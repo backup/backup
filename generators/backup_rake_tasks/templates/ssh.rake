@@ -1,5 +1,3 @@
-require 'backup'
-
 namespace :backup do
   namespace :ssh do
     
@@ -8,7 +6,7 @@ namespace :backup do
     # Specify that you want to use :ssh
     # Specify what user should connect through SSH, to what address (be it IP or an URL) and the absolute path on the backup-server
     # to where Backup should store the backups.
-    task :mysql do
+    task :mysql => :environment do
       Backup::Mysql.new({
         :mysql => {
           :user     => "",
@@ -31,7 +29,7 @@ namespace :backup do
     # Specify that you want to use :ssh
     # Specify what user should connect through SSH, to what address (be it IP or an URL) and the absolute path on the backup-server
     # to where Backup should store the backups.
-    task :sqlite3 do
+    task :sqlite3 => :environment do
       Backup::Sqlite3.new({
         :file => 'production.sqlite3', # "production.sqlite3" is default, can remove the whole :file attribute or change it's value
         
@@ -49,7 +47,7 @@ namespace :backup do
     # Specify that you want to use :ssh
     # Specify what user should connect through SSH, to what address (be it IP or an URL) and the absolute path on the backup-server
     # to where Backup should store the backups.
-    task :assets do
+    task :assets => :environment do
       Backup::Assets.new({
         :path => "#{RAILS_ROOT}/public/assets",
         

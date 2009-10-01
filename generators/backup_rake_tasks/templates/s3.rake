@@ -1,5 +1,3 @@
-require 'backup'
-
 namespace :backup do
   namespace :s3 do
     
@@ -10,7 +8,7 @@ namespace :backup do
     # Specify which bucket you wish to store your files to.
     # If you wish to put specific files in subfolders inside the bucket, you may do so by doing something like this:
     # :bucket => "my_bucket/subfolder1/subfolder2" etc.
-    task :mysql do
+    task :mysql => :environment do
       Backup::Mysql.new({
         :mysql => {
           :user     => "",
@@ -34,7 +32,7 @@ namespace :backup do
     # Specify which bucket you wish to store your files to.
     # If you wish to put specific files in subfolders inside the bucket, you may do so by doing something like this:
     # :bucket => "my_bucket/subfolder1/subfolder2" etc.
-    task :sqlite3 do
+    task :sqlite3 => :environment do
       Backup::Sqlite3.new({
         :file => 'production.sqlite3', # "production.sqlite3" is default, can remove the whole :file attribute or change it's value
         
@@ -54,7 +52,7 @@ namespace :backup do
     # Specify which bucket you wish to store your files to.
     # If you wish to put specific files in subfolders inside the bucket, you may do so by doing something like this:
     # :bucket => "my_bucket/subfolder1/subfolder2" etc.
-    task :assets do
+    task :assets => :environment do
       Backup::Assets.new({
         :path => "#{RAILS_ROOT}/public/assets",
         
