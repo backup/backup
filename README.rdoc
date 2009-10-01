@@ -1,15 +1,15 @@
 = Backup
 
 Backup is a gem/plugin that enables you to very easily create backups and transfer these to Amazon S3 or another server with SSH.
-It currently supports MySQL, SQLite3 and basic Assets (documents, images, etc) inside a folder. The files will get tar'd / gzip'd and get a timestamp.
-After the backup has been created, these files can be transferred to either Amazon S3 or any remote server through SSH.
+It currently supports MySQL, SQLite3 and basic Assets (documents, images, etc) inside a folder. The files will get tar'd / gzip'd and get a timestamp-prefix.
+After the backup file has been created, it can be transferred to either Amazon S3 or any remote server through SSH.
 
 == Installation
 
 === Gem
 
-==== NOTE: Can't install the GEM version until GitHub Re-Enables it.
-==== Gem has not yet been built! Will build as soon as the service is available!
+NOTE: Can't install the GEM version until GitHub Re-Enables it.
+Gem has not yet been built! Will build as soon as the service is available!
 
   gem sources -a http://gems.github.com
   sudo gem install meskyanichi-backup
@@ -43,35 +43,37 @@ Open and read the README. It will explain everything very quickly. Don't worry, 
 Then (or otherwise) open the "s3.rake" and "ssh.rake" rake task files. These include all the rake tasks/combinations that are (currently!) possible.
 Above each task inside these files is a description, explaining what you must do, again, very straight forward. Stupidly Easy to set up.
 
-After you've set up the tasks you wish to utilize (obviously you don't need to utilize all of them, you can simply just choose to utilize one of them).
-They are all generated so you can basically just fill in the configuration values and be done with it. You obviously don't have to fill in the configuration
+After you've set up the tasks you wish to utilize (obviously you don't need to utilize all of them, you can simply just choose to utilize one of them),
+they are all generated so you can basically just fill in the configuration values and be done with it. You obviously don't have to fill in the configuration
 for any rake tasks you are not going to use.
 
-That's it! Now just run one of the configured rake tasks to perform a backup!
+That's it! Now you have both configured the files, and have the backup rake tasks at your disposal!
+Just run one of the configured rake tasks to perform a backup!
 
 
 == Requirements
 
-Backup makes use of the aws-s3 gem. This is a dependency and will be installed when installing the Backup gem.
-If you are using the plugin, you will manually need to install either the gem or plugin from:
+Backup makes use of the "aws-s3" gem. This is a dependency and will be installed when installing the Backup gem.
+If you are using the plugin, you will need to manually install either the gem or plugin from:
 http://github.com/marcel/aws-s3
 
 Your production environment, where these backups are running, must be able to use the following utilities:
 - tar
 - gzip
-- ssh
-- scp
-- mysqldump
+- ssh (if using ssh)
+- scp (if using ssh)
+- mysqldump (if using mysql)
 
 Usually these are all installed by default. Mysqldump comes with the Mysql installation.
-So you will probably be set.
+The rest usually comes with any Linux flavor. So you will probably be set, assuming you're running Linux or any other UNIX based system.
 
 
 == Suggestions - Periodically Executing Rake Tasks (Backups)
 
-So, I'm assuming you will want to run these backups (rake tasks) periodically.
+Assuming you will want to run these backups (rake tasks) periodically.
 What I currently use to run them is the "javan-whenever" gem. This is very simple, easy to use gem
 that generates crontab syntax from your Ruby syntax. To understand what I mean, see the example below!
+
 
 === Javan's Whenever Gem Example
 
@@ -91,7 +93,8 @@ If you want to do multiple backups, like perhaps backup your MySQL database, alo
 
 So yes, I highly recommend using the javan-whenever gem for this. It's very easy to write and maintain the crontab this way.
 For more information on this gem and on how to use it: http://github.com/javan/whenever
-
+Also, Ryan Bates has created a screencast about this gem, see it here: http://railscasts.com/episodes/164-cron-in-ruby
+It's awesome, go check it out!
 
 
 == Copyright
