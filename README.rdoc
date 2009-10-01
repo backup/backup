@@ -100,6 +100,21 @@ Also, Ryan Bates has created a screencast for this gem, see it here: http://rail
 It's awesome, go check it out!
 
 
+== Resources
+
+So let me sum up the resources
+
+- My Backup Gem (sudo gem install meskyanichi-backup)
+- AWS-S3 Gem (sudo gem install aws-s3)
+- Whenever Gem (sudo gem install javan-whenever)
+
+==== Notes:
+If you are going to use Amazon S3 to store your backups, be sure to install "AWS-S3".
+If you want a nice way of managing the crontab and do periodical backups, install "Whenever".
+Screencast Whenever Gem by Ryan Bates: http://railscasts.com/episodes/164-cron-in-ruby
+
+
+
 == Copyright
 
 Copyright (c) 2009 Michael van Rooijen | Final Creation. See LICENSE for details.
