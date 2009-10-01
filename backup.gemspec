@@ -27,7 +27,7 @@ Gem::Specification.new do |s|
      "VERSION",
      "backup.gemspec",
      "generators/backup_rake_tasks/backup_rake_tasks_generator.rb",
-     "generators/backup_rake_tasks/templates/README",
+     "generators/backup_rake_tasks/templates/README.rdoc",
      "generators/backup_rake_tasks/templates/s3.rake",
      "generators/backup_rake_tasks/templates/ssh.rake",
      "lib/backup.rb",
