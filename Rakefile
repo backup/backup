@@ -13,8 +13,8 @@ begin
     gem.homepage = "http://github.com/meskyanichi/backup"
     gem.authors = ["meskyanichi"]
     gem.add_development_dependency "aws-s3"
-    gem.files.include 'generators/**/*'
-    gem.files.include 'lib/**/*'
+#    gem.files.include 'generators/**/*'
+#    gem.files.include 'lib/**/*'
   end
 rescue LoadError
   puts "Jeweler (or a dependency) not available. Install it with: sudo gem install jeweler"
