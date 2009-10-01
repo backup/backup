@@ -15,9 +15,9 @@ class BackupRakeTasksGenerator < Rails::Generator::Base
     record do |m|
       m.directory "lib/tasks/"
       m.directory "lib/tasks/backup"
-      m.file      "README",   "lib/tasks/backup/README"
-      m.file      "s3.rake",  "lib/tasks/backup/s3.rake"
-      m.file      "ssh.rake", "lib/tasks/backup/ssh.rake"
+      m.file      "README.rdoc",  "lib/tasks/backup/README.rdoc"
+      m.file      "s3.rake",      "lib/tasks/backup/s3.rake"
+      m.file      "ssh.rake",     "lib/tasks/backup/ssh.rake"
     end
   end
   
