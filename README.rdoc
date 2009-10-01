@@ -1,6 +1,6 @@
 = Backup
 
-Backup is a gem/plugin that enables you to very easily create backups and transfer these to Amazon S3 or another server with SSH.
+Backup is a gem/plugin that enables you to very easily create backups and transfer these to Amazon S3 or another server using SSH.
 It currently supports MySQL, SQLite3 and basic Assets (documents, images, etc) inside a folder. The files will get tar'd / gzip'd and get a timestamp-prefix.
 After the backup file has been created, it can be transferred to either Amazon S3 or any remote server through SSH.
 
@@ -71,11 +71,11 @@ Usually these are all installed by default on any Linux flavor. So you will prob
 The Mysqldump utility comes with the Mysql installation. So if you're running MySQL you probably have this as well.
 
 
-== Suggestions - Periodically Executing Rake Tasks (Backups)
+== Periodical Backups (using the "rake tasks" and a "cron")
 
 Assuming you will want to run these backups (rake tasks) periodically.
-What I currently use to run them is the "javan-whenever" gem. This is very simple, easy to use gem
-that generates crontab syntax from your Ruby syntax. To understand what I mean, see the example below!
+What I currently use to run them is the "javan-whenever" gem. This is a very simple, easy to use gem
+that makes it EXTREMELY simple to manage cron, using Ruby syntax. To understand what I mean, see the example below!
 
 
 === Javan's Whenever Gem Example
@@ -104,14 +104,22 @@ It's awesome, go check it out!
 
 So let me sum up the resources
 
-- My Backup Gem (sudo gem install meskyanichi-backup)
-- AWS-S3 Gem (sudo gem install aws-s3)
-- Whenever Gem (sudo gem install javan-whenever)
+==== My Backup Gem
+  sudo gem install meskyanichi-backup
+
+==== AWS-S3 Gem
+  sudo gem install aws-s3
+
+==== Whenever Gem ( + Ryan Bates' Screencast: http://railscasts.com/episodes/164-cron-in-ruby )
+  sudo gem install javan-whenever
 
 ==== Notes:
+
 If you are going to use Amazon S3 to store your backups, be sure to install "AWS-S3".
-If you want a nice way of managing the crontab and do periodical backups, install "Whenever".
-Screencast Whenever Gem by Ryan Bates: http://railscasts.com/episodes/164-cron-in-ruby
+
+If you want a nice and super easy way of managing the crontab and do periodical backups, install "Whenever".
+
+Watch the Whenever Gem Screencast by Ryan Bates: http://railscasts.com/episodes/164-cron-in-ruby
 
 
 
