@@ -86,7 +86,7 @@ With this gem you can basically get periodic backup execution as easy as this:
     rake "backup:s3:sqlite3"
   end
 
-Obviously this will update the crontab to make SQLite3 backups every 2 hours.
+Obviously this will update the crontab to make SQLite3 backups and store them on Amazon S3 every 2 hours.
 If you want to do multiple backups, like perhaps backup your MySQL database, along with your assets:
 
   every 2.hours do
