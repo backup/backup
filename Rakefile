@@ -12,7 +12,7 @@ begin
     gem.email = "meskyan@gmail.com"
     gem.homepage = "http://github.com/meskyanichi/backup"
     gem.authors = ["meskyanichi"]
-    gem.add_development_dependency "aws-s3"
+    gem.add_dependency "aws-s3"
 #    gem.files.include 'generators/**/*'
 #    gem.files.include 'lib/**/*'
   end
