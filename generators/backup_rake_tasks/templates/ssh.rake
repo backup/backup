@@ -52,7 +52,7 @@ namespace :backup do
         :path => "#{RAILS_ROOT}/public/assets",
         
         :use => :ssh,
-        :ssh => {
+        :ssh => { 
           :user => "root",
           :ip   => "123.45.678.90", # OR my-domain.com
           :path => "/var/backups/etc"
