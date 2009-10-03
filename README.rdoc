@@ -8,8 +8,8 @@ After the backup file has been created, it can be transferred to either Amazon S
 
 === Add Repository Source(s)
 
-  gem sources -a http://gems.github.com
   gem sources -a http://gemcutter.org
+  gem sources -a http://gems.github.com
 
 === Gem
 
@@ -26,6 +26,8 @@ After the backup file has been created, it can be transferred to either Amazon S
 
 === Dependencies
 
+  # This will automatically install when installing the Backup gem.
+  # If you are using the Plugin, instead of the gem, be sure to install the aws-s3 gem.
   sudo gem install aws-s3
 
 
@@ -225,19 +227,9 @@ If you want a nice and super easy way of managing the crontab and do periodical 
 Watch the Whenever Gem Screencast by Ryan Bates: http://railscasts.com/episodes/164-cron-in-ruby
 
 
-
 == Requests
 
 If anyone wishes to see support for PostgreSQL or any other database format, please send me a message!
-
-
-== TODO
-
-I will be implementing a feature that will enable you to create a custom backup procedure (in a simple way).
-So basically what I have in mind is, again a rake task, where you can input a unix command / command line command that you wish to execute.
-For example, if you are using a database format that is not supported, you can insert your own UNIX command to create this dump file and let "Backup" handle the transfer. Backup will take that dump file and use the regular SSH or S3 Storage transfer method. This will make the Backup plugin more usable since you can use a different database, but it will require you to know how to create your own database dump through command-line.
-
-Of course, it'd be prettier to have a rake task for each database format, so if you have any requests, send me a message!
 
 
 == Copyright
