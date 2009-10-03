@@ -2,7 +2,7 @@
 
 == What is "Backup"?
 
-Backup is a RubyGem written for Rails to (easily) handle backing up your database files and assets.
+"Backup" is a RubyGem written for Rails to (easily) handle backing up your database files and assets to either Amazon S3, or any other server using SSH.
 
 
 === Backup makes use of two storage methods:
@@ -62,6 +62,19 @@ http://wiki.github.com/meskyanichi/backup/resources
 === Requests
 
 If anyone wishes to see support for PostgreSQL or any other database format, please send me a message!
+
+=== TODO
+
+==== "Backup" will soon support file encryption.
+I will implement this within a few days! This will be optional when you store your database and assets on a remove server.
+It's just an extra security layer for when you're storing important files on a different location.
+
+==== "Backup" will be configurable using a yaml file
+Also I will make some changes to how Backup should be configured.
+As it currently stands, you must go into the rake tasks that are generated to alter the settings
+as of the next update, the Backup generator will generate an additional file, namely the "backup.yml"
+ALL settings can be configured here very easily. This will definitely improve the ease of setting up Backup!
+This too, will be updated in a few days!
 
 
 === Copyright
