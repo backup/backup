@@ -49,9 +49,9 @@ http://wiki.github.com/meskyanichi/backup/getting-started
 http://wiki.github.com/meskyanichi/backup/requirements
 
 
-=== Periodical (Automatic) Backups
+=== Automatic Backups
 
-http://wiki.github.com/meskyanichi/backup/periodical-automatic-backups
+http://wiki.github.com/meskyanichi/backup/automatic-backups
 
 
 === Resources
