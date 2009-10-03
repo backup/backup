@@ -1,237 +1,69 @@
 = Backup
 
-Backup is a gem/plugin that enables you to very easily create backups and transfer these to Amazon S3 or another server using SSH.
-It currently supports MySQL, SQLite3 and basic Assets (documents, images, etc) inside a folder. The files will get tar'd / gzip'd and get a timestamp-prefix.
-After the backup file has been created, it can be transferred to either Amazon S3 or any remote server through SSH.
+== What is "Backup"?
 
-== Installation
+Backup is a RubyGem written for Rails to (easily) handle backing up your database files and assets.
 
-=== Add Repository Source(s)
 
-  gem sources -a http://gemcutter.org
-  gem sources -a http://gems.github.com
+=== Backup makes use of two storage methods:
 
-=== Gem
+- Amazon S3
+- Any Remote Server You Can Access Through "SSH"
 
-  # Gem Cutter
-  sudo gem install backup
-  
-  # GitHub
-  sudo gem install meskyanichi-backup
 
-=== Plugin
+=== Currently it supports:
 
-  ./script/plugin install git://github.com/meskyanichi/backup.git
+- SQLite3
+- MySQL
+- Folder (and Sub Folders) of Assets (Think of: Documents, Images, Etc.)
 
 
-=== Dependencies
+=== Your database type not on the list?
 
-  # This will automatically install when installing the Backup gem.
-  # If you are using the Plugin, instead of the gem, be sure to install the aws-s3 gem.
-  sudo gem install aws-s3
+- Custom
 
+I built in a simple class (called: Custom) that will allow you to manually create a SQL dump using a shell command.
+This looks basically the same as the other options, except that you will have to write (probably) only a "single
+line'd shell command" to generate a sql dump file. Once you generate the file, Backup will take care of the rest
+of the (optional)archiving, compressing and pushing to S3 or any remote server that supports SSH.
 
-== Getting started
+==== Setting up Backup takes me about 1-2 minutes and it's really easy!
 
-Well, this is ridiculously easy to set up! So let's do this.
-First install either the gem or plugin.
 
-If you are using the gem version you "must" add the following line to your environment.rb file
+== Interested in trying out Backup?
 
-==== config/environment.rb
+=== Check out the following Wiki pages:
 
-  # For GemCutter Version
-  config.gem "backup", :lib => "backup", :version => "0.1.0", :source => "http://gemcutter.org"
-  
-  # For GitHub Version
-  config.gem "meskyanichi-backup", :lib => "backup", :version => "0.1.0", :source => "http://gems.github.com"
+=== Installation
 
-Once that's done, run the following command from the "root" of your Rails App
+http://wiki.github.com/meskyanichi/backup/installation
 
-  ./script/generate backup_rake_tasks
-  
 
-This will generate two rake tasks and a README inside your "#{RAILS_ROOT}/lib/tasks/backup" folder.
-- README.rdoc
-- s3.rake
-- ssh.rake
+=== Getting started
 
-Open and read the README.rdoc if you want. It will explain everything very quickly, though, I doubt there is much to explain!
-Then (or otherwise) open the "s3.rake" and "ssh.rake" rake task files. These include all the rake tasks/combinations that are (currently!) available.
-Above each task inside these files is a description, explaining what you must do, again, "very" straight forward. Stupidly Easy to set up, thankfully!
+http://wiki.github.com/meskyanichi/backup/getting-started
 
-After you've set up the tasks you wish to utilize (obviously you don't need to use all of them, you can simply just choose to use one of them),
-they are all generated so you can basically just fill in the configuration values and be done with it. You obviously don't have to fill in the configuration
-for any rake tasks you are not going to use.
 
-That's it! So you have now done two things:
-- Configured the Rake Files (just filled in the empty values)
-- And at the same time, these are the executable rake tasks you will be using to create a backup
+=== Requirements
 
-Just run one of the configured rake tasks to perform a backup!
+http://wiki.github.com/meskyanichi/backup/requirements
 
-== Example
 
-So let me give an example of what one of these rake tasks will look like:
+=== Periodical (Automatic) Backups
 
-==== Rake Task for Backing up a Sqlite3 file to S3
+http://wiki.github.com/meskyanichi/backup/periodical-automatic-backups
 
-  task :sqlite3 => :environment do
-    Backup::Sqlite3.new({
-      :file => 'production.sqlite3',
-      
-      :use => :s3,
-      :s3 => {
-        :access_key_id      => 'your-s3-id',
-        :secret_access_key  => 'your-s3-password',
-        :bucket             => 'your-bucket-to-backup-to'
-      }
-    }).run
-  end
 
-So this is one of the rake that's that the generator provides. Simple, isn't it?
-Just fill in the values and run:
+=== Resources
 
-  rake backup:s3:sqlite3
+http://wiki.github.com/meskyanichi/backup/resources
 
-==== Rake Task for Backing up a Sqlite3 file to another server through SSH
 
-  task :sqlite3 => :environment do
-    Backup::Sqlite3.new({
-      :file => 'production.sqlite3',
-     
-      :use => :ssh,
-      :ssh => {
-        :user => "root",
-        :ip   => "123.45.678.90", # OR my-domain.com
-        :path => "/var/backups/etc"
-      }
-    }).run
-  end
-
-Again, quick and easy. Now just execute this Backing/SSH transfer by running:
-
-  rake backing:ssh:sqlite3
-
-
-See below what the requirements are when using S3 or SSH.
-
-== Requirements
-
-=== Using Amazon S3
-
-This obviously requires you to have access to an Amazon S3 account.
-These accounts are free and you only get charged for what you actually "use".
-So no transfers = no cost. And aside of that, S3 is EXTREMELY cheap!
-
-You can get an account here: http://aws.amazon.com/s3
-
-Once you have an account you must install the AWS S3 gem, like so:
-
-  sudo gem install aws-s3
-
-Backup makes use of the "aws-s3" gem to connect to Amazon S3. This is a dependency and will be installed when installing the Backup gem.
-If you are using the plugin, you will need to manually install it.
-
-=== Using SSH
-
-If you're using SSH then there is one thing you must do. You must provide the machine that's going to "receive" your backups
-your machine's (the senders) ssh-key. This is basically what you did with GitHub so you could push data to your GitHub repository
-without getting prompted for a password.
-
-=== Setting Up A Key For SSH
-
-Setting up SSH Keychains is quite simple.
-
-SSH to the "production" server and run the following command:
-  ssh-keygen -t rsa
-
-It will prompt you 3 times, first it will ask what you wish to call the filename.
-
-Just hit enter every time, do "not" fill in a password. 
-
-This will generate two files in the ~/.ssh/ directory, namely:
-- id_rsa
-- id_rsa.pub
-
-So, now that the files are generated, holding the authorization keys, you can use these on any server you wish to login to without using a password.
-The procedure accomplishing this is easy.
-
-First, we will ensure there is a .ssh directory on the "backup" server by running the following command:
-  ssh root@your_ip mkdir -p .ssh
-
-Once that's in place, we will append our newly (or already existing) key to the backup servers' .ssh/authorized_keys file.
-  cat ~/.ssh/id_rsa.pub | ssh root@server.com 'cat >> .ssh/authorized_keys'
-
-Done. Now the key, generated on your "production" server, has been inserted inside the ".ssh/authorized_keys" file on the Backup server.
-You should now be set to run all SSH rake tasks that have been configured to work with that particular Backup server.
-
-==== Note: If the "authorized_keys" file does not yet exist, it will be automatically be created.
-
-
-== Periodical Backups (using the "rake tasks" and a "cron")
-
-Assuming you will want to run these backups (rake tasks) periodically.
-What I currently use to run them is the "javan-whenever" gem. This is a very simple, easy to use gem
-that makes it EXTREMELY simple to manage cron, using Ruby syntax. To understand what I mean, see the example below!
-
-
-=== Javan's Whenever Gem Example
-
-With this gem you can basically get periodic backup execution as easy as this:
-
-  every 2.hours do
-    rake "backup:s3:sqlite3"
-  end
-
-Obviously this will update the crontab to make SQLite3 backups and store them on Amazon S3 every 2 hours.
-If you want to do multiple backups, like perhaps backup your MySQL database, along with your assets:
-
-  every 2.hours do
-    rake "backup:s3:mysql"
-    rake "backup:s3:assets"
-  end
-
-So yes, I highly recommend using the javan-whenever gem for this. It's very easy to write and maintain the crontab this way.
-For more information on this gem and on how to use it: http://github.com/javan/whenever
-Also, Ryan Bates has created a screencast for this gem, see it here: http://railscasts.com/episodes/164-cron-in-ruby
-It's awesome, go check it out!
-
-
-== Resources
-
-So let me sum up the resources
-
-==== My Backup Gem
-  sudo gem install backup
-  or
-  sudo gem install meskyanichi-backup
-
-==== AWS-S3 Gem
-  sudo gem install aws-s3
-
-==== Whenever Gem
-  sudo gem install javan-whenever
-  http://railscasts.com/episodes/164-cron-in-ruby
-
-==== Amazon S3 Account Creation
-  http://aws.amazon.com/s3
-
-
-==== Notes:
-
-If you are going to use Amazon S3 to store your backups, be sure to install "AWS-S3".
-
-If you want a nice and super easy way of managing the crontab and do periodical backups, install "Whenever".
-
-Watch the Whenever Gem Screencast by Ryan Bates: http://railscasts.com/episodes/164-cron-in-ruby
-
-
-== Requests
+=== Requests
 
 If anyone wishes to see support for PostgreSQL or any other database format, please send me a message!
 
 
-== Copyright
+=== Copyright
 
 Copyright (c) 2009 Michael van Rooijen | Final Creation. See LICENSE for details.
