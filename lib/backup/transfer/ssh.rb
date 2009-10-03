@@ -6,7 +6,7 @@ module Backup
         super(default_options.merge(options))
         
         ssh = Backup::Connection::SSH.new(options)
-        ssh.store
+        ssh.transfer
       end
       
       private

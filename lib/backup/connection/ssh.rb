@@ -6,7 +6,7 @@ module Backup
         super(options)
       end
       
-      def store
+      def transfer
         %x{ ssh #{options[:ssh][:user]}@#{options[:ssh][:ip]} mkdir -p #{options[:ssh][:path]} }
         %x{ scp #{File.join(options[:backup_path], options[:backup_file])} #{options[:ssh][:user]}@#{options[:ssh][:ip]}:#{options[:ssh][:path]} }
       end

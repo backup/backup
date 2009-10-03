@@ -9,10 +9,7 @@ module Backup
         
         s3 = Backup::Connection::S3.new(options)
         s3.connect
-        s3.object.store(
-          options[:backup_file],
-          open(File.join(options[:backup_path], options[:backup_file])),
-          options[:s3][:bucket] )
+        s3.transfer
       end
       
       private

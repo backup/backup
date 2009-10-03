@@ -25,6 +25,13 @@ module Backup
         AWS::S3::S3Object
       end
       
+      def transfer
+        object.store(
+          options[:backup_file],
+          open(File.join(options[:backup_path], options[:backup_file])),
+          options[:s3][:bucket] )
+      end
+      
     end
   end 
 end
