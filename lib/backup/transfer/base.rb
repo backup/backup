@@ -7,12 +7,6 @@ module Backup
       def initialize(options)
         self.options = options
       end
-    
-      private
-      
-        def remove_temp_files
-          %x{ rm #{File.join(options[:backup_path], "*")} }
-        end
       
     end
   end

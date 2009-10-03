@@ -7,21 +7,18 @@ module Backup
         
         ssh = Backup::Connection::SSH.new(options)
         ssh.store
-                              
-        remove_temp_files
       end
-      
       
       private
       
         def default_options
           {:ssh => {
-            :user => "root",
-            :ip   => "123.45.678.90",
+            :user => "",
+            :ip   => "",
             :path => "/var/backups/"
           }}
         end
-      
+
     end
   end
 end

@@ -21,7 +21,12 @@ module Backup
           when :s3  then Backup::Transfer::S3.new(options)
           when :ssh then Backup::Transfer::SSH.new(options)
         end
+        remove_temp_files
       end
-
+      
+      def remove_temp_files
+        %x{ rm #{File.join(options[:backup_path], "*")} }
+      end
+      
   end
 end
