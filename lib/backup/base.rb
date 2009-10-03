@@ -9,7 +9,12 @@ module Backup
     end
     
     private
-    
+      
+      # Sets up the default paths and stores them in the options hash
+      # It also ensures the directory to where the temporary files are stored
+      # exists. If it doesn't it'll be created
+      # It will store the backup_path and the backup_file names
+      # The backup_file name is prefixed with the timestamp of the initialize time.
       def setup_paths(path, type = nil)
         %x{ mkdir -p #{RAILS_ROOT}/tmp/backups/#{path} }
         options[:backup_path] = "#{RAILS_ROOT}/tmp/backups/#{path}"
@@ -21,6 +26,11 @@ module Backup
         end
       end
     
+      # Initializes one of the transfer methods
+      # Currently there are two transfer methods available
+      #
+      # - Amazon S3
+      # - SSH
       def transfer
         case options[:use]
           when :s3  then Backup::Transfer::S3.new(options)
@@ -28,10 +38,15 @@ module Backup
         end
       end
       
+      # Removes files that were stored in the tmp/backups/* directory of the Rails application
+      # It completely cleans up the backup folders so theres no trash stored on the production server
       def remove_temp_files
         %x{ rm #{File.join(options[:backup_path], "*")} }
       end
       
+      # Removes files that were generated for the transfer
+      # This can remove either a single file or an array of files
+      # Depending on whether the options[:file] is an Array or a String
       def remove_original_file
         if options[:file].is_a?(Array)
           options[:file].each do |file|

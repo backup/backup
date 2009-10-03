@@ -6,6 +6,7 @@ module Backup
         super(options)
       end
       
+      # Establishes a connection with Amazon S3 using the credentials provided by the user
       def connect
         AWS::S3::Base.establish_connection!(
           :access_key_id     => options[:s3][:access_key_id], 
@@ -13,18 +14,23 @@ module Backup
         )
       end
       
+      # Wrapper for the Service object
       def service
         AWS::S3::Service
       end
       
+      # Wrapper for the Bucket object
       def bucket
         AWS::S3::Bucket
       end
       
+      # Wrapper for the Object object
       def object
         AWS::S3::S3Object
       end
       
+      # Initializes the file transfer to Amazon S3
+      # This can only run after a connection has been made using the #connect method 
       def transfer
         object.store(
           options[:backup_file],
