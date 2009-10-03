@@ -10,6 +10,7 @@ module Backup
       archive
       compress
       transfer
+      remove_temp_files
     end
     
     private

@@ -10,6 +10,7 @@ module Backup
       make_mysql_dump
       compress
       transfer
+      remove_temp_files
     end
 
     private

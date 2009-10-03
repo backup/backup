@@ -36,6 +36,7 @@ Gem::Specification.new do |s|
      "lib/backup/connection/base.rb",
      "lib/backup/connection/s3.rb",
      "lib/backup/connection/ssh.rb",
+     "lib/backup/custom.rb",
      "lib/backup/mysql.rb",
      "lib/backup/sqlite3.rb",
      "lib/backup/transfer/base.rb",

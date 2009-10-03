@@ -20,7 +20,7 @@ namespace :backup do
         :s3 => {
           :access_key_id      => '',
           :secret_access_key  => '',
-          :bucket             => ''
+          :bucket             => 'mybucket/backups/etc'
         }
       }).run
     end
@@ -40,7 +40,7 @@ namespace :backup do
         :s3 => {
           :access_key_id      => '',
           :secret_access_key  => '',
-          :bucket             => ''
+          :bucket             => 'mybucket/backups/etc'
         }
       }).run
     end
@@ -60,7 +60,58 @@ namespace :backup do
         :s3 => {
           :access_key_id      => '',
           :secret_access_key  => '',
-          :bucket             => ''
+          :bucket             => 'mybucket/backups/etc'
+        }
+      }).run
+    end
+    
+    # => rake backup:s3:custom
+    # This is a more complex implementation of the Backup gem.
+    # Might you be using a database type that is currently not supported, then you can manually create an SQL dump
+    # using the :command attribute. This will take either a single string, or an array of strings, depending on how many
+    # commands you wish to execute.
+    # 
+    # Single Command
+    #  :command => "my command"
+    # Multiple Commands
+    #  :command => ["my command 1", "my command 2", "my command 3"] etc.
+    #
+    # This means you have full control over where the sql dump should be placed. But, depending on your decision, you must
+    # set the correct path to the file(s) (sql dumps) that have been generated.
+    # 
+    # Path To File(s) Directory
+    #  :path => "#{RAILS_ROOT}/db"
+    #  
+    # Finally, you must specify which file(s) should be backed up.
+    # The :file attribute can take either a single string, or an array of strings to add multiple files.
+    # 
+    # Select a single file to backup from the :path directory you specified
+    #  :file => "foobar1.sql"
+    # Select multiple files to backup from the :path directory you specified
+    #  :file => ["foobar1.sql", "foobar2.sql"] etc
+    # 
+    # When you specify you would like to backup multiple files, it will automatically archive these as a "tar" for you and then compress it.
+    #
+    # By default, after the backup has been pushed to S3, it will remove the original files (created from your :command attribute)
+    # If you wish to keep these files, then add the following line:
+    #  :keep_original_files => true
+    # This is set to 'false' by default, as you most likely don't want to keep these files on your production server.
+    # 
+    # Just use the ":use => :s3" as usual to tell it you would like to back up these files using S3.
+    # And then, like in the example below, provide the S3 credentials/details to be able to connect to the server you wish to back these files up to.
+    task :custom => :environment do
+      Backup::Custom.new({
+        :command  => ["mysqldump --quick -u root --password='' foobar > #{RAILS_ROOT}/db/foobar1.sql",
+                      "mysqldump --quick -u root --password='' foobar > #{RAILS_ROOT}/db/foobar2.sql"],
+                      
+        :path     => "#{RAILS_ROOT}/db",
+        :file     => ["foobar1.sql","foobar2.sql"],
+                
+        :use => :s3,
+        :s3 => { 
+          :access_key_id      => '',
+          :secret_access_key  => '',
+          :bucket             => 'mybucket/backups/etc'
         }
       }).run
     end

@@ -9,6 +9,7 @@ module Backup
     def run
       compress
       transfer
+      remove_temp_files
     end
     
     private

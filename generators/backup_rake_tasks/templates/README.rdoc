@@ -13,9 +13,11 @@ Here is a list of the current rake tasks that are available:
 backup:s3:mysql
 backup:s3:sqlite3
 backup:s3:assets
+backup:s3:custom
 backup:ssh:mysql
 backup:ssh:sqlite3
 backup:ssh:assets
+backup:ssh:custom
 
 
 So now you have rake tasks for all your essential backups.
