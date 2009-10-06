@@ -49,7 +49,7 @@ mysql:
 # To run this adapter, execute the following rake task:
 # rake backup:s3:sqlite3
 sqlite3:
-  file: development.sqlite3
+  file: production.sqlite3
   path: ':rails_root/db'
   s3:
     access_key_id: my_access_key_id
