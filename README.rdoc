@@ -3,6 +3,8 @@
 == What is "Backup"?
 
 "Backup" is a RubyGem written for Rails to (easily) handle backing up your database files and assets to either Amazon S3, or any other server using SSH.
+You barely have to get your hands dirty! Backup provides you with 2 (easily) configurable .yml files. These two files are the only ones you will need to use to configure
+all your backups.
 
 
 === Backup makes use of two storage methods:
@@ -11,11 +13,11 @@
 - Any Remote Server You Can Access Through "SSH"
 
 
-=== Currently it supports:
+=== Currently it supports these adapters:
 
 - SQLite3
 - MySQL
-- Folder (and Sub Folders) of Assets (Think of: Documents, Images, Etc.)
+- Assets/Folders (and Sub Folders) of Assets (Think of: Documents, Images, Etc.)
 
 
 === Your database type not on the list?
@@ -25,7 +27,21 @@
 I built in a simple class (called: Custom) that will allow you to manually create a SQL dump using a shell command.
 This looks basically the same as the other options, except that you will have to write (probably) only a "single
 line'd shell command" to generate a sql dump file. Once you generate the file, Backup will take care of the rest
-of the (optional)archiving, compressing and pushing to S3 or any remote server that supports SSH.
+of the (optional)archiving, compressing, encrypting and pushing to Amazon S3 or any remote server that supports SSH.
+
+=== Encryption
+
+Backup also provides encryption. Adding a single line to one of the configuration files will enable encryption for your backups!
+
+== Why?
+
+- I wanted a simple Backup Gem for Rails
+- I wanted minimum and easy configuration
+- I wanted it to take less than 2 minutes to set up 
+- I wanted it to support (AT LEAST) both SQLite3 as well as MySQL
+- I wanted it to support an additional (custom) adapter incase the database type isn't SQLite3 or MySQL
+- I wanted it to support some encryption
+- I wanted to be able to store my files on my private backup server and on Amazon S3
 
 ==== Setting up Backup takes me about 1-2 minutes and it's really easy!
 
@@ -63,18 +79,16 @@ http://wiki.github.com/meskyanichi/backup/resources
 
 If anyone wishes to see support for PostgreSQL or any other database format, please send me a message!
 
-=== TODO
 
-==== "Backup" will soon support file encryption.
-I will implement this within a few days! This will be optional when you store your database and assets on a remove server.
-It's just an extra security layer for when you're storing important files on a different location.
+=== Suggestions?
 
-==== "Backup" will be configurable using a yaml file
-Also I will make some changes to how Backup should be configured.
-As it currently stands, you must go into the rake tasks that are generated to alter the settings
-as of the next update, the Backup generator will generate an additional file, namely the "backup.yml"
-ALL settings can be configured here very easily. This will definitely improve the ease of setting up Backup!
-This too, will be updated in a few days!
+Send me a message! Fork the project! Help out! :)
+
+
+=== Found a Bug?
+
+Report it!
+http://github.com/meskyanichi/backup/issues
 
 
 === Copyright
