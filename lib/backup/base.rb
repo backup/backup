@@ -38,6 +38,10 @@ module Backup
         end
       end
       
+      # Encrypts the backup file
+      # Only if the encrypt option is specified inside the .yml config file
+      # Otherwise, the encryption will be not be executed.
+      # Encryption is OPTIONAL.
       def encrypt
         unless options[:encrypt].blank?
           Backup::Encrypt.new(options).run

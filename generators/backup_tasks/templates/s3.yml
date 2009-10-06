@@ -1,41 +1,88 @@
+# Backup Configuration file for "Amazon S3 Backups"
+# This file was generated with the Backup Generator
+#
+# FOR MORE INFORMATION, VIEW THE WIKI ON GITHUB:
+#  http://wiki.github.com/meskyanichi/backup
+# 
+# If you wish to make use of the Amazon S3 service to store your
+# backups, use this configuration file.
+# 
+# Step by Step
+# 
+# Step 1
+#  Choose the adapter you would like to use to back up your files
+#  (MySQL, SQLite3, Assets or something Custom)
+# 
+# Step 2
+#  Fill in the values for the adapter you choose.
+#  You do not need to fill in the values for every adapter,
+#  only the ones you are going to use. The rest you can leave untouched or remove.
+# 
+# Step 3
+#  Once you've filled in all values, you are ready to execute the rake task that
+#  starts that backup process. Above each Adapter you will see what rake task should
+#  be run to start the backup process for that specific Adapter.
+#
+# Step 4
+#  Once set up, you could set these rake tasks up in a cronjob to execute it periodically.
+#  For handling this, I recommend using the javan-whenever gem
+# 
+#  See here: http://github.com/javan/whenever
 
+
+# MySQL Adapter
+# To run this adapter, execute the following rake task:
+# rake backup:s3:mysql
 mysql:
   mysql_config:
     user: root
     password: '' 
-    database: foobar
+    database: my_database
   s3:
-    access_key_id: AKIAIBSZJIDXPPY5COWQ
-    secret_access_key: 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
-    bucket: final-creation/backups
-  encrypt: mesk
-    
+    access_key_id: my_access_key_id
+    secret_access_key: my_secret_access_key
+    bucket: my_bucket
+  #encrypt: my_secret_password # Uncomment me if you want to encrypt the backup
+
+
+# SQLite3 Adapter
+# To run this adapter, execute the following rake task:
+# rake backup:s3:sqlite3
 sqlite3:
   file: development.sqlite3
   path: ':rails_root/db'
   s3:
-    access_key_id: AKIAIBSZJIDXPPY5COWQ
-    secret_access_key: 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
-    bucket: final-creation/backups
-  encrypt: mesk
+    access_key_id: my_access_key_id
+    secret_access_key: my_secret_access_key
+    bucket: my_bucket
+  #encrypt: my_secret_password # Uncomment me if you want to encrypt the backup
 
+
+# Asset Adapter
+# To run this adapter, execute the following rake task:
+# rake backup:s3:assets
 assets:
   path: ':rails_root/public/assets'
   s3:
-    access_key_id: AKIAIBSZJIDXPPY5COWQ
-    secret_access_key: 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
-    bucket: final-creation/backups
+    access_key_id: my_access_key_id
+    secret_access_key: my_secret_access_key
+    bucket: my_bucket
+  #encrypt: my_secret_password # Uncomment me if you want to encrypt the backup
 
+
+# Custom Adapter
+# To run this adapter, execute the following rake task:
+# rake backup:s3:custom
 custom:
   path: ':rails_root/db'
   file:
     - 'foobar1.sql'
     - 'foobar2.sql'
   command:
-    - '/usr/local/mysql/bin/mysqldump --quick -u root --password="" foobar > :rails_root/db/foobar1.sql'
-    - '/usr/local/mysql/bin/mysqldump --quick -u root --password="" foobar > :rails_root/db/foobar2.sql'
+    - 'mysqldump --quick -u root --password="" foobar > :rails_root/db/foobar1.sql'
+    - 'mysqldump --quick -u root --password="" foobar > :rails_root/db/foobar2.sql'
   s3:
-    access_key_id: AKIAIBSZJIDXPPY5COWQ
-    secret_access_key: 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
-    bucket: final-creation/backups
-  encrypt: mesk
+    access_key_id: my_access_key_id
+    secret_access_key: my_secret_access_key
+    bucket: my_bucket
+  #encrypt: my_secret_password # Uncomment me if you want to encrypt the backup

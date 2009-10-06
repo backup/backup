@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["meskyanichi"]
-  s.date = %q{2009-10-03}
+  s.date = %q{2009-10-06}
   s.description = %q{Backup is a gem/plugin that enables you to very easily create backups and transfer these to Amazon S3 or another server with SSH.
                         It currently supports MySQL, SQLite3 and basic Assets (documents, images, etc). The files will get tar'd / gzip'd and get a timestamp.
                         After creation, these files can be transferred to either Amazon S3 or any remote server through SSH.}
@@ -26,10 +26,13 @@ Gem::Specification.new do |s|
      "Rakefile",
      "VERSION",
      "backup.gemspec",
-     "generators/backup_rake_tasks/backup_rake_tasks_generator.rb",
-     "generators/backup_rake_tasks/templates/README.rdoc",
-     "generators/backup_rake_tasks/templates/s3.rake",
-     "generators/backup_rake_tasks/templates/ssh.rake",
+     "generators/backup_tasks/backup_tasks_generator.rb",
+     "generators/backup_tasks/templates/README.rdoc",
+     "generators/backup_tasks/templates/config.rake",
+     "generators/backup_tasks/templates/s3.rake",
+     "generators/backup_tasks/templates/s3.yml",
+     "generators/backup_tasks/templates/ssh.rake",
+     "generators/backup_tasks/templates/ssh.yml",
      "lib/backup.rb",
      "lib/backup/assets.rb",
      "lib/backup/base.rb",
@@ -37,6 +40,7 @@ Gem::Specification.new do |s|
      "lib/backup/connection/s3.rb",
      "lib/backup/connection/ssh.rb",
      "lib/backup/custom.rb",
+     "lib/backup/encrypt.rb",
      "lib/backup/mysql.rb",
      "lib/backup/sqlite3.rb",
      "lib/backup/transfer/base.rb",

@@ -8,6 +8,7 @@ namespace :backup do
     # Specify which bucket you wish to store your files to.
     # If you wish to put specific files in subfolders inside the bucket, you may do so by doing something like this:
     # :bucket => "my_bucket/subfolder1/subfolder2" etc.
+    desc 'Makes a backup from a MySQL database and transfers it to Amazon S3.'
     task :mysql => :s3_config do
       @config = @config['mysql']
       Backup::Mysql.new({
@@ -35,6 +36,7 @@ namespace :backup do
     # Specify which bucket you wish to store your files to.
     # If you wish to put specific files in subfolders inside the bucket, you may do so by doing something like this:
     # :bucket => "my_bucket/subfolder1/subfolder2" etc.
+    desc 'Makes a backup from a SQLite3 database and transfers it to Amazon S3.'
     task :sqlite3 => :s3_config do
       @config = @config['sqlite3']
       Backup::Sqlite3.new({
@@ -58,6 +60,7 @@ namespace :backup do
     # Specify which bucket you wish to store your files to.
     # If you wish to put specific files in subfolders inside the bucket, you may do so by doing something like this:
     # :bucket => "my_bucket/subfolder1/subfolder2" etc.
+    desc 'Makes a backup from Assets and transfers it to Amazon S3.'
     task :assets => :s3_config do
       @config = @config['assets']
       Backup::Assets.new({
@@ -107,6 +110,7 @@ namespace :backup do
     # 
     # Just use the ":use => :s3" as usual to tell it you would like to back up these files using S3.
     # And then, like in the example below, provide the S3 credentials/details to be able to connect to the server you wish to back these files up to.
+    desc 'Makes a backup from a Custom database and transfers it to Amazon S3.'
     task :custom => :s3_config do
       @config = @config['custom']
       Backup::Custom.new({

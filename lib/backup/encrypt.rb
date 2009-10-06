@@ -7,6 +7,7 @@ module Backup
       self.options = options
     end
     
+    # Encrypts the backup file
     def run
       unencrypted_file  = File.join(options[:backup_path], options[:backup_file])
       encrypted_file    = File.join(options[:backup_path], options[:backup_file] + '.enc')

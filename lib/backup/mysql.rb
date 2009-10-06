@@ -13,6 +13,8 @@ module Backup
     #   Creates a MySQL dump based on the parameters provided by the user
     # - Compress
     #   Compresses the .tar file using Gzip
+    # - Encrypt
+    #   Encrypts the backup file
     # - Transfer
     #   Initializes the transfer to either S3 or using SSH
     # - Remove Temp Files

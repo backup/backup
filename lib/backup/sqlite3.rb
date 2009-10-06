@@ -11,6 +11,8 @@ module Backup
     #
     # - Compress
     #   Compresses the .tar file using Gzip
+    # - Encrypt
+    #   Encrypts the backup file
     # - Transfer
     #   Initializes the transfer to either S3 or using SSH
     # - Remove Temp Files

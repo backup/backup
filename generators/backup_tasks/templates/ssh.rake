@@ -6,6 +6,7 @@ namespace :backup do
     # Specify that you want to use :ssh
     # Specify what user should connect through SSH, to what address (be it IP or an URL) and the absolute path on the backup-server
     # to where Backup should store the backups.
+    desc 'Makes a backup from a MySQL database and transfers it through SSH (SCP).'
     task :mysql => :ssh_config do
       @config = @config['mysql']
       Backup::Mysql.new({
@@ -32,6 +33,7 @@ namespace :backup do
     # Specify that you want to use :ssh
     # Specify what user should connect through SSH, to what address (be it IP or an URL) and the absolute path on the backup-server
     # to where Backup should store the backups.
+    desc 'Makes a backup from a SQLite3 database and transfers it through SSH (SCP).'
     task :sqlite3 => :ssh_config do
       @config = @config['sqlite3']
       Backup::Sqlite3.new({
@@ -53,6 +55,7 @@ namespace :backup do
     # Specify that you want to use :ssh
     # Specify what user should connect through SSH, to what address (be it IP or an URL) and the absolute path on the backup-server
     # to where Backup should store the backups.
+    desc 'Makes a backup from Assets and transfers it through SSH (SCP).'
     task :assets => :ssh_config do
       @config = @config['assets']
       Backup::Assets.new({
@@ -102,6 +105,7 @@ namespace :backup do
     #
     # Just use the ":use => :ssh" as usual to tell it you would like to back up these files using SSH.
     # And then, like in the example below, provide the SSH details to be able to connect to the server you wish to back these files up to.
+    desc 'Makes a backup from a Custom database and transfers it through SSH (SCP).'
     task :custom => :ssh_config do
       @config = @config['custom']
       Backup::Custom.new({
