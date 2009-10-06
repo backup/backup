@@ -6,38 +6,44 @@ namespace :backup do
     # Specify that you want to use :ssh
     # Specify what user should connect through SSH, to what address (be it IP or an URL) and the absolute path on the backup-server
     # to where Backup should store the backups.
-    task :mysql => :environment do
+    task :mysql => :ssh_config do
+      @config = @config['mysql']
       Backup::Mysql.new({
         :mysql => {
-          :user     => "",
-          :password => "",
-          :database => ""
+          :user     => @config['mysql_config']['user'],
+          :password => @config['mysql_config']['password'],
+          :database => @config['mysql_config']['database']
         },
+        
+        :encrypt => @config['encrypt'],
         
         :use => :ssh,
         :ssh => {
-          :user => "root",
-          :ip   => "mydomain.com", # or: 123.45.678.90
-          :path => "/var/backups/etc"
+          :user => @config['ssh']['user'],
+          :ip   => @config['ssh']['ip'],
+          :path => @config['ssh']['path']
         }
       }).run
     end
-    
+
     # => rake backup:ssh:sqlite3
     # Specify which sqlite3 file you wish to back up. This will generally be "production.sqlite3". (and this is the default, so you can remove the :file attribute if it is)
     # If your sqlite3 file is not located inside the #{RAILS_ROOT}/db folder, then add a :path => "#{RAILS_ROOT}/path/to/db/folder" 
     # Specify that you want to use :ssh
     # Specify what user should connect through SSH, to what address (be it IP or an URL) and the absolute path on the backup-server
     # to where Backup should store the backups.
-    task :sqlite3 => :environment do
+    task :sqlite3 => :ssh_config do
+      @config = @config['sqlite3']
       Backup::Sqlite3.new({
-        :file => 'production.sqlite3', # "production.sqlite3" is default, can remove the whole :file attribute or change it's value
+        :file     => @config['file'],
+        :path     => @config['path'],
+        :encrypt  => @config['encrypt'],
         
         :use => :ssh,
         :ssh => {
-          :user => "root",
-          :ip   => "mydomain.com", # or: 123.45.678.90
-          :path => "/var/backups/etc"
+          :user => @config['ssh']['user'],
+          :ip   => @config['ssh']['ip'],
+          :path => @config['ssh']['path']
         }
       }).run
     end
@@ -47,15 +53,17 @@ namespace :backup do
     # Specify that you want to use :ssh
     # Specify what user should connect through SSH, to what address (be it IP or an URL) and the absolute path on the backup-server
     # to where Backup should store the backups.
-    task :assets => :environment do
+    task :assets => :ssh_config do
+      @config = @config['assets']
       Backup::Assets.new({
-        :path => "#{RAILS_ROOT}/public/assets",
+        :path     => @config['path'],
+        :encrypt  => @config['encrypt'],
         
         :use => :ssh,
         :ssh => { 
-          :user => "root",
-          :ip   => "mydomain.com", # or: 123.45.678.90
-          :path => "/var/backups/etc"
+          :user => @config['ssh']['user'],
+          :ip   => @config['ssh']['ip'],
+          :path => @config['ssh']['path']
         }
       }).run
     end
@@ -94,19 +102,19 @@ namespace :backup do
     #
     # Just use the ":use => :ssh" as usual to tell it you would like to back up these files using SSH.
     # And then, like in the example below, provide the SSH details to be able to connect to the server you wish to back these files up to.
-    task :custom => :environment do
+    task :custom => :ssh_config do
+      @config = @config['custom']
       Backup::Custom.new({
-        :command  => ["mysqldump --quick -u root --password='' foobar > #{RAILS_ROOT}/db/foobar1.sql",
-                      "mysqldump --quick -u root --password='' foobar > #{RAILS_ROOT}/db/foobar2.sql"],
-                      
-        :path     => "#{RAILS_ROOT}/db",
-        :file     => ["foobar1.sql", "foobar2.sql"],
+        :file     => @config['file'],
+        :path     => @config['path'],
+        :command  => @config['command'],
+        :encrypt  => @config['encrypt'],
                 
         :use => :ssh,
         :ssh => { 
-          :user => "root",
-          :ip   => "mydomain.com", # or: 123.45.678.90
-          :path => "/var/backups/etc"
+          :user => @config['ssh']['user'],
+          :ip   => @config['ssh']['ip'],
+          :path => @config['ssh']['path']
         }
       }).run
     end

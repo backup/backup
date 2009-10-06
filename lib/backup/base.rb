@@ -38,6 +38,13 @@ module Backup
         end
       end
       
+      def encrypt
+        unless options[:encrypt].blank?
+          Backup::Encrypt.new(options).run
+          options[:backup_file] = "#{options[:backup_file]}.enc"
+        end
+      end
+      
       # Removes files that were stored in the tmp/backups/* directory of the Rails application
       # It completely cleans up the backup folders so theres no trash stored on the production server
       def remove_temp_files
@@ -48,12 +55,14 @@ module Backup
       # This can remove either a single file or an array of files
       # Depending on whether the options[:file] is an Array or a String
       def remove_original_file
-        if options[:file].is_a?(Array)
-          options[:file].each do |file|
-            %x{ rm #{File.join(options[:path], file)} }          
+        unless options[:keep_original_files].eql?(true)
+          if options[:file].is_a?(Array)
+            options[:file].each do |file|
+              %x{ rm #{File.join(options[:path], file)} }          
+            end
+          else
+            %x{ rm #{File.join(options[:path], options[:file])} }
           end
-        else
-          %x{ rm #{File.join(options[:path], options[:file])} }
         end
       end
       

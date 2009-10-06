@@ -20,6 +20,7 @@ module Backup
     def run
       archive
       compress
+      encrypt
       transfer
       remove_temp_files
     end

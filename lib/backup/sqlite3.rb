@@ -17,6 +17,7 @@ module Backup
     #   Removes temporary files after the process is complete
     def run
       compress
+      encrypt
       transfer
       remove_temp_files
     end

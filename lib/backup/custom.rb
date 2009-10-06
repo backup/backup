@@ -25,9 +25,10 @@ module Backup
       command
       archive
       compress
+      encrypt
       transfer
       remove_temp_files
-      remove_original_file unless options[:keep_original_files].eql?(true)
+      remove_original_file
     end
     
     private

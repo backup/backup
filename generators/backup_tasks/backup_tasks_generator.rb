@@ -1,4 +1,4 @@
-class BackupRakeTasksGenerator < Rails::Generator::Base
+class BackupTasksGenerator < Rails::Generator::Base
 
   # This method gets initialized when the generator gets run.
   # It will receive an array of arguments inside @args
@@ -13,11 +13,19 @@ class BackupRakeTasksGenerator < Rails::Generator::Base
   # This will automatically be run after the initialize method
   def manifest
     record do |m|
+      
+      # Generate the Rake Tasks
       m.directory "lib/tasks/"
       m.directory "lib/tasks/backup"
-      m.file      "README.rdoc",  "lib/tasks/backup/README.rdoc"
+      m.file      "config.rake",  "lib/tasks/backup/config.rake"
       m.file      "s3.rake",      "lib/tasks/backup/s3.rake"
       m.file      "ssh.rake",     "lib/tasks/backup/ssh.rake"
+      
+      # Generate the YAML files
+      m.directory "config/backup"
+      m.file      "s3.yml",       "config/backup/s3.yml"
+      m.file      "ssh.yml",      "config/backup/ssh.yml"
+      
     end
   end
   

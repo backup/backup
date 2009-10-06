@@ -1,0 +1,41 @@
+
+mysql:
+  mysql_config:
+    user: root
+    password: '' 
+    database: foobar
+  s3:
+    access_key_id: AKIAIBSZJIDXPPY5COWQ
+    secret_access_key: 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
+    bucket: final-creation/backups
+  encrypt: mesk
+    
+sqlite3:
+  file: development.sqlite3
+  path: ':rails_root/db'
+  s3:
+    access_key_id: AKIAIBSZJIDXPPY5COWQ
+    secret_access_key: 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
+    bucket: final-creation/backups
+  encrypt: mesk
+
+assets:
+  path: ':rails_root/public/assets'
+  s3:
+    access_key_id: AKIAIBSZJIDXPPY5COWQ
+    secret_access_key: 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
+    bucket: final-creation/backups
+
+custom:
+  path: ':rails_root/db'
+  file:
+    - 'foobar1.sql'
+    - 'foobar2.sql'
+  command:
+    - '/usr/local/mysql/bin/mysqldump --quick -u root --password="" foobar > :rails_root/db/foobar1.sql'
+    - '/usr/local/mysql/bin/mysqldump --quick -u root --password="" foobar > :rails_root/db/foobar2.sql'
+  s3:
+    access_key_id: AKIAIBSZJIDXPPY5COWQ
+    secret_access_key: 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
+    bucket: final-creation/backups
+  encrypt: mesk

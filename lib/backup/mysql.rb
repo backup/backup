@@ -20,6 +20,7 @@ module Backup
     def run
       make_mysql_dump
       compress
+      encrypt
       transfer
       remove_temp_files
     end

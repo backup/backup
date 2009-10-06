@@ -8,19 +8,22 @@ namespace :backup do
     # Specify which bucket you wish to store your files to.
     # If you wish to put specific files in subfolders inside the bucket, you may do so by doing something like this:
     # :bucket => "my_bucket/subfolder1/subfolder2" etc.
-    task :mysql => :environment do
+    task :mysql => :s3_config do
+      @config = @config['mysql']
       Backup::Mysql.new({
         :mysql => {
-          :user     => "",
-          :password => "",
-          :database => ""
+          :user     => @config['mysql_config']['user'],
+          :password => @config['mysql_config']['password'],
+          :database => @config['mysql_config']['database']
         },
+        
+        :encrypt => @config['encrypt'],
         
         :use => :s3,
         :s3 => {
-          :access_key_id      => '',
-          :secret_access_key  => '',
-          :bucket             => 'mybucket/backups/etc'
+          :access_key_id      => @config['s3']['access_key_id'],
+          :secret_access_key  => @config['s3']['secret_access_key'],
+          :bucket             => @config['s3']['bucket']
         }
       }).run
     end
@@ -32,15 +35,18 @@ namespace :backup do
     # Specify which bucket you wish to store your files to.
     # If you wish to put specific files in subfolders inside the bucket, you may do so by doing something like this:
     # :bucket => "my_bucket/subfolder1/subfolder2" etc.
-    task :sqlite3 => :environment do
+    task :sqlite3 => :s3_config do
+      @config = @config['sqlite3']
       Backup::Sqlite3.new({
-        :file => 'production.sqlite3', # "production.sqlite3" is default, can remove the whole :file attribute or change it's value
-        
+        :file => @config['file'],
+        :path => @config['path'],
+        :encrypt => @config['encrypt'],
+                
         :use => :s3,
         :s3 => {
-          :access_key_id      => '',
-          :secret_access_key  => '',
-          :bucket             => 'mybucket/backups/etc'
+          :access_key_id      => @config['s3']['access_key_id'],
+          :secret_access_key  => @config['s3']['secret_access_key'],
+          :bucket             => @config['s3']['bucket']
         }
       }).run
     end
@@ -52,15 +58,17 @@ namespace :backup do
     # Specify which bucket you wish to store your files to.
     # If you wish to put specific files in subfolders inside the bucket, you may do so by doing something like this:
     # :bucket => "my_bucket/subfolder1/subfolder2" etc.
-    task :assets => :environment do
+    task :assets => :s3_config do
+      @config = @config['assets']
       Backup::Assets.new({
-        :path => "#{RAILS_ROOT}/public/assets",
+        :path => @config['path'],
+        :encrypt => @config['encrypt'],
         
         :use => :s3,
         :s3 => {
-          :access_key_id      => '',
-          :secret_access_key  => '',
-          :bucket             => 'mybucket/backups/etc'
+          :access_key_id      => @config['s3']['access_key_id'],
+          :secret_access_key  => @config['s3']['secret_access_key'],
+          :bucket             => @config['s3']['bucket']
         }
       }).run
     end
@@ -99,19 +107,19 @@ namespace :backup do
     # 
     # Just use the ":use => :s3" as usual to tell it you would like to back up these files using S3.
     # And then, like in the example below, provide the S3 credentials/details to be able to connect to the server you wish to back these files up to.
-    task :custom => :environment do
+    task :custom => :s3_config do
+      @config = @config['custom']
       Backup::Custom.new({
-        :command  => ["mysqldump --quick -u root --password='' foobar > #{RAILS_ROOT}/db/foobar1.sql",
-                      "mysqldump --quick -u root --password='' foobar > #{RAILS_ROOT}/db/foobar2.sql"],
-                      
-        :path     => "#{RAILS_ROOT}/db",
-        :file     => ["foobar1.sql","foobar2.sql"],
+        :file     => @config['file'],
+        :path     => @config['path'],
+        :command  => @config['command'],
+        :encrypt => @config['encrypt'],
                 
         :use => :s3,
         :s3 => { 
-          :access_key_id      => '',
-          :secret_access_key  => '',
-          :bucket             => 'mybucket/backups/etc'
+          :access_key_id      => @config['s3']['access_key_id'],
+          :secret_access_key  => @config['s3']['secret_access_key'],
+          :bucket             => @config['s3']['bucket']
         }
       }).run
     end

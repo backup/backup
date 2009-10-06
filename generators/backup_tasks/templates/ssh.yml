@@ -1,0 +1,44 @@
+
+mysql:
+  mysql_config:
+    user: root
+    password: '' 
+    database: foobar
+  ssh:
+    user: root
+    ip: final-creation.com
+    path: '/home/michael'
+  encrypt: mesk
+    
+    
+sqlite3:
+  file: development.sqlite3
+  path: ':rails_root/db'
+  ssh:
+    user: root
+    ip: final-creation.com
+    path: '/home/michael'
+  encrypt: mesk
+
+
+assets:
+  path: ':rails_root/public/assets'
+  ssh:
+    user: root
+    ip: final-creation.com
+    path: '/home/michael'
+  encrypt: mesk
+
+custom:
+  path: ':rails_root/db'
+  file:
+    - 'foobar1.sql'
+    - 'foobar2.sql'
+  command:
+    - '/usr/local/mysql/bin/mysqldump --quick -u root --password="" foobar > :rails_root/db/foobar1.sql'
+    - '/usr/local/mysql/bin/mysqldump --quick -u root --password="" foobar > :rails_root/db/foobar2.sql'
+  ssh:
+    user: root
+    ip: final-creation.com
+    path: '/home/michael'
+  encrypt: mesk
