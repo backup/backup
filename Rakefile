@@ -20,6 +20,8 @@ begin
     gem.homepage = "http://github.com/meskyanichi/backup"
     gem.authors = ["meskyanichi"]
     gem.add_dependency "aws-s3"
+    gem.add_dependency "net-ssh"
+    gem.add_dependency "net-scp"
 #    gem.files.include 'generators/**/*'
 #    gem.files.include 'lib/**/*'
   end

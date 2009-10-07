@@ -1,4 +1,4 @@
-class BackupTasksGenerator < Rails::Generator::Base
+class BackupFilesGenerator < Rails::Generator::Base
 
   # This method gets initialized when the generator gets run.
   # It will receive an array of arguments inside @args
@@ -15,16 +15,21 @@ class BackupTasksGenerator < Rails::Generator::Base
     record do |m|
       
       # Generate the Rake Tasks
-      m.directory "lib/tasks/"
+      m.directory "lib/tasks"
       m.directory "lib/tasks/backup"
       m.file      "config.rake",  "lib/tasks/backup/config.rake"
       m.file      "s3.rake",      "lib/tasks/backup/s3.rake"
       m.file      "ssh.rake",     "lib/tasks/backup/ssh.rake"
+      m.file      "db.rake",      "lib/tasks/backup/db.rake"
       
       # Generate the YAML files
       m.directory "config/backup"
       m.file      "s3.yml",       "config/backup/s3.yml"
       m.file      "ssh.yml",      "config/backup/ssh.yml"
+      
+      # Generates the backup.sqlite3 database
+      m.directory "db"
+      m.file      "backup.sqlite3", "db/backup.sqlite3"
       
     end
   end

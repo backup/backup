@@ -38,6 +38,13 @@ module Backup
           options[:s3][:bucket] )
       end
       
+      # Destroys file from a bucket on Amazon S3
+      def destroy(backup_file, bucket)
+        object.delete(
+          backup_file,
+          bucket )
+      end
+      
     end
   end 
 end

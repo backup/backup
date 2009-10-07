@@ -38,6 +38,24 @@ module Backup
         end
       end
       
+      # Records a backup to the "backup.sqlite3" database
+      # Will destroy any old backups that exceed the amount of
+      # backups that are allowed to be stored on either S3 or any
+      # remote server through SSH.
+      def record        
+        case options[:use]
+          when :s3
+            backup = Backup::BackupRecord::S3.new
+            backup.set_options(options)
+            backup.save
+          
+          when :ssh
+            backup = Backup::BackupRecord::SSH.new
+            backup.set_options(options)
+            backup.save
+        end
+      end
+      
       # Encrypts the backup file
       # Only if the encrypt option is specified inside the .yml config file
       # Otherwise, the encryption will be not be executed.

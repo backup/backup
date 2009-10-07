@@ -11,14 +11,16 @@ namespace :backup do
     desc 'Makes a backup from a MySQL database and transfers it to Amazon S3.'
     task :mysql => :s3_config do
       @config = @config['mysql']
-      Backup::Mysql.new({
+      Backup::Adapter::Mysql.new({
+        :adapter    => 'mysql',
         :mysql => {
           :user     => @config['mysql_config']['user'],
           :password => @config['mysql_config']['password'],
           :database => @config['mysql_config']['database']
         },
         
-        :encrypt => @config['encrypt'],
+        :encrypt      => @config['encrypt'],
+        :keep_backups => @config['keep_backups'],
         
         :use => :s3,
         :s3 => {
@@ -39,11 +41,13 @@ namespace :backup do
     desc 'Makes a backup from a SQLite3 database and transfers it to Amazon S3.'
     task :sqlite3 => :s3_config do
       @config = @config['sqlite3']
-      Backup::Sqlite3.new({
-        :file     => @config['file'],
-        :path     => @config['path'],
-        :encrypt  => @config['encrypt'],
-                
+      Backup::Adapter::Sqlite3.new({
+        :adapter      => 'sqlite3',
+        :file         => @config['file'],
+        :path         => @config['path'],
+        :encrypt      => @config['encrypt'],
+        :keep_backups => @config['keep_backups'],
+        
         :use => :s3,
         :s3 => {
           :access_key_id      => @config['s3']['access_key_id'],
@@ -63,9 +67,11 @@ namespace :backup do
     desc 'Makes a backup from Assets and transfers it to Amazon S3.'
     task :assets => :s3_config do
       @config = @config['assets']
-      Backup::Assets.new({
-        :path     => @config['path'],
-        :encrypt  => @config['encrypt'],
+      Backup::Adapter::Assets.new({
+        :adapter      => 'assets',
+        :path         => @config['path'],
+        :encrypt      => @config['encrypt'],
+        :keep_backups => @config['keep_backups'],
         
         :use => :s3,
         :s3 => {
@@ -113,11 +119,13 @@ namespace :backup do
     desc 'Makes a backup from a Custom database and transfers it to Amazon S3.'
     task :custom => :s3_config do
       @config = @config['custom']
-      Backup::Custom.new({
-        :file     => @config['file'],
-        :path     => @config['path'],
-        :command  => @config['command'],
-        :encrypt  => @config['encrypt'],
+      Backup::Adapter::Custom.new({
+        :adapter      => 'custom',
+        :file         => @config['file'],
+        :path         => @config['path'],
+        :command      => @config['command'],
+        :encrypt      => @config['encrypt'],
+        :keep_backups => @config['keep_backups'],
                 
         :use => :s3,
         :s3 => { 

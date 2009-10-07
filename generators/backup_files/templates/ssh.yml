@@ -1,11 +1,11 @@
-# Backup Configuration file for "Amazon S3 Backups"
+# Backup Configuration file for "SSH (SCP) Backups"
 # This file was generated with the Backup Generator
 #
 # FOR MORE INFORMATION, VIEW THE WIKI ON GITHUB:
 #  http://wiki.github.com/meskyanichi/backup
 # 
-# If you wish to make use of the Amazon S3 service to store your
-# backups, use this configuration file.
+# If you wish to make use of SSH (SCP) to store your
+# backups to another server, use this configuration file.
 # 
 # Step by Step
 # 
@@ -32,47 +32,49 @@
 
 # MySQL Adapter
 # To run this adapter, execute the following rake task:
-# rake backup:s3:mysql
+# rake backup:ssh:mysql
 mysql:
   mysql_config:
     user: root
     password: '' 
-    database: my_database
-  s3:
-    access_key_id: my_access_key_id
-    secret_access_key: my_secret_access_key
-    bucket: my_bucket
+    database: foobar
+  ssh:
+    user: root
+    ip: my-domain.com
+    path: '/var/backups'
   #encrypt: my_secret_password # Uncomment me if you want to encrypt the backup
-
-
+  #keep_backups: 25 # Uncomment me if you want to automatically delete old backups
+    
+    
 # SQLite3 Adapter
 # To run this adapter, execute the following rake task:
-# rake backup:s3:sqlite3
+# rake backup:ssh:sqlite3
 sqlite3:
   file: production.sqlite3
   path: ':rails_root/db'
-  s3:
-    access_key_id: my_access_key_id
-    secret_access_key: my_secret_access_key
-    bucket: my_bucket
+  ssh:
+    user: root
+    ip: my-domain.com
+    path: '/var/backups'
   #encrypt: my_secret_password # Uncomment me if you want to encrypt the backup
-
+  #keep_backups: 25 # Uncomment me if you want to automatically delete old backups
 
 # Asset Adapter
 # To run this adapter, execute the following rake task:
-# rake backup:s3:assets
+# rake backup:ssh:assets
 assets:
   path: ':rails_root/public/assets'
-  s3:
-    access_key_id: my_access_key_id
-    secret_access_key: my_secret_access_key
-    bucket: my_bucket
+  ssh:
+    user: root
+    ip: my-domain.com
+    path: '/var/backups'
   #encrypt: my_secret_password # Uncomment me if you want to encrypt the backup
+  #keep_backups: 25 # Uncomment me if you want to automatically delete old backups
 
 
 # Custom Adapter
 # To run this adapter, execute the following rake task:
-# rake backup:s3:custom
+# rake backup:ssh:custom
 custom:
   path: ':rails_root/db'
   file:
@@ -81,8 +83,9 @@ custom:
   command:
     - 'mysqldump --quick -u root --password="" foobar > :rails_root/db/foobar1.sql'
     - 'mysqldump --quick -u root --password="" foobar > :rails_root/db/foobar2.sql'
-  s3:
-    access_key_id: my_access_key_id
-    secret_access_key: my_secret_access_key
-    bucket: my_bucket
+  ssh:
+    user: root
+    ip: my-domain.com
+    path: '/var/backups'
   #encrypt: my_secret_password # Uncomment me if you want to encrypt the backup
+  #keep_backups: 25 # Uncomment me if you want to automatically delete old backups

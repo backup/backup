@@ -9,14 +9,16 @@ namespace :backup do
     desc 'Makes a backup from a MySQL database and transfers it through SSH (SCP).'
     task :mysql => :ssh_config do
       @config = @config['mysql']
-      Backup::Mysql.new({
+      Backup::Adapter::Mysql.new({
+        :adapter => 'mysql',
         :mysql => {
           :user     => @config['mysql_config']['user'],
           :password => @config['mysql_config']['password'],
           :database => @config['mysql_config']['database']
         },
         
-        :encrypt => @config['encrypt'],
+        :encrypt      => @config['encrypt'],
+        :keep_backups => @config['keep_backups'],
         
         :use => :ssh,
         :ssh => {
@@ -36,10 +38,12 @@ namespace :backup do
     desc 'Makes a backup from a SQLite3 database and transfers it through SSH (SCP).'
     task :sqlite3 => :ssh_config do
       @config = @config['sqlite3']
-      Backup::Sqlite3.new({
-        :file     => @config['file'],
-        :path     => @config['path'],
-        :encrypt  => @config['encrypt'],
+      Backup::Adapter::Sqlite3.new({
+        :adapter      => 'sqlite3',
+        :file         => @config['file'],
+        :path         => @config['path'],
+        :encrypt      => @config['encrypt'],
+        :keep_backups => @config['keep_backups'],
         
         :use => :ssh,
         :ssh => {
@@ -58,9 +62,11 @@ namespace :backup do
     desc 'Makes a backup from Assets and transfers it through SSH (SCP).'
     task :assets => :ssh_config do
       @config = @config['assets']
-      Backup::Assets.new({
-        :path     => @config['path'],
-        :encrypt  => @config['encrypt'],
+      Backup::Adapter::Assets.new({
+        :adapter      => 'assets',
+        :path         => @config['path'],
+        :encrypt      => @config['encrypt'],
+        :keep_backups => @config['keep_backups'],
         
         :use => :ssh,
         :ssh => { 
@@ -108,11 +114,13 @@ namespace :backup do
     desc 'Makes a backup from a Custom database and transfers it through SSH (SCP).'
     task :custom => :ssh_config do
       @config = @config['custom']
-      Backup::Custom.new({
-        :file     => @config['file'],
-        :path     => @config['path'],
-        :command  => @config['command'],
-        :encrypt  => @config['encrypt'],
+      Backup::Adapter::Custom.new({
+        :adapter      => 'custom',
+        :file         => @config['file'],
+        :path         => @config['path'],
+        :command      => @config['command'],
+        :encrypt      => @config['encrypt'],
+        :keep_backups => @config['keep_backups'],
                 
         :use => :ssh,
         :ssh => { 
