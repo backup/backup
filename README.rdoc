@@ -2,9 +2,7 @@
 
 == What is "Backup"?
 
-"Backup" is a RubyGem written for Rails to (easily) handle backing up your database files and assets to either Amazon S3, or any other server using SSH.
-You barely have to get your hands dirty! Backup provides you with 2 (easily) configurable .yml files. These two files are the only ones you will need to use to configure
-all your backups.
+“Backup” is a RubyGem, written for Ruby on Rails. It's main purpose is to Backup any files to Amazon S3 or any remotely accessible server through SSH (SCP). It supports database and regular file backups. On top of that, it's extremely easy to set up. Backup will provide a generator script that will place all necessary files inside your Rails application. Two of which, are “yaml” configuration files. Using just these two files to configure a backup for database formats such as a MySQL, SQLite3 or any Assets folder. Setting up “Backup” takes only about a minute or two!
 
 
 === Backup makes use of two storage methods:
