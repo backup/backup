@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["meskyanichi"]
-  s.date = %q{2009-10-07}
+  s.date = %q{2009-10-08}
   s.description = %q{
                           “Backup” is a RubyGem, written for Ruby on Rails. It's main purpose is to Backup any
                           files to Amazon S3 or any remotely accessible server through SSH (SCP). It supports database
@@ -32,25 +32,32 @@ Gem::Specification.new do |s|
      "Rakefile",
      "VERSION",
      "backup.gemspec",
-     "generators/backup_tasks/backup_tasks_generator.rb",
-     "generators/backup_tasks/templates/config.rake",
-     "generators/backup_tasks/templates/s3.rake",
-     "generators/backup_tasks/templates/s3.yml",
-     "generators/backup_tasks/templates/ssh.rake",
-     "generators/backup_tasks/templates/ssh.yml",
+     "generators/backup_files/backup_files_generator.rb",
+     "generators/backup_files/templates/backup.sqlite3",
+     "generators/backup_files/templates/config.rake",
+     "generators/backup_files/templates/db.rake",
+     "generators/backup_files/templates/s3.rake",
+     "generators/backup_files/templates/s3.yml",
+     "generators/backup_files/templates/ssh.rake",
+     "generators/backup_files/templates/ssh.yml",
      "lib/backup.rb",
-     "lib/backup/assets.rb",
+     "lib/backup/adapter/assets.rb",
+     "lib/backup/adapter/custom.rb",
+     "lib/backup/adapter/mysql.rb",
+     "lib/backup/adapter/sqlite3.rb",
+     "lib/backup/backup_record/s3.rb",
+     "lib/backup/backup_record/ssh.rb",
      "lib/backup/base.rb",
      "lib/backup/connection/base.rb",
      "lib/backup/connection/s3.rb",
      "lib/backup/connection/ssh.rb",
-     "lib/backup/custom.rb",
      "lib/backup/encrypt.rb",
-     "lib/backup/mysql.rb",
-     "lib/backup/sqlite3.rb",
      "lib/backup/transfer/base.rb",
      "lib/backup/transfer/s3.rb",
-     "lib/backup/transfer/ssh.rb"
+     "lib/backup/transfer/ssh.rb",
+     "lib/tasks/backup/config.rake",
+     "lib/tasks/backup/s3.rake",
+     "lib/tasks/backup/ssh.rake"
   ]
   s.homepage = %q{http://github.com/meskyanichi/backup}
   s.rdoc_options = ["--charset=UTF-8"]
@@ -64,10 +71,16 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::RubyGemsVersion) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<aws-s3>, [">= 0"])
+      s.add_runtime_dependency(%q<net-ssh>, [">= 0"])
+      s.add_runtime_dependency(%q<net-scp>, [">= 0"])
     else
       s.add_dependency(%q<aws-s3>, [">= 0"])
+      s.add_dependency(%q<net-ssh>, [">= 0"])
+      s.add_dependency(%q<net-scp>, [">= 0"])
     end
   else
     s.add_dependency(%q<aws-s3>, [">= 0"])
+    s.add_dependency(%q<net-ssh>, [">= 0"])
+    s.add_dependency(%q<net-scp>, [">= 0"])
   end
 end

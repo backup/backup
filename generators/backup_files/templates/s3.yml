@@ -28,6 +28,35 @@
 #  For handling this, I recommend using the javan-whenever gem
 # 
 #  See here: http://github.com/javan/whenever
+#
+
+
+# Global Options
+# 
+# - encrypt (optional!)
+#
+#   What "encrypt" does is encrypt your backup with the given password
+#   Example:
+#     encrypt: this_is_my_password
+#
+#   This will encrypt the backup file with the password: this_is_my_password 
+#   NOTE: To "decrypt" an encrypted file later on, use the following command:
+#     openssl enc -des-cbc -d -in encrypted_file -out decrypted_file 
+#
+#
+# - keep_backups (optional!)
+#
+#   what "keep_backups" does is it ensures that there won't be more than the specified
+#   amount of backups present on the storage location (S3 or any remotely accessible server)
+#   Example:
+#     keep_backups: 10
+#   
+#   This will make sure there won't be more than 10 backups on the server at a time.
+#   When the 11th backup is pushed to for example Amazon S3, it will delete the oldest
+#   backup. Why would you want this? To avoid S3 from being expensive and otherwise
+#   to not overload your remote server's harddisk and practically fload it.
+
+
 
 
 # MySQL Adapter
@@ -42,8 +71,8 @@ mysql:
     access_key_id: my_access_key_id
     secret_access_key: my_secret_access_key
     bucket: my_bucket
-  #encrypt: my_secret_password # Uncomment me if you want to encrypt the backup
-  #keep_backups: 25 # Uncomment me if you want to automatically delete old backups
+  #encrypt: my_secret_password # Uncomment me if you want this functionality
+  #keep_backups: 25 # Uncomment me if you want this functionality
 
 
 # SQLite3 Adapter
@@ -56,8 +85,8 @@ sqlite3:
     access_key_id: my_access_key_id
     secret_access_key: my_secret_access_key
     bucket: my_bucket
-  #encrypt: my_secret_password # Uncomment me if you want to encrypt the backup
-  #keep_backups: 25 # Uncomment me if you want to automatically delete old backups
+  #encrypt: my_secret_password # Uncomment me if you want this functionality
+  #keep_backups: 25 # Uncomment me if you want this functionality
 
 
 # Asset Adapter
@@ -69,8 +98,8 @@ assets:
     access_key_id: my_access_key_id
     secret_access_key: my_secret_access_key
     bucket: my_bucket
-  #encrypt: my_secret_password # Uncomment me if you want to encrypt the backup
-  #keep_backups: 25 # Uncomment me if you want to automatically delete old backups
+  #encrypt: my_secret_password # Uncomment me if you want this functionality
+  #keep_backups: 25 # Uncomment me if you want this functionality
 
 # Custom Adapter
 # To run this adapter, execute the following rake task:
@@ -87,5 +116,5 @@ custom:
     access_key_id: my_access_key_id
     secret_access_key: my_secret_access_key
     bucket: my_bucket
-  #encrypt: my_secret_password # Uncomment me if you want to encrypt the backup
-  #keep_backups: 25 # Uncomment me if you want to automatically delete old backups
+  #encrypt: my_secret_password # Uncomment me if you want this functionality
+  #keep_backups: 25 # Uncomment me if you want this functionality
