@@ -91,6 +91,17 @@ Report it!
 http://github.com/meskyanichi/backup/issues
 
 
+=== Upcoming Feature(s)
+
+The ability to set the amount of backups you wish to keep stored.
+This will be configurable inside the .yml files.
+It'd look something like this:
+
+  keep_backups: 50
+
+When this is set, and the 51th backup gets stored, it will remove the oldest one from S3 or what ever other
+server you've set up to back up to.
+
 === Copyright
 
 Copyright (c) 2009 Michael van Rooijen | Final Creation. See LICENSE for details.
