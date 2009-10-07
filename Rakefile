@@ -6,9 +6,16 @@ begin
   Jeweler::Tasks.new do |gem|
     gem.name = "backup"
     gem.summary = %Q{Backup is a gem/plugin that enables you to very easily create backups and transfer these to Amazon S3 or another server with SSH.}
-    gem.description = %Q{Backup is a gem/plugin that enables you to very easily create backups and transfer these to Amazon S3 or another server with SSH.
-                        It currently supports MySQL, SQLite3 and basic Assets (documents, images, etc). The files will get tar'd / gzip'd and get a timestamp.
-                        After creation, these files can be transferred to either Amazon S3 or any remote server through SSH.}
+    gem.description = %Q{
+                          “Backup” is a RubyGem, written for Ruby on Rails. It's main purpose is to Backup any
+                          files to Amazon S3 or any remotely accessible server through SSH (SCP). It supports database
+                          and regular file backups. On top of that, it's extremely easy to set up. Backup will provide
+                          a generator script that will place all necessary files inside your Rails application.
+                          Two of which, are “yaml” configuration files. Using just these two files to configure a
+                          backup for database formats such as a MySQL, SQLite3 or any Assets folder.
+                          Setting up “Backup” takes only about a minute or two!
+                        }
+                        
     gem.email = "meskyan@gmail.com"
     gem.homepage = "http://github.com/meskyanichi/backup"
     gem.authors = ["meskyanichi"]
