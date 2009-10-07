@@ -40,9 +40,9 @@ namespace :backup do
     task :sqlite3 => :s3_config do
       @config = @config['sqlite3']
       Backup::Sqlite3.new({
-        :file => @config['file'],
-        :path => @config['path'],
-        :encrypt => @config['encrypt'],
+        :file     => @config['file'],
+        :path     => @config['path'],
+        :encrypt  => @config['encrypt'],
                 
         :use => :s3,
         :s3 => {
@@ -64,8 +64,8 @@ namespace :backup do
     task :assets => :s3_config do
       @config = @config['assets']
       Backup::Assets.new({
-        :path => @config['path'],
-        :encrypt => @config['encrypt'],
+        :path     => @config['path'],
+        :encrypt  => @config['encrypt'],
         
         :use => :s3,
         :s3 => {
@@ -117,7 +117,7 @@ namespace :backup do
         :file     => @config['file'],
         :path     => @config['path'],
         :command  => @config['command'],
-        :encrypt => @config['encrypt'],
+        :encrypt  => @config['encrypt'],
                 
         :use => :s3,
         :s3 => { 
