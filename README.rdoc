@@ -27,9 +27,25 @@ This looks basically the same as the other options, except that you will have to
 line'd shell command" to generate a sql dump file. Once you generate the file, Backup will take care of the rest
 of the (optional)archiving, compressing, encrypting and pushing to Amazon S3 or any remote server that supports SSH.
 
+
 === Encryption
 
 Backup also provides encryption. Adding a single line to one of the configuration files will enable encryption for your backups!
+This is what that line looks like:
+
+  encrypt: my_secret_password
+
+Now all backups will be encrypted with the specified password.
+
+
+=== Backup Cleaning
+
+Backup has the ability to clean up old backup files. If you don't feel the need to have more than 120 backups on your S3 account then you can easily specify so! It's as simple as adding this line to your configuration file. (or rather, uncommenting it)
+
+  keep_backups: 120 
+
+It will now automagically remove the oldest backup from for example, S3, when the 121st backup gets uploaded.
+
 
 == Why?
 
@@ -40,6 +56,7 @@ Backup also provides encryption. Adding a single line to one of the configuratio
 - I wanted it to support an additional (custom) adapter incase the database type isn't SQLite3 or MySQL
 - I wanted it to support some encryption
 - I wanted to be able to store my files on my private backup server and on Amazon S3
+- I wanted it to be able to automatically (and optionally) remove old backups to keep S3/backup server costs low
 
 ==== Setting up Backup takes me about 1-2 minutes and it's really easy!
 
@@ -88,17 +105,6 @@ Send me a message! Fork the project! Help out! :)
 Report it!
 http://github.com/meskyanichi/backup/issues
 
-
-=== Upcoming Feature(s)
-
-The ability to set the amount of backups you wish to keep stored.
-This will be configurable inside the .yml files.
-It'd look something like this:
-
-  keep_backups: 50
-
-When this is set, and the 51th backup gets stored, it will remove the oldest one from S3 or what ever other
-server you've set up to back up to.
 
 === Copyright
 
