@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{backup}
-  s.version = "1.0.0"
+  s.version = "1.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["meskyanichi"]
@@ -54,10 +54,7 @@ Gem::Specification.new do |s|
      "lib/backup/encrypt.rb",
      "lib/backup/transfer/base.rb",
      "lib/backup/transfer/s3.rb",
-     "lib/backup/transfer/ssh.rb",
-     "lib/tasks/backup/config.rake",
-     "lib/tasks/backup/s3.rake",
-     "lib/tasks/backup/ssh.rake"
+     "lib/backup/transfer/ssh.rb"
   ]
   s.homepage = %q{http://github.com/meskyanichi/backup}
   s.rdoc_options = ["--charset=UTF-8"]
@@ -70,17 +67,17 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::RubyGemsVersion) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<aws-s3>, [">= 0"])
-      s.add_runtime_dependency(%q<net-ssh>, [">= 0"])
-      s.add_runtime_dependency(%q<net-scp>, [">= 0"])
+      s.add_runtime_dependency(%q<aws-s3>, [">= 0.6.2"])
+      s.add_runtime_dependency(%q<net-ssh>, [">= 2.0.15"])
+      s.add_runtime_dependency(%q<net-scp>, [">= 1.0.2"])
     else
-      s.add_dependency(%q<aws-s3>, [">= 0"])
-      s.add_dependency(%q<net-ssh>, [">= 0"])
-      s.add_dependency(%q<net-scp>, [">= 0"])
+      s.add_dependency(%q<aws-s3>, [">= 0.6.2"])
+      s.add_dependency(%q<net-ssh>, [">= 2.0.15"])
+      s.add_dependency(%q<net-scp>, [">= 1.0.2"])
     end
   else
-    s.add_dependency(%q<aws-s3>, [">= 0"])
-    s.add_dependency(%q<net-ssh>, [">= 0"])
-    s.add_dependency(%q<net-scp>, [">= 0"])
+    s.add_dependency(%q<aws-s3>, [">= 0.6.2"])
+    s.add_dependency(%q<net-ssh>, [">= 2.0.15"])
+    s.add_dependency(%q<net-scp>, [">= 1.0.2"])
   end
 end
