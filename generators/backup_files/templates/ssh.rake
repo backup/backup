@@ -9,24 +9,48 @@ namespace :backup do
     desc 'Makes a backup from a MySQL database and transfers it through SSH (SCP).'
     task :mysql => :ssh_config do
       @config = @config['mysql']
-      Backup::Adapter::Mysql.new({
-        :adapter => 'mysql',
-        :mysql => {
-          :user     => @config['mysql_config']['user'],
-          :password => @config['mysql_config']['password'],
-          :database => @config['mysql_config']['database']
-        },
+      unless @config.is_a?(Array)
+        Backup::Adapter::Mysql.new({
+          :adapter => 'mysql',
+          :mysql => {
+            :user     => @config['mysql_config']['user'],
+            :password => @config['mysql_config']['password'],
+            :database => @config['mysql_config']['database']
+          },
         
-        :encrypt      => @config['encrypt'],
-        :keep_backups => @config['keep_backups'],
+          :encrypt      => @config['encrypt'],
+          :keep_backups => @config['keep_backups'],
         
-        :use => :ssh,
-        :ssh => {
-          :user => @config['ssh']['user'],
-          :ip   => @config['ssh']['ip'],
-          :path => @config['ssh']['path']
-        }
-      }).run
+          :use => :ssh,
+          :ssh => {
+            :user => @config['ssh']['user'],
+            :ip   => @config['ssh']['ip'],
+            :path => @config['ssh']['path']
+          }
+        }).run
+      else
+        @config.each do |config|
+          Backup::Adapter::Mysql.new({
+            :adapter => 'mysql',
+            :mysql => {
+              :user     => config['mysql_config']['user'],
+              :password => config['mysql_config']['password'],
+              :database => config['mysql_config']['database']
+            },
+
+            :encrypt      => config['encrypt'],
+            :keep_backups => config['keep_backups'],
+
+            :use => :ssh,
+            :ssh => {
+              :user => config['ssh']['user'],
+              :ip   => config['ssh']['ip'],
+              :path => config['ssh']['path']
+            }
+          }).run
+          sleep(1)
+        end
+      end
     end
 
     # => rake backup:ssh:sqlite3
@@ -38,20 +62,40 @@ namespace :backup do
     desc 'Makes a backup from a SQLite3 database and transfers it through SSH (SCP).'
     task :sqlite3 => :ssh_config do
       @config = @config['sqlite3']
-      Backup::Adapter::Sqlite3.new({
-        :adapter      => 'sqlite3',
-        :file         => @config['file'],
-        :path         => @config['path'],
-        :encrypt      => @config['encrypt'],
-        :keep_backups => @config['keep_backups'],
+      unless @config.is_a?(Array)
+        Backup::Adapter::Sqlite3.new({
+          :adapter      => 'sqlite3',
+          :file         => @config['file'],
+          :path         => @config['path'],
+          :encrypt      => @config['encrypt'],
+          :keep_backups => @config['keep_backups'],
         
-        :use => :ssh,
-        :ssh => {
-          :user => @config['ssh']['user'],
-          :ip   => @config['ssh']['ip'],
-          :path => @config['ssh']['path']
-        }
-      }).run
+          :use => :ssh,
+          :ssh => {
+            :user => @config['ssh']['user'],
+            :ip   => @config['ssh']['ip'],
+            :path => @config['ssh']['path']
+          }
+        }).run
+      else
+        @config.each do |config|
+          Backup::Adapter::Sqlite3.new({
+            :adapter      => 'sqlite3',
+            :file         => config['file'],
+            :path         => config['path'],
+            :encrypt      => config['encrypt'],
+            :keep_backups => config['keep_backups'],
+
+            :use => :ssh,
+            :ssh => {
+              :user => config['ssh']['user'],
+              :ip   => config['ssh']['ip'],
+              :path => config['ssh']['path']
+            }
+          }).run
+          sleep(1)
+        end
+      end
     end
     
     # => rake backup:ssh:assets
@@ -62,19 +106,38 @@ namespace :backup do
     desc 'Makes a backup from Assets and transfers it through SSH (SCP).'
     task :assets => :ssh_config do
       @config = @config['assets']
-      Backup::Adapter::Assets.new({
-        :adapter      => 'assets',
-        :path         => @config['path'],
-        :encrypt      => @config['encrypt'],
-        :keep_backups => @config['keep_backups'],
+      unless @config.is_a?(Array)
+        Backup::Adapter::Assets.new({
+          :adapter      => 'assets',
+          :path         => @config['path'],
+          :encrypt      => @config['encrypt'],
+          :keep_backups => @config['keep_backups'],
         
-        :use => :ssh,
-        :ssh => { 
-          :user => @config['ssh']['user'],
-          :ip   => @config['ssh']['ip'],
-          :path => @config['ssh']['path']
-        }
-      }).run
+          :use => :ssh,
+          :ssh => { 
+            :user => @config['ssh']['user'],
+            :ip   => @config['ssh']['ip'],
+            :path => @config['ssh']['path']
+          }
+        }).run
+      else
+        @config.each do |config|
+          Backup::Adapter::Assets.new({
+            :adapter      => 'assets',
+            :path         => config['path'],
+            :encrypt      => config['encrypt'],
+            :keep_backups => config['keep_backups'],
+
+            :use => :ssh,
+            :ssh => { 
+              :user => config['ssh']['user'],
+              :ip   => config['ssh']['ip'],
+              :path => config['ssh']['path']
+            }
+          }).run
+          sleep(1)
+        end
+      end
     end
     
     # => rake backup:ssh:custom
@@ -114,21 +177,42 @@ namespace :backup do
     desc 'Makes a backup from a Custom database and transfers it through SSH (SCP).'
     task :custom => :ssh_config do
       @config = @config['custom']
-      Backup::Adapter::Custom.new({
-        :adapter      => 'custom',
-        :file         => @config['file'],
-        :path         => @config['path'],
-        :command      => @config['command'],
-        :encrypt      => @config['encrypt'],
-        :keep_backups => @config['keep_backups'],
+      unless @config.is_a?(Array)
+        Backup::Adapter::Custom.new({
+          :adapter      => 'custom',
+          :file         => @config['file'],
+          :path         => @config['path'],
+          :command      => @config['command'],
+          :encrypt      => @config['encrypt'],
+          :keep_backups => @config['keep_backups'],
                 
-        :use => :ssh,
-        :ssh => { 
-          :user => @config['ssh']['user'],
-          :ip   => @config['ssh']['ip'],
-          :path => @config['ssh']['path']
-        }
-      }).run
+          :use => :ssh,
+          :ssh => { 
+            :user => @config['ssh']['user'],
+            :ip   => @config['ssh']['ip'],
+            :path => @config['ssh']['path']
+          }
+        }).run
+      else
+        @config.each do |config|
+          Backup::Adapter::Custom.new({
+            :adapter      => 'custom',
+            :file         => config['file'],
+            :path         => config['path'],
+            :command      => config['command'],
+            :encrypt      => config['encrypt'],
+            :keep_backups => config['keep_backups'],
+
+            :use => :ssh,
+            :ssh => { 
+              :user => config['ssh']['user'],
+              :ip   => config['ssh']['ip'],
+              :path => config['ssh']['path']
+            }
+          }).run
+          sleep(1)
+        end
+      end
     end
   end
 end

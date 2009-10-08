@@ -1,33 +1,22 @@
+def generate_yaml(config_file)
+  File.open(File.join(RAILS_ROOT, 'config', 'backup', config_file), 'r') do |file|
+    tmp_file = File.new(File.join(RAILS_ROOT, 'config', 'backup', 'tmp.yml'), 'w+')
+    tmp_file.write(file.read.gsub(/:rails_root/, RAILS_ROOT))
+    tmp_file.close
+  end      
+  yaml_file = YAML.load_file(File.join(RAILS_ROOT, 'config', 'backup', 'tmp.yml'))
+  File.delete(File.join(RAILS_ROOT, 'config', 'backup', 'tmp.yml'))
+  return yaml_file
+end
+
 namespace :backup do
 
   task :s3_config => :environment do
-    @config = YAML.load_file(File.join(RAILS_ROOT, 'config', 'backup', 's3.yml'))
-    
-    @config.each do |key, value|
-      value.each do |k, v|
-        if @config[key][k].is_a?(String)
-          @config[key][k] = @config[key][k][v].gsub(/:rails_root/, RAILS_ROOT)
-        end     
-        if @config[key][k].is_a?(Array)
-          @config[key][k].map! {|string| string.gsub(/:rails_root/, RAILS_ROOT)}
-        end
-      end
-    end
+    @config = generate_yaml('s3.yml')
   end
   
   task :ssh_config => :environment do
-    @config = YAML.load_file(File.join(RAILS_ROOT, 'config', 'backup', 'ssh.yml'))
-    
-    @config.each do |key, value|
-      value.each do |k, v|
-        if @config[key][k].is_a?(String)
-          @config[key][k] = @config[key][k][v].gsub(/:rails_root/, RAILS_ROOT)
-        end     
-        if @config[key][k].is_a?(Array)
-          @config[key][k].map! {|string| string.gsub(/:rails_root/, RAILS_ROOT)}
-        end
-      end
-    end
+    @config = generate_yaml('ssh.yml')
   end
   
 end

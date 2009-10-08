@@ -11,24 +11,48 @@ namespace :backup do
     desc 'Makes a backup from a MySQL database and transfers it to Amazon S3.'
     task :mysql => :s3_config do
       @config = @config['mysql']
-      Backup::Adapter::Mysql.new({
-        :adapter    => 'mysql',
-        :mysql => {
-          :user     => @config['mysql_config']['user'],
-          :password => @config['mysql_config']['password'],
-          :database => @config['mysql_config']['database']
-        },
+      unless @config.is_a?(Array)
+        Backup::Adapter::Mysql.new({
+          :adapter    => 'mysql',
+          :mysql => {
+            :user     => @config['mysql_config']['user'],
+            :password => @config['mysql_config']['password'],
+            :database => @config['mysql_config']['database']
+          },
         
-        :encrypt      => @config['encrypt'],
-        :keep_backups => @config['keep_backups'],
+          :encrypt      => @config['encrypt'],
+          :keep_backups => @config['keep_backups'],
         
-        :use => :s3,
-        :s3 => {
-          :access_key_id      => @config['s3']['access_key_id'],
-          :secret_access_key  => @config['s3']['secret_access_key'],
-          :bucket             => @config['s3']['bucket']
-        }
-      }).run
+          :use => :s3,
+          :s3 => {
+            :access_key_id      => @config['s3']['access_key_id'],
+            :secret_access_key  => @config['s3']['secret_access_key'],
+            :bucket             => @config['s3']['bucket']
+          }
+        }).run
+      else
+        @config.each do |config|
+          Backup::Adapter::Mysql.new({
+            :adapter    => 'mysql',
+            :mysql => {
+              :user     => config['mysql_config']['user'],
+              :password => config['mysql_config']['password'],
+              :database => config['mysql_config']['database']
+            },
+
+            :encrypt      => config['encrypt'],
+            :keep_backups => config['keep_backups'],
+
+            :use => :s3,
+            :s3 => {
+              :access_key_id      => config['s3']['access_key_id'],
+              :secret_access_key  => config['s3']['secret_access_key'],
+              :bucket             => config['s3']['bucket']
+            }
+          }).run
+          sleep(1)
+        end
+      end
     end
     
     # => rake backup:s3:sqlite3
@@ -41,20 +65,40 @@ namespace :backup do
     desc 'Makes a backup from a SQLite3 database and transfers it to Amazon S3.'
     task :sqlite3 => :s3_config do
       @config = @config['sqlite3']
-      Backup::Adapter::Sqlite3.new({
-        :adapter      => 'sqlite3',
-        :file         => @config['file'],
-        :path         => @config['path'],
-        :encrypt      => @config['encrypt'],
-        :keep_backups => @config['keep_backups'],
+      unless @config.is_a?(Array)
+        Backup::Adapter::Sqlite3.new({
+          :adapter      => 'sqlite3',
+          :file         => @config['file'],
+          :path         => @config['path'],
+          :encrypt      => @config['encrypt'],
+          :keep_backups => @config['keep_backups'],
         
-        :use => :s3,
-        :s3 => {
-          :access_key_id      => @config['s3']['access_key_id'],
-          :secret_access_key  => @config['s3']['secret_access_key'],
-          :bucket             => @config['s3']['bucket']
-        }
-      }).run
+          :use => :s3,
+          :s3 => {
+            :access_key_id      => @config['s3']['access_key_id'],
+            :secret_access_key  => @config['s3']['secret_access_key'],
+            :bucket             => @config['s3']['bucket']
+          }
+        }).run
+      else
+        @config.each do |config|
+          Backup::Adapter::Sqlite3.new({
+            :adapter      => 'sqlite3',
+            :file         => config['file'],
+            :path         => config['path'],
+            :encrypt      => config['encrypt'],
+            :keep_backups => config['keep_backups'],
+
+            :use => :s3,
+            :s3 => {
+              :access_key_id      => config['s3']['access_key_id'],
+              :secret_access_key  => config['s3']['secret_access_key'],
+              :bucket             => config['s3']['bucket']
+            }
+          }).run
+          sleep(1)
+        end
+      end
     end
     
     # => rake backup:s3:assets
@@ -67,19 +111,38 @@ namespace :backup do
     desc 'Makes a backup from Assets and transfers it to Amazon S3.'
     task :assets => :s3_config do
       @config = @config['assets']
-      Backup::Adapter::Assets.new({
-        :adapter      => 'assets',
-        :path         => @config['path'],
-        :encrypt      => @config['encrypt'],
-        :keep_backups => @config['keep_backups'],
+      unless @config.is_a?(Array)
+        Backup::Adapter::Assets.new({
+          :adapter      => 'assets',
+          :path         => @config['path'],
+          :encrypt      => @config['encrypt'],
+          :keep_backups => @config['keep_backups'],
         
-        :use => :s3,
-        :s3 => {
-          :access_key_id      => @config['s3']['access_key_id'],
-          :secret_access_key  => @config['s3']['secret_access_key'],
-          :bucket             => @config['s3']['bucket']
-        }
-      }).run
+          :use => :s3,
+          :s3 => {
+            :access_key_id      => @config['s3']['access_key_id'],
+            :secret_access_key  => @config['s3']['secret_access_key'],
+            :bucket             => @config['s3']['bucket']
+          }
+        }).run
+      else
+        @config.each do |config|
+          Backup::Adapter::Assets.new({
+            :adapter      => 'assets',
+            :path         => config['path'],
+            :encrypt      => config['encrypt'],
+            :keep_backups => config['keep_backups'],
+
+            :use => :s3,
+            :s3 => {
+              :access_key_id      => config['s3']['access_key_id'],
+              :secret_access_key  => config['s3']['secret_access_key'],
+              :bucket             => config['s3']['bucket']
+            }
+          }).run
+          sleep(1)
+        end
+      end
     end
     
     # => rake backup:s3:custom
@@ -119,21 +182,42 @@ namespace :backup do
     desc 'Makes a backup from a Custom database and transfers it to Amazon S3.'
     task :custom => :s3_config do
       @config = @config['custom']
-      Backup::Adapter::Custom.new({
-        :adapter      => 'custom',
-        :file         => @config['file'],
-        :path         => @config['path'],
-        :command      => @config['command'],
-        :encrypt      => @config['encrypt'],
-        :keep_backups => @config['keep_backups'],
+      unless @config.is_a?(Array)
+        Backup::Adapter::Custom.new({
+          :adapter      => 'custom',
+          :file         => @config['file'],
+          :path         => @config['path'],
+          :command      => @config['command'],
+          :encrypt      => @config['encrypt'],
+          :keep_backups => @config['keep_backups'],
                 
-        :use => :s3,
-        :s3 => { 
-          :access_key_id      => @config['s3']['access_key_id'],
-          :secret_access_key  => @config['s3']['secret_access_key'],
-          :bucket             => @config['s3']['bucket']
-        }
-      }).run
+          :use => :s3,
+          :s3 => { 
+            :access_key_id      => @config['s3']['access_key_id'],
+            :secret_access_key  => @config['s3']['secret_access_key'],
+            :bucket             => @config['s3']['bucket']
+          }
+        }).run
+      else
+        @config.each do |config|
+          Backup::Adapter::Custom.new({
+            :adapter      => 'custom',
+            :file         => config['file'],
+            :path         => config['path'],
+            :command      => config['command'],
+            :encrypt      => config['encrypt'],
+            :keep_backups => config['keep_backups'],
+                
+            :use => :s3,
+            :s3 => { 
+              :access_key_id      => config['s3']['access_key_id'],
+              :secret_access_key  => config['s3']['secret_access_key'],
+              :bucket             => config['s3']['bucket']
+            }
+          }).run
+          sleep(1)
+        end
+      end
     end
   end
 end
