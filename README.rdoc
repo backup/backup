@@ -85,6 +85,11 @@ http://wiki.github.com/meskyanichi/backup/requirements
 http://wiki.github.com/meskyanichi/backup/automatic-backups
 
 
+=== Capistrano Recipes
+
+http://wiki.github.com/meskyanichi/backup/capistrano-recipes
+
+
 === Resources
 
 http://wiki.github.com/meskyanichi/backup/resources
