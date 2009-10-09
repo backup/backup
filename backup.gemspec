@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{backup}
-  s.version = "1.3.0"
+  s.version = "1.3.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["meskyanichi"]
@@ -38,6 +38,7 @@ Gem::Specification.new do |s|
      "generators/backup_files/templates/db.rake",
      "generators/backup_files/templates/s3.rake",
      "generators/backup_files/templates/s3.yml",
+     "generators/backup_files/templates/setup.rake",
      "generators/backup_files/templates/ssh.rake",
      "generators/backup_files/templates/ssh.yml",
      "lib/backup.rb",
