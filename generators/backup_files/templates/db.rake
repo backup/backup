@@ -22,15 +22,15 @@ namespace :backup do
       desc 'Destroys S3 Backup database records; Physical files WILL be deleted as well.'
       task :s3 => :s3_config do
         puts "Removing all backups from S3.."
-        ['mysql', 'sqlite3', 'assets', 'custom'].each do |adapter|
+        @adapters.each do |adapter|
           if @config[adapter]
             unless @config[adapter].is_a?(Array)
               puts "\n\n-- Processing #{adapter} backups.. --"
-              Backup::BackupRecord::S3.destroy_all_backups(adapter, @config[adapter])
+              Backup::BackupRecord::S3.destroy_all_backups(adapter, @config[adapter], 0)
             else
               puts "\n\n-- Processing #{adapter} backups.. --"
-              @config[adapter].each do |config|
-                Backup::BackupRecord::S3.destroy_all_backups(adapter, config)  
+              @config[adapter].each_with_index do |config, index|
+                Backup::BackupRecord::S3.destroy_all_backups(adapter, config, index)  
               end
             end
           end
@@ -41,15 +41,15 @@ namespace :backup do
       desc 'Destroys SSH Backup database records; Physical files WILL be deleted as well.'
       task :ssh => :ssh_config do
         puts "Removing all backups from remote server through SSH.."
-        ['mysql', 'sqlite3', 'assets', 'custom'].each do |adapter|
+        @adapters.each do |adapter|
           if @config[adapter]
             unless @config[adapter].is_a?(Array)
               puts "\n\n-- Processing #{adapter} backups.. --"
-              Backup::BackupRecord::SSH.destroy_all_backups(adapter, @config[adapter])
+              Backup::BackupRecord::SSH.destroy_all_backups(adapter, @config[adapter], 0)
             else
               puts "\n\n-- Processing #{adapter} backups.. --"
-              @config[adapter].each do |config|
-                Backup::BackupRecord::SSH.destroy_all_backups(adapter, config)  
+              @config[adapter].each_with_index do |config, index|
+                Backup::BackupRecord::SSH.destroy_all_backups(adapter, config, index)  
               end
             end
           end

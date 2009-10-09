@@ -30,12 +30,13 @@ module Backup
         self.backup_path  = options[:ssh][:path]
         self.keep_backups = options[:keep_backups]
         self.adapter      = options[:adapter]
+        self.index        = options[:index]
         self.ip           = options[:ssh][:ip]
         self.user         = options[:ssh][:user]
       end
 
-      def self.destroy_all_backups(adapter, options)
-        backups = Backup::BackupRecord::SSH.all(:conditions => {:adapter => adapter})
+      def self.destroy_all_backups(adapter, options, index)
+        backups = Backup::BackupRecord::SSH.all(:conditions => {:adapter => adapter, :index => index})
         Net::SSH.start(options['ssh']['ip'], options['ssh']['user']) do |ssh|
           # Loop through all backups that should be destroyed and remove them from remote server.
           backups.each do |backup|
@@ -53,7 +54,7 @@ module Backup
         # First all backups will be fetched. 
         def destroy_old_backups
           if keep_backups.is_a?(Integer)
-            backups = Backup::BackupRecord::SSH.all(:conditions => {:adapter => adapter})
+            backups = Backup::BackupRecord::SSH.all(:conditions => {:adapter => adapter, :index => index})
             backups_to_destroy = Array.new
             backups.each_with_index do |backup, index|
               if index >= keep_backups then

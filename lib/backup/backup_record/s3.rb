@@ -30,12 +30,13 @@ module Backup
         self.bucket       = options[:s3][:bucket]
         self.keep_backups = options[:keep_backups]
         self.adapter      = options[:adapter]
+        self.index        = options[:index]
       end
       
-      def self.destroy_all_backups(adapter, options)
+      def self.destroy_all_backups(adapter, options, index)
         s3 = Backup::Connection::S3.new(options)
         s3.connect
-        backups = Backup::BackupRecord::S3.all(:conditions => {:adapter => adapter})
+        backups = Backup::BackupRecord::S3.all(:conditions => {:adapter => adapter, :index => index})
         backups.each do |backup|
           puts "Destroying backup: #{backup.backup_file}.."
           s3.destroy(backup.backup_file, backup.bucket)
@@ -50,7 +51,7 @@ module Backup
         # First all backups will be fetched. 
         def destroy_old_backups
           if keep_backups.is_a?(Integer)
-            backups = Backup::BackupRecord::S3.all(:conditions => {:adapter => adapter})
+            backups = Backup::BackupRecord::S3.all(:conditions => {:adapter => adapter, :index => index})
             backups_to_destroy = Array.new
             backups.each_with_index do |backup, index|
               if index >= keep_backups then

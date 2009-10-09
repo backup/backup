@@ -12,11 +12,13 @@ end
 namespace :backup do
 
   task :s3_config => :environment do
-    @config = generate_yaml('s3.yml')
+    @config   = generate_yaml('s3.yml')
+    @adapters = ['mysql', 'sqlite3', 'assets', 'custom']
   end
   
   task :ssh_config => :environment do
     @config = generate_yaml('ssh.yml')
+    @adapters = ['mysql', 'sqlite3', 'assets', 'custom']
   end
   
 end

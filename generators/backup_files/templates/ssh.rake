@@ -11,7 +11,8 @@ namespace :backup do
       @config = @config['mysql']
       unless @config.is_a?(Array)
         Backup::Adapter::Mysql.new({
-          :adapter => 'mysql',
+          :adapter  => 'mysql',
+          :index    => 0,
           :mysql => {
             :user     => @config['mysql_config']['user'],
             :password => @config['mysql_config']['password'],
@@ -29,9 +30,10 @@ namespace :backup do
           }
         }).run
       else
-        @config.each do |config|
+        @config.each_with_index do |config, index|
           Backup::Adapter::Mysql.new({
             :adapter => 'mysql',
+            :index   => index,
             :mysql => {
               :user     => config['mysql_config']['user'],
               :password => config['mysql_config']['password'],
@@ -65,6 +67,7 @@ namespace :backup do
       unless @config.is_a?(Array)
         Backup::Adapter::Sqlite3.new({
           :adapter      => 'sqlite3',
+          :index        => 0,
           :file         => @config['file'],
           :path         => @config['path'],
           :encrypt      => @config['encrypt'],
@@ -78,9 +81,10 @@ namespace :backup do
           }
         }).run
       else
-        @config.each do |config|
+        @config.each_with_index do |config, index|
           Backup::Adapter::Sqlite3.new({
             :adapter      => 'sqlite3',
+            :index        => index,
             :file         => config['file'],
             :path         => config['path'],
             :encrypt      => config['encrypt'],
@@ -109,6 +113,7 @@ namespace :backup do
       unless @config.is_a?(Array)
         Backup::Adapter::Assets.new({
           :adapter      => 'assets',
+          :index        => 0,
           :path         => @config['path'],
           :encrypt      => @config['encrypt'],
           :keep_backups => @config['keep_backups'],
@@ -121,9 +126,10 @@ namespace :backup do
           }
         }).run
       else
-        @config.each do |config|
+        @config.each_with_index do |config, index|
           Backup::Adapter::Assets.new({
             :adapter      => 'assets',
+            :index        => index,
             :path         => config['path'],
             :encrypt      => config['encrypt'],
             :keep_backups => config['keep_backups'],
@@ -180,6 +186,7 @@ namespace :backup do
       unless @config.is_a?(Array)
         Backup::Adapter::Custom.new({
           :adapter      => 'custom',
+          :index        => 0,
           :file         => @config['file'],
           :path         => @config['path'],
           :command      => @config['command'],
@@ -194,9 +201,10 @@ namespace :backup do
           }
         }).run
       else
-        @config.each do |config|
+        @config.each_with_index do |config, index|
           Backup::Adapter::Custom.new({
             :adapter      => 'custom',
+            :index        => index,
             :file         => config['file'],
             :path         => config['path'],
             :command      => config['command'],
