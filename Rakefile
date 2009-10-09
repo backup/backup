@@ -18,7 +18,7 @@ begin
                         
     gem.email = "meskyan@gmail.com"
     gem.homepage = "http://github.com/meskyanichi/backup"
-    gem.authors = ["meskyanichi"]
+    gem.authors = ["Michael van Rooijen"]
     gem.add_dependency "aws-s3", ">= 0.6.2"
     gem.add_dependency "net-ssh", ">= 2.0.15"
     gem.add_dependency "net-scp", ">= 1.0.2"
