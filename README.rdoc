@@ -75,9 +75,9 @@ http://wiki.github.com/meskyanichi/backup/installation
 http://wiki.github.com/meskyanichi/backup/getting-started
 
 
-=== Requirements
+=== Rake Tasks
 
-http://wiki.github.com/meskyanichi/backup/requirements
+http://wiki.github.com/meskyanichi/backup/rake-tasks
 
 
 === Automatic Backups
@@ -88,6 +88,26 @@ http://wiki.github.com/meskyanichi/backup/automatic-backups
 === Capistrano Recipes
 
 http://wiki.github.com/meskyanichi/backup/capistrano-recipes
+
+
+=== Capistrano, Whenever!
+
+http://wiki.github.com/meskyanichi/backup/capistrano-whenever
+
+
+=== Understanding "The Backup Database"
+
+http://wiki.github.com/meskyanichi/backup/the-backup-database
+
+
+=== Trouble Shooting
+
+http://wiki.github.com/meskyanichi/backup/troubleshooting
+
+
+=== Requirements
+
+http://wiki.github.com/meskyanichi/backup/requirements
 
 
 === Resources
