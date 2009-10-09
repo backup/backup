@@ -22,11 +22,27 @@
 
 - Custom
 
-I built in a simple class (called: Custom) that will allow you to manually create a SQL dump using a shell command.
-This looks basically the same as the other options, except that you will have to write (probably) only a "single
-line'd shell command" to generate a sql dump file. Once you generate the file, Backup will take care of the rest
-of the (optional)archiving, compressing, encrypting and pushing to Amazon S3 or any remote server that supports SSH.
+Custom enables you to, regardless whether "Backup" supports your database type or not, to still enable you to make backups and benefit from the other features!
+There is just one thing you must do yourself inside one of the configuration files that Backup provides, and that is (assuming you know how to create a SQL dump through the command line for your database type), to actually create that command. If you don't how, you can probably find out how when searching through "google". Usually, it takes just "one line" to make a SQL dump, regardless of what database type we're talking about. So now, if you know that particular command to generate that SQL dump for your database, you're practically set to benefit from "Backup"!
 
+==== Again, whether "Backup" has an adapter that supports your database or not,
+==== if you are able to generate the SQL dump through command line, you will still benefit from the following:
+
+- Backup Archiving
+- Backup Compression
+- Backup Encryption (see below)
+- Backup Cleaning (see below)
+- Backup Transfer to S3
+- Backup Transfer through SSH(SCP) to any remote server
+
+The only difference is that you now have to know how to produce a SQL dump yourself. Here's an example of the PostgreSQL command:
+
+  pg_dump -U {user-name} {source_db} -f {dumpfilename.sql}
+
+So, after you experimented using the command you found, and see it works, you just copy that 'working command' inside the configuration files in a special section,
+and you're set to use it with "Backup" and benefit from the other features!
+
+ 
 
 === Encryption
 
@@ -54,7 +70,9 @@ It will now automagically remove the oldest backup from for example, S3, when th
 - I wanted it to take less than 2 minutes to set up 
 - I wanted it to support (AT LEAST) both SQLite3 as well as MySQL
 - I wanted it to support an additional (custom) adapter incase the database type isn't SQLite3 or MySQL
-- I wanted it to support some encryption
+- I wanted it to support compression
+- I wanted it to support archiving
+- I wanted it to support encryption
 - I wanted to be able to store my files on my private backup server and on Amazon S3
 - I wanted it to be able to automatically (and optionally) remove old backups to keep S3/backup server costs low
 
