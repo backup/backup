@@ -17,10 +17,13 @@ class BackupFilesGenerator < Rails::Generator::Base
       # Generate the Rake Tasks
       m.directory "lib/tasks"
       m.directory "lib/tasks/backup"
-      m.file      "config.rake",  "lib/tasks/backup/config.rake"
-      m.file      "s3.rake",      "lib/tasks/backup/s3.rake"
-      m.file      "ssh.rake",     "lib/tasks/backup/ssh.rake"
-      m.file      "db.rake",      "lib/tasks/backup/db.rake"
+      m.directory "lib/tasks/backup/files"
+      m.file      "config.rake",    "lib/tasks/backup/config.rake"
+      m.file      "s3.rake",        "lib/tasks/backup/s3.rake"
+      m.file      "ssh.rake",       "lib/tasks/backup/ssh.rake"
+      m.file      "db.rake",        "lib/tasks/backup/db.rake"
+      m.file      "setup.rake",     "lib/tasks/backup/setup.rake"
+      m.file      "backup.sqlite3", "lib/tasks/backup/files/backup.sqlite3"
       
       # Generate the YAML files
       m.directory "config/backup"
