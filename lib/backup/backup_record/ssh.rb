@@ -34,15 +34,24 @@ module Backup
         self.ip           = options[:ssh][:ip]
         self.user         = options[:ssh][:user]
       end
-
+      
+      # This will only be triggered by the rake task
+      # rake backup:db:destroy:ssh
+      # 
+      # This will loop through all the configured adapters
+      # and destroy all "Backup" database records for the
+      # SSH table and delete all backed up files from the
+      # remote server on which they are stored.
       def self.destroy_all_backups(adapter, options, index)
         backups = Backup::BackupRecord::SSH.all(:conditions => {:adapter => adapter, :index => index})
-        Net::SSH.start(options['ssh']['ip'], options['ssh']['user']) do |ssh|
-          # Loop through all backups that should be destroyed and remove them from remote server.
-          backups.each do |backup|
-            puts "Destroying old backup: #{backup.backup_file}.."
-            ssh.exec("rm #{File.join(backup.backup_path, backup.backup_file)}")
-            backup.destroy
+        unless backups.empty?
+          Net::SSH.start(options['ssh']['ip'], options['ssh']['user']) do |ssh|
+            # Loop through all backups that should be destroyed and remove them from remote server.
+            backups.each do |backup|
+              puts "Destroying old backup: #{backup.backup_file}.."
+              ssh.exec("rm #{File.join(backup.backup_path, backup.backup_file)}")
+              backup.destroy
+            end
           end
         end
       end

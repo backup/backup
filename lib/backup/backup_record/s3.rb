@@ -33,14 +33,23 @@ module Backup
         self.index        = options[:index]
       end
       
+      # This will only be triggered by the rake task
+      # rake backup:db:destroy:s3
+      # 
+      # This will loop through all the configured adapters
+      # and destroy all "Backup" database records for the
+      # S3 table and delete all backed up files from the
+      # Amazon S3 server.
       def self.destroy_all_backups(adapter, options, index)
-        s3 = Backup::Connection::S3.new(options)
-        s3.connect
         backups = Backup::BackupRecord::S3.all(:conditions => {:adapter => adapter, :index => index})
-        backups.each do |backup|
-          puts "Destroying backup: #{backup.backup_file}.."
-          s3.destroy(backup.backup_file, backup.bucket)
-          backup.destroy
+        unless backups.empty?
+          s3 = Backup::Connection::S3.new(options)
+          s3.connect
+          backups.each do |backup|
+            puts "Destroying backup: #{backup.backup_file}.."
+            s3.destroy(backup.backup_file, backup.bucket)
+            backup.destroy
+          end
         end
       end
       
