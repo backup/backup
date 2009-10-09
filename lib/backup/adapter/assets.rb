@@ -9,7 +9,7 @@ module Backup
     
       # Initialize the process
       # Executing multiple processes
-      #
+      # 
       # - Archive
       #   Archives the specified folder to a .tar
       # - Compress
