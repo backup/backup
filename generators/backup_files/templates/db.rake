@@ -25,17 +25,17 @@ namespace :backup do
         @adapters.each do |adapter|
           if @config[adapter]
             unless @config[adapter].is_a?(Array)
-              puts "\n\n-- Processing #{adapter} backups.. --"
+              puts "\n\n-- Processing #{adapter} backups --"
               Backup::BackupRecord::S3.destroy_all_backups(adapter, @config[adapter], 0)
             else
-              puts "\n\n-- Processing #{adapter} backups.. --"
+              puts "\n\n-- Processing #{adapter} backups --"
               @config[adapter].each_with_index do |config, index|
                 Backup::BackupRecord::S3.destroy_all_backups(adapter, config, index)  
               end
             end
           end
         end
-        puts "\n\nAll S3 backups destroyed!"
+        puts "\n\nAll S3 backups destroyed!\n\n"
       end
       
       desc 'Destroys SSH Backup database records; Physical files WILL be deleted as well.'
@@ -44,17 +44,17 @@ namespace :backup do
         @adapters.each do |adapter|
           if @config[adapter]
             unless @config[adapter].is_a?(Array)
-              puts "\n\n-- Processing #{adapter} backups.. --"
+              puts "\n\n-- Processing #{adapter} backups --"
               Backup::BackupRecord::SSH.destroy_all_backups(adapter, @config[adapter], 0)
             else
-              puts "\n\n-- Processing #{adapter} backups.. --"
+              puts "\n\n-- Processing #{adapter} backups --"
               @config[adapter].each_with_index do |config, index|
                 Backup::BackupRecord::SSH.destroy_all_backups(adapter, config, index)  
               end
             end
           end
         end
-        puts "All backups from remote server destroyed!"
+        puts "\n\nAll backups from remote server destroyed!\n\n"
       end
       
     end
