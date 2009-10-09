@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{backup}
-  s.version = "1.2.0"
+  s.version = "1.2.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["meskyanichi"]
-  s.date = %q{2009-10-08}
+  s.date = %q{2009-10-09}
   s.description = %q{
                           “Backup” is a RubyGem, written for Ruby on Rails. It's main purpose is to Backup any
                           files to Amazon S3 or any remotely accessible server through SSH (SCP). It supports database
