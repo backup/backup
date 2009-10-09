@@ -3,6 +3,8 @@ module Backup
     class S3 < Backup::Connection::Base
       
       def initialize(options = {})
+        options.symbolize_keys!
+        options[:s3].symbolize_keys!
         super(options)
       end
       

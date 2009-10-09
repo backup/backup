@@ -34,6 +34,18 @@ module Backup
         self.user         = options[:ssh][:user]
       end
 
+      def self.destroy_all_backups(adapter, options)
+        backups = Backup::BackupRecord::SSH.all(:conditions => {:adapter => adapter})
+        Net::SSH.start(options['ssh']['ip'], options['ssh']['user']) do |ssh|
+          # Loop through all backups that should be destroyed and remove them from remote server.
+          backups.each do |backup|
+            puts "Destroying old backup: #{backup.backup_file}.."
+            ssh.exec("rm #{File.join(backup.backup_path, backup.backup_file)}")
+            backup.destroy
+          end
+        end
+      end
+
       private
         
         # Destroys backups when the backup limit has been reached
@@ -52,7 +64,7 @@ module Backup
             if backups_to_destroy
               # Establish a connection with the remote server through SSH
               Net::SSH.start(ip, user) do |ssh|
-                # Loop through all backups that should be destroyed and remove them from S3.
+                # Loop through all backups that should be destroyed and remove them from remote server.
                 backups_to_destroy.each do |backup|
                   puts "Destroying old backup: #{backup.backup_file}.."
                   ssh.exec("rm #{File.join(backup.backup_path, backup.backup_file)}")

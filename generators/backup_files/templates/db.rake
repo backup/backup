@@ -1,13 +1,6 @@
 namespace :backup do
   namespace :db do
     namespace :truncate do
-
-      desc 'Truncates all the Backup database records; Physical files WILL NOT be deleted.'
-      task :all => :environment do
-        puts "Truncating All!"
-        Backup::BackupRecord::S3.destroy_all
-        Backup::BackupRecord::SSH.destroy_all
-      end
       
       desc 'Truncates the S3 Backup database records; Physical files WILL NOT be deleted from S3.'
       task :s3 => :environment do
@@ -23,27 +16,47 @@ namespace :backup do
       
     end
 
-=begin
+
     namespace :destroy do
-      
-      desc 'Destroys all Backup database records; Physical files WILL be deleted as well.'
-      task :all => :environment do
-        Backup::BackupRecord::S3.destroy_all_backups
-        Backup::BackupRecord::SSH.destroy_all_backups
-      end
       
       desc 'Destroys S3 Backup database records; Physical files WILL be deleted as well.'
       task :s3 => :s3_config do
-        Backup::BackupRecord::S3.destroy_all_backups
+        puts "Removing all backups from S3.."
+        ['mysql', 'sqlite3', 'assets', 'custom'].each do |adapter|
+          if @config[adapter]
+            unless @config[adapter].is_a?(Array)
+              puts "\n\n-- Processing #{adapter} backups.. --"
+              Backup::BackupRecord::S3.destroy_all_backups(adapter, @config[adapter])
+            else
+              puts "\n\n-- Processing #{adapter} backups.. --"
+              @config[adapter].each do |config|
+                Backup::BackupRecord::S3.destroy_all_backups(adapter, config)  
+              end
+            end
+          end
+        end
+        puts "\n\nAll S3 backups destroyed!"
       end
       
       desc 'Destroys SSH Backup database records; Physical files WILL be deleted as well.'
       task :ssh => :ssh_config do
-        Backup::BackupRecord::SSH.destroy_all_backups
+        puts "Removing all backups from remote server through SSH.."
+        ['mysql', 'sqlite3', 'assets', 'custom'].each do |adapter|
+          if @config[adapter]
+            unless @config[adapter].is_a?(Array)
+              puts "\n\n-- Processing #{adapter} backups.. --"
+              Backup::BackupRecord::SSH.destroy_all_backups(adapter, @config[adapter])
+            else
+              puts "\n\n-- Processing #{adapter} backups.. --"
+              @config[adapter].each do |config|
+                Backup::BackupRecord::SSH.destroy_all_backups(adapter, config)  
+              end
+            end
+          end
+        end
+        puts "All backups from remote server destroyed!"
       end
       
     end
-=end
-
   end
 end

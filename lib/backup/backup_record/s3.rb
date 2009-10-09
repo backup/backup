@@ -32,16 +32,15 @@ module Backup
         self.adapter      = options[:adapter]
       end
       
-      def self.destroy_all_backups(options)
+      def self.destroy_all_backups(adapter, options)
         s3 = Backup::Connection::S3.new(options)
         s3.connect
-        backups = Backup::BackupRecord::S3.all
+        backups = Backup::BackupRecord::S3.all(:conditions => {:adapter => adapter})
         backups.each do |backup|
           puts "Destroying backup: #{backup.backup_file}.."
           s3.destroy(backup.backup_file, backup.bucket)
           backup.destroy
         end
-        puts "All S3 Backups Destroyed!"
       end
       
       private
