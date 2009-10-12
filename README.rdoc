@@ -74,7 +74,7 @@ It will now automagically remove the oldest backup from for example, S3, when th
 - I wanted it to support archiving
 - I wanted it to support encryption
 - I wanted to be able to store my files on my private backup server and on Amazon S3
-- I wanted it to be able to automatically (and optionally) remove old backups to keep S3/backup server costs low
+- I wanted it to be able to automatically remove old backups to keep S3/backup server costs low
 
 ==== Setting up Backup takes me about 1-2 minutes and it's really easy!
 
