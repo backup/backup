@@ -16,16 +16,19 @@ module Backup
       #   Encrypts the backup file
       # - Transfer
       #   Initializes the transfer to either S3 or using SSH
-      # - Records
+      # - Record
       #   Records the Backup Data to the Backup SQLite3 database
       # - Remove Temp Files
       #   Removes temporary files after the process is complete
       def run
-        compress
-        encrypt
-        transfer
-        record
-        remove_temp_files
+        begin
+          compress
+          encrypt
+          transfer
+          record
+        ensure
+          remove_temp_files
+        end
       end
     
       private
