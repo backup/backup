@@ -5,19 +5,15 @@
 
 Gem::Specification.new do |s|
   s.name = %q{backup}
-  s.version = "1.3.4"
+  s.version = "2.0.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Michael van Rooijen"]
-  s.date = %q{2009-11-08}
+  s.date = %q{2009-11-30}
   s.description = %q{
-                          “Backup” is a RubyGem, written for Ruby on Rails. It's main purpose is to Backup any
-                          files to Amazon S3 or any remotely accessible server through SSH (SCP). It supports database
-                          and regular file backups. On top of that, it's extremely easy to set up. Backup will provide
-                          a generator script that will place all necessary files inside your Rails application.
-                          Two of which, are “yaml” configuration files. Using just these two files to configure a
-                          backup for database formats such as a MySQL, SQLite3 or any Assets folder.
-                          Setting up “Backup” takes only about a minute or two!
+                          Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way
+                          to configure and run backups of your MySQL database (soon PostgreSQL and possibly more) and Archives (any files or folders)
+                          to "Amazon S3" or "any remotely accessible server using SCP". Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
                         }
   s.email = %q{meskyan@gmail.com}
   s.extra_rdoc_files = [
@@ -33,29 +29,23 @@ Gem::Specification.new do |s|
      "VERSION",
      "backup.gemspec",
      "generators/backup_files/backup_files_generator.rb",
+     "generators/backup_files/templates/backup.rake",
+     "generators/backup_files/templates/backup.rb",
      "generators/backup_files/templates/backup.sqlite3",
-     "generators/backup_files/templates/config.rake",
-     "generators/backup_files/templates/db.rake",
-     "generators/backup_files/templates/s3.rake",
-     "generators/backup_files/templates/s3.yml",
-     "generators/backup_files/templates/setup.rake",
-     "generators/backup_files/templates/ssh.rake",
-     "generators/backup_files/templates/ssh.yml",
+     "generators/backup_files/templates/capistrano.rake",
      "lib/backup.rb",
-     "lib/backup/adapter/assets.rb",
-     "lib/backup/adapter/custom.rb",
-     "lib/backup/adapter/mysql.rb",
-     "lib/backup/adapter/sqlite3.rb",
-     "lib/backup/backup_record/s3.rb",
-     "lib/backup/backup_record/ssh.rb",
-     "lib/backup/base.rb",
-     "lib/backup/connection/base.rb",
+     "lib/backup/adapters/archive.rb",
+     "lib/backup/adapters/base.rb",
+     "lib/backup/adapters/mysql.rb",
+     "lib/backup/configuration/adapter.rb",
+     "lib/backup/configuration/base.rb",
+     "lib/backup/configuration/helpers.rb",
+     "lib/backup/configuration/storage.rb",
      "lib/backup/connection/s3.rb",
-     "lib/backup/connection/ssh.rb",
-     "lib/backup/encrypt.rb",
-     "lib/backup/transfer/base.rb",
-     "lib/backup/transfer/s3.rb",
-     "lib/backup/transfer/ssh.rb"
+     "lib/backup/record/s3.rb",
+     "lib/backup/record/scp.rb",
+     "lib/backup/storage/s3.rb",
+     "lib/backup/storage/scp.rb"
   ]
   s.homepage = %q{}
   s.rdoc_options = ["--charset=UTF-8"]

@@ -1,6 +1,6 @@
 namespace :backup do
   namespace :setup do
-    desc "Automatically sets up Capistrano Structure for you!"
+    desc "Automatically sets up Backup for Capistrano on deployment and maintains symlinks!"
     task :capistrano => :environment do
       puts 'Looking for shared path!'
       if File.directory?("../../shared") then
@@ -21,6 +21,7 @@ namespace :backup do
           puts "backup.sqlite3 already exists in the shared/db folder! Skipping backup.sqlite3 creation!"
         end
 	        %x{ ln -nfs #{RAILS_ROOT}/../../shared/db/backup.sqlite3 #{RAILS_ROOT}/db/backup.sqlite3 }
+	        %x{ sudo chown www-data:www-data #{RAILS_ROOT}/../../shared/db/backup.sqlite3 }
 	        puts "Set up a symbolic link to the backup.sqlite3 inside #{RAILS_ROOT}/db/ folder!"
       end
     end

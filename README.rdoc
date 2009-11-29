@@ -2,12 +2,34 @@
 
 == A Backup Ruby Gem for Rails
 
-== I am currently updating the Wiki (RIGHT NOW) so don't be fooled by the random updates! :)
-
 Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way to configure and run backups of your
 MySQL database (soon PostgreSQL and possibly more) and Archives (any files or folders) to "Amazon S3" or "any remotely accessible server using SCP".
 Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
 
+== Backup Just Updated to Version 2.0!
+
+==== 100% Rewrite!
+This was a 100% rewrite of the gem. So if you discover any issues with it, please report them here so I can fix them as soon as possible!
+http://github.com/meskyanichi/backup/issues
+
+==== Coded Quickly!
+I've been going all hardcore on this one, building it in a very small amount of time compared to the first version. As far as I can see it fully works,
+but it is of course likely that you or anyone else might encounter some issues. Please report them if you do.
+
+==== Updated The Wiki Quickly!
+So when I finished crafting the Backup Gem, I immediately started working on the Wiki and, as for the gem, updated it very quickly on a late sunday night.
+I will come back to the Wiki and see if I can improve it even more next weekend when I have more time. I just wanted to get the essentials built in and I think it worked out pretty nicely regardless. If you have any questions though, don't bother asking!
+
+==== More to come!
+Yes, Backup currently supports the most used backup adapters: MySQL and Archive(Files, Folders).
+It Archives, Compresses, Encrypts and cleans up old backups if needed.
+
+I do have plans for adding the PostgreSQL and Custom adapter for version 2.0 as well very soon!
+If there are requests for more/other adapters, I'm all ears! Enjoy.
+
+
+
+== Backup's Capabilities
 
 === Storage Methods
 
@@ -88,11 +110,6 @@ Note: You can of course add as many "backup setting" blocks as you want inside t
 
 === Check out the following Wiki pages to get up and running:
 
-=== Installation
-
-http://wiki.github.com/meskyanichi/backup/installation
-
-
 === Getting started
 
 http://wiki.github.com/meskyanichi/backup/getting-started
@@ -155,4 +172,4 @@ http://github.com/meskyanichi/backup/issues
 
 === Copyright
 
-Copyright (c) 2009 Michael van Rooijen | Final Creation. See LICENSE for details.
+Copyright (c) 2009 Michael van Rooijen | Final Creation. (http://final-creation.com/) See LICENSE for details.
