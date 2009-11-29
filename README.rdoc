@@ -1,87 +1,92 @@
 = Backup
 
-== What is "Backup"?
+== A Backup Ruby Gem for Rails
 
-“Backup” is a RubyGem, written for Ruby on Rails. It's main purpose is to Backup any files to Amazon S3 or any remotely accessible server through SSH (SCP). It supports database and regular file backups. On top of that, it's extremely easy to set up. Backup will provide a generator script that will place all necessary files inside your Rails application. Two of which, are “yaml” configuration files. Using just these two files to configure a backup for database formats such as a MySQL, SQLite3 or any Assets folder. Setting up “Backup” takes only about a minute or two!
+== I am currently updating the Wiki (RIGHT NOW) so don't be fooled by the random updates! :)
 
-
-=== Backup makes use of two storage methods:
-
-- Amazon S3
-- Any Remote Server You Can Access Through "SSH"
+Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way to configure and run backups of your
+MySQL database (soon PostgreSQL and possibly more) and Archives (any files or folders) to "Amazon S3" or "any remotely accessible server using SCP".
+Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
 
 
-=== Currently it supports these adapters:
+=== Storage Methods
 
-- SQLite3
+- Amazon (S3)
+- Remote Server (SCP)
+
+
+=== (Current) Adapters
+
 - MySQL
-- Assets/Folders (and Sub Folders) of Assets (Think of: Documents, Images, Etc.)
+- Archive (Any physical file(s)/folder(s))
+
+(More will be added later, such as PostgreSQL and Custom)
 
 
-=== Your database type not on the list?
+=== Archiving
 
-- Custom
-
-Custom enables you to, regardless whether "Backup" supports your database type or not, to still enable you to make backups and benefit from the other features!
-There is just one thing you must do yourself inside one of the configuration files that Backup provides, and that is (assuming you know how to create a SQL dump through the command line for your database type), to actually create that command. If you don't how, you can probably find out how when searching through "google". Usually, it takes just "one line" to make a SQL dump, regardless of what database type we're talking about. So now, if you know that particular command to generate that SQL dump for your database, you're practically set to benefit from "Backup"!
-
-==== Again, whether "Backup" has an adapter that supports your database or not,
-==== if you are able to generate the SQL dump through command line, you will still benefit from the following:
-
-- Backup Archiving
-- Backup Compression
-- Backup Encryption (see below)
-- Backup Cleaning (see below)
-- Backup Transfer to S3
-- Backup Transfer through SSH(SCP) to any remote server
-
-The only difference is that you now have to know how to produce a SQL dump yourself. Here's an example of the PostgreSQL command:
-
-  pg_dump -U {user-name} {source_db} -f {dumpfilename.sql}
-
-So, after you experimented using the command you found, and see it works, you just copy that 'working command' inside the configuration files in a special section,
-and you're set to use it with "Backup" and benefit from the other features!
-
+==== Backup supports Archiving.
+When you use the Archive adapter to backup a bunch of files and folders, backup will archive and compress these all together.
  
 
 === Encryption
 
-Backup also provides encryption. Adding a single line to one of the configuration files will enable encryption for your backups!
-This is what that line looks like:
+==== Backup supports a simple form of encryption.
+This is optional. All adapters support encryption. This is very simple to enable. Just add the following method inside on of your backup settings
+and it will encrypt it with the specified password:
 
-  encrypt: my_secret_password
-
-Now all backups will be encrypted with the specified password.
+  encrypt_with_password "mypassword"
 
 
 === Backup Cleaning
 
-Backup has the ability to clean up old backup files. If you don't feel the need to have more than 120 backups on your S3 account then you can easily specify so! It's as simple as adding this line to your configuration file. (or rather, uncommenting it)
+==== Backup supports backup cleaning.
+Backup Cleaning (which is optional) enables you to specify the amount of backups that may be stored on either Amazon S3 or a Remote Server. If you for example tell backup to limit the amount of backups by 20, when the 21st backup gets pushed to the storage location, the oldest version will automatically be destroyed.
 
-  keep_backups: 120 
+The idea behind this is to not flood either your backup server, which might resort in possible lack of hard disk space. Another good reason to utilize this would be for Amazon. Although Amazon S3 is extremely cheap, when backing up 1-2GB of MySQL dumps twice a day, it can become quite expensive if you never remove old ones.
 
-It will now automagically remove the oldest backup from for example, S3, when the 121st backup gets uploaded.
+To enable this you simply call the following method inside the desired "backup setting":
 
+  keep_backups 20
+  
+  
+=== Quick Example of a Single Backup Setting inside the Backup Configuration File
 
-== Why?
+  backup 'mysql-backup-s3' do
+  
+    adapter :mysql do
+      user      'user'
+      password  'password'
+      database  'database'
+    end
+  
+    storage :s3 do
+      access_key_id     'access_key_id'
+      secret_access_key 'secret_access_key'
+      bucket            '/bucket/backups/mysql/'
+    end
+  
+    keep_backups 25
+    encrypt_with_password 'password'
+  
+  end
+  
+The (backup 'mysql-backup-s3' do) is what I call a "backup setting". The first argument of the block is the so called "trigger".
 
-- I wanted a simple Backup Gem for Rails
-- I wanted minimum and easy configuration
-- I wanted it to take less than 2 minutes to set up 
-- I wanted it to support (AT LEAST) both SQLite3 as well as MySQL
-- I wanted it to support an additional (custom) adapter incase the database type isn't SQLite3 or MySQL
-- I wanted it to support compression
-- I wanted it to support archiving
-- I wanted it to support encryption
-- I wanted to be able to store my files on my private backup server and on Amazon S3
-- I wanted it to be able to automatically remove old backups to keep S3/backup server costs low
+  backup 'mysql-backup-s3' do
+  
+This acts as an "identifier" for the "backup setting". The (above) "backup setting" is all pretty straightforward.
+So now that we've set up a "backup setting", we can run it using a rake task, like so:
 
-==== Setting up Backup takes me about 1-2 minutes and it's really easy!
+  rake backup:run trigger="mysql-backup-s3"
+
+==== That's it, the MySQL database has been "backed up" to Amazon S3. It has been dumped, compressed and encrypted with password.
+Note: You can of course add as many "backup setting" blocks as you want inside the configuration file, and invoke each of them by their own "trigger".
 
 
 == Interested in trying out Backup?
 
-=== Check out the following Wiki pages:
+=== Check out the following Wiki pages to get up and running:
 
 === Installation
 
@@ -135,17 +140,16 @@ http://wiki.github.com/meskyanichi/backup/resources
 
 === Requests
 
-If anyone wishes to see support for PostgreSQL or any other database format, please send me a message!
+If anyone has any requests, please send me a message!
 
 
 === Suggestions?
 
-Send me a message! Fork the project! Help out! :)
+Send me a message! Fork the project!
 
 
 === Found a Bug?
 
-Report it!
 http://github.com/meskyanichi/backup/issues
 
 
