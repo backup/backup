@@ -6,13 +6,16 @@ Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This 
 MySQL database (soon PostgreSQL and possibly more) and Archives (any files or folders) to "Amazon S3" or "any remotely accessible server using SCP".
 Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
 
-== Backup Just Updated to Version 2.0.0! (And now updated to 2.1.0)
+== Backup Just Updated to Version 2.0.0! (And now updated to 2.1.0, be sure to use this one!)
 
-== IMPORTANT: Backup SQLite3 Database will no longer be utilized!
+== IMPORTANT: Backup SQLite3 Database will no longer be utilized as of 2.1.0!
 Backup will no longer utilize the Backup SQLite3 Database as of version 2.1.0!
-It seemed some users were having a struggle with SQLite3 and maintaining it with Backup, so I decided to get rid of it
+It seemed many users were having a struggle with SQLite3 and maintaining it with Backup, so I decided to get rid of it
 and instead of using the self-contained SQLite3 database, Backup will now utilize the Production database of your application.
-All you have to do is run @./script/generate backup_files@ and then run @rake db:migrate@ and you're set! No further "Backup" database management is required!
+All you have to do is run "./script/generate backup_files" and then run "rake db:migrate" and you're set! No further "Backup" database management is required!
+
+=== Refer to the Getting Started page to get up and running incredibly fast with Backup 2.1.0!
+http://wiki.github.com/meskyanichi/backup/getting-started
 
 
 ==== 100% Rewrite!

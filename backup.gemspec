@@ -60,18 +60,15 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<aws-s3>, [">= 0.6.2"])
       s.add_runtime_dependency(%q<net-ssh>, [">= 2.0.15"])
       s.add_runtime_dependency(%q<net-scp>, [">= 1.0.2"])
-      s.add_runtime_dependency(%q<sqlite3-ruby>, [">= 1.2.5"])
     else
       s.add_dependency(%q<aws-s3>, [">= 0.6.2"])
       s.add_dependency(%q<net-ssh>, [">= 2.0.15"])
       s.add_dependency(%q<net-scp>, [">= 1.0.2"])
-      s.add_dependency(%q<sqlite3-ruby>, [">= 1.2.5"])
     end
   else
     s.add_dependency(%q<aws-s3>, [">= 0.6.2"])
     s.add_dependency(%q<net-ssh>, [">= 2.0.15"])
     s.add_dependency(%q<net-scp>, [">= 1.0.2"])
-    s.add_dependency(%q<sqlite3-ruby>, [">= 1.2.5"])
   end
 end
 

@@ -18,7 +18,6 @@ begin
     gem.add_dependency "aws-s3", ">= 0.6.2"
     gem.add_dependency "net-ssh", ">= 2.0.15"
     gem.add_dependency "net-scp", ">= 1.0.2"
-    gem.add_dependency "sqlite3-ruby", ">= 1.2.5"
 #    gem.files.include 'generators/**/*'
 #    gem.files.include 'lib/**/*'
   end
