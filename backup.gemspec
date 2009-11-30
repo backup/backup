@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{backup}
-  s.version = "2.0.0"
+  s.version = "2.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Michael van Rooijen"]
@@ -29,6 +29,9 @@ Gem::Specification.new do |s|
      "VERSION",
      "backup.gemspec",
      "generators/backup_files/backup_files_generator.rb",
+     "generators/backup_files/templates/config/backup.rb",
+     "generators/backup_files/templates/migrations/create_backup_tables.rb",
+     "generators/backup_files/templates/tasks/backup.rake",
      "lib/backup.rb",
      "lib/backup/adapters/archive.rb",
      "lib/backup/adapters/base.rb",

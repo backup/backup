@@ -6,7 +6,14 @@ Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This 
 MySQL database (soon PostgreSQL and possibly more) and Archives (any files or folders) to "Amazon S3" or "any remotely accessible server using SCP".
 Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
 
-== Backup Just Updated to Version 2.0!
+== Backup Just Updated to Version 2.0.0! (And now updated to 2.1.0)
+
+== IMPORTANT: Backup SQLite3 Database will no longer be utilized!
+Backup will no longer utilize the Backup SQLite3 Database as of version 2.1.0!
+It seemed some users were having a struggle with SQLite3 and maintaining it with Backup, so I decided to get rid of it
+and instead of using the self-contained SQLite3 database, Backup will now utilize the Production database of your application.
+All you have to do is run @./script/generate backup_files@ and then run @rake db:migrate@ and you're set! No further "Backup" database management is required!
+
 
 ==== 100% Rewrite!
 This was a 100% rewrite of the gem. So if you discover any issues with it, please report them here so I can fix them as soon as possible!
@@ -27,8 +34,6 @@ It Archives, Compresses, Encrypts and cleans up old backups if needed.
 I do have plans for adding the PostgreSQL and Custom adapter for version 2.0 as well very soon!
 If there are requests for more/other adapters, I'm all ears! Enjoy.
 
-==== The Backup Database (SQLite3)
-I have been considering taking this backup.sqlite3 file out and just using the users Production Environment database to handle this. This will make the users life a lot easier since there is no need to maintain that SQLite3 file every time. Also since the user will definitely ensure that the "production" database is always present in production mode, it might be a good idea to just store the backup details in there since the data will always be available. I will experiment with this and see how it works and if it really makes it a lot easier. If it does I will change this as soon as possible to enhance usability.
 
 
 
