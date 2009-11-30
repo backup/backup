@@ -5,11 +5,13 @@ module Backup
       # Establishes a connection with the SQLite3
       # local database to avoid conflict with users
       # Production database.
-      establish_connection(
-        :adapter  => "sqlite3",
-        :database => "db/backup.sqlite3",
-        :pool     => 5,
-        :timeout  => 5000 )
+      # establish_connection(
+      #  :adapter  => "sqlite3",
+      #  :database => "db/backup.sqlite3",
+      #  :pool     => 5,
+      #  :timeout  => 5000 )
+      
+      set_table_name 'backup_s3'
       
       # Scopes
       default_scope :order => 'created_at desc'

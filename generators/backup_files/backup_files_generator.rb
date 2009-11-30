@@ -14,19 +14,16 @@ class BackupFilesGenerator < Rails::Generator::Base
       # Generates the Rake Tasks and Backup Database
       m.directory "lib/tasks"
       m.directory "lib/tasks/backup"
-      m.directory "lib/tasks/backup/files"
-      m.directory "lib/tasks/backup/setup"
-      m.file      "backup.rake",      "lib/tasks/backup/backup.rake"
-      m.file      "capistrano.rake",  "lib/tasks/backup/setup/capistrano.rake"
-      m.file      "backup.sqlite3",   "lib/tasks/backup/files/backup.sqlite3"
-      
+      m.file      "tasks/backup.rake",        "lib/tasks/backup/backup.rake"
+
       # Generates the configuration file
       m.directory "config"
-      m.file      "backup.rb",        "config/backup.rb"
+      m.file      "config/backup.rb",         "config/backup.rb"
       
-      # Generates the backup.sqlite3 database
-      m.directory "db"
-      m.file      "backup.sqlite3",   "db/backup.sqlite3"
+      # Generates the database migration file
+      m.migration_template                    "migrations/create_backup_tables.rb",
+                                              "db/migrate",
+                                              :migration_file_name => "create_backup_tables"
       
     end
   end
