@@ -1,4 +1,4 @@
-class BackupFilesGenerator < Rails::Generator::Base
+class BackupGenerator < Rails::Generator::Base
 
   # This method gets initialized when the generator gets run.
   # It will receive an array of arguments inside @args
