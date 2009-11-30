@@ -6,15 +6,33 @@ Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This 
 MySQL database (soon PostgreSQL and possibly more) and Archives (any files or folders) to "Amazon S3" or "any remotely accessible server using SCP".
 Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
 
-== Backup Just Updated to Version 2.0.0! (And now updated to 2.1.0, be sure to use this one!)
+== Backup just updated to version 2.0.0(+)!
 
-== IMPORTANT: Backup SQLite3 Database will no longer be utilized as of 2.1.0!
-Backup will no longer utilize the Backup SQLite3 Database as of version 2.1.0!
-It seemed many users were having a struggle with SQLite3 and maintaining it with Backup, so I decided to get rid of it
-and instead of using the self-contained SQLite3 database, Backup will now utilize the Production database of your application.
-All you have to do is run "./script/generate backup_files" and then run "rake db:migrate" and you're set! No further "Backup" database management is required!
+This was a major update (read below) and a lot of stuff has changed since version 1.x.x!
+Notable changes:
+* Should be a lot more backwards compatible with every update I do.
+* Does not depend on the separate local SQLite3 file any longer.
+* Will provide a db migration file for your Rails Application to store backup record data in. 
+* Does not use YAML files to do configuration any longer.
+* Uses a SINGLE ruby file for "all" configuration (config/backup.rb) using elegant block notations!
+* Uses a SINGLE rake task to handle the initialization of any backup setting.
+* Can now configure an unlimited amount of customizable backup settings and run them each "individually"!
+* HIGHLY IMPROVED USABILITY!
 
-=== Refer to the Getting Started page to get up and running incredibly fast with Backup 2.1.0!
+== HAVING TROUBLE WITH VERSION "2.0.0"?
+
+I have encountered and issue with Backup version "2.0.0" after the release. This issue has been addressed and patched to both version 2.0.0 as well as version 2.1.0. This involved the use of the SQLite3 database, which is no longer utilized by Backup. So for people that are going to install Backup version 2.0.0 (or later) right now, this issue no longer applies. However, for users that installed Backup 2.0.0 pretty early after the release, this might cause problems.
+
+==== If you are running Backup version "2.0.0", please run the following to ensure you have a "good" install.
+
+  sudo gem uninstall backup -v 2.0.0
+  sudo gem install backup
+
+This will obviously uninstall your currently installed backup version 2.0.0 and install the latest version of Backup.
+Do this and you're set! My apologies for the initial hassle! ;)
+
+
+=== Refer to the Getting Started page to get up and running incredibly fast with "Backup 2"!
 http://wiki.github.com/meskyanichi/backup/getting-started
 
 
@@ -34,13 +52,12 @@ I will come back to the Wiki and see if I can improve it even more next weekend 
 Yes, Backup currently supports the most used backup adapters: MySQL and Archive(Files, Folders).
 It Archives, Compresses, Encrypts and cleans up old backups if needed.
 
-I do have plans for adding the PostgreSQL and Custom adapter for version 2.0 as well very soon!
+I do have plans for adding the PostgreSQL and Custom adapter for version 2 as well very soon!
 If there are requests for more/other adapters, I'm all ears! Enjoy.
 
 
-
-
-== Backup's Capabilities
+== (Current) Backup's Capabilities
+More to be added!
 
 === Storage Methods
 
@@ -48,10 +65,10 @@ If there are requests for more/other adapters, I'm all ears! Enjoy.
 - Remote Server (SCP)
 
 
-=== (Current) Adapters
+=== Adapters
 
 - MySQL
-- Archive (Any physical file(s)/folder(s))
+- Archive (Any physical files/folders)
 
 (More will be added later, such as PostgreSQL and Custom)
 
@@ -107,6 +124,8 @@ To enable this you simply call the following method inside the desired "backup s
 The (backup 'mysql-backup-s3' do) is what I call a "backup setting". The first argument of the block is the so called "trigger".
 
   backup 'mysql-backup-s3' do
+    # Configuration Here
+  end
   
 This acts as an "identifier" for the "backup setting". The (above) "backup setting" is all pretty straightforward.
 So now that we've set up a "backup setting", we can run it using a rake task, like so:
@@ -114,7 +133,19 @@ So now that we've set up a "backup setting", we can run it using a rake task, li
   rake backup:run trigger="mysql-backup-s3"
 
 ==== That's it, the MySQL database has been "backed up" to Amazon S3. It has been dumped, compressed and encrypted with password.
-Note: You can of course add as many "backup setting" blocks as you want inside the configuration file, and invoke each of them by their own "trigger".
+Note: You can add as many "backup setting" blocks as you want inside the "config/backup.rb" configuration file and invoke each of them by their own "trigger". This means you can have as many backup setups as you want, which "don't" all run simultaneously when you initialize a backup.
+
+==== Runs the backup setting with the trigger "backup-logs"
+  rake backup:run trigger="backup-logs"
+
+==== Runs the backup setting with the trigger "backup-mysql"
+  rake backup:run trigger="backup-mysql"
+
+==== Runs the backup setting with the trigger "backup-assets"
+  rake backup:run trigger="backup-assets"
+
+etc. etc. etc. etc. etc. etc...
+
 
 
 == Interested in trying out Backup?
@@ -124,6 +155,11 @@ Note: You can of course add as many "backup setting" blocks as you want inside t
 === Getting started
 
 http://wiki.github.com/meskyanichi/backup/getting-started
+
+
+=== Backup Configuration File (All Adapters, Storage Methods and Options)
+
+http://wiki.github.com/meskyanichi/backup/configuration-file
 
 
 === Rake Tasks
