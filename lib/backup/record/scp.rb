@@ -2,14 +2,17 @@ module Backup
   module Record
     class SCP < ActiveRecord::Base
       
-      if table_exists?('backup')
+      if connection.table_exists?('backup')
         set_table_name 'backup'
-      elsif
+        default_scope \
+          :order => 'created_at desc',
+          :conditions => {:storage => 'scp'}
+      else
         set_table_name 'backup_scp'
+        attr_accessor :storage
+        default_scope \
+          :order => 'created_at desc'
       end
-      
-      # Scopes
-      default_scope :order => 'created_at desc', :storage => 'scp'
       
       # Callbacks
       after_save :clean_backups
@@ -23,7 +26,7 @@ module Backup
         self.adapter_config = adapter
         self.storage        = 'scp'
         self.trigger        = adapter.procedure.trigger
-        self.adapter        = adapter.procedure.adapter_name
+        self.adapter        = adapter.procedure.adapter_name.to_s
         self.filename       = adapter.final_file
         self.keep_backups   = adapter.procedure.attributes['keep_backups']
         
