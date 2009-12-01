@@ -1,20 +1,15 @@
 module Backup
   module Record
     class SCP < ActiveRecord::Base
-        
-      # Establishes a connection with the SQLite3
-      # local database to avoid conflict with users
-      # Production database.
-      # establish_connection(
-      #  :adapter  => "sqlite3",
-      #  :database => "db/backup.sqlite3",
-      #  :pool     => 5,
-      #  :timeout  => 5000 )
       
-      set_table_name 'backup_scp'
+      if table_exists?('backup')
+        set_table_name 'backup'
+      elsif
+        set_table_name 'backup_scp'
+      end
       
       # Scopes
-      default_scope :order => 'created_at desc'
+      default_scope :order => 'created_at desc', :storage => 'scp'
       
       # Callbacks
       after_save :clean_backups
@@ -26,6 +21,7 @@ module Backup
       # Sets the SCP values
       def load_adapter(adapter)
         self.adapter_config = adapter
+        self.storage        = 'scp'
         self.trigger        = adapter.procedure.trigger
         self.adapter        = adapter.procedure.adapter_name
         self.filename       = adapter.final_file

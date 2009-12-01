@@ -9,8 +9,8 @@ namespace :backup do
   task :truncate => :environment do
     backup = Backup::Setup.new(ENV['trigger'], @backup_procedures)
     case backup.procedure.storage_name.to_sym
-      when :s3  then Backup::Record::S3.destroy_all(:trigger => ENV['trigger'])
-      when :scp then Backup::Record::SCP.destroy_all(:trigger => ENV['trigger'])
+      when :s3  then Backup::Record::S3.destroy_all(:trigger => ENV['trigger'], :storage => 's3')
+      when :scp then Backup::Record::SCP.destroy_all(:trigger => ENV['trigger'], :storage => 'scp')
     end
   end
   
