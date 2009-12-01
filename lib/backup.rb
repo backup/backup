@@ -1,8 +1,7 @@
-# Connectivity and Record Gems
+# Load in Connectivity and Transfer Gems
 require 'net/ssh'
 require 'net/scp'
 require 'aws/s3'
-require 'sqlite3'
 
 # Load in Adapters
 require 'backup/adapters/base'
