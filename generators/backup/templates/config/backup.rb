@@ -14,7 +14,7 @@
 # each of them separately.
 # 
 # For more information on "Backup", please refer to the wiki on github
-#   http://wiki.github.com/meskyanichi/backup
+#   http://wiki.github.com/meskyanichi/backup/configuration-file
 
 
 # Initialize with:

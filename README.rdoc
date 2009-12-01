@@ -6,7 +6,7 @@ Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This 
 MySQL database (soon PostgreSQL and possibly more) and Archives (any files or folders) to "Amazon S3" or "any remotely accessible server using SCP".
 Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
 
-== Backup just updated to version 2.0.0(+)!
+== Backup just updated to version 2.1.0!
 
 This was a major update (read below) and a lot of stuff has changed since version 1.x.x!
 Notable changes:
@@ -19,18 +19,18 @@ Notable changes:
 * Can now configure an unlimited amount of customizable backup settings and run them each "individually"!
 * HIGHLY IMPROVED USABILITY!
 
-== HAVING TROUBLE WITH VERSION "2.0.0"?
+== TO ANYONE RUNNING BACKUP VERSION 2.0.0! PLEASE READ!
 
-I have encountered and issue with Backup version "2.0.0" after the release. This issue has been addressed and patched to both version 2.0.0 as well as version 2.1.0. This involved the use of the SQLite3 database, which is no longer utilized by Backup. So for people that are going to install Backup version 2.0.0 (or later) right now, this issue no longer applies. However, for users that installed Backup 2.0.0 pretty early after the release, this might cause problems.
+I would like to ask you to install the latest version of Backup, as 2.0.0 has some issues.
+A few things that were left unchanged in 2.0.0 have been changed in 2.1.0 and I have updated the Wiki page "Getting Started"
+based on the 2.1.0 release to get everyone up and running!
 
-==== If you are running Backup version "2.0.0", please run the following to ensure you have a "good" install.
+==== If you have Backup version 2.0.0 installed, please do the following:
 
   sudo gem uninstall backup -v 2.0.0
   sudo gem install backup
 
-This will obviously uninstall your currently installed backup version 2.0.0 and install the latest version of Backup.
-Do this and you're set! My apologies for the initial hassle! ;)
-
+And have a quick read through the "Getting Started" Wiki page to see how simple the Backup setup is since 2.1.0!
 
 === Refer to the Getting Started page to get up and running incredibly fast with "Backup 2"!
 http://wiki.github.com/meskyanichi/backup/getting-started

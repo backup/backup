@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Michael van Rooijen"]
-  s.date = %q{2009-11-30}
+  s.date = %q{2009-12-01}
   s.description = %q{
                           Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way
                           to configure and run backups of your MySQL database (soon PostgreSQL and possibly more) and Archives (any files or folders)
