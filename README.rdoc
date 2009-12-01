@@ -23,16 +23,16 @@ Notable changes:
 
 I would like to ask you to install the latest version of Backup, as 2.0.0 has some issues.
 A few things that were left unchanged in 2.0.0 have been changed in 2.1.0 and I have updated the Wiki page "Getting Started"
-based on the 2.1.0 release to get everyone up and running!
+based on the 2.1.0 release (and later releases) to get everyone up and running!
 
 ==== If you have Backup version 2.0.0 installed, please do the following:
 
   sudo gem uninstall backup -v 2.0.0
   sudo gem install backup
 
-And have a quick read through the "Getting Started" Wiki page to see how simple the Backup setup is since 2.1.0!
+And have a quick read through the "Getting Started" Wiki page to see how to setup Backup as of 2.1.0!
 
-=== Refer to the Getting Started page to get up and running incredibly fast with "Backup 2"!
+=== Refer to the Getting Started page to get up and running incredibly fast with Backup 2!
 http://wiki.github.com/meskyanichi/backup/getting-started
 
 
