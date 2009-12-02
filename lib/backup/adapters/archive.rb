@@ -2,7 +2,7 @@ module Backup
   module Adapters
     class Archive < Backup::Adapters::Base
       
-      attr_accessor :archived_file, :compressed_file, :encrypted_file, :user, :password, :database
+      attr_accessor :archived_file, :compressed_file, :encrypted_file
       
       # Initializes the Backup Process
       def initialize(trigger, procedure)
@@ -42,9 +42,6 @@ module Backup
         # Loads the initial settings
         def load_settings
           self.trigger  = procedure.trigger
-          self.user     = procedure.get_adapter_configuration.attributes['user']
-          self.password = procedure.get_adapter_configuration.attributes['password']
-          self.database = procedure.get_adapter_configuration.attributes['database']
 
           self.archived_file    = "#{timestamp}.#{trigger.gsub(' ', '-')}.tar"      
           self.compressed_file  = "#{archived_file}.gz"
