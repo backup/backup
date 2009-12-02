@@ -36,11 +36,12 @@ module Backup
         
         # Loads the initial settings
         def load_settings
+          self.trigger  = procedure.trigger
           self.user     = procedure.get_adapter_configuration.attributes['user']
           self.password = procedure.get_adapter_configuration.attributes['password']
           self.database = procedure.get_adapter_configuration.attributes['database']
 
-          self.dumped_file      = "#{timestamp}.#{database}.sql"      
+          self.dumped_file      = "#{timestamp}.#{trigger.gsub(' ', '-')}.sql"      
           self.compressed_file  = "#{dumped_file}.gz"
           self.encrypted_file   = "#{compressed_file}.enc"
           self.final_file       = compressed_file
