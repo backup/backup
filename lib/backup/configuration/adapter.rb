@@ -4,7 +4,7 @@ module Backup
       
       attr_accessor :attributes 
       
-      %w(files user password database skip_tables).each do |method|
+      %w(files user password database skip_tables commands).each do |method|
         define_method method do |value|
           attributes[method] = value
         end

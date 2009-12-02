@@ -9,6 +9,7 @@ require 'aws/s3'
 require 'backup/adapters/base'
 require 'backup/adapters/mysql'
 require 'backup/adapters/archive'
+require 'backup/adapters/custom'
 
 # Load in Connectors
 require 'backup/connection/s3'
@@ -56,6 +57,7 @@ module Backup
       case procedure.adapter_name.to_sym
         when :mysql   then Backup::Adapters::MySQL.new(trigger, procedure)
         when :archive then Backup::Adapters::Archive.new(trigger, procedure)
+        when :custom  then Backup::Adapters::Custom.new(trigger, procedure)
         else raise "Unknown Adapter: \"#{procedure.adapter_name}\""
       end
     end
