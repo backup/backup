@@ -56,9 +56,10 @@ module Backup
     
     def initialize_adapter
       case procedure.adapter_name.to_sym
-        when :mysql   then Backup::Adapters::MySQL.new(trigger, procedure)
-        when :archive then Backup::Adapters::Archive.new(trigger, procedure)
-        when :custom  then Backup::Adapters::Custom.new(trigger, procedure)
+        when :mysql       then Backup::Adapters::MySQL.new(trigger, procedure)
+        when :postgresql  then Backup::Adapters::PostgreSQL.new(trigger, procedure)
+        when :archive     then Backup::Adapters::Archive.new(trigger, procedure)
+        when :custom      then Backup::Adapters::Custom.new(trigger, procedure)
         else raise "Unknown Adapter: \"#{procedure.adapter_name}\""
       end
     end

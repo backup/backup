@@ -64,7 +64,7 @@ module Backup
           if skip_tables.is_a?(Array)
             skip_tables.map {|table| " --ignore-table='#{database}.#{table}' "}
           elsif skip_tables.is_a?(String)
-            "--ignore-table=#{database}.#{skip_tables}"
+            " --ignore-table='#{database}.#{skip_tables}' "
           else
             ""
           end

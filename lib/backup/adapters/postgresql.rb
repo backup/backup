@@ -1,16 +1,14 @@
 module Backup
   module Adapters
     class PostgreSQL < Backup::Adapters::Base
-=begin
+
       attr_accessor :dumped_file, :compressed_file, :encrypted_file, :user, :password, :database, :skip_tables, :host, :port, :socket
       
       # Initializes the Backup Process
       def initialize(trigger, procedure)
         super
         load_settings
-        
-        raise "STOP!"
-        
+
         begin
           pg_dump
           encrypt
@@ -25,10 +23,10 @@ module Backup
         
         # Dumps and Compresses the PostgreSQL file 
         def pg_dump
-          # %x{ pg_dump  -U #{user}  --password='#{password}' #{options} #{database} #{tables_to_skip} | gzip -f --best > #{File.join(tmp_path, compressed_file)} }
+           %x{ pg_dump  -U #{user} #{options} #{tables_to_skip} #{database} | gzip -f --best > #{File.join(tmp_path, compressed_file)} }
         end
         
-        # Encrypts the MySQL file
+        # Encrypts the PostgreSQL file
         def encrypt
           if encrypt_with_password.is_a?(String)
             %x{ openssl enc -des-cbc -in #{File.join(tmp_path, compressed_file)} -out #{File.join(tmp_path, encrypted_file)} -k #{encrypt_with_password} }
@@ -56,22 +54,22 @@ module Backup
         
         def options
           options = String.new
-          options += " --host='#{host}' "     unless host.blank?
           options += " --port='#{port}' "     unless port.blank?
-          options += " --socket='#{socket}' " unless socket.blank?
+          options += " --host='#{host}' "     unless host.blank?
+          options += " --host='#{socket}' "   unless socket.blank?  unless options.include?('--host=')
           options
         end
         
         def tables_to_skip
           if skip_tables.is_a?(Array)
-            skip_tables.map {|table| " --ignore-table='#{database}.#{table}' "}
+            skip_tables.map {|table| " -T \"#{table}\" "}
           elsif skip_tables.is_a?(String)
-            "--ignore-table=#{database}.#{skip_tables}"
+            " -T \"#{skip_tables}\" "
           else
             ""
           end
         end
-=end
+
     end
   end
 end
