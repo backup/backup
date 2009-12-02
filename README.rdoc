@@ -19,7 +19,7 @@ Notable changes:
 * Can now configure an unlimited amount of customizable backup settings and run them each "individually"!
 * HIGHLY IMPROVED USABILITY!
 
-== TO ANYONE RUNNING BACKUP VERSION 2.0.0! PLEASE READ!
+== TO ANYONE RUNNING BACKUP VERSION 2.0.0, PLEASE READ!
 
 I would like to ask you to install the latest version of Backup, as 2.0.0 has some issues.
 A few things that were left unchanged in 2.0.0 have been changed in 2.1.0 and I have updated the Wiki page "Getting Started"
@@ -99,6 +99,27 @@ To enable this you simply call the following method inside the desired "backup s
 
   keep_backups 20
   
+
+=== To Do
+
+==== (S)FTP
+I will be adding FTP and SFTP support to Backup shortly. (New Storage Method)
+
+==== MySQL
+I will be adding more options to the MySQL Adapter shortly.
+
+==== PostgreSQL
+I will be adding the PostgreSQL Adapter shortly.
+
+==== Custom
+I will be adding the Custom Adapter shortly.
+This adapter is meant (mainly) for people running other database formats that actually supported by Backup.
+Which means, if you run a database format other than MySQL or PostgreSQL, then Custom will allows you to input
+a command (for the command line / terminal) to create an SQL dump of your desired database. Of course, you will
+(and you probably already know how), have to create the SQL dump command and add it to the Custom Adapter's options.
+The benefit of doing this is that you will still gain all the other benefits of Backup, such as Archiving, Compression, Encryption and Backup Cleaning even though Backup doesn't officially support your database format. You can basically see the "Custom" adapter as any other adapter, except that you have to write your sql dump command yourself. Backup handles the rest!
+
+
   
 === Quick Example of a Single Backup Setting inside the Backup Configuration File
 
