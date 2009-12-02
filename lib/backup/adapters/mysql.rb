@@ -9,11 +9,14 @@ module Backup
         super
         load_settings
         
-        mysqldump
-        encrypt
-        store
-        record
-        remove_tmp_files
+        begin
+          mysqldump
+          encrypt
+          store
+          record
+        ensure
+          remove_tmp_files
+        end
       end
       
       private

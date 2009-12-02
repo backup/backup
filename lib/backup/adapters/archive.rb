@@ -9,11 +9,14 @@ module Backup
         super
         load_settings
         
-        targz
-        encrypt
-        store
-        record
-        remove_tmp_files
+        begin
+          targz
+          encrypt
+          store
+          record
+        ensure
+          remove_tmp_files
+        end
       end
       
       private

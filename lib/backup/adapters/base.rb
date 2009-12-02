@@ -43,6 +43,7 @@ module Backup
         case procedure.storage_name.to_sym
           when :s3  then Backup::Storage::S3.new(self)
           when :scp then Backup::Storage::SCP.new(self)
+          when :ftp then Backup::Storage::FTP.new(self)
         end
       end
       
@@ -55,6 +56,10 @@ module Backup
             record.save
           when :scp
             record = Backup::Record::SCP.new
+            record.load_adapter(self)
+            record.save
+          when :ftp
+            record = Backup::Record::FTP.new
             record.load_adapter(self)
             record.save
         end

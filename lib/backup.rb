@@ -1,6 +1,7 @@
 # Load in Connectivity and Transfer Gems
 require 'net/ssh'
 require 'net/scp'
+require 'net/ftp'
 require 'aws/s3'
 
 # Load in Adapters
@@ -14,10 +15,12 @@ require 'backup/connection/s3'
 # Load in Storage
 require 'backup/storage/s3'
 require 'backup/storage/scp'
+require 'backup/storage/ftp'
 
 # Load in Backup Recorders
 require 'backup/record/s3'
 require 'backup/record/scp'
+require 'backup/record/ftp'
 
 # Load in Configuration
 require 'backup/configuration/base'
