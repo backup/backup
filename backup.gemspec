@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Michael van Rooijen"]
-  s.date = %q{2009-12-01}
+  s.date = %q{2009-12-03}
   s.description = %q{
                           Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way
                           to configure and run backups of your MySQL database (soon PostgreSQL and possibly more) and Archives (any files or folders)
@@ -23,6 +23,7 @@ Gem::Specification.new do |s|
   s.files = [
     ".document",
      ".gitignore",
+     "CHANGELOG",
      "LICENSE",
      "README.rdoc",
      "Rakefile",
@@ -35,18 +36,25 @@ Gem::Specification.new do |s|
      "lib/backup.rb",
      "lib/backup/adapters/archive.rb",
      "lib/backup/adapters/base.rb",
+     "lib/backup/adapters/custom.rb",
      "lib/backup/adapters/mysql.rb",
+     "lib/backup/adapters/postgresql.rb",
      "lib/backup/configuration/adapter.rb",
+     "lib/backup/configuration/adapter_options.rb",
      "lib/backup/configuration/base.rb",
      "lib/backup/configuration/helpers.rb",
      "lib/backup/configuration/storage.rb",
      "lib/backup/connection/s3.rb",
+     "lib/backup/record/ftp.rb",
      "lib/backup/record/s3.rb",
      "lib/backup/record/scp.rb",
+     "lib/backup/record/sftp.rb",
+     "lib/backup/storage/ftp.rb",
      "lib/backup/storage/s3.rb",
-     "lib/backup/storage/scp.rb"
+     "lib/backup/storage/scp.rb",
+     "lib/backup/storage/sftp.rb"
   ]
-  s.homepage = %q{}
+  s.homepage = %q{http://final-creation.com/open-source}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.5}
@@ -60,15 +68,18 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<aws-s3>, [">= 0.6.2"])
       s.add_runtime_dependency(%q<net-ssh>, [">= 2.0.15"])
       s.add_runtime_dependency(%q<net-scp>, [">= 1.0.2"])
+      s.add_runtime_dependency(%q<net-sftp>, [">= 2.0.4"])
     else
       s.add_dependency(%q<aws-s3>, [">= 0.6.2"])
       s.add_dependency(%q<net-ssh>, [">= 2.0.15"])
       s.add_dependency(%q<net-scp>, [">= 1.0.2"])
+      s.add_dependency(%q<net-sftp>, [">= 2.0.4"])
     end
   else
     s.add_dependency(%q<aws-s3>, [">= 0.6.2"])
     s.add_dependency(%q<net-ssh>, [">= 2.0.15"])
     s.add_dependency(%q<net-scp>, [">= 1.0.2"])
+    s.add_dependency(%q<net-sftp>, [">= 2.0.4"])
   end
 end
 
