@@ -19,7 +19,7 @@ module Backup
         self.trigger                = trigger
         self.procedure              = procedure
         self.timestamp              = Time.now.strftime("%Y%m%d%H%M%S")
-        self.tmp_path               = "#{RAILS_ROOT.gsub(' ', '\ ')}/tmp/backup/#{procedure.adapter_name}"
+        self.tmp_path               = File.join(RAILS_ROOT.gsub(' ', '\ '), 'tmp', 'backup', trigger)
         self.encrypt_with_password  = procedure.attributes['encrypt_with_password']
         self.keep_backups           = procedure.attributes['keep_backups']
         create_tmp_folder
@@ -32,7 +32,7 @@ module Backup
 
       # Removes the files inside the temporary folder
       def remove_tmp_files
-        %x{ rm #{tmp_path}/* }
+        %x{ rm #{File.join(tmp_path, '*')} }
       end
 
       # Initializes the storing process depending on the store settings

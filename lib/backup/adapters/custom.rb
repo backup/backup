@@ -26,10 +26,10 @@ module Backup
         def execute_commands
           if commands.is_a?(Array)
             commands.each do |command|
-              %x{ #{command} }
+              %x{ #{command.gsub(':tmp_path', tmp_path)} }
             end
           elsif commands.is_a?(String)
-            %x{ #{commands} }
+            %x{ #{commands.gsub(':tmp_path', tmp_path)} }
           end
         end
         
