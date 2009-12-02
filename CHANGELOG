@@ -1,0 +1,32 @@
+MINOR UPDATE
+=== 2.1.2 ====================================
+  
+  - The backup generator will now provide you with a step-by-step guide to getting up and running
+  - Updated the generator itself
+  - Removed SQLite3 dependencies
+  
+
+2 TABLES 2 1
+=== 2.1.1 ====================================
+  
+  - Backup will from now on only utilize one table, instead of one for each storage method
+  - Still backwards compatible to 2.1.0
+  
+
+FIXED A CRUCIAL BUG
+=== 2.1.0 ====================================
+
+  - Problem with Backup::Record. It tried to connect to the SQLite3 database.
+
+
+MAJOR RELEASE
+=== 2.0.0 ====================================
+
+  - Should be a lot more backwards compatible with every update I do.
+  - Does not depend on the separate local SQLite3 file any longer.
+  - Will provide a db migration file for your Rails Application to store backup record data in.
+  - Does not use YAML files to do configuration any longer.
+  - Uses a SINGLE ruby file for "all" configuration (config/backup.rb) using elegant block notations!
+  - Uses a SINGLE rake task to handle the initialization of any backup setting.
+  - Can now configure an unlimited amount of customizable backup settings and run them each "individually"!
+  - HIGHLY IMPROVED USABILITY!
