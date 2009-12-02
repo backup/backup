@@ -8,6 +8,7 @@ require 'aws/s3'
 # Load in Adapters
 require 'backup/adapters/base'
 require 'backup/adapters/mysql'
+require 'backup/adapters/postgresql'
 require 'backup/adapters/archive'
 require 'backup/adapters/custom'
 
