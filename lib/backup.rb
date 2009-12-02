@@ -28,6 +28,7 @@ require 'backup/record/sftp'
 # Load in Configuration
 require 'backup/configuration/base'
 require 'backup/configuration/adapter'
+require 'backup/configuration/adapter_options'
 require 'backup/configuration/storage'
 require 'backup/configuration/helpers'
 
