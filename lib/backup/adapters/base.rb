@@ -39,15 +39,18 @@ module Backup
       # Options:
       #  Amazon (S3)
       #  Remote Server (SCP)
+      #  Remote Server (FTP)
+      #  Remote Server (SFTP)
       def store
         case procedure.storage_name.to_sym
           when :s3  then Backup::Storage::S3.new(self)
           when :scp then Backup::Storage::SCP.new(self)
           when :ftp then Backup::Storage::FTP.new(self)
+          when :sftp then Backup::Storage::SFTP.new(self)
         end
       end
       
-      # Records data on every individual file to the backup.sqlite3 local database
+      # Records data on every individual file to the database
       def record
         case procedure.storage_name.to_sym
           when :s3
@@ -60,6 +63,10 @@ module Backup
             record.save
           when :ftp
             record = Backup::Record::FTP.new
+            record.load_adapter(self)
+            record.save
+          when :sftp
+            record = Backup::Record::SFTP.new
             record.load_adapter(self)
             record.save
         end

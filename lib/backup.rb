@@ -2,6 +2,7 @@
 require 'net/ssh'
 require 'net/scp'
 require 'net/ftp'
+require 'net/sftp'
 require 'aws/s3'
 
 # Load in Adapters
@@ -16,11 +17,13 @@ require 'backup/connection/s3'
 require 'backup/storage/s3'
 require 'backup/storage/scp'
 require 'backup/storage/ftp'
+require 'backup/storage/sftp'
 
 # Load in Backup Recorders
 require 'backup/record/s3'
 require 'backup/record/scp'
 require 'backup/record/ftp'
+require 'backup/record/sftp'
 
 # Load in Configuration
 require 'backup/configuration/base'
@@ -45,7 +48,7 @@ module Backup
     def initialize(trigger, procedures)
       self.trigger    = trigger
       self.procedures = procedures
-      self.procedure  = find_triggered_procedure
+      self.procedure  = find_triggered_procedure unless trigger.eql?(false)
     end
     
     def initialize_adapter

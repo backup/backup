@@ -1,6 +1,6 @@
 module Backup
   module Storage
-    class FTP
+    class SFTP
       
       attr_accessor :user, :password, :ip, :path, :tmp_path, :final_file
       
@@ -13,18 +13,12 @@ module Backup
         final_file = adapter.final_file
         tmp_path   = adapter.tmp_path
         
-        Net::FTP.open(ip, user, password) do |ftp|
-          begin
-            ftp.chdir(path)
-          rescue
-            raise "Could not find \"#{path}\" on \"#{ip}\", please ensure this directory exists."
-          end
-          
+        Net::SFTP.start(ip, user, :password => password) do |sftp|
           begin
             puts "Storing \"#{final_file}\" to path \"#{path}\" on remote server (#{ip})."
-            ftp.putbinaryfile(File.join(tmp_path, final_file).gsub('\ ', ' '), File.join(path, final_file))
+            sftp.upload!(File.join(tmp_path, final_file).gsub('\ ', ' '), File.join(path, final_file))
           rescue
-            raise "Could not save file to backup server. Is the \"#{path}\" directory writable?"
+            raise "Could not find \"#{path}\" on \"#{ip}\", please ensure this directory exists."
           end
         end
       end
