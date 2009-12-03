@@ -29,6 +29,13 @@
 # GLOBAL OPTIONS
 #  - Keep Backups (keep_backups)
 #  - Encrypt With Pasword (encrypt_with_password)
+#
+# Each Backup Setting can contain:
+# - 1 Adapter
+# - 1 Storage Method
+# - Multiple Global Options
+#
+# The combination of these, however, do not matter! So experiment with it.
 # 
 # For more information on "Backup", please refer to the wiki on github
 #   http://wiki.github.com/meskyanichi/backup/configuration-file
@@ -42,7 +49,7 @@ backup 'mysql-backup-s3' do
     user        'user'
     password    'password'
     database    'database'
-    
+  
     # skip_tables ['table1', 'table2', 'table3']
     # 
     # options do
@@ -70,11 +77,10 @@ backup 'postgresql-backup-scp' do
   
   adapter :postgresql do
     user      'user'
-    password  'password'
     database  'database'
 
     # skip_tables ['table1', 'table2', 'table3']
-    
+  
     # options do
     #   host    '123.45.678.90'
     #   port    '80'
@@ -118,7 +124,7 @@ end
 
 
 # Initialize with:
-#   rake backup:run trigger='custom-backup-ftp'
+#   rake backup:run trigger='custom-backup-sftp'
 backup 'custom-backup-sftp' do
   
   adapter :custom do
