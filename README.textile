@@ -1,12 +1,12 @@
-= Backup
+h1. Backup
 
-== A Backup Ruby Gem for Rails
+h2. A Backup Ruby Gem for Rails
 
 Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way to configure and run backups of your
 MySQL database (soon PostgreSQL and possibly more) and Archives (any files or folders) to "Amazon S3" or "any remotely accessible server using SCP".
 Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
 
-== Backup just updated to version 2.1.0!
+h2. Backup just updated to version 2.1.0!
 
 This was a major update (read below) and a lot of stuff has changed since version 1.x.x!
 Notable changes:
@@ -19,36 +19,36 @@ Notable changes:
 * Can now configure an unlimited amount of customizable backup settings and run them each "individually"!
 * HIGHLY IMPROVED USABILITY!
 
-== TO ANYONE RUNNING BACKUP VERSION 2.0.0, PLEASE READ!
+h2. TO ANYONE RUNNING BACKUP VERSION 2.0.0, PLEASE READ!
 
 I would like to ask you to install the latest version of Backup, as 2.0.0 has some issues.
 A few things that were left unchanged in 2.0.0 have been changed in 2.1.0 and I have updated the Wiki page "Getting Started"
 based on the 2.1.0 release (and later releases) to get everyone up and running!
 
-==== If you have Backup version 2.0.0 installed, please do the following:
+h4. If you have Backup version 2.0.0 installed, please do the following:
 
   sudo gem uninstall backup -v 2.0.0
   sudo gem install backup
 
 And have a quick read through the "Getting Started" Wiki page to see how to setup Backup as of 2.1.0!
 
-=== Refer to the Getting Started page to get up and running incredibly fast with Backup 2!
-http://wiki.github.com/meskyanichi/backup/getting-started
+h3. Refer to the Getting Started page to get up and running incredibly fast with Backup 2!
+"http://wiki.github.com/meskyanichi/backup/getting-started":http://wiki.github.com/meskyanichi/backup/getting-started
 
 
-==== 100% Rewrite!
+*100% Rewrite!*
 This was a 100% rewrite of the gem. So if you discover any issues with it, please report them here so I can fix them as soon as possible!
-http://github.com/meskyanichi/backup/issues
+"http://github.com/meskyanichi/backup/issues":http://github.com/meskyanichi/backup/issues
 
-==== Coded Quickly!
+*Coded Quickly!*
 I've been going all hardcore on this one, building it in a very small amount of time compared to the first version. As far as I can see it fully works,
 but it is of course likely that you or anyone else might encounter some issues. Please report them if you do.
 
-==== Updated The Wiki Quickly!
+*Updated The Wiki Quickly!*
 So when I finished crafting the Backup Gem, I immediately started working on the Wiki and, as for the gem, updated it very quickly on a late sunday night.
 I will come back to the Wiki and see if I can improve it even more next weekend when I have more time. I just wanted to get the essentials built in and I think it worked out pretty nicely regardless. If you have any questions though, don't bother asking!
 
-==== More to come!
+*More to come!*
 Yes, Backup currently supports the most used backup adapters: MySQL and Archive(Files, Folders).
 It Archives, Compresses, Encrypts and cleans up old backups if needed.
 
@@ -56,62 +56,63 @@ I do have plans for adding the PostgreSQL and Custom adapter for version 2 as we
 If there are requests for more/other adapters, I'm all ears! Enjoy.
 
 
-== (Current) Backup's Capabilities
+h2. (Current) Backup's Capabilities
+
 More to be added!
 
-=== Storage Methods
+h3. Storage Methods
 
-- Amazon (S3)
-- Remote Server (SCP)
-
-
-=== Adapters
-
-- MySQL
-- Archive (Any physical files/folders)
-
-(More will be added later, such as PostgreSQL and Custom)
+* Amazon (S3)
+* Remote Server (SCP)
 
 
-=== Archiving
+h3. Adapters
 
-==== Backup supports Archiving.
+* MySQL
+* Archive (Any physical files/folders)
+
+__(More will be added later, such as PostgreSQL and Custom)__
+
+
+h3. Archiving
+
+*Backup supports Archiving.*
 When you use the Archive adapter to backup a bunch of files and folders, backup will archive and compress these all together.
  
 
-=== Encryption
+h3. Encryption
 
-==== Backup supports a simple form of encryption.
+*Backup supports a simple form of encryption.*
 This is optional. All adapters support encryption. This is very simple to enable. Just add the following method inside on of your backup settings
 and it will encrypt it with the specified password:
 
-  encrypt_with_password "mypassword"
+bc. encrypt_with_password "mypassword"
 
 
-=== Backup Cleaning
+h3. Backup Cleaning
 
-==== Backup supports backup cleaning.
+*Backup supports backup cleaning.*
 Backup Cleaning (which is optional) enables you to specify the amount of backups that may be stored on either Amazon S3 or a Remote Server. If you for example tell backup to limit the amount of backups by 20, when the 21st backup gets pushed to the storage location, the oldest version will automatically be destroyed.
 
 The idea behind this is to not flood either your backup server, which might resort in possible lack of hard disk space. Another good reason to utilize this would be for Amazon. Although Amazon S3 is extremely cheap, when backing up 1-2GB of MySQL dumps twice a day, it can become quite expensive if you never remove old ones.
 
 To enable this you simply call the following method inside the desired "backup setting":
 
-  keep_backups 20
+bc. keep_backups 20
   
 
-=== To Do
+h3. To Do
 
-==== (S)FTP
+*(S)FTP*
 I will be adding FTP and SFTP support to Backup shortly. (New Storage Method)
 
-==== MySQL
+*MySQL*
 I will be adding more options to the MySQL Adapter shortly.
 
-==== PostgreSQL
+*PostgreSQL*
 I will be adding the PostgreSQL Adapter shortly.
 
-==== Custom
+*Custom*
 I will be adding the Custom Adapter shortly.
 This adapter is meant (mainly) for people running other database formats that actually supported by Backup.
 Which means, if you run a database format other than MySQL or PostgreSQL, then Custom will allows you to input
@@ -120,124 +121,123 @@ a command (for the command line / terminal) to create an SQL dump of your desire
 The benefit of doing this is that you will still gain all the other benefits of Backup, such as Archiving, Compression, Encryption and Backup Cleaning even though Backup doesn't officially support your database format. You can basically see the "Custom" adapter as any other adapter, except that you have to write your sql dump command yourself. Backup handles the rest!
 
 
-  
-=== Quick Example of a Single Backup Setting inside the Backup Configuration File
+h3. Quick Example of a Single Backup Setting inside the Backup Configuration File
 
-  backup 'mysql-backup-s3' do
-  
-    adapter :mysql do
-      user      'user'
-      password  'password'
-      database  'database'
-    end
-  
-    storage :s3 do
-      access_key_id     'access_key_id'
-      secret_access_key 'secret_access_key'
-      bucket            '/bucket/backups/mysql/'
-    end
-  
-    keep_backups 25
-    encrypt_with_password 'password'
-  
+bc. backup 'mysql-backup-s3' do
+  adapter :mysql do
+    user      'user'
+    password  'password'
+    database  'database'
   end
+  storage :s3 do
+    access_key_id     'access_key_id'
+    secret_access_key 'secret_access_key'
+    bucket            '/bucket/backups/mysql/'
+  end
+  keep_backups 25
+  encrypt_with_password 'password'
+end
+  
   
 The (backup 'mysql-backup-s3' do) is what I call a "backup setting". The first argument of the block is the so called "trigger".
 
-  backup 'mysql-backup-s3' do
-    # Configuration Here
-  end
+bc. backup 'mysql-backup-s3' do
+  # Configuration Here
+end
   
 This acts as an "identifier" for the "backup setting". The (above) "backup setting" is all pretty straightforward.
 So now that we've set up a "backup setting", we can run it using a rake task, like so:
 
-  rake backup:run trigger="mysql-backup-s3"
+bc. rake backup:run trigger="mysql-backup-s3"
 
-==== That's it, the MySQL database has been "backed up" to Amazon S3. It has been dumped, compressed and encrypted with password.
+*That's it, the MySQL database has been "backed up" to Amazon S3. It has been dumped, compressed and encrypted with password.*
 Note: You can add as many "backup setting" blocks as you want inside the "config/backup.rb" configuration file and invoke each of them by their own "trigger". This means you can have as many backup setups as you want, which "don't" all run simultaneously when you initialize a backup.
 
-==== Runs the backup setting with the trigger "backup-logs"
-  rake backup:run trigger="backup-logs"
+*Runs the backup setting with the trigger "backup-logs"*
 
-==== Runs the backup setting with the trigger "backup-mysql"
-  rake backup:run trigger="backup-mysql"
+bc. rake backup:run trigger="backup-logs"
 
-==== Runs the backup setting with the trigger "backup-assets"
-  rake backup:run trigger="backup-assets"
+*Runs the backup setting with the trigger "backup-mysql"*
+
+bc. rake backup:run trigger="backup-mysql"
+
+*Runs the backup setting with the trigger "backup-assets"*
+
+bc. rake backup:run trigger="backup-assets"
 
 etc. etc. etc. etc. etc. etc...
 
 
 
-== Interested in trying out Backup?
+h2. Interested in trying out Backup?
 
-=== Check out the following Wiki pages to get up and running:
+h3. Check out the following Wiki pages to get up and running:
 
-=== Getting started
+h3. Getting started
 
-http://wiki.github.com/meskyanichi/backup/getting-started
-
-
-=== Backup Configuration File (All Adapters, Storage Methods and Options)
-
-http://wiki.github.com/meskyanichi/backup/configuration-file
+"http://wiki.github.com/meskyanichi/backup/getting-started":http://wiki.github.com/meskyanichi/backup/getting-started
 
 
-=== Rake Tasks
+h3. Backup Configuration File (All Adapters, Storage Methods and Options)
 
-http://wiki.github.com/meskyanichi/backup/rake-tasks
-
-
-=== Automatic Backups
-
-http://wiki.github.com/meskyanichi/backup/automatic-backups
+"http://wiki.github.com/meskyanichi/backup/configuration-file":http://wiki.github.com/meskyanichi/backup/configuration-file
 
 
-=== Capistrano Recipes
+h3. Rake Tasks
 
-http://wiki.github.com/meskyanichi/backup/capistrano-recipes
-
-
-=== Capistrano, Whenever!
-
-http://wiki.github.com/meskyanichi/backup/capistrano-whenever
+"http://wiki.github.com/meskyanichi/backup/rake-tasks":http://wiki.github.com/meskyanichi/backup/rake-tasks
 
 
-=== Understanding "The Backup Database"
+h3. Automatic Backups
 
-http://wiki.github.com/meskyanichi/backup/the-backup-database
-
-
-=== Trouble Shooting
-
-http://wiki.github.com/meskyanichi/backup/troubleshooting
+"http://wiki.github.com/meskyanichi/backup/automatic-backups":http://wiki.github.com/meskyanichi/backup/automatic-backups
 
 
-=== Requirements
+h3. Capistrano Recipes
 
-http://wiki.github.com/meskyanichi/backup/requirements
-
-
-=== Resources
-
-http://wiki.github.com/meskyanichi/backup/resources
+"http://wiki.github.com/meskyanichi/backup/capistrano-recipes":http://wiki.github.com/meskyanichi/backup/capistrano-recipes
 
 
-=== Requests
+h3. Capistrano, Whenever!
+
+"http://wiki.github.com/meskyanichi/backup/capistrano-whenever":http://wiki.github.com/meskyanichi/backup/capistrano-whenever
+
+
+h3. Understanding "The Backup Database"
+
+"http://wiki.github.com/meskyanichi/backup/the-backup-database":http://wiki.github.com/meskyanichi/backup/the-backup-database
+
+
+h3. Trouble Shooting
+
+"http://wiki.github.com/meskyanichi/backup/troubleshooting":http://wiki.github.com/meskyanichi/backup/troubleshooting
+
+
+h3. Requirements
+
+"http://wiki.github.com/meskyanichi/backup/requirements":http://wiki.github.com/meskyanichi/backup/requirements
+
+
+h3. Resources
+
+"http://wiki.github.com/meskyanichi/backup/resources":http://wiki.github.com/meskyanichi/backup/resources
+
+
+h3. Requests
 
 If anyone has any requests, please send me a message!
 
 
-=== Suggestions?
+h3. Suggestions?
 
 Send me a message! Fork the project!
 
 
-=== Found a Bug?
+h3. Found a Bug?
 
-http://github.com/meskyanichi/backup/issues
+"http://github.com/meskyanichi/backup/issues":http://github.com/meskyanichi/backup/issues
 
 
-=== Copyright
+h3. Copyright
 
-Copyright (c) 2009 Michael van Rooijen | Final Creation. (http://final-creation.com/) See LICENSE for details.
+Copyright (c) 2009 Michael van Rooijen | Final Creation. ("http://final-creation.com":http://final-creation.com) See LICENSE for details.
