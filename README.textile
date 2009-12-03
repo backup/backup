@@ -3,8 +3,12 @@ h1. Backup
 h2. A Backup Ruby Gem for Rails
 
 Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way to configure and run backups of your
-*MySQL/PostgreSQL databases*, your *Archives (any files or folders)* to *"Amazon S3"* or *"any remotely accessible server using SCP, SFTP or FTP"* transfer methods.
-Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
+MySQL/PostgreSQL databases *(and practically even any other database you can dump through the command line)*. It can also make backups of your *archives* (any files or folders).
+
+All backups can be transferred to either *"Amazon S3"* or "any remotely accessible server using the *SCP, SFTP or FTP* transfer methods".
+
+*Backup handles: Compression, Archiving, Encryption and Backup Cleaning.*
+
 
 h2. What's new in 2.2.0?
 
@@ -44,15 +48,19 @@ What the Custom Adapter does is it allows you to input one or more *commands* to
 *A few bug fixes*
 
 * Issue where two backup settings would conflict if they were using the same Adapter at the same second! (which can happens when running cronjobs!)
-* The temporary files will now be nicely name spaced by "trigger" so no conflict "can" occur
-* When an exception is raised during the backup process, the temporary files will not be removed. This will be fixed as of 2.2.0 as well.
-* And some other minor patches will be applied.
+* The temporary files will now be nicely name spaced by "trigger" so no conflict between two different triggers can occur
+* When an exception is raised during the backup process, the temporary files would not be removed. This is now fixed.
+* And some other minor patches have been applied.
 
 *Updated the Wiki based on this release.*
 
 h3. Get Backup 2.2.x+ now!
 
 bc. sudo gem install backup
+
+And get up and running with Backup 2.2.x+ by reading the *Getting Started* Wiki Page!
+
+"http://wiki.github.com/meskyanichi/backup/getting-started":http://wiki.github.com/meskyanichi/backup/getting-started
 
 
 h2. (Current) Backup's Capabilities

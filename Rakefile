@@ -8,7 +8,8 @@ begin
     gem.summary = %Q{Backup is a gem/plugin that enables you to very easily create backups and transfer these to Amazon S3 or another server with SSH.}
     gem.description = %Q{
                         Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way to configure and run backups of your
-                        MySQL/PostgreSQL databases, your Archives (any files or folders) to "Amazon S3" or "any remotely accessible server using SCP, SFTP or FTP transfer methods".
+                        MySQL/PostgreSQL databases (and practically even any other database you can dump through the command line). It can also make backups of your archives (any files or folders).
+                        All backups can be transferred to either "Amazon S3" or "any remotely accessible server using the SCP, SFTP or FTP transfer methods".
                         Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
                         }
                         

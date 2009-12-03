@@ -5,15 +5,16 @@
 
 Gem::Specification.new do |s|
   s.name = %q{backup}
-  s.version = "2.1.2"
+  s.version = "2.2.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Michael van Rooijen"]
   s.date = %q{2009-12-03}
   s.description = %q{
-                          Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way
-                          to configure and run backups of your MySQL database (soon PostgreSQL and possibly more) and Archives (any files or folders)
-                          to "Amazon S3" or "any remotely accessible server using SCP". Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
+                        Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way to configure and run backups of your
+                        MySQL/PostgreSQL databases (and practically even any other database you can dump through the command line). It can also make backups of your archives (any files or folders).
+                        All backups can be transferred to either "Amazon S3" or "any remotely accessible server using the SCP, SFTP or FTP transfer methods".
+                        Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
                         }
   s.email = %q{meskyan@gmail.com}
   s.extra_rdoc_files = [

@@ -30,6 +30,9 @@
 #  - Keep Backups (keep_backups)
 #  - Encrypt With Pasword (encrypt_with_password)
 #
+#  This is the "decrypt" command for all encrypted backups:
+#    openssl enc -des-cbc -d -in encrypted_file -out decrypted_file
+#
 # Each Backup Setting can contain:
 # - 1 Adapter
 # - 1 Storage Method
