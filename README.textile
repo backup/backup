@@ -6,6 +6,14 @@ Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This 
 MySQL database (soon PostgreSQL and possibly more) and Archives (any files or folders) to "Amazon S3" or "any remotely accessible server using SCP".
 Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
 
+h2. Annoucement! Today/Tomorrow Version Update 2.2.0!
+
+Yes, version 2.0.0 was just released and now we're already moving on to version 2.2.0.
+The move from 2.0.0 to 2.1.0 was more because of an issue with the database, but the move from 2.1.0 to 2.2.0 is a lot bigger than that!
+Scroll down to the *TO DO LIST* to see what will be implemented! Cause I just finished doing all the updates, tomorrow some test runs and then
+I will release the Backup Gem version 2.2.0 and update the Wiki pages as well!
+
+
 h2. Backup just updated to version 2.1.0!
 
 This was a major update (read below) and a lot of stuff has changed since version 1.x.x!
@@ -101,24 +109,45 @@ To enable this you simply call the following method inside the desired "backup s
 bc. keep_backups 20
   
 
-h3. To Do
+h2. TO DO LIST (Finished! Releasing Today/Tomorrow, as Gem version 2.2.0!)
 
 *(S)FTP*
-I will be adding FTP and SFTP support to Backup shortly. (New Storage Method)
+I will be adding FTP and SFTP support to Backup tomorrow! (New Storage Methods!)
 
 *MySQL*
-I will be adding more options to the MySQL Adapter shortly.
+I will be adding more options to the MySQL Adapter tomorrow!
+
+* host
+* socket
+* port
+* skip_tables
+
 
 *PostgreSQL*
-I will be adding the PostgreSQL Adapter shortly.
+I will be adding the PostgreSQL Adapter tomorrow! PostgreSQL will have the same new options as the MySQL Adapter
+
+* host/socket
+* port
+* skip_tables
+
 
 *Custom*
-I will be adding the Custom Adapter shortly.
-This adapter is meant (mainly) for people running other database formats that actually supported by Backup.
-Which means, if you run a database format other than MySQL or PostgreSQL, then Custom will allows you to input
-a command (for the command line / terminal) to create an SQL dump of your desired database. Of course, you will
-(and you probably already know how), have to create the SQL dump command and add it to the Custom Adapter's options.
-The benefit of doing this is that you will still gain all the other benefits of Backup, such as Archiving, Compression, Encryption and Backup Cleaning even though Backup doesn't officially support your database format. You can basically see the "Custom" adapter as any other adapter, except that you have to write your sql dump command yourself. Backup handles the rest!
+I will be adding the Custom Adapter tomorrow!
+This adapter will enable you, regardless of your database, to make SQL dumps. It's very simple.
+*Simply put, if you don't use MySQL or PostgreSQL then you can use Custom.* What the Custom Adapter does is
+it allows you to input one or more commands to execute (SQL Dump Commands). So you will be in full control of
+the SQL Dump command of your specific database format.
+
+*The benefit of doing this through Backup* is that you will still gain all the other features that it provides, such as Archiving, Compression, Encryption and Backup Cleaning even though Backup doesn't officially support your database format. You can basically see the "Custom" adapter as any other adapter, except that you have to write your sql dump command yourself. Backup handles the rest!
+
+*A few bug fixes*
+
+* Issue where two backup settings would conflict if they were using the same Adapter at the same second! (which can happens when running cronjobs!)
+* The temporary files will now be nicely namespaced by "trigger" so no conflict "can" occur
+* When an exception is raised during the backup process, the temporary files will not be removed. This will be fixed as of 2.2.0 as well.
+* And some other minor patches will be applied.
+
+*Update the Wiki based on this release of course!*
 
 
 h3. Quick Example of a Single Backup Setting inside the Backup Configuration File
