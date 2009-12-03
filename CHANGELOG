@@ -1,3 +1,12 @@
+PRETTY BIG UPDATE
+=== 2.2.0 ====================================
+  
+  - Added Storage Methods: FTP and SFTP
+  - Added Adapters: PostgreSQL and Custom
+  - Added more options to the MySQL Adapter
+  - A couple of bug fixes
+
+
 MINOR UPDATE
 === 2.1.2 ====================================
   

@@ -106,7 +106,7 @@ end
 backup 'archive-backup-ftp' do
   
   adapter :archive do
-    files ["#{RAILS_ROOT}/log", "#{RAILS_ROOT}/public/assets"]
+    files ["#{RAILS_ROOT}/log", "#{RAILS_ROOT}/db"]
     # files "#{RAILS_ROOT}/log"
   end
   

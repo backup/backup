@@ -7,9 +7,9 @@ begin
     gem.name = "backup"
     gem.summary = %Q{Backup is a gem/plugin that enables you to very easily create backups and transfer these to Amazon S3 or another server with SSH.}
     gem.description = %Q{
-                          Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way
-                          to configure and run backups of your MySQL database (soon PostgreSQL and possibly more) and Archives (any files or folders)
-                          to "Amazon S3" or "any remotely accessible server using SCP". Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
+                        Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way to configure and run backups of your
+                        MySQL/PostgreSQL databases, your Archives (any files or folders) to "Amazon S3" or "any remotely accessible server using SCP, SFTP or FTP transfer methods".
+                        Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
                         }
                         
     gem.email = "meskyan@gmail.com"

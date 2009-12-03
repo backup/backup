@@ -3,96 +3,88 @@ h1. Backup
 h2. A Backup Ruby Gem for Rails
 
 Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way to configure and run backups of your
-MySQL database (soon PostgreSQL and possibly more) and Archives (any files or folders) to "Amazon S3" or "any remotely accessible server using SCP".
+*MySQL/PostgreSQL databases*, your *Archives (any files or folders)* to *"Amazon S3"* or *"any remotely accessible server using SCP, SFTP or FTP"* transfer methods.
 Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
 
-h2. Annoucement! Today/Tomorrow Version Update 2.2.0!
+h2. What's new in 2.2.0?
 
-Yes, version 2.0.0 was just released and now we're already moving on to version 2.2.0.
-The move from 2.0.0 to 2.1.0 was more because of an issue with the database, but the move from 2.1.0 to 2.2.0 is a lot bigger than that!
-Scroll down to the *TO DO LIST* to see what will be implemented! Cause I just finished doing all the updates, tomorrow some test runs and then
-I will release the Backup Gem version 2.2.0 and update the Wiki pages as well!
+*(S)FTP*
+FTP and SFTP Storage Methods have been added. This will allow you to transfer your backups
+through a (S)FTP if you cannot make use of SCP.
 
+*MySQL*
+The following options have been added to the MySQL Adapter
 
-h2. Backup just updated to version 2.1.0!
+* host
+* socket
+* port
+* skip_tables
 
-This was a major update (read below) and a lot of stuff has changed since version 1.x.x!
-Notable changes:
-* Should be a lot more backwards compatible with every update I do.
-* Does not depend on the separate local SQLite3 file any longer.
-* Will provide a db migration file for your Rails Application to store backup record data in. 
-* Does not use YAML files to do configuration any longer.
-* Uses a SINGLE ruby file for "all" configuration (config/backup.rb) using elegant block notations!
-* Uses a SINGLE rake task to handle the initialization of any backup setting.
-* Can now configure an unlimited amount of customizable backup settings and run them each "individually"!
-* HIGHLY IMPROVED USABILITY!
+*PostgreSQL*
+The PostgreSQL Adapter has been added! It has about the same options as the MySQL Adapter
 
-h2. TO ANYONE RUNNING BACKUP VERSION 2.0.0, PLEASE READ!
+* host/socket
+* port
+* skip_tables
 
-I would like to ask you to install the latest version of Backup, as 2.0.0 has some issues.
-A few things that were left unchanged in 2.0.0 have been changed in 2.1.0 and I have updated the Wiki page "Getting Started"
-based on the 2.1.0 release (and later releases) to get everyone up and running!
+If you are using PostgreSQL and the Adapter isn't working correctly, please notify me of this.
+I personally never used PostgreSQL, so I don't really have any experience with it, but since there are people that do use it, I wanted to implement it.
 
-h4. If you have Backup version 2.0.0 installed, please do the following:
+*Custom*
+This adapter will enable you, regardless of your database, to make SQL dumps. It's very simple.
+*Simply put: If you don't use MySQL or PostgreSQL then you can use Custom to backup your database format, regardless.*
+What the Custom Adapter does is it allows you to input one or more *commands* to execute (think of *mysqldump* or *pg_dump*, but for other databases).
 
-  sudo gem uninstall backup -v 2.0.0
-  sudo gem install backup
+*The benefit of doing this through Backup* is that you will still gain all the other features that it provides, such as Archiving, Compression, Encryption and Backup Cleaning, even though Backup doesn't officially support your specific database format! You can basically see the Custom adapter as any other adapter, except that you have to *write the sql dump command yourself*. And then Backup handles the rest!
 
-And have a quick read through the "Getting Started" Wiki page to see how to setup Backup as of 2.1.0!
+*More info on the adapters:*
 
-h3. Refer to the Getting Started page to get up and running incredibly fast with Backup 2!
-"http://wiki.github.com/meskyanichi/backup/getting-started":http://wiki.github.com/meskyanichi/backup/getting-started
+"http://wiki.github.com/meskyanichi/backup/configuration-file":http://wiki.github.com/meskyanichi/backup/configuration-file
 
+*A few bug fixes*
 
-*100% Rewrite!*
-This was a 100% rewrite of the gem. So if you discover any issues with it, please report them here so I can fix them as soon as possible!
-"http://github.com/meskyanichi/backup/issues":http://github.com/meskyanichi/backup/issues
+* Issue where two backup settings would conflict if they were using the same Adapter at the same second! (which can happens when running cronjobs!)
+* The temporary files will now be nicely name spaced by "trigger" so no conflict "can" occur
+* When an exception is raised during the backup process, the temporary files will not be removed. This will be fixed as of 2.2.0 as well.
+* And some other minor patches will be applied.
 
-*Coded Quickly!*
-I've been going all hardcore on this one, building it in a very small amount of time compared to the first version. As far as I can see it fully works,
-but it is of course likely that you or anyone else might encounter some issues. Please report them if you do.
+*Updated the Wiki based on this release.*
 
-*Updated The Wiki Quickly!*
-So when I finished crafting the Backup Gem, I immediately started working on the Wiki and, as for the gem, updated it very quickly on a late sunday night.
-I will come back to the Wiki and see if I can improve it even more next weekend when I have more time. I just wanted to get the essentials built in and I think it worked out pretty nicely regardless. If you have any questions though, don't bother asking!
+h3. Get Backup 2.2.x+ now!
 
-*More to come!*
-Yes, Backup currently supports the most used backup adapters: MySQL and Archive(Files, Folders).
-It Archives, Compresses, Encrypts and cleans up old backups if needed.
-
-I do have plans for adding the PostgreSQL and Custom adapter for version 2 as well very soon!
-If there are requests for more/other adapters, I'm all ears! Enjoy.
+bc. sudo gem install backup
 
 
 h2. (Current) Backup's Capabilities
-
-More to be added!
 
 h3. Storage Methods
 
 * Amazon (S3)
 * Remote Server (SCP)
+* Remote Server (SFTP)
+* Remote Server (FTP)
 
 
 h3. Adapters
 
 * MySQL
-* Archive (Any physical files/folders)
-
-__(More will be added later, such as PostgreSQL and Custom)__
+* PostgreSQL
+* Archive (any files or folders)
+* Custom (any database format other than MySQL or PostgreSQL!)
 
 
 h3. Archiving
 
 *Backup supports Archiving.*
 When you use the Archive adapter to backup a bunch of files and folders, backup will archive and compress these all together.
- 
+Archiving also happens when using the *Custom* adapter. If you issue a few commands using it, to dump maybe 1-3 databases, Backup will
+handle the archiving, compression and encryption for you!
 
 h3. Encryption
 
 *Backup supports a simple form of encryption.*
-This is optional. All adapters support encryption. This is very simple to enable. Just add the following method inside on of your backup settings
-and it will encrypt it with the specified password:
+All adapters support encryption. This is very simple to enable. Just add the following method inside of the backup settings
+of which you wish to encrypt, and it will encrypt it with the specified password:
 
 bc. encrypt_with_password "mypassword"
 
@@ -100,54 +92,13 @@ bc. encrypt_with_password "mypassword"
 h3. Backup Cleaning
 
 *Backup supports backup cleaning.*
-Backup Cleaning (which is optional) enables you to specify the amount of backups that may be stored on either Amazon S3 or a Remote Server. If you for example tell backup to limit the amount of backups by 20, when the 21st backup gets pushed to the storage location, the oldest version will automatically be destroyed.
+Backup Cleaning enables you to specify the amount of backups that may be stored on either Amazon S3 or a Remote Server. If you for example tell backup to limit the amount of backups at 20, then when the 21st backup gets pushed to the storage location, the oldest version will automatically be destroyed.
 
 The idea behind this is to not flood either your backup server, which might resort in possible lack of hard disk space. Another good reason to utilize this would be for Amazon. Although Amazon S3 is extremely cheap, when backing up 1-2GB of MySQL dumps twice a day, it can become quite expensive if you never remove old ones.
 
 To enable this you simply call the following method inside the desired "backup setting":
 
 bc. keep_backups 20
-  
-
-h2. TO DO LIST (Finished! Releasing Today/Tomorrow, as Gem version 2.2.0!)
-
-*(S)FTP*
-I will be adding FTP and SFTP support to Backup tomorrow! (New Storage Methods!)
-
-*MySQL*
-I will be adding more options to the MySQL Adapter tomorrow!
-
-* host
-* socket
-* port
-* skip_tables
-
-
-*PostgreSQL*
-I will be adding the PostgreSQL Adapter tomorrow! PostgreSQL will have the same new options as the MySQL Adapter
-
-* host/socket
-* port
-* skip_tables
-
-
-*Custom*
-I will be adding the Custom Adapter tomorrow!
-This adapter will enable you, regardless of your database, to make SQL dumps. It's very simple.
-*Simply put, if you don't use MySQL or PostgreSQL then you can use Custom.* What the Custom Adapter does is
-it allows you to input one or more commands to execute (SQL Dump Commands). So you will be in full control of
-the SQL Dump command of your specific database format.
-
-*The benefit of doing this through Backup* is that you will still gain all the other features that it provides, such as Archiving, Compression, Encryption and Backup Cleaning even though Backup doesn't officially support your database format. You can basically see the "Custom" adapter as any other adapter, except that you have to write your sql dump command yourself. Backup handles the rest!
-
-*A few bug fixes*
-
-* Issue where two backup settings would conflict if they were using the same Adapter at the same second! (which can happens when running cronjobs!)
-* The temporary files will now be nicely namespaced by "trigger" so no conflict "can" occur
-* When an exception is raised during the backup process, the temporary files will not be removed. This will be fixed as of 2.2.0 as well.
-* And some other minor patches will be applied.
-
-*Update the Wiki based on this release of course!*
 
 
 h3. Quick Example of a Single Backup Setting inside the Backup Configuration File
