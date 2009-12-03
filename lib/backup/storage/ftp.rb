@@ -17,7 +17,7 @@ module Backup
           begin
             ftp.chdir(path)
           rescue
-            raise "Could not find \"#{path}\" on \"#{ip}\", please ensure this directory exists."
+            raise "Could not find or access \"#{path}\" on \"#{ip}\", please ensure this directory exists and is accessible by the user \"#{user}\"."
           end
           
           begin
