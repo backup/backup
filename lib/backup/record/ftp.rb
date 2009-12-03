@@ -14,7 +14,7 @@ module Backup
       attr_accessor :adapter_config, :keep_backups, :ip, :user, :password
       
       # Receives the options hash and stores it
-      # Sets the SCP values
+      # Sets the FTP values
       def load_adapter(adapter)
         self.adapter_config = adapter
         self.storage        = 'ftp'
@@ -28,7 +28,7 @@ module Backup
         end
       end
       
-      # Destroys all backups for the specified trigger from Remote Server (SCP)
+      # Destroys all backups for the specified trigger from Remote Server (FTP)
       def self.destroy_all_backups(procedure, trigger)
         backups = Backup::Record::FTP.all(:conditions => {:trigger => trigger})        
         unless backups.empty?

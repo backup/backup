@@ -4,7 +4,7 @@ module Backup
       
       attr_accessor :user, :password, :ip, :path, :tmp_path, :final_file
       
-      # Stores the file on the remote server using SCP
+      # Stores the backup file on the remote server using SFTP
       def initialize(adapter)
         %w(ip user password path).each do |method|
           send(:"#{method}=", adapter.procedure.get_storage_configuration.attributes[method])

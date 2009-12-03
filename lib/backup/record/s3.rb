@@ -64,10 +64,8 @@ module Backup
             end
             
             unless backups_to_destroy.empty?
-              
               # Create a new Amazon S3 Object
               s3 = Backup::Connection::S3.new(adapter_config)
-            
               # Connect to Amazon S3 with provided credentials
               s3.connect
             
