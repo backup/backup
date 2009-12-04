@@ -167,6 +167,11 @@ h3. Getting started
 "http://wiki.github.com/meskyanichi/backup/getting-started":http://wiki.github.com/meskyanichi/backup/getting-started
 
 
+h3. Production Mode (important)
+
+"http://wiki.github.com/meskyanichi/backup/production-mode":http://wiki.github.com/meskyanichi/backup/production-mode
+
+
 h3. Backup Configuration File (All Adapters, Storage Methods and Options)
 
 "http://wiki.github.com/meskyanichi/backup/configuration-file":http://wiki.github.com/meskyanichi/backup/configuration-file
