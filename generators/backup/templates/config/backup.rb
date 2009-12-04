@@ -66,6 +66,7 @@ backup 'mysql-backup-s3' do
     access_key_id     'access_key_id'
     secret_access_key 'secret_access_key'
     bucket            '/bucket/backups/mysql/'
+    use_ssl           true
   end
   
   keep_backups 25

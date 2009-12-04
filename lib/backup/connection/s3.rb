@@ -2,7 +2,7 @@ module Backup
   module Connection
     class S3
       
-      attr_accessor :adapter, :access_key_id, :secret_access_key, :s3_bucket, :final_file, :tmp_path
+      attr_accessor :adapter, :access_key_id, :secret_access_key, :s3_bucket, :use_ssl, :final_file, :tmp_path
       
       # Initializes the S3 connection, setting the values using the S3 adapter
       def initialize(adapter = false)
@@ -12,6 +12,7 @@ module Backup
           self.access_key_id      = adapter.procedure.get_storage_configuration.attributes['access_key_id']
           self.secret_access_key  = adapter.procedure.get_storage_configuration.attributes['secret_access_key']
           self.s3_bucket          = adapter.procedure.get_storage_configuration.attributes['bucket']
+          self.use_ssl            = adapter.procedure.get_storage_configuration.attributes['use_ssl']
         end
       end
       
@@ -20,13 +21,15 @@ module Backup
         self.access_key_id      = procedure.get_storage_configuration.attributes['access_key_id']
         self.secret_access_key  = procedure.get_storage_configuration.attributes['secret_access_key']
         self.s3_bucket          = procedure.get_storage_configuration.attributes['bucket']
+        self.use_ssl            = procedure.get_storage_configuration.attributes['use_ssl']
       end
       
       # Establishes a connection with Amazon S3 using the credentials provided by the user
       def connect
         AWS::S3::Base.establish_connection!(
           :access_key_id     => access_key_id,
-          :secret_access_key => secret_access_key
+          :secret_access_key => secret_access_key,
+          :use_ssl           => use_ssl
         )
       end
       
