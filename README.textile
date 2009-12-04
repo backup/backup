@@ -226,6 +226,13 @@ h3. Found a Bug?
 "http://github.com/meskyanichi/backup/issues":http://github.com/meskyanichi/backup/issues
 
 
+h3. Contributors
+
+List of people that forked and added stuff!
+
+* "dtrueman":http://github.com/dtrueman
+
+
 h3. Copyright
 
 Copyright (c) 2009 Michael van Rooijen | Final Creation. ("http://final-creation.com":http://final-creation.com) See LICENSE for details.
