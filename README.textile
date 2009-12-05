@@ -154,6 +154,21 @@ bc. rake backup:run trigger="backup-mysql"
 
 bc. rake backup:run trigger="backup-assets"
 
+h3. Additional Options for MySQL and PostgreSQL
+
+You can pass additional options/flags into the MySQL and PostgreSQL adapters via additional_options. For example:
+
+bc. backup 'mysql-backup-s3' do
+  adapter :mysql do
+    user      'user'
+    password  'password'
+    database  'database'
+    additional_options '--single-transaction'
+  end
+  .
+  .
+end
+
 etc. etc. etc. etc. etc. etc...
 
 
