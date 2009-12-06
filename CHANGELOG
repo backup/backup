@@ -1,3 +1,10 @@
+SMALL FEATURE UPDATE
+=== 2.2.1 ====================================
+  
+  - use_ssl option added for S3 Storage Method
+  - additional_options option added for MySQL and PostgreSQL Adapters
+
+
 PRETTY BIG UPDATE
 === 2.2.0 ====================================
   
