@@ -9,6 +9,16 @@ All backups can be transferred to either *"Amazon S3"* or "any remotely accessib
 
 *Backup handles: Compression, Archiving, Encryption and Backup Cleaning.*
 
+h2. Backup Might Go General Purpose, and have a Rails Adapter?
+
+I've been thinking that it might be more interesting to have Backup as a general purpose Ruby Gem, that's not limited to only being used in Ruby on Rails applications. It might be an interesting idea make Backup a general purpose solution for backing up (as it does now), but not only as a Rails Plugin. What I mean by this is that I believe it would be a good idea to implement an executable binary that can be used to backup anything, regardless of whether it has anything to do with Rails or not. The benefit of having this is that if you for example run your MySQL or PostgreSQL (or whatever database or assets) on a separate server, then you could just install the Backup Gem and without installing Rails, be able to run backups from that server as well.
+
+I am not sure if this is even possible to implement with the current Backup Gem architecture. I will be looking in to this. But I believe it has many little benefits cause It will be compatible basically with anything. Because if you look at what it does now, it backs up your database, and/or assets. What you get from it being Rails Specific is that it's stupidly easy to set up. Just generate a configuration file, add the config.gem "backup" in the environment.rb and run the rake task. Though, with a general purpose version it should be just as easy. Because you still have to specify the database, you still have to specify the assets/files/folders. The only difference is that you will have a default location on the server where Backup will remain (which is good in my honest opinion) sort of "installed" and isolated from any Rails Applications, but can of course just access them through, for example, absolute paths e.g. "/var/rails/myapp/current".
+
+So again, I'll be looking into if it's still possible with backup and maybe start a new separate branch to hack on it and see how it goes. I could always do a 100% rewrite again. *I do aim to keep Backup working with Rails as it currently does however*, so that nothing changes from what it is now. So if it gets implemented, you could basically see the general purpose thing as the main thing, and that it works with Rails more as a sub-thing. Again, we'll see and I'll keep you updated!
+
+*If anyone has any suggestions/comments/ideas/whatever, please send me a message!*
+
 
 h2. What's new in 2.2.0?
 
