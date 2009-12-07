@@ -1,0 +1,100 @@
+#!/usr/bin/env ruby
+
+#require "#{File.join(File.dirname(__FILE__), '..', 'lib', 'backup')}"
+require 'backup'
+include Backup::Environment::Unix::Commands
+
+options = {}
+
+optparse = OptionParser.new do |opts|
+  
+  opts.banner = "\nUsage: backup [OPTIONS]"
+  
+  opts.on('-h', '--help', 'Display help screen') do
+    puts opts
+    exit
+  end
+  
+  opts.on('--setup', "Sets up Backup") do
+    setup
+  end
+  
+  opts.on('--reset', "Reinstalls Backup (This will remove ALL current settings!)") do
+    reset
+  end
+  
+  opts.on('--remove', "Removes Backup (This will remove ALL current settings!)") do
+    remove
+  end
+
+  opts.on('-r', '--run [trigger]', "Runs backup process by trigger") do |trigger|
+    Backup::Setup.new(trigger, @backup_procedures).initialize_adapter
+  end
+  
+  opts.on('-t', '--truncate [trigger]', "Truncates backup records for specified trigger") do |trigger|
+    puts "Truncating backups with trigger: #{trigger}."
+    backup = Backup::Setup.new(trigger, @backup_procedures)
+    case backup.procedure.storage_name.to_sym
+      when :s3    then Backup::Record::S3.destroy_all   :trigger => trigger, :storage => 's3'
+      when :scp   then Backup::Record::SCP.destroy_all  :trigger => trigger, :storage => 'scp'
+      when :ftp   then Backup::Record::FTP.destroy_all  :trigger => trigger, :storage => 'ftp'
+      when :sftp  then Backup::Record::SFTP.destroy_all :trigger => trigger, :storage => 'sftp'
+    end
+  end
+  
+  opts.on('--truncate-all', "Truncates all backup records") do
+    Backup::Record::S3.destroy_all
+    Backup::Record::SCP.destroy_all
+    Backup::Record::FTP.destroy_all
+    Backup::Record::SFTP.destroy_all
+  end
+  
+  opts.on('-d', '--destroy [trigger]', "Destroys backup records and files for specified trigger") do |trigger|
+    backup = Backup::Setup.new(trigger, @backup_procedures)
+    case backup.procedure.storage_name.to_sym
+      when :s3    then Backup::Record::S3.destroy_all_backups   backup.procedure,  trigger
+      when :scp   then Backup::Record::SCP.destroy_all_backups  backup.procedure,  trigger
+      when :ftp   then Backup::Record::FTP.destroy_all_backups  backup.procedure,  trigger
+      when :sftp  then Backup::Record::SFTP.destroy_all_backups backup.procedure,  trigger
+    end
+  end
+
+  opts.on('--destroy-all', "Destroys all backup records and files") do
+    backup = Backup::Setup.new(false, @backup_procedures)
+    backup.procedures.each do |backup_procedure|
+      case backup_procedure.storage_name.to_sym
+        when :s3    then Backup::Record::S3.destroy_all_backups     backup_procedure,  backup_procedure.trigger
+        when :scp   then Backup::Record::SCP.destroy_all_backups    backup_procedure,  backup_procedure.trigger
+        when :ftp   then Backup::Record::FTP.destroy_all_backups    backup_procedure,  backup_procedure.trigger
+        when :sftp  then Backup::Record::SFTP.destroy_all_backups   backup_procedure,  backup_procedure.trigger
+      end
+    end
+  end
+  
+  opts.on('-f', '--find [trigger]', "Finds backup records by trigger") do |trigger|
+    require 'pp'
+    require 'hirb'
+    
+  #  Hirb.enable
+    Hirb::View.enable
+    
+    p Backup::Record::SCP.all
+    
+    puts Backup::Record::SCP.all
+    
+    pp Backup::Record::SCP.all
+    
+    #Backup::Record::SCP.all.each do |record|
+    #  puts record.to_yaml
+    #end
+  end
+
+end
+
+begin
+  optparse.parse!
+rescue OptionParser::InvalidOption
+  puts "\nInvalid Option. See the list of available options below.\n"
+  puts optparse
+  exit
+end

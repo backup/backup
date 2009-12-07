@@ -2,18 +2,15 @@ module Backup
   module Record
     class S3 < ActiveRecord::Base
       
-      if connection.table_exists?('backup')
-        set_table_name 'backup'
-        default_scope \
-          :order => 'created_at desc',
-          :conditions => {:storage => 's3'}
-      else
-        set_table_name 'backup_s3'
-        attr_accessor :storage
-        default_scope \
-          :order => 'created_at desc'
+      if DB_CONNECTION_SETTINGS
+        establish_connection(DB_CONNECTION_SETTINGS)
       end
       
+      set_table_name 'backup'
+      default_scope \
+        :order => 'created_at desc',
+        :conditions => {:storage => 's3'}
+
       # Callbacks
       after_save :clean_backups
       

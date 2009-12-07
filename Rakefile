@@ -16,10 +16,12 @@ begin
     gem.email = "meskyan@gmail.com"
     gem.homepage = "http://final-creation.com/open-source"
     gem.authors = ["Michael van Rooijen"]
-    gem.add_dependency "aws-s3",    ">= 0.6.2"
-    gem.add_dependency "net-ssh",   ">= 2.0.15"
-    gem.add_dependency "net-scp",   ">= 1.0.2"
-    gem.add_dependency "net-sftp",  ">= 2.0.4"
+    gem.add_dependency "aws-s3",        ">= 0.6.2"
+    gem.add_dependency "net-ssh",       ">= 2.0.15"
+    gem.add_dependency "net-scp",       ">= 1.0.2"
+    gem.add_dependency "net-sftp",      ">= 2.0.4"
+    gem.add_dependency "activerecord",  ">= 2.3.5"
+    
   end
 rescue LoadError
   puts "Jeweler (or a dependency) not available. Install it with: sudo gem install jeweler"

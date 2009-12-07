@@ -1,7 +1,11 @@
 module Backup
   module Record
     class FTP < ActiveRecord::Base
-
+      
+      if DB_CONNECTION_SETTINGS
+        establish_connection(DB_CONNECTION_SETTINGS)
+      end
+      
       set_table_name 'backup'
       default_scope \
         :order => 'created_at desc',

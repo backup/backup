@@ -1,46 +1,56 @@
-# Load in Connectivity and Transfer Gems
+# Gems
 require 'net/ssh'
 require 'net/scp'
 require 'net/ftp'
 require 'net/sftp'
 require 'aws/s3'
 
-# Load in Adapters
-require 'backup/adapters/base'
-require 'backup/adapters/mysql'
-require 'backup/adapters/postgresql'
-require 'backup/adapters/archive'
-require 'backup/adapters/custom'
+# Environments
+require 'backup/environment/base'
+require 'backup/environment/unix'
+require 'backup/environment/rails'
 
-# Load in Connectors
-require 'backup/connection/s3'
-
-# Load in Storage
-require 'backup/storage/s3'
-require 'backup/storage/scp'
-require 'backup/storage/ftp'
-require 'backup/storage/sftp'
-
-# Load in Backup Recorders
-require 'backup/record/s3'
-require 'backup/record/scp'
-require 'backup/record/ftp'
-require 'backup/record/sftp'
-
-# Load in Configuration
+# Configuration
 require 'backup/configuration/base'
 require 'backup/configuration/adapter'
 require 'backup/configuration/adapter_options'
 require 'backup/configuration/storage'
 require 'backup/configuration/helpers'
 
-# Load Backup Configuration Helpers
 include Backup::Configuration::Helpers
+include Backup::Environment::Base
 
-# Load in User Configured Backup Procedures if the file exists
-if File.exist?(File.join(RAILS_ROOT, 'config', 'backup.rb'))
-  require File.join(RAILS_ROOT, 'config', 'backup.rb')
+case current_environment
+  when :unix  then include Backup::Environment::Unix
+  when :rails then include Backup::Environment::Rails
 end
+
+if File.exist?(File.join(BACKUP_PATH, 'config', 'backup.rb'))
+  require File.join(BACKUP_PATH, 'config', 'backup.rb')
+end
+
+# Adapters
+require 'backup/adapters/base'
+require 'backup/adapters/mysql'
+require 'backup/adapters/postgresql'
+require 'backup/adapters/archive'
+require 'backup/adapters/custom'
+
+# Connectors
+require 'backup/connection/s3'
+
+# Storage
+require 'backup/storage/s3'
+require 'backup/storage/scp'
+require 'backup/storage/ftp'
+require 'backup/storage/sftp'
+
+# Backup Recorders
+require 'backup/record/s3'
+require 'backup/record/scp'
+require 'backup/record/ftp'
+require 'backup/record/sftp'
+
 
 # Backup Module
 module Backup

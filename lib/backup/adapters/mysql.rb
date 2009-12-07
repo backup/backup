@@ -26,7 +26,7 @@ module Backup
           store
           record
         ensure
-          remove_tmp_files
+          #remove_tmp_files
         end
       end
       
