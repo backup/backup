@@ -31,7 +31,7 @@
 #  - Encrypt With Pasword (encrypt_with_password)
 #
 #  This is the "decrypt" command for all encrypted backups:
-#    openssl enc -des-cbc -d -in encrypted_file -out decrypted_file
+#    sudo backup --decrypt /path/to/encrypted/file
 #
 # Each Backup Setting can contain:
 # - 1 Adapter
@@ -60,6 +60,7 @@ backup 'mysql-backup-s3' do
     #   port    '80'
     #   socket  '/tmp/socket.sock'
     # end
+    # additional_options '--single-transaction  --quick'
   end
   
   storage :s3 do
@@ -90,6 +91,7 @@ backup 'postgresql-backup-scp' do
     #   port    '80'
     #   socket  '/tmp/socket.sock'
     # end
+    # additional_options '--clean --blobs'
   end
   
   storage :scp do

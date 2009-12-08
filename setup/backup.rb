@@ -6,9 +6,9 @@
 #
 # In the example below we have a "mysql-backup-s3" trigger for the backup setting.
 # All the configuration is done inside this block. To initialize the backup process for this block,
-# you invoke it using the following rake task:
+# you invoke it using the following command:
 #
-#   rake backup:run trigger="mysql-backup-s3"
+#   backup --run mysql-backup-s3
 # 
 # You can add as many backup block settings as you want, just be sure every trigger is unique and you can run
 # each of them separately.
@@ -30,7 +30,7 @@
 #  - Encrypt With Pasword (encrypt_with_password)
 #
 #  This is the "decrypt" command for all encrypted backups:
-#    openssl enc -des-cbc -d -in encrypted_file -out decrypted_file
+#    sudo backup --decrypt /path/to/encrypted/file
 #
 # Each Backup Setting can contain:
 # - 1 Adapter
@@ -44,7 +44,7 @@
 
 
 # Initialize with:
-#   rake backup:run trigger='mysql-backup-s3'
+#  sudo backup --run mysql-backup-s3
 backup 'mysql-backup-s3' do
   
   adapter :mysql do
@@ -59,6 +59,7 @@ backup 'mysql-backup-s3' do
     #   port    '80'
     #   socket  '/tmp/socket.sock'
     # end
+    # additional_options '--single-transaction  --quick'
   end
   
   storage :s3 do
@@ -75,7 +76,7 @@ end
 
 
 # Initialize with:
-#   rake backup:run trigger='postgresql-backup-s3'
+#  sudo backup --run postgresql-backup-s3
 backup 'postgresql-backup-scp' do
   
   adapter :postgresql do
@@ -89,6 +90,7 @@ backup 'postgresql-backup-scp' do
     #   port    '80'
     #   socket  '/tmp/socket.sock'
     # end
+    # additional_options '--clean --blobs'
   end
   
   storage :scp do
@@ -105,7 +107,7 @@ end
 
 
 # Initialize with:
-#   rake backup:run trigger='archive-backup-ftp'
+#   sudo backup --run archive-backup-ftp
 backup 'archive-backup-ftp' do
   
   adapter :archive do
@@ -127,7 +129,7 @@ end
 
 
 # Initialize with:
-#   rake backup:run trigger='custom-backup-sftp'
+#   sudo backup --run custom-backup-sftp
 backup 'custom-backup-sftp' do
   
   adapter :custom do
