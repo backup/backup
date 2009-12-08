@@ -1,3 +1,10 @@
+BIG UPDATE
+=== 2.3.0 ====================================
+  
+  - Backup became independent of Ruby on Rails
+  - Backup now supports multiple environments: Rails and Unix
+  - Backup is now executable through the command-line when using the Unix environment
+
 SMALL FEATURE UPDATE
 === 2.2.1 ====================================
   

@@ -9,7 +9,7 @@ options = {}
 
 optparse = OptionParser.new do |opts|
   
-  opts.banner = "\nUsage: backup [OPTIONS]"
+  opts.banner = "\nUsage: backup [options]\n "
   
   opts.on('-r', '--run [trigger]', "Runs backup process by trigger") do |trigger|
     confirm_configuration_file_existence
@@ -80,7 +80,7 @@ optparse = OptionParser.new do |opts|
     end
   end
 
-  opts.on('--decrypt [FILE]', "Decrypts a \"Backup\" encrypted file") do |file|
+  opts.on('--decrypt [file]', "Decrypts a \"Backup\" encrypted file") do |file|
     %x{ openssl enc -des-cbc -d -in #{file} -out #{file.gsub('.enc', '')} }
   end
   
@@ -110,6 +110,7 @@ optparse = OptionParser.new do |opts|
 
   opts.on('-h', '--help', 'Display help screen') do
     puts opts
+    puts "\n "
     exit
   end  
   
@@ -120,5 +121,6 @@ begin
 rescue OptionParser::InvalidOption
   puts "\nInvalid Option. See the list of available options below.\n"
   puts optparse
+  puts "\n "
   exit
 end

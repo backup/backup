@@ -5,17 +5,18 @@
 
 Gem::Specification.new do |s|
   s.name = %q{backup}
-  s.version = "2.2.2"
+  s.version = "2.3.0.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Michael van Rooijen"]
   s.date = %q{2009-12-08}
   s.default_executable = %q{backup}
   s.description = %q{
-                        Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way to configure and run backups of your
-                        MySQL/PostgreSQL databases (and practically even any other database you can dump through the command line). It can also make backups of your archives (any files or folders).
-                        All backups can be transferred to either "Amazon S3" or "any remotely accessible server using the SCP, SFTP or FTP transfer methods".
-                        Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
+                            Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the
+                            Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases such as
+                            MySQL/PostgreSQL and Files/Folders. All backups can be transferred to Amazon S3 or any remote server you
+                            have access to, using either SCP, SFTP or regular FTP. Backup handles Compression, Archiving, Encryption
+                            and Backup Cleaning (Cycling).
                         }
   s.email = %q{meskyan@gmail.com}
   s.executables = ["backup"]
@@ -67,7 +68,7 @@ Gem::Specification.new do |s|
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.5}
-  s.summary = %q{Backup is a gem/plugin that enables you to very easily create backups and transfer these to Amazon S3 or another server with SSH.}
+  s.summary = %q{Backup is a Ruby Gem that simplifies making backups for databases, files and folders.}
 
   if s.respond_to? :specification_version then
     current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
@@ -79,12 +80,16 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<net-scp>, [">= 1.0.2"])
       s.add_runtime_dependency(%q<net-sftp>, [">= 2.0.4"])
       s.add_runtime_dependency(%q<activerecord>, [">= 2.3.5"])
+      s.add_runtime_dependency(%q<sqlite3-ruby>, [">= 1.2.5"])
+      s.add_runtime_dependency(%q<hirb>, [">= 0.2.9"])
     else
       s.add_dependency(%q<aws-s3>, [">= 0.6.2"])
       s.add_dependency(%q<net-ssh>, [">= 2.0.15"])
       s.add_dependency(%q<net-scp>, [">= 1.0.2"])
       s.add_dependency(%q<net-sftp>, [">= 2.0.4"])
       s.add_dependency(%q<activerecord>, [">= 2.3.5"])
+      s.add_dependency(%q<sqlite3-ruby>, [">= 1.2.5"])
+      s.add_dependency(%q<hirb>, [">= 0.2.9"])
     end
   else
     s.add_dependency(%q<aws-s3>, [">= 0.6.2"])
@@ -92,6 +97,8 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<net-scp>, [">= 1.0.2"])
     s.add_dependency(%q<net-sftp>, [">= 2.0.4"])
     s.add_dependency(%q<activerecord>, [">= 2.3.5"])
+    s.add_dependency(%q<sqlite3-ruby>, [">= 1.2.5"])
+    s.add_dependency(%q<hirb>, [">= 0.2.9"])
   end
 end
 

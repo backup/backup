@@ -1,76 +1,42 @@
 h1. Backup
 
-h2. A Backup Ruby Gem for Rails
+h2. A Backup Ruby Gem
 
-Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way to configure and run backups of your
-MySQL/PostgreSQL databases *(and practically even any other database you can dump through the command line)*. It can also make backups of your *archives* (any files or folders).
+Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases such as MySQL/PostgreSQL and Files/Folders. All backups can be transferred to Amazon S3 or any remote server you have access to, using either SCP, SFTP or regular FTP. Backup handles Compression, Archiving, Encryption and Backup Cleaning (Cycling).
 
-All backups can be transferred to either *"Amazon S3"* or "any remotely accessible server using the *SCP, SFTP or FTP* transfer methods".
+h2. Backup goes independent with the release of version 2.3.0! Ruby on Rails is no longer "required"!
 
-*Backup handles: Compression, Archiving, Encryption and Backup Cleaning.*
+*Before you read on, let me tell you that even though all this awesomeness has been added, Backup will still work as it did in the previous version with Ruby on Rails!*
 
-h2. Backup Might Go General Purpose, and have a Rails Adapter?
+I am pleased to announce that Backup (version 2.3.0+) has been released and am very satisfied with this update. Backup can now make use of an executable bin file! Why is this so awesome? Because now Backup is Ruby on Rails independent! This means you can make use of Backup whether you use Rails or not, and with the same simplicity! *(pshh.. It's actually simpler to be honest!)*.
 
-I've been thinking that it might be more interesting to have Backup as a general purpose Ruby Gem, that's not limited to only being used in Ruby on Rails applications. It might be an interesting idea make Backup a general purpose solution for backing up (as it does now), but not only as a Rails Plugin. What I mean by this is that I believe it would be a good idea to implement an executable binary that can be used to backup anything, regardless of whether it has anything to do with Rails or not. The benefit of having this is that if you for example run your MySQL or PostgreSQL (or whatever database or assets) on a separate server, then you could just install the Backup Gem and without installing Rails, be able to run backups from that server as well.
+Imagine you have one or more web applications written in another language on the same server, for example, a Python or PHP application. It'd be nice if you could also back up these databases in the same way you are used to, using Backup. Or what about having a MySQL Server running on a separate remove server? It'd be nice to be able to backup directly from that server instead of create a dump from there to the application's server and then push it to Amazon S3 or elsewhere. Previously this wasn't really possible. But now it is! Check this out.
 
-I am not sure if this is even possible to implement with the current Backup Gem architecture. I will be looking in to this. But I believe it has many little benefits cause It will be compatible basically with anything. Because if you look at what it does now, it backs up your database, and/or assets. What you get from it being Rails Specific is that it's stupidly easy to set up. Just generate a configuration file, add the config.gem "backup" in the environment.rb and run the rake task. Though, with a general purpose version it should be just as easy. Because you still have to specify the database, you still have to specify the assets/files/folders. The only difference is that you will have a default location on the server where Backup will remain (which is good in my honest opinion) sort of "installed" and isolated from any Rails Applications, but can of course just access them through, for example, absolute paths e.g. "/var/rails/myapp/current".
-
-So again, I'll be looking into if it's still possible with backup and maybe start a new separate branch to hack on it and see how it goes. I could always do a 100% rewrite again. *I do aim to keep Backup working with Rails as it currently does however*, so that nothing changes from what it is now. So if it gets implemented, you could basically see the general purpose thing as the main thing, and that it works with Rails more as a sub-thing. Again, we'll see and I'll keep you updated!
-
-*If anyone has any suggestions/comments/ideas/whatever, please send me a message!*
-
-
-h2. What's new in 2.2.0?
-
-*(S)FTP*
-FTP and SFTP Storage Methods have been added. This will allow you to transfer your backups
-through a (S)FTP if you cannot make use of SCP.
-
-*MySQL*
-The following options have been added to the MySQL Adapter
-
-* host
-* socket
-* port
-* skip_tables
-
-*PostgreSQL*
-The PostgreSQL Adapter has been added! It has about the same options as the MySQL Adapter
-
-* host/socket
-* port
-* skip_tables
-
-If you are using PostgreSQL and the Adapter isn't working correctly, please notify me of this.
-I personally never used PostgreSQL, so I don't really have any experience with it, but since there are people that do use it, I wanted to implement it.
-
-*Custom*
-This adapter will enable you, regardless of your database, to make SQL dumps. It's very simple.
-*Simply put: If you don't use MySQL or PostgreSQL then you can use Custom to backup your database format, regardless.*
-What the Custom Adapter does is it allows you to input one or more *commands* to execute (think of *mysqldump* or *pg_dump*, but for other databases).
-
-*The benefit of doing this through Backup* is that you will still gain all the other features that it provides, such as Archiving, Compression, Encryption and Backup Cleaning, even though Backup doesn't officially support your specific database format! You can basically see the Custom adapter as any other adapter, except that you have to *write the sql dump command yourself*. And then Backup handles the rest!
-
-*More info on the adapters:*
-
-"http://wiki.github.com/meskyanichi/backup/configuration-file":http://wiki.github.com/meskyanichi/backup/configuration-file
-
-*A few bug fixes*
-
-* Issue where two backup settings would conflict if they were using the same Adapter at the same second! (which can happens when running cronjobs!)
-* The temporary files will now be nicely name spaced by "trigger" so no conflict between two different triggers can occur
-* When an exception is raised during the backup process, the temporary files would not be removed. This is now fixed.
-* And some other minor patches have been applied.
-
-*Updated the Wiki based on this release.*
-
-h3. Get Backup 2.2.x+ now!
+*Install Backup Gem version 2.3.0 or later!*
 
 bc. sudo gem install backup
 
-And get up and running with Backup 2.2.x+ by reading the *Getting Started* Wiki Page!
+*Setup Backup*
 
-"http://wiki.github.com/meskyanichi/backup/getting-started":http://wiki.github.com/meskyanichi/backup/getting-started
+bc. sudo backup --setup
+
+*New folders and files are created in /opt/backup, these will look familiar if you've been using Backup.. Edit the config file!*
+The configuration file works *100% the same as the Ruby on Rails configuration file*, so no need to re-understand it!
+
+bc. sudo nano /opt/backup/config/backup.rb
+
+*And now just run it like so!*
+
+bc. sudo backup --run mytrigger
+
+*For a full list of commands:*
+
+bc. backup --help
+
+
+*Another handy command I added to this backup utility, is the ability to decrypt files that were encrypted by Backup.*
+
+bc. sudo backup --decrypt /path/to/encrypted/file
 
 
 h2. (Current) Backup's Capabilities
@@ -82,14 +48,12 @@ h3. Storage Methods
 * Remote Server (SFTP)
 * Remote Server (FTP)
 
-
 h3. Adapters
 
 * MySQL
 * PostgreSQL
 * Archive (any files or folders)
 * Custom (any database format other than MySQL or PostgreSQL!)
-
 
 h3. Archiving
 
@@ -106,6 +70,9 @@ of which you wish to encrypt, and it will encrypt it with the specified password
 
 bc. encrypt_with_password "mypassword"
 
+As of *Backup 2.3.0*, backup is executable through the command line. To decrypt an encrypted file, backup provides you with a handy utility to do this:
+
+bc. sudo backup --decrypt /path/to/encrypted/file
 
 h3. Backup Cleaning
 
@@ -152,17 +119,22 @@ bc. rake backup:run trigger="mysql-backup-s3"
 *That's it, the MySQL database has been "backed up" to Amazon S3. It has been dumped, compressed and encrypted with password.*
 Note: You can add as many "backup setting" blocks as you want inside the "config/backup.rb" configuration file and invoke each of them by their own "trigger". This means you can have as many backup setups as you want, which "don't" all run simultaneously when you initialize a backup.
 
+*Depending on what environment you're running backup on, you will use different commands. Rails uses Rake Tasks, while Unix uses regular executable commands. See below!*
+
 *Runs the backup setting with the trigger "backup-logs"*
 
 bc. rake backup:run trigger="backup-logs"
+sudo backup --run backup-logs
 
 *Runs the backup setting with the trigger "backup-mysql"*
 
 bc. rake backup:run trigger="backup-mysql"
+sudo backup --run backup-mysql
 
 *Runs the backup setting with the trigger "backup-assets"*
 
 bc. rake backup:run trigger="backup-assets"
+sudo backup --run backup-assets
 
 h3. Additional Options for MySQL and PostgreSQL
 
@@ -179,17 +151,20 @@ bc. backup 'mysql-backup-s3' do
   .
 end
 
-etc. etc. etc. etc. etc. etc...
-
-
 
 h2. Interested in trying out Backup?
 
 h3. Check out the following Wiki pages to get up and running:
 
-h3. Getting started
 
-"http://wiki.github.com/meskyanichi/backup/getting-started":http://wiki.github.com/meskyanichi/backup/getting-started
+h3. Getting started (Unix Environment)
+
+"http://wiki.github.com/meskyanichi/backup/getting-started-unix":http://wiki.github.com/meskyanichi/backup/getting-started-unix
+
+
+h3. Getting started (Rails Environment)
+
+"http://wiki.github.com/meskyanichi/backup/getting-started-ruby-on-rails":http://wiki.github.com/meskyanichi/backup/getting-started-ruby-on-rails
 
 
 h3. Production Mode (important)

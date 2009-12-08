@@ -5,12 +5,13 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "backup"
-    gem.summary = %Q{Backup is a gem/plugin that enables you to very easily create backups and transfer these to Amazon S3 or another server with SSH.}
+    gem.summary = %Q{Backup is a Ruby Gem that simplifies making backups for databases, files and folders.}
     gem.description = %Q{
-                        Backup is a Ruby Gem, written specifically for Ruby on Rails applications. This gem offers a quick and easy way to configure and run backups of your
-                        MySQL/PostgreSQL databases (and practically even any other database you can dump through the command line). It can also make backups of your archives (any files or folders).
-                        All backups can be transferred to either "Amazon S3" or "any remotely accessible server using the SCP, SFTP or FTP transfer methods".
-                        Backup handles: Compression, Archiving, Encryption and Backup Cleaning.
+                            Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the
+                            Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases such as
+                            MySQL/PostgreSQL and Files/Folders. All backups can be transferred to Amazon S3 or any remote server you
+                            have access to, using either SCP, SFTP or regular FTP. Backup handles Compression, Archiving, Encryption
+                            and Backup Cleaning (Cycling).
                         }
                         
     gem.email = "meskyan@gmail.com"
@@ -21,6 +22,8 @@ begin
     gem.add_dependency "net-scp",       ">= 1.0.2"
     gem.add_dependency "net-sftp",      ">= 2.0.4"
     gem.add_dependency "activerecord",  ">= 2.3.5"
+    gem.add_dependency "sqlite3-ruby",  ">= 1.2.5"
+    gem.add_dependency "hirb",          ">= 0.2.9"
     
   end
 rescue LoadError

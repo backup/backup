@@ -54,7 +54,7 @@ module Backup
           unless File.exist?(File.join(BACKUP_PATH, 'config', 'backup.rb'))
             puts "\nBackup could not find the Backup Configuration File."
             puts "Did you set up Backup? Do so if you haven't yet:"
-            puts "\nbackup --setup\n"
+            puts "\nbackup --setup\n "
             exit
           end
         end
