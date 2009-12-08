@@ -10,7 +10,7 @@ h2. Backup goes independent with the release of version 2.3.0! Ruby on Rails is 
 
 I am pleased to announce that Backup (version 2.3.0+) has been released and am very satisfied with this update. Backup can now make use of an executable bin file! Why is this so awesome? Because now Backup is Ruby on Rails independent! This means you can make use of Backup whether you use Rails or not, and with the same simplicity! *(pshh.. It's actually simpler to be honest!)*.
 
-Imagine you have one or more web applications written in another language on the same server, for example, a Python or PHP application. It'd be nice if you could also back up these databases in the same way you are used to, using Backup. Or what about having a MySQL Server running on a separate remove server? It'd be nice to be able to backup directly from that server instead of create a dump from there to the application's server and then push it to Amazon S3 or elsewhere. Previously this wasn't really possible. But now it is! Check this out.
+Imagine you have one or more web applications written in another language on the same server, for example, a Python or PHP application. It'd be nice if you could also back up these databases in the same way you are used to, using Backup. Or what about having a MySQL Server running on a separate remote server? It'd be nice to be able to backup directly from that server instead of create a dump from there to the application's server and then push it to Amazon S3 or elsewhere. Previously this wasn't really possible. But now it is! Check this out.
 
 *Install Backup Gem version 2.3.0 or later!*
 
@@ -37,6 +37,10 @@ bc. backup --help
 *Another handy command I added to this backup utility, is the ability to decrypt files that were encrypted by Backup.*
 
 bc. sudo backup --decrypt /path/to/encrypted/file
+
+h3. Get started with Backup in the Unix environment!
+
+"http://wiki.github.com/meskyanichi/backup/getting-started-unix":http://wiki.github.com/meskyanichi/backup/getting-started-unix
 
 
 h2. (Current) Backup's Capabilities
