@@ -1,51 +1,69 @@
-# Gems
+#
+# Load Gems
+#
 require 'net/ssh'
 require 'net/scp'
 require 'net/ftp'
 require 'net/sftp'
 require 'aws/s3'
+require 'hirb'
 
-# Environments
+#
+# Load Environments
+# 
 require 'backup/environment/base'
 require 'backup/environment/unix'
 require 'backup/environment/rails'
 
-# Configuration
+#
+# Load Configuration
+# 
 require 'backup/configuration/base'
 require 'backup/configuration/adapter'
 require 'backup/configuration/adapter_options'
 require 'backup/configuration/storage'
 require 'backup/configuration/helpers'
 
+# Include the Configuration adn Environment Helpers  
 include Backup::Configuration::Helpers
 include Backup::Environment::Base
 
+# Load either UNIX or RAILS environment configuration
 case current_environment
   when :unix  then include Backup::Environment::Unix
   when :rails then include Backup::Environment::Rails
 end
 
+# Load configuration
 if File.exist?(File.join(BACKUP_PATH, 'config', 'backup.rb'))
   require File.join(BACKUP_PATH, 'config', 'backup.rb')
 end
 
-# Adapters
+#
+# Load Adapters
+#
 require 'backup/adapters/base'
 require 'backup/adapters/mysql'
 require 'backup/adapters/postgresql'
 require 'backup/adapters/archive'
 require 'backup/adapters/custom'
 
-# Connectors
+#
+# Load Connectors
+# 
 require 'backup/connection/s3'
 
-# Storage
+#
+# Load Storage
+#
 require 'backup/storage/s3'
 require 'backup/storage/scp'
 require 'backup/storage/ftp'
 require 'backup/storage/sftp'
 
+#
 # Backup Recorders
+#
 require 'backup/record/s3'
 require 'backup/record/scp'
 require 'backup/record/ftp'

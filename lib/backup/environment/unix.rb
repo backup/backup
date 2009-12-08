@@ -17,6 +17,7 @@ module Backup
       }
 
       module Commands
+        
         def setup
           unless File.directory?(BACKUP_PATH)
             puts "Installing Backup in #{BACKUP_PATH}.."
@@ -45,6 +46,19 @@ module Backup
           puts "Removing Backup..\n"
           %x{ sudo rm -rf #{BACKUP_PATH} }
         end
+      end
+      
+      module Helpers
+
+        def confirm_configuration_file_existence
+          unless File.exist?(File.join(BACKUP_PATH, 'config', 'backup.rb'))
+            puts "\nBackup could not find the Backup Configuration File."
+            puts "Did you set up Backup? Do so if you haven't yet:"
+            puts "\nbackup --setup\n"
+            exit
+          end
+        end
+        
       end
     
     end
