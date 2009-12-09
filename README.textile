@@ -4,6 +4,29 @@ h2. A Backup Ruby Gem
 
 Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases such as MySQL/PostgreSQL and Files/Folders. All backups can be transferred to Amazon S3 or any remote server you have access to, using either SCP, SFTP or regular FTP. Backup handles Compression, Archiving, Encryption and Backup Cleaning (Cycling).
 
+h2. New Commands as of 2.3.0.2
+
+*Finders*
+
+Unix Environment:
+
+bc. sudo backup --find [trigger]
+
+Rails Environment:
+
+bc. rake backup:find trigger='trigger'
+
+*Finders in Table Format*
+
+Unix Environment:
+
+bc. sudo backup --table --find [trigger]
+
+Rails Environment:
+
+bc. rake backup:find trigger='trigger' table=true
+
+
 h2. Backup goes independent with the release of version 2.3.0! Ruby on Rails is no longer "required"!
 
 *Before you read on, let me tell you that even though all this awesomeness has been added, Backup will still work as it did in the previous version with Ruby on Rails!*
@@ -92,6 +115,9 @@ bc. keep_backups 20
 
 h3. Quick Example of a Single Backup Setting inside the Backup Configuration File
 
+* In *Rails Environments* this file is located in *RAILS_ROOT/config/backup.rb*
+* In *Unix Environments* this file is located in */opt/backup/config/backup.rb*
+
 bc. backup 'mysql-backup-s3' do
   adapter :mysql do
     user      'user'
@@ -108,7 +134,6 @@ bc. backup 'mysql-backup-s3' do
   encrypt_with_password 'password'
 end
   
-  
 The (backup 'mysql-backup-s3' do) is what I call a "backup setting". The first argument of the block is the so called "trigger".
 
 bc. backup 'mysql-backup-s3' do
@@ -118,12 +143,18 @@ end
 This acts as an "identifier" for the "backup setting". The (above) "backup setting" is all pretty straightforward.
 So now that we've set up a "backup setting", we can run it using a rake task, like so:
 
+*If you're using this inside a Unix Environment, use the Backup utility:*
+
+bc. sudo backup --run mysql-backup-s3
+
+*If you're using this inside a Ruby on Rails Environment, use the Backup rake task:*
+
 bc. rake backup:run trigger="mysql-backup-s3"
 
 *That's it, the MySQL database has been "backed up" to Amazon S3. It has been dumped, compressed and encrypted with password.*
-Note: You can add as many "backup setting" blocks as you want inside the "config/backup.rb" configuration file and invoke each of them by their own "trigger". This means you can have as many backup setups as you want, which "don't" all run simultaneously when you initialize a backup.
+Note: You can add as many "backup setting" blocks as you want inside the ("/opt/backup/config/backup.rb" for Unix) or ("RAILS_ROOT/config/backup.rb" for Ruby on Rails) configuration file and invoke each of them by their own "trigger". This means you can have as many backup setups as you want, which "don't" all run simultaneously when you initialize a backup.
 
-*Depending on what environment you're running backup on, you will use different commands. Rails uses Rake Tasks, while Unix uses regular executable commands. See below!*
+*Depending on what environment you're running backup on, you will use different commands. Rails uses Rake Tasks, while Unix uses Backup's utility commands. See below!*
 
 *Runs the backup setting with the trigger "backup-logs"*
 
@@ -181,7 +212,9 @@ h3. Backup Configuration File (All Adapters, Storage Methods and Options)
 "http://wiki.github.com/meskyanichi/backup/configuration-file":http://wiki.github.com/meskyanichi/backup/configuration-file
 
 
-h3. Rake Tasks
+h3. Utility Commands and Rake Tasks
+
+"http://wiki.github.com/meskyanichi/backup/utility-commands":http://wiki.github.com/meskyanichi/backup/utility-commands
 
 "http://wiki.github.com/meskyanichi/backup/rake-tasks":http://wiki.github.com/meskyanichi/backup/rake-tasks
 
