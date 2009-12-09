@@ -7,7 +7,7 @@ module Backup
       # Stores the backup file on the remote server using SCP
       def initialize(adapter)
         %w(ip user password path).each do |method|
-          send(:"#{method}=", adapter.procedure.get_storage_configuration.attributes[method])
+          send("#{method}=", adapter.procedure.get_storage_configuration.attributes[method])
         end
         
         final_file = adapter.final_file

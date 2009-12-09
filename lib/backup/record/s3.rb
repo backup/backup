@@ -61,12 +61,8 @@ module Backup
             end
             
             unless backups_to_destroy.empty?
-              # Create a new Amazon S3 Object
               s3 = Backup::Connection::S3.new(adapter_config)
-              # Connect to Amazon S3 with provided credentials
               s3.connect
-            
-              # Loop through all backups that should be destroyed and remove them from S3.
               backups_to_destroy.each do |backup|
                 puts "\nDestroying backup \"#{backup.filename}\" from bucket \"#{backup.bucket}\"."
                 s3.destroy(backup.filename, backup.bucket)

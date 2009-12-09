@@ -2,26 +2,23 @@ module Backup
   module Connection
     class S3
       
-      attr_accessor :adapter, :access_key_id, :secret_access_key, :s3_bucket, :use_ssl, :final_file, :tmp_path
+      attr_accessor :adapter, :procedure, :access_key_id, :secret_access_key, :s3_bucket, :use_ssl, :final_file, :tmp_path
       
       # Initializes the S3 connection, setting the values using the S3 adapter
       def initialize(adapter = false)
         if adapter
+          self.adapter            = adapter
+          self.procedure          = adapter.procedure
           self.final_file         = adapter.final_file
           self.tmp_path           = adapter.tmp_path.gsub('\ ', ' ')
-          self.access_key_id      = adapter.procedure.get_storage_configuration.attributes['access_key_id']
-          self.secret_access_key  = adapter.procedure.get_storage_configuration.attributes['secret_access_key']
-          self.s3_bucket          = adapter.procedure.get_storage_configuration.attributes['bucket']
-          self.use_ssl            = adapter.procedure.get_storage_configuration.attributes['use_ssl']
+          load_storage_configuration_attributes
         end
       end
       
       # Sets values from a procedure, rather than from the adapter object
       def static_initialize(procedure)
-        self.access_key_id      = procedure.get_storage_configuration.attributes['access_key_id']
-        self.secret_access_key  = procedure.get_storage_configuration.attributes['secret_access_key']
-        self.s3_bucket          = procedure.get_storage_configuration.attributes['bucket']
-        self.use_ssl            = procedure.get_storage_configuration.attributes['use_ssl']
+        self.procedure = procedure
+        load_storage_configuration_attributes(true)
       end
       
       # Establishes a connection with Amazon S3 using the credentials provided by the user
@@ -65,6 +62,24 @@ module Backup
           bucket )
       end
       
+      private
+      
+        def load_storage_configuration_attributes(static = false)          
+          %w(access_key_id secret_access_key use_ssl).each do |attribute|
+            if static
+              send("#{attribute}=", procedure.get_storage_configuration.attributes[attribute])
+            else
+              send("#{attribute}=", adapter.procedure.get_storage_configuration.attributes[attribute])
+            end
+          end
+          
+          if static
+            self.s3_bucket = procedure.get_storage_configuration.attributes['bucket']
+          else
+            self.s3_bucket = adapter.procedure.get_storage_configuration.attributes['bucket']
+          end
+        end
+        
     end
   end 
 end

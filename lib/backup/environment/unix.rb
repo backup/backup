@@ -24,6 +24,34 @@ module Backup
             %x{ sudo mkdir -p #{File.join(BACKUP_PATH, 'config')} }
             %x{ sudo cp #{File.join(File.dirname(__FILE__), '..', '..', '..', 'setup', 'backup.sqlite3')} #{BACKUP_PATH} }
             %x{ sudo cp #{File.join(File.dirname(__FILE__), '..', '..', '..', 'setup', 'backup.rb')} #{File.join(BACKUP_PATH, 'config')} }
+            puts <<-MESSAGE
+              
+  ==============================================================
+  Backup has been set up!
+  ==============================================================
+
+  1: Set up some "Backup Settings" inside the configuration file!
+
+    /opt/backup/config/backup.rb
+
+
+  2: Run the backups!
+
+    sudo backup --run [trigger]
+
+
+  For a list of Backup commands:
+
+    sudo backup --help
+  
+
+  For More Information:
+
+    http://github.com/meskyanichi/backup
+
+  ==============================================================
+              
+            MESSAGE
           else
             puts "\nBackup is already installed in #{BACKUP_PATH}..\n"
             puts "If you want to reset it, run:\n\nbackup --reset\n\n"
