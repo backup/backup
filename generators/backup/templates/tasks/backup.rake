@@ -5,15 +5,32 @@ namespace :backup do
     Backup::Setup.new(ENV['trigger'], @backup_procedures).initialize_adapter
   end
   
+  desc "Finds backup records by trigger"
+  task :find => :environment do
+    backup = Backup::Setup.new(ENV['trigger'], @backup_procedures)
+    records = Array.new
+    case backup.procedure.storage_name.to_sym
+      when :s3    then records = Backup::Record::S3.all   :conditions => {:trigger => ENV['trigger']}
+      when :scp   then records = Backup::Record::SCP.all  :conditions => {:trigger => ENV['trigger']}
+      when :ftp   then records = Backup::Record::FTP.all  :conditions => {:trigger => ENV['trigger']}
+      when :sftp  then records = Backup::Record::SFTP.all :conditions => {:trigger => ENV['trigger']}
+    end
+    
+    if ENV['table'].eql?("true")
+      puts Hirb::Helpers::AutoTable.render(records)
+    else
+      records.each do |record|
+        puts record.to_yaml
+      end
+    end
+  end
+  
   desc "Truncates all records for the specified \"trigger\", excluding the physical files on s3 or the remote server."
   task :truncate => :environment do
-    backup = Backup::Setup.new(ENV['trigger'], @backup_procedures)
-    case backup.procedure.storage_name.to_sym
-      when :s3    then Backup::Record::S3.destroy_all   :trigger => ENV['trigger'], :storage => 's3'
-      when :scp   then Backup::Record::SCP.destroy_all  :trigger => ENV['trigger'], :storage => 'scp'
-      when :ftp   then Backup::Record::FTP.destroy_all  :trigger => ENV['trigger'], :storage => 'ftp'
-      when :sftp  then Backup::Record::SFTP.destroy_all :trigger => ENV['trigger'], :storage => 'sftp'
-    end
+    Backup::Record::S3.destroy_all    :trigger => ENV['trigger'], :storage => 's3'
+    Backup::Record::SCP.destroy_all   :trigger => ENV['trigger'], :storage => 'scp'
+    Backup::Record::FTP.destroy_all   :trigger => ENV['trigger'], :storage => 'ftp'
+    Backup::Record::SFTP.destroy_all  :trigger => ENV['trigger'], :storage => 'sftp'
   end
   
   desc "Truncates everything."
