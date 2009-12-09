@@ -2,11 +2,13 @@ namespace :backup do
 
   desc "Run Backup Procedure."
   task :run => :environment do
+    puts "Running: #{ENV['trigger']}."
     Backup::Setup.new(ENV['trigger'], @backup_procedures).initialize_adapter
   end
   
   desc "Finds backup records by trigger"
   task :find => :environment do
+    puts "Finding backup records with trigger: #{ENV['trigger']}."
     backup = Backup::Setup.new(ENV['trigger'], @backup_procedures)
     records = Array.new
     case backup.procedure.storage_name.to_sym
@@ -27,6 +29,7 @@ namespace :backup do
   
   desc "Truncates all records for the specified \"trigger\", excluding the physical files on s3 or the remote server."
   task :truncate => :environment do
+    puts "Truncating backup records with trigger: #{ENV['trigger']}."
     Backup::Record::S3.destroy_all    :trigger => ENV['trigger'], :storage => 's3'
     Backup::Record::SCP.destroy_all   :trigger => ENV['trigger'], :storage => 'scp'
     Backup::Record::FTP.destroy_all   :trigger => ENV['trigger'], :storage => 'ftp'
@@ -35,6 +38,7 @@ namespace :backup do
   
   desc "Truncates everything."
   task :truncate_all => :environment do
+    puts "Truncating all backup records."
     Backup::Record::S3.destroy_all
     Backup::Record::SCP.destroy_all
     Backup::Record::FTP.destroy_all
@@ -43,6 +47,7 @@ namespace :backup do
   
   desc "Destroys all records for the specified \"trigger\", including the physical files on s3 or the remote server."
   task :destroy => :environment do
+    puts "Destroying backup records with trigger: #{ENV['trigger']}."
     backup = Backup::Setup.new(ENV['trigger'], @backup_procedures)
     case backup.procedure.storage_name.to_sym
       when :s3    then Backup::Record::S3.destroy_all_backups   backup.procedure,  ENV['trigger']
@@ -54,6 +59,7 @@ namespace :backup do
   
   desc "Destroys all records for the specified \"trigger\", including the physical files on s3 or the remote server."
   task :destroy_all => :environment do
+    puts "Destroying all backup records."
     backup = Backup::Setup.new(false, @backup_procedures)
     backup.procedures.each do |backup_procedure|
       case backup_procedure.storage_name.to_sym

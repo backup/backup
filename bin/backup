@@ -13,11 +13,13 @@ optparse = OptionParser.new do |opts|
   
   opts.on('-r', '--run [trigger]', "Runs backup process by trigger") do |trigger|
     confirm_configuration_file_existence
+    puts "Running: #{trigger}."
     Backup::Setup.new(trigger, @backup_procedures).initialize_adapter
   end
   
   opts.on('-f', '--find [trigger]', "Finds backup records by trigger") do |trigger|
     confirm_configuration_file_existence
+    puts "Finding backup records with trigger: #{trigger}."
     backup = Backup::Setup.new(trigger, @backup_procedures)
     records = Array.new
     case backup.procedure.storage_name.to_sym
@@ -46,6 +48,7 @@ optparse = OptionParser.new do |opts|
   
   opts.on('-d', '--destroy [trigger]', "Destroys backup records and files for specified trigger") do |trigger|
     confirm_configuration_file_existence
+    puts "Destroying backup records with trigger: #{trigger}."
     backup = Backup::Setup.new(trigger, @backup_procedures)
     case backup.procedure.storage_name.to_sym
       when :s3    then Backup::Record::S3.destroy_all_backups   backup.procedure,  trigger
@@ -65,6 +68,7 @@ optparse = OptionParser.new do |opts|
 
   opts.on('--destroy-all', "Destroys all backup records and files") do
     confirm_configuration_file_existence
+    puts "Destroying all backup records."
     backup = Backup::Setup.new(false, @backup_procedures)
     backup.procedures.each do |backup_procedure|
       case backup_procedure.storage_name.to_sym
@@ -77,6 +81,7 @@ optparse = OptionParser.new do |opts|
   end
 
   opts.on('--decrypt [file]', "Decrypts a \"Backup\" encrypted file") do |file|
+    puts "Attempting to decrypt: #{file}."
     %x{ openssl enc -des-cbc -d -in #{file} -out #{file.gsub('.enc', '')} }
   end
   
