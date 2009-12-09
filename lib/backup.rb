@@ -91,7 +91,9 @@ module Backup
         when :postgresql  then Backup::Adapters::PostgreSQL.new trigger, procedure
         when :archive     then Backup::Adapters::Archive.new    trigger, procedure
         when :custom      then Backup::Adapters::Custom.new     trigger, procedure
-        else raise "Unknown Adapter: \"#{procedure.adapter_name}\"."
+        else
+          puts "Unknown Adapter: \"#{procedure.adapter_name}\"."
+          exit
       end
     end
   
@@ -106,7 +108,8 @@ module Backup
         end
       end
       available_triggers = procedures.each.map {|procedure| "- #{procedure.trigger}\n" }
-      raise "Could not find a backup procedure with the trigger \"#{trigger}\". \nHere's a list of available triggers:\n#{available_triggers}"
+      puts "Could not find a backup procedure with the trigger \"#{trigger}\". \nHere's a list of available triggers:\n#{available_triggers}"
+      exit
     end
 
   end
