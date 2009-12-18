@@ -107,7 +107,7 @@ module Backup
           return procedure
         end
       end
-      available_triggers = procedures.each.map {|procedure| "- #{procedure.trigger}\n" }
+      available_triggers = procedures.map {|procedure| "- #{procedure.trigger}\n" }
       puts "Could not find a backup procedure with the trigger \"#{trigger}\". \nHere's a list of available triggers:\n#{available_triggers}"
       exit
     end
