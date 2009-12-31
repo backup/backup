@@ -22,6 +22,8 @@ require 'backup/configuration/mail'
 require 'backup/configuration/smtp'
 require 'backup/configuration/helpers'
 
+require 'backup/mail/base'
+
 # Include the Configuration adn Environment Helpers  
 include Backup::Configuration::Helpers
 include Backup::Environment::Base
@@ -37,7 +39,12 @@ if File.exist?(File.join(BACKUP_PATH, 'config', 'backup.rb'))
   require File.join(BACKUP_PATH, 'config', 'backup.rb')
 end
 
-MAIL = @mail
+
+
+Backup::Mail::Base.setup(@mail)
+
+
+exit
 
 # Load Adapters
 require 'backup/adapters/base'
