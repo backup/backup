@@ -1,27 +1,25 @@
-#
 # Load Gems
-#
 require 'net/ssh'
 require 'net/scp'
 require 'net/ftp'
 require 'net/sftp'
 require 'aws/s3'
+require 'pony'
 require 'hirb'
 
-#
+
 # Load Environments
-# 
 require 'backup/environment/base'
 require 'backup/environment/unix'
 require 'backup/environment/rails'
 
-#
 # Load Configuration
-# 
 require 'backup/configuration/base'
 require 'backup/configuration/adapter'
 require 'backup/configuration/adapter_options'
 require 'backup/configuration/storage'
+require 'backup/configuration/mail'
+require 'backup/configuration/smtp'
 require 'backup/configuration/helpers'
 
 # Include the Configuration adn Environment Helpers  
@@ -39,31 +37,25 @@ if File.exist?(File.join(BACKUP_PATH, 'config', 'backup.rb'))
   require File.join(BACKUP_PATH, 'config', 'backup.rb')
 end
 
-#
+MAIL = @mail
+
 # Load Adapters
-#
 require 'backup/adapters/base'
 require 'backup/adapters/mysql'
 require 'backup/adapters/postgresql'
 require 'backup/adapters/archive'
 require 'backup/adapters/custom'
 
-#
 # Load Connectors
-# 
 require 'backup/connection/s3'
 
-#
 # Load Storage
-#
 require 'backup/storage/s3'
 require 'backup/storage/scp'
 require 'backup/storage/ftp'
 require 'backup/storage/sftp'
 
-#
 # Backup Recorders
-#
 require 'backup/record/s3'
 require 'backup/record/scp'
 require 'backup/record/ftp'

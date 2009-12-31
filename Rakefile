@@ -24,6 +24,7 @@ begin
     gem.add_dependency "activerecord",  ">= 2.3.5"
     gem.add_dependency "sqlite3-ruby",  ">= 1.2.5"
     gem.add_dependency "hirb",          ">= 0.2.9"
+    gem.add_dependency "pony",          ">= 0.5"
     
   end
 rescue LoadError
