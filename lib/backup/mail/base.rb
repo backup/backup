@@ -30,10 +30,11 @@ module Backup
       # Requires the Backup Object
       def self.notify!(backup)
         if self.setup?
-          @backup = backup          
+          @backup = backup
+          self.parse_body   
           Pony.mail({
             :subject  => "Backup for \"#{@backup.trigger}\" was successfully created!",
-            :body     => self.parse_body
+            :body     => @content
             }.merge(self.smtp_configuration))
         end
       end
@@ -56,25 +57,26 @@ module Backup
       
       def self.parse_body
         File.open(File.join(File.dirname(__FILE__), 'mail.txt'), 'r') do |file|
-          content = self.gsub_content(file.readlines)
+          self.gsub_content(file.readlines)
         end
-        content
       end
       
-      def self.gsub_content(content)
-        %w(bucket path).each do |value|
-          value = @backup.procedure.get_storage_configuration.attributes[value]
-        end
+      def self.gsub_content(lines)
+        bucket  = @backup.procedure.get_storage_configuration.attributes['bucket']
+        path    = @backup.procedure.get_storage_configuration.attributes['path']
         
-        content.gsub!(':trigger',   @backup.trigger)
-        content.gsub!(':day',       Time.now.strftime("%d (%A)"))
-        content.gsub!(':month',     Time.now.strftime("%B (%m)"))
-        content.gsub!(':year',      Time.now.strftime("%Y"))
-        content.gsub!(':time',      Time.now.strftime("%r"))
-        content.gsub!(':adapter',   @backup.procedure.adapter_name.to_s)
-        content.gsub!(':location',  bucket || path)
-        content.gsub!(':backup',    @backup.final_file)
-        content
+        @content = ""
+        lines.each do |line|
+          line.gsub!(':trigger',   @backup.trigger)
+          line.gsub!(':day',       Time.now.strftime("%d (%A)"))
+          line.gsub!(':month',     Time.now.strftime("%B (%m)"))
+          line.gsub!(':year',      Time.now.strftime("%Y"))
+          line.gsub!(':time',      Time.now.strftime("%r"))
+          line.gsub!(':adapter',   @backup.procedure.adapter_name.to_s)
+          line.gsub!(':location',  bucket || path)
+          line.gsub!(':backup',    @backup.final_file)
+          @content += line
+        end
       end
 
     end

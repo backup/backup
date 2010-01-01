@@ -56,6 +56,7 @@ Gem::Specification.new do |s|
      "lib/backup/environment/rails.rb",
      "lib/backup/environment/unix.rb",
      "lib/backup/mail/base.rb",
+     "lib/backup/mail/mail.txt",
      "lib/backup/record/ftp.rb",
      "lib/backup/record/s3.rb",
      "lib/backup/record/scp.rb",
