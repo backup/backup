@@ -15,9 +15,8 @@ module Backup
       # A helper method for the config/mail.rb configuration file
       # Takes a block containing the mail options
       def mail_notification(&block)
-        mail = Backup::Configuration::Mail.new
-        mail.instance_eval &block
-        @mail = mail
+        @mail_configuration = Backup::Configuration::Mail.new
+        @mail_configuration.instance_eval &block
       end
       
     end

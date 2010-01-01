@@ -7,7 +7,6 @@ require 'aws/s3'
 require 'pony'
 require 'hirb'
 
-
 # Load Environments
 require 'backup/environment/base'
 require 'backup/environment/unix'
@@ -21,8 +20,6 @@ require 'backup/configuration/storage'
 require 'backup/configuration/mail'
 require 'backup/configuration/smtp'
 require 'backup/configuration/helpers'
-
-require 'backup/mail/base'
 
 # Include the Configuration adn Environment Helpers  
 include Backup::Configuration::Helpers
@@ -39,12 +36,11 @@ if File.exist?(File.join(BACKUP_PATH, 'config', 'backup.rb'))
   require File.join(BACKUP_PATH, 'config', 'backup.rb')
 end
 
+# Load Mail Notifier
+require 'backup/mail/base'
 
-
-Backup::Mail::Base.setup(@mail)
-
-
-exit
+# Set Mail Configuration (extracted from the backup.rb configuration file) inside the Mail Class
+Backup::Mail::Base.setup(@mail_configuration)
 
 # Load Adapters
 require 'backup/adapters/base'

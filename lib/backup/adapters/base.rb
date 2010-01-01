@@ -43,10 +43,10 @@ module Backup
       #  Remote Server (SFTP)
       def store
         case procedure.storage_name.to_sym
-          when :s3  then Backup::Storage::S3.new(self)
-          when :scp then Backup::Storage::SCP.new(self)
-          when :ftp then Backup::Storage::FTP.new(self)
-          when :sftp then Backup::Storage::SFTP.new(self)
+          when :s3    then Backup::Storage::S3.new(self)
+          when :scp   then Backup::Storage::SCP.new(self)
+          when :ftp   then Backup::Storage::FTP.new(self)
+          when :sftp  then Backup::Storage::SFTP.new(self)
         end
       end
       
@@ -69,6 +69,13 @@ module Backup
             record = Backup::Record::SFTP.new
             record.load_adapter(self)
             record.save
+        end
+      end
+      
+      # Delivers a notification by email regarding the successfully stored backup
+      def notify
+        if Backup::Mail::Base.setup?
+          Backup::Mail::Base.notify!(self)
         end
       end
       

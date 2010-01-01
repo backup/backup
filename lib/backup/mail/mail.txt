@@ -1,0 +1,7 @@
+A backup was successfully created for ":trigger"!
+
+The backup was created on :day :month of :year at :time.
+
+It has been stored using :adapter at :location.
+
+The following backup was stored: :backup

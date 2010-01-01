@@ -25,6 +25,7 @@ module Backup
           encrypt
           store
           record
+          notify
         ensure
           remove_tmp_files
         end

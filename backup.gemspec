@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Michael van Rooijen"]
-  s.date = %q{2009-12-31}
+  s.date = %q{2010-01-01}
   s.default_executable = %q{backup}
   s.description = %q{
                             Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the
@@ -55,6 +55,7 @@ Gem::Specification.new do |s|
      "lib/backup/environment/base.rb",
      "lib/backup/environment/rails.rb",
      "lib/backup/environment/unix.rb",
+     "lib/backup/mail/base.rb",
      "lib/backup/record/ftp.rb",
      "lib/backup/record/s3.rb",
      "lib/backup/record/scp.rb",
