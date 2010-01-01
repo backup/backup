@@ -35,12 +35,14 @@ module Backup
         
         # Dumps and Compresses the MySQL file 
         def mysqldump
+          puts system_messages[:mysqldump]; puts system_messages[:compressing]
           %x{ mysqldump -u #{user} --password='#{password}' #{options} #{additional_options} #{database} #{tables_to_skip} | gzip -f --best > #{File.join(tmp_path, compressed_file)} }
         end
         
         # Encrypts the MySQL file
         def encrypt
           if encrypt_with_password.is_a?(String)
+            puts system_messages[:encrypting]
             %x{ openssl enc -des-cbc -in #{File.join(tmp_path, compressed_file)} -out #{File.join(tmp_path, encrypted_file)} -k #{encrypt_with_password} }
             self.final_file = encrypted_file
           end

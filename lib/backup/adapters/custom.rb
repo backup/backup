@@ -38,22 +38,26 @@ module Backup
         # Executes the commands
         def execute_commands
           if commands.is_a?(Array)
+            puts system_messages[:commands]
             commands.each do |command|
               %x{ #{command.gsub(':tmp_path', tmp_path)} }
             end
           elsif commands.is_a?(String)
+            puts system_messages[:commands]
             %x{ #{commands.gsub(':tmp_path', tmp_path)} }
           end
         end
         
         # Archives and Compresses
         def targz
+          puts system_messages[:archiving]; puts system_messages[:compressing]
           %x{ tar -czf #{File.join(tmp_path, compressed_file)} #{File.join(tmp_path, '*')} }
         end
         
         # Encrypts the archive file
         def encrypt
           if encrypt_with_password.is_a?(String)
+            puts system_messages[:encrypting]
             %x{ openssl enc -des-cbc -in #{File.join(tmp_path, compressed_file)} -out #{File.join(tmp_path, encrypted_file)} -k #{encrypt_with_password} }
             self.final_file = encrypted_file
           end

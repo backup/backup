@@ -35,12 +35,14 @@ module Backup
         
         # Dumps and Compresses the PostgreSQL file 
         def pg_dump
+            puts system_messages[:pgdump]; puts system_messages[:compressing]
            %x{ pg_dump -U #{user} #{options} #{additional_options} #{tables_to_skip} #{database} | gzip -f --best > #{File.join(tmp_path, compressed_file)} }
         end
         
         # Encrypts the PostgreSQL file
         def encrypt
           if encrypt_with_password.is_a?(String)
+            puts system_messages[:encrypting]
             %x{ openssl enc -des-cbc -in #{File.join(tmp_path, compressed_file)} -out #{File.join(tmp_path, encrypted_file)} -k #{encrypt_with_password} }
             self.final_file = encrypted_file
           end

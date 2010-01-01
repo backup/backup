@@ -79,6 +79,15 @@ module Backup
         end
       end
       
+      def system_messages
+        { :compressing  => "Compressing backup..",
+          :archiving    => "Archiving backup..",
+          :encrypting   => "Encrypting backup..",
+          :mysqldump    => "Creating MySQL dump..",
+          :pgdump       => "Creating PostgreSQL dump..",
+          :commands     => "Executing commands.." }
+      end
+      
     end
   end
 end

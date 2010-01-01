@@ -37,8 +37,10 @@ module Backup
         def targz
           files = procedure.get_adapter_configuration.attributes['files']
           if files.is_a?(Array)
+            puts system_messages[:archiving]; puts system_messages[:compressing]
             %x{ tar -czf #{File.join(tmp_path, compressed_file)} #{files.map{|f| f.gsub(' ', '\ ')}.join(' ')} }
           elsif files.is_a?(String)
+            puts system_messages[:archiving]; puts system_messages[:compressing]
             %x{ tar -czf #{File.join(tmp_path, compressed_file)} #{files.gsub(' ', '\ ')} }
           end
         end
@@ -46,6 +48,7 @@ module Backup
         # Encrypts the Archive
         def encrypt
           if encrypt_with_password.is_a?(String)
+            puts system_messages[:encrypting]
             %x{ openssl enc -des-cbc -in #{File.join(tmp_path, compressed_file)} -out #{File.join(tmp_path, encrypted_file)} -k #{encrypt_with_password} }
             self.final_file = encrypted_file
           end
