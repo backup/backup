@@ -40,8 +40,33 @@
 #
 # The combination of these, however, do not matter! So experiment with it.
 # 
+# You can also let Backup notify you by email on successfully created backups.
+# - Just uncomment the block of code below (notifier_settings) and fill in your credentials.
+# - Then for set "notify" to "true" in each (backup) block you wish to be notified of.
+# 
 # For more information on "Backup", please refer to the wiki on github
 #   http://wiki.github.com/meskyanichi/backup/configuration-file
+
+
+# Notifier
+#   Uncomment this if you want to enable notification by email on successful backup runs
+#   You will also have to set "notify true" inside each backup block below to enable it for that particular backup
+# notifier_settings do
+#   
+#   to    "example1@gmail.com"
+#   from  "example2@gmail.com"
+#   
+#   smtp do
+#     host            "smtp.gmail.com"
+#     port            "587"
+#     username        "example1@gmail.com"
+#     password        "example1password"
+#     authentication  "plain"
+#     domain          "localhost.localdomain"
+#     tls             true
+#   end
+# 
+# end
 
 
 # Initialize with:
@@ -72,6 +97,7 @@ backup 'mysql-backup-s3' do
   
   keep_backups 25
   encrypt_with_password 'password'
+  notify false
   
 end
 
@@ -103,7 +129,8 @@ backup 'postgresql-backup-scp' do
 
   keep_backups :all
   encrypt_with_password false
-  
+  notify false
+
 end
 
 
@@ -125,7 +152,8 @@ backup 'archive-backup-ftp' do
 
   keep_backups 10
   encrypt_with_password false
-  
+  notify false
+
 end
 
 
@@ -149,5 +177,6 @@ backup 'custom-backup-sftp' do
 
   keep_backups :all
   encrypt_with_password 'password'
+  notify false
   
 end
