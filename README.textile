@@ -4,27 +4,56 @@ h2. A Backup Ruby Gem
 
 Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases such as MySQL/PostgreSQL and Files/Folders. All backups can be transferred to Amazon S3 or any remote server you have access to, using either SCP, SFTP or regular FTP. Backup handles Compression, Archiving, Encryption and Backup Cleaning (Cycling).
 
-h2. New Commands as of 2.3.0.2
+h2. Email Notification as of 2.3.1!
 
-*Finders*
+The first thing you will notice when you re-generate a new copy of the default "backup.rb" template, will be this:
 
-Unix Environment:
+bc.. notifier_settings do
+  
+  to    "example1@gmail.com"
+  from  "example2@gmail.com"
+  
+  smtp do
+    host            "smtp.gmail.com"
+    port            "587"
+    username        "example1@gmail.com"
+    password        "example1password"
+    authentication  "plain"
+    domain          "localhost.localdomain"
+    tls             true
+  end
 
-bc. sudo backup --find [trigger]
+end
 
-Rails Environment:
 
-bc. rake backup:find trigger='trigger'
 
-*Finders in Table Format*
 
-Unix Environment:
 
-bc. sudo backup --table --find [trigger]
+p. This is disabled by default. You must uncomment it. Once you uncomment it, fill in your credentials. By default I setup a "gmail"-based configuration.
+Once you've filled in your smtp credentials, all you have to do is set "notify false" to "notify true" inside each *backup* block you wish to be notified of on each successful backup.
 
-Rails Environment:
 
-bc. rake backup:find trigger='trigger' table=true
+bc.. backup 'mysql-backup-s3' do
+  
+  adapter :mysql do
+    ...
+  end
+  
+  storage :s3 do
+    ...
+  end
+  
+  keep_backups 25
+  encrypt_with_password 'password'
+  notify false # set this to "true"
+  
+end
+
+
+
+
+
+p. And that's it! Now after every 'mysql-backup-s3', given you've provided the correct smtp configuration, you will be notified of each backup that has been created by email!
 
 
 h2. Backup goes independent with the release of version 2.3.0! Ruby on Rails is no longer "required"!
