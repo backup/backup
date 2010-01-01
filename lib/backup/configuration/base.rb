@@ -3,7 +3,7 @@ module Backup
     class Base
       attr_accessor :attributes, :trigger, :storage_name, :adapter_name
 
-      %w(encrypt_with_password keep_backups).each do |method|
+      %w(encrypt_with_password keep_backups notify).each do |method|
         define_method method do |value|
           attributes[method] = value
         end

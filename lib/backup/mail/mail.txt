@@ -1,7 +1,7 @@
 A backup was successfully created for ":trigger"!
 
-The backup was created on ":day :month of :year at :time".
+The backup was created on ":day of :month :year at :time".
 
-It has been stored using ":adapter" adapter at :location.
+It has been stored using the ":adapter" adapter, and the file was stored in :location on :remote.
 
 The following backup was stored: ":backup"
