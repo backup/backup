@@ -35,6 +35,15 @@ module Backup
         %x{ rm #{File.join(tmp_path, '*')} }
       end
 
+      # Encrypts the archive file
+      def encrypt
+        if encrypt_with_password.is_a?(String)
+          puts system_messages[:encrypting]
+          %x{ openssl enc -des-cbc -in #{File.join(tmp_path, compressed_file)} -out #{File.join(tmp_path, encrypted_file)} -k #{encrypt_with_password} }
+          self.final_file = encrypted_file
+        end
+      end
+      
       # Initializes the storing process depending on the store settings
       # Options:
       #  Amazon (S3)

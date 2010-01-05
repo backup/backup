@@ -54,15 +54,6 @@ module Backup
           %x{ tar -czf #{File.join(tmp_path, compressed_file)} #{File.join(tmp_path, '*')} }
         end
         
-        # Encrypts the archive file
-        def encrypt
-          if encrypt_with_password.is_a?(String)
-            puts system_messages[:encrypting]
-            %x{ openssl enc -des-cbc -in #{File.join(tmp_path, compressed_file)} -out #{File.join(tmp_path, encrypted_file)} -k #{encrypt_with_password} }
-            self.final_file = encrypted_file
-          end
-        end
-        
         # Loads the initial settings
         def load_settings
           self.trigger  = procedure.trigger
