@@ -1,18 +1,11 @@
 module Backup
   module Configuration
     class Adapter
-      
-      attr_accessor :attributes 
-      
-      %w(files user password database skip_tables commands additional_options).each do |method|
-        define_method method do |value|
-          attributes[method] = value
-        end
-      end
+      extend Backup::Configuration::Attributes
+      generate_attributes %w(files user password database skip_tables commands additional_options)
 
       def initialize
-        @attributes = {}
-        @options    = Backup::Configuration::AdapterOptions.new
+        @options = Backup::Configuration::AdapterOptions.new
       end
 
       def options(&block)

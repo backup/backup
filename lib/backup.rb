@@ -13,6 +13,7 @@ require 'backup/environment/unix'
 require 'backup/environment/rails'
 
 # Load Configuration
+require 'backup/configuration/attributes'
 require 'backup/configuration/base'
 require 'backup/configuration/adapter'
 require 'backup/configuration/adapter_options'

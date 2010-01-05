@@ -1,16 +1,12 @@
 module Backup
   module Configuration
     class Base
-      attr_accessor :attributes, :trigger, :storage_name, :adapter_name
-
-      %w(encrypt_with_password keep_backups notify).each do |method|
-        define_method method do |value|
-          attributes[method] = value
-        end
-      end
+      extend Backup::Configuration::Attributes
+      generate_attributes %w(encrypt_with_password keep_backups notify)
+      
+      attr_accessor :trigger, :storage_name, :adapter_name
 
       def initialize(trigger)
-        @attributes = {}
         @trigger = trigger
         @adapter_configuration = Backup::Configuration::Adapter.new
         @storage_configuration = Backup::Configuration::Storage.new

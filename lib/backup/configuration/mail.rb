@@ -1,16 +1,10 @@
 module Backup
   module Configuration
     class Mail
-      attr_accessor :attributes
-
-      %w(from to smtp).each do |method|
-        define_method method do |value|
-          attributes[method.to_sym] = value
-        end
-      end
+      extend Backup::Configuration::Attributes
+      generate_attributes %(from to smtp)
 
       def initialize
-        @attributes = {}
         @smtp_configuration = Backup::Configuration::SMTP.new
       end
 
