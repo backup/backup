@@ -52,24 +52,14 @@ module Backup
       
       # Records data on every individual file to the database
       def record
-        case procedure.storage_name.to_sym
-          when :s3
-            record = Backup::Record::S3.new
-            record.load_adapter(self)
-            record.save
-          when :scp
-            record = Backup::Record::SCP.new
-            record.load_adapter(self)
-            record.save
-          when :ftp
-            record = Backup::Record::FTP.new
-            record.load_adapter(self)
-            record.save
-          when :sftp
-            record = Backup::Record::SFTP.new
-            record.load_adapter(self)
-            record.save
+        record = case procedure.storage_name.to_sym
+          when :s3    then Backup::Record::S3.new
+          when :scp   then Backup::Record::SCP.new
+          when :ftp   then Backup::Record::FTP.new
+          when :sftp  then Backup::Record::SFTP.new
         end
+        record.load_adapter(self)
+        record.save
       end
       
       # Delivers a notification by email regarding the successfully stored backup
