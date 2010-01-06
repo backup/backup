@@ -83,22 +83,12 @@ module Backup
       #  Remote Server (FTP)
       #  Remote Server (SFTP)
       def store
-        case procedure.storage_name.to_sym
-          when :s3    then Backup::Storage::S3.new(self)
-          when :scp   then Backup::Storage::SCP.new(self)
-          when :ftp   then Backup::Storage::FTP.new(self)
-          when :sftp  then Backup::Storage::SFTP.new(self)
-        end
+        procedure.initialize_storage(self)
       end
       
       # Records data on every individual file to the database
       def record
-        record = case procedure.storage_name.to_sym
-          when :s3    then Backup::Record::S3.new
-          when :scp   then Backup::Record::SCP.new
-          when :ftp   then Backup::Record::FTP.new
-          when :sftp  then Backup::Record::SFTP.new
-        end
+        record = procedure.initialize_record
         record.load_adapter(self)
         record.save
       end
