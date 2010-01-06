@@ -15,6 +15,19 @@ module Backup
       # It is important that, whatever the final filename of the file will be, that :final_file will contain it.
       attr_accessor :final_file
 
+      # Initializes the Backup Process
+      # 
+      # This will first load in any prefixed settings from the Backup::Adapters::Base
+      # Then it will add it's own settings.
+      # 
+      # First it will call the 'perform' method. This method is concerned with the backup, and must
+      # be implemented by derived classes!
+      # Then it will optionally encrypt the backed up file
+      # Then it will store it to the specified storage location
+      # Then it will record the data to the database
+      # Once this is all done, all the temporary files will be removed
+      # 
+      # Wrapped inside of begin/ensure/end block to ensure the deletion of any files in the tmp directory
       def initialize(trigger, procedure)
         self.trigger                = trigger
         self.procedure              = procedure
@@ -22,7 +35,19 @@ module Backup
         self.tmp_path               = File.join(BACKUP_PATH.gsub(' ', '\ '), 'tmp', 'backup', trigger)
         self.encrypt_with_password  = procedure.attributes['encrypt_with_password']
         self.keep_backups           = procedure.attributes['keep_backups']
+
         create_tmp_folder
+        load_settings
+        
+        begin
+          perform
+          encrypt
+          store
+          record
+          notify
+        ensure
+          remove_tmp_files
+        end
       end
       
       # Creates the temporary folder for the specified adapter

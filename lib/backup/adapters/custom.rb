@@ -4,36 +4,14 @@ module Backup
       
       attr_accessor :archived_file, :compressed_file, :encrypted_file, :commands
       
-      # Initializes the Backup Process
-      # 
-      # This will first load in any prefixed settings from the Backup::Adapters::Base
-      # Then it will add it's own settings.
-      # 
-      # First it will execute any given commands
-      # Then it will archive and compress every folder/file
-      # Then it will optionally encrypt the backed up file
-      # Then it will store it to the specified storage location
-      # Then it will record the data to the database
-      # Once this is all done, all the temporary files will be removed
-      # 
-      # Wrapped inside of begin/ensure/end block to ensure the deletion of any files in the tmp directory
-      def initialize(trigger, procedure)
-        super
-        load_settings
-        
-        begin
-          execute_commands
-          targz
-          encrypt
-          store
-          record
-          notify
-        ensure
-          remove_tmp_files
-        end
-      end
+      # Execute any given commands, then archive and compress every folder/file
       
       private
+
+        def perform
+          execute_commands
+          targz
+        end
         
         # Executes the commands
         def execute_commands
