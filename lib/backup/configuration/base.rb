@@ -28,6 +28,7 @@ module Backup
           when :scp   then Backup::Storage::SCP.new(adapter)
           when :ftp   then Backup::Storage::FTP.new(adapter)
           when :sftp  then Backup::Storage::SFTP.new(adapter)
+          when :local then Backup::Storage::Local.new(adapter)
         end
       end
 
@@ -37,6 +38,7 @@ module Backup
           when :scp   then Backup::Record::SCP.new
           when :ftp   then Backup::Record::FTP.new
           when :sftp  then Backup::Record::SFTP.new
+          when :local then Backup::Record::Local.new
         end        
       end
   

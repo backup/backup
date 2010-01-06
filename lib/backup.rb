@@ -58,12 +58,14 @@ require 'backup/storage/s3'
 require 'backup/storage/scp'
 require 'backup/storage/ftp'
 require 'backup/storage/sftp'
+require 'backup/storage/local'
 
 # Backup Recorders
 require 'backup/record/s3'
 require 'backup/record/scp'
 require 'backup/record/ftp'
 require 'backup/record/sftp'
+require 'backup/record/local'
 
 
 # Backup Module

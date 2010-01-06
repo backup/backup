@@ -103,6 +103,7 @@ h3. Storage Methods
 * Remote Server (SCP)
 * Remote Server (SFTP)
 * Remote Server (FTP)
+* Local server  (Another Hard Drive, Network path)
 
 h3. Adapters
 
