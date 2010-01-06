@@ -2,7 +2,7 @@ module Backup
   module Adapters
     class Custom < Backup::Adapters::Base
       
-      attr_accessor :archived_file, :compressed_file, :encrypted_file, :commands
+      attr_accessor :archived_file, :commands
       
       private
 

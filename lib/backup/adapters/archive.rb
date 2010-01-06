@@ -2,7 +2,7 @@ module Backup
   module Adapters
     class Archive < Backup::Adapters::Base
       
-      attr_accessor :archived_file, :compressed_file, :encrypted_file
+      attr_accessor :archived_file
       
       private
 

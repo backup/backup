@@ -13,7 +13,7 @@ module Backup
       #   myfile.gz.enc
       #
       # It is important that, whatever the final filename of the file will be, that :final_file will contain it.
-      attr_accessor :final_file
+      attr_accessor :compressed_file, :encrypted_file, :final_file
 
       # Initializes the Backup Process
       # 

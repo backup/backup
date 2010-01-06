@@ -2,7 +2,7 @@ module Backup
   module Adapters
     class PostgreSQL < Backup::Adapters::Base
 
-      attr_accessor :dumped_file, :compressed_file, :encrypted_file, :user, :password, :database, :skip_tables, :host, :port, :socket, :additional_options
+      attr_accessor :dumped_file, :user, :password, :database, :skip_tables, :host, :port, :socket, :additional_options
       
       private
 
