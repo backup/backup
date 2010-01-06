@@ -4,10 +4,9 @@ module Backup
       
       attr_accessor :archived_file, :compressed_file, :encrypted_file, :commands
       
-      # Execute any given commands, then archive and compress every folder/file
-      
       private
 
+        # Execute any given commands, then archive and compress every folder/file
         def perform
           execute_commands
           targz

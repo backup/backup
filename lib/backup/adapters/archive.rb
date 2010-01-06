@@ -4,16 +4,10 @@ module Backup
       
       attr_accessor :archived_file, :compressed_file, :encrypted_file
       
-      # Archive and compress every folder/file
-      
       private
 
-        def perform
-          targz
-        end
-        
         # Archives and Compresses all files
-        def targz
+        def perform
           files = procedure.get_adapter_configuration.attributes['files']
           if files.is_a?(Array)
             puts system_messages[:archiving]; puts system_messages[:compressing]

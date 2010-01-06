@@ -4,16 +4,10 @@ module Backup
       
       attr_accessor :dumped_file, :compressed_file, :encrypted_file, :user, :password, :database, :skip_tables, :host, :port, :socket, :additional_options
       
-      # Create a compressed MySQL dump 
-      
       private
 
-        def perform
-          mysqldump
-        end
-        
         # Dumps and Compresses the MySQL file 
-        def mysqldump
+        def perform
           puts system_messages[:mysqldump]; puts system_messages[:compressing]
           %x{ mysqldump -u #{user} --password='#{password}' #{options} #{additional_options} #{database} #{tables_to_skip} | gzip -f --best > #{File.join(tmp_path, compressed_file)} }
         end

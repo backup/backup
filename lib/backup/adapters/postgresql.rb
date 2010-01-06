@@ -4,16 +4,10 @@ module Backup
 
       attr_accessor :dumped_file, :compressed_file, :encrypted_file, :user, :password, :database, :skip_tables, :host, :port, :socket, :additional_options
       
-      # Create a compressed PostgreSQL dump 
-      
       private
 
-        def perform
-          pg_dump
-        end
-        
         # Dumps and Compresses the PostgreSQL file 
-        def pg_dump
+        def perform
             puts system_messages[:pgdump]; puts system_messages[:compressing]
            %x{ pg_dump -U #{user} #{options} #{additional_options} #{tables_to_skip} #{database} | gzip -f --best > #{File.join(tmp_path, compressed_file)} }
         end
