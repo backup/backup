@@ -2,7 +2,7 @@ module Backup
   module Adapters
     class Custom < Backup::Adapters::Base
       
-      attr_accessor :archived_file, :commands
+      attr_accessor :commands
       
       private
 
@@ -31,15 +31,14 @@ module Backup
           %x{ tar -czf #{File.join(tmp_path, compressed_file)} #{File.join(tmp_path, '*')} }
         end
         
+        def performed_file_extension
+          "tar"
+        end
+
         # Loads the initial settings
         def load_settings
-          self.trigger  = procedure.trigger
+          super
           self.commands = procedure.get_adapter_configuration.attributes['commands']
-          
-          self.archived_file    = "#{timestamp}.#{trigger.gsub(' ', '-')}.tar"      
-          self.compressed_file  = "#{archived_file}.gz"
-          self.encrypted_file   = "#{compressed_file}.enc"
-          self.final_file       = compressed_file
         end
                 
     end

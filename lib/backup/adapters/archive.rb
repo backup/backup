@@ -2,8 +2,6 @@ module Backup
   module Adapters
     class Archive < Backup::Adapters::Base
       
-      attr_accessor :archived_file
-      
       private
 
         # Archives and Compresses all files
@@ -17,15 +15,9 @@ module Backup
             %x{ tar -czf #{File.join(tmp_path, compressed_file)} #{files.gsub(' ', '\ ')} }
           end
         end
-        
-        # Loads the initial settings
-        def load_settings
-          self.trigger  = procedure.trigger
 
-          self.archived_file    = "#{timestamp}.#{trigger.gsub(' ', '-')}.tar"      
-          self.compressed_file  = "#{archived_file}.gz"
-          self.encrypted_file   = "#{compressed_file}.enc"
-          self.final_file       = compressed_file
+        def performed_file_extension
+          "tar"
         end
         
     end

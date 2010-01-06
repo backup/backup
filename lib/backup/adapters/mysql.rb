@@ -2,7 +2,7 @@ module Backup
   module Adapters
     class MySQL < Backup::Adapters::Base
       
-      attr_accessor :dumped_file, :user, :password, :database, :skip_tables, :host, :port, :socket, :additional_options
+      attr_accessor :user, :password, :database, :skip_tables, :host, :port, :socket, :additional_options
       
       private
 
@@ -12,9 +12,13 @@ module Backup
           %x{ mysqldump -u #{user} --password='#{password}' #{options} #{additional_options} #{database} #{tables_to_skip} | gzip -f --best > #{File.join(tmp_path, compressed_file)} }
         end
         
+        def performed_file_extension
+          "sql"
+        end
+
         # Loads the initial settings
         def load_settings
-          self.trigger  = procedure.trigger
+          super
           
           %w(user password database skip_tables additional_options).each do |attribute|
             send(:"#{attribute}=", procedure.get_adapter_configuration.attributes[attribute])
@@ -23,11 +27,6 @@ module Backup
           %w(host port socket).each do |attribute|
             send(:"#{attribute}=", procedure.get_adapter_configuration.get_options.attributes[attribute])
           end
-
-          self.dumped_file      = "#{timestamp}.#{trigger.gsub(' ', '-')}.sql"      
-          self.compressed_file  = "#{dumped_file}.gz"
-          self.encrypted_file   = "#{compressed_file}.enc"
-          self.final_file       = compressed_file
         end
         
         # Returns a list of options in MySQL syntax

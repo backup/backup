@@ -13,7 +13,7 @@ module Backup
       #   myfile.gz.enc
       #
       # It is important that, whatever the final filename of the file will be, that :final_file will contain it.
-      attr_accessor :compressed_file, :encrypted_file, :final_file
+      attr_accessor :performed_file, :compressed_file, :encrypted_file, :final_file
 
       # Initializes the Backup Process
       # 
@@ -35,6 +35,13 @@ module Backup
         self.tmp_path               = File.join(BACKUP_PATH.gsub(' ', '\ '), 'tmp', 'backup', trigger)
         self.encrypt_with_password  = procedure.attributes['encrypt_with_password']
         self.keep_backups           = procedure.attributes['keep_backups']
+
+        self.trigger  = procedure.trigger # is this necessary?
+
+        self.performed_file   = "#{timestamp}.#{trigger.gsub(' ', '-')}.#{performed_file_extension}"
+        self.compressed_file  = "#{performed_file}.gz"
+        self.encrypted_file   = "#{compressed_file}.enc"
+        self.final_file       = compressed_file
 
         create_tmp_folder
         load_settings
