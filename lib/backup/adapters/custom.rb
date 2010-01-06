@@ -33,7 +33,6 @@ module Backup
 
         # Loads the initial settings
         def load_settings
-          super
           self.commands = procedure.get_adapter_configuration.attributes['commands']
         end
                 

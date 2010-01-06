@@ -18,8 +18,6 @@ module Backup
 
         # Loads the initial settings
         def load_settings
-          super
-          
           %w(user password database skip_tables additional_options).each do |attribute|
             send(:"#{attribute}=", procedure.get_adapter_configuration.attributes[attribute])
           end
