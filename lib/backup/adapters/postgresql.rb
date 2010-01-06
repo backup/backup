@@ -40,13 +40,8 @@ module Backup
         
         # Returns a list of tables to skip in PostgreSQL syntax
         def tables_to_skip
-          if skip_tables.is_a?(Array)
-            skip_tables.map {|table| " -T \"#{table}\" "}
-          elsif skip_tables.is_a?(String)
-            " -T \"#{skip_tables}\" "
-          else
-            ""
-          end
+          return "" unless skip_tables
+          [*skip_tables].map {|table| " -T \"#{table}\" "}
         end
 
     end

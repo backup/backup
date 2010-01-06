@@ -40,13 +40,8 @@ module Backup
         
         # Returns a list of tables to skip in MySQL syntax
         def tables_to_skip
-          if skip_tables.is_a?(Array)
-            skip_tables.map {|table| " --ignore-table='#{database}.#{table}' "}
-          elsif skip_tables.is_a?(String)
-            " --ignore-table='#{database}.#{skip_tables}' "
-          else
-            ""
-          end
+          return "" unless skip_tables
+          [*skip_tables].map {|table| " --ignore-table='#{database}.#{table}' "}
         end
                 
     end
