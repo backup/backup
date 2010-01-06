@@ -14,14 +14,10 @@ module Backup
         
         # Executes the commands
         def execute_commands
-          if commands.is_a?(Array)
-            puts system_messages[:commands]
-            commands.each do |command|
-              %x{ #{command.gsub(':tmp_path', tmp_path)} }
-            end
-          elsif commands.is_a?(String)
-            puts system_messages[:commands]
-            %x{ #{commands.gsub(':tmp_path', tmp_path)} }
+          return unless commands
+          puts system_messages[:commands]
+          [*commands].each do |command|
+            %x{ #{command.gsub(':tmp_path', tmp_path)} }
           end
         end
         
