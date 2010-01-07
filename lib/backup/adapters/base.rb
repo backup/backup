@@ -45,7 +45,7 @@ module Backup
 
         begin
           create_tmp_folder
-          load_settings if respond_to?(:load_settings)
+          load_settings # if respond_to?(:load_settings)
           perform
           encrypt
           store
@@ -59,6 +59,10 @@ module Backup
       # Creates the temporary folder for the specified adapter
       def create_tmp_folder
         run "mkdir -p #{tmp_path}"
+      end
+      
+      # TODO make methods in derived classes public? respond_to cannot identify private methods
+      def load_settings
       end
 
       # Removes the files inside the temporary folder
