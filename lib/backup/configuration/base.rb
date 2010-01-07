@@ -22,6 +22,7 @@ module Backup
         @storage_configuration.instance_eval &block
       end
 
+      # Initializes the storing process depending on the store settings
       def initialize_storage(adapter)
         case @storage_name.to_sym
           when :s3    then Backup::Storage::S3.new(adapter)

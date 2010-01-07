@@ -75,12 +75,7 @@ module Backup
         end
       end
       
-      # Initializes the storing process depending on the store settings
-      # Options:
-      #  Amazon (S3)
-      #  Remote Server (SCP)
-      #  Remote Server (FTP)
-      #  Remote Server (SFTP)
+      # Initializes the storing process
       def store
         procedure.initialize_storage(self)
       end
