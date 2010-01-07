@@ -2,6 +2,8 @@ module Backup
   module Adapters
     class Base
 
+      include Backup::CommandHelper
+      
       attr_accessor :procedure, :timestamp, :options, :tmp_path, :encrypt_with_password, :keep_backups, :trigger
 
       # IMPORTANT
@@ -59,19 +61,19 @@ module Backup
       
       # Creates the temporary folder for the specified adapter
       def create_tmp_folder
-        %x{ mkdir -p #{tmp_path} }
+        run "mkdir -p #{tmp_path}"
       end
 
       # Removes the files inside the temporary folder
       def remove_tmp_files
-        %x{ rm #{File.join(tmp_path, '*')} }
+        run "rm #{File.join(tmp_path, '*')}"
       end
 
       # Encrypts the archive file
       def encrypt
         if encrypt_with_password.is_a?(String)
-          puts system_messages[:encrypting]
-          %x{ openssl enc -des-cbc -in #{File.join(tmp_path, compressed_file)} -out #{File.join(tmp_path, encrypted_file)} -k #{encrypt_with_password} }
+          log system_messages[:encrypting]
+          run "openssl enc -des-cbc -in #{File.join(tmp_path, compressed_file)} -out #{File.join(tmp_path, encrypted_file)} -k #{encrypt_with_password}"
           self.final_file = encrypted_file
         end
       end

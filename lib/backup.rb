@@ -22,6 +22,8 @@ require 'backup/configuration/mail'
 require 'backup/configuration/smtp'
 require 'backup/configuration/helpers'
 
+require 'backup/command_helper'
+
 # Include the Configuration adn Environment Helpers  
 include Backup::Configuration::Helpers
 include Backup::Environment::Base

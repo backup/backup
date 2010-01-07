@@ -15,16 +15,16 @@ module Backup
         # Executes the commands
         def execute_commands
           return unless commands
-          puts system_messages[:commands]
+          log system_messages[:commands]
           [*commands].each do |command|
-            %x{ #{command.gsub(':tmp_path', tmp_path)} }
+            run "#{command.gsub(':tmp_path', tmp_path)}"
           end
         end
         
         # Archives and Compresses
         def targz
-          puts system_messages[:archiving]; puts system_messages[:compressing]
-          %x{ tar -czf #{File.join(tmp_path, compressed_file)} #{File.join(tmp_path, '*')} }
+          log system_messages[:archiving]; log system_messages[:compressing]
+          run "tar -czf #{File.join(tmp_path, compressed_file)} #{File.join(tmp_path, '*')}"
         end
         
         def performed_file_extension

@@ -8,8 +8,8 @@ module Backup
 
         # Dumps and Compresses the MySQL file 
         def perform
-          puts system_messages[:mysqldump]; puts system_messages[:compressing]
-          %x{ mysqldump -u #{user} --password='#{password}' #{options} #{additional_options} #{database} #{tables_to_skip} | gzip -f --best > #{File.join(tmp_path, compressed_file)} }
+          log system_messages[:mysqldump]; log system_messages[:compressing]
+          run "mysqldump -u #{user} --password='#{password}' #{options} #{additional_options} #{database} #{tables_to_skip} | gzip -f --best > #{File.join(tmp_path, compressed_file)}"
         end
         
         def performed_file_extension

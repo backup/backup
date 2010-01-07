@@ -8,8 +8,8 @@ module Backup
 
         # Dumps and Compresses the PostgreSQL file 
         def perform
-            puts system_messages[:pgdump]; puts system_messages[:compressing]
-           %x{ pg_dump -U #{user} #{options} #{additional_options} #{tables_to_skip} #{database} | gzip -f --best > #{File.join(tmp_path, compressed_file)} }
+          log system_messages[:pgdump]; log system_messages[:compressing]
+          run "pg_dump -U #{user} #{options} #{additional_options} #{tables_to_skip} #{database} | gzip -f --best > #{File.join(tmp_path, compressed_file)}"
         end
         
         def performed_file_extension
