@@ -47,12 +47,7 @@ module Backup
         def clean_backups
           if keep_backups.is_a?(Integer)
             backups = self.class.all(:conditions => {:trigger => trigger})
-            backups_to_destroy = Array.new
-            backups.each_with_index do |backup, index|
-              if index >= keep_backups then
-                backups_to_destroy << backup
-              end
-            end
+            backups_to_destroy = backups[keep_backups, backups.size] || []
             
             unless backups_to_destroy.empty?
               # Derived classes must implement this method!
