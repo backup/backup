@@ -108,9 +108,10 @@ h3. Storage Methods
 h3. Adapters
 
 * MySQL
+* SQLite
 * PostgreSQL
 * Archive (any files or folders)
-* Custom (any database format other than MySQL or PostgreSQL!)
+* Custom (any database format other than MySQL, SQLite or PostgreSQL!)
 
 h3. Archiving
 

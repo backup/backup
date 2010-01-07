@@ -24,7 +24,7 @@ require 'backup/configuration/helpers'
 
 require 'backup/command_helper'
 
-# Include the Configuration adn Environment Helpers  
+# Include the Configuration and Environment Helpers
 include Backup::Configuration::Helpers
 include Backup::Environment::Base
 
@@ -48,6 +48,7 @@ Backup::Mail::Base.setup(@mail_configuration)
 # Load Adapters
 require 'backup/adapters/base'
 require 'backup/adapters/mysql'
+require 'backup/adapters/sqlite'
 require 'backup/adapters/postgresql'
 require 'backup/adapters/archive'
 require 'backup/adapters/custom'
@@ -88,6 +89,7 @@ module Backup
     def initialize_adapter
       case procedure.adapter_name.to_sym
         when :mysql       then Backup::Adapters::MySQL.new      trigger, procedure
+        when :sqlite      then Backup::Adapters::SQLite.new     trigger, procedure
         when :postgresql  then Backup::Adapters::PostgreSQL.new trigger, procedure
         when :archive     then Backup::Adapters::Archive.new    trigger, procedure
         when :custom      then Backup::Adapters::Custom.new     trigger, procedure

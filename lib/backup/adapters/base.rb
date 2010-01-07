@@ -104,6 +104,7 @@ module Backup
           :encrypting   => "Encrypting backup..",
           :mysqldump    => "Creating MySQL dump..",
           :pgdump       => "Creating PostgreSQL dump..",
+          :sqlite       => "Copying and compressing SQLite database..",
           :commands     => "Executing commands.." }
       end
       
