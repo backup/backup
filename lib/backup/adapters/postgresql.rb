@@ -9,7 +9,9 @@ module Backup
         # Dumps and Compresses the PostgreSQL file 
         def perform
           log system_messages[:pgdump]; log system_messages[:compressing]
+          ENV['PGPASSWORD'] = password
           run "pg_dump -U #{user} #{options} #{additional_options} #{tables_to_skip} #{database} | gzip -f --best > #{File.join(tmp_path, compressed_file)}"
+          ENV['PGPASSWORD'] = nil
         end
         
         def performed_file_extension

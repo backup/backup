@@ -23,10 +23,11 @@ optparse = OptionParser.new do |opts|
     backup = Backup::Setup.new(trigger, @backup_procedures)
     records = Array.new
     case backup.procedure.storage_name.to_sym
-      when :s3    then records = Backup::Record::S3.all   :conditions => {:trigger => trigger}
-      when :scp   then records = Backup::Record::SCP.all  :conditions => {:trigger => trigger}
-      when :ftp   then records = Backup::Record::FTP.all  :conditions => {:trigger => trigger}
-      when :sftp  then records = Backup::Record::SFTP.all :conditions => {:trigger => trigger}
+      when :s3    then records = Backup::Record::S3.all    :conditions => {:trigger => trigger}
+      when :scp   then records = Backup::Record::SCP.all   :conditions => {:trigger => trigger}
+      when :ftp   then records = Backup::Record::FTP.all   :conditions => {:trigger => trigger}
+      when :sftp  then records = Backup::Record::SFTP.all  :conditions => {:trigger => trigger}
+      when :local then records = Backup::Record::Local.all :conditions => {:trigger => trigger}
     end
     
     if options[:table]
@@ -40,10 +41,7 @@ optparse = OptionParser.new do |opts|
   
   opts.on('-t', '--truncate [trigger]', "Truncates backup records for specified trigger") do |trigger|
     puts "Truncating backup records with trigger: #{trigger}."
-    Backup::Record::S3.destroy_all    :trigger => trigger, :storage => 's3'
-    Backup::Record::SCP.destroy_all   :trigger => trigger, :storage => 'scp'
-    Backup::Record::FTP.destroy_all   :trigger => trigger, :storage => 'ftp'
-    Backup::Record::SFTP.destroy_all  :trigger => trigger, :storage => 'sftp'
+    Backup::Record::Base.destroy_all :trigger => trigger
   end
   
   opts.on('-d', '--destroy [trigger]', "Destroys backup records and files for specified trigger") do |trigger|
@@ -60,10 +58,7 @@ optparse = OptionParser.new do |opts|
   
   opts.on('--truncate-all', "Truncates all backup records") do
     puts "Truncating all backup records."
-    Backup::Record::S3.destroy_all
-    Backup::Record::SCP.destroy_all
-    Backup::Record::FTP.destroy_all
-    Backup::Record::SFTP.destroy_all
+    Backup::Record::Base.destroy_all
   end
 
   opts.on('--destroy-all', "Destroys all backup records and files") do
@@ -76,6 +71,7 @@ optparse = OptionParser.new do |opts|
         when :scp   then Backup::Record::SCP.destroy_all_backups    backup_procedure,  backup_procedure.trigger
         when :ftp   then Backup::Record::FTP.destroy_all_backups    backup_procedure,  backup_procedure.trigger
         when :sftp  then Backup::Record::SFTP.destroy_all_backups   backup_procedure,  backup_procedure.trigger
+        when :local then Backup::Record::Local.destroy_all_backups  backup.procedure,  backup_procedure.trigger
       end
     end
   end
