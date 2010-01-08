@@ -1,3 +1,10 @@
+=== 2.?.? ====================================
+
+  - Added Storage Method: Local
+  - Added Adapter: SQLite
+  - exclude option added for Archive Adapter
+  - Internal cleanup
+
 PATCH
 === 2.3.0.3 ====================================
 
