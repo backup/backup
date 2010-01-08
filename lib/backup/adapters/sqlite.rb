@@ -12,6 +12,10 @@ module Backup
           run "gzip -c --best #{database} > #{File.join(tmp_path, compressed_file)}"
         end
         
+        def load_settings
+          self.database = procedure.get_adapter_configuration.attributes['database']
+        end
+        
         def performed_file_extension
           ""
         end
