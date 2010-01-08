@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Michael van Rooijen"]
-  s.date = %q{2010-01-01}
+  s.date = %q{2010-01-08}
   s.default_executable = %q{backup}
   s.description = %q{
                             Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the
@@ -38,14 +38,19 @@ Gem::Specification.new do |s|
      "generators/backup/templates/config/backup.rb",
      "generators/backup/templates/migrations/create_backup_tables.rb",
      "generators/backup/templates/tasks/backup.rake",
+     "generators/backup_update/backup_update_generator.rb",
+     "generators/backup_update/templates/migrations/update_backup_tables.rb",
      "lib/backup.rb",
      "lib/backup/adapters/archive.rb",
      "lib/backup/adapters/base.rb",
      "lib/backup/adapters/custom.rb",
      "lib/backup/adapters/mysql.rb",
      "lib/backup/adapters/postgresql.rb",
+     "lib/backup/adapters/sqlite.rb",
+     "lib/backup/command_helper.rb",
      "lib/backup/configuration/adapter.rb",
      "lib/backup/configuration/adapter_options.rb",
+     "lib/backup/configuration/attributes.rb",
      "lib/backup/configuration/base.rb",
      "lib/backup/configuration/helpers.rb",
      "lib/backup/configuration/mail.rb",
@@ -57,22 +62,29 @@ Gem::Specification.new do |s|
      "lib/backup/environment/unix.rb",
      "lib/backup/mail/base.rb",
      "lib/backup/mail/mail.txt",
+     "lib/backup/record/base.rb",
      "lib/backup/record/ftp.rb",
+     "lib/backup/record/local.rb",
      "lib/backup/record/s3.rb",
      "lib/backup/record/scp.rb",
      "lib/backup/record/sftp.rb",
      "lib/backup/storage/ftp.rb",
+     "lib/backup/storage/local.rb",
      "lib/backup/storage/s3.rb",
      "lib/backup/storage/scp.rb",
      "lib/backup/storage/sftp.rb",
      "setup/backup.rb",
-     "setup/backup.sqlite3"
+     "setup/backup.sqlite3",
+     "spec/configuration/attributes_spec.rb"
   ]
   s.homepage = %q{http://final-creation.com/open-source}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.5}
   s.summary = %q{Backup is a Ruby Gem that simplifies making backups for databases, files and folders.}
+  s.test_files = [
+    "spec/configuration/attributes_spec.rb"
+  ]
 
   if s.respond_to? :specification_version then
     current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
