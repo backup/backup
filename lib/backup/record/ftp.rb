@@ -1,6 +1,6 @@
 module Backup
   module Record
-    class FTP < Base
+    class FTP < Backup::Record::Base
       
       attr_accessor :ip, :user, :password
       

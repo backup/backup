@@ -64,12 +64,12 @@ require 'backup/storage/sftp'
 require 'backup/storage/local'
 
 # Backup Recorders
+require 'backup/record/base'
 require 'backup/record/s3'
 require 'backup/record/scp'
 require 'backup/record/ftp'
 require 'backup/record/sftp'
 require 'backup/record/local'
-
 
 # Backup Module
 module Backup

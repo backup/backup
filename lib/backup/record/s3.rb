@@ -1,6 +1,6 @@
 module Backup
   module Record
-    class S3 < Base
+    class S3 < Backup::Record::Base
       
       def load_specific_settings(adapter)
         self.bucket = adapter.procedure.get_storage_configuration.attributes['bucket']
