@@ -18,7 +18,7 @@ module Backup
         end
 
         def performed_file_extension
-          "tar"
+          ".tar"
         end
         
         def tar_files

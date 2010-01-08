@@ -13,7 +13,7 @@ module Backup
         end
         
         def performed_file_extension
-          "sql"
+          ".sql"
         end
 
         # Loads the initial settings

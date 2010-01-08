@@ -38,7 +38,7 @@ module Backup
         self.encrypt_with_password  = procedure.attributes['encrypt_with_password']
         self.keep_backups           = procedure.attributes['keep_backups']
 
-        self.performed_file   = "#{timestamp}.#{trigger.gsub(' ', '-')}.#{performed_file_extension}"
+        self.performed_file   = "#{timestamp}.#{trigger.gsub(' ', '-')}#{performed_file_extension}"
         self.compressed_file  = "#{performed_file}.gz"
         self.encrypted_file   = "#{compressed_file}.enc"
         self.final_file       = compressed_file
