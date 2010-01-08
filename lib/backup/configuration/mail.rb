@@ -2,7 +2,7 @@ module Backup
   module Configuration
     class Mail
       extend Backup::Configuration::Attributes
-      generate_attributes %(from to smtp)
+      generate_attributes %w(from to smtp)
 
       def initialize
         @smtp_configuration = Backup::Configuration::SMTP.new
