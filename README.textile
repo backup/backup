@@ -4,150 +4,50 @@ h2. A Backup Ruby Gem
 
 Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases such as MySQL/PostgreSQL and Files/Folders. All backups can be transferred to Amazon S3 or any remote server you have access to, using either SCP, SFTP or regular FTP. Backup handles Compression, Archiving, Encryption and Backup Cleaning (Cycling).
 
-h2. Email Notification as of 2.3.1!
+h2. Authors/Maintainers
 
-The first thing you will notice when you re-generate a new copy of the default "backup.rb" template, will be this:
-
-bc.. notifier_settings do
-  
-  to    "example1@gmail.com"
-  from  "example2@gmail.com"
-  
-  smtp do
-    host            "smtp.gmail.com"
-    port            "587"
-    username        "example1@gmail.com"
-    password        "example1password"
-    authentication  "plain"
-    domain          "localhost.localdomain"
-    tls             true
-  end
-
-end
+* "Meskyanichi (Michael van Rooijen)":http://github.com/meskyanichi
+* "Fernandoluizao (Fernando Migliorini Luizão)":http://github.com/fernandoluizao
 
 
-
-
-
-p. This is disabled by default. You must uncomment it. Once you uncomment it, fill in your credentials. By default I setup a "gmail"-based configuration.
-Once you've filled in your smtp credentials, all you have to do is set "notify false" to "notify true" inside each *backup* block you wish to be notified of on each successful backup.
-
-
-bc.. backup 'mysql-backup-s3' do
-  
-  adapter :mysql do
-    ...
-  end
-  
-  storage :s3 do
-    ...
-  end
-  
-  keep_backups 25
-  encrypt_with_password 'password'
-  notify false # set this to "true"
-  
-end
-
-
-
-
-
-p. And that's it! Now after every 'mysql-backup-s3', given you've provided the correct smtp configuration, you will be notified of each backup that has been created by email!
-
-
-h2. Backup goes independent with the release of version 2.3.0! Ruby on Rails is no longer "required"!
-
-*Before you read on, let me tell you that even though all this awesomeness has been added, Backup will still work as it did in the previous version with Ruby on Rails!*
-
-I am pleased to announce that Backup (version 2.3.0+) has been released and am very satisfied with this update. Backup can now make use of an executable bin file! Why is this so awesome? Because now Backup is Ruby on Rails independent! This means you can make use of Backup whether you use Rails or not, and with the same simplicity! *(pshh.. It's actually simpler to be honest!)*.
-
-Imagine you have one or more web applications written in another language on the same server, for example, a Python or PHP application. It'd be nice if you could also back up these databases in the same way you are used to, using Backup. Or what about having a MySQL Server running on a separate remote server? It'd be nice to be able to backup directly from that server instead of create a dump from there to the application's server and then push it to Amazon S3 or elsewhere. Previously this wasn't really possible. But now it is! Check this out.
-
-*Install Backup Gem version 2.3.0 or later!*
-
-bc. sudo gem install backup
-
-*Setup Backup*
-
-bc. sudo backup --setup
-
-*New folders and files are created in /opt/backup, these will look familiar if you've been using Backup.. Edit the config file!*
-The configuration file works *100% the same as the Ruby on Rails configuration file*, so no need to re-understand it!
-
-bc. sudo nano /opt/backup/config/backup.rb
-
-*And now just run it like so!*
-
-bc. sudo backup --run mytrigger
-
-*For a full list of commands:*
-
-bc. backup --help
-
-
-*Another handy command I added to this backup utility, is the ability to decrypt files that were encrypted by Backup.*
-
-bc. sudo backup --decrypt /path/to/encrypted/file
-
-h3. Get started with Backup in the Unix environment!
-
-"http://wiki.github.com/meskyanichi/backup/getting-started-unix":http://wiki.github.com/meskyanichi/backup/getting-started-unix
-
-
-h2. (Current) Backup's Capabilities
+h2. Backup's Current Capabilities
 
 h3. Storage Methods
 
-* Amazon (S3)
-* Remote Server (SCP)
-* Remote Server (SFTP)
-* Remote Server (FTP)
-* Local server  (Another Hard Drive, Network path)
+* Amazon S3
+* Remote Server (Available Protocols: SCP, SFTP, FTP)
+* Local server (Example Locations: Another Hard Drive, Network path)
 
 h3. Adapters
 
 * MySQL
 * SQLite
 * PostgreSQL
-* Archive (any files or folders)
-* Custom (any database format other than MySQL, SQLite or PostgreSQL!)
+* Archive (Any files and/or folders)
+* Custom (Anything you can produce using the command line)
 
 h3. Archiving
 
-*Backup supports Archiving.*
-When you use the Archive adapter to backup a bunch of files and folders, backup will archive and compress these all together.
-Archiving also happens when using the *Custom* adapter. If you issue a few commands using it, to dump maybe 1-3 databases, Backup will
-handle the archiving, compression and encryption for you!
+Handles archiving for the *Archive* and *Custom* adapters.
 
 h3. Encryption
 
-*Backup supports a simple form of encryption.*
-All adapters support encryption. This is very simple to enable. Just add the following method inside of the backup settings
-of which you wish to encrypt, and it will encrypt it with the specified password:
+Handles encryption of *all* backups for *any* adapter.
+To decrypt a "Backup encrypted file" you can use Backup's built-in utility command:
 
-bc. encrypt_with_password "mypassword"
-
-As of *Backup 2.3.0*, backup is executable through the command line. To decrypt an encrypted file, backup provides you with a handy utility to do this:
-
-bc. sudo backup --decrypt /path/to/encrypted/file
+bc. sudo backup --decrypt /path/to/encrypted/file.enc
 
 h3. Backup Cleaning
 
-*Backup supports backup cleaning.*
-Backup Cleaning enables you to specify the amount of backups that may be stored on either Amazon S3 or a Remote Server. If you for example tell backup to limit the amount of backups at 20, then when the 21st backup gets pushed to the storage location, the oldest version will automatically be destroyed.
+With Backup you can very easily specify how many backups you would like to have stored (per backup procedure!) on your Amazon S3, Remote or Local server.
+When the limit you specify gets exceeded, the oldest backup will automatically be cleaned up.
 
-The idea behind this is to not flood either your backup server, which might resort in possible lack of hard disk space. Another good reason to utilize this would be for Amazon. Although Amazon S3 is extremely cheap, when backing up 1-2GB of MySQL dumps twice a day, it can become quite expensive if you never remove old ones.
+h3. Email Notifications
 
-To enable this you simply call the following method inside the desired "backup setting":
+You will be able to specify whether you would like to be notified by email when a backup successfully been stored.
+Simply fill in the email configuration block and set "notify" to true inside the backup procedure you would like to be notified of.
 
-bc. keep_backups 20
-
-
-h3. Quick Example of a Single Backup Setting inside the Backup Configuration File
-
-* In *Rails Environments* this file is located in *RAILS_ROOT/config/backup.rb*
-* In *Unix Environments* this file is located in */opt/backup/config/backup.rb*
+h3. Quick Example of a Single Backup Setting/Procedure inside the Backup Configuration File
 
 bc. backup 'mysql-backup-s3' do
   adapter :mysql do
@@ -162,88 +62,48 @@ bc. backup 'mysql-backup-s3' do
     use_ssl           true
   end
   keep_backups 25
-  encrypt_with_password 'password'
+  encrypt_with_password 'my_password'
+  notify true
 end
   
-The (backup 'mysql-backup-s3' do) is what I call a "backup setting". The first argument of the block is the so called "trigger".
+Everything above should be pretty straightforward, so now, using the "trigger" we specified between
+the *backup* and *do* you can execute this backup procedure like so:
 
-bc. backup 'mysql-backup-s3' do
-  # Configuration Here
-end
-  
-This acts as an "identifier" for the "backup setting". The (above) "backup setting" is all pretty straightforward.
-So now that we've set up a "backup setting", we can run it using a rake task, like so:
+*Rails Environment*
 
-*If you're using this inside a Unix Environment, use the Backup utility:*
+bc. rake backup:run trigger=mysql-backup-s3
+
+*Unix Environment*
 
 bc. sudo backup --run mysql-backup-s3
 
-*If you're using this inside a Ruby on Rails Environment, use the Backup rake task:*
-
-bc. rake backup:run trigger="mysql-backup-s3"
-
-*That's it, the MySQL database has been "backed up" to Amazon S3. It has been dumped, compressed and encrypted with password.*
-Note: You can add as many "backup setting" blocks as you want inside the ("/opt/backup/config/backup.rb" for Unix) or ("RAILS_ROOT/config/backup.rb" for Ruby on Rails) configuration file and invoke each of them by their own "trigger". This means you can have as many backup setups as you want, which "don't" all run simultaneously when you initialize a backup.
-
-*Depending on what environment you're running backup on, you will use different commands. Rails uses Rake Tasks, while Unix uses Backup's utility commands. See below!*
-
-*Runs the backup setting with the trigger "backup-logs"*
-
-bc. rake backup:run trigger="backup-logs"
-sudo backup --run backup-logs
-
-*Runs the backup setting with the trigger "backup-mysql"*
-
-bc. rake backup:run trigger="backup-mysql"
-sudo backup --run backup-mysql
-
-*Runs the backup setting with the trigger "backup-assets"*
-
-bc. rake backup:run trigger="backup-assets"
-sudo backup --run backup-assets
-
-h3. Additional Options for MySQL and PostgreSQL
-
-You can pass additional options/flags into the MySQL and PostgreSQL adapters via additional_options. For example:
-
-bc. backup 'mysql-backup-s3' do
-  adapter :mysql do
-    user      'user'
-    password  'password'
-    database  'database'
-    additional_options '--single-transaction'
-  end
-  .
-  .
-end
+That's it. This was a simple example of how it works.
 
 
 h2. Interested in trying out Backup?
 
-h3. Check out the following Wiki pages to get up and running:
 
-
-h3. Getting started (Unix Environment)
+h3. Getting started with Backup for the *Unix Environment*
 
 "http://wiki.github.com/meskyanichi/backup/getting-started-unix":http://wiki.github.com/meskyanichi/backup/getting-started-unix
 
 
-h3. Getting started (Rails Environment)
+h3. Getting started with Backup for the *Rails Environment*
 
 "http://wiki.github.com/meskyanichi/backup/getting-started-ruby-on-rails":http://wiki.github.com/meskyanichi/backup/getting-started-ruby-on-rails
 
 
-h3. Production Mode (important)
+h3. Production Mode *RAILS_ENV*
 
 "http://wiki.github.com/meskyanichi/backup/production-mode":http://wiki.github.com/meskyanichi/backup/production-mode
 
 
-h3. Backup Configuration File (All Adapters, Storage Methods and Options)
+h3. Backup Configuration File (All Adapters, Storage Methods, Mail Settings and Options)
 
 "http://wiki.github.com/meskyanichi/backup/configuration-file":http://wiki.github.com/meskyanichi/backup/configuration-file
 
 
-h3. Utility Commands and Rake Tasks
+h3. Unix Utility Commands and Rails Rake Tasks
 
 "http://wiki.github.com/meskyanichi/backup/utility-commands":http://wiki.github.com/meskyanichi/backup/utility-commands
 
@@ -287,12 +147,12 @@ h3. Resources
 
 h3. Requests
 
-If anyone has any requests, please send me a message!
+If anyone has any requests, please send us a message or post it on the issues page!
 
 
 h3. Suggestions?
 
-Send me a message! Fork the project!
+Send us a message! Fork the project!
 
 
 h3. Found a Bug?
@@ -307,6 +167,5 @@ List of people that forked and added stuff!
 * "dtrueman":http://github.com/dtrueman
 
 
-h3. Copyright
 
-Copyright (c) 2009 Michael van Rooijen | Final Creation. ("http://final-creation.com":http://final-creation.com) See LICENSE for details.
+_Michael van Rooijen | Final Creation. ("http://final-creation.com":http://final-creation.com)_
