@@ -49,10 +49,11 @@ optparse = OptionParser.new do |opts|
     puts "Destroying backup records with trigger: #{trigger}."
     backup = Backup::Setup.new(trigger, @backup_procedures)
     case backup.procedure.storage_name.to_sym
-      when :s3    then Backup::Record::S3.destroy_all_backups   backup.procedure,  trigger
-      when :scp   then Backup::Record::SCP.destroy_all_backups  backup.procedure,  trigger
-      when :ftp   then Backup::Record::FTP.destroy_all_backups  backup.procedure,  trigger
-      when :sftp  then Backup::Record::SFTP.destroy_all_backups backup.procedure,  trigger
+      when :s3    then Backup::Record::S3.destroy_all_backups     backup.procedure,  trigger
+      when :scp   then Backup::Record::SCP.destroy_all_backups    backup.procedure,  trigger
+      when :ftp   then Backup::Record::FTP.destroy_all_backups    backup.procedure,  trigger
+      when :sftp  then Backup::Record::SFTP.destroy_all_backups   backup.procedure,  trigger
+      when :local then Backup::Record::Local.destroy_all_backups  backup.procedure,  trigger
     end
   end
   
