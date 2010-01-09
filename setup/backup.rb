@@ -141,7 +141,7 @@ end
 backup 'archive-backup-ftp' do
   
   adapter :archive do
-    files "/path/to/log", "/path/to/db"
+    files ["/path/to/log", "/path/to/db"]
   end
   
   storage :ftp do
