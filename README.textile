@@ -97,6 +97,11 @@ h3. Production Mode *RAILS_ENV*
 "http://wiki.github.com/meskyanichi/backup/production-mode":http://wiki.github.com/meskyanichi/backup/production-mode
 
 
+h3. Encrypting and Decrypting
+
+"http://wiki.github.com/meskyanichi/backup/encrypting-and-decrypting":http://wiki.github.com/meskyanichi/backup/encrypting-and-decrypting
+
+
 h3. Backup Configuration File (All Adapters, Storage Methods, Mail Settings and Options)
 
 "http://wiki.github.com/meskyanichi/backup/configuration-file":http://wiki.github.com/meskyanichi/backup/configuration-file
