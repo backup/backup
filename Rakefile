@@ -10,13 +10,13 @@ begin
                             Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the
                             Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases such as
                             MySQL/PostgreSQL and Files/Folders. All backups can be transferred to Amazon S3 or any remote server you
-                            have access to, using either SCP, SFTP or regular FTP. Backup handles Compression, Archiving, Encryption
-                            and Backup Cleaning (Cycling).
+                            have access to, using either SCP, SFTP or regular FTP. Backup handles Compression, Archiving, Encryption,
+                            Backup Cleaning (Cycling) and supports Email Notifications.
                         }
                         
-    gem.email = "meskyan@gmail.com"
+    gem.email = "meskyanichi@gmail.com"
     gem.homepage = "http://final-creation.com/open-source"
-    gem.authors = ["Michael van Rooijen"]
+    gem.authors = ["Michael van Rooijen", "Fernando Migliorini Luizão"]
     gem.add_dependency "aws-s3",        ">= 0.6.2"
     gem.add_dependency "net-ssh",       ">= 2.0.15"
     gem.add_dependency "net-scp",       ">= 1.0.2"

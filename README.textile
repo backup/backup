@@ -2,7 +2,7 @@ h1. Backup
 
 h2. A Backup Ruby Gem
 
-Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases such as MySQL/PostgreSQL and Files/Folders. All backups can be transferred to Amazon S3 or any remote server you have access to, using either SCP, SFTP or regular FTP. Backup handles Compression, Archiving, Encryption and Backup Cleaning (Cycling).
+Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases such as MySQL/PostgreSQL and Files/Folders. All backups can be transferred to Amazon S3 or any remote server you have access to, using either SCP, SFTP or regular FTP. Backup handles Compression, Archiving, Encryption, Backup Cleaning (Cycling) and supports Email Notifications.
 
 h2. Authors/Maintainers
 
@@ -16,12 +16,12 @@ h3. Storage Methods
 
 * Amazon S3
 * Remote Server (Available Protocols: SCP, SFTP, FTP)
-* Local server (Example Locations: Another Hard Drive, Network path)
+* Local server (Example Locations: Another Hard Drive, Network path) *(coming in the next gem release)*
 
 h3. Adapters
 
 * MySQL
-* SQLite
+* SQLite *(in the next gem release)*
 * PostgreSQL
 * Archive (Any files and/or folders)
 * Custom (Anything you can produce using the command line)
