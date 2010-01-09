@@ -1,6 +1,6 @@
 module Backup
   module Record
-    class SCP < Base
+    class SCP < Backup::Record::Base
 
       attr_accessor :ip, :user, :password
       

@@ -1,6 +1,6 @@
 module Backup
   module Record
-    class SFTP < Base
+    class SFTP < Backup::Record::Base
 
       attr_accessor :ip, :user, :password
       

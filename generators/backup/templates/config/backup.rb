@@ -1,4 +1,3 @@
-
 # Backup Configuration File
 # 
 # Use the "backup" block to add backup settings to the configuration file.
@@ -17,18 +16,21 @@
 # ADAPTERS
 #  - MySQL
 #  - PostgreSQL
+#  - SQLite
 #  - Archive
 #  - Custom
 #
 # STORAGE METHODS
-#  - S3 (Amazon)
-#  - SCP (Remote Server)
-#  - FTP (Remote Server)
-#  - SFTP (Remote Server)
+#  - S3     (Amazon)
+#  - SCP    (Remote Server)
+#  - FTP    (Remote Server)
+#  - SFTP   (Remote Server)
+#  - LOCAL  (Local Server)
 #
 # GLOBAL OPTIONS
 #  - Keep Backups (keep_backups)
 #  - Encrypt With Pasword (encrypt_with_password)
+#  - Notify (notify)
 #
 #  This is the "decrypt" command for all encrypted backups:
 #    sudo backup --decrypt /path/to/encrypted/file
@@ -139,8 +141,7 @@ end
 backup 'archive-backup-ftp' do
   
   adapter :archive do
-    files ["#{RAILS_ROOT}/log", "#{RAILS_ROOT}/db"]
-    # files "#{RAILS_ROOT}/log"
+    files "#{RAILS_ROOT}/log", "#{RAILS_ROOT}/db"
   end
   
   storage :ftp do
@@ -177,6 +178,25 @@ backup 'custom-backup-sftp' do
 
   keep_backups :all
   encrypt_with_password 'password'
+  notify false
+  
+end
+
+
+# Initializ with:
+#   rake backup:run trigger='sqlite-backup-local'
+backup 'sqlite-backup-local' do
+  
+  adapter :sqlite do
+    database "#{RAILS_ROOT}/db/production.sqlite3"
+  end
+  
+  storage :local do
+    path "/path/to/storage/location/"
+  end
+  
+  keep_backups :all
+  encrypt_with_password false
   notify false
   
 end

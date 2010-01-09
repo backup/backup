@@ -71,7 +71,6 @@ require 'backup/record/ftp'
 require 'backup/record/sftp'
 require 'backup/record/local'
 
-
 # Backup Module
 module Backup
   class Setup

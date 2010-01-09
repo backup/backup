@@ -1,6 +1,6 @@
 module Backup
   module Record
-    class Local < Base
+    class Local < Backup::Record::Base
       
       def load_specific_settings(adapter)
         self.path = adapter.procedure.get_storage_configuration.attributes['path']

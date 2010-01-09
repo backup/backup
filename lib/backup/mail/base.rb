@@ -77,8 +77,12 @@ module Backup
           line.gsub!(':time',      Time.now.strftime("%r"))
           line.gsub!(':adapter',   @backup.procedure.adapter_name.to_s)
           line.gsub!(':location',  bucket || path)
-          line.gsub!(':remote',    bucket ? "Amazon S3" : "the remote server (#{ip})")
           line.gsub!(':backup',    @backup.final_file)
+          case @backup.procedure.storage_name.to_sym
+            when :s3                then line.gsub!(':remote', "on Amazon S3")
+            when :local             then line.gsub!(':remote', "on the local server")
+            when :scp, :sftp, :ftp  then line.gsub!(':remote', "on the remote server (#{ip})")
+          end
           @content ||= String.new
           @content << line
         end
