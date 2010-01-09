@@ -6,8 +6,8 @@ Backup is a Ruby Gem written for Unix and Rails environments. It can be used bot
 
 h2. Authors/Maintainers
 
-* "Meskyanichi (Michael van Rooijen)":http://github.com/meskyanichi
-* "Fernandoluizao (Fernando Migliorini Luizão)":http://github.com/fernandoluizao
+* "Meskyanichi - Michael van Rooijen":http://github.com/meskyanichi
+* "Fernandoluizao - Fernando Migliorini Luizão":http://github.com/fernandoluizao
 
 
 h2. Backup's Current Capabilities
@@ -39,8 +39,7 @@ bc. sudo backup --decrypt /path/to/encrypted/file.enc
 
 h3. Backup Cleaning
 
-With Backup you can very easily specify how many backups you would like to have stored (per backup procedure!) on your Amazon S3, Remote or Local server.
-When the limit you specify gets exceeded, the oldest backup will automatically be cleaned up.
+With Backup you can very easily specify how many backups you would like to have stored (per backup procedure!) on your Amazon S3, Remote or Local server. When the limit you specify gets exceeded, the oldest backup will automatically be cleaned up.
 
 h3. Email Notifications
 

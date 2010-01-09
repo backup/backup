@@ -4,6 +4,14 @@
   - Added Adapter: SQLite
   - exclude option added for Archive Adapter
   - Internal cleanup
+  - Will try to automatically determine the path to mysqldump and pg_dump utilities
+  - Added spec/tests
+
+MINOR UPDATE
+=== 2.3.1 ======================================
+
+  - Added Feature: Email notifications
+
 
 PATCH
 === 2.3.0.3 ====================================
