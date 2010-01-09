@@ -9,7 +9,14 @@ module Backup
         # Dumps and Compresses the MySQL file 
         def perform
           log system_messages[:mysqldump]; log system_messages[:compressing]
-          run "mysqldump -u #{user} --password='#{password}' #{options} #{additional_options} #{database} #{tables_to_skip} | gzip -f --best > #{File.join(tmp_path, compressed_file)}"
+          run "#{mysqldump} -u #{user} --password='#{password}' #{options} #{additional_options} #{database} #{tables_to_skip} | gzip -f --best > #{File.join(tmp_path, compressed_file)}"
+        end
+
+        def mysqldump
+          # try to determine the full path, and fall back to myqsldump if not found
+          cmd = `which mysqldump`.chomp
+          cmd = 'mysqldump' if cmd.empty?
+          cmd
         end
         
         def performed_file_extension

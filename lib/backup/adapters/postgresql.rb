@@ -10,8 +10,15 @@ module Backup
         def perform
           log system_messages[:pgdump]; log system_messages[:compressing]
           ENV['PGPASSWORD'] = password
-          run "pg_dump -U #{user} #{options} #{additional_options} #{tables_to_skip} #{database} | gzip -f --best > #{File.join(tmp_path, compressed_file)}"
+          run "#{pg_dump} -U #{user} #{options} #{additional_options} #{tables_to_skip} #{database} | gzip -f --best > #{File.join(tmp_path, compressed_file)}"
           ENV['PGPASSWORD'] = nil
+        end
+
+        def pg_dump
+          # try to determine the full path, and fall back to pg_dump if not found
+          cmd = `which pg_dump`.chomp
+          cmd = 'pg_dump' if cmd.empty?
+          cmd
         end
         
         def performed_file_extension
