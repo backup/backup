@@ -1,3 +1,5 @@
+require 'pony'
+
 module Backup
   module Mail
     class Base

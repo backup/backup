@@ -1,3 +1,5 @@
+require 'aws/s3'
+
 module Backup
   module Connection
     class S3

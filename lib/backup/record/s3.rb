@@ -1,3 +1,5 @@
+require 'backup/connection/s3'
+
 module Backup
   module Record
     class S3 < Backup::Record::Base

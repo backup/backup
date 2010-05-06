@@ -1,3 +1,5 @@
+require 'net/ftp'
+
 module Backup
   module Storage
     class FTP

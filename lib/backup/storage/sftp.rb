@@ -1,3 +1,5 @@
+require 'net/sftp'
+
 module Backup
   module Storage
     class SFTP

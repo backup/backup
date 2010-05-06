@@ -1,3 +1,5 @@
+require 'backup/connection/s3'
+
 module Backup
   module Storage
     class S3

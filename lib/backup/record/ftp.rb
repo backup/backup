@@ -1,3 +1,5 @@
+require 'net/ftp'
+
 module Backup
   module Record
     class FTP < Backup::Record::Base

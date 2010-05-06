@@ -17,10 +17,6 @@ begin
     gem.email = "meskyanichi@gmail.com"
     gem.homepage = "http://final-creation.com/open-source"
     gem.authors = ["Michael van Rooijen", "Fernando Migliorini Luizão"]
-    gem.add_dependency "aws-s3",        ">= 0.6.2"
-    gem.add_dependency "net-ssh",       ">= 2.0.15"
-    gem.add_dependency "net-scp",       ">= 1.0.2"
-    gem.add_dependency "net-sftp",      ">= 2.0.4"
     gem.add_dependency "activerecord",  ">= 2.3.5"
     gem.add_dependency "sqlite3-ruby",  ">= 1.2.5"
     gem.add_dependency "hirb",          ">= 0.2.9"

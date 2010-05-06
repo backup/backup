@@ -1,3 +1,5 @@
+require 'net/scp'
+
 module Backup
   module Storage
     class SCP

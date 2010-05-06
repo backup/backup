@@ -1,10 +1,4 @@
 # Load Gems
-require 'net/ssh'
-require 'net/scp'
-require 'net/ftp'
-require 'net/sftp'
-require 'aws/s3'
-require 'pony'
 require 'hirb'
 
 # Load Environments
@@ -45,34 +39,34 @@ require 'backup/mail/base'
 # Set Mail Configuration (extracted from the backup.rb configuration file) inside the Mail Class
 Backup::Mail::Base.setup(@mail_configuration)
 
-# Load Adapters
-require 'backup/adapters/base'
-require 'backup/adapters/mysql'
-require 'backup/adapters/sqlite'
-require 'backup/adapters/postgresql'
-require 'backup/adapters/archive'
-require 'backup/adapters/custom'
-
-# Load Connectors
-require 'backup/connection/s3'
-
-# Load Storage
-require 'backup/storage/s3'
-require 'backup/storage/scp'
-require 'backup/storage/ftp'
-require 'backup/storage/sftp'
-require 'backup/storage/local'
-
-# Backup Recorders
-require 'backup/record/base'
-require 'backup/record/s3'
-require 'backup/record/scp'
-require 'backup/record/ftp'
-require 'backup/record/sftp'
-require 'backup/record/local'
-
 # Backup Module
 module Backup
+  module Adapters
+    autoload :Base,       'backup/adapters/base'
+    autoload :MySQL,      'backup/adapters/mysql'
+    autoload :SQLite,     'backup/adapters/sqlite'
+    autoload :PostgreSQL, 'backup/adapters/postgresql'
+    autoload :Archive,    'backup/adapters/archive'
+    autoload :Custom,     'backup/adapters/custom'
+  end
+
+  module Storage
+    autoload :S3,    'backup/storage/s3'
+    autoload :SCP,   'backup/storage/scp'
+    autoload :FTP,   'backup/storage/ftp'
+    autoload :SFTP,  'backup/storage/sftp'
+    autoload :Local, 'backup/storage/local'
+  end
+
+  module Record
+    autoload :Base,  'backup/record/base'
+    autoload :S3,    'backup/record/s3'
+    autoload :SCP,   'backup/record/scp'
+    autoload :FTP,   'backup/record/ftp'
+    autoload :SFTP,  'backup/record/sftp'
+    autoload :Local, 'backup/record/local'
+  end
+
   class Setup
   
     attr_accessor :trigger, :procedures, :procedure

@@ -1,3 +1,5 @@
+require 'net/sftp'
+
 module Backup
   module Record
     class SFTP < Backup::Record::Base

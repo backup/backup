@@ -1,3 +1,5 @@
+require 'net/scp'
+
 module Backup
   module Record
     class SCP < Backup::Record::Base
