@@ -2,7 +2,7 @@ module Backup
   module Configuration
     class Adapter
       extend Backup::Configuration::Attributes
-      generate_attributes %w(files exclude user password database skip_tables commands additional_options)
+      generate_attributes %w(files exclude user password database tables skip_tables commands additional_options)
 
       def initialize
         @options = Backup::Configuration::AdapterOptions.new

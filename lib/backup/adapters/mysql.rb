@@ -2,14 +2,14 @@ module Backup
   module Adapters
     class MySQL < Backup::Adapters::Base
       
-      attr_accessor :user, :password, :database, :skip_tables, :host, :port, :socket, :additional_options
+      attr_accessor :user, :password, :database, :skip_tables, :host, :port, :socket, :additional_options, :tables
       
       private
 
         # Dumps and Compresses the MySQL file 
         def perform
           log system_messages[:mysqldump]; log system_messages[:compressing]
-          run "#{mysqldump} -u #{user} --password='#{password}' #{options} #{additional_options} #{database} #{tables_to_skip} | gzip -f --best > #{File.join(tmp_path, compressed_file)}"
+          run "#{mysqldump} -u #{user} --password='#{password}' #{options} #{additional_options} #{database} #{tables_to_include} #{tables_to_skip} | gzip -f --best > #{File.join(tmp_path, compressed_file)}"
         end
 
         def mysqldump
@@ -25,7 +25,7 @@ module Backup
 
         # Loads the initial settings
         def load_settings
-          %w(user password database skip_tables additional_options).each do |attribute|
+          %w(user password database tables skip_tables additional_options).each do |attribute|
             send(:"#{attribute}=", procedure.get_adapter_configuration.attributes[attribute])
           end
           
@@ -47,6 +47,12 @@ module Backup
         def tables_to_skip
           return "" unless skip_tables
           [*skip_tables].map {|table| " --ignore-table='#{database}.#{table}' "}
+        end
+        
+        # Returns a list of tables to include in MySQL syntax
+        def tables_to_include
+          return "" unless tables
+          [*tables].join(" ")
         end
                 
     end
