@@ -105,7 +105,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<net-scp>, [">= 1.0.2"])
       s.add_dependency(%q<net-sftp>, [">= 2.0.4"])
       s.add_dependency(%q<activerecord>, [">= 2.3.5"])
-      s.add_dependency(%q<sqlite3-ruby>, [">= 1.2.5"])
+      s.add_dependency(%q<sqlite3-ruby>, ["= 1.2.5"])
       s.add_dependency(%q<hirb>, [">= 0.2.9"])
       s.add_dependency(%q<pony>, [">= 0.5"])
     end
