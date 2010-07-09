@@ -5,13 +5,13 @@ module Backup
       require 'active_record'
       require 'optparse'
       
-      # Sets BACKUP_PATH equal to /opt/backup
-      BACKUP_PATH = "/opt/backup"
+      # Sets BACKUP_PATH
+      BACKUP_PATH = ENV['BACKUP_PATH'] || "/opt/backup"
       
       # Sets DB_CONNECTION_SETTINGS
       DB_CONNECTION_SETTINGS = {
         :adapter  => "sqlite3",
-        :database => "/opt/backup/backup.sqlite3",
+        :database => "#{BACKUP_PATH}/backup.sqlite3",
         :pool     => 5,
         :timeout  => 5000 
       }
@@ -32,7 +32,7 @@ module Backup
 
   1: Set up some "Backup Settings" inside the configuration file!
 
-    /opt/backup/config/backup.rb
+    #{BACKUP_PATH}/config/backup.rb
 
 
   2: Run the backups!
