@@ -1,4 +1,4 @@
-require 'aws/s3'
+require 's3'
 
 module Backup
   module Connection
@@ -25,47 +25,37 @@ module Backup
       
       # Establishes a connection with Amazon S3 using the credentials provided by the user
       def connect
-        AWS::S3::Base.establish_connection!(
-          :access_key_id     => access_key_id,
-          :secret_access_key => secret_access_key,
-          :use_ssl           => use_ssl
-        )
+        service
       end
-      
+
       # Wrapper for the Service object
       def service
-        AWS::S3::Service
+        ::S3::Service.new(:access_key_id => access_key_id,
+                          :secret_access_key => secret_access_key,
+                          :use_ssl => use_ssl)
       end
-      
+
       # Wrapper for the Bucket object
       def bucket
-        AWS::S3::Bucket
+        service.buckets.find(s3_bucket)
       end
-      
-      # Wrapper for the Object object
-      def object
-        AWS::S3::S3Object
-      end
-      
+
       # Initializes the file transfer to Amazon S3
       # This can only run after a connection has been made using the #connect method 
       def store
-        puts "Storing \"#{final_file}\" to bucket \"#{s3_bucket}\" on Amazon S3."
-        object.store(
-          final_file,
-          open(File.join(tmp_path, final_file)),
-          s3_bucket )
+        object = bucket.objects.build(final_file)
+        object.content = open(File.join(tmp_path, final_file))
+        object.save
       end
-      
+
       # Destroys file from a bucket on Amazon S3
-      def destroy(file, bucket)
-        object.delete(
-          file,
-          bucket )
+      def destroy(file, bucket_as_string)
+        object = bucket.objects.find(file)
+        object.destroy
       end
-      
+
       private
-      
+
         def load_storage_configuration_attributes(static = false)          
           %w(access_key_id secret_access_key use_ssl).each do |attribute|
             if static
