@@ -3,7 +3,7 @@ Gem::Specification.new do |gem|
   ##
   # Gem Specifications
   gem.name        = 'backup'
-  gem.version     = '2.3.2.pre'
+  gem.version     = '2.3.2.pre2'
   gem.date        = Date.today.to_s
   gem.summary     = 'Backup is a Ruby Gem that simplifies making backups for databases, files and folders.'
   gem.description = 'Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the
