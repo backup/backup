@@ -8,11 +8,11 @@ Gem::Specification.new do |gem|
   gem.version     = '2.3.2.pre3'
   gem.date        = Date.today.to_s
   gem.summary     = 'Backup is a Ruby Gem that simplifies making backups for databases, files and folders.'
-  gem.description = 'Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the
-  Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases such as
-  MySQL/PostgreSQL and Files/Folders. All backups can be transferred to Amazon S3 or any remote server you
-  have access to, using either SCP, SFTP or regular FTP. Backup handles Compression, Archiving, Encryption
-  and Backup Cleaning (Cycling).'
+  gem.description = 'Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with
+  and without the Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases
+  such as MySQL/PostgreSQL/SQLite3 and Files/Folders. All backups can be transferred to Amazon S3, Rackspace Cloud Files,
+  any remote server you have access to (using either SCP, SFTP or regular FTP), or a Local server. Backup handles
+  Compression, Archiving, Encryption, Backup Cleaning (Cycling) and supports Email Notifications.'
   
   ##
   # Author specifications
