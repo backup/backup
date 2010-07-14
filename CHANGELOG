@@ -1,11 +1,29 @@
-=== 2.?.? ====================================
+MINOR UPDATE
+=== 2.3.2.pre3 ==================================
+
+  - Added support for Rackspace Cloud Files. Backups can now also be stored in Rackspace Cloud Files.
+
+
+MINOR UPDATE
+=== 2.3.2.pre2 ==================================
+
+  - Added support for Amazon S3 EEUU and European buckets.
+
+
+BIG UPDATE
+=== 2.3.2.pre ==================================
 
   - Added Storage Method: Local
   - Added Adapter: SQLite
   - exclude option added for Archive Adapter
   - Internal cleanup
   - Will try to automatically determine the path to mysqldump and pg_dump utilities
+  - Option to specify which tables to include for the backup
+  - The ability to specify a custom backup (unix environment) installation folder with ENV['BACKUP_PATH']
+  - Fixed dependency issue with SQLite3 Ruby Driver (must be 1.2.5)
+  - Removed Jeweler from Backup, the Gemspec should be manually updated from now on.
   - Added spec/tests
+
 
 MINOR UPDATE
 === 2.3.1 ======================================

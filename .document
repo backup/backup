@@ -1,5 +1,5 @@
-README.textile
+README.md
 lib/**/*.rb
 bin/*
-features/**/*.feature
+CHANGELOG
 LICENSE
