@@ -15,13 +15,14 @@ h2. Backup's Current Capabilities
 h3. Storage Methods
 
 * Amazon S3
+* Rackspace Cloud Files
 * Remote Server (Available Protocols: SCP, SFTP, FTP)
-* Local server (Example Locations: Another Hard Drive, Network path) *(coming in the next gem release)*
+* Local server (Example Locations: Another Hard Drive, Network path)
 
 h3. Adapters
 
 * MySQL
-* SQLite *(in the next gem release)*
+* SQLite
 * PostgreSQL
 * Archive (Any files and/or folders)
 * Custom (Anything you can produce using the command line)
@@ -166,10 +167,10 @@ h3. Found a Bug?
 
 h3. Contributors
 
-List of people that forked and added stuff!
-
 * "dtrueman":http://github.com/dtrueman
+* "Nathan L Smith":http://github.com/smith
+* "Francesc Esplugas":http://github.com/fesplugas
+* "wakiki":http://github.com/wakiki
+* "Dan Hixon":http://github.com/danhixon
 
-
-
-_Michael van Rooijen | Final Creation. ("http://final-creation.com":http://final-creation.com)_
+_Michael van Rooijen | Final Creation. ("http://michaelvanrooijen.com":http://michaelvanrooijen.com)_
