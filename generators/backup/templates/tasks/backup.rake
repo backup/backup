@@ -10,14 +10,7 @@ namespace :backup do
   task :find => :environment do
     puts "Finding backup records with trigger: #{ENV['trigger']}."
     backup = Backup::Setup.new(ENV['trigger'], @backup_procedures)
-    records = Array.new
-    case backup.procedure.storage_name.to_sym
-      when :s3    then records = Backup::Record::S3.all    :conditions => {:trigger => ENV['trigger']}
-      when :scp   then records = Backup::Record::SCP.all   :conditions => {:trigger => ENV['trigger']}
-      when :ftp   then records = Backup::Record::FTP.all   :conditions => {:trigger => ENV['trigger']}
-      when :sftp  then records = Backup::Record::SFTP.all  :conditions => {:trigger => ENV['trigger']}
-      when :local then records = Backup::Record::Local.all :conditions => {:trigger => ENV['trigger']}
-    end
+    records = backup.procedure.record_class.all( :conditions => {:trigger => ENV['trigger']} )
     
     if ENV['table'].eql?("true")
       puts Hirb::Helpers::AutoTable.render(records)
@@ -44,13 +37,7 @@ namespace :backup do
   task :destroy => :environment do
     puts "Destroying backup records with trigger: #{ENV['trigger']}."
     backup = Backup::Setup.new(ENV['trigger'], @backup_procedures)
-    case backup.procedure.storage_name.to_sym
-      when :s3    then Backup::Record::S3.destroy_all_backups    backup.procedure,  ENV['trigger']
-      when :scp   then Backup::Record::SCP.destroy_all_backups   backup.procedure,  ENV['trigger']
-      when :ftp   then Backup::Record::FTP.destroy_all_backups   backup.procedure,  ENV['trigger']
-      when :sftp  then Backup::Record::SFTP.destroy_all_backups  backup.procedure,  ENV['trigger']
-      when :local then Backup::Record::Local.destroy_all_backups backup.procedure,  ENV['trigger']
-    end
+    backup.procedure.record_class.destroy_all_backups( backup.procedure, ENV['trigger'] )
   end
   
   desc "Destroys all records for the specified \"trigger\", including the physical files on s3 or the remote server."
@@ -58,13 +45,7 @@ namespace :backup do
     puts "Destroying all backup records."
     backup = Backup::Setup.new(false, @backup_procedures)
     backup.procedures.each do |backup_procedure|
-      case backup_procedure.storage_name.to_sym
-        when :s3    then Backup::Record::S3.destroy_all_backups     backup_procedure,  backup_procedure.trigger
-        when :scp   then Backup::Record::SCP.destroy_all_backups    backup_procedure,  backup_procedure.trigger
-        when :ftp   then Backup::Record::FTP.destroy_all_backups    backup_procedure,  backup_procedure.trigger
-        when :sftp  then Backup::Record::SFTP.destroy_all_backups   backup_procedure,  backup_procedure.trigger
-        when :local then Backup::Record::Local.destroy_all_backups  backup_procedure,  backup_procedure.trigger
-      end
+      backup_procedure.record_class.destroy_all_backups( backup_procedure, backup_procedure.trigger )
     end
   end
   
