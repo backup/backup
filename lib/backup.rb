@@ -51,20 +51,22 @@ module Backup
   end
 
   module Storage
-    autoload :S3,    'backup/storage/s3'
-    autoload :SCP,   'backup/storage/scp'
-    autoload :FTP,   'backup/storage/ftp'
-    autoload :SFTP,  'backup/storage/sftp'
-    autoload :Local, 'backup/storage/local'
+    autoload :CloudFiles, 'backup/storage/cloudfiles'
+    autoload :S3,         'backup/storage/s3'
+    autoload :SCP,        'backup/storage/scp'
+    autoload :FTP,        'backup/storage/ftp'
+    autoload :SFTP,       'backup/storage/sftp'
+    autoload :Local,      'backup/storage/local'
   end
 
   module Record
-    autoload :Base,  'backup/record/base'
-    autoload :S3,    'backup/record/s3'
-    autoload :SCP,   'backup/record/scp'
-    autoload :FTP,   'backup/record/ftp'
-    autoload :SFTP,  'backup/record/sftp'
-    autoload :Local, 'backup/record/local'
+    autoload :Base,       'backup/record/base'
+    autoload :CloudFiles, 'backup/record/cloudfiles'
+    autoload :S3,         'backup/record/s3'
+    autoload :SCP,        'backup/record/scp'
+    autoload :FTP,        'backup/record/ftp'
+    autoload :SFTP,       'backup/record/sftp'
+    autoload :Local,      'backup/record/local'
   end
 
   class Setup

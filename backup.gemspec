@@ -1,9 +1,11 @@
+require 'date'
+
 Gem::Specification.new do |gem|
   
   ##
   # Gem Specifications
   gem.name        = 'backup'
-  gem.version     = '2.3.2.pre2'
+  gem.version     = '2.3.2.pre3'
   gem.date        = Date.today.to_s
   gem.summary     = 'Backup is a Ruby Gem that simplifies making backups for databases, files and folders.'
   gem.description = 'Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the
@@ -33,7 +35,7 @@ Gem::Specification.new do |gem|
   
   ##
   # Dependencies
-  gem.add_dependency('s3',        [">= 0.3.0"])
+  gem.add_dependency('s3',            [">= 0.3.0"])
   gem.add_dependency('net-ssh',       [">= 2.0.15"])
   gem.add_dependency('net-scp',       [">= 1.0.2"])
   gem.add_dependency('net-sftp',      [">= 2.0.4"])
@@ -41,4 +43,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency('sqlite3-ruby',  ["= 1.2.5"])
   gem.add_dependency('hirb',          [">= 0.2.9"])
   gem.add_dependency('pony',          [">= 0.5"])
+  gem.add_dependency('cloudfiles',    [">= 1.4.7"])
 end

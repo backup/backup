@@ -25,21 +25,23 @@ module Backup
       # Initializes the storing process depending on the store settings
       def initialize_storage(adapter)
         case @storage_name.to_sym
-          when :s3    then Backup::Storage::S3.new(adapter)
-          when :scp   then Backup::Storage::SCP.new(adapter)
-          when :ftp   then Backup::Storage::FTP.new(adapter)
-          when :sftp  then Backup::Storage::SFTP.new(adapter)
-          when :local then Backup::Storage::Local.new(adapter)
+          when :cloudfiles then Backup::Storage::CloudFiles.new(adapter)
+          when :s3         then Backup::Storage::S3.new(adapter)
+          when :scp        then Backup::Storage::SCP.new(adapter)
+          when :ftp        then Backup::Storage::FTP.new(adapter)
+          when :sftp       then Backup::Storage::SFTP.new(adapter)
+          when :local      then Backup::Storage::Local.new(adapter)
         end
       end
 
       def initialize_record
         case @storage_name.to_sym
-          when :s3    then Backup::Record::S3.new
-          when :scp   then Backup::Record::SCP.new
-          when :ftp   then Backup::Record::FTP.new
-          when :sftp  then Backup::Record::SFTP.new
-          when :local then Backup::Record::Local.new
+          when :cloudfiles then Backup::Record::CloudFiles.new
+          when :s3         then Backup::Record::S3.new
+          when :scp        then Backup::Record::SCP.new
+          when :ftp        then Backup::Record::FTP.new
+          when :sftp       then Backup::Record::SFTP.new
+          when :local      then Backup::Record::Local.new
         end        
       end
   

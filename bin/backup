@@ -23,13 +23,14 @@ optparse = OptionParser.new do |opts|
     backup = Backup::Setup.new(trigger, @backup_procedures)
     records = Array.new
     case backup.procedure.storage_name.to_sym
-      when :s3    then records = Backup::Record::S3.all    :conditions => {:trigger => trigger}
-      when :scp   then records = Backup::Record::SCP.all   :conditions => {:trigger => trigger}
-      when :ftp   then records = Backup::Record::FTP.all   :conditions => {:trigger => trigger}
-      when :sftp  then records = Backup::Record::SFTP.all  :conditions => {:trigger => trigger}
-      when :local then records = Backup::Record::Local.all :conditions => {:trigger => trigger}
+      when :cloudfiles then records = Backup::Record::CloudFiles.all :conditions => {:trigger => trigger}
+      when :s3         then records = Backup::Record::S3.all         :conditions => {:trigger => trigger}
+      when :scp        then records = Backup::Record::SCP.all        :conditions => {:trigger => trigger}
+      when :ftp        then records = Backup::Record::FTP.all        :conditions => {:trigger => trigger}
+      when :sftp       then records = Backup::Record::SFTP.all       :conditions => {:trigger => trigger}
+      when :local      then records = Backup::Record::Local.all      :conditions => {:trigger => trigger}
     end
-    
+
     if options[:table]
       puts Hirb::Helpers::AutoTable.render(records)
     else
@@ -49,11 +50,12 @@ optparse = OptionParser.new do |opts|
     puts "Destroying backup records with trigger: #{trigger}."
     backup = Backup::Setup.new(trigger, @backup_procedures)
     case backup.procedure.storage_name.to_sym
-      when :s3    then Backup::Record::S3.destroy_all_backups     backup.procedure,  trigger
-      when :scp   then Backup::Record::SCP.destroy_all_backups    backup.procedure,  trigger
-      when :ftp   then Backup::Record::FTP.destroy_all_backups    backup.procedure,  trigger
-      when :sftp  then Backup::Record::SFTP.destroy_all_backups   backup.procedure,  trigger
-      when :local then Backup::Record::Local.destroy_all_backups  backup.procedure,  trigger
+      when :cloudfiles then Backup::Record::CloudFiles.destroy_all_backups backup.procedure,  trigger
+      when :s3         then Backup::Record::S3.destroy_all_backups         backup.procedure,  trigger
+      when :scp        then Backup::Record::SCP.destroy_all_backups        backup.procedure,  trigger
+      when :ftp        then Backup::Record::FTP.destroy_all_backups        backup.procedure,  trigger
+      when :sftp       then Backup::Record::SFTP.destroy_all_backups       backup.procedure,  trigger
+      when :local      then Backup::Record::Local.destroy_all_backups      backup.procedure,  trigger
     end
   end
   
@@ -68,11 +70,12 @@ optparse = OptionParser.new do |opts|
     backup = Backup::Setup.new(false, @backup_procedures)
     backup.procedures.each do |backup_procedure|
       case backup_procedure.storage_name.to_sym
-        when :s3    then Backup::Record::S3.destroy_all_backups     backup_procedure,  backup_procedure.trigger
-        when :scp   then Backup::Record::SCP.destroy_all_backups    backup_procedure,  backup_procedure.trigger
-        when :ftp   then Backup::Record::FTP.destroy_all_backups    backup_procedure,  backup_procedure.trigger
-        when :sftp  then Backup::Record::SFTP.destroy_all_backups   backup_procedure,  backup_procedure.trigger
-        when :local then Backup::Record::Local.destroy_all_backups  backup.procedure,  backup_procedure.trigger
+        when :cloudfiles then Backup::Record::CloudFiles.destroy_all_backups backup_procedure,  backup_procedure.trigger
+        when :s3         then Backup::Record::S3.destroy_all_backups         backup_procedure,  backup_procedure.trigger
+        when :scp        then Backup::Record::SCP.destroy_all_backups        backup_procedure,  backup_procedure.trigger
+        when :ftp        then Backup::Record::FTP.destroy_all_backups        backup_procedure,  backup_procedure.trigger
+        when :sftp       then Backup::Record::SFTP.destroy_all_backups       backup_procedure,  backup_procedure.trigger
+        when :local then Backup::Record::Local.destroy_all_backups           backup.procedure,  backup_procedure.trigger
       end
     end
   end
