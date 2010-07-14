@@ -22,7 +22,7 @@ Gem::Specification.new do |gem|
   
   ##
   # Files to be compiled
-  gem.files = ['README.textile', 'CHANGELOG', 'LICENSE', 'VERSION'] +
+  gem.files = ['README.md', 'CHANGELOG', 'LICENSE', 'VERSION'] +
               Dir['lib/**/*'] + Dir['bin/*'] + Dir['generators/**/*'] + Dir['setup/*']
   
   ##
