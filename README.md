@@ -157,12 +157,12 @@ If anyone has any requests, please send us a message or post it in the [issue lo
 Send us a message! Fork the project!
 
 
-h3. Found a Bug?
+### Found a Bug?
 
 [Report it](http://github.com/meskyanichi/backup/issues)
 
 
-h3. Contributors
+### Contributors
 
 * [dtrueman](http://github.com/dtrueman)
 * [Nathan L Smith](http://github.com/smith)
