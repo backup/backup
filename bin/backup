@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+require 'optparse'
 require 'backup'
 
 include Backup::Environment::Unix::Commands

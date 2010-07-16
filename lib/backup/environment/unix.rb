@@ -3,7 +3,6 @@ module Backup
     module Unix
       
       require 'active_record'
-      require 'optparse'
       
       # Sets BACKUP_PATH
       BACKUP_PATH = ENV['BACKUP_PATH'] || "/opt/backup"
