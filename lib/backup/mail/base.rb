@@ -1,5 +1,3 @@
-require 'pony'
-
 module Backup
   module Mail
     class Base
@@ -34,6 +32,8 @@ module Backup
       # Requires the Backup Object
       def self.notify!(backup)
         if self.setup? and backup.procedure.attributes['notify'].eql?(true)
+          require 'pony'
+
           @backup = backup
           self.parse_body
           Pony.mail({
