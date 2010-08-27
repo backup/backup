@@ -21,6 +21,7 @@
 #  - Custom
 #
 # STORAGE METHODS
+#  - Rackspace Cloud Files
 #  - S3     (Amazon)
 #  - SCP    (Remote Server)
 #  - FTP    (Remote Server)
@@ -103,6 +104,22 @@ backup 'mysql-backup-s3' do
   
 end
 
+# Initialize with:
+#   rake backup:run trigger='mysql-backup-cloudfiles'
+backup 'mysql-backup-cloudfiles' do
+
+  adapter :mysql do
+    user        'user'
+    password    'password'
+    database    'database'
+  end
+
+  storage :cloudfiles do
+    username  'username'
+    api_key   'api_key'
+    container 'mysql_backup'
+  end
+end
 
 # Initialize with:
 #   rake backup:run trigger='postgresql-backup-s3'
