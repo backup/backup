@@ -22,6 +22,7 @@
 #
 # STORAGE METHODS
 #  - S3     (Amazon)
+#  - CF     (Rackspace Cloud Files)
 #  - SCP    (Remote Server)
 #  - FTP    (Remote Server)
 #  - SFTP   (Remote Server)
@@ -101,6 +102,24 @@ backup 'mysql-backup-s3' do
   encrypt_with_password 'password'
   notify false
   
+end
+
+
+# Initialize with:
+#  sudo backup --run mysql-backup-cloudfiles
+backup 'mysql-backup-cloudfiles' do
+
+  adapter :mysql do
+    user        'user'
+    password    'password'
+    database    'database'
+  end
+
+  storage :cloudfiles do
+    username  'username'
+    api_key   'api_key'
+    container 'mysql_backup'
+  end
 end
 
 

@@ -21,8 +21,8 @@
 #  - Custom
 #
 # STORAGE METHODS
-#  - Rackspace Cloud Files
 #  - S3     (Amazon)
+#  - CF     (Rackspace Cloud Files)
 #  - SCP    (Remote Server)
 #  - FTP    (Remote Server)
 #  - SFTP   (Remote Server)
