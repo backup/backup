@@ -20,9 +20,9 @@ module Backup
         def setup
           unless File.directory?(BACKUP_PATH)
             puts "Installing Backup in #{BACKUP_PATH}.."
-            %x{ sudo mkdir -p #{File.join(BACKUP_PATH, 'config')} }
-            %x{ sudo cp #{File.join(File.dirname(__FILE__), '..', '..', '..', 'setup', 'backup.sqlite3')} #{BACKUP_PATH} }
-            %x{ sudo cp #{File.join(File.dirname(__FILE__), '..', '..', '..', 'setup', 'backup.rb')} #{File.join(BACKUP_PATH, 'config')} }
+            %x{ #{sudo} mkdir -p #{File.join(BACKUP_PATH, 'config')} }
+            %x{ #{sudo} cp #{File.join(File.dirname(__FILE__), '..', '..', '..', 'setup', 'backup.sqlite3')} #{BACKUP_PATH} }
+            %x{ #{sudo} cp #{File.join(File.dirname(__FILE__), '..', '..', '..', 'setup', 'backup.rb')} #{File.join(BACKUP_PATH, 'config')} }
             puts <<-MESSAGE
               
   ==============================================================
@@ -71,7 +71,7 @@ module Backup
 
         def remove
           puts "Removing Backup..\n"
-          %x{ sudo rm -rf #{BACKUP_PATH} }
+          %x{ #{sudo} rm -rf #{BACKUP_PATH} }
         end
       end
       
@@ -85,7 +85,23 @@ module Backup
             exit
           end
         end
-        
+
+        def sudo
+          if writable?(BACKUP_PATH)
+            ""
+          else
+            "sudo"
+          end
+        end
+
+        private
+        def writable?(f)
+          unless File.exists?(f)
+            writable?(File.dirname(f))
+          else
+            File.writable?(f)
+          end
+        end
       end
     
     end
