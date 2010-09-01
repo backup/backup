@@ -67,6 +67,7 @@ module Backup
       end
       
       def self.gsub_content(lines)
+        container = @backup.procedure.get_storage_configuration.attributes['container']
         bucket  = @backup.procedure.get_storage_configuration.attributes['bucket']
         path    = @backup.procedure.get_storage_configuration.attributes['path']
         ip      = @backup.procedure.get_storage_configuration.attributes['ip']
@@ -78,9 +79,10 @@ module Backup
           line.gsub!(':year',      Time.now.strftime("%Y"))
           line.gsub!(':time',      Time.now.strftime("%r"))
           line.gsub!(':adapter',   @backup.procedure.adapter_name.to_s)
-          line.gsub!(':location',  bucket || path)
+          line.gsub!(':location',  container || bucket || path)
           line.gsub!(':backup',    @backup.final_file)
           case @backup.procedure.storage_name.to_sym
+            when :cloudfiles        then line.gsub!(':remote', "on Rackspace Cloudfiles")
             when :s3                then line.gsub!(':remote', "on Amazon S3")
             when :local             then line.gsub!(':remote', "on the local server")
             when :scp, :sftp, :ftp  then line.gsub!(':remote', "on the remote server (#{ip})")
