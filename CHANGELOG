@@ -1,3 +1,14 @@
+UPDATE
+=== 2.3.2 =======================================
+  
+  - Only load 'pony' and 'optparse' when they need to be utilized.
+  - Only uses 'sudo' if BACKUP_PATH is not writable by current user.
+  - With Cloud Files storage, it will automatically create the bucket if it does not yet exist.
+  - Backup's logger will now display the current time when logging. Now also indicates what S3 bucket it
+    is being backed up to, as well as what the filename is.
+  - Backup now supports GPG public key encryption which is a new and more safe way to encrypt your data.
+  
+  
 MINOR UPDATE
 === 2.3.2.pre3 ==================================
 
