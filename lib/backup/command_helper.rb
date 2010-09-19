@@ -5,7 +5,7 @@ module Backup
     end
  
     def log(command)
-      puts "Backup => #{command}"
+      puts "Backup (#{Time.now.strftime("%Y-%m-%d %H:%M:%S %Z")}) => #{command}"
     end
   end
 end
