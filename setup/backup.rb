@@ -120,6 +120,15 @@ backup 'mysql-backup-cloudfiles' do
     api_key   'api_key'
     container 'mysql_backup'
   end
+  
+  encrypt_with_gpg_public_key <<-KEY
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1.4.7 (Darwin)
+
+Your very long public key goes here
+-----END PGP PUBLIC KEY BLOCK-----
+KEY
+  
 end
 
 
