@@ -13,7 +13,6 @@ module Backup
         def self.destroy_backups(procedure, backups)
           s3 = Backup::Connection::S3.new
           s3.static_initialize(procedure)
-          s3.connect
           backups.each do |backup|
             puts "\nDestroying backup \"#{backup.filename}\" from bucket \"#{backup.bucket}\"."
             s3.destroy(backup.filename, backup.bucket)
