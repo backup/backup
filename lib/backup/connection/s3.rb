@@ -37,7 +37,9 @@ module Backup
 
       # Wrapper for the Bucket object
       def bucket
-        service.buckets.find(s3_bucket)
+        bucket = service.buckets.build(s3_bucket)
+        bucket.save
+        bucket.retrieve
       end
 
       # Initializes the file transfer to Amazon S3
