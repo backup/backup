@@ -51,6 +51,7 @@ module Backup
   end
 
   module Storage
+    autoload :Base,       'backup/storage/base'
     autoload :CloudFiles, 'backup/storage/cloudfiles'
     autoload :S3,         'backup/storage/s3'
     autoload :SCP,        'backup/storage/scp'

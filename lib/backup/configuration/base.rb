@@ -2,7 +2,7 @@ module Backup
   module Configuration
     class Base
       extend Backup::Configuration::Attributes
-      generate_attributes %w(encrypt_with_password keep_backups notify)
+      generate_attributes %w(encrypt_with_password encrypt_with_gpg_public_key keep_backups notify)
       
       attr_accessor :trigger, :storage_name, :adapter_name
 

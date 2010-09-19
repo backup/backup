@@ -1,8 +1,6 @@
 module Backup
   module Storage
-    class Local
-      
-      include Backup::CommandHelper
+    class Local < Base
       
       # Store on same machine, preferentially in a different hard drive or in 
       # a mounted network path (NFS, Samba, etc)

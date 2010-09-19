@@ -2,7 +2,7 @@ require 'net/sftp'
 
 module Backup
   module Storage
-    class SFTP
+    class SFTP < Base
       
       attr_accessor :user, :password, :ip, :path, :tmp_path, :final_file
       

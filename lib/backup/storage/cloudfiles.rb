@@ -2,7 +2,7 @@ require 'backup/connection/cloudfiles'
 
 module Backup
   module Storage
-    class CloudFiles
+    class CloudFiles < Base
 
       # Stores the backup file on the remote server using Rackspace Cloud Files
       def initialize(adapter)

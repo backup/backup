@@ -2,7 +2,7 @@ require 'net/scp'
 
 module Backup
   module Storage
-    class SCP
+    class SCP < Base
       
       attr_accessor :user, :password, :ip, :path, :tmp_path, :final_file
       

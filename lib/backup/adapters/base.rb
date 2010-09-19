@@ -4,7 +4,7 @@ module Backup
 
       include Backup::CommandHelper
       
-      attr_accessor :procedure, :timestamp, :options, :tmp_path, :encrypt_with_password, :keep_backups, :trigger
+      attr_accessor :procedure, :timestamp, :options, :tmp_path, :encrypt_with_password, :encrypt_with_gpg_public_key, :keep_backups, :trigger
 
       # IMPORTANT
       # final_file must have the value of the final filename result
@@ -12,7 +12,9 @@ module Backup
       #   myfile.gz
       #
       # and if a file afterwards gets encrypted, the file will look like:
-      #   myfile.gz.enc
+      #   myfile.gz.enc (with a password)
+      #   myfile.gz.gpg (with a gpg public key)
+      #
       #
       # It is important that, whatever the final filename of the file will be, that :final_file will contain it.
       attr_accessor :performed_file, :compressed_file, :encrypted_file, :final_file
@@ -31,16 +33,16 @@ module Backup
       # 
       # Wrapped inside of begin/ensure/end block to ensure the deletion of any files in the tmp directory
       def initialize(trigger, procedure)
-        self.trigger                = trigger
-        self.procedure              = procedure
-        self.timestamp              = Time.now.strftime("%Y%m%d%H%M%S")
-        self.tmp_path               = File.join(BACKUP_PATH.gsub(' ', '\ '), 'tmp', 'backup', trigger)
-        self.encrypt_with_password  = procedure.attributes['encrypt_with_password']
-        self.keep_backups           = procedure.attributes['keep_backups']
+        self.trigger                     = trigger
+        self.procedure                   = procedure
+        self.timestamp                   = Time.now.strftime("%Y%m%d%H%M%S")
+        self.tmp_path                    = File.join(BACKUP_PATH.gsub(' ', '\ '), 'tmp', 'backup', trigger)
+        self.encrypt_with_password       = procedure.attributes['encrypt_with_password']
+        self.encrypt_with_gpg_public_key = procedure.attributes['encrypt_with_gpg_public_key']
+        self.keep_backups                = procedure.attributes['keep_backups']
 
         self.performed_file   = "#{timestamp}.#{trigger.gsub(' ', '-')}#{performed_file_extension}"
         self.compressed_file  = "#{performed_file}.gz"
-        self.encrypted_file   = "#{compressed_file}.enc"
         self.final_file       = compressed_file
 
         begin
@@ -72,11 +74,28 @@ module Backup
 
       # Encrypts the archive file
       def encrypt
-        if encrypt_with_password.is_a?(String)
-          log system_messages[:encrypting]
+        if encrypt_with_gpg_public_key.is_a?(String)
+          if `which gpg` == ''
+            puts "Encrypting with a GPG public key requires that gpg be in your public path.  gpg was not found.  Exiting"
+            exit 1
+          end
+          log system_messages[:encrypting_w_key]
+          self.encrypted_file   = "#{self.final_file}.gpg"
+
+          # tmp_file = Tempfile.new('backup.pub'){ |tmp_file| tmp_file << encrypt_with_gpg_public_key }
+          tmp_file = Tempfile.new('backup.pub')
+          tmp_file << encrypt_with_gpg_public_key
+          tmp_file.close       
+          # that will either say the key was added OR that it wasn't needed, but either way we need to parse for the uid
+          # which will be wrapped in '<' and '>' like <sweetspot-backup2007@6bar8.com>
+          encryptionKeyId = `gpg --import #{tmp_file.path} 2>&1`.match(/<(.+)>/)[1] 
+          run "gpg -e --trust-model always -o #{File.join(tmp_path, encrypted_file)} -r '#{encryptionKeyId}' #{File.join(tmp_path, compressed_file)}"
+        elsif encrypt_with_password.is_a?(String)
+          log system_messages[:encrypting_w_pass]
+          self.encrypted_file   = "#{self.final_file}.enc"
           run "openssl enc -des-cbc -in #{File.join(tmp_path, compressed_file)} -out #{File.join(tmp_path, encrypted_file)} -k #{encrypt_with_password}"
-          self.final_file = encrypted_file
         end
+        self.final_file = encrypted_file
       end
       
       # Initializes the storing process
@@ -99,13 +118,14 @@ module Backup
       end
       
       def system_messages
-        { :compressing  => "Compressing backup..",
-          :archiving    => "Archiving backup..",
-          :encrypting   => "Encrypting backup..",
-          :mysqldump    => "Creating MySQL dump..",
-          :pgdump       => "Creating PostgreSQL dump..",
-          :sqlite       => "Copying and compressing SQLite database..",
-          :commands     => "Executing commands.." }
+        { :compressing        => "Compressing backup..",
+          :archiving          => "Archiving backup..",
+          :encrypting_w_pass  => "Encrypting backup with password..",
+          :encrypting_w_key   => "Encrypting backup with gpg public key..",
+          :mysqldump          => "Creating MySQL dump..",
+          :pgdump             => "Creating PostgreSQL dump..",
+          :sqlite             => "Copying and compressing SQLite database..",
+          :commands           => "Executing commands.." }
       end
       
     end

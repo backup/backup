@@ -2,7 +2,7 @@ require 'net/ftp'
 
 module Backup
   module Storage
-    class FTP
+    class FTP < Backup::Storage::Base
       
       attr_accessor :user, :password, :ip, :path, :tmp_path, :final_file
       
