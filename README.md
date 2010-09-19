@@ -169,5 +169,6 @@ Send us a message! Fork the project!
 * [Francesc Esplugas](http://github.com/fesplugas)
 * [wakiki](http://github.com/wakiki)
 * [Dan Hixon](http://github.com/danhixon)
+* [Adam Greene](http://github.com/skippy)
 
 __Michael van Rooijen | Final Creation. ([http://michaelvanrooijen.com](http://michaelvanrooijen.com))__
