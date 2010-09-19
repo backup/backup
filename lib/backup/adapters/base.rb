@@ -74,6 +74,11 @@ module Backup
 
       # Encrypts the archive file
       def encrypt
+        if encrypt_with_gpg_public_key.is_a?(String) && encrypt_with_password.is_a?(String)
+          puts "both 'encrypt_with_gpg_public_key' and 'encrypt_with_password' are set.  Please choose one or the other.  Exiting."
+          exit 1
+        end
+        
         if encrypt_with_gpg_public_key.is_a?(String)
           if `which gpg` == ''
             puts "Encrypting with a GPG public key requires that gpg be in your public path.  gpg was not found.  Exiting"
