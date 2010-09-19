@@ -69,7 +69,7 @@ module Backup
 
       # Removes the files inside the temporary folder
       def remove_tmp_files
-        run "rm #{File.join(tmp_path, '*')}"
+        run "rm -r #{File.join(tmp_path, '*')}"
       end
 
       # Encrypts the archive file
@@ -128,6 +128,7 @@ module Backup
           :encrypting_w_pass  => "Encrypting backup with password..",
           :encrypting_w_key   => "Encrypting backup with gpg public key..",
           :mysqldump          => "Creating MySQL dump..",
+          :mongodump          => "Creating MongoDB dump..",
           :pgdump             => "Creating PostgreSQL dump..",
           :sqlite             => "Copying and compressing SQLite database..",
           :commands           => "Executing commands.." }
