@@ -31,6 +31,7 @@
 # GLOBAL OPTIONS
 #  - Keep Backups (keep_backups)
 #  - Encrypt With Pasword (encrypt_with_password)
+#  - Encrypt With GPG Public Key (encrypt_with_gpg_public_key)
 #  - Notify (notify)
 #
 #  This is the "decrypt" command for all encrypted backups:
