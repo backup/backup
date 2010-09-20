@@ -100,7 +100,7 @@ module Backup
           self.encrypted_file   = "#{self.final_file}.enc"
           run "openssl enc -des-cbc -in #{File.join(tmp_path, compressed_file)} -out #{File.join(tmp_path, encrypted_file)} -k #{encrypt_with_password}"
         end
-        self.final_file = encrypted_file
+        self.final_file = encrypted_file if encrypted_file
       end
       
       # Initializes the storing process
