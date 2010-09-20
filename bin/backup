@@ -3,8 +3,10 @@
 require 'optparse'
 require 'backup'
 
-include Backup::Environment::Unix::Commands
-include Backup::Environment::Unix::Helpers
+Backup::System.boot!
+
+include Backup::Environment::UnixConfiguration::Commands
+include Backup::Environment::UnixConfiguration::Helpers
 
 options = {}
 

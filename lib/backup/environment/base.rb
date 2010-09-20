@@ -3,7 +3,7 @@ module Backup
     module Base
       
       def current_environment
-        return :rails if defined?(RAILS_ENV)
+        return :rails if defined?(Rails.root)
         return :unix
       end
       
