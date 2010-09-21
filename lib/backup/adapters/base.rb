@@ -128,7 +128,8 @@ module Backup
           :encrypting_w_pass  => "Encrypting backup with password..",
           :encrypting_w_key   => "Encrypting backup with gpg public key..",
           :mysqldump          => "Creating MySQL dump..",
-          :mongodump          => "Creating MongoDB dump..",
+          :mongo_dump         => "Creating MongoDB dump..",
+          :mongo_copy         => "Creating MongoDB disk level copy..",
           :pgdump             => "Creating PostgreSQL dump..",
           :sqlite             => "Copying and compressing SQLite database..",
           :commands           => "Executing commands.." }
