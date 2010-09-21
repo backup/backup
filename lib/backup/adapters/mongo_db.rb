@@ -9,11 +9,12 @@ module Backup
         # Dumps and Compresses the Mongodump file 
         def perform
           log system_messages[:mongodump]
-          tmp_dump_dir = File.join(tmp_path, "mongodump-#{Time.now.strftime("%Y%m%d%H%M%S")}")
-          run "#{mongodump} #{options} #{collections_to_include} -o #{tmp_dump_dir} #{additional_options}"
+          tmp_mongo_dir = "mongodump-#{Time.now.strftime("%Y%m%d%H%M%S")}"
+          tmp_dump_dir = File.join(tmp_path, tmp_mongo_dir)
+          run "#{mongodump} #{options} #{collections_to_include} -o #{tmp_dump_dir} #{additional_options} > /dev/null 2>&1"
 
           log system_messages[:compressing]
-          run "tar -czf #{File.join(tmp_path, compressed_file)} #{tmp_dump_dir}"
+          run "tar -cz -C #{tmp_path} -f #{File.join(tmp_path, compressed_file)} #{tmp_mongo_dir}"
         end
 
         def mongodump
