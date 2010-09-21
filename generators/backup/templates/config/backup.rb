@@ -94,6 +94,7 @@ backup 'mysql-backup-s3' do
   storage :s3 do
     access_key_id     'access_key_id'
     secret_access_key 'secret_access_key'
+    # host              's3-ap-southeast-1.amazonaws.com' #the s3 location.  Defaults to us-east-1
     bucket            '/bucket/backups/mysql/'
     use_ssl           true
   end
