@@ -37,8 +37,14 @@ module Backup
 
       # Wrapper for the Bucket object
       def bucket
-        bucket = service.buckets.build(s3_bucket)
-        bucket.save
+        begin
+          # Find existing bucket:
+          bucket = service.buckets.find(s3_bucket)
+        rescue ::S3::Error::NoSuchBucket => e
+          # Apparently the bucket doesn't exist yet, so create a new one:
+          bucket = service.buckets.build(s3_bucket)
+          bucket.save
+        end
         bucket.retrieve
       end
 
