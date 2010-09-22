@@ -28,7 +28,7 @@ module Backup
               cmd = "mongo --quiet --eval 'printjson(db.runCommand({getCmdLineOpts:1}));' admin"
               output = JSON.parse(`#{cmd}`)
               db_path = output['argv'][output['argv'].index('--dbpath') + 1] if output['argv'].index('--dbpath')            #see if --dbpath was passed in
-              db_path ||= $1 if File.read(output['argv'][output['argv'].index('--config') + 1]) =~ /dbpath\s*=\s*([^\s]*)/  #see if --config is passed in, and if so, lets parse it
+              db_path ||= $1 if output['argv'].index('--config') && File.read(output['argv'][output['argv'].index('--config') + 1]) =~ /dbpath\s*=\s*([^\s]*)/  #see if --config is passed in, and if so, lets parse it
               db_path ||= "/data/db/" #mongo's default path
               run "cp -rp #{db_path} #{tmp_dump_dir}"              
             ensure
