@@ -23,6 +23,7 @@ Backup is a Ruby Gem written for Unix and Rails environments. It can be used bot
 * MySQL
 * PostgreSQL
 * SQLite
+* MongoDB
 * Archive (Any files and/or folders)
 * Custom (Anything you can produce using the command line)
 

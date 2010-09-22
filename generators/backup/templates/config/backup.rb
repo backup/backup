@@ -17,6 +17,7 @@
 #  - MySQL
 #  - PostgreSQL
 #  - SQLite
+#  - MongoDB
 #  - Archive
 #  - Custom
 #
@@ -73,22 +74,22 @@
 
 
 # Initialize with:
-#   rake backup:run trigger='mysql-backup-s3'
-backup 'mysql-backup-s3' do
+#   rake backup:run trigger='mongo-backup-s3'
+backup 'mongo-backup-s3' do
   
-  adapter :mysql do
-    user        'user'
-    password    'password'
-    database    'database'
-  
-    # skip_tables ['table1', 'table2', 'table3']
-    # 
-    # options do
-    #   host    '123.45.678.90'
-    #   port    '80'
-    #   socket  '/tmp/socket.sock'
-    # end
-    # additional_options '--single-transaction  --quick'
+  adapter :mongo do
+    database "sweetspot-#{Rails.env}"
+    #There are two ways to backup mongo:
+    # * :mongodump (DEFAULT) fairly fast, non-blocking, creates smaller bson files, need to import to recover
+    # * :disk_copy locks the database (use a slave!!!), does a disk-level copy, and then unlocks.  fast, blocking, large archives, but very fast to recover
+    backup_method :mongodump #default
+    database :my_mongo_collection
+    options do
+      # host mongo.mysite.com
+      # port 27018  #perhaps you have a slave instance
+      # username user
+      # password secret
+    end
   end
   
   storage :s3 do
@@ -100,9 +101,14 @@ backup 'mysql-backup-s3' do
   end
   
   keep_backups 25
-  encrypt_with_password 'password'
-  notify false
-  
+  encrypt_with_gpg_public_key <<-KEY
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1.4.10 (Darwin)
+
+public key goes here
+-----END PGP PUBLIC KEY BLOCK-----
+  KEY
+  notify false  
 end
 
 # Initialize with:
