@@ -19,6 +19,16 @@ module Backup
             log system_messages[:mongo_dump]
             run "#{mongodump} #{mongodump_options} #{collections_to_include} -o #{tmp_dump_dir} #{additional_options} > /dev/null 2>&1"
           when :disk_copy
+            #this is a bit more complicated AND potentially a lot riskier:            
+            # PROS:
+            #   * byte level copy, so it includes all the indexes, meta data, etc
+            #   * fast recovery; you just copy the files into place and startup mongo
+            # CONS:
+            #   * locks the database, so ONLY use against a slave instance
+            #   * will probably need to run under sudo as the mongodb db_path file is probably under a different owner.  
+            #     If you do run under sudo, you will probably need to run rake RAILS_ENV=... if you aren't already
+            #   * the logic is a bit brittle...
+                  
             log system_messages[:mongo_copy]
             begin
               cmd = "#{mongo} #{mongo_disk_copy_options} --quiet --eval 'db.runCommand({fsync : 1, lock : 1}); printjson(db.runCommand({getCmdLineOpts:1}));' admin"
