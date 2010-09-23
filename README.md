@@ -2,7 +2,13 @@
 
 ## A Backup Ruby Gem
 
-Backup is a Ruby Gem written for Unix and Rails environments. It can be used both with and without the Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases such as MySQL/PostgreSQL/SQLite and Files/Folders. All backups can be transferred to Amazon S3, Rackspace Cloud Files, any remote server you have access to (using either SCP, SFTP or regular FTP), or a Local server. Backup handles Compression, Archiving, Encryption, Backup Cleaning (Cycling) and supports Email Notifications.
+__Backup__ is a Ruby Gem written for __Unix__ and __Ruby on Rails (2 and 3)__ environments. It can be used both with and without the Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases such as MySQL/PostgreSQL/SQLite and Files/Folders. All backups can be transferred to Amazon S3, Rackspace Cloud Files, any remote server you have access to (using either SCP, SFTP or regular FTP), or a Local server. Backup handles Compression, Archiving, Encryption, Backup Cleaning (Cycling) and supports Email Notifications.
+
+## Written for Environments
+
+* UNIX (Ubuntu, OSX, etc.)
+* Ruby on Rails 3
+* Ruby on Rails 2
 
 ## Authors/Maintainers
 
