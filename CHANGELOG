@@ -1,3 +1,16 @@
+PATCH
+=== 2.3.3.1 =====================================
+
+  Fixes an issue when trying to use S3. It would try to create a bucket
+  when one already exists and this raises an error.
+  
+
+UPDATE
+=== 2.3.3 =======================================
+
+  Set final_file to encrypted_file only when encryption is used.
+
+
 UPDATE
 === 2.3.2 =======================================
   
