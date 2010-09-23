@@ -6,9 +6,9 @@
 #
 # In the example below we have a "mysql-backup-s3" trigger for the backup setting.
 # All the configuration is done inside this block. To initialize the backup process for this block,
-# you invoke it using the following command:
+# you invoke it using the following rake task:
 #
-#   backup --run mysql-backup-s3
+#   rake backup:run trigger="mysql-backup-s3"
 # 
 # You can add as many backup block settings as you want, just be sure every trigger is unique and you can run
 # each of them separately.
@@ -47,7 +47,7 @@
 # You can also let Backup notify you by email on successfully created backups.
 # - Just uncomment the block of code below (notifier_settings) and fill in your credentials.
 # - Then for set "notify" to "true" in each (backup) block you wish to be notified of.
-#
+# 
 # For more information on "Backup", please refer to the wiki on github
 #   http://wiki.github.com/meskyanichi/backup/configuration-file
 
@@ -74,7 +74,7 @@
 
 
 # Initialize with:
-#  sudo backup --run mysql-backup-s3
+#   rake backup:run trigger='mysql-backup-s3'
 backup 'mysql-backup-s3' do
   
   adapter :mysql do
@@ -105,9 +105,8 @@ backup 'mysql-backup-s3' do
   
 end
 
-
 # Initialize with:
-#  sudo backup --run mysql-backup-cloudfiles
+#   rake backup:run trigger='mysql-backup-cloudfiles'
 backup 'mysql-backup-cloudfiles' do
 
   adapter :mysql do
@@ -129,12 +128,11 @@ Version: GnuPG v1.4.7 (Darwin)
 Your very long public key goes here
 -----END PGP PUBLIC KEY BLOCK-----
 KEY
-  
+
 end
 
-
 # Initialize with:
-#  sudo backup --run postgresql-backup-s3
+#   rake backup:run trigger='postgresql-backup-s3'
 backup 'postgresql-backup-scp' do
   
   adapter :postgresql do
@@ -161,16 +159,16 @@ backup 'postgresql-backup-scp' do
   keep_backups :all
   encrypt_with_password false
   notify false
-  
+
 end
 
 
 # Initialize with:
-#   sudo backup --run archive-backup-ftp
+#   rake backup:run trigger='archive-backup-ftp'
 backup 'archive-backup-ftp' do
   
   adapter :archive do
-    files ["/path/to/log", "/path/to/db"]
+    files ["#{RAILS_ROOT}/log", "#{RAILS_ROOT}/db"]
   end
   
   storage :ftp do
@@ -183,12 +181,12 @@ backup 'archive-backup-ftp' do
   keep_backups 10
   encrypt_with_password false
   notify false
-  
+
 end
 
 
 # Initialize with:
-#   sudo backup --run custom-backup-sftp
+#   rake backup:run trigger='custom-backup-sftp'
 backup 'custom-backup-sftp' do
   
   adapter :custom do
@@ -208,16 +206,16 @@ backup 'custom-backup-sftp' do
   keep_backups :all
   encrypt_with_password 'password'
   notify false
-
+  
 end
 
 
 # Initializ with:
-#   sudo backup --run sqlite-backup-local
+#   rake backup:run trigger='sqlite-backup-local'
 backup 'sqlite-backup-local' do
   
   adapter :sqlite do
-    database "/path/to/database.sqlite3"
+    database "#{RAILS_ROOT}/db/production.sqlite3"
   end
   
   storage :local do

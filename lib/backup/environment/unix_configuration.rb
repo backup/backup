@@ -1,6 +1,6 @@
 module Backup
   module Environment
-    module Unix
+    module UnixConfiguration
       
       require 'active_record'
       

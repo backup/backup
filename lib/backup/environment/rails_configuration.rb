@@ -1,15 +1,13 @@
 module Backup
   module Environment
-    module Rails
+    module RailsConfiguration
       
-      if defined? RAILS_ENV
-        
-        # Sets BACKUP_PATH equal to RAILS_ROOT
-        BACKUP_PATH = RAILS_ROOT
+      if defined?(Rails.root)
+        # Sets BACKUP_PATH equal to Rails.root
+        BACKUP_PATH = Rails.root.to_s
       
         # Sets DB_CONNECTION_SETTINGS to false
         DB_CONNECTION_SETTINGS = false
-    
       end
     
     end

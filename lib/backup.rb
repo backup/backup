@@ -1,46 +1,56 @@
-# Load Gems
-require 'hirb'
+BACKUP_SYSTEM = Proc.new do
+  # Load Gems
+  require 'hirb'
 
-# Load Environments
-require 'backup/environment/base'
-require 'backup/environment/unix'
-require 'backup/environment/rails'
+  # Load Environments
+  require 'backup/environment/base'
+  require 'backup/environment/unix_configuration'
+  require 'backup/environment/rails_configuration'
 
-# Load Configuration
-require 'backup/configuration/attributes'
-require 'backup/configuration/base'
-require 'backup/configuration/adapter'
-require 'backup/configuration/adapter_options'
-require 'backup/configuration/storage'
-require 'backup/configuration/mail'
-require 'backup/configuration/smtp'
-require 'backup/configuration/helpers'
+  # Load Configuration
+  require 'backup/configuration/attributes'
+  require 'backup/configuration/base'
+  require 'backup/configuration/adapter'
+  require 'backup/configuration/adapter_options'
+  require 'backup/configuration/storage'
+  require 'backup/configuration/mail'
+  require 'backup/configuration/smtp'
+  require 'backup/configuration/helpers'
 
-require 'backup/command_helper'
+  require 'backup/command_helper'
 
-# Include the Configuration and Environment Helpers
-include Backup::Configuration::Helpers
-include Backup::Environment::Base
+  # Include the Configuration and Environment Helpers
+  include Backup::Configuration::Helpers
+  include Backup::Environment::Base
 
-# Load either UNIX or RAILS environment configuration
-case current_environment
-  when :unix  then include Backup::Environment::Unix
-  when :rails then include Backup::Environment::Rails
+  # Load either UNIX or RAILS environment configuration
+  case current_environment
+    when :unix  then include Backup::Environment::UnixConfiguration
+    when :rails then include Backup::Environment::RailsConfiguration
+  end
+
+  # Load configuration
+  if File.exist?(File.join(BACKUP_PATH, 'config', 'backup.rb'))
+    require File.join(BACKUP_PATH, 'config', 'backup.rb')
+  end
+
+  # Load Mail Notifier
+  require 'backup/mail/base'
+
+  # Set Mail Configuration (extracted from the backup.rb configuration file) inside the Mail Class
+  Backup::Mail::Base.setup(@mail_configuration)
 end
-
-# Load configuration
-if File.exist?(File.join(BACKUP_PATH, 'config', 'backup.rb'))
-  require File.join(BACKUP_PATH, 'config', 'backup.rb')
-end
-
-# Load Mail Notifier
-require 'backup/mail/base'
-
-# Set Mail Configuration (extracted from the backup.rb configuration file) inside the Mail Class
-Backup::Mail::Base.setup(@mail_configuration)
 
 # Backup Module
 module Backup
+  
+  class System
+    def self.boot!
+      BACKUP_SYSTEM.call
+      true
+    end
+  end
+  
   module Adapters
     autoload :Base,       'backup/adapters/base'
     autoload :MySQL,      'backup/adapters/mysql'
@@ -95,7 +105,7 @@ module Backup
           exit
       end
     end
-  
+    
     # Scans through all the backup settings and returns the backup setting
     # that was specified in the "trigger" argument.
     # If an non-existing trigger is specified, it will raise an error and display

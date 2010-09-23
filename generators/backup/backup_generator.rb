@@ -13,17 +13,16 @@ class BackupGenerator < Rails::Generator::Base
       
       # Generates the Rake Tasks and Backup Database
       m.directory "lib/tasks"
-      m.directory "lib/tasks/backup"
-      m.file      "tasks/backup.rake",        "lib/tasks/backup/backup.rake"
+      m.file      "backup.rake", "lib/tasks/backup.rake"
 
       # Generates the configuration file
       m.directory "config"
-      m.file      "config/backup.rb",         "config/backup.rb"
+      m.file      "backup.rb", "config/backup.rb"
       
       # Generates the database migration file
-      m.migration_template                    "migrations/create_backup_tables.rb",
-                                              "db/migrate",
-                                              :migration_file_name => "create_backup_tables"
+      m.migration_template "create_backup_tables.rb",
+                           "db/migrate",
+                           :migration_file_name => "create_backup_tables"
       
       # Outputs the generators message to the terminal
       puts message
@@ -32,7 +31,6 @@ class BackupGenerator < Rails::Generator::Base
   
   def message
     <<-MESSAGE
-    
     
     
     ==============================================================
@@ -63,7 +61,6 @@ class BackupGenerator < Rails::Generator::Base
     http://github.com/meskyanichi/backup
     
     ==============================================================
-    
     
     
     MESSAGE

@@ -1,0 +1,10 @@
+Description:
+  Backup's Ruby on Rails 3 Generator
+
+Example:
+  rails generate backup
+
+  This will create:
+    * lib/tasks/backup.rake
+    * config/backup.rb
+    * db/migrate/<DateTime>_create_backup_tables.rb
