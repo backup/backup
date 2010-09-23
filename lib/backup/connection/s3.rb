@@ -5,7 +5,6 @@ module Backup
     class S3
       include Backup::CommandHelper
       
-      # I'm not sure if this size limit is inclusive or exclusive...so playing it safe
       MAX_S3_FILE_SIZE = 5368709120 - 1
       
       attr_accessor :adapter, :procedure, :access_key_id, :secret_access_key, :host, :s3_bucket, :use_ssl, :final_file, :tmp_path
@@ -29,7 +28,7 @@ module Backup
       
       # Establishes a connection with Amazon S3 using the credentials provided by the user
       def connection
-        @_connection ||= Fog::AWS::S3.new(
+        @_connection ||= Fog::AWS::Storage.new(
           :aws_access_key_id => access_key_id,
           :aws_secret_access_key => secret_access_key
         )
@@ -38,7 +37,7 @@ module Backup
       # Initializes the file transfer to Amazon S3
       # This can only run after a connection has been made using the #connect method 
       def store
-        #TODO: need to add logic like this to restore: `cat /mnt/dvd/part.xxx >>restore.tgz`
+        #TODO: need to add logic like this to restore: `cat /mnt/backups/part.xx >>restore.tgz`
         tmp_file_path = File.join(tmp_path, final_file)
         store_files = []
         if File.stat(File.join(tmp_path, final_file)).size >= MAX_S3_FILE_SIZE

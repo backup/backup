@@ -69,9 +69,9 @@ module Backup
 
       # Removes the files inside the temporary folder
       def remove_tmp_files
-        run "rm -r #{File.join(tmp_path, '*')}"
+        run "rm -r #{File.join(tmp_path)}" if File.exists?(tmp_path) #just in case there isn't one because the process was skipped
       end
-
+      
       # Encrypts the archive file
       def encrypt
         if encrypt_with_gpg_public_key.is_a?(String) && encrypt_with_password.is_a?(String)
