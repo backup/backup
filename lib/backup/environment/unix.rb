@@ -20,7 +20,7 @@ module Backup
         def setup
           unless File.directory?(BACKUP_PATH)
             puts "Installing Backup in #{BACKUP_PATH}.."
-            %x{ #{sudo} mkdir -p #{File.join(BACKUP_PATH, 'config')} }
+            %x{ #{sudo} mkdir -m 0777 -p #{File.join(BACKUP_PATH, 'config')} }
             %x{ #{sudo} cp #{File.join(File.dirname(__FILE__), '..', '..', '..', 'setup', 'backup.sqlite3')} #{BACKUP_PATH} }
             %x{ #{sudo} cp #{File.join(File.dirname(__FILE__), '..', '..', '..', 'setup', 'backup.rb')} #{File.join(BACKUP_PATH, 'config')} }
             puts <<-MESSAGE
