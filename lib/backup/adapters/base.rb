@@ -60,7 +60,8 @@ module Backup
       
       # Creates the temporary folder for the specified adapter
       def create_tmp_folder
-        run "mkdir -p #{tmp_path}"
+        #need to create with universal privlages as some backup tasks might create this path under sudo
+        run "mkdir -m 0777 -p #{tmp_path.sub(/\/[^\/]+$/, '')}"
       end
       
       # TODO make methods in derived classes public? respond_to cannot identify private methods
