@@ -54,6 +54,7 @@ module Backup
   module Adapters
     autoload :Base,       'backup/adapters/base'
     autoload :MySQL,      'backup/adapters/mysql'
+    autoload :MongoDB,      'backup/adapters/mongo_db'
     autoload :SQLite,     'backup/adapters/sqlite'
     autoload :PostgreSQL, 'backup/adapters/postgresql'
     autoload :Archive,    'backup/adapters/archive'
@@ -95,6 +96,7 @@ module Backup
     # Initializes one of the few adapters and start the backup process
     def initialize_adapter
       case procedure.adapter_name.to_sym
+        when :mongo       then Backup::Adapters::MongoDB.new    trigger, procedure
         when :mysql       then Backup::Adapters::MySQL.new      trigger, procedure
         when :sqlite      then Backup::Adapters::SQLite.new     trigger, procedure
         when :postgresql  then Backup::Adapters::PostgreSQL.new trigger, procedure

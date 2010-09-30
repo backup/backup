@@ -29,6 +29,7 @@ __Backup__ is a Ruby Gem written for __Unix__ and __Ruby on Rails (2 and 3)__ en
 * MySQL
 * PostgreSQL
 * SQLite
+* MongoDB
 * Archive (Any files and/or folders)
 * Custom (Anything you can produce using the command line)
 
@@ -63,6 +64,7 @@ Simply fill in the email configuration block and set "notify" to true inside the
       storage :s3 do
         access_key_id     'access_key_id'
         secret_access_key 'secret_access_key'
+        # host            's3-ap-southeast-1.amazonaws.com' #the s3 host.  Defaults to s3.amazonaws.com
         bucket            '/bucket/backups/mysql/'
         use_ssl           true
       end

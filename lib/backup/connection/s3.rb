@@ -1,10 +1,13 @@
-require 's3'
+require "fog"
 
 module Backup
   module Connection
     class S3
+      include Backup::CommandHelper
       
-      attr_accessor :adapter, :procedure, :access_key_id, :secret_access_key, :s3_bucket, :use_ssl, :final_file, :tmp_path
+      MAX_S3_FILE_SIZE = 5368709120 - 1
+      
+      attr_accessor :adapter, :procedure, :access_key_id, :secret_access_key, :host, :s3_bucket, :use_ssl, :final_file, :tmp_path
       
       # Initializes the S3 connection, setting the values using the S3 adapter
       def initialize(adapter = false)
@@ -24,48 +27,48 @@ module Backup
       end
       
       # Establishes a connection with Amazon S3 using the credentials provided by the user
-      def connect
-        service
-      end
-
-      # Wrapper for the Service object
-      def service
-        ::S3::Service.new(:access_key_id => access_key_id,
-                          :secret_access_key => secret_access_key,
-                          :use_ssl => use_ssl)
-      end
-
-      # Wrapper for the Bucket object
-      def bucket
-        begin
-          # Find existing bucket:
-          bucket = service.buckets.find(s3_bucket)
-        rescue ::S3::Error::NoSuchBucket => e
-          # Apparently the bucket doesn't exist yet, so create a new one:
-          bucket = service.buckets.build(s3_bucket)
-          bucket.save
-        end
-        bucket.retrieve
+      def connection
+        @_connection ||= Fog::AWS::Storage.new(
+          :aws_access_key_id => access_key_id,
+          :aws_secret_access_key => secret_access_key
+        )
       end
 
       # Initializes the file transfer to Amazon S3
       # This can only run after a connection has been made using the #connect method 
       def store
-        object = bucket.objects.build(final_file)
-        object.content = open(File.join(tmp_path, final_file))
-        object.save
+        #TODO: need to add logic like this to restore: `cat /mnt/backups/part.xx >>restore.tgz`
+        tmp_file_path = File.join(tmp_path, final_file)
+        store_files = []
+        if File.stat(File.join(tmp_path, final_file)).size >= MAX_S3_FILE_SIZE
+          #we need to split!
+          `split -b #{MAX_S3_FILE_SIZE}  #{tmp_file_path} #{tmp_file_path}.`
+          store_files += `ls  #{tmp_file_path}.*`.split
+          log("Splitting '#{final_file}' into #{store_files.length} parts as it is too large for s3.")
+        else
+          store_files << tmp_file_path
+        end
+
+        #lets make sure it exists
+        self.connection.put_bucket(s3_bucket)
+        
+        store_files.each do |tmp_file|
+          file_name = File.basename(tmp_file)
+          log("Saving '#{file_name}' to s3 bucket '#{s3_bucket}'")
+          self.connection.put_object(s3_bucket, file_name, open(tmp_file))
+        end
       end
 
       # Destroys file from a bucket on Amazon S3
       def destroy(file, bucket_as_string)
-        object = bucket.objects.find(file)
-        object.destroy
+        self.connection.put_bucket(s3_bucket)
+        connection.delete_object(s3_bucket, file)
       end
 
       private
 
         def load_storage_configuration_attributes(static = false)          
-          %w(access_key_id secret_access_key use_ssl).each do |attribute|
+          %w(access_key_id secret_access_key use_ssl host).each do |attribute|
             if static
               send("#{attribute}=", procedure.get_storage_configuration.attributes[attribute])
             else
