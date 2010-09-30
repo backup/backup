@@ -78,7 +78,7 @@
 backup 'mongo-backup-s3' do
   
   adapter :mongo do
-    database "sweetspot-#{Rails.env}"
+    database "your_mongo_database"
     #There are two ways to backup mongo:
     # * :mongodump (DEFAULT) fairly fast, non-blocking, creates smaller bson files, need to import to recover
     # * :disk_copy locks the database (use a slave!!!), does a disk-level copy, and then unlocks.  fast, blocking, large archives, but very fast to recover

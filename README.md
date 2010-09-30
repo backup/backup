@@ -58,7 +58,7 @@ Simply fill in the email configuration block and set "notify" to true inside the
       storage :s3 do
         access_key_id     'access_key_id'
         secret_access_key 'secret_access_key'
-        # host              's3-ap-southeast-1.amazonaws.com' #the s3 location.  Defaults to us-east-1
+        # host            's3-ap-southeast-1.amazonaws.com' #the s3 host.  Defaults to s3.amazonaws.com
         bucket            '/bucket/backups/mysql/'
         use_ssl           true
       end

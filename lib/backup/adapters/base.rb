@@ -115,7 +115,7 @@ module Backup
           tmp_file << encrypt_with_gpg_public_key
           tmp_file.close       
           # that will either say the key was added OR that it wasn't needed, but either way we need to parse for the uid
-          # which will be wrapped in '<' and '>' like <sweetspot-backup2007@6bar8.com>
+          # which will be wrapped in '<' and '>' like <someone_famous@me.com>
           encryptionKeyId = `gpg --import #{tmp_file.path} 2>&1`.match(/<(.+)>/)[1] 
           run "gpg -e --trust-model always -o #{File.join(tmp_path, encrypted_file)} -r '#{encryptionKeyId}' #{File.join(tmp_path, compressed_file)}"
         elsif encrypt_with_password.is_a?(String)
