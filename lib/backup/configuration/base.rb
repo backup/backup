@@ -4,7 +4,7 @@ module Backup
       extend Backup::Configuration::Attributes
       generate_attributes %w(encrypt_with_password encrypt_with_gpg_public_key keep_backups notify)
       
-      attr_accessor :trigger, :storage_name, :adapter_name
+      attr_accessor :trigger, :storage_name, :adapter_name, :before_backup_block, :after_backup_block
 
       def initialize(trigger)
         @trigger = trigger
@@ -20,6 +20,14 @@ module Backup
       def storage(storage, &block)
         @storage_name = storage
         @storage_configuration.instance_eval &block
+      end
+
+      def before_backup(&block)
+        @before_backup_block = block
+      end
+
+      def after_backup(&block)
+        @after_backup_block = block
       end
 
       def storage_class
