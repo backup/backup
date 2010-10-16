@@ -1,6 +1,7 @@
 BACKUP_SYSTEM = Proc.new do
   # Load Gems
   require 'hirb'
+  require 'dropbox'
 
   # Load Environments
   require 'backup/environment/base'
@@ -54,7 +55,7 @@ module Backup
   module Adapters
     autoload :Base,       'backup/adapters/base'
     autoload :MySQL,      'backup/adapters/mysql'
-    autoload :MongoDB,      'backup/adapters/mongo_db'
+    autoload :MongoDB,     'backup/adapters/mongo_db'
     autoload :SQLite,     'backup/adapters/sqlite'
     autoload :PostgreSQL, 'backup/adapters/postgresql'
     autoload :Archive,    'backup/adapters/archive'
@@ -69,6 +70,7 @@ module Backup
     autoload :FTP,        'backup/storage/ftp'
     autoload :SFTP,       'backup/storage/sftp'
     autoload :Local,      'backup/storage/local'
+    autoload :Dropbox,    'backup/storage/dropbox'
   end
 
   module Record
@@ -79,6 +81,7 @@ module Backup
     autoload :FTP,        'backup/record/ftp'
     autoload :SFTP,       'backup/record/sftp'
     autoload :Local,      'backup/record/local'
+    autoload :Dropbox,    'backup/record/dropbox'
   end
 
   class Setup

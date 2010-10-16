@@ -38,6 +38,7 @@ module Backup
           when :ftp        then Backup::Storage::FTP
           when :sftp       then Backup::Storage::SFTP
           when :local      then Backup::Storage::Local
+          when :dropbox    then Backup::Storage::Dropbox
         end
       end
 
@@ -49,6 +50,7 @@ module Backup
           when :ftp        then Backup::Record::FTP
           when :sftp       then Backup::Record::SFTP
           when :local      then Backup::Record::Local
+          when :dropbox    then Backup::Record::Dropbox
         end        
       end
 

@@ -227,3 +227,25 @@ backup 'sqlite-backup-local' do
   notify false
   
 end
+
+# Initialize with
+# rake backup:run trigger='postgresql-backup-dropbox'
+backup 'postgresql-backup-dropbox' do
+  
+  adapter :postgresql do
+    user      'devmen'
+    database  'domowoi_test'
+  end
+  
+  storage :dropbox do
+    api_key           'your_api_key'
+    secret_access_key 'your_api_secret'
+    username          'user@example.org'
+    password          'super_s3cret'
+    path              'backups'
+  end
+
+  keep_backups :all
+  encrypt_with_password false
+  notify false
+end

@@ -45,4 +45,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency('hirb',          [">= 0.2.9"])
   gem.add_dependency('pony',          [">= 0.5"])
   gem.add_dependency('cloudfiles',    [">= 1.4.7"])
+  gem.add_dependency('dropbox',       [">= 1.1.2"])
 end

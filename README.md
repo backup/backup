@@ -23,6 +23,7 @@ __Backup__ is a Ruby Gem written for __Unix__ and __Ruby on Rails (2 and 3)__ en
 * Rackspace Cloud Files
 * Remote Server (Available Protocols: SCP, SFTP, FTP)
 * Local server (Example Locations: Another Hard Drive, Network path)
+* Dropbox (you should get your API key and secret at developers.dropbox.com)
 
 ### Adapters
 
