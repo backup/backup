@@ -2,7 +2,7 @@
 
 ## A Backup Ruby Gem
 
-__Backup__ is a Ruby Gem written for __Unix__ and __Ruby on Rails (2 and 3)__ environments. It can be used both with and without the Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases such as MySQL/PostgreSQL/SQLite and Files/Folders. All backups can be transferred to Amazon S3, Rackspace Cloud Files, any remote server you have access to (using either SCP, SFTP or regular FTP), or a Local server. Backup handles Compression, Archiving, Encryption, Backup Cleaning (Cycling) and supports Email Notifications.
+__Backup__ is a Ruby Gem written for __Unix__ and __Ruby on Rails (2 and 3)__ environments. It can be used both with and without the Ruby on Rails framework! This gem offers a quick and simple solution to backing up databases such as MySQL/PostgreSQL/SQLite and Files/Folders. All backups can be transferred to Amazon S3, Rackspace Cloud Files, Dropbox Web Service, any remote server you have access to (using either SCP, SFTP or regular FTP), or a Local server. Backup handles Compression, Archiving, Encryption, Backup Cleaning (Cycling) and supports Email Notifications.
 
 ## Written for Environments
 
@@ -14,6 +14,17 @@ __Backup__ is a Ruby Gem written for __Unix__ and __Ruby on Rails (2 and 3)__ en
 
 * [Meskyanichi - Michael van Rooijen](http://github.com/meskyanichi)
 * [Fernandoluizao - Fernando Migliorini Luizão](http://github.com/fernandoluizao)
+
+### Contributors
+
+* [dtrueman](http://github.com/dtrueman)
+* [Nathan L Smith](http://github.com/smith)
+* [Francesc Esplugas](http://github.com/fesplugas)
+* [wakiki](http://github.com/wakiki)
+* [Dan Hixon](http://github.com/danhixon)
+* [Adam Greene](http://github.com/skippy)
+* [Dmitriy Novotochinov](http://github.com/trybeee)
+
 
 ## Backup's Current Capabilities
 
@@ -170,14 +181,5 @@ Send us a message! Fork the project!
 
 [Report it](http://github.com/meskyanichi/backup/issues)
 
-
-### Contributors
-
-* [dtrueman](http://github.com/dtrueman)
-* [Nathan L Smith](http://github.com/smith)
-* [Francesc Esplugas](http://github.com/fesplugas)
-* [wakiki](http://github.com/wakiki)
-* [Dan Hixon](http://github.com/danhixon)
-* [Adam Greene](http://github.com/skippy)
 
 __Michael van Rooijen | Final Creation. ([http://michaelvanrooijen.com](http://michaelvanrooijen.com))__

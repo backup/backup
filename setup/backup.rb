@@ -21,12 +21,13 @@
 #  - Custom
 #
 # STORAGE METHODS
-#  - S3     (Amazon)
-#  - CF     (Rackspace Cloud Files)
-#  - SCP    (Remote Server)
-#  - FTP    (Remote Server)
-#  - SFTP   (Remote Server)
-#  - LOCAL  (Local Server)
+#  - S3      (Amazon)
+#  - CF      (Rackspace Cloud Files)
+#  - Dropbox (Dropbox Web Service)
+#  - SCP     (Remote Server)
+#  - FTP     (Remote Server)
+#  - SFTP    (Remote Server)
+#  - LOCAL   (Local Server)
 #
 # GLOBAL OPTIONS
 #  - Keep Backups (keep_backups)
@@ -228,4 +229,27 @@ backup 'sqlite-backup-local' do
   encrypt_with_password false
   notify false
   
+end
+
+
+# Initialize with
+# sudo backup --run postgresql-backup-dropbox
+backup 'postgresql-backup-dropbox' do
+  
+  adapter :postgresql do
+    user      'devmen'
+    database  'domowoi_test'
+  end
+  
+  storage :dropbox do
+    api_key           'your_api_key'
+    secret_access_key 'your_api_secret'
+    username          'user@example.org'
+    password          'super_s3cret'
+    path              'backups'
+  end
+
+  keep_backups :all
+  encrypt_with_password false
+  notify false
 end

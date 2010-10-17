@@ -21,12 +21,13 @@
 #  - Custom
 #
 # STORAGE METHODS
-#  - S3     (Amazon)
-#  - CF     (Rackspace Cloud Files)
-#  - SCP    (Remote Server)
-#  - FTP    (Remote Server)
-#  - SFTP   (Remote Server)
-#  - LOCAL  (Local Server)
+#  - S3      (Amazon)
+#  - CF      (Rackspace Cloud Files)
+#  - Dropbox (Dropbox Web Service)
+#  - SCP     (Remote Server)
+#  - FTP     (Remote Server)
+#  - SFTP    (Remote Server)
+#  - LOCAL   (Local Server)
 #
 # GLOBAL OPTIONS
 #  - Keep Backups (keep_backups)
@@ -227,6 +228,7 @@ backup 'sqlite-backup-local' do
   notify false
   
 end
+
 
 # Initialize with
 # rake backup:run trigger='postgresql-backup-dropbox'
