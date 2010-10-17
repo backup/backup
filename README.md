@@ -32,9 +32,9 @@ __Backup__ is a Ruby Gem written for __Unix__ and __Ruby on Rails (2 and 3)__ en
 
 * Amazon S3
 * Rackspace Cloud Files
+* Dropbox (Using your API key/secret from developers.dropbox.com)
 * Remote Server (Available Protocols: SCP, SFTP, FTP)
 * Local server (Example Locations: Another Hard Drive, Network path)
-* Dropbox (you should get your API key and secret at developers.dropbox.com)
 
 ### Adapters
 
@@ -62,8 +62,7 @@ With Backup you can very easily specify how many backups you would like to have 
 
 ### Email Notifications
 
-You will be able to specify whether you would like to be notified by email when a backup successfully been stored.
-Simply fill in the email configuration block and set "notify" to true inside the backup procedure you would like to be notified of.
+You will be able to specify whether you would like to be notified by email when a backup successfully been stored. Simply fill in the email configuration block and set "notify" to true inside the backup procedure you would like to be notified of.
 
 ### Quick Example of a Single Backup Setting/Procedure inside the Backup Configuration File
 
@@ -76,7 +75,7 @@ Simply fill in the email configuration block and set "notify" to true inside the
       storage :s3 do
         access_key_id     'access_key_id'
         secret_access_key 'secret_access_key'
-        # host            's3-ap-southeast-1.amazonaws.com' #the s3 host.  Defaults to s3.amazonaws.com
+        host              's3-ap-southeast-1.amazonaws.com'
         bucket            '/bucket/backups/mysql/'
         use_ssl           true
       end
@@ -100,6 +99,8 @@ That's it. This was a simple example of how it works.
 
 ## Want to take Backup for a spin?
 
+### Wiki Pages
+
 [Check out our (15) helpful wiki pages](http://github.com/meskyanichi/backup/wiki)
 
 
@@ -118,4 +119,4 @@ Send us a message! Fork the project!
 [Report it](http://github.com/meskyanichi/backup/issues)
 
 
-__Michael van Rooijen | Final Creation. ([http://michaelvanrooijen.com](http://michaelvanrooijen.com))__
+__Michael van Rooijen | Final Creation. ([http://michaelvanrooijen.com/](http://michaelvanrooijen.com))__
