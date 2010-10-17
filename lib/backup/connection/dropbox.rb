@@ -1,4 +1,4 @@
-require 'rubygems'
+require 'dropbox'
 
 module Backup
   module Connection

@@ -1,7 +1,6 @@
 BACKUP_SYSTEM = Proc.new do
   # Load Gems
   require 'hirb'
-  require 'dropbox'
 
   # Load Environments
   require 'backup/environment/base'
