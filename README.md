@@ -98,73 +98,9 @@ __Unix Environment__
 
 That's it. This was a simple example of how it works.
 
-## Interested in trying out Backup?
+## Want to take Backup for a spin?
 
-### Getting started with Backup for the *Unix Environment*
-
-[http://wiki.github.com/meskyanichi/backup/getting-started-unix](http://wiki.github.com/meskyanichi/backup/getting-started-unix)
-
-
-### Getting started with Backup for the *Rails Environment*
-
-[http://wiki.github.com/meskyanichi/backup/getting-started-ruby-on-rails](http://wiki.github.com/meskyanichi/backup/getting-started-ruby-on-rails)
-
-
-### Production Mode __RAILS_ENV___
-
-[http://wiki.github.com/meskyanichi/backup/production-mode](http://wiki.github.com/meskyanichi/backup/production-mode)
-
-
-### Encrypting and Decrypting
-
-[http://wiki.github.com/meskyanichi/backup/encrypting-and-decrypting](http://wiki.github.com/meskyanichi/backup/encrypting-and-decrypting)
-
-
-### Backup Configuration File (All Adapters, Storage Methods, Mail Settings and Options)
-
-[http://wiki.github.com/meskyanichi/backup/configuration-file](http://wiki.github.com/meskyanichi/backup/configuration-file)
-
-
-### Unix Utility Commands and Rails Rake Tasks
-
-[http://wiki.github.com/meskyanichi/backup/utility-commands](http://wiki.github.com/meskyanichi/backup/utility-commands)
-
-[http://wiki.github.com/meskyanichi/backup/rake-tasks](http://wiki.github.com/meskyanichi/backup/rake-tasks)
-
-
-### Automatic Backups
-
-[http://wiki.github.com/meskyanichi/backup/automatic-backups](http://wiki.github.com/meskyanichi/backup/automatic-backups)
-
-
-### Capistrano Recipes
-
-[http://wiki.github.com/meskyanichi/backup/capistrano-recipes](http://wiki.github.com/meskyanichi/backup/capistrano-recipes)
-
-
-### Capistrano, Whenever!
-
-[http://wiki.github.com/meskyanichi/backup/capistrano-whenever](http://wiki.github.com/meskyanichi/backup/capistrano-whenever)
-
-
-### Understanding "The Backup Database"
-
-[http://wiki.github.com/meskyanichi/backup/the-backup-database](http://wiki.github.com/meskyanichi/backup/the-backup-database)
-
-
-### Trouble Shooting
-
-[http://wiki.github.com/meskyanichi/backup/troubleshooting](http://wiki.github.com/meskyanichi/backup/troubleshooting)
-
-
-### Requirements
-
-[http://wiki.github.com/meskyanichi/backup/requirements](http://wiki.github.com/meskyanichi/backup/requirements)
-
-
-### Resources
-
-[http://wiki.github.com/meskyanichi/backup/resources](http://wiki.github.com/meskyanichi/backup/resources)
+[Check out our (15) helpful wiki pages](http://github.com/meskyanichi/backup/wiki/_pages)
 
 
 ### Requests
