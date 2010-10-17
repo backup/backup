@@ -100,7 +100,7 @@ That's it. This was a simple example of how it works.
 
 ## Want to take Backup for a spin?
 
-[Check out our (15) helpful wiki pages](http://github.com/meskyanichi/backup/wiki/_pages)
+[Check out our (15) helpful wiki pages](http://github.com/meskyanichi/backup/wiki)
 
 
 ### Requests
