@@ -1,3 +1,5 @@
+require 'tempfile'
+
 module Backup
   module Adapters
     class Base
