@@ -2,6 +2,9 @@ BACKUP_SYSTEM = Proc.new do
   # Load Gems
   require 'hirb'
 
+  # Load Extensions
+  require 'backup/core_ext/object'
+
   # Load Environments
   require 'backup/environment/base'
   require 'backup/environment/unix_configuration'
