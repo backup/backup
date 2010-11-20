@@ -1,11 +1,15 @@
+lib = File.expand_path('../lib/', __FILE__)
+$:.unshift lib unless $:.include?(lib)
+
 require 'date'
+require 'backup/version'
 
 Gem::Specification.new do |gem|
   
   ##
   # Gem Specifications
   gem.name        = 'backup'
-  gem.version     = '2.4.3'
+  gem.version     = Backup::VERSION
   gem.date        = Date.today.to_s
   gem.summary     = 'Backup is a Ruby Gem that simplifies making backups for databases, files and folders.'
   gem.description = 'Backup is a Ruby Gem written for Unix and Ruby on Rails (2 and 3) environments. It can be used both with
@@ -22,7 +26,7 @@ Gem::Specification.new do |gem|
   
   ##
   # Files to be compiled
-  gem.files = ['README.md', 'CHANGELOG', 'LICENSE', 'VERSION'] +
+  gem.files = ['README.md', 'CHANGELOG', 'LICENSE'] +
               Dir['lib/**/*'] + Dir['bin/*'] + Dir['generators/**/*'] + Dir['setup/*']
   
   ##
