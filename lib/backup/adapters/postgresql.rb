@@ -2,7 +2,7 @@ module Backup
   module Adapters
     class PostgreSQL < Backup::Adapters::Base
 
-      attr_accessor :user, :password, :database, :skip_tables, :host, :port, :socket, :additional_options
+      attr_accessor :user, :password, :database, :skip_tables, :host, :port, :socket, :additional_options, :su_as_user
       
       private
 
@@ -10,7 +10,11 @@ module Backup
         def perform
           log system_messages[:pgdump]; log system_messages[:compressing]
           ENV['PGPASSWORD'] = password
-          run "#{pg_dump} -U #{user} #{options} #{additional_options} #{tables_to_skip} #{database} | gzip -f --best > #{File.join(tmp_path, compressed_file)}"
+          if su_as_user
+            run "su #{su_as_user} -c \"#{pg_dump} -U #{user} #{options} #{additional_options} #{tables_to_skip} #{database} | gzip -f --best > #{File.join(tmp_path, compressed_file)}\""
+          else
+            run "#{pg_dump} -U #{user} #{options} #{additional_options} #{tables_to_skip} #{database} | gzip -f --best > #{File.join(tmp_path, compressed_file)}"
+          end
           ENV['PGPASSWORD'] = nil
         end
 
@@ -27,7 +31,7 @@ module Backup
 
         # Loads the initial settings
         def load_settings
-          %w(user password database skip_tables additional_options).each do |attribute|
+          %w(user password database skip_tables additional_options su_as_user).each do |attribute|
             send(:"#{attribute}=", procedure.get_adapter_configuration.attributes[attribute])
           end
           

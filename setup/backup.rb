@@ -139,8 +139,10 @@ end
 backup 'postgresql-backup-scp' do
   
   adapter :postgresql do
-    user      'user'
-    database  'database'
+    user        'user'
+    database    'database'
+
+    # su_as_user  'user'
 
     # skip_tables ['table1', 'table2', 'table3']
   
