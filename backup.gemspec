@@ -39,7 +39,6 @@ Gem::Specification.new do |gem|
   
   ##
   # Dependencies
-  gem.add_dependency('fog',           ["~> 0.3.5"])
   gem.add_dependency('json_pure',     ["~> 1.4.6"])
   gem.add_dependency('net-ssh',       [">= 2.0.15"])
   gem.add_dependency('net-scp',       [">= 1.0.2"])
@@ -50,4 +49,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency('pony',          [">= 0.5"])
   gem.add_dependency('cloudfiles',    [">= 1.4.7"])
   gem.add_dependency('dropbox',       [">= 1.1.2"])
+  gem.add_dependency('fog',           ["~> 0.3.5"])
 end
