@@ -43,7 +43,7 @@ module Backup
 
       def store
         path_to_file = File.join(tmp_path, final_file)
-        session.upload(path_to_file, path, :mode => :dropbox)
+        session.upload(path_to_file, path, :mode => :dropbox, :timeout => 360)
       end
 
       private
@@ -60,3 +60,4 @@ module Backup
     end
   end
 end
+
