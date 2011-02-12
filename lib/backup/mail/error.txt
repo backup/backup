@@ -1,0 +1,5 @@
+A backup failed for the trigger: ":trigger"! on ":day of :month :year at :time", using the ":adapter" adapter.
+
+The error was as follows:
+:exception
+

@@ -57,6 +57,8 @@ module Backup
           handle_after_backup
           record
           notify
+	rescue => ex
+	  notify ex
         ensure
           remove_tmp_files
         end
@@ -140,10 +142,10 @@ module Backup
         record.save
       end
       
-      # Delivers a notification by email regarding the successfully stored backup
-      def notify
+      # Delivers a notification by email regarding the result of the backup attempt
+      def notify(exception = nil)
         if Backup::Mail::Base.setup?
-          Backup::Mail::Base.notify!(self)
+          Backup::Mail::Base.notify!(self, exception)
         end
       end
       

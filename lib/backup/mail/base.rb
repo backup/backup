@@ -30,18 +30,31 @@ module Backup
       
       # Delivers the backup details by email to the recipient
       # Requires the Backup Object
-      def self.notify!(backup)
-        if self.setup? and backup.procedure.attributes['notify'].eql?(true)
-          require 'pony'
+      def self.notify!(backup, exception = nil)
+        @backup = backup
+        if self.setup? 
+          if exception
+            if [true, :only_errors].include? backup.procedure.attributes['notify']
+              @exception = exception
+              send_email 'error.txt', "Backup for \"#{@backup.trigger}\" FAILED!"
+            end
+          else
+            if backup.procedure.attributes['notify'].eql?(true)
+              send_email 'mail.txt', "Backup for \"#{@backup.trigger}\" was successfully created!"
+            end
+          end
+        end
+      end
 
-          @backup = backup
-          self.parse_body
+      # Email-sending logic shared between success and failure emails
+      def self.send_email(template, subject)
+          require 'pony'
+          self.parse_body template
           Pony.mail({
-            :subject  => "Backup for \"#{@backup.trigger}\" was successfully created!",
+            :subject  => subject,
             :body     => @content
             }.merge(self.smtp_configuration))
           puts "Sending notification to #{self.to}."
-        end
       end
             
       # Retrieves SMTP configuration
@@ -60,8 +73,8 @@ module Backup
         }}
       end
       
-      def self.parse_body
-        File.open(File.join(File.dirname(__FILE__), 'mail.txt'), 'r') do |file|
+      def self.parse_body(mail_template = 'mail.txt')
+        File.open(File.join(File.dirname(__FILE__), mail_template), 'r') do |file|
           self.gsub_content(file.readlines)
         end
       end
@@ -81,6 +94,7 @@ module Backup
           line.gsub!(':adapter',   @backup.procedure.adapter_name.to_s)
           line.gsub!(':location',  container || bucket || path)
           line.gsub!(':backup',    @backup.final_file)
+	  line.gsub!(':exception', @exception.to_s) if @exception
           case @backup.procedure.storage_name.to_sym
             when :cloudfiles        then line.gsub!(':remote', "on Rackspace Cloudfiles")
             when :s3                then line.gsub!(':remote', "on Amazon S3")
