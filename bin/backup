@@ -1,0 +1,28 @@
+#! /usr/bin/env ruby
+
+##
+# Load RubyGems for Ruby <= 1.8.7
+require 'rubygems'
+
+##
+# Load Thor for the Command Line Interface
+begin
+  require 'thor'
+rescue LoadError
+  puts 'Backup uses Thor as CLI (Command Line Interface).'
+  puts 'Please install Thor first: `gem install thor`'
+end
+
+##
+# Load the Backup source
+require File.expand_path("../../lib/backup", __FILE__)
+
+##
+# Build the Backup Command Line Interface using Thor
+class BackupCLI < Thor
+  
+end
+
+##
+# Enable the CLI for the Backup binary
+BackupCLI.start
