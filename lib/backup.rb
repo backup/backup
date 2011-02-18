@@ -1,9 +1,22 @@
 # encoding: utf-8
 
-LIB_PATH = File.dirname(__FILE__) + '/backup'
+##
+# Backup's directory path constants
+LIBRARY_PATH       = File.join(File.dirname(__FILE__), 'backup')
+CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
 
+##
+# Backup Ruby Gem
 module Backup
 
-  autoload :Version, LIB_PATH + '/version'
+  ##
+  # Autoload Backup base files
+  autoload :Version, File.join(LIBRARY_PATH, 'version')
+
+  ##
+  # Autoload Backup configuration files
+  module Configuration
+    autoload :S3, File.join(CONFIGURATION_PATH, 's3')
+  end
 
 end
