@@ -9,3 +9,5 @@ require File.expand_path( '../../lib/backup', __FILE__ )
 RSpec.configure do |config|
   config.mock_with :mocha
 end
+
+FIXTURES_PATH = File.join( File.dirname(__FILE__), 'fixtures' )

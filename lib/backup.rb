@@ -11,6 +11,7 @@ module Backup
 
   ##
   # Autoload Backup base files
+  autoload :Model,   File.join(LIBRARY_PATH, 'model')
   autoload :Version, File.join(LIBRARY_PATH, 'version')
 
   ##
