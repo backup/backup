@@ -1,12 +1,11 @@
 # encoding: utf-8
 
-# Backup::Configuration::S3.defaults do |s3|
-#   s3.access_key_id      = 'access_key_id'
-#   s3.secret_access_key  = 'secret_access_key'
-#   s3.host               = 's3-ap-southeast-1.amazonaws.com'
-#   s3.ssl                = true
-# end
-#
+Backup::Configuration::S3.defaults do |s3|
+  s3.access_key_id      = 'access_key_id'
+  s3.secret_access_key  = 'secret_access_key'
+  s3.region             = 'us-east-1'
+end
+
 # Backup::Configuration::Mail.defaults do |mail|
 #   mail.from                 = 'my.sender.email@gmail.com'
 #   mail.to                   = 'my.receiver.email@gmail.com'
