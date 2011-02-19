@@ -2,12 +2,16 @@
 
 require File.dirname(__FILE__) + '/spec_helper'
 
+##
+# Mocks - Adapter
 module Backup::Adapter
   class TestAdapter
     def initialize(&block); end
   end
 end
 
+##
+# Mocks - Storage
 module Backup::Storage
   class TestStorage
     def initialize(&block); end

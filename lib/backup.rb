@@ -5,6 +5,7 @@
 LIBRARY_PATH       = File.join(File.dirname(__FILE__), 'backup')
 CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
 STORAGE_PATH       = File.join(LIBRARY_PATH, 'storage')
+ADAPTER_PATH       = File.join(LIBRARY_PATH, 'adapter')
 
 ##
 # Backup Ruby Gem
@@ -26,6 +27,12 @@ module Backup
   # Autoload Backup storage files
   module Storage
     autoload :S3, File.join(STORAGE_PATH, 's3')
+  end
+
+  ##
+  # Autoload Backup adapter files
+  module Adapter
+    autoload :MySQL, File.join(ADAPTER_PATH, 'mysql')
   end
 
 end
