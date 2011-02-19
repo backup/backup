@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 require 'fileutils'
+require 'yaml'
 
 ##
 # Backup's directory path constants
