@@ -17,11 +17,16 @@ module Backup
     attr_accessor :adapters
 
     ##
+    # The storages attribute holds an array of storage objects
+    attr_accessor :storages
+
+    ##
     # Takes a trigger, label and the intructions block
     def initialize(trigger, label = false, &block)
       @trigger  = trigger
       @label    = label
       @adapters = Array.new
+      @storages = Array.new
 
       instance_eval(&block)
     end
@@ -31,6 +36,13 @@ module Backup
     # during the backup process
     def use_adapter(adapter, &block)
       @adapters << Backup::Adapters.const_get(adapter).new(&block)
+    end
+
+    ##
+    # Adds a storage method to the array of storage methods to use
+    # during the backup process
+    def store_to(storage, &block)
+      @storages << Backup::Storage.const_get(storage).new(&block)
     end
 
   end

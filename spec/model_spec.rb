@@ -8,6 +8,12 @@ module Backup::Adapters
   end
 end
 
+module Backup::Storage
+  class TestStorage
+    def initialize(&block); end
+  end
+end
+
 describe Backup::Model do
 
   it 'should create a new model with a trigger and label' do
@@ -35,6 +41,28 @@ describe Backup::Model do
       end
 
       model.adapters.count.should == 2
+    end
+  end
+
+  describe 'storages' do
+    it 'should add a storage to the array of storages to use' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        store_to 'TestStorage' do |a|
+        end
+      end
+
+      model.storages.count.should == 1
+    end
+
+    it 'should add a storage to the array of storages to use' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        store_to 'TestStorage' do |a|
+        end
+        store_to 'TestStorage' do |a|
+        end
+      end
+
+      model.storages.count.should == 2
     end
   end
 
