@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+require 'fileutils'
+
 ##
 # Backup's directory path constants
 LIBRARY_PATH       = File.join(File.dirname(__FILE__), 'backup')
@@ -14,6 +16,7 @@ module Backup
   ##
   # Autoload Backup base files
   autoload :Model,   File.join(LIBRARY_PATH, 'model')
+  autoload :CLI,     File.join(LIBRARY_PATH, 'cli')
   autoload :Version, File.join(LIBRARY_PATH, 'version')
 
   ##
