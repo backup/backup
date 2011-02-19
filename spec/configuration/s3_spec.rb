@@ -12,8 +12,9 @@ describe Backup::Configuration::S3 do
   end
 
   it 'should set the default S3 configuration' do
-    Backup::Configuration::S3.access_key_id.should == 'my_access_key_id'
-    Backup::Configuration::S3.secret_access_key.should == 'my_secret_access_key'
-    Backup::Configuration::S3.region.should == 'us-east-1'
+    s3 = Backup::Configuration::S3
+    s3.access_key_id.should     == 'my_access_key_id'
+    s3.secret_access_key.should == 'my_secret_access_key'
+    s3.region.should            == 'us-east-1'
   end
 end

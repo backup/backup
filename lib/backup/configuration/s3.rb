@@ -13,7 +13,7 @@ module Backup
       #
       # By setting the configurations here, they will become the default
       # througout the backup process. These defaults can be (individually)
-      # overwritten by the Backup::Object
+      # overwritten by the Backup::Model
       def self.defaults
         yield self
       end
