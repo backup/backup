@@ -13,7 +13,7 @@ module Backup
     attr_accessor :label
 
     ##
-    # The adapters holds an array of adapter objects
+    # The adapters attribute holds an array of adapter objects
     attr_accessor :adapters
 
     ##
@@ -35,7 +35,7 @@ module Backup
     # Adds an adapter to the array of adapters to use
     # during the backup process
     def use_adapter(adapter, &block)
-      @adapters << Backup::Adapters.const_get(adapter).new(&block)
+      @adapters << Backup::Adapter.const_get(adapter).new(&block)
     end
 
     ##

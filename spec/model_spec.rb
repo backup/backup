@@ -2,7 +2,7 @@
 
 require File.dirname(__FILE__) + '/spec_helper'
 
-module Backup::Adapters
+module Backup::Adapter
   class TestAdapter
     def initialize(&block); end
   end
