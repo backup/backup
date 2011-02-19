@@ -9,6 +9,7 @@ LIBRARY_PATH       = File.join(File.dirname(__FILE__), 'backup')
 CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
 STORAGE_PATH       = File.join(LIBRARY_PATH, 'storage')
 ADAPTER_PATH       = File.join(LIBRARY_PATH, 'adapter')
+TMP_PATH           = File.join(ENV['HOME'], 'tmp', 'backup')
 
 ##
 # Backup Ruby Gem

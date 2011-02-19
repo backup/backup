@@ -119,16 +119,20 @@ describe Backup::Adapter::MySQL do
   end
 
   describe '#perform' do
+    before do
+      adapter.stubs(:mysqldump_utility).returns('mysqldump')
+    end
+
     it 'should run the mysqldump command and dump it to the specified path' do
       adapter.stubs(:mkdir)
-      adapter.expects(:run).with("#{adapter.mysqldump} > '/Users/Michael/tmp/backup/myapp/mysql/mydatabase.sql'")
-      adapter.perform('/Users/Michael/tmp/backup/myapp')
+      adapter.expects(:run).with("#{adapter.mysqldump} > '#{TMP_PATH}/myapp/mysql/mydatabase.sql'")
+      adapter.perform('myapp')
     end
 
     it 'should ensure the directory is available' do
       adapter.stubs(:run)
-      adapter.expects(:mkdir).with('/Users/Michael/tmp/backup/myapp/mysql')
-      adapter.perform('/Users/Michael/tmp/backup/myapp')
+      adapter.expects(:mkdir).with("#{TMP_PATH}/myapp/mysql")
+      adapter.perform('myapp')
     end
   end
 end
