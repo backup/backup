@@ -27,6 +27,6 @@ Gem::Specification.new do |gem|
 
   ##
   # Production gem dependencies
-  # gem.add_dependency 'rainbow',       ['~> 1.1.0']
+  gem.add_dependency 'fog', ['~> 0.5.3']
 
 end

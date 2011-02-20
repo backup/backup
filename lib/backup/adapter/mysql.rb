@@ -103,8 +103,8 @@ module Backup
       ##
       # Performs the mysqldump command and outputs the
       # data to the specified path based on the 'trigger'
-      def perform(trigger)
-        path = File.join(TMP_PATH, trigger, 'mysql')
+      def perform
+        path = File.join(TMP_PATH, TRIGGER, 'mysql')
         mkdir(path)
         run("#{mysqldump} > '#{File.join(path, database)}.sql'")
       end

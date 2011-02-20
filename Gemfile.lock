@@ -2,11 +2,24 @@ PATH
   remote: .
   specs:
     backup (3.0.0)
+      fog (~> 0.5.3)
 
 GEM
   remote: http://rubygems.org/
   specs:
+    builder (2.1.2)
     diff-lcs (1.1.2)
+    excon (0.5.3)
+    fog (0.5.3)
+      builder
+      excon (>= 0.5.2)
+      formatador (>= 0.0.16)
+      json
+      mime-types
+      net-ssh (>= 2.0.23)
+      nokogiri (>= 1.4.4)
+      ruby-hmac
+    formatador (0.0.16)
     fuubar (0.0.3)
       rspec (~> 2.0)
       rspec-instafail (~> 0.1.4)
@@ -14,7 +27,11 @@ GEM
     infinity_test (1.0.2)
       notifiers (>= 1.1.0)
       watchr (>= 0.7)
+    json (1.5.1)
+    mime-types (1.16)
     mocha (0.9.12)
+    net-ssh (2.1.0)
+    nokogiri (1.4.4)
     notifiers (1.1.0)
     rspec (2.5.0)
       rspec-core (~> 2.5.0)
@@ -25,6 +42,7 @@ GEM
       diff-lcs (~> 1.1.2)
     rspec-instafail (0.1.6)
     rspec-mocks (2.5.0)
+    ruby-hmac (0.4.0)
     ruby-progressbar (0.0.9)
     watchr (0.7)
 
@@ -33,6 +51,7 @@ PLATFORMS
 
 DEPENDENCIES
   backup!
+  fog (~> 0.5.3)
   fuubar
   infinity_test
   mocha

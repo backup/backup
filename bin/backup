@@ -31,6 +31,12 @@ class BackupCLI < Thor
 
   ##
   # Commands
+  method_option :trigger, :type => :string, :required => true
+  def run
+    const_set(:TRIGGER, options[:trigger])
+    const_set(:TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
+  end
+
   def version
     puts "Backup #{Backup::Version.current}"
   end

@@ -11,3 +11,9 @@ RSpec.configure do |config|
 end
 
 # FIXTURES_PATH = File.join( File.dirname(__FILE__), 'fixtures' )
+
+Object.send(:remove_const, :TRIGGER) if defined? TRIGGER
+TRIGGER = 'myapp'
+
+Object.send(:remove_const, :TIME) if defined? TIME
+TIME = Time.now.strftime("%Y.%m.%d.%H.%M.%S")

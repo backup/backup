@@ -26,6 +26,11 @@ describe Backup::Model do
     model.label.should == 'MySQL S3 Backup for MyApp'
   end
 
+  it 'should have the time logged in the object' do
+    model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {}
+    model.time.should == TIME
+  end
+
   describe 'adapters' do
     it 'should add the mysql adapter to the array of adapters to invoke' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do

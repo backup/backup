@@ -21,12 +21,17 @@ module Backup
     attr_accessor :storages
 
     ##
+    # The time when the backup initiated (in format: 2011.02.20.03.29.59)
+    attr_accessor :time
+
+    ##
     # Takes a trigger, label and the intructions block
     def initialize(trigger, label = false, &block)
       @trigger  = trigger
       @label    = label
       @adapters = Array.new
       @storages = Array.new
+      @time     = TIME
 
       instance_eval(&block)
     end
