@@ -18,6 +18,10 @@ module Backup
     attr_accessor :databases
 
     ##
+    # The archives attr_accessor holds an array of archive objects
+    attr_accessor :archives
+
+    ##
     # The storages attribute holds an array of storage objects
     attr_accessor :storages
 
@@ -49,6 +53,7 @@ module Backup
       @trigger   = trigger
       @label     = label
       @databases = Array.new
+      @archives  = Array.new
       @storages  = Array.new
       @time      = TIME
 
@@ -64,6 +69,13 @@ module Backup
     end
 
     ##
+    # Adds an archive to the array of archives to store
+    # during the backup process
+    def archive(name, &block)
+      @archives << Backup::Archive.new(name, &block)
+    end
+
+    ##
     # Adds a storage method to the array of storage methods to use
     # during the backup process
     def store_to(storage, &block)
@@ -76,20 +88,32 @@ module Backup
     # [Databases]
     # Runs all (if any) database objects to dump the databases
     ##
+    # [Package]
+    # After all the database dumps and archives are placed inside
+    # the folder, it'll make a single .tar package (archive) out of it
+    ##
     # [Storages]
     # Runs all (if any) storage objects to store the backups to remote locations
+    ##
+    # [Cleaning]
+    # After the whole backup process finishes, it'll go ahead and remove any temporary
+    # file that it produced. If an exception(error) is raised during this process which
+    # breaks the process, it'll always ensure it removes the temporary files regardless
+    # to avoid mass consumption of storage space on the machine
     def perform!
-      databases.each do |database|
-        database.perform!
+      begin
+        databases.each do |database|
+          database.perform!
+        end
+
+        package!
+
+        storages.each do |storage|
+          storage.perform!
+        end
+      ensure
+        clean!
       end
-
-      package!
-
-      storages.each do |storage|
-        storage.perform!
-      end
-
-      clean!
     end
 
   private

@@ -18,6 +18,14 @@ module Backup::Storage
   end
 end
 
+##
+# Mocks - Archive
+module Backup
+  class Archive
+    def initialize(name, &block); end
+  end
+end
+
 describe Backup::Model do
 
   let(:model) { Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {} }
@@ -68,6 +76,25 @@ describe Backup::Model do
       end
 
       model.storages.count.should == 2
+    end
+  end
+
+  describe 'archives' do
+    it 'should add an archive to the array of archives to use' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        archive('my_archive') {}
+      end
+
+      model.archives.count.should == 1
+    end
+
+    it 'should add a storage to the array of storages to use' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        archive('TestStorage') {}
+        archive('TestStorage') {}
+      end
+
+      model.archives.count.should == 2
     end
   end
 
