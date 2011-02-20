@@ -54,17 +54,6 @@ describe Backup::Storage::S3 do
 
       s3.connection
     end
-
-    it 'should only establish a connection once even if the method is called multiple times' do
-      Fog::Storage.expects(:new).with({
-        :provider               => 'AWS',
-        :aws_access_key_id      => 'my_access_key_id',
-        :aws_secret_access_key  => 'my_secret_access_key',
-        :region                 => 'us-east-1'
-      }).once
-
-      5.times { s3.connection }
-    end
   end
 
   describe '#provider' do
