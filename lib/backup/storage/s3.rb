@@ -39,7 +39,9 @@ module Backup
         end
 
         instance_eval(&block)
-        @connected = false
+        @connected   = false
+        @transferred = false
+        @time        = TIME
       end
 
       ##
@@ -65,6 +67,7 @@ module Backup
       # Transfers the archived file to the specified Amazon S3 bucket
       def transfer!
         connection.put_object(bucket, remote_path, file)
+        @transferred = true
       end
 
       ##

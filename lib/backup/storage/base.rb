@@ -5,6 +5,15 @@ module Backup
     class Base
 
       ##
+      # The time when the backup initiated (in format: 2011.02.20.03.29.59)
+      attr_accessor :time
+
+      ##
+      # Returns true or false based on whether the file has been transferred or not
+      attr_accessor :transferred
+      alias :transferred? :transferred
+
+      ##
       # Returns the local path
       def local_path
         TMP_PATH
