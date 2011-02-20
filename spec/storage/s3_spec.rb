@@ -103,19 +103,8 @@ describe Backup::Storage::S3 do
     end
   end
 
-  describe '#create_bucket!' do
-    let(:connection) { mock('Fog::Storage') }
-
-    it 'should invoke create a bucket on amazon S3' do
-      connection.expects(:put_bucket).with('my-bucket')
-      s3.expects(:connection).returns(connection)
-      s3.create_bucket!
-    end
-  end
-
   describe '#perform' do
     it 'should invoke create_bucket! and transfer!' do
-      s3.expects(:create_bucket!)
       s3.expects(:transfer!)
       s3.perform!
     end

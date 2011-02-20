@@ -80,15 +80,8 @@ module Backup
       end
 
       ##
-      # Creates the bucket if it doesn't exist
-      def create_bucket!
-        connection.put_bucket(bucket)
-      end
-
-      ##
       # Performs the backup transfer
       def perform!
-        create_bucket!
         transfer!
       end
 
