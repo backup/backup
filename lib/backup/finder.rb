@@ -21,11 +21,11 @@ module Backup
       end
 
       ##
-      # Loads the configuration file
+      # Loads the backup configuration file
       load config
 
       ##
-      # Iterates through all the loaded backup models and returns
+      # Iterates through all the instantiated backup models and returns
       # the one that matches the specified 'trigger'
       Backup::Model.all.each do |model|
         return model if model.trigger.eql?(trigger)

@@ -38,7 +38,12 @@ module Backup
     @all = Array.new
 
     ##
-    # Takes a trigger, label and the intructions block
+    # Takes a trigger, label and the configuration block and instantiates the model.
+    # The TIME (time of execution) gets stored in the @time attribute.
+    # After the instance has evaluated the configuration block and properly set the
+    # configuration for the model, it will append the newly created "model" instance
+    # to the @all class variable (Array) so it can be accessed by Backup::Finder
+    # and any other location
     def initialize(trigger, label, &block)
       @trigger   = trigger
       @label     = label
@@ -66,16 +71,15 @@ module Backup
 
     ##
     # Performs the backup process
+    ##
+    # [Databases]
+    # Runs all (if any) database objects to dump the databases
+    ##
+    # [Storages]
+    # Runs all (if any) storage objects to store the backups to remote locations
     def perform!
-
-      ##
-      # Dump all databases
       databases.each(&:perform!)
-
-      ##
-      # Store all backups to the storage locations
       storages.each(&:perform!)
-
     end
 
   end
