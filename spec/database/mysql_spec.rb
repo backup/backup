@@ -109,7 +109,7 @@ describe Backup::Database::MySQL do
 
   describe '#mysqldump_string' do
     it 'should return the full mysqldump string' do
-      db.expects(:mysqldump_utility).returns('mysqldump')
+      db.expects(:utility).with(:mysqldump).returns('mysqldump')
       db.mysqldump.should ==
       "mysqldump --user='someuser' --password='secret' " +
       "--host='localhost' --port='123' --socket='/mysql.sock' " +
@@ -120,7 +120,7 @@ describe Backup::Database::MySQL do
 
   describe '#perform!' do
     before do
-      db.stubs(:mysqldump_utility).returns('mysqldump')
+      db.stubs(:utility).returns('mysqldump')
     end
 
     it 'should run the mysqldump command and dump it to the specified path' do

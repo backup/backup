@@ -19,5 +19,16 @@ module Backup
       FileUtils.mkdir_p(path)
     end
 
+    ##
+    # Tries to find the full path of the specified utility. If the full
+    # path is found, it'll return that. Otherwise it'll just return the
+    # name of the utility.
+    def utility(name)
+      if path = %x[which #{name}].chomp and not path.empty?
+        return path
+      end
+      name
+    end
+
   end
 end

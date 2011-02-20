@@ -83,20 +83,9 @@ module Backup
       end
 
       ##
-      # Returns the mysqldump utility. It'll try to auto-detect the full path
-      # to the utility. If it can't find the full path it'll attempt to use
-      # just the 'mysqldump' command.
-      def mysqldump_utility
-        if path = %x[which mysqldump].chomp and not path.empty?
-          return path
-        end
-        'mysqldump'
-      end
-
-      ##
       # Builds the full mysqldump string based on all attributes
       def mysqldump
-        "#{ mysqldump_utility } #{ credential_options } #{ connectivity_options } " +
+        "#{ utility(:mysqldump) } #{ credential_options } #{ connectivity_options } " +
         "#{ options } #{ name } #{ tables_to_dump } #{ tables_to_skip }"
       end
 
