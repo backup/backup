@@ -26,17 +26,19 @@ class BackupCLI < Thor
   map '-v' => :version
 
   ##
-  # Descriptions
-  desc 'version', 'Display installed Backup version'
-
-  ##
   # Commands
-  method_option :trigger, :type => :string, :required => true
-  def run
-    const_set(:TRIGGER, options[:trigger])
-    const_set(:TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
+  method_option :trigger, :type => :string, :aliases => '-t', :required => true
+  method_option :config,  :type => :string, :aliases => '-c'
+  desc 'perform', 'Performs the backup of the specified trigger'
+  def perform
+    Object.send(:const_set, :TRIGGER, options[:trigger])
+    Object.send(:const_set, :TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
+
+    model = Backup::Finder.new(options[:trigger], options[:config]).find
+    model.perform!
   end
 
+  desc 'version', 'Display installed Backup version'
   def version
     puts "Backup #{Backup::Version.current}"
   end
