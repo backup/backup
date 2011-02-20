@@ -88,6 +88,8 @@ module Backup
       storages.each do |storage|
         storage.perform!
       end
+
+      clean!
     end
 
   private
@@ -98,6 +100,12 @@ module Backup
     # becomes a single (transferrable) packaged file.
     def package!
       run("#{ utility(:tar) } -c '#{ File.join(TMP_PATH, TRIGGER) }' > '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar") }'")
+    end
+
+    ##
+    # Cleans up the temporary files that were created after the backup process finishes
+    def clean!
+      run("#{ utility(:rm) } -rf '#{ File.join(TMP_PATH, TRIGGER) }' '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar") }'*")
     end
 
   end

@@ -79,4 +79,12 @@ describe Backup::Model do
     end
   end
 
+  describe '#clean!' do
+    it 'remove the temporary files and folders that were created' do
+      model.expects(:utility).with(:rm).returns(:rm)
+      model.expects(:run).with("rm -rf '#{ File.join(TMP_PATH, TRIGGER) }' '#{ File.join(TMP_PATH, "#{ TIME }.#{ TRIGGER }.tar") }'*")
+      model.send(:clean!)
+    end
+  end
+
 end
