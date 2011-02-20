@@ -80,9 +80,10 @@ describe Backup::Storage::S3 do
     end
 
     it 'should transfer the provided file to the bucket' do
-      file = mock('File')
+      file = mock("Backup::Storage::File")
       s3.expects(:file).returns(file)
-      connection.expects(:put_object).with('my-bucket', 'backup/myapp/', file)
+      s3.expects(:remote_file).returns("#{ TIME }.#{ TRIGGER }.tar")
+      connection.expects(:put_object).with('my-bucket', "backup/myapp/#{ TIME }.#{ TRIGGER }.tar", file)
       s3.transferred?.should == false
       s3.transfer!
       s3.transferred?.should == true

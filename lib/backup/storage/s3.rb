@@ -66,7 +66,7 @@ module Backup
       ##
       # Transfers the archived file to the specified Amazon S3 bucket
       def transfer!
-        connection.put_object(bucket, remote_path, file)
+        connection.put_object(bucket, File.join(remote_path, remote_file), file)
         @transferred = true
       end
 
