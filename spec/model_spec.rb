@@ -3,7 +3,7 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
 ##
-# Mocks - Adapter
+# Mocks - Database
 module Backup::Database
   class TestDatabase
     def initialize(&block); end
