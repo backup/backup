@@ -13,8 +13,8 @@ module Backup
     attr_accessor :label
 
     ##
-    # The adapters attribute holds an array of adapter objects
-    attr_accessor :adapters
+    # The databases attribute holds an array of database objects
+    attr_accessor :databases
 
     ##
     # The storages attribute holds an array of storage objects
@@ -27,20 +27,20 @@ module Backup
     ##
     # Takes a trigger, label and the intructions block
     def initialize(trigger, label = false, &block)
-      @trigger  = trigger
-      @label    = label
-      @adapters = Array.new
-      @storages = Array.new
-      @time     = TIME
+      @trigger   = trigger
+      @label     = label
+      @databases = Array.new
+      @storages  = Array.new
+      @time      = TIME
 
       instance_eval(&block)
     end
 
     ##
-    # Adds an adapter to the array of adapters to use
+    # Adds a database to the array of databases to dump
     # during the backup process
-    def use_adapter(adapter, &block)
-      @adapters << Backup::Adapter.const_get(adapter).new(&block)
+    def database(database, &block)
+      @databases << Backup::Database.const_get(database).new(&block)
     end
 
     ##

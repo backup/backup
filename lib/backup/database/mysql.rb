@@ -1,13 +1,13 @@
 # encoding: utf-8
 
 module Backup
-  module Adapter
+  module Database
     class MySQL
       include Backup::CLI
 
       ##
       # Name of the database that needs to get dumped
-      attr_accessor :database
+      attr_accessor :name
 
       ##
       # Credentials for the specified database
@@ -44,7 +44,7 @@ module Backup
       # during the dumping of the database
       def tables_to_skip
         skip_tables.map do |table|
-          "--ignore-table='#{database}.#{table}'"
+          "--ignore-table='#{name}.#{table}'"
         end.join("\s")
       end
 
@@ -97,7 +97,7 @@ module Backup
       # Builds the full mysqldump string based on all attributes
       def mysqldump
         "#{ mysqldump_utility } #{ credential_options } #{ connectivity_options } " +
-        "#{ options } #{ database } #{ tables_to_dump } #{ tables_to_skip }"
+        "#{ options } #{ name } #{ tables_to_dump } #{ tables_to_skip }"
       end
 
       ##
@@ -106,7 +106,7 @@ module Backup
       def perform
         path = File.join(TMP_PATH, TRIGGER, 'mysql')
         mkdir(path)
-        run("#{mysqldump} > '#{File.join(path, database)}.sql'")
+        run("#{mysqldump} > '#{File.join(path, name)}.sql'")
       end
 
     end

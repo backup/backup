@@ -4,8 +4,8 @@ require File.dirname(__FILE__) + '/spec_helper'
 
 ##
 # Mocks - Adapter
-module Backup::Adapter
-  class TestAdapter
+module Backup::Database
+  class TestDatabase
     def initialize(&block); end
   end
 end
@@ -31,25 +31,25 @@ describe Backup::Model do
     model.time.should == TIME
   end
 
-  describe 'adapters' do
-    it 'should add the mysql adapter to the array of adapters to invoke' do
+  describe 'databases' do
+    it 'should add the mysql adapter to the array of databases to invoke' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        use_adapter 'TestAdapter' do |a|
+        database 'TestDatabase' do |a|
         end
       end
 
-      model.adapters.count.should == 1
+      model.databases.count.should == 1
     end
 
     it 'should add 2 mysql adapters to the array of adapters to invoke' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        use_adapter 'TestAdapter' do |a|
+        database 'TestDatabase' do |a|
         end
-        use_adapter 'TestAdapter' do |a|
+        database 'TestDatabase' do |a|
         end
       end
 
-      model.adapters.count.should == 2
+      model.databases.count.should == 2
     end
   end
 

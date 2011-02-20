@@ -8,7 +8,7 @@ require 'yaml'
 LIBRARY_PATH       = File.join(File.dirname(__FILE__), 'backup')
 CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
 STORAGE_PATH       = File.join(LIBRARY_PATH, 'storage')
-ADAPTER_PATH       = File.join(LIBRARY_PATH, 'adapter')
+DATABASE_PATH      = File.join(LIBRARY_PATH, 'database')
 TMP_PATH           = File.join(ENV['HOME'], 'tmp', 'backup')
 
 ##
@@ -37,9 +37,9 @@ module Backup
   end
 
   ##
-  # Autoload Backup adapter files
-  module Adapter
-    autoload :MySQL, File.join(ADAPTER_PATH, 'mysql')
+  # Autoload Backup database files
+  module Database
+    autoload :MySQL, File.join(DATABASE_PATH, 'mysql')
   end
 
 end
