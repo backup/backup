@@ -34,8 +34,7 @@ describe Backup::Model do
   describe 'databases' do
     it 'should add the mysql adapter to the array of databases to invoke' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        database 'TestDatabase' do |a|
-        end
+        database('TestDatabase') {}
       end
 
       model.databases.count.should == 1
@@ -43,10 +42,8 @@ describe Backup::Model do
 
     it 'should add 2 mysql adapters to the array of adapters to invoke' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        database 'TestDatabase' do |a|
-        end
-        database 'TestDatabase' do |a|
-        end
+        database('TestDatabase') {}
+        database('TestDatabase') {}
       end
 
       model.databases.count.should == 2
@@ -56,8 +53,7 @@ describe Backup::Model do
   describe 'storages' do
     it 'should add a storage to the array of storages to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        store_to 'TestStorage' do |a|
-        end
+        store_to('TestStorage') {}
       end
 
       model.storages.count.should == 1
@@ -65,10 +61,8 @@ describe Backup::Model do
 
     it 'should add a storage to the array of storages to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        store_to 'TestStorage' do |a|
-        end
-        store_to 'TestStorage' do |a|
-        end
+        store_to('TestStorage') {}
+        store_to('TestStorage') {}
       end
 
       model.storages.count.should == 2
