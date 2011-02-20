@@ -25,8 +25,21 @@ module Backup
     attr_accessor :time
 
     ##
+    # The Backup::Model.all class method keeps track of all the models
+    # that have been instantiated. It returns the @all class variable,
+    # which contains an array of all the models
+    class << self
+      attr_accessor :all
+    end
+
+    ##
+    # Accessible through "Backup::Model.all", it stores an array of Backup::Model instances.
+    # Everytime a new Backup::Model gets instantiated it gets pushed into this array
+    @all = Array.new
+
+    ##
     # Takes a trigger, label and the intructions block
-    def initialize(trigger, label = false, &block)
+    def initialize(trigger, label, &block)
       @trigger   = trigger
       @label     = label
       @databases = Array.new
@@ -34,6 +47,7 @@ module Backup
       @time      = TIME
 
       instance_eval(&block)
+      Backup::Model.all << self
     end
 
     ##

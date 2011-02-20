@@ -19,6 +19,7 @@ module Backup
   # Autoload Backup base files
   autoload :Model,   File.join(LIBRARY_PATH, 'model')
   autoload :CLI,     File.join(LIBRARY_PATH, 'cli')
+  autoload :Finder,  File.join(LIBRARY_PATH, 'finder')
   autoload :Version, File.join(LIBRARY_PATH, 'version')
 
   ##
