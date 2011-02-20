@@ -2,6 +2,7 @@
 
 module Backup
   class Model
+    include Backup::CLI
 
     ##
     # The trigger is used as an identifier for
@@ -78,8 +79,25 @@ module Backup
     # [Storages]
     # Runs all (if any) storage objects to store the backups to remote locations
     def perform!
-      databases.each(&:perform!)
-      storages.each(&:perform!)
+      databases.each do |database|
+        database.perform!
+      end
+
+      package!
+
+      storages.each do |storage|
+        storage.perform!
+      end
+    end
+
+  private
+
+    ##
+    # After all the databases and archives have been dumped and sorted,
+    # these files will be bundled in to a .tar archive (uncompressed) so it
+    # becomes a single (transferrable) packaged file.
+    def package!
+      run("#{ utility(:tar) } -c '#{ File.join(TMP_PATH, TRIGGER) }' > '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar") }'")
     end
 
   end

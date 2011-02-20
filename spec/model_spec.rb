@@ -20,6 +20,8 @@ end
 
 describe Backup::Model do
 
+  let(:model) { Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {} }
+
   it 'should create a new model with a trigger and label' do
     model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {}
     model.trigger.should == 'mysql-s3'
@@ -66,6 +68,14 @@ describe Backup::Model do
       end
 
       model.storages.count.should == 2
+    end
+  end
+
+  describe '#package!' do
+    it 'should package the folder' do
+      model.expects(:utility).with(:tar).returns(:tar)
+      model.expects(:run).with("tar -c '#{ File.join(TMP_PATH, TRIGGER) }' > '#{ File.join( TMP_PATH, "#{ TIME }.#{ TRIGGER }.tar" ) }'")
+      model.send(:package!)
     end
   end
 
