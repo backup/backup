@@ -50,5 +50,19 @@ module Backup
       @storages << Backup::Storage.const_get(storage).new(&block)
     end
 
+    ##
+    # Performs the backup process
+    def perform!
+
+      ##
+      # Dump all databases
+      databases.each(&:perform!)
+
+      ##
+      # Store all backups to the storage locations
+      storages.each(&:perform!)
+
+    end
+
   end
 end
