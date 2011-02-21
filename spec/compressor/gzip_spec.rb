@@ -24,7 +24,7 @@ describe Backup::Compressor::Gzip do
   describe '#perform!' do
     it 'should perform the compression' do
       compressor.expects(:utility).with(:gzip).returns(:gzip)
-      compressor.expects(:run).with("gzip  '#{ File.join(TMP_PATH, "#{ TIME }.#{ TRIGGER }.tar") }'")
+      compressor.expects(:run).with("gzip  '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'")
       compressor.perform!
     end
 
@@ -34,7 +34,7 @@ describe Backup::Compressor::Gzip do
       end
 
       compressor.stubs(:utility).returns(:gzip)
-      compressor.expects(:run).with("gzip --fast --best '#{ File.join(TMP_PATH, "#{ TIME }.#{ TRIGGER }.tar") }'")
+      compressor.expects(:run).with("gzip --fast --best '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'")
       compressor.perform!
     end
 

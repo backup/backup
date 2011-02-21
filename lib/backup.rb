@@ -4,18 +4,18 @@ require 'fileutils'
 require 'yaml'
 
 ##
-# Backup's directory path constants
-LIBRARY_PATH       = File.join(File.dirname(__FILE__), 'backup')
-CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
-STORAGE_PATH       = File.join(LIBRARY_PATH, 'storage')
-DATABASE_PATH      = File.join(LIBRARY_PATH, 'database')
-COMPRESSOR_PATH    = File.join(LIBRARY_PATH, 'compressor')
-ENCRYPTOR_PATH     = File.join(LIBRARY_PATH, 'encryptor')
-TMP_PATH           = File.join(ENV['HOME'], 'tmp', 'backup')
-
-##
 # Backup Ruby Gem
 module Backup
+
+  ##
+  # Backup's directory path constants
+  LIBRARY_PATH       = File.join(File.dirname(__FILE__), 'backup')
+  CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
+  STORAGE_PATH       = File.join(LIBRARY_PATH, 'storage')
+  DATABASE_PATH      = File.join(LIBRARY_PATH, 'database')
+  COMPRESSOR_PATH    = File.join(LIBRARY_PATH, 'compressor')
+  ENCRYPTOR_PATH     = File.join(LIBRARY_PATH, 'encryptor')
+  TMP_PATH           = File.join(ENV['HOME'], 'tmp', 'backup')
 
   ##
   # Autoload Backup base files

@@ -31,8 +31,8 @@ class BackupCLI < Thor
   method_option :config,  :type => :string, :aliases => '-c'
   desc 'perform', 'Performs the backup of the specified trigger'
   def perform
-    Object.send(:const_set, :TRIGGER, options[:trigger])
-    Object.send(:const_set, :TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
+    Backup.send(:const_set, :TRIGGER, options[:trigger])
+    Backup.send(:const_set, :TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
 
     model = Backup::Finder.new(options[:trigger], options[:config]).find
 

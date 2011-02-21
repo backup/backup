@@ -12,8 +12,10 @@ end
 
 # FIXTURES_PATH = File.join( File.dirname(__FILE__), 'fixtures' )
 
-Object.send(:remove_const, :TRIGGER) if defined? TRIGGER
-TRIGGER = 'myapp'
+Backup.send(:remove_const, :TRIGGER) if defined? Backup::TRIGGER
+Backup.send(:remove_const, :TIME) if defined? Backup::TIME
 
-Object.send(:remove_const, :TIME) if defined? TIME
-TIME = Time.now.strftime("%Y.%m.%d.%H.%M.%S")
+module Backup
+  TRIGGER = 'myapp'
+  TIME = Time.now.strftime("%Y.%m.%d.%H.%M.%S")
+end

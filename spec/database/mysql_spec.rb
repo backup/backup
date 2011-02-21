@@ -125,13 +125,13 @@ describe Backup::Database::MySQL do
 
     it 'should run the mysqldump command and dump it to the specified path' do
       db.stubs(:mkdir)
-      db.expects(:run).with("#{db.mysqldump} > '#{TMP_PATH}/myapp/mysql/mydatabase.sql'")
+      db.expects(:run).with("#{db.mysqldump} > '#{Backup::TMP_PATH}/myapp/mysql/mydatabase.sql'")
       db.perform!
     end
 
     it 'should ensure the directory is available' do
       db.stubs(:run)
-      db.expects(:mkdir).with("#{TMP_PATH}/myapp/mysql")
+      db.expects(:mkdir).with("#{Backup::TMP_PATH}/myapp/mysql")
       db.perform!
     end
   end

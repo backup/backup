@@ -34,8 +34,8 @@ describe Backup::Archive do
 
   describe '#perform!' do
     it 'should tar all the specified paths' do
-      archive.expects(:mkdir).with(File.join(TMP_PATH, TRIGGER, 'archive'))
-      archive.expects(:run).with("tar -c '/home/rspecuser/somefile' '/home/rspecuser/logs/' '/home/rspecuser/dotfiles/' &> /dev/null > '#{File.join(TMP_PATH, TRIGGER, 'archive', "#{:dummy_archive}.tar")}'")
+      archive.expects(:mkdir).with(File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive'))
+      archive.expects(:run).with("tar -c '/home/rspecuser/somefile' '/home/rspecuser/logs/' '/home/rspecuser/dotfiles/' &> /dev/null > '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}'")
       archive.expects(:utility).with(:tar).returns(:tar)
       archive.perform!
     end

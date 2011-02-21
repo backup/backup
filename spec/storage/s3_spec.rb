@@ -71,8 +71,8 @@ describe Backup::Storage::S3 do
     it 'should transfer the provided file to the bucket' do
       file = mock("Backup::Storage::File")
       s3.expects(:file).returns(file)
-      s3.expects(:remote_file).returns("#{ TIME }.#{ TRIGGER }.tar")
-      connection.expects(:put_object).with('my-bucket', "backup/myapp/#{ TIME }.#{ TRIGGER }.tar", file)
+      s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      connection.expects(:put_object).with('my-bucket', "backup/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
       s3.transferred?.should == false
       s3.transfer!
       s3.transferred?.should == true
@@ -86,8 +86,8 @@ describe Backup::Storage::S3 do
     end
 
     it 'should remove the file from the bucket' do
-      s3.expects(:remote_file).returns("#{ TIME }.#{ TRIGGER }.tar")
-      connection.expects(:delete_object).with('my-bucket', "backup/myapp/#{ TIME }.#{ TRIGGER }.tar")
+      s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      connection.expects(:delete_object).with('my-bucket', "backup/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
       s3.remove!
     end
   end

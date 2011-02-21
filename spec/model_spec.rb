@@ -37,17 +37,17 @@ describe Backup::Model do
 
   it do
     Backup::Model.new('blah', 'blah') {}
-    Backup::Model.file.should == "#{ File.join(TMP_PATH, "#{ TIME }.#{ TRIGGER }.tar") }"
+    Backup::Model.file.should == "#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }"
   end
 
   it do
     Backup::Model.new('blah', 'blah') {}
-    File.basename(Backup::Model.file).should == "#{ TIME }.#{ TRIGGER }.tar"
+    File.basename(Backup::Model.file).should == "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"
   end
 
   it do
     Backup::Model.new('blah', 'blah') {}
-    Backup::Model.tmp_path.should == File.join(TMP_PATH, TRIGGER)
+    Backup::Model.tmp_path.should == File.join(Backup::TMP_PATH, Backup::TRIGGER)
   end
 
   it 'should create a new model with a trigger and label' do
@@ -58,7 +58,7 @@ describe Backup::Model do
 
   it 'should have the time logged in the object' do
     model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {}
-    model.time.should == TIME
+    model.time.should == Backup::TIME
   end
 
   describe '#extension' do
@@ -165,7 +165,7 @@ describe Backup::Model do
   describe '#package!' do
     it 'should package the folder' do
       model.expects(:utility).with(:tar).returns(:tar)
-      model.expects(:run).with("tar -c '#{ File.join(TMP_PATH, TRIGGER) }' &> /dev/null > '#{ File.join( TMP_PATH, "#{ TIME }.#{ TRIGGER }.tar" ) }'")
+      model.expects(:run).with("tar -c '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' &> /dev/null > '#{ File.join( Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar" ) }'")
       model.send(:package!)
     end
   end
@@ -173,7 +173,7 @@ describe Backup::Model do
   describe '#clean!' do
     it 'should remove the temporary files and folders that were created' do
       model.expects(:utility).with(:rm).returns(:rm)
-      model.expects(:run).with("rm -rf '#{ File.join(TMP_PATH, TRIGGER) }' '#{ File.join(TMP_PATH, "#{ TIME }.#{ TRIGGER }.tar") }'")
+      model.expects(:run).with("rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'")
       model.send(:clean!)
     end
   end

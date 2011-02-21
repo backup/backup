@@ -59,7 +59,7 @@ describe Backup::Compressor::Gzip do
     it do
       encryptor = Backup::Encryptor::OpenSSL.new
       encryptor.expects(:utility).returns(:openssl)
-      encryptor.expects(:run).with("openssl aes-256-cbc -in '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar") }' -out '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar.enc") }' -k ''")
+      encryptor.expects(:run).with("openssl aes-256-cbc -in '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar") }' -out '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar.enc") }' -k ''")
       encryptor.perform!
     end
 
@@ -70,7 +70,7 @@ describe Backup::Compressor::Gzip do
         e.base64   = true
       end
       encryptor.stubs(:utility).returns(:openssl)
-      encryptor.expects(:run).with("openssl aes-256-cbc -a -salt -in '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar") }' -out '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar.enc") }' -k 'my_secret_password'")
+      encryptor.expects(:run).with("openssl aes-256-cbc -a -salt -in '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar") }' -out '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar.enc") }' -k 'my_secret_password'")
       encryptor.perform!
     end
 
