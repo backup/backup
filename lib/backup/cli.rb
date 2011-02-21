@@ -20,6 +20,14 @@ module Backup
     end
 
     ##
+    # Wrapper for the FileUtils.rm_rf to remove files and folders
+    # through a ruby method. This helps with test coverage and
+    # improves readability
+    def rm(path)
+      FileUtils.rm_rf(path)
+    end
+
+    ##
     # Tries to find the full path of the specified utility. If the full
     # path is found, it'll return that. Otherwise it'll just return the
     # name of the utility.
