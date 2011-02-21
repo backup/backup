@@ -2,31 +2,19 @@
 
 require File.dirname(__FILE__) + '/spec_helper'
 
-##
-# Mocks - Database
-module Backup::Database
-  class TestDatabase
-    def initialize(&block); end
-  end
-end
-
-##
-# Mocks - Storage
-module Backup::Storage
-  class TestStorage
-    def initialize(&block); end
-  end
-end
-
-##
-# Mocks - Archive
-module Backup
-  class Archive
-    def initialize(name, &block); end
-  end
-end
-
 describe Backup::Model do
+
+  before do
+    class Backup::Database::TestDatabase
+      def initialize(&block); end
+    end
+    class Backup::Storage::TestStorage
+      def initialize(&block); end
+    end
+    class Backup::Archive
+      def initialize(name, &block); end
+    end
+  end
 
   let(:model) { Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {} }
 
