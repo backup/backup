@@ -42,11 +42,11 @@ describe Backup::Compressor::Gzip do
     end
 
     it do
-      encryptor.send(:base64).should == ['-a']
+      encryptor.send(:base64).should == ['-base64']
     end
 
     it do
-      encryptor.send(:options).should == "aes-256-cbc -a -salt"
+      encryptor.send(:options).should == "aes-256-cbc -base64 -salt"
     end
   end
 
@@ -70,7 +70,7 @@ describe Backup::Compressor::Gzip do
         e.base64   = true
       end
       encryptor.stubs(:utility).returns(:openssl)
-      encryptor.expects(:run).with("openssl aes-256-cbc -a -salt -in '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar") }' -out '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar.enc") }' -k 'my_secret_password'")
+      encryptor.expects(:run).with("openssl aes-256-cbc -base64 -salt -in '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar") }' -out '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar.enc") }' -k 'my_secret_password'")
       encryptor.perform!
     end
 

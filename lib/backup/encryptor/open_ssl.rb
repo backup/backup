@@ -50,7 +50,7 @@ module Backup
       # This option will make the encrypted output base64 encoded,
       # this makes the encrypted file readable using text editors
       def base64
-        return ['-a'] if @base64; []
+        return ['-base64'] if @base64; []
       end
 
       ##
