@@ -22,6 +22,10 @@ module Backup
     attr_accessor :archives
 
     ##
+    # The compressors attr_accessor holds an array of compressor objects
+    attr_accessor :compressors
+
+    ##
     # The storages attribute holds an array of storage objects
     attr_accessor :storages
 
@@ -34,13 +38,17 @@ module Backup
     # that have been instantiated. It returns the @all class variable,
     # which contains an array of all the models
     class << self
-      attr_accessor :all
+      attr_accessor :all, :extension
     end
 
     ##
     # Accessible through "Backup::Model.all", it stores an array of Backup::Model instances.
     # Everytime a new Backup::Model gets instantiated it gets pushed into this array
     @all = Array.new
+
+    ##
+    # Contains the current file extension (should change after each compression or encryption)
+    @extension = String.new
 
     ##
     # Takes a trigger, label and the configuration block and instantiates the model.
@@ -50,15 +58,17 @@ module Backup
     # to the @all class variable (Array) so it can be accessed by Backup::Finder
     # and any other location
     def initialize(trigger, label, &block)
-      @trigger   = trigger
-      @label     = label
-      @databases = Array.new
-      @archives  = Array.new
-      @storages  = Array.new
-      @time      = TIME
+      @trigger     = trigger
+      @label       = label
+      @databases   = Array.new
+      @archives    = Array.new
+      @compressors = Array.new
+      @storages    = Array.new
+      @time        = TIME
 
       instance_eval(&block)
       Backup::Model.all << self
+      Backup::Model.extension = 'tar'
     end
 
     ##
@@ -73,6 +83,13 @@ module Backup
     # during the backup process
     def archive(name, &block)
       @archives << Backup::Archive.new(name, &block)
+    end
+
+    ##
+    # Adds a compressor to the array of compressors to use
+    # during the backup process
+    def compress_with(name, &block)
+      @compressors << Backup::Compressor.const_get(name).new(&block)
     end
 
     ##
@@ -96,6 +113,9 @@ module Backup
     # After all the database dumps and archives are placed inside
     # the folder, it'll make a single .tar package (archive) out of it
     ##
+    # [Compression]
+    # Optionally compresses the packaged file with one of the available compressors
+    ##
     # [Storages]
     # Runs all (if any) storage objects to store the backups to remote locations
     ##
@@ -115,6 +135,10 @@ module Backup
         end
 
         package!
+
+        compressors.each do |compressor|
+          compressor.perform!
+        end
 
         storages.each do |storage|
           storage.perform!
@@ -137,7 +161,8 @@ module Backup
     ##
     # Cleans up the temporary files that were created after the backup process finishes
     def clean!
-      run("#{ utility(:rm) } -rf '#{ File.join(TMP_PATH, TRIGGER) }' '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar") }'*")
+      # run("#{ utility(:rm) } -rf '#{ File.join(TMP_PATH, TRIGGER) }' '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar") }'*")
+      run("#{ utility(:rm) } -rf '#{ File.join(TMP_PATH, TRIGGER) }' '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.#{Backup::Model.extension}") }'")
     end
 
   end

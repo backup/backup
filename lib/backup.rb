@@ -9,6 +9,7 @@ LIBRARY_PATH       = File.join(File.dirname(__FILE__), 'backup')
 CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
 STORAGE_PATH       = File.join(LIBRARY_PATH, 'storage')
 DATABASE_PATH      = File.join(LIBRARY_PATH, 'database')
+COMPRESSOR_PATH    = File.join(LIBRARY_PATH, 'compressor')
 TMP_PATH           = File.join(ENV['HOME'], 'tmp', 'backup')
 
 ##
@@ -42,6 +43,12 @@ module Backup
   # Autoload Backup database files
   module Database
     autoload :MySQL, File.join(DATABASE_PATH, 'mysql')
+  end
+
+  ##
+  # Autoload compressor files
+  module Compressor
+    autoload :Gzip, File.join(COMPRESSOR_PATH, 'gzip')
   end
 
 end
