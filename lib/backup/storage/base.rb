@@ -22,7 +22,7 @@ module Backup
       ##
       # Returns the local archive filename
       def local_file
-        @local_file ||= File.basename(Dir[File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar*")][0])
+        @local_file ||= File.basename(Backup::Model.file)
       end
 
       ##
