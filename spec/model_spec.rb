@@ -24,6 +24,26 @@ describe Backup::Model do
 
   let(:model) { Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {} }
 
+  it do
+    Backup::Model.new('blah', 'blah') {}
+    Backup::Model.extension.should == 'tar'
+  end
+
+  it do
+    Backup::Model.new('blah', 'blah') {}
+    Backup::Model.file.should == "#{ File.join(TMP_PATH, "#{ TIME }.#{ TRIGGER }.tar") }"
+  end
+
+  it do
+    Backup::Model.new('blah', 'blah') {}
+    File.basename(Backup::Model.file).should == "#{ TIME }.#{ TRIGGER }.tar"
+  end
+
+  it do
+    Backup::Model.new('blah', 'blah') {}
+    Backup::Model.tmp_path.should == File.join(TMP_PATH, TRIGGER)
+  end
+
   it 'should create a new model with a trigger and label' do
     model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {}
     model.trigger.should == 'mysql-s3'

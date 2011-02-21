@@ -33,12 +33,32 @@ module Backup
     # The time when the backup initiated (in format: 2011.02.20.03.29.59)
     attr_accessor :time
 
-    ##
-    # The Backup::Model.all class method keeps track of all the models
-    # that have been instantiated. It returns the @all class variable,
-    # which contains an array of all the models
     class << self
-      attr_accessor :all, :extension
+      ##
+      # The Backup::Model.all class method keeps track of all the models
+      # that have been instantiated. It returns the @all class variable,
+      # which contains an array of all the models
+      attr_accessor :all
+
+      ##
+      # Contains the current file extension (this changes from time to time after a file
+      # gets compressed or encrypted so we can keep track of the correct file when new
+      # extensions get appended to the current file name)
+      attr_accessor :extension
+
+      ##
+      # Returns the full path to the current file (including the current extension).
+      # To just return the filename and extension without the path, use File.basename(Backup::Model.file)
+      def file
+        File.join(TMP_PATH, "#{ TIME }.#{ TRIGGER }.#{ Backup::Model.extension }")
+      end
+
+      ##
+      # Returns the temporary trigger path of the current model
+      # e.g. /Users/Michael/tmp/backup/my_trigger
+      def tmp_path
+        File.join(TMP_PATH, TRIGGER)
+      end
     end
 
     ##
