@@ -9,16 +9,14 @@ describe Backup::Compressor::Gzip do
     Backup::Model.extension = 'tar'
   end
 
-  it 'should have no additional options' do
-    compressor.additional_options.should == []
-  end
-
-  it 'should have 2 options' do
-    compressor = Backup::Compressor::Gzip.new do |c|
-      c.additional_options = ['--fast', '--best']
+  describe 'the options' do
+    it do
+      compressor.send(:best).should == []
     end
-
-    compressor.additional_options.should == ['--fast', '--best']
+    
+    it do
+      compressor.send(:fast).should == []
+    end
   end
 
   describe '#perform!' do
@@ -28,13 +26,14 @@ describe Backup::Compressor::Gzip do
       compressor.perform!
     end
 
-    it 'should perform the compression with additional options' do
+    it 'should perform the compression with the --best and --fast options' do
       compressor = Backup::Compressor::Gzip.new do |c|
-        c.additional_options = ['--fast', '--best']
+        c.best = true
+        c.fast = true
       end
 
       compressor.stubs(:utility).returns(:gzip)
-      compressor.expects(:run).with("gzip --fast --best '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'")
+      compressor.expects(:run).with("gzip --best --fast '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'")
       compressor.perform!
     end
 

@@ -6,14 +6,21 @@ module Backup
       include Backup::CLI
 
       ##
-      # Contains additional options for Backup::Compressor::Gzip
-      attr_accessor :additional_options
+      # Tells Backup::Compressor::Gzip to compress
+      # better rather than faster when set to true
+      attr_writer :best
+
+      ##
+      # Tells Backup::Compressor::Gzip to compress
+      # faster rather than better when set to true
+      attr_writer :fast
 
       ##
       # Creates a new instance of Backup::Compressor::Gzip and
-      # configures the (optional) additional_options attribute
+      # configures it to either compress faster or better
       def initialize(&block)
-        @additional_options = Array.new
+        @best = false
+        @fast = false
 
         instance_eval(&block) if block_given?
       end
@@ -21,18 +28,32 @@ module Backup
       ##
       # Performs the compression of the packages backup file
       def perform!
-        run("#{ utility(:gzip) } #{ options } '#{ File.join(TMP_PATH, "#{ TIME }.#{ TRIGGER }.#{ Backup::Model.extension }") }'")
+        run("#{ utility(:gzip) } #{ options } '#{ Backup::Model.file }'")
         Backup::Model.extension += '.gz'
       end
 
     private
 
       ##
-      # Generates the options (String) based on the additional_options (Array) parameters
-      # so that it works with the gzip command
+      # Combines the provided options and returns a gzip options string
       def options
-        additional_options.join("\s")
+        (best + fast).join("\s")
       end
+
+      ##
+      # Returns the gzip option syntax for compressing
+      # better when @best is set to true
+      def best
+        return ['--best'] if @best; []
+      end
+
+      ##
+      # Returns the gzip option syntax for compressing
+      # faster when @fast is set to true
+      def fast
+        return ['--fast'] if @fast; []
+      end
+
     end
   end
 end
