@@ -106,6 +106,10 @@ module Backup
           database.perform!
         end
 
+        archives.each do |archive|
+          archive.perform!
+        end
+
         package!
 
         storages.each do |storage|
