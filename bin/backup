@@ -35,6 +35,8 @@ class BackupCLI < Thor
     Object.send(:const_set, :TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
 
     model = Backup::Finder.new(options[:trigger], options[:config]).find
+
+    puts "Performing backup for #{model.label}!"
     model.perform!
   end
 
