@@ -88,6 +88,10 @@ module Backup
     # [Databases]
     # Runs all (if any) database objects to dump the databases
     ##
+    # [Archives]
+    # Runs all (if any) archive objects to package all their
+    # paths in to a single tar file and places it in the backup folder
+    ##
     # [Package]
     # After all the database dumps and archives are placed inside
     # the folder, it'll make a single .tar package (archive) out of it
