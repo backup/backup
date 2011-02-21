@@ -65,7 +65,11 @@ module Backup
       # Transfers the archived file to the specified Amazon S3 bucket
       def transfer!
         begin
-          connection.put_object(bucket, File.join(remote_path, remote_file), file)
+          connection.put_object(
+            bucket,
+            File.join(remote_path, remote_file),
+            File.read(File.join(local_path, local_file))
+          )
           @transferred = true
         rescue Excon::Errors::SocketError
           puts "\nAn error occurred while trying to transfer the backup."

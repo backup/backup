@@ -20,27 +20,21 @@ module Backup
       end
 
       ##
-      # Returns the local archive filename
-      def local_file
-        @local_file ||= File.basename(Backup::Model.file)
-      end
-
-      ##
       # This is the remote path to where the backup files will be stored
       def remote_path
         File.join('backup', TRIGGER, '/')
       end
 
       ##
-      # Returns the name of the file that's stored on the remote location
-      def remote_file
-        local_file
+      # Returns the local archive filename
+      def local_file
+        @local_file ||= File.basename(Backup::Model.file)
       end
 
       ##
-      # Returns the File object of the local archived file
-      def file
-        File.read(File.join(local_path, local_file))
+      # Returns the name of the file that's stored on the remote location
+      def remote_file
+        @remote_file ||= local_file
       end
 
       ##
