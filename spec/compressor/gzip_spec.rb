@@ -13,7 +13,7 @@ describe Backup::Compressor::Gzip do
     it do
       compressor.send(:best).should == []
     end
-    
+
     it do
       compressor.send(:fast).should == []
     end
