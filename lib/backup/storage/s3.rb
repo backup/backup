@@ -38,7 +38,7 @@ module Backup
           self.send("#{attribute}=", Backup::Configuration::S3.send(attribute))
         end
 
-        instance_eval(&block)
+        instance_eval(&block) if block_given?
         @connected   = false
         @transferred = false
         @time        = TIME
