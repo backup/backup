@@ -32,6 +32,7 @@ module Backup
       # Performs the compression of the packages backup file
       def perform!
         run "#{ utility(:openssl) } #{ options } -in '#{ Backup::Model.file }' -out '#{ Backup::Model.file }.enc' -k '#{ password }'"
+        rm Backup::Model.file
         Backup::Model.extension += '.enc'
       end
 

@@ -86,5 +86,14 @@ describe Backup::Compressor::Gzip do
       encryptor.stubs(:run)
       encryptor.perform!
     end
+
+    context "after encrypting the file (which creates a new file)" do
+      it 'should remove the non-encrypted file' do
+        encryptor.stubs(:run)
+        encryptor.stubs(:utility)
+        encryptor.expects(:rm).with(Backup::Model.file)
+        encryptor.perform!
+      end
+    end
   end
 end
