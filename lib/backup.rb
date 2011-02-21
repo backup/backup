@@ -10,6 +10,7 @@ CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
 STORAGE_PATH       = File.join(LIBRARY_PATH, 'storage')
 DATABASE_PATH      = File.join(LIBRARY_PATH, 'database')
 COMPRESSOR_PATH    = File.join(LIBRARY_PATH, 'compressor')
+ENCRYPTOR_PATH     = File.join(LIBRARY_PATH, 'encryptor')
 TMP_PATH           = File.join(ENV['HOME'], 'tmp', 'backup')
 
 ##
@@ -49,6 +50,12 @@ module Backup
   # Autoload compressor files
   module Compressor
     autoload :Gzip, File.join(COMPRESSOR_PATH, 'gzip')
+  end
+
+  ##
+  # Autoload encryptor files
+  module Encryptor
+    autoload :OpenSSL, File.join(ENCRYPTOR_PATH, 'open_ssl')
   end
 
 end

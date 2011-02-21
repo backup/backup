@@ -20,6 +20,12 @@ describe Backup::Model do
     class Backup::Compressor::SevenZip
       def initialize(&block); end
     end
+    class Backup::Encryptor::OpenSSL
+      def initialize(&block); end
+    end
+    class Backup::Encryptor::GPG
+      def initialize(&block); end
+    end
   end
 
   let(:model) { Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {} }
@@ -134,6 +140,25 @@ describe Backup::Model do
       end
 
       model.compressors.count.should == 2
+    end
+  end
+
+  describe '#encrypt_with' do
+    it 'should add a encryptor to the array of encryptors to use' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        encrypt_with('OpenSSL')
+      end
+
+      model.encryptors.count.should == 1
+    end
+
+    it 'should add a encryptor to the array of encryptors to use' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        encrypt_with('OpenSSL')
+        encrypt_with('GPG')
+      end
+
+      model.encryptors.count.should == 2
     end
   end
 

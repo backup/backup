@@ -22,6 +22,10 @@ module Backup
     attr_accessor :archives
 
     ##
+    # The encryptors attr_accessor holds an array of encryptor objects
+    attr_accessor :encryptors
+
+    ##
     # The compressors attr_accessor holds an array of compressor objects
     attr_accessor :compressors
 
@@ -82,6 +86,7 @@ module Backup
       @label       = label
       @databases   = Array.new
       @archives    = Array.new
+      @encryptors  = Array.new
       @compressors = Array.new
       @storages    = Array.new
       @time        = TIME
@@ -103,6 +108,13 @@ module Backup
     # during the backup process
     def archive(name, &block)
       @archives << Backup::Archive.new(name, &block)
+    end
+
+    ##
+    # Adds an encryptor to the array of encryptors to use
+    # during the backup process
+    def encrypt_with(name, &block)
+      @encryptors << Backup::Encryptor.const_get(name).new(&block)
     end
 
     ##
@@ -133,8 +145,11 @@ module Backup
     # After all the database dumps and archives are placed inside
     # the folder, it'll make a single .tar package (archive) out of it
     ##
+    # [Encryption]
+    # Optionally encrypts the packaged file with one or more encryptors
+    ##
     # [Compression]
-    # Optionally compresses the packaged file with one of the available compressors
+    # Optionally compresses the packaged file with one or more compressors
     ##
     # [Storages]
     # Runs all (if any) storage objects to store the backups to remote locations
@@ -155,6 +170,10 @@ module Backup
         end
 
         package!
+
+        encryptors.each do |encryptor|
+          encryptor.perform!
+        end
 
         compressors.each do |compressor|
           compressor.perform!
