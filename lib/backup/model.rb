@@ -127,7 +127,7 @@ module Backup
     # these files will be bundled in to a .tar archive (uncompressed) so it
     # becomes a single (transferrable) packaged file.
     def package!
-      run("#{ utility(:tar) } -c '#{ File.join(TMP_PATH, TRIGGER) }' > '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar") }'")
+      run("#{ utility(:tar) } -c '#{ File.join(TMP_PATH, TRIGGER) }' &> /dev/null > '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar") }'")
     end
 
     ##

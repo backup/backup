@@ -36,8 +36,8 @@ module Backup
     # Archives all the provided paths in to a single .tar file
     # and places that .tar file in the folder which later will be packaged
     def perform!
-      mkdir archive_path
-      run("#{ utility(:tar) } -c #{ paths_to_package } > '#{ File.join(archive_path, "#{name}.tar") }'")
+      mkdir(archive_path)
+      run("#{ utility(:tar) } -c #{ paths_to_package } &> /dev/null > '#{ File.join(archive_path, "#{name}.tar") }'")
     end
 
   private

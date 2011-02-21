@@ -89,7 +89,7 @@ describe Backup::Model do
   describe '#package!' do
     it 'should package the folder' do
       model.expects(:utility).with(:tar).returns(:tar)
-      model.expects(:run).with("tar -c '#{ File.join(TMP_PATH, TRIGGER) }' > '#{ File.join( TMP_PATH, "#{ TIME }.#{ TRIGGER }.tar" ) }'")
+      model.expects(:run).with("tar -c '#{ File.join(TMP_PATH, TRIGGER) }' &> /dev/null > '#{ File.join( TMP_PATH, "#{ TIME }.#{ TRIGGER }.tar" ) }'")
       model.send(:package!)
     end
   end
