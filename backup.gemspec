@@ -27,6 +27,7 @@ Gem::Specification.new do |gem|
 
   ##
   # Production gem dependencies
-  gem.add_dependency 'fog', ['~> 0.5.3']
+  gem.add_dependency 'thor', ['~> 0.14.6']
+  gem.add_dependency 'fog',  ['~> 0.5.3']
 
 end

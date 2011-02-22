@@ -3,6 +3,7 @@ PATH
   specs:
     backup (3.0.0)
       fog (~> 0.5.3)
+      thor (~> 0.14.6)
 
 GEM
   remote: http://rubygems.org/
@@ -44,6 +45,7 @@ GEM
     rspec-mocks (2.5.0)
     ruby-hmac (0.4.0)
     ruby-progressbar (0.0.9)
+    thor (0.14.6)
     watchr (0.7)
 
 PLATFORMS
@@ -51,7 +53,6 @@ PLATFORMS
 
 DEPENDENCIES
   backup!
-  fog (~> 0.5.3)
   fuubar
   infinity_test
   mocha
