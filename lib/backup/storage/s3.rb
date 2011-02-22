@@ -22,11 +22,6 @@ module Backup
       attr_accessor :region
 
       ##
-      # Determines whether a connection has been establised to Amazon S3
-      attr_accessor :connected
-      alias :connected? :connected
-
-      ##
       # Creates a new instance of the Amazon S3 storage object
       # First it sets the defaults (if any exist) and then evaluates
       # the configuration block which may overwrite these defaults
@@ -39,7 +34,6 @@ module Backup
         end
 
         instance_eval(&block) if block_given?
-        @connected   = false
         @transferred = false
         @time        = TIME
       end
@@ -51,49 +45,51 @@ module Backup
       end
 
       ##
-      # Establishes a connection to Amazon S3 and returns the Fog object
-      def connection
-        @connection ||= Fog::Storage.new(
-          :provider               => provider,
-          :aws_access_key_id      => access_key_id,
-          :aws_secret_access_key  => secret_access_key,
-          :region                 => region
-        )
-      end
-
-      ##
-      # Transfers the archived file to the specified Amazon S3 bucket
-      def transfer!
-        begin
-          connection.put_object(
-            bucket,
-            File.join(remote_path, remote_file),
-            File.read(File.join(local_path, local_file))
-          )
-          @transferred = true
-        rescue Excon::Errors::SocketError
-          puts "\nAn error occurred while trying to transfer the backup."
-          puts "Make sure the bucket exists, and that you specified the correct bucket region.\n\n"
-          puts "The available regions are:\n\n"
-          puts %w[eu-west-1 us-east-1 ap-southeast-1 us-west-1].map{ |region| "\s\s* #{region}" }.join("\n")
-          exit
-        end
-      end
-
-      ##
-      # Removes the transferred archive file from the Amazon S3 bucket
-      def remove!
-        begin
-          connection.delete_object(bucket, File.join(remote_path, remote_file))
-        rescue Excon::Errors::SocketError
-        end
-      end
-
-      ##
       # Performs the backup transfer
       def perform!
         transfer!
       end
+
+  private
+  
+    ##
+    # Establishes a connection to Amazon S3 and returns the Fog object
+    def connection
+      @connection ||= Fog::Storage.new(
+        :provider               => provider,
+        :aws_access_key_id      => access_key_id,
+        :aws_secret_access_key  => secret_access_key,
+        :region                 => region
+      )
+    end
+
+    ##
+    # Transfers the archived file to the specified Amazon S3 bucket
+    def transfer!
+      begin
+        connection.put_object(
+          bucket,
+          File.join(remote_path, remote_file),
+          File.read(File.join(local_path, local_file))
+        )
+        @transferred = true
+      rescue Excon::Errors::SocketError
+        puts "\nAn error occurred while trying to transfer the backup."
+        puts "Make sure the bucket exists, and that you specified the correct bucket region.\n\n"
+        puts "The available regions are:\n\n"
+        puts %w[eu-west-1 us-east-1 ap-southeast-1 us-west-1].map{ |region| "\s\s* #{region}" }.join("\n")
+        exit
+      end
+    end
+
+    ##
+    # Removes the transferred archive file from the Amazon S3 bucket
+    def remove!
+      begin
+        connection.delete_object(bucket, File.join(remote_path, remote_file))
+      rescue Excon::Errors::SocketError
+      end
+    end
 
     end
   end

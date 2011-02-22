@@ -52,7 +52,7 @@ describe Backup::Storage::S3 do
         :region                 => 'us-east-1'
       })
 
-      s3.connection
+      s3.send(:connection)
     end
   end
 
@@ -75,7 +75,7 @@ describe Backup::Storage::S3 do
       s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
       connection.expects(:put_object).with('my-bucket', "backup/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
       s3.transferred?.should == false
-      s3.transfer!
+      s3.send(:transfer!)
       s3.transferred?.should == true
     end
   end
@@ -89,7 +89,7 @@ describe Backup::Storage::S3 do
     it 'should remove the file from the bucket' do
       s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
       connection.expects(:delete_object).with('my-bucket', "backup/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
-      s3.remove!
+      s3.send(:remove!)
     end
   end
 
