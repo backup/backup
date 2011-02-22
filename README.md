@@ -8,6 +8,7 @@ Backup 3 - Coming Soon!
 I am currently hard at work developing Backup 3.0. This is a __100% rewrite__ of the gem. There are a bunch of goals I've set for this next big release, a few of which are:
 
 * Great test coverage __(100% TDD)__
+* Tested against __Ruby 1.8.7__ and __Ruby 1.9.2__
 * Greatly __reduce__ the amount of __dependencies__ and use better dependencies
 * Drop SQL-based backup recording (so no more SQLite nor ActiveRecord ORM)
 * Recording will be done using pure YAML (no dependency)
