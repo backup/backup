@@ -20,7 +20,6 @@ require File.expand_path("../../lib/backup", __FILE__)
 ##
 # Build the Backup Command Line Interface using Thor
 class BackupCLI < Thor
-
   ##
   # Aliases
   map '-v' => :version
@@ -33,9 +32,7 @@ class BackupCLI < Thor
   def perform
     Backup.send(:const_set, :TRIGGER, options[:trigger])
     Backup.send(:const_set, :TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
-
     model = Backup::Finder.new(options[:trigger], options[:config]).find
-
     puts "Performing backup for #{model.label}!"
     model.perform!
   end
@@ -44,7 +41,6 @@ class BackupCLI < Thor
   def version
     puts "Backup #{Backup::Version.current}"
   end
-
 end
 
 ##
