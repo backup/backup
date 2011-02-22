@@ -20,27 +20,55 @@ require File.expand_path("../../lib/backup", __FILE__)
 ##
 # Build the Backup Command Line Interface using Thor
 class BackupCLI < Thor
-  ##
-  # Aliases
-  map '-v' => :version
 
   ##
-  # Commands
-  method_option :trigger, :type => :string, :aliases => '-t', :required => true
-  method_option :config,  :type => :string, :aliases => '-c'
+  # [Perform]
+  # Performs the backup process. The only required option is the --trigger [-t].
+  # If the other options (--config_file, --data_path, --tmp_path) aren't specified
+  # it'll fallback to the (good) defaults
+  method_option :trigger,     :type => :string, :aliases => '-t', :required => true
+  method_option :config_file, :type => :string, :aliases => '-c'
+  method_option :data_path,   :type => :string, :aliases => '-d'
+  method_option :tmp_path,    :type => :string
   desc 'perform', 'Performs the backup of the specified trigger'
   def perform
     Backup.send(:const_set, :TRIGGER, options[:trigger])
     Backup.send(:const_set, :TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
-    model = Backup::Finder.new(options[:trigger], options[:config]).find
+
+    if options[:config_file]
+      Backup.send(:remove_const, :CONFIG_FILE)
+      Backup.send(:const_set, :CONFIG_FILE, options[:config_file])
+    end
+
+    if options[:data_path]
+      Backup.send(:remove_const, :DATA_PATH)
+      Backup.send(:const_set, :DATA_PATH, options[:data_path])
+    end
+
+    if options[:tmp_path]
+      Backup.send(:remove_const, :TMP_PATH)
+      Backup.send(:const_set, :TMP_PATH, options[:tmp_path])
+    end
+
+    [Backup::TMP_PATH, Backup::DATA_PATH].each do |path|
+      FileUtils.mkdir_p(path)
+    end
+
+    model = Backup::Finder.new(options[:trigger], Backup::CONFIG_FILE).find
+
     puts "Performing backup for #{model.label}!"
     model.perform!
   end
 
+  ##
+  # [Version]
+  # Returns the current version of the Backup gem
+  map '-v' => :version
   desc 'version', 'Display installed Backup version'
   def version
     puts "Backup #{Backup::Version.current}"
   end
+
 end
 
 ##

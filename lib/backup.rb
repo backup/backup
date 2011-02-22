@@ -8,14 +8,19 @@ require 'yaml'
 module Backup
 
   ##
-  # Backup's directory path constants
+  # Backup's internal paths
   LIBRARY_PATH       = File.join(File.dirname(__FILE__), 'backup')
   CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
   STORAGE_PATH       = File.join(LIBRARY_PATH, 'storage')
   DATABASE_PATH      = File.join(LIBRARY_PATH, 'database')
   COMPRESSOR_PATH    = File.join(LIBRARY_PATH, 'compressor')
   ENCRYPTOR_PATH     = File.join(LIBRARY_PATH, 'encryptor')
-  TMP_PATH           = File.join(ENV['HOME'], 'tmp', 'backup')
+
+  ##
+  # Backup's Environment paths
+  TMP_PATH           = File.join(ENV['HOME'], 'Backup', '.tmp')
+  DATA_PATH          = File.join(ENV['HOME'], 'Backup', 'data')
+  CONFIG_FILE        = File.join(ENV['HOME'], 'Backup', 'config.rb')
 
   ##
   # Autoload Backup base files
