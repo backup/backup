@@ -53,7 +53,9 @@ PLATFORMS
 
 DEPENDENCIES
   backup!
+  fog (~> 0.5.3)
   fuubar
   infinity_test
   mocha
   rspec
+  thor (~> 0.14.6)
