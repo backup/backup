@@ -5,7 +5,19 @@ module Backup
     module Configuration
       class S3 < Base
         class << self
-          attr_accessor :access_key_id, :secret_access_key, :region, :bucket
+
+          ##
+          # Amazon Simple Storage Service (S3) Credentials
+          attr_accessor :access_key_id, :secret_access_key
+
+          ##
+          # Amazon S3 bucket name
+          attr_accessor :bucket
+
+          ##
+          # Region of the specified S3 bucket
+          attr_accessor :region
+
         end
       end
     end
