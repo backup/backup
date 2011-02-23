@@ -50,11 +50,15 @@ class BackupCLI < Thor
       Backup.send(:const_set, :TMP_PATH, options[:tmp_path])
     end
 
-    [Backup::TMP_PATH, Backup::DATA_PATH].each do |path|
+    Array.new([
+      Backup::TMP_PATH,
+      Backup::DATA_PATH,
+      File.join(Backup::DATA_PATH, Backup::TRIGGER)
+    ]).each do |path|
       FileUtils.mkdir_p(path)
     end
 
-    model = Backup::Finder.new(options[:trigger], Backup::CONFIG_FILE).find
+    model = Backup::Finder.new(Backup::TRIGGER, Backup::CONFIG_FILE).find
 
     puts "Performing backup for #{model.label}!"
     model.perform!
