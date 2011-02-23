@@ -53,7 +53,7 @@ describe Backup::Compressor::Gzip do
   describe '#perform!' do
     let(:encryptor) { Backup::Encryptor::OpenSSL.new }
     before do
-      Backup::Model.new('blah', 'blah') {}
+      Backup::Model.extension = 'tar'
     end
 
     it do

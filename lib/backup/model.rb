@@ -79,7 +79,7 @@ module Backup
 
     ##
     # Contains the current file extension (should change after each compression or encryption)
-    @extension = String.new
+    @extension = 'tar'
 
     ##
     # Takes a trigger, label and the configuration block and instantiates the model.
@@ -100,7 +100,6 @@ module Backup
 
       instance_eval(&block)
       Backup::Model.all << self
-      Backup::Model.extension = 'tar'
     end
 
     ##

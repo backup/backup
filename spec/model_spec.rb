@@ -31,6 +31,19 @@ describe Backup::Model do
   let(:model) { Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {} }
 
   it do
+    Backup::Model.extension.should == 'tar'
+  end
+
+  it do
+    Backup::Model.new('foo', 'bar') {}
+    Backup::Model.extension.should == 'tar'
+  end
+
+  before do
+    Backup::Model.extension = 'tar'
+  end
+
+  it do
     Backup::Model.new('blah', 'blah') {}
     Backup::Model.extension.should == 'tar'
   end
