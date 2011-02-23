@@ -2,7 +2,9 @@
 
 module Backup
   module Configuration
-    class S3 < Base
+    class S3
+      extend Backup::Configuration::Helpers
+
       class << self
         attr_accessor :access_key_id, :secret_access_key, :region, :bucket
       end

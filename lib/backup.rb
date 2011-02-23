@@ -48,9 +48,9 @@ module Backup
   ##
   # Autoload Backup configuration files
   module Configuration
-    autoload :Base, File.join(CONFIGURATION_PATH, 'base')
-    autoload :S3,   File.join(CONFIGURATION_PATH, 's3')
-    autoload :Mail, File.join(CONFIGURATION_PATH, 'mail')
+    autoload :Helpers, File.join(CONFIGURATION_PATH, 'helpers')
+    autoload :S3,      File.join(CONFIGURATION_PATH, 's3')
+    autoload :Mail,    File.join(CONFIGURATION_PATH, 'mail')
   end
 
   ##

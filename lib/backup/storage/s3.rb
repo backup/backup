@@ -28,10 +28,7 @@ module Backup
       # Currently available regions:
       #   eu-west-1, us-east-1, ap-southeast-1, us-west-1
       def initialize(&block)
-        %w[access_key_id secret_access_key bucket region].each do |attribute|
-          self.send("#{attribute}=", Backup::Configuration::S3.send(attribute))
-        end
-
+        load_defaults!
         instance_eval(&block) if block_given?
         @time = TIME
       end
