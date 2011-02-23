@@ -1,8 +1,7 @@
 # encoding: utf-8
 
 ##
-# Only load the Fog gem when the
-# Backup::Storage::S3 class is loaded
+# Only load the Fog gem when the Backup::Storage::S3 class is loaded
 require 'fog'
 
 module Backup
@@ -34,8 +33,7 @@ module Backup
         end
 
         instance_eval(&block) if block_given?
-        @transferred = false
-        @time        = TIME
+        @time = TIME
       end
 
       ##
@@ -48,14 +46,19 @@ module Backup
       # Performs the backup transfer
       def perform!
         transfer!
+        cycle!
       end
 
     private
 
       ##
-      # Establishes a connection to Amazon S3 and returns the Fog object
+      # Establishes a connection to Amazon S3 and returns the Fog object.
+      # Not doing any instance variable caching because this object gets persisted in YAML
+      # format to a file and will issues. This, however has no impact on performance since it only
+      # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
+      # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
-        @connection ||= Fog::Storage.new(
+        Fog::Storage.new(
           :provider               => provider,
           :aws_access_key_id      => access_key_id,
           :aws_secret_access_key  => secret_access_key,
@@ -72,7 +75,6 @@ module Backup
             File.join(remote_path, remote_file),
             File.read(File.join(local_path, local_file))
           )
-          @transferred = true
         rescue Excon::Errors::SocketError
           puts "\nAn error occurred while trying to transfer the backup."
           puts "Make sure the bucket exists, and that you specified the correct bucket region.\n\n"

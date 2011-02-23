@@ -41,8 +41,9 @@ module Backup
   ##
   # Autoload Backup storage files
   module Storage
-    autoload :Base, File.join(STORAGE_PATH, 'base')
-    autoload :S3,   File.join(STORAGE_PATH, 's3')
+    autoload :Base,   File.join(STORAGE_PATH, 'base')
+    autoload :Object, File.join(STORAGE_PATH, 'object')
+    autoload :S3,     File.join(STORAGE_PATH, 's3')
   end
 
   ##

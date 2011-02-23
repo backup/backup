@@ -13,6 +13,7 @@ describe Backup::Storage::S3 do
       s3.secret_access_key  = 'my_secret_access_key'
       s3.region             = 'us-east-1'
       s3.bucket             = 'my-bucket'
+      s3.keep               = 20
     end
   end
 
@@ -25,6 +26,7 @@ describe Backup::Storage::S3 do
     s3.secret_access_key.should  == 'my_secret_access_key'
     s3.region.should             == 'us-east-1'
     s3.bucket.should             == 'my-bucket'
+    s3.keep.should               == 20
   end
 
   it 'should use the defaults if a particular attribute has not been defined' do
@@ -74,9 +76,7 @@ describe Backup::Storage::S3 do
       File.expects(:read).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
       s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
       connection.expects(:put_object).with('my-bucket', "backup/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
-      s3.transferred?.should == false
       s3.send(:transfer!)
-      s3.transferred?.should == true
     end
   end
 
@@ -94,8 +94,9 @@ describe Backup::Storage::S3 do
   end
 
   describe '#perform' do
-    it 'should invoke create_bucket! and transfer!' do
+    it 'should invoke transfer! and cycle!' do
       s3.expects(:transfer!)
+      s3.expects(:cycle!)
       s3.perform!
     end
   end
