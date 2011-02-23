@@ -4,8 +4,23 @@ require 'fileutils'
 require 'yaml'
 
 ##
-# Backup Ruby Gem
+# The Backup Ruby Gem
 module Backup
+
+  ##
+  # List the available database, storage, compressor, encryptor and notifier constants.
+  # These are used to dynamically define these constants as classes inside Backup::Finder
+  # to provide a nicer configuration file DSL syntax to the users. Adding existing constants
+  # to the arrays below will enable the user to use a constant instead of a string.
+  # Example, instead of:
+  #  database "MySQL" do |mysql|
+  # You can do:
+  #  database MySQL do |mysql|
+  DATABASES   = ['MySQL']
+  STORAGES    = ['S3']
+  COMPRESSORS = ['Gzip']
+  ENCRYPTORS  = ['OpenSSL']
+  NOTIFIERS   = []
 
   ##
   # Backup's internal paths
@@ -62,6 +77,13 @@ module Backup
   # Autoload encryptor files
   module Encryptor
     autoload :OpenSSL, File.join(ENCRYPTOR_PATH, 'open_ssl')
+  end
+
+  ##
+  # Dynamically defines all the available database, storage, compressor, encryptor and notifier
+  # classes inside Backup::Finder to improve the DSL for the configuration file
+  (DATABASES + STORAGES + COMPRESSORS + ENCRYPTORS + NOTIFIERS).each do |constant|
+    Backup::Finder.const_set(constant, Class.new)
   end
 
 end

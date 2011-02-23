@@ -5,13 +5,6 @@ module Backup
     include Backup::CLI
 
     ##
-    # List the available database, storage, compressor and encryptor constants
-    DATABASES   = ['MySQL']
-    STORAGES    = ['S3']
-    COMPRESSORS = ['Gzip']
-    ENCRYPTORS  = ['OpenSSL']
-
-    ##
     # The trigger is used as an identifier for
     # initializing the backup process
     attr_accessor :trigger
@@ -143,13 +136,6 @@ module Backup
       @storages << Backup::Storage.const_get(
         last_constant(storage)
       ).new(&block)
-    end
-
-    ##
-    # Dynamically defines all the available database, storage, compressor and encryptors
-    # classes inside Backup::Model to improve the DSL for the configuration file
-    (DATABASES + STORAGES + COMPRESSORS + ENCRYPTORS).each do |constant|
-      Backup::Model.const_set(constant, Class.new)
     end
 
     ##
