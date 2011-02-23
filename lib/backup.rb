@@ -30,6 +30,7 @@ module Backup
   DATABASE_PATH      = File.join(LIBRARY_PATH, 'database')
   COMPRESSOR_PATH    = File.join(LIBRARY_PATH, 'compressor')
   ENCRYPTOR_PATH     = File.join(LIBRARY_PATH, 'encryptor')
+  NOTIFIER_PATH      = File.join(LIBRARY_PATH, 'notifier')
 
   ##
   # Backup's Environment paths
@@ -48,9 +49,8 @@ module Backup
   ##
   # Autoload Backup configuration files
   module Configuration
-    autoload :Helpers, File.join(CONFIGURATION_PATH, 'helpers')
-    autoload :S3,      File.join(CONFIGURATION_PATH, 's3')
-    autoload :Mail,    File.join(CONFIGURATION_PATH, 'mail')
+    autoload :Base,     File.join(CONFIGURATION_PATH, 'base')
+    autoload :Helpers,  File.join(CONFIGURATION_PATH, 'helpers')
   end
 
   ##
@@ -59,6 +59,11 @@ module Backup
     autoload :Base,   File.join(STORAGE_PATH, 'base')
     autoload :Object, File.join(STORAGE_PATH, 'object')
     autoload :S3,     File.join(STORAGE_PATH, 's3')
+
+    module Configuration
+      autoload :Base, File.join(STORAGE_PATH, 'configuration', 'base')
+      autoload :S3,   File.join(STORAGE_PATH, 'configuration', 's3')
+    end
   end
 
   ##
@@ -77,6 +82,18 @@ module Backup
   # Autoload encryptor files
   module Encryptor
     autoload :OpenSSL, File.join(ENCRYPTOR_PATH, 'open_ssl')
+  end
+
+  ##
+  # Autoload notification files
+  module Notifier
+    autoload :Base, File.join(NOTIFIER_PATH, 'base')
+    autoload :Mail, File.join(NOTIFIER_PATH, 'mail')
+
+    module Configuration
+      autoload :Base, File.join(NOTIFIER_PATH, 'configuration', 'base')
+      autoload :Mail, File.join(NOTIFIER_PATH, 'configuration', 'mail')
+    end
   end
 
   ##

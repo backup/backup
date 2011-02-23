@@ -9,9 +9,9 @@ module Backup
       # configuration for these methods, if they respond then they will
       # assign the object's attribute(s) to that particular global configuration's attribute
       def load_defaults!
-        configuration = Backup::Configuration.const_get(
-          self.class.name.split('::').last
-        )
+        constants           = self.class.name.split('::')
+        configuration       = Backup.const_get(constants[1])::
+                              Configuration.const_get(constants[2])
 
         getter_methods.each do |attribute|
           if configuration.respond_to?(attribute)
