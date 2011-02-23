@@ -5,6 +5,13 @@ module Backup
     include Backup::CLI
 
     ##
+    # List the available database, storage, compressor and encryptor constants
+    DATABASES   = ['MySQL']
+    STORAGES    = ['S3']
+    COMPRESSORS = ['Gzip']
+    ENCRYPTORS  = ['OpenSSL']
+
+    ##
     # The trigger is used as an identifier for
     # initializing the backup process
     attr_accessor :trigger
@@ -97,38 +104,53 @@ module Backup
     end
 
     ##
-    # Adds a database to the array of databases to dump
-    # during the backup process
+    # Adds a database to the array of databases
+    # to dump during the backup process
     def database(database, &block)
-      @databases << Backup::Database.const_get(database).new(&block)
+      @databases << Backup::Database.const_get(
+        last_constant(database)
+      ).new(&block)
     end
 
     ##
-    # Adds an archive to the array of archives to store
-    # during the backup process
+    # Adds an archive to the array of archives
+    # to store during the backup process
     def archive(name, &block)
       @archives << Backup::Archive.new(name, &block)
     end
 
     ##
-    # Adds an encryptor to the array of encryptors to use
-    # during the backup process
+    # Adds an encryptor to the array of encryptors
+    # to use during the backup process
     def encrypt_with(name, &block)
-      @encryptors << Backup::Encryptor.const_get(name).new(&block)
+      @encryptors << Backup::Encryptor.const_get(
+        last_constant(name)
+      ).new(&block)
     end
 
     ##
-    # Adds a compressor to the array of compressors to use
-    # during the backup process
+    # Adds a compressor to the array of compressors
+    # to use during the backup process
     def compress_with(name, &block)
-      @compressors << Backup::Compressor.const_get(name).new(&block)
+      @compressors << Backup::Compressor.const_get(
+        last_constant(name)
+      ).new(&block)
     end
 
     ##
-    # Adds a storage method to the array of storage methods to use
-    # during the backup process
+    # Adds a storage method to the array of storage
+    # methods to use during the backup process
     def store_to(storage, &block)
-      @storages << Backup::Storage.const_get(storage).new(&block)
+      @storages << Backup::Storage.const_get(
+        last_constant(storage)
+      ).new(&block)
+    end
+
+    ##
+    # Dynamically defines all the available database, storage, compressor and encryptors
+    # classes inside Backup::Model to improve the DSL for the configuration file
+    (DATABASES + STORAGES + COMPRESSORS + ENCRYPTORS).each do |constant|
+      Backup::Model.const_set(constant, Class.new)
     end
 
     ##
@@ -153,6 +175,8 @@ module Backup
     ##
     # [Storages]
     # Runs all (if any) storage objects to store the backups to remote locations
+    # and (if configured) it'll cycle the files on the remote location to limit the
+    # amount of backups stored on each individual location
     ##
     # [Cleaning]
     # After the whole backup process finishes, it'll go ahead and remove any temporary
@@ -201,6 +225,16 @@ module Backup
     # Cleans up the temporary files that were created after the backup process finishes
     def clean!
       run("#{ utility(:rm) } -rf '#{ File.join(TMP_PATH, TRIGGER) }' '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.#{Backup::Model.extension}") }'")
+    end
+
+    ##
+    # Returns the string representation of the last value of a nested constant
+    # example:
+    #  Backup::Model::MySQL
+    # becomes and returns:
+    #  "MySQL"
+    def last_constant(constant)
+      constant.to_s.split("::").last
     end
 
   end
