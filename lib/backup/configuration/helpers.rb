@@ -33,7 +33,7 @@ module Backup
       def setter_methods
         methods.map do |method|
           method = method.to_s
-          method if method =~ /^\w(\w|\d)+\=$/ and method != 'taguri='
+          method if method =~ /^\w(\w|\d|\_)+\=$/ and method != 'taguri='
         end.compact
       end
 
@@ -42,7 +42,7 @@ module Backup
       def getter_methods
         methods.map do |method|
           method = method.to_s
-          if method =~ /^\w(\w|\d)+\=$/ and method != 'taguri='
+          if method =~ /^\w(\w|\d|\_)+\=$/ and method != 'taguri='
             method.sub('=','')
           end
         end.compact
