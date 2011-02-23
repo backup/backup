@@ -170,27 +170,12 @@ module Backup
     # to avoid mass consumption of storage space on the machine
     def perform!
       begin
-        databases.each do |database|
-          database.perform!
-        end
-
-        archives.each do |archive|
-          archive.perform!
-        end
-
+        databases.each   { |d| d.perform! }
+        archives.each    { |a| a.perform! }
         package!
-
-        encryptors.each do |encryptor|
-          encryptor.perform!
-        end
-
-        compressors.each do |compressor|
-          compressor.perform!
-        end
-
-        storages.each do |storage|
-          storage.perform!
-        end
+        encryptors.each  { |e| e.perform! }
+        compressors.each { |c| c.perform! }
+        storages.each    { |s| s.perform! }
       ensure
         clean!
       end
