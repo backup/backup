@@ -2,9 +2,9 @@
 
 require File.dirname(__FILE__) + '/../../spec_helper'
 
-describe Backup::Notifier::Configuration::Mail do
+describe Backup::Configuration::Notifier::Mail do
   before do
-    Backup::Notifier::Configuration::Mail.defaults do |mail|
+    Backup::Configuration::Notifier::Mail.defaults do |mail|
       mail.from                 = 'my.sender.email@gmail.com'
       mail.to                   = 'my.receiver.email@gmail.com'
       mail.address              = 'smtp.gmail.com'
@@ -18,7 +18,7 @@ describe Backup::Notifier::Configuration::Mail do
   end
 
   it 'should set the default Mail configuration' do
-    mail = Backup::Notifier::Configuration::Mail
+    mail = Backup::Configuration::Notifier::Mail
     mail.from.should                 == 'my.sender.email@gmail.com'
     mail.to.should                   == 'my.receiver.email@gmail.com'
     mail.address.should              == 'smtp.gmail.com'

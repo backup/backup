@@ -1,8 +1,8 @@
 # encoding: utf-8
 
 module Backup
-  module Notifier
-    module Configuration
+  module Configuration
+    module Notifier
       class Base < Backup::Configuration::Base
         class << self
 

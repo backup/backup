@@ -34,7 +34,7 @@ describe Backup::Notifier::Mail do
 
   describe 'defaults' do
     it do
-      Backup::Notifier::Configuration::Mail.defaults do |mail|
+      Backup::Configuration::Notifier::Mail.defaults do |mail|
         mail.to         = 'some.receiver.email@gmail.com'
         mail.on_success = false
         mail.on_failure = true

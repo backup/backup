@@ -1,8 +1,8 @@
 # encoding: utf-8
 
 module Backup
-  module Storage
-    module Configuration
+  module Configuration
+    module Storage
       class S3 < Base
         class << self
 

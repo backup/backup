@@ -51,6 +51,16 @@ module Backup
   module Configuration
     autoload :Base,     File.join(CONFIGURATION_PATH, 'base')
     autoload :Helpers,  File.join(CONFIGURATION_PATH, 'helpers')
+
+    module Notifier
+      autoload :Base, File.join(CONFIGURATION_PATH, 'notifier', 'base')
+      autoload :Mail, File.join(CONFIGURATION_PATH, 'notifier', 'mail')
+    end
+
+    module Storage
+      autoload :Base, File.join(CONFIGURATION_PATH, 'storage', 'base')
+      autoload :S3,   File.join(CONFIGURATION_PATH, 'storage', 's3')
+    end
   end
 
   ##
@@ -59,11 +69,6 @@ module Backup
     autoload :Base,   File.join(STORAGE_PATH, 'base')
     autoload :Object, File.join(STORAGE_PATH, 'object')
     autoload :S3,     File.join(STORAGE_PATH, 's3')
-
-    module Configuration
-      autoload :Base, File.join(STORAGE_PATH, 'configuration', 'base')
-      autoload :S3,   File.join(STORAGE_PATH, 'configuration', 's3')
-    end
   end
 
   ##
@@ -89,11 +94,6 @@ module Backup
   module Notifier
     autoload :Base, File.join(NOTIFIER_PATH, 'base')
     autoload :Mail, File.join(NOTIFIER_PATH, 'mail')
-
-    module Configuration
-      autoload :Base, File.join(NOTIFIER_PATH, 'configuration', 'base')
-      autoload :Mail, File.join(NOTIFIER_PATH, 'configuration', 'mail')
-    end
   end
 
   ##

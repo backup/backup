@@ -18,7 +18,7 @@ describe Backup::Storage::S3 do
   end
 
   before do
-    Backup::Storage::Configuration::S3.clear_defaults!
+    Backup::Configuration::Storage::S3.clear_defaults!
   end
 
   it 'should have defined the configuration properly' do
@@ -30,7 +30,7 @@ describe Backup::Storage::S3 do
   end
 
   it 'should use the defaults if a particular attribute has not been defined' do
-    Backup::Storage::Configuration::S3.defaults do |s3|
+    Backup::Configuration::Storage::S3.defaults do |s3|
       s3.access_key_id      = 'my_access_key_id'
       s3.region             = 'us-east-1'
     end
