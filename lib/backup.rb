@@ -20,7 +20,7 @@ module Backup
   STORAGES    = ['S3']
   COMPRESSORS = ['Gzip']
   ENCRYPTORS  = ['OpenSSL']
-  NOTIFIERS   = []
+  NOTIFIERS   = ['Mail']
 
   ##
   # Backup's internal paths

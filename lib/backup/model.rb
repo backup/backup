@@ -30,6 +30,10 @@ module Backup
     attr_accessor :compressors
 
     ##
+    # The notifiers attr_accessor holds an array of notifier objects
+    attr_accessor :notifiers
+
+    ##
     # The storages attribute holds an array of storage objects
     attr_accessor :storages
 
@@ -84,12 +88,14 @@ module Backup
     def initialize(trigger, label, &block)
       @trigger     = trigger
       @label       = label
+      @time        = TIME
+
       @databases   = Array.new
       @archives    = Array.new
       @encryptors  = Array.new
       @compressors = Array.new
       @storages    = Array.new
-      @time        = TIME
+      @notifiers   = Array.new
 
       instance_eval(&block)
       Backup::Model.all << self
@@ -130,6 +136,15 @@ module Backup
     end
 
     ##
+    # Adds a notifier to the array of notifiers
+    # to use during the backup process
+    def notify_by(name, &block)
+      @notifiers << Backup::Notifier.const_get(
+        last_constant(name)
+      ).new(&block)
+    end
+
+    ##
     # Adds a storage method to the array of storage
     # methods to use during the backup process
     def store_to(storage, &block)
@@ -163,6 +178,10 @@ module Backup
     # and (if configured) it'll cycle the files on the remote location to limit the
     # amount of backups stored on each individual location
     ##
+    # [Notifiers]
+    # Runs all (if any) notifier objects when a backup proces finished with or without
+    # any errors.
+    ##
     # [Cleaning]
     # After the whole backup process finishes, it'll go ahead and remove any temporary
     # file that it produced. If an exception(error) is raised during this process which
@@ -176,8 +195,12 @@ module Backup
         encryptors.each  { |e| e.perform! }
         compressors.each { |c| c.perform! }
         storages.each    { |s| s.perform! }
-      ensure
+        notifiers.each   { |n| n.perform!(self) }
         clean!
+      rescue Exception => exception
+        clean!
+        notifiers.each   { |n| n.perform!(self, exception) }
+        show_exception!(exception)
       end
     end
 
@@ -205,6 +228,14 @@ module Backup
     #  "MySQL"
     def last_constant(constant)
       constant.to_s.split("::").last
+    end
+
+    ##
+    # Formats an exception
+    def show_exception!(exception)
+      puts ("=" * 75) + "\n#{exception}\n" + ("=" * 75)
+      puts exception.backtrace.join("\n")
+      puts ("=" * 75) + "\n\nIf you've setup a \"Notification\" in your configuration file, the above error will have been sent."
     end
 
   end

@@ -26,6 +26,9 @@ describe Backup::Model do
     class Backup::Encryptor::GPG
       def initialize(&block); end
     end
+    class Backup::Notifier::TestMail
+      def initialize(&block); end
+    end
   end
 
   let(:model) { Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {} }
@@ -172,6 +175,25 @@ describe Backup::Model do
       end
 
       model.encryptors.count.should == 2
+    end
+  end
+
+  describe '#notify_by' do
+    it 'should add a notifier to the array of notifiers to use' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        notify_by('TestMail')
+      end
+
+      model.notifiers.count.should == 1
+    end
+
+    it 'should add a notifier to the array of notifiers to use' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        notify_by('TestMail')
+        notify_by('TestMail')
+      end
+
+      model.notifiers.count.should == 2
     end
   end
 

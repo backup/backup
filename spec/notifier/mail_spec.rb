@@ -49,4 +49,41 @@ describe Backup::Notifier::Mail do
       notifier.on_failure.should == true
     end
   end
+
+  describe '#initialize' do
+    it do
+      Backup::Notifier::Mail.any_instance.expects(:set_defaults!)
+      Backup::Notifier::Mail.new
+    end
+  end
+
+  describe '#perform!' do
+    context "when successful" do
+      it do
+        notifier.expects("notify_success!")
+        notifier.on_success = true
+        notifier.perform!(nil)
+      end
+
+      it do
+        notifier.expects("notify_success!").never
+        notifier.on_success = false
+        notifier.perform!(nil)
+      end
+    end
+
+    context "when failed" do
+      it do
+        notifier.expects("notify_failure!")
+        notifier.on_failure = true
+        notifier.perform!(nil, Exception.new)
+      end
+
+      it do
+        notifier.expects("notify_failure!").never
+        notifier.on_failure = false
+        notifier.perform!(nil, Exception.new)
+      end
+    end
+  end
 end
