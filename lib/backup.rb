@@ -2,6 +2,7 @@
 
 require 'fileutils'
 require 'yaml'
+require 'erb'
 
 ##
 # The Backup Ruby Gem
@@ -92,8 +93,9 @@ module Backup
   ##
   # Autoload notification files
   module Notifier
-    autoload :Base, File.join(NOTIFIER_PATH, 'base')
-    autoload :Mail, File.join(NOTIFIER_PATH, 'mail')
+    autoload :Base,   File.join(NOTIFIER_PATH, 'base')
+    autoload :Binder, File.join(NOTIFIER_PATH, 'binder')
+    autoload :Mail,   File.join(NOTIFIER_PATH, 'mail')
   end
 
   ##

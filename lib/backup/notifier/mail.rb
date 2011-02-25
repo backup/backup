@@ -87,8 +87,7 @@ module Backup
       # proceeded without any errors
       def notify_success!
         mail[:subject] = "[Backup::Succeeded] #{model.label} (#{model.trigger})"
-        mail[:body]    = "Backup \"#{model.label}\" (#{model.trigger}) finished without any errors." +
-                         "\n\nhttps://github.com/meskyanichi/backup"
+        mail[:body]    = read_template('notify_success', Binder.bind(:model => @model))
         mail.deliver!
       end
 
@@ -97,9 +96,7 @@ module Backup
       # raised an exception and will send the user the error details
       def notify_failure!(exception)
         mail[:subject] = "[Backup::Failed] #{model.label} (#{model.trigger})"
-        mail[:body]    = "There seemed to be a problem backing up \"#{model.label}\" (#{model.trigger}).\n\n" +
-                         ("=" * 75) + "\n\nException that got raised: " + exception.to_s + "\nBacktrace of the exception below\n\n" + ("=" * 75) +
-                         "\n\n" + exception.backtrace.join("\n") + "\n\n" + ("=" * 75) + "\n\nhttps://github.com/meskyanichi/backup"
+        mail[:body]    = read_template('notify_failure', Binder.bind(:model => @model, :exception => exception))
         mail.deliver!
       end
 
@@ -124,6 +121,14 @@ module Backup
         @mail        = ::Mail.new
         @mail[:from] = @from
         @mail[:to]   = @to
+      end
+
+      ##
+      # Returns the path to the templates, appended by the passed in argument
+      def read_template(file, binder)
+        ERB.new(File.read(
+          File.join( File.dirname(__FILE__), "templates", "#{file}.erb" )
+        )).result(binder)
       end
 
     end

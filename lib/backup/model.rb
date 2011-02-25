@@ -233,9 +233,9 @@ module Backup
     ##
     # Formats an exception
     def show_exception!(exception)
-      puts ("=" * 75) + "\n#{exception}\n" + ("=" * 75)
-      puts exception.backtrace.join("\n")
-      puts ("=" * 75) + "\n\nIf you've setup a \"Notification\" in your configuration file, the above error will have been sent."
+      puts ("=" * 75) + "\nException that got raised:\n#{exception}\n" + ("=" * 75) + "\n" + exception.backtrace.join("\n")
+      puts ("=" * 75) + "\n\nYou are running Backup version \"#{Backup::Version.current}\" and Ruby version \"#{ENV['RUBY_VERSION']}\".\n"
+      puts "If you've setup a \"Notification\" in your configuration file, the above error will have been sent."
     end
 
   end
