@@ -98,7 +98,7 @@ module Backup
       def notify_failure!(exception)
         mail[:subject] = "[Backup::Failed] #{model.label} (#{model.trigger})"
         mail[:body]    = "There seemed to be a problem backing up \"#{model.label}\" (#{model.trigger}).\n\n" +
-                         ("=" * 75) + "\n\nException that got raised: " + exception + "\nBacktrace of the exception below\n\n" + ("=" * 75) +
+                         ("=" * 75) + "\n\nException that got raised: " + exception.to_s + "\nBacktrace of the exception below\n\n" + ("=" * 75) +
                          "\n\n" + exception.backtrace.join("\n") + "\n\n" + ("=" * 75) + "\n\nhttps://github.com/meskyanichi/backup"
         mail.deliver!
       end
