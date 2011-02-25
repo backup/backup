@@ -58,17 +58,23 @@ describe Backup::Notifier::Mail do
   end
 
   describe '#perform!' do
+    let(:model) { Backup::Model.new('blah', 'blah') {} }
+    before do
+      notifier.on_success = false
+      notifier.on_failure = false
+    end
+
     context "when successful" do
       it do
         notifier.expects("notify_success!")
         notifier.on_success = true
-        notifier.perform!(nil)
+        notifier.perform!(model)
       end
 
       it do
         notifier.expects("notify_success!").never
         notifier.on_success = false
-        notifier.perform!(nil)
+        notifier.perform!(model)
       end
     end
 
@@ -76,13 +82,13 @@ describe Backup::Notifier::Mail do
       it do
         notifier.expects("notify_failure!")
         notifier.on_failure = true
-        notifier.perform!(nil, Exception.new)
+        notifier.perform!(model, Exception.new)
       end
 
       it do
         notifier.expects("notify_failure!").never
         notifier.on_failure = false
-        notifier.perform!(nil, Exception.new)
+        notifier.perform!(model, Exception.new)
       end
     end
   end

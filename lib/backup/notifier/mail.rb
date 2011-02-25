@@ -73,10 +73,10 @@ module Backup
       def perform!(model, exception = false)
         @model = model
 
-        if exception.eql?(false)
-          notify_success! if on_success
-        else
-          notify_failure!(exception) if on_failure
+        if notify_on_success? and exception.eql?(false)
+          notify_success!
+        elsif notify_on_failure? and not exception.eql?(false)
+          notify_failure!(exception)
         end
       end
 
