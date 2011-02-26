@@ -2,8 +2,7 @@
 
 module Backup
   module Encryptor
-    class OpenSSL
-      include Backup::CLI
+    class OpenSSL < Base
 
       ##
       # The password that'll be used to encrypt the backup. This
@@ -31,8 +30,9 @@ module Backup
       ##
       # Performs the compression of the packages backup file
       def perform!
-        run "#{ utility(:openssl) } #{ options } -in '#{ Backup::Model.file }' -out '#{ Backup::Model.file }.enc' -k '#{ password }'"
-        rm Backup::Model.file
+        log!
+        run("#{ utility(:openssl) } #{ options } -in '#{ Backup::Model.file }' -out '#{ Backup::Model.file }.enc' -k '#{ password }'")
+        rm(Backup::Model.file)
         Backup::Model.extension += '.enc'
       end
 

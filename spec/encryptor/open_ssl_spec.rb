@@ -54,6 +54,8 @@ describe Backup::Compressor::Gzip do
     let(:encryptor) { Backup::Encryptor::OpenSSL.new }
     before do
       Backup::Model.extension = 'tar'
+      Backup::Logger.stubs(:message)
+      [:utility, :run, :rm].each { |method| encryptor.stubs(method) }
     end
 
     it do
@@ -75,7 +77,6 @@ describe Backup::Compressor::Gzip do
     end
 
     it 'should append the .enc extension after the encryption' do
-      encryptor.stubs(:run)
       Backup::Model.extension.should == 'tar'
       encryptor.perform!
       Backup::Model.extension.should == 'tar.enc'
@@ -83,14 +84,16 @@ describe Backup::Compressor::Gzip do
 
     it do
       encryptor.expects(:utility).with(:openssl)
-      encryptor.stubs(:run)
+      encryptor.perform!
+    end
+
+    it do
+      Backup::Logger.expects(:message).with("Backup::Encryptor::OpenSSL started encrypting the archive.")
       encryptor.perform!
     end
 
     context "after encrypting the file (which creates a new file)" do
       it 'should remove the non-encrypted file' do
-        encryptor.stubs(:run)
-        encryptor.stubs(:utility)
         encryptor.expects(:rm).with(Backup::Model.file)
         encryptor.perform!
       end

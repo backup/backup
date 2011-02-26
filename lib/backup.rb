@@ -90,6 +90,7 @@ module Backup
   ##
   # Autoload encryptor files
   module Encryptor
+    autoload :Base,    File.join(ENCRYPTOR_PATH, 'base')
     autoload :OpenSSL, File.join(ENCRYPTOR_PATH, 'open_ssl')
   end
 
