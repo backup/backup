@@ -211,6 +211,7 @@ module Backup
     # these files will be bundled in to a .tar archive (uncompressed) so it
     # becomes a single (transferrable) packaged file.
     def package!
+      Logger.message "Backup started packaging everything to a single archive file."
       run("#{ utility(:tar) } -c '#{ File.join(TMP_PATH, TRIGGER) }' &> /dev/null > '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar") }'")
     end
 

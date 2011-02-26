@@ -198,9 +198,19 @@ describe Backup::Model do
   end
 
   describe '#package!' do
+    before do
+      [:utility, :run].each { |method| model.stubs(method) }
+      Backup::Logger.stubs(:message)
+    end
+
     it 'should package the folder' do
       model.expects(:utility).with(:tar).returns(:tar)
       model.expects(:run).with("tar -c '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' &> /dev/null > '#{ File.join( Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar" ) }'")
+      model.send(:package!)
+    end
+
+    it 'should log' do
+      Backup::Logger.expects(:message).with("Backup started packaging everything to a single archive file.")
       model.send(:package!)
     end
   end
