@@ -216,9 +216,19 @@ describe Backup::Model do
   end
 
   describe '#clean!' do
+    before do
+      [:utility, :run, :rm].each { |method| model.stubs(method) }
+      Backup::Logger.stubs(:message)
+    end
+
     it 'should remove the temporary files and folders that were created' do
       model.expects(:utility).with(:rm).returns(:rm)
       model.expects(:run).with("rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'")
+      model.send(:clean!)
+    end
+
+    it do
+      Backup::Logger.expects(:message).with("Backup started cleaning up the temporary files.")
       model.send(:clean!)
     end
   end

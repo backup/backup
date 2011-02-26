@@ -218,6 +218,7 @@ module Backup
     ##
     # Cleans up the temporary files that were created after the backup process finishes
     def clean!
+      Logger.message "Backup started cleaning up the temporary files."
       run("#{ utility(:rm) } -rf '#{ File.join(TMP_PATH, TRIGGER) }' '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.#{Backup::Model.extension}") }'")
     end
 
