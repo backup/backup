@@ -29,6 +29,7 @@ class BackupCLI < Thor
   method_option :trigger,     :type => :string, :aliases => '-t', :required => true
   method_option :config_file, :type => :string, :aliases => '-c'
   method_option :data_path,   :type => :string, :aliases => '-d'
+  method_option :log_path,    :type => :string, :aliases => '-l'
   method_option :tmp_path,    :type => :string
   desc 'perform', 'Performs the backup of the specified trigger'
   def perform
@@ -45,6 +46,11 @@ class BackupCLI < Thor
       Backup.send(:const_set, :DATA_PATH, options[:data_path])
     end
 
+    if options[:log_path]
+      Backup.send(:remove_const, :LOG_PATH)
+      Backup.send(:const_set, :LOG_PATH, options[:log_path])
+    end
+
     if options[:tmp_path]
       Backup.send(:remove_const, :TMP_PATH)
       Backup.send(:const_set, :TMP_PATH, options[:tmp_path])
@@ -52,7 +58,7 @@ class BackupCLI < Thor
 
     Array.new([
       Backup::TMP_PATH,
-      Backup::DATA_PATH,
+      Backup::LOG_PATH,
       File.join(Backup::DATA_PATH, Backup::TRIGGER)
     ]).each do |path|
       FileUtils.mkdir_p(path)

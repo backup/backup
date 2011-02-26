@@ -35,9 +35,10 @@ module Backup
 
   ##
   # Backup's Environment paths
-  TMP_PATH           = File.join(ENV['HOME'], 'Backup', '.tmp')
   DATA_PATH          = File.join(ENV['HOME'], 'Backup', 'data')
   CONFIG_FILE        = File.join(ENV['HOME'], 'Backup', 'config.rb')
+  LOG_PATH           = File.join(ENV['HOME'], 'Backup', 'log')
+  TMP_PATH           = File.join(ENV['HOME'], 'Backup', '.tmp')
 
   ##
   # Autoload Backup base files
@@ -45,6 +46,7 @@ module Backup
   autoload :Archive, File.join(LIBRARY_PATH, 'archive')
   autoload :CLI,     File.join(LIBRARY_PATH, 'cli')
   autoload :Finder,  File.join(LIBRARY_PATH, 'finder')
+  autoload :Logger,  File.join(LIBRARY_PATH, 'logger')
   autoload :Version, File.join(LIBRARY_PATH, 'version')
 
   ##
