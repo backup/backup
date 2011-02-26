@@ -13,4 +13,5 @@ group :test do
   gem 'mocha'
   gem 'infinity_test'
   gem 'fuubar'
+  gem 'timecop'
 end
