@@ -33,10 +33,20 @@ describe Backup::Archive do
   end
 
   describe '#perform!' do
+    before do
+      [:mkdir, :run, :utility].each { |method| archive.stubs(method) }
+      Backup::Logger.stubs(:message)
+    end
+
     it 'should tar all the specified paths' do
       archive.expects(:mkdir).with(File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive'))
       archive.expects(:run).with("tar -c '/home/rspecuser/somefile' '/home/rspecuser/logs/' '/home/rspecuser/dotfiles/' &> /dev/null > '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}'")
       archive.expects(:utility).with(:tar).returns(:tar)
+      archive.perform!
+    end
+
+    it 'should log the status' do
+      Backup::Logger.expects(:message).with("Backup::Archive started packaging and archiving \"/home/rspecuser/somefile\", \"/home/rspecuser/logs/\", \"/home/rspecuser/dotfiles/\".")
       archive.perform!
     end
   end

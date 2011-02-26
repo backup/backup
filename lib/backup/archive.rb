@@ -37,6 +37,7 @@ module Backup
     # and places that .tar file in the folder which later will be packaged
     def perform!
       mkdir(archive_path)
+      Logger.message("#{ self.class } started packaging and archiving #{ paths.map { |path| "\"#{path}\""}.join(", ") }.")
       run("#{ utility(:tar) } -c #{ paths_to_package } &> /dev/null > '#{ File.join(archive_path, "#{name}.tar") }'")
     end
 
