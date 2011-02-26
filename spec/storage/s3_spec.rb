@@ -68,13 +68,14 @@ describe Backup::Storage::S3 do
     let(:connection) { mock('Fog::Storage') }
     before do
       Fog::Storage.stubs(:new).returns(connection)
+      Backup::Logger.stubs(:message)
     end
 
     it 'should transfer the provided file to the bucket' do
       Backup::Model.new('blah', 'blah') {}
       file = mock("Backup::Storage::S3::File")
       File.expects(:read).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
-      s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
       connection.expects(:put_object).with('my-bucket', "backup/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
       s3.send(:transfer!)
     end
@@ -100,4 +101,5 @@ describe Backup::Storage::S3 do
       s3.perform!
     end
   end
+
 end

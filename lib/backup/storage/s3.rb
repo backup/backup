@@ -67,6 +67,7 @@ module Backup
       # Transfers the archived file to the specified Amazon S3 bucket
       def transfer!
         begin
+          Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
           connection.put_object(
             bucket,
             File.join(remote_path, remote_file),

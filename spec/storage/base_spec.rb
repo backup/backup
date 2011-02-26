@@ -5,6 +5,10 @@ require File.dirname(__FILE__) + '/../spec_helper'
 describe Backup::Storage::Base do
   let(:base) { Backup::Storage::Base.new }
 
+  before do
+    Backup::Logger.stubs(:message)
+  end
+
   it do
     storage_object = mock
     Backup::Storage::Object.expects(:new).with('Base').returns(storage_object)

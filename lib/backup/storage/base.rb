@@ -59,7 +59,10 @@ module Backup
         objects        = [self] + storage_object.load
         if keep.is_a?(Integer) and objects.count > keep
           objects_to_remove = objects[keep..-1]
-          objects_to_remove.each { |object| object.send(:remove!) }
+          objects_to_remove.each do |object|
+            Logger.message "#{ self.class } started removing (cycling) \"#{ object.remote_file }\"."
+            object.send(:remove!)
+          end
           objects = objects - objects_to_remove
         end
         storage_object.write(objects)
