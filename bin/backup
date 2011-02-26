@@ -31,31 +31,45 @@ class BackupCLI < Thor
   method_option :data_path,   :type => :string, :aliases => '-d'
   method_option :log_path,    :type => :string, :aliases => '-l'
   method_option :tmp_path,    :type => :string
-  desc 'perform', 'Performs the backup of the specified trigger'
+  desc 'perform', 'Performs the backup for the specified trigger'
   def perform
+
+    ##
+    # Defines the TRIGGER and TIME constants
     Backup.send(:const_set, :TRIGGER, options[:trigger])
     Backup.send(:const_set, :TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
 
+    ##
+    # Overwrites the CONFIG_FILE location, if --config-file was specified
     if options[:config_file]
       Backup.send(:remove_const, :CONFIG_FILE)
       Backup.send(:const_set, :CONFIG_FILE, options[:config_file])
     end
 
+    ##
+    # Overwrites the DATA_PATH location, if --data-path was specified
     if options[:data_path]
       Backup.send(:remove_const, :DATA_PATH)
       Backup.send(:const_set, :DATA_PATH, options[:data_path])
     end
 
+    ##
+    # Overwrites the LOG_PATH location, if --log-path was specified
     if options[:log_path]
       Backup.send(:remove_const, :LOG_PATH)
       Backup.send(:const_set, :LOG_PATH, options[:log_path])
     end
 
+    ##
+    # Overwrites the TMP_PATH location, if --tmp-path was specified
     if options[:tmp_path]
       Backup.send(:remove_const, :TMP_PATH)
       Backup.send(:const_set, :TMP_PATH, options[:tmp_path])
     end
 
+    ##
+    # Ensure the TMP_PATH, LOG_PATH, DATA_PATH and DATA_PATH/TRIGGER
+    # are created if they do not yet exist
     Array.new([
       Backup::TMP_PATH,
       Backup::LOG_PATH,
@@ -64,9 +78,13 @@ class BackupCLI < Thor
       FileUtils.mkdir_p(path)
     end
 
+    ##
+    # Parses the backup configuration file and returns the model instance by trigger
     model = Backup::Finder.new(Backup::TRIGGER, Backup::CONFIG_FILE).find
 
-    puts "Performing backup for #{model.label}!"
+    ##
+    # Runs the returned model
+    Backup::Logger.message "Performing backup for #{model.label}!"
     model.perform!
   end
 
