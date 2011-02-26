@@ -84,6 +84,7 @@ module Backup
   ##
   # Autoload compressor files
   module Compressor
+    autoload :Base, File.join(COMPRESSOR_PATH, 'base')
     autoload :Gzip, File.join(COMPRESSOR_PATH, 'gzip')
   end
 

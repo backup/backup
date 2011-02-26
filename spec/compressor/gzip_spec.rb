@@ -20,6 +20,10 @@ describe Backup::Compressor::Gzip do
   end
 
   describe '#perform!' do
+    before do
+      Backup::Logger.stubs(:message)
+    end
+
     it 'should perform the compression' do
       compressor.expects(:utility).with(:gzip).returns(:gzip)
       compressor.expects(:run).with("gzip  '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'")
@@ -44,6 +48,11 @@ describe Backup::Compressor::Gzip do
       Backup::Model.extension.should == 'tar'
       compressor.perform!
       Backup::Model.extension.should == 'tar.gz'
+    end
+
+    it 'should log' do
+      Backup::Logger.expects(:message).with("Backup::Compressor::Gzip started compressing the archive.")
+      compressor.perform!
     end
   end
 end

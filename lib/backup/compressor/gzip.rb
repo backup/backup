@@ -2,8 +2,7 @@
 
 module Backup
   module Compressor
-    class Gzip
-      include Backup::CLI
+    class Gzip < Base
 
       ##
       # Tells Backup::Compressor::Gzip to compress
@@ -28,6 +27,7 @@ module Backup
       ##
       # Performs the compression of the packages backup file
       def perform!
+        log!
         run("#{ utility(:gzip) } #{ options } '#{ Backup::Model.file }'")
         Backup::Model.extension += '.gz'
       end
