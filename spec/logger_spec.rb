@@ -16,7 +16,7 @@ describe Backup::Logger do
       Backup::Logger.message "This has been logged."
     end
   end
-  
+
   context 'when logging error messages' do
     it do
       Backup::Logger.expects(:puts).with("[#{ Time.now.strftime("%Y/%m/%d %H:%M:%S") }][\e[31merror\e[0m] This has been logged.")
