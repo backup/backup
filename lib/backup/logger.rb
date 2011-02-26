@@ -64,7 +64,7 @@ module Backup
 
     ##
     # Invokes the #colorize method the with provided string
-    # and the color code "32" (for green)
+    # and the color code "31" (for red)
     def self.red(string)
       colorize(string, 31)
     end
