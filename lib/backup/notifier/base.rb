@@ -17,6 +17,10 @@ module Backup
       attr_accessor :on_failure
       alias :notify_on_failure? :on_failure
 
+      def log!
+        Logger.message "#{ self.class } started notifying about the proccess."
+      end
+
     end
   end
 end

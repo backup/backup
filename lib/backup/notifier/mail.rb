@@ -74,8 +74,10 @@ module Backup
         @model = model
 
         if notify_on_success? and exception.eql?(false)
+          log!
           notify_success!
         elsif notify_on_failure? and not exception.eql?(false)
+          log!
           notify_failure!(exception)
         end
       end
