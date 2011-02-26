@@ -2,8 +2,7 @@
 
 module Backup
   module Database
-    class MySQL
-      include Backup::CLI
+    class MySQL < Base
 
       ##
       # Name of the database that needs to get dumped
@@ -37,6 +36,7 @@ module Backup
         @additional_options = Array.new
 
         instance_eval(&block)
+        prepare!
       end
 
       ##
@@ -93,9 +93,8 @@ module Backup
       # Performs the mysqldump command and outputs the
       # data to the specified path based on the 'trigger'
       def perform!
-        path = File.join(TMP_PATH, TRIGGER, 'mysql')
-        mkdir(path)
-        run("#{mysqldump} > '#{File.join(path, name)}.sql'")
+        log!
+        run("#{mysqldump} > '#{File.join(dump_path, name)}.sql'")
       end
 
     end

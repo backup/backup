@@ -77,6 +77,7 @@ module Backup
   ##
   # Autoload Backup database files
   module Database
+    autoload :Base,  File.join(DATABASE_PATH, 'base')
     autoload :MySQL, File.join(DATABASE_PATH, 'mysql')
   end
 

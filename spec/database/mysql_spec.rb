@@ -19,29 +19,36 @@ describe Backup::Database::MySQL do
     end
   end
 
-  it 'should read the adapter details correctly' do
-    db.name.should      == 'mydatabase'
-    db.user.should      == 'someuser'
-    db.password.should  == 'secret'
-    db.host.should      == 'localhost'
-    db.port.should      == '123'
-    db.socket.should    == '/mysql.sock'
+  describe '#new' do
+    it 'should read the adapter details correctly' do
+      db.name.should      == 'mydatabase'
+      db.user.should      == 'someuser'
+      db.password.should  == 'secret'
+      db.host.should      == 'localhost'
+      db.port.should      == '123'
+      db.socket.should    == '/mysql.sock'
 
-    db.skip_tables.should == ['logs', 'profiles']
-    db.only_tables.should == ['users', 'pirates']
-    db.additional_options.should == ['--single-transaction', '--quick']
-  end
-
-  it 'arrays should default to empty arrays when not specified' do
-    db = Backup::Database::MySQL.new do |db|
-      db.name     = 'mydatabase'
-      db.user     = 'someuser'
-      db.password = 'secret'
+      db.skip_tables.should == ['logs', 'profiles']
+      db.only_tables.should == ['users', 'pirates']
+      db.additional_options.should == ['--single-transaction', '--quick']
     end
 
-    db.skip_tables.should == []
-    db.only_tables.should == []
-    db.additional_options.should == []
+    it 'arrays should default to empty arrays when not specified' do
+      db = Backup::Database::MySQL.new do |db|
+        db.name     = 'mydatabase'
+        db.user     = 'someuser'
+        db.password = 'secret'
+      end
+
+      db.skip_tables.should == []
+      db.only_tables.should == []
+      db.additional_options.should == []
+    end
+
+    it 'should ensure the directory is available' do
+      Backup::Database::MySQL.any_instance.expects(:mkdir).with("#{Backup::TMP_PATH}/myapp/MySQL")
+      Backup::Database::MySQL.new {}
+    end
   end
 
   describe '#skip_tables' do
@@ -120,18 +127,19 @@ describe Backup::Database::MySQL do
 
   describe '#perform!' do
     before do
+      Backup::Logger.stubs(:message)
       db.stubs(:utility).returns('mysqldump')
+      db.stubs(:mkdir)
+      db.stubs(:run)
     end
 
     it 'should run the mysqldump command and dump it to the specified path' do
-      db.stubs(:mkdir)
-      db.expects(:run).with("#{db.mysqldump} > '#{Backup::TMP_PATH}/myapp/mysql/mydatabase.sql'")
+      db.expects(:run).with("#{db.mysqldump} > '#{Backup::TMP_PATH}/myapp/MySQL/mydatabase.sql'")
       db.perform!
     end
 
-    it 'should ensure the directory is available' do
-      db.stubs(:run)
-      db.expects(:mkdir).with("#{Backup::TMP_PATH}/myapp/mysql")
+    it do
+      Backup::Logger.expects(:message).with("Backup::Database::MySQL started dumping and archiving \"mydatabase\".")
       db.perform!
     end
   end
