@@ -5,6 +5,9 @@ module Backup
     class Base
       include Backup::CLI
 
+      ##
+      # Logs a message to the console and log file to inform
+      # the client that Backup is compressing the archive
       def log!
         Backup::Logger.message "#{ self.class } started compressing the archive."
       end

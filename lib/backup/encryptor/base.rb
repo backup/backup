@@ -5,6 +5,9 @@ module Backup
     class Base
       include Backup::CLI
 
+      ##
+      # Logs a message to the console and log file to inform
+      # the client that Backup is encrypting the archive
       def log!
         Logger.message "#{ self.class } started encrypting the archive."
       end

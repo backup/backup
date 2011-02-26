@@ -15,9 +15,10 @@ module Backup
       end
 
       ##
-      # Logs info to the console and backup.log
+      # Logs a message to the console and log file to inform
+      # the client that Backup is dumping the database
       def log!
-        Logger.message("#{self.class.name} started dumping and archiving \"#{name}\".")
+        Logger.message("#{ self.class } started dumping and archiving \"#{ name }\".")
       end
     end
   end

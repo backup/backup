@@ -17,6 +17,9 @@ module Backup
       attr_accessor :on_failure
       alias :notify_on_failure? :on_failure
 
+      ##
+      # Logs a message to the console and log file to inform
+      # the client that Backup is notifying about the process
       def log!
         Logger.message "#{ self.class } started notifying about the proccess."
       end
