@@ -16,7 +16,7 @@ module Backup
   #  database "MySQL" do |mysql|
   # You can do:
   #  database MySQL do |mysql|
-  DATABASES   = ['MySQL']
+  DATABASES   = ['MySQL', 'PostgreSQL']
   STORAGES    = ['S3']
   COMPRESSORS = ['Gzip']
   ENCRYPTORS  = ['OpenSSL']
@@ -76,8 +76,9 @@ module Backup
   ##
   # Autoload Backup database files
   module Database
-    autoload :Base,  File.join(DATABASE_PATH, 'base')
-    autoload :MySQL, File.join(DATABASE_PATH, 'mysql')
+    autoload :Base,       File.join(DATABASE_PATH, 'base')
+    autoload :MySQL,      File.join(DATABASE_PATH, 'mysql')
+    autoload :PostgreSQL, File.join(DATABASE_PATH, 'postgresql')
   end
 
   ##
