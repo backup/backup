@@ -96,6 +96,7 @@ module Backup
       ##
       # Performs the pgdump command and outputs the
       # data to the specified path based on the 'trigger'
+      # and resets the 'PGPASSWORD' environment variable to nil
       def perform!
         log!
         run("#{pgdump} > '#{File.join(dump_path, name)}.sql'")

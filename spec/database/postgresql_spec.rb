@@ -11,7 +11,7 @@ describe Backup::Database::PostgreSQL do
       db.password  = 'secret'
       db.host      = 'localhost'
       db.port      = '123'
-      db.socket    = '/mysql.sock'
+      db.socket    = '/pg.sock'
 
       db.skip_tables = ['logs', 'profiles']
       db.only_tables = ['users', 'pirates']
@@ -26,7 +26,7 @@ describe Backup::Database::PostgreSQL do
       db.password.should  == 'secret'
       db.host.should      == 'localhost'
       db.port.should      == '123'
-      db.socket.should    == '/mysql.sock'
+      db.socket.should    == '/pg.sock'
 
       db.skip_tables.should == ['logs', 'profiles']
       db.only_tables.should == ['users', 'pirates']
@@ -89,17 +89,17 @@ describe Backup::Database::PostgreSQL do
 
   describe '#connectivity_options' do
     it 'should return the mysql syntax for the connectivity options' do
-      db.connectivity_options.should == "--host='localhost' --port='123' --host='/mysql.sock'"
+      db.connectivity_options.should == "--host='localhost' --port='123' --host='/pg.sock'"
     end
 
     it 'should return only the socket' do
       db = Backup::Database::PostgreSQL.new do |db|
         db.host   = ''
         db.port   = nil
-        db.socket = '/mysql.sock'
+        db.socket = '/pg.sock'
       end
 
-      db.connectivity_options.should == "--host='/mysql.sock'"
+      db.connectivity_options.should == "--host='/pg.sock'"
     end
   end
 
@@ -119,7 +119,7 @@ describe Backup::Database::PostgreSQL do
       db.expects(:utility).with(:pg_dump).returns('pg_dump')
       db.pgdump.should ==
       "pg_dump --username='someuser' " +
-      "--host='localhost' --port='123' --host='/mysql.sock' " +
+      "--host='localhost' --port='123' --host='/pg.sock' " +
       "--single-transaction --quick --table='users' --table='pirates' " +
       "--exclude-table='logs' --exclude-table='profiles' mydatabase"
     end
