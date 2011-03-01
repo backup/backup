@@ -1,8 +1,9 @@
 # encoding: utf-8
 
 ##
-# Only load the Fog gem when the Backup::Storage::S3 class is loaded
+# Only load the Mail gem and Erb library when using Mail notifications
 require 'mail'
+require 'erb'
 
 module Backup
   module Notifier

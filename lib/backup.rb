@@ -2,7 +2,6 @@
 
 require 'fileutils'
 require 'yaml'
-require 'erb'
 
 ##
 # The Backup Ruby Gem
