@@ -92,11 +92,11 @@ describe Backup::Database::PostgreSQL do
   end
 
   describe '#credential_options' do
-    it 'should return the mysql syntax for the credential options' do
+    it 'should return the postgresql syntax for the credential options' do
       db.credential_options.should == "--username='someuser'"
     end
 
-    it 'should only return the mysql syntax for the user' do
+    it 'should only return the postgresql syntax for the user' do
       db = Backup::Database::PostgreSQL.new do |db|
         db.username = 'someuser'
       end
@@ -106,7 +106,7 @@ describe Backup::Database::PostgreSQL do
   end
 
   describe '#connectivity_options' do
-    it 'should return the mysql syntax for the connectivity options' do
+    it 'should return the postgresql syntax for the connectivity options' do
       db.connectivity_options.should == "--host='localhost' --port='123' --host='/pg.sock'"
     end
 

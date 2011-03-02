@@ -16,7 +16,7 @@ describe Backup::Configuration::Database::Redis do
     end
   end
 
-  it 'should set the default MongoDB configuration' do
+  it 'should set the default Redis configuration' do
     db = Backup::Configuration::Database::Redis
     db.name.should                == 'mydb'
     db.path.should                == '/var/lib/redis/db'
