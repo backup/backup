@@ -4,6 +4,10 @@ require File.dirname(__FILE__) + '/../spec_helper'
 
 describe Backup::Database::PostgreSQL do
 
+  before do
+    Backup::Database::PostgreSQL.any_instance.stubs(:load_defaults!)
+  end
+
   let(:db) do
     Backup::Database::PostgreSQL.new do |db|
       db.name      = 'mydatabase'

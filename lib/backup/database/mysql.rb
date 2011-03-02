@@ -31,9 +31,11 @@ module Backup
       ##
       # Creates a new instance of the MySQL adapter object
       def initialize(&block)
-        @skip_tables        = Array.new
-        @only_tables        = Array.new
-        @additional_options = Array.new
+        load_defaults!
+
+        @skip_tables        ||= Array.new
+        @only_tables        ||= Array.new
+        @additional_options ||= Array.new
 
         instance_eval(&block)
         prepare!

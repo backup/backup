@@ -4,6 +4,10 @@ require File.dirname(__FILE__) + '/../spec_helper'
 
 describe Backup::Database::MySQL do
 
+  before do
+    Backup::Database::MySQL.any_instance.stubs(:load_defaults!)
+  end
+
   let(:db) do
     Backup::Database::MySQL.new do |db|
       db.name      = 'mydatabase'

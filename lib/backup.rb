@@ -63,6 +63,13 @@ module Backup
       autoload :Base, File.join(CONFIGURATION_PATH, 'storage', 'base')
       autoload :S3,   File.join(CONFIGURATION_PATH, 'storage', 's3')
     end
+
+    module Database
+      autoload :Base,       File.join(CONFIGURATION_PATH, 'database', 'base')
+      autoload :MySQL,      File.join(CONFIGURATION_PATH, 'database', 'mysql')
+      autoload :PostgreSQL, File.join(CONFIGURATION_PATH, 'database', 'postgresql')
+      autoload :MongoDB,    File.join(CONFIGURATION_PATH, 'database', 'mongodb')
+    end
   end
 
   ##

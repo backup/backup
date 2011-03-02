@@ -14,7 +14,9 @@ module Backup
 
         getter_methods.each do |attribute|
           if configuration.respond_to?(attribute)
-            self.send("#{attribute}=", configuration.send(attribute))
+            unless configuration.send(attribute).nil?
+              self.send("#{attribute}=", configuration.send(attribute))
+            end
           end
         end
       end

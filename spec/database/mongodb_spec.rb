@@ -4,6 +4,10 @@ require File.dirname(__FILE__) + '/../spec_helper'
 
 describe Backup::Database::MongoDB do
 
+  before do
+    Backup::Database::MongoDB.any_instance.stubs(:load_defaults!)
+  end
+
   let(:db) do
     Backup::Database::MongoDB.new do |db|
       db.name      = 'mydatabase'

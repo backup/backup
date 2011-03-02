@@ -31,9 +31,11 @@ module Backup
       ##
       # Creates a new instance of the MongoDB database object
       def initialize(&block)
-        @only_collections   = Array.new
-        @additional_options = Array.new
-        @ipv6               = false
+        load_defaults!
+
+        @only_collections   ||= Array.new
+        @additional_options ||= Array.new
+        @ipv6               ||= false
 
         instance_eval(&block)
         prepare!

@@ -4,6 +4,7 @@ module Backup
   module Database
     class Base
       include Backup::CLI
+      include Backup::Configuration::Helpers
 
       ##
       # Contains the path to where the database should be dumped

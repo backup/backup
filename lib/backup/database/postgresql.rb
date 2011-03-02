@@ -33,9 +33,11 @@ module Backup
       # Sets the PGPASSWORD environment variable to the password
       # so it doesn't prompt and hang in the process
       def initialize(&block)
-        @skip_tables        = Array.new
-        @only_tables        = Array.new
-        @additional_options = Array.new
+        load_defaults!
+
+        @skip_tables        ||= Array.new
+        @only_tables        ||= Array.new
+        @additional_options ||= Array.new
 
         instance_eval(&block)
         prepare!
