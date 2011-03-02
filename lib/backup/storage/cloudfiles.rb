@@ -1,32 +1,25 @@
 # encoding: utf-8
 
 ##
-# Only load the Fog gem when the Backup::Storage::S3 class is loaded
+# Only load the Fog gem when the Backup::Storage::CloudFiles class is loaded
 require 'fog'
 
 module Backup
   module Storage
-    class S3 < Base
+    class CloudFiles < Base
 
       ##
-      # Amazon Simple Storage Service (S3) Credentials
-      attr_accessor :access_key_id, :secret_access_key
+      # Rackspace Cloud Files Credentials
+      attr_accessor :username, :api_key
 
       ##
-      # Amazon S3 bucket name
-      attr_accessor :bucket
+      # Rackspace Cloud Files container name
+      attr_accessor :container
 
       ##
-      # Region of the specified S3 bucket
-      attr_accessor :region
-
-      ##
-      # Creates a new instance of the Amazon S3 storage object
+      # Creates a new instance of the Rackspace Cloud Files storage object
       # First it sets the defaults (if any exist) and then evaluates
       # the configuration block which may overwrite these defaults
-      #
-      # Currently available regions:
-      #   eu-west-1, us-east-1, ap-southeast-1, us-west-1
       def initialize(&block)
         load_defaults!
         instance_eval(&block) if block_given?
@@ -36,13 +29,13 @@ module Backup
       ##
       # This is the remote path to where the backup files will be stored
       def remote_path
-        File.join('backup', TRIGGER, '/')
+        File.join('backup', TRIGGER)
       end
 
       ##
-      # This is the provider that Fog uses for the S3 Storage
+      # This is the provider that Fog uses for the Cloud Files Storage
       def provider
-        'AWS'
+        'Rackspace'
       end
 
       ##
@@ -55,44 +48,41 @@ module Backup
     private
 
       ##
-      # Establishes a connection to Amazon S3 and returns the Fog object.
+      # Establishes a connection to Rackspace Cloud Files and returns the Fog object.
       # Not doing any instance variable caching because this object gets persisted in YAML
       # format to a file and will issues. This, however has no impact on performance since it only
       # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
       # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
         Fog::Storage.new(
-          :provider               => provider,
-          :aws_access_key_id      => access_key_id,
-          :aws_secret_access_key  => secret_access_key,
-          :region                 => region
+          :provider           => provider,
+          :rackspace_username => username,
+          :rackspace_api_key  => api_key
         )
       end
 
       ##
-      # Transfers the archived file to the specified Amazon S3 bucket
+      # Transfers the archived file to the specified Cloud Files container
       def transfer!
         begin
           Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
           connection.put_object(
-            bucket,
+            container,
             File.join(remote_path, remote_file),
             File.read(File.join(local_path, local_file))
           )
-        rescue Excon::Errors::SocketError
+        rescue Excon::Errors::SocketError => e
           puts "\nAn error occurred while trying to transfer the backup."
-          puts "Make sure the bucket exists, and that you specified the correct bucket region.\n\n"
-          puts "The available regions are:\n\n"
-          puts %w[eu-west-1 us-east-1 ap-southeast-1 us-west-1].map{ |region| "\s\s* #{region}" }.join("\n")
+          puts "Make sure the container exists and try again.\n\n"
           exit
         end
       end
 
       ##
-      # Removes the transferred archive file from the Amazon S3 bucket
+      # Removes the transferred archive file from the Cloud Files container
       def remove!
         begin
-          connection.delete_object(bucket, File.join(remote_path, remote_file))
+          connection.delete_object(container, File.join(remote_path, remote_file))
         rescue Excon::Errors::SocketError
         end
       end

@@ -21,12 +21,6 @@ module Backup
       end
 
       ##
-      # This is the remote path to where the backup files will be stored
-      def remote_path
-        File.join('backup', TRIGGER, '/')
-      end
-
-      ##
       # Returns the local archive filename
       def local_file
         @local_file ||= File.basename(Backup::Model.file)
