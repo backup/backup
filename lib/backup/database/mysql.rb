@@ -10,7 +10,7 @@ module Backup
 
       ##
       # Credentials for the specified database
-      attr_accessor :user, :password
+      attr_accessor :username, :password
 
       ##
       # Connectivity options
@@ -59,9 +59,9 @@ module Backup
       # Builds the credentials MySQL syntax to authenticate the user
       # to perform the database dumping process
       def credential_options
-        %w[user password].map do |option|
+        %w[username password].map do |option|
           next if send(option).nil? or send(option).empty?
-          "--#{option}='#{send(option)}'"
+          "--#{option}='#{send(option)}'".gsub('--username', '--user')
         end.compact.join("\s")
       end
 

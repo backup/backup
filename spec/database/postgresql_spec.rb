@@ -7,7 +7,7 @@ describe Backup::Database::PostgreSQL do
   let(:db) do
     Backup::Database::PostgreSQL.new do |db|
       db.name      = 'mydatabase'
-      db.user      = 'someuser'
+      db.username  = 'someuser'
       db.password  = 'secret'
       db.host      = 'localhost'
       db.port      = '123'
@@ -22,7 +22,7 @@ describe Backup::Database::PostgreSQL do
   describe '#new' do
     it 'should read the adapter details correctly' do
       db.name.should      == 'mydatabase'
-      db.user.should      == 'someuser'
+      db.username.should  == 'someuser'
       db.password.should  == 'secret'
       db.host.should      == 'localhost'
       db.port.should      == '123'
@@ -36,13 +36,27 @@ describe Backup::Database::PostgreSQL do
     it 'arrays should default to empty arrays when not specified' do
       db = Backup::Database::PostgreSQL.new do |db|
         db.name     = 'mydatabase'
-        db.user     = 'someuser'
+        db.username = 'someuser'
         db.password = 'secret'
       end
 
       db.skip_tables.should == []
       db.only_tables.should == []
       db.additional_options.should == []
+    end
+
+    it do
+      db = Backup::Database::PostgreSQL.new {}
+      db.username = ''
+
+      db.credential_options.should == ''
+    end
+
+    it do
+      db = Backup::Database::PostgreSQL.new {}
+      db.username = nil
+
+      db.credential_options.should == ''
     end
 
     it 'should ensure the directory is available' do
@@ -80,7 +94,7 @@ describe Backup::Database::PostgreSQL do
 
     it 'should only return the mysql syntax for the user' do
       db = Backup::Database::PostgreSQL.new do |db|
-        db.user = 'someuser'
+        db.username = 'someuser'
       end
 
       db.credential_options.should == "--username='someuser'"

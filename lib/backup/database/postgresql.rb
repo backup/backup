@@ -10,7 +10,7 @@ module Backup
 
       ##
       # Credentials for the specified database
-      attr_accessor :user, :password
+      attr_accessor :username, :password
 
       ##
       # Connectivity options
@@ -64,7 +64,8 @@ module Backup
       # Builds the credentials PostgreSQL syntax to authenticate the user
       # to perform the database dumping process
       def credential_options
-        "--username='#{user}'"
+        return '' unless username.is_a?(String) and not username.empty?
+        "--username='#{username}'"
       end
 
       ##

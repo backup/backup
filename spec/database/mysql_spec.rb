@@ -7,7 +7,7 @@ describe Backup::Database::MySQL do
   let(:db) do
     Backup::Database::MySQL.new do |db|
       db.name      = 'mydatabase'
-      db.user      = 'someuser'
+      db.username  = 'someuser'
       db.password  = 'secret'
       db.host      = 'localhost'
       db.port      = '123'
@@ -22,7 +22,7 @@ describe Backup::Database::MySQL do
   describe '#new' do
     it 'should read the adapter details correctly' do
       db.name.should      == 'mydatabase'
-      db.user.should      == 'someuser'
+      db.username.should  == 'someuser'
       db.password.should  == 'secret'
       db.host.should      == 'localhost'
       db.port.should      == '123'
@@ -36,7 +36,7 @@ describe Backup::Database::MySQL do
     it 'arrays should default to empty arrays when not specified' do
       db = Backup::Database::MySQL.new do |db|
         db.name     = 'mydatabase'
-        db.user     = 'someuser'
+        db.username = 'someuser'
         db.password = 'secret'
       end
 
@@ -80,7 +80,7 @@ describe Backup::Database::MySQL do
 
     it 'should only return the mysql syntax for the user' do
       db = Backup::Database::MySQL.new do |db|
-        db.user = 'someuser'
+        db.username = 'someuser'
       end
 
       db.credential_options.should == "--user='someuser'"
