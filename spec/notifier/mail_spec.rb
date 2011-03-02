@@ -66,7 +66,7 @@ describe Backup::Notifier::Mail do
 
     context "when successful" do
       it do
-        Backup::Logger.expects(:message).with("Backup::Notifier::Mail started notifying about the proccess.")
+        Backup::Logger.expects(:message).with("Backup::Notifier::Mail started notifying about the process.")
         notifier.expects("notify_success!")
         notifier.on_success = true
         notifier.perform!(model)
@@ -81,7 +81,7 @@ describe Backup::Notifier::Mail do
 
     context "when failed" do
       it do
-        Backup::Logger.expects(:message).with("Backup::Notifier::Mail started notifying about the proccess.")
+        Backup::Logger.expects(:message).with("Backup::Notifier::Mail started notifying about the process.")
         notifier.expects("notify_failure!")
         notifier.on_failure = true
         notifier.perform!(model, Exception.new)

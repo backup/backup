@@ -21,7 +21,7 @@ module Backup
       # Logs a message to the console and log file to inform
       # the client that Backup is notifying about the process
       def log!
-        Logger.message "#{ self.class } started notifying about the proccess."
+        Logger.message "#{ self.class } started notifying about the process."
       end
 
     end
