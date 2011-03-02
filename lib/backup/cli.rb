@@ -30,8 +30,16 @@ module Backup
     ##
     # Tries to find the full path of the specified utility. If the full
     # path is found, it'll return that. Otherwise it'll just return the
-    # name of the utility.
+    # name of the utility. If the 'utility_path' is defined, it'll check
+    # to see if it isn't an empty string, and if it isn't, it'll go ahead and
+    # always use that path rather than auto-detecting it
     def utility(name)
+      if respond_to?(:utility_path)
+        if utility_path.is_a?(String) and not utility_path.empty?
+          return utility_path
+        end
+      end
+
       if path = %x[which #{name}].chomp and not path.empty?
         return path
       end

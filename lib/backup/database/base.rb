@@ -5,7 +5,14 @@ module Backup
     class Base
       include Backup::CLI
 
+      ##
+      # Contains the path to where the database should be dumped
       attr_accessor :dump_path
+
+      ##
+      # Allows the user to specify the path to a "dump" utility
+      # in case it cannot be auto-detected by Backup
+      attr_accessor :utility_path
 
       ##
       # Defines the @dump_path and ensures it exists by creating it
