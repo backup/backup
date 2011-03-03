@@ -17,7 +17,7 @@ module Backup
   # You can do:
   #  database MySQL do |mysql|
   DATABASES   = ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis']
-  STORAGES    = ['S3', 'CloudFiles']
+  STORAGES    = ['S3', 'CloudFiles', 'Dropbox']
   COMPRESSORS = ['Gzip']
   ENCRYPTORS  = ['OpenSSL']
   NOTIFIERS   = ['Mail']
@@ -63,6 +63,7 @@ module Backup
       autoload :Base,       File.join(CONFIGURATION_PATH, 'storage', 'base')
       autoload :S3,         File.join(CONFIGURATION_PATH, 'storage', 's3')
       autoload :CloudFiles, File.join(CONFIGURATION_PATH, 'storage', 'cloudfiles')
+      autoload :Dropbox,    File.join(CONFIGURATION_PATH, 'storage', 'dropbox')
     end
 
     module Database
@@ -81,6 +82,7 @@ module Backup
     autoload :Object,     File.join(STORAGE_PATH, 'object')
     autoload :S3,         File.join(STORAGE_PATH, 's3')
     autoload :CloudFiles, File.join(STORAGE_PATH, 'cloudfiles')
+    autoload :Dropbox,    File.join(STORAGE_PATH, 'dropbox')
   end
 
   ##
