@@ -28,6 +28,7 @@ module Backup
         load_defaults!
         instance_eval(&block) if block_given?
         @time = TIME
+        @path = path.sub(/^\~\//, '')
       end
 
       ##

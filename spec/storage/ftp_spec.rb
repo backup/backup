@@ -24,7 +24,7 @@ describe Backup::Storage::FTP do
     ftp.password.should == 'my_password'
     ftp.ip.should       == '123.45.678.90'
     ftp.port.should     == 21
-    ftp.path.should     == '~/backups/'
+    ftp.path.should     == 'backups/'
     ftp.keep.should     == 20
   end
 
@@ -32,6 +32,7 @@ describe Backup::Storage::FTP do
     Backup::Configuration::Storage::FTP.defaults do |ftp|
       ftp.username = 'my_default_username'
       ftp.password = 'my_default_password'
+      ftp.path     = '~/backups'
     end
 
     ftp = Backup::Storage::FTP.new do |ftp|
@@ -75,7 +76,7 @@ describe Backup::Storage::FTP do
       ftp.expects(:create_remote_directories!)
       connection.expects(:put).with(
         File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"),
-        File.join('~/backups/myapp', "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+        File.join('backups/myapp', "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
       )
 
       ftp.send(:transfer!)
@@ -90,7 +91,7 @@ describe Backup::Storage::FTP do
     end
 
     it 'should remove the file from the remote server path' do
-      connection.expects(:delete).with("~/backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      connection.expects(:delete).with("backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
       ftp.send(:remove!)
     end
   end
