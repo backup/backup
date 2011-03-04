@@ -27,9 +27,11 @@ Gem::Specification.new do |gem|
 
   ##
   # Production gem dependencies
-  gem.add_dependency 'thor',    ['~> 0.14.6']
-  gem.add_dependency 'fog',     ['~> 0.5.3' ]
-  gem.add_dependency 'dropbox', ['~> 1.2.3' ]
-  gem.add_dependency 'mail',    ['~> 2.2.15']
+  gem.add_dependency 'thor',     ['~> 0.14.6'] # CLI
+  gem.add_dependency 'fog',      ['~> 0.5.3' ] # Amazon S3, Rackspace Cloud Files
+  gem.add_dependency 'dropbox',  ['~> 1.2.3' ] # Dropbox
+  gem.add_dependency 'mail',     ['~> 2.2.15'] # Mail
+  gem.add_dependency 'net-sftp', ['~> 2.0.5' ] # SFTP Protocol
+  gem.add_dependency 'net-scp',  ['~> 1.0.4' ] # SCP Protocol
 
 end
