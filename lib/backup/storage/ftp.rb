@@ -78,9 +78,13 @@ module Backup
       ##
       # Removes the transferred archive file from the server
       def remove!
-        connection.delete(
-          File.join(remote_path, remote_file)
-        )
+        begin
+          connection.delete(
+            File.join(remote_path, remote_file)
+          )
+        rescue Net::FTPPermError
+          Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+        end
       end
 
       ##
