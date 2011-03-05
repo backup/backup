@@ -9,7 +9,7 @@ describe Backup::Configuration::Storage::FTP do
       ftp.password  = 'my_password'
       ftp.ip        = '123.45.678.90'
       ftp.port      = 21
-      ftp.path      = '~/backups/'
+      ftp.path      = 'my_backups'
       ftp.keep      = 20
     end
   end
@@ -20,7 +20,7 @@ describe Backup::Configuration::Storage::FTP do
     ftp.password.should == 'my_password'
     ftp.ip.should       == '123.45.678.90'
     ftp.port.should     == 21
-    ftp.path.should     == '~/backups/'
+    ftp.path.should     == 'my_backups'
     ftp.keep.should     == 20
   end
 

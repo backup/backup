@@ -9,7 +9,7 @@ describe Backup::Configuration::Storage::SFTP do
       sftp.password  = 'my_password'
       sftp.ip        = '123.45.678.90'
       sftp.port      = 22
-      sftp.path      = '~/backups/'
+      sftp.path      = 'my_backups'
       sftp.keep      = 20
     end
   end
@@ -20,7 +20,7 @@ describe Backup::Configuration::Storage::SFTP do
     sftp.password.should == 'my_password'
     sftp.ip.should       == '123.45.678.90'
     sftp.port.should     == 22
-    sftp.path.should     == '~/backups/'
+    sftp.path.should     == 'my_backups'
     sftp.keep.should     == 20
   end
 

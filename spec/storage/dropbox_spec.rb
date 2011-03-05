@@ -28,7 +28,16 @@ describe Backup::Storage::Dropbox do
     db.password.should    == 'my_password'
     db.api_key.should     == 'my_api_key'
     db.api_secret.should  == 'my_secret'
+    db.path.should        == 'backups'
     db.keep.should        == 20
+  end
+
+  it 'should overwrite the default path' do
+    db = Backup::Storage::Dropbox.new do |db|
+      db.path = 'my/backups'
+    end
+    
+    db.path.should == 'my/backups'
   end
 
   describe '#connection' do
@@ -59,7 +68,7 @@ describe Backup::Storage::Dropbox do
     it do
       connection.expects(:upload).with(
         File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"),
-        File.join('backup', Backup::TRIGGER),
+        File.join('backups', Backup::TRIGGER),
         :timeout => 300
       )
 
@@ -70,7 +79,7 @@ describe Backup::Storage::Dropbox do
   describe '#remove!' do
     it do
       connection.expects(:delete).with(
-        File.join('backup', Backup::TRIGGER, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+        File.join('backups', Backup::TRIGGER, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
       )
 
       db.send(:remove!)

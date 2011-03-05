@@ -13,8 +13,8 @@ module Backup
       attr_accessor :access_key_id, :secret_access_key
 
       ##
-      # Amazon S3 bucket name
-      attr_accessor :bucket
+      # Amazon S3 bucket name and path
+      attr_accessor :bucket, :path
 
       ##
       # Region of the specified S3 bucket
@@ -29,14 +29,18 @@ module Backup
       #   eu-west-1, us-east-1, ap-southeast-1, us-west-1
       def initialize(&block)
         load_defaults!
+
+        @path ||= 'backups'
+
         instance_eval(&block) if block_given?
+
         @time = TIME
       end
 
       ##
       # This is the remote path to where the backup files will be stored
       def remote_path
-        File.join('backup', TRIGGER, '/')
+        File.join(path, TRIGGER, '/')
       end
 
       ##

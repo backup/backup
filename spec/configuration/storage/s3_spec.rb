@@ -9,6 +9,7 @@ describe Backup::Configuration::Storage::S3 do
       s3.secret_access_key  = 'my_secret_access_key'
       s3.region             = 'us-east-1'
       s3.bucket             = 'my-bucket'
+      s3.path               = 'my_backups'
     end
   end
 
@@ -18,6 +19,7 @@ describe Backup::Configuration::Storage::S3 do
     s3.secret_access_key.should == 'my_secret_access_key'
     s3.region.should            == 'us-east-1'
     s3.bucket.should            == 'my-bucket'
+    s3.path.should              == 'my_backups'
   end
 
   describe '#clear_defaults!' do
@@ -29,6 +31,7 @@ describe Backup::Configuration::Storage::S3 do
       s3.secret_access_key.should == nil
       s3.region.should            == nil
       s3.bucket.should            == nil
+      s3.path.should              == nil
     end
   end
 end

@@ -14,6 +14,10 @@ module Backup
           # Dropbox API credentials
           attr_accessor :api_key, :api_secret
 
+          ##
+          # Path to where the backups will be stored
+          attr_accessor :path
+
         end
       end
     end

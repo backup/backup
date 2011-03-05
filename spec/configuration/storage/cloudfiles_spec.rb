@@ -8,6 +8,7 @@ describe Backup::Configuration::Storage::CloudFiles do
       cf.username  = 'my_username'
       cf.api_key   = 'my_api_key'
       cf.container = 'my_container'
+      cf.path      = 'my_backups'
     end
   end
 
@@ -16,6 +17,7 @@ describe Backup::Configuration::Storage::CloudFiles do
     cf.username.should  == 'my_username'
     cf.api_key.should   == 'my_api_key'
     cf.container.should == 'my_container'
+    cf.path.should      == 'my_backups'
   end
 
   describe '#clear_defaults!' do
@@ -26,6 +28,7 @@ describe Backup::Configuration::Storage::CloudFiles do
       cf.username.should  == nil
       cf.api_key.should   == nil
       cf.container.should == nil
+      cf.path.should      == nil
     end
   end
 end

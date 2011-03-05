@@ -9,7 +9,7 @@ describe Backup::Configuration::Storage::SCP do
       scp.password  = 'my_password'
       scp.ip        = '123.45.678.90'
       scp.port      = 21
-      scp.path      = '~/backups/'
+      scp.path      = 'my_backups'
       scp.keep      = 20
     end
   end
@@ -20,7 +20,7 @@ describe Backup::Configuration::Storage::SCP do
     scp.password.should == 'my_password'
     scp.ip.should       == '123.45.678.90'
     scp.port.should     == 21
-    scp.path.should     == '~/backups/'
+    scp.path.should     == 'my_backups'
     scp.keep.should     == 20
   end
 

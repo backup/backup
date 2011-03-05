@@ -9,6 +9,7 @@ describe Backup::Storage::CloudFiles do
       cf.username  = 'my_username'
       cf.api_key   = 'my_api_key'
       cf.container = 'my_container'
+      cf.path      = 'backups'
       cf.keep      = 20
     end
   end
@@ -21,6 +22,7 @@ describe Backup::Storage::CloudFiles do
     cf.username.should  == 'my_username'
     cf.api_key.should   == 'my_api_key'
     cf.container.should == 'my_container'
+    cf.path.should      == 'backups'
     cf.keep.should      == 20
   end
 
@@ -32,11 +34,13 @@ describe Backup::Storage::CloudFiles do
 
     cf = Backup::Storage::CloudFiles.new do |cf|
       cf.container = 'my_container'
+      cf.path      = 'my/backups'
     end
 
     cf.username.should  == 'my_username'
     cf.api_key.should   == 'my_api_key'
     cf.container.should == 'my_container'
+    cf.path.should      == 'my/backups'
   end
 
   describe '#connection' do
@@ -69,7 +73,7 @@ describe Backup::Storage::CloudFiles do
       file = mock("Backup::Storage::CloudFiles::File")
       File.expects(:read).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
       cf.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
-      connection.expects(:put_object).with('my_container', "backup/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
+      connection.expects(:put_object).with('my_container', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
       cf.send(:transfer!)
     end
   end
@@ -82,7 +86,7 @@ describe Backup::Storage::CloudFiles do
 
     it 'should remove the file from the container' do
       cf.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
-      connection.expects(:delete_object).with('my_container', "backup/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      connection.expects(:delete_object).with('my_container', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
       cf.send(:remove!)
     end
   end

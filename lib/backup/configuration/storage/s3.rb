@@ -11,8 +11,8 @@ module Backup
           attr_accessor :access_key_id, :secret_access_key
 
           ##
-          # Amazon S3 bucket name
-          attr_accessor :bucket
+          # Amazon S3 bucket name and path
+          attr_accessor :bucket, :path
 
           ##
           # Region of the specified S3 bucket

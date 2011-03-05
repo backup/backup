@@ -13,8 +13,8 @@ module Backup
       attr_accessor :username, :api_key
 
       ##
-      # Rackspace Cloud Files container name
-      attr_accessor :container
+      # Rackspace Cloud Files container name and path
+      attr_accessor :container, :path
 
       ##
       # Creates a new instance of the Rackspace Cloud Files storage object
@@ -22,14 +22,18 @@ module Backup
       # the configuration block which may overwrite these defaults
       def initialize(&block)
         load_defaults!
+        
+        @path ||= 'backups'
+        
         instance_eval(&block) if block_given?
+        
         @time = TIME
       end
 
       ##
       # This is the remote path to where the backup files will be stored
       def remote_path
-        File.join('backup', TRIGGER)
+        File.join(path, TRIGGER)
       end
 
       ##

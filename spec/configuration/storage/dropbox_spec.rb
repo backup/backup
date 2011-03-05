@@ -9,6 +9,7 @@ describe Backup::Configuration::Storage::Dropbox do
       db.password    = 'my_password'
       db.api_key     = 'my_api_key'
       db.api_secret  = 'my_secret'
+      db.path        = 'my_backups'
       db.keep        = 20
     end
   end
@@ -19,6 +20,7 @@ describe Backup::Configuration::Storage::Dropbox do
     db.password.should    == 'my_password'
     db.api_key.should     == 'my_api_key'
     db.api_secret.should  == 'my_secret'
+    db.path.should        == 'my_backups'
     db.keep.should        == 20
   end
 
@@ -31,6 +33,7 @@ describe Backup::Configuration::Storage::Dropbox do
       db.password.should    == nil
       db.api_key.should     == nil
       db.api_secret.should  == nil
+      db.path.should        == nil
       db.keep.should        == nil
     end
   end

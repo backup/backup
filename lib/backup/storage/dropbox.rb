@@ -17,19 +17,27 @@ module Backup
       attr_accessor :api_key, :api_secret
 
       ##
+      # Path to where the backups will be stored
+      attr_accessor :path
+
+      ##
       # Creates a new instance of the Dropbox storage object
       # First it sets the defaults (if any exist) and then evaluates
       # the configuration block which may overwrite these defaults
       def initialize(&block)
         load_defaults!
+
+        @path ||= 'backups'
+
         instance_eval(&block) if block_given?
+
         @time = TIME
       end
 
       ##
       # This is the remote path to where the backup files will be stored
       def remote_path
-        File.join('backup', TRIGGER)
+        File.join(path, TRIGGER)
       end
 
       ##

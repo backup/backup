@@ -13,6 +13,7 @@ describe Backup::Storage::S3 do
       s3.secret_access_key  = 'my_secret_access_key'
       s3.region             = 'us-east-1'
       s3.bucket             = 'my-bucket'
+      s3.path               = 'backups'
       s3.keep               = 20
     end
   end
@@ -37,12 +38,14 @@ describe Backup::Storage::S3 do
 
     s3 = Backup::Storage::S3.new do |s3|
       s3.region = 'us-west-1'
+      s3.path   = 'my/backups'
     end
 
     s3.access_key_id.should     == 'my_access_key_id' # not defined, uses default
     s3.secret_access_key.should == nil                # not defined, no default
     s3.region.should            == 'us-west-1'        # defined, overwrites default
     s3.bucket.should            == nil                # not defined, no default
+    s3.path.should              == 'my/backups'       # overwritten from Backup::Storage::S3
   end
 
   describe '#connection' do
@@ -76,7 +79,7 @@ describe Backup::Storage::S3 do
       file = mock("Backup::Storage::S3::File")
       File.expects(:read).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
       s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
-      connection.expects(:put_object).with('my-bucket', "backup/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
+      connection.expects(:put_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
       s3.send(:transfer!)
     end
   end
@@ -89,7 +92,7 @@ describe Backup::Storage::S3 do
 
     it 'should remove the file from the bucket' do
       s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
-      connection.expects(:delete_object).with('my-bucket', "backup/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      connection.expects(:delete_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
       s3.send(:remove!)
     end
   end

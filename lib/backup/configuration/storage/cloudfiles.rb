@@ -11,8 +11,8 @@ module Backup
           attr_accessor :api_key, :username
 
           ##
-          # Rackspace Cloud Files container name
-          attr_accessor :container
+          # Rackspace Cloud Files container name and path
+          attr_accessor :container, :path
 
         end
       end
