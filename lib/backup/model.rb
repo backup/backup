@@ -55,6 +55,11 @@ module Backup
       attr_accessor :extension
 
       ##
+      # Contains the currently-in-use model. This attribute should get set by Backup::Finder.
+      # Use Backup::Model.current to retrieve the actual data of the model
+      attr_accessor :current
+
+      ##
       # Returns the full path to the current file (including the current extension).
       # To just return the filename and extension without the path, use File.basename(Backup::Model.file)
       def file

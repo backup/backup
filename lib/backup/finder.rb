@@ -28,7 +28,9 @@ module Backup
       # Iterates through all the instantiated backup models and returns
       # the one that matches the specified 'trigger'
       Backup::Model.all.each do |model|
-        return model if model.trigger.eql?(trigger)
+        if model.trigger.eql?(trigger)
+          return Backup::Model.current = model
+        end
       end
 
       puts "Could not find trigger '#{trigger}' in '#{config}'."; exit
