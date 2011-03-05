@@ -28,7 +28,12 @@ module Backup
       # the configuration block which may overwrite these defaults
       def initialize(&block)
         load_defaults!
+
+        @port ||= 22
+        @path ||= 'backups'
+
         instance_eval(&block) if block_given?
+
         @time = TIME
         @path = path.sub(/^\~\//, '')
       end

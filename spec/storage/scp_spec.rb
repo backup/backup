@@ -16,7 +16,7 @@ describe Backup::Storage::SCP do
   end
 
   before do
-    Backup::Configuration::Storage::SFTP.clear_defaults!
+    Backup::Configuration::Storage::SCP.clear_defaults!
   end
 
   it 'should have defined the configuration properly' do
@@ -43,7 +43,13 @@ describe Backup::Storage::SCP do
     scp.username.should == 'my_default_username'
     scp.password.should == 'my_password'
     scp.ip.should       == '123.45.678.90'
-    scp.port.should     == nil
+    scp.port.should     == 22
+  end
+
+  it 'should have its own defaults' do
+    scp = Backup::Storage::SCP.new
+    scp.port.should == 22
+    scp.path.should == 'backups'
   end
 
   describe '#connection' do

@@ -43,7 +43,13 @@ describe Backup::Storage::FTP do
     ftp.username.should == 'my_default_username'
     ftp.password.should == 'my_password'
     ftp.ip.should       == '123.45.678.90'
-    ftp.port.should     == nil
+    ftp.port.should     == 21
+  end
+
+  it 'should have its own defaults' do
+    ftp = Backup::Storage::FTP.new
+    ftp.port.should == 21
+    ftp.path.should == 'backups'
   end
 
   describe '#connection' do

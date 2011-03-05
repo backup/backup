@@ -43,7 +43,13 @@ describe Backup::Storage::SFTP do
     sftp.username.should == 'my_default_username'
     sftp.password.should == 'my_password'
     sftp.ip.should       == '123.45.678.90'
-    sftp.port.should     == nil
+    sftp.port.should     == 22
+  end
+
+  it 'should have its own defaults' do
+    sftp = Backup::Storage::SFTP.new
+    sftp.port.should == 22
+    sftp.path.should == 'backups'
   end
 
   describe '#connection' do
