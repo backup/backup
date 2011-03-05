@@ -105,8 +105,7 @@ module Backup
           path_parts << path_part
           begin
             connection.mkdir(path_parts.join('/'))
-          rescue Net::FTPPermError
-          end
+          rescue Net::FTPPermError; end
         end
       end
 

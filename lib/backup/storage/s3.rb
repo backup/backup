@@ -97,8 +97,7 @@ module Backup
       def remove!
         begin
           connection.delete_object(bucket, File.join(remote_path, remote_file))
-        rescue Excon::Errors::SocketError
-        end
+        rescue Excon::Errors::SocketError; end
       end
 
     end

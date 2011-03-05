@@ -97,8 +97,7 @@ module Backup
           path_parts << path_part
           begin
             connection.mkdir!(path_parts.join('/'))
-          rescue Net::SFTP::StatusException
-          end
+          rescue Net::SFTP::StatusException; end
         end
       end
 
