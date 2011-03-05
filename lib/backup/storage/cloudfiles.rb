@@ -22,11 +22,11 @@ module Backup
       # the configuration block which may overwrite these defaults
       def initialize(&block)
         load_defaults!
-        
+
         @path ||= 'backups'
-        
+
         instance_eval(&block) if block_given?
-        
+
         @time = TIME
       end
 

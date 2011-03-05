@@ -36,7 +36,7 @@ describe Backup::Storage::Dropbox do
     db = Backup::Storage::Dropbox.new do |db|
       db.path = 'my/backups'
     end
-    
+
     db.path.should == 'my/backups'
   end
 
