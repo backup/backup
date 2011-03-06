@@ -51,7 +51,7 @@ module Backup
         type           = self.class.name.split("::").last
         storage_object = Backup::Storage::Object.new(type)
         objects        = [self] + storage_object.load
-        if keep.is_a?(Integer) and objects.count > keep
+        if keep.is_a?(Integer) and keep > 0 and objects.count > keep
           objects_to_remove = objects[keep..-1]
           objects_to_remove.each do |object|
             Logger.message "#{ self.class } started removing (cycling) \"#{ object.remote_file }\"."

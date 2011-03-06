@@ -14,6 +14,7 @@ describe Backup::Storage::Base do
     Backup::Storage::Object.expects(:new).with('Base').returns(storage_object)
     storage_object.stubs(:load).returns([])
     storage_object.expects(:write)
+    base.keep = 1
     base.cycle!
   end
 
