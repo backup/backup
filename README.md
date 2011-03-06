@@ -3,6 +3,11 @@ Michael van Rooijen ( [@meskyanichi](http://twitter.com/#!/meskyanichi) )
 
 **This is the Backup 3 place holder page**, [click here if you were looking for Backup 2](https://github.com/meskyanichi/backup/tree/backup-2).
 
+Backup 3 - ETA (Update)
+==============
+
+I have delayed the Backup 3 release just a little because I'm lacking a bit of time to finish it up. I said it'd be out just before March, but as it stands now I think I'll need until around mid-end March 2011. I also want proper documentation on release so people can pick it up without hassle.
+
 Backup 3 - Coming Soon!
 =======================
 
@@ -25,12 +30,6 @@ I am currently hard at work developing Backup 3.0. This is a __100% rewrite__ of
 * The freedom (through CLI) to specify the location of the configuration file on the filesystem, as well as the location of where the dumped .yml files should be stored and loaded
 
 These are a few of the goals I've set for the next release. Feel free the view the source. I probably won't release the initial version with __every__ feature that Backup 2 has when it first comes out, but it'll have plenty of features to start off with. Also, it'll be __a lot__ easier to maintain it and improve it now that it has good test coverage, and is more modular and extensible. So expect a lot more to come in Backup 3 in the future! I am really excited about this one.
-
-
-Backup 3 - ETA
-==============
-
-There is no ETA yet, but I hope to push the initial version out before __March - 2011__. Then we take it from there. ;)
 
 
 Backup 3 - No Ruby on Rails support?
