@@ -105,7 +105,7 @@ describe Backup::Model do
   describe 'storages' do
     it 'should add a storage to the array of storages to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        store_to('TestStorage')
+        store_with('TestStorage')
       end
 
       model.storages.count.should == 1
@@ -113,8 +113,8 @@ describe Backup::Model do
 
     it 'should add a storage to the array of storages to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        store_to('TestStorage')
-        store_to('TestStorage')
+        store_with('TestStorage')
+        store_with('TestStorage')
       end
 
       model.storages.count.should == 2
