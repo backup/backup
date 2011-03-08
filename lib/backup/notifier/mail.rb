@@ -60,7 +60,9 @@ module Backup
       # Instantiates a new Backup::Notifier::Mail object
       def initialize(&block)
         load_defaults!
+
         instance_eval(&block) if block_given?
+
         set_defaults!
       end
 
