@@ -38,7 +38,7 @@ module Backup
     def perform!
       mkdir(archive_path)
       Logger.message("#{ self.class } started packaging and archiving #{ paths.map { |path| "\"#{path}\""}.join(", ") }.")
-      run("#{ utility(:tar) } -c #{ paths_to_package } &> /dev/null > '#{ File.join(archive_path, "#{name}.tar") }'")
+      run("#{ utility(:tar) } -c #{ paths_to_package } 1> '#{ File.join(archive_path, "#{name}.tar") }' 2> /dev/null")
     end
 
   private
