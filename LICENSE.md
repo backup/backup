@@ -1,6 +1,9 @@
-# Copyright (c) 2009-2011 Michael van Rooijen ( [@meskyanichi](http://twitter.com/#!/meskyanichi) )
 
-## The Backup gem is released under the **MIT LICENSE**
+Copyright (c) 2009-2011 Michael van Rooijen ( [@meskyanichi](http://twitter.com/#!/meskyanichi) )
+=================================================================================================
+
+The "Backup" RubyGem is released under the **MIT LICENSE**
+----------------------------------------------------------
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
