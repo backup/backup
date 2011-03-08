@@ -2,7 +2,7 @@
 
 require File.dirname(__FILE__) + '/../spec_helper'
 
-describe Backup::Compressor::Gzip do
+describe Backup::Encryptor::OpenSSL do
 
   context "when no block is provided" do
     let(:encryptor) { Backup::Encryptor::OpenSSL.new }

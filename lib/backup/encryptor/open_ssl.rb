@@ -28,7 +28,7 @@ module Backup
       end
 
       ##
-      # Performs the compression of the packages backup file
+      # Performs the encryption of the backup file
       def perform!
         log!
         run("#{ utility(:openssl) } #{ options } -in '#{ Backup::Model.file }' -out '#{ Backup::Model.file }.enc' -k '#{ password }'")
