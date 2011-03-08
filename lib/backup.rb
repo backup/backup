@@ -65,6 +65,11 @@ module Backup
       autoload :GPG,     File.join(CONFIGURATION_PATH, 'encryptor', 'gpg')
     end
 
+    module Compressor
+      autoload :Base, File.join(CONFIGURATION_PATH, 'compressor', 'base')
+      autoload :Gzip, File.join(CONFIGURATION_PATH, 'compressor', 'gzip')
+    end
+
     module Storage
       autoload :Base,       File.join(CONFIGURATION_PATH, 'storage', 'base')
       autoload :S3,         File.join(CONFIGURATION_PATH, 'storage', 's3')

@@ -18,8 +18,10 @@ module Backup
       # Creates a new instance of Backup::Compressor::Gzip and
       # configures it to either compress faster or better
       def initialize(&block)
-        @best = false
-        @fast = false
+        load_defaults!
+
+        @best ||= false
+        @fast ||= false
 
         instance_eval(&block) if block_given?
       end
