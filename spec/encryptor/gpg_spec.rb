@@ -35,4 +35,23 @@ describe Backup::Encryptor::GPG do
       encryptor.key.should == key.gsub(/^(\s|\t)+/, '')
     end
   end
+
+  describe '#options' do
+    it do
+      encryptor.expects(:encryption_key_id).returns('secret')
+      encryptor.send(:options).should == "-e --trust-model always -r 'secret'"
+    end
+  end
+
+  describe '#write_tmp_file!' do
+    it do
+      tmp_file = mock('TmpFile')
+      Tempfile.expects(:new).returns(tmp_file)
+      tmp_file.expects(:write).with('secret')
+      tmp_file.expects(:close)
+
+      encryptor.key = 'secret'
+      encryptor.send(:write_tmp_file!)
+    end
+  end
 end
