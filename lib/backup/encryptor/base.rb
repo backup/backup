@@ -4,6 +4,7 @@ module Backup
   module Encryptor
     class Base
       include Backup::CLI
+      include Backup::Configuration::Helpers
 
       ##
       # Logs a message to the console and log file to inform

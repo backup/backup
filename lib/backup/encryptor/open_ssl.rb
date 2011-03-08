@@ -21,8 +21,10 @@ module Backup
       # Creates a new instance of Backup::Encryptor::OpenSSL and
       # sets the password attribute to what was provided
       def initialize(&block)
-        @base64 = false
-        @salt   = false
+        load_defaults!
+
+        @base64 ||= false
+        @salt   ||= false
 
         instance_eval(&block) if block_given?
       end

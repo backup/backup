@@ -26,6 +26,7 @@ module Backup
       # the user may use tabs and spaces to indent the multi-line key string
       # since we gsub() every preceding 'space' and 'tab' on each line
       def initialize(&block)
+        load_defaults!
         instance_eval(&block) if block_given?
         @key = key.gsub(/^(\s|\t)+/, '')
       end

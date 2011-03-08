@@ -59,6 +59,12 @@ module Backup
       autoload :Mail, File.join(CONFIGURATION_PATH, 'notifier', 'mail')
     end
 
+    module Encryptor
+      autoload :Base,    File.join(CONFIGURATION_PATH, 'encryptor', 'base')
+      autoload :OpenSSL, File.join(CONFIGURATION_PATH, 'encryptor', 'open_ssl')
+      autoload :GPG,     File.join(CONFIGURATION_PATH, 'encryptor', 'gpg')
+    end
+
     module Storage
       autoload :Base,       File.join(CONFIGURATION_PATH, 'storage', 'base')
       autoload :S3,         File.join(CONFIGURATION_PATH, 'storage', 's3')
