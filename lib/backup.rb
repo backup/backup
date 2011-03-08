@@ -19,7 +19,7 @@ module Backup
   DATABASES   = ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis']
   STORAGES    = ['S3', 'CloudFiles', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync']
   COMPRESSORS = ['Gzip']
-  ENCRYPTORS  = ['OpenSSL']
+  ENCRYPTORS  = ['OpenSSL', 'GPG']
   NOTIFIERS   = ['Mail']
 
   ##
@@ -115,6 +115,7 @@ module Backup
   module Encryptor
     autoload :Base,    File.join(ENCRYPTOR_PATH, 'base')
     autoload :OpenSSL, File.join(ENCRYPTOR_PATH, 'open_ssl')
+    autoload :GPG,     File.join(ENCRYPTOR_PATH, 'gpg')
   end
 
   ##
