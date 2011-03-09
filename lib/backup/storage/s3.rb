@@ -34,6 +34,7 @@ module Backup
 
         instance_eval(&block) if block_given?
 
+        @path = path.sub(/^\//, '')
         @time = TIME
       end
 
