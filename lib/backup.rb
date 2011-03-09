@@ -34,6 +34,7 @@ module Backup
 
   ##
   # Backup's Environment paths
+  PATH               = File.join(ENV['HOME'], 'Backup')
   DATA_PATH          = File.join(ENV['HOME'], 'Backup', 'data')
   CONFIG_FILE        = File.join(ENV['HOME'], 'Backup', 'config.rb')
   LOG_PATH           = File.join(ENV['HOME'], 'Backup', 'log')

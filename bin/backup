@@ -3,6 +3,8 @@
 ##
 # Load RubyGems for Ruby <= 1.8.7
 require 'rubygems'
+require 'tempfile'
+require 'fileutils'
 
 ##
 # Load Thor for the Command Line Interface
@@ -20,6 +22,8 @@ require File.expand_path("../../lib/backup", __FILE__)
 ##
 # Build the Backup Command Line Interface using Thor
 class BackupCLI < Thor
+
+  TEMPLATE_DIR = File.expand_path("../../lib/templates", __FILE__)
 
   ##
   # [Perform]
@@ -86,6 +90,56 @@ class BackupCLI < Thor
     # Runs the returned model
     Backup::Logger.message "Performing backup for #{model.label}!"
     model.perform!
+  end
+
+  ##
+  # [Generate]
+  # Generates a configuration file based on the arguments passed in.
+  # For example, running $ backup generate --databases='mongodb' will generate a pre-populated
+  # configuration file with a base MongoDB setup
+  desc 'generate', 'Generates configuration blocks based on the arguments you pass in'
+  method_option :path,        :type => :string
+  method_option :databases,   :type => :string
+  method_option :storages,    :type => :string
+  method_option :encryptors,  :type => :string
+  method_option :compressors, :type => :string
+  method_option :notifiers,   :type => :string
+  method_option :archives,    :type => :boolean
+  def generate
+    temp_file = Tempfile.new('backup.rb')
+    temp_file << File.read( File.join(TEMPLATE_DIR, 'readme') )
+    temp_file << "Backup::Model.new(:my_backup, 'My Backup') do\n\n"
+
+    if options[:archives]
+      temp_file << File.read( File.join(TEMPLATE_DIR, 'archive') ) + "\n\n"
+    end
+
+    [:databases, :storages, :encryptors, :compressors, :notifiers].each do |item|
+      if options[item]
+        options[item].split(',').map(&:strip).uniq.each do |entry|
+          if File.exist?( File.join(TEMPLATE_DIR, item.to_s[0..-2], entry) )
+            temp_file << File.read( File.join(TEMPLATE_DIR, item.to_s[0..-2], entry) ) + "\n\n"
+          end
+        end
+      end
+    end
+
+    temp_file << "end\n\n"
+    temp_file.close
+    if options[:path]
+      FileUtils.mkdir_p(options[:path])
+      File.open(File.join(options[:path], 'config.rb'), 'w') do |file|
+        file.write( File.read(temp_file.path) )
+        puts "Generated configuration file in '#{File.join(options[:path], 'config.rb')}'"
+      end
+    else
+      FileUtils.mkdir_p(Backup::PATH)
+      File.open(File.join(Backup::PATH, 'config.rb'), 'w') do |file|
+        file.write( File.read(temp_file.path) )
+        puts "Generated configuration file in '#{File.join(Backup::PATH, 'config.rb')}'"
+      end
+    end
+    temp_file.unlink
   end
 
   ##

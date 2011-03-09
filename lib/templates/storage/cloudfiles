@@ -1,0 +1,7 @@
+  store_with CloudFiles do |cf|
+    cf.api_key   = 'my_api_key'
+    cf.username  = 'my_username'
+    cf.container = 'my_container'
+    cf.path      = '/path/to/my/backups'
+    cf.keep      = 5
+  end
