@@ -1,5 +1,5 @@
   encrypt_with GPG do |encryption|
-    encryption.key <<-KEY
+    encryption.key = <<-KEY
       -----BEGIN PGP PUBLIC KEY BLOCK-----
       Version: GnuPG v1.4.11 (Darwin)
 
