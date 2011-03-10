@@ -73,7 +73,7 @@ module Backup
           connection.put_object(
             container,
             File.join(remote_path, remote_file),
-            File.read(File.join(local_path, local_file))
+            File.open(File.join(local_path, local_file))
           )
         rescue Excon::Errors::SocketError => e
           puts "\nAn error occurred while trying to transfer the backup."
