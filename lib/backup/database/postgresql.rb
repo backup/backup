@@ -77,7 +77,7 @@ module Backup
       # both the host and the socket are specified, the socket will take priority over the host
       def connectivity_options
         %w[host port socket].map do |option|
-          next if send(option).nil? or send(option).empty?
+          next if send(option).nil? or (send(option).respond_to?(:empty?) and send(option).empty?)
           "--#{option}='#{send(option)}'".gsub('--socket=', '--host=')
         end.compact.join("\s")
       end

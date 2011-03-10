@@ -72,7 +72,7 @@ module Backup
       # to perform the database dumping process
       def connectivity_options
         %w[host port socket].map do |option|
-          next if send(option).nil? or send(option).empty?
+          next if send(option).nil? or (send(option).respond_to?(:empty?) and send(option).empty?)
           "--#{option}='#{send(option)}'"
         end.compact.join("\s")
       end
