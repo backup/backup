@@ -1,0 +1,4 @@
+  archive :my_archive do |archive|
+    archive.add '/path/to/a/file.rb'
+    archive.add '/path/to/a/folder/'
+  end

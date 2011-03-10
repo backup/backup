@@ -3,6 +3,8 @@
 ##
 # Load RubyGems for Ruby <= 1.8.7
 require 'rubygems'
+require 'tempfile'
+require 'fileutils'
 
 ##
 # Load Thor for the Command Line Interface
@@ -20,7 +22,156 @@ require File.expand_path("../../lib/backup", __FILE__)
 ##
 # Build the Backup Command Line Interface using Thor
 class BackupCLI < Thor
-  
+
+  TEMPLATE_DIR = File.expand_path("../../lib/templates", __FILE__)
+
+  ##
+  # [Perform]
+  # Performs the backup process. The only required option is the --trigger [-t].
+  # If the other options (--config_file, --data_path, --tmp_path) aren't specified
+  # it'll fallback to the (good) defaults
+  method_option :trigger,     :type => :string, :aliases => '-t', :required => true
+  method_option :config_file, :type => :string, :aliases => '-c'
+  method_option :data_path,   :type => :string, :aliases => '-d'
+  method_option :log_path,    :type => :string, :aliases => '-l'
+  method_option :tmp_path,    :type => :string
+  desc 'perform', 'Performs the backup for the specified trigger'
+  def perform
+
+    ##
+    # Defines the TRIGGER and TIME constants
+    Backup.send(:const_set, :TRIGGER, options[:trigger])
+    Backup.send(:const_set, :TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
+
+    ##
+    # Overwrites the CONFIG_FILE location, if --config-file was specified
+    if options[:config_file]
+      Backup.send(:remove_const, :CONFIG_FILE)
+      Backup.send(:const_set, :CONFIG_FILE, options[:config_file])
+    end
+
+    ##
+    # Overwrites the DATA_PATH location, if --data-path was specified
+    if options[:data_path]
+      Backup.send(:remove_const, :DATA_PATH)
+      Backup.send(:const_set, :DATA_PATH, options[:data_path])
+    end
+
+    ##
+    # Overwrites the LOG_PATH location, if --log-path was specified
+    if options[:log_path]
+      Backup.send(:remove_const, :LOG_PATH)
+      Backup.send(:const_set, :LOG_PATH, options[:log_path])
+    end
+
+    ##
+    # Overwrites the TMP_PATH location, if --tmp-path was specified
+    if options[:tmp_path]
+      Backup.send(:remove_const, :TMP_PATH)
+      Backup.send(:const_set, :TMP_PATH, options[:tmp_path])
+    end
+
+    ##
+    # Ensure the TMP_PATH, LOG_PATH, DATA_PATH and DATA_PATH/TRIGGER
+    # are created if they do not yet exist
+    Array.new([
+      Backup::TMP_PATH,
+      Backup::LOG_PATH,
+      File.join(Backup::DATA_PATH, Backup::TRIGGER)
+    ]).each do |path|
+      FileUtils.mkdir_p(path)
+    end
+
+    ##
+    # Parses the backup configuration file and returns the model instance by trigger
+    model = Backup::Finder.new(Backup::TRIGGER, Backup::CONFIG_FILE).find
+
+    ##
+    # Runs the returned model
+    Backup::Logger.message "Performing backup for #{model.label}!"
+    model.perform!
+  end
+
+  ##
+  # [Generate]
+  # Generates a configuration file based on the arguments passed in.
+  # For example, running $ backup generate --databases='mongodb' will generate a pre-populated
+  # configuration file with a base MongoDB setup
+  desc 'generate', 'Generates configuration blocks based on the arguments you pass in'
+  method_option :path,        :type => :string
+  method_option :databases,   :type => :string
+  method_option :storages,    :type => :string
+  method_option :encryptors,  :type => :string
+  method_option :compressors, :type => :string
+  method_option :notifiers,   :type => :string
+  method_option :archives,    :type => :boolean
+  def generate
+    temp_file = Tempfile.new('backup.rb')
+    temp_file << File.read( File.join(TEMPLATE_DIR, 'readme') )
+    temp_file << "Backup::Model.new(:my_backup, 'My Backup') do\n\n"
+
+    if options[:archives]
+      temp_file << File.read( File.join(TEMPLATE_DIR, 'archive') ) + "\n\n"
+    end
+
+    [:databases, :storages, :encryptors, :compressors, :notifiers].each do |item|
+      if options[item]
+        options[item].split(',').map(&:strip).uniq.each do |entry|
+          if File.exist?( File.join(TEMPLATE_DIR, item.to_s[0..-2], entry) )
+            temp_file << File.read( File.join(TEMPLATE_DIR, item.to_s[0..-2], entry) ) + "\n\n"
+          end
+        end
+      end
+    end
+
+    temp_file << "end\n\n"
+    temp_file.close
+    if options[:path]
+      FileUtils.mkdir_p(options[:path])
+      File.open(File.join(options[:path], 'config.rb'), 'w') do |file|
+        file.write( File.read(temp_file.path) )
+        puts "Generated configuration file in '#{File.join(options[:path], 'config.rb')}'"
+      end
+    else
+      FileUtils.mkdir_p(Backup::PATH)
+      File.open(File.join(Backup::PATH, 'config.rb'), 'w') do |file|
+        file.write( File.read(temp_file.path) )
+        puts "Generated configuration file in '#{File.join(Backup::PATH, 'config.rb')}'"
+      end
+    end
+    temp_file.unlink
+  end
+
+  ##
+  # [Decrypt]
+  # Shorthand for decrypting encrypted files
+  desc 'decrypt', 'Decrypts encrypted files'
+  method_option :encryptor, :type => :string,  :required => true
+  method_option :in,        :type => :string,  :required => true
+  method_option :out,       :type => :string,  :required => true
+  method_option :base64,    :type => :boolean, :default  => false
+  def decrypt
+    case options[:encryptor].downcase
+    when 'openssl'
+      base64 = options[:base64] ? '-base64' : ''
+      %x[openssl aes-256-cbc -d #{base64} -in '#{options[:in]}' -out '#{options[:out]}']
+    when 'gpg'
+      %x[gpg -o '#{options[:out]}' -d '#{options[:in]}']
+    else
+      puts "Unknown encryptor: #{options[:encryptor]}"
+      puts "Use either 'openssl' or 'gpg'"
+    end
+  end
+
+  ##
+  # [Version]
+  # Returns the current version of the Backup gem
+  map '-v' => :version
+  desc 'version', 'Display installed Backup version'
+  def version
+    puts "Backup #{Backup::Version.current}"
+  end
+
 end
 
 ##

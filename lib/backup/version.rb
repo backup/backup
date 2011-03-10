@@ -3,15 +3,30 @@
 module Backup
 
   ##
-  # Update only the constants: "MAJOR", "MINOR", "PATCH" and "BUILD"
+  # Usage:
+  #
+  #  # Returns the current backup version based on the defined constants
+  #    Backup::Version.current
+  #
+  #  # Returns a gemspec compatible version number based on the defined constants
+  #    Backup::Version.gemspec
+  #
   class Version
 
     ##
-    # MAJOR: Defines the major version
-    # MINOR: Defines the minor version
-    # PATCH: Defines the patch version
-    # BUILD: Defines the build version ( use 'false' if no build )
+    # MAJOR:
+    #  Defines the major version
+    # MINOR:
+    #  Defines the minor version
+    # PATCH:
+    #  Defines the patch version
+    # BUILD:
+    #  Defines the build version ( use 'false' if no build )
     MAJOR, MINOR, PATCH, BUILD = 3, 0, 0, false
+
+    # ========================================================= #
+    #  ADJUST THE CONSTANTS ABOVE TO CHANGE THE BACKUP VERSION  #
+    # ========================================================= #
 
     ##
     # Returns the major version ( big release based off of multiple minor releases )

@@ -1,0 +1,9 @@
+  encrypt_with GPG do |encryption|
+    encryption.key = <<-KEY
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v1.4.11 (Darwin)
+
+          <Your GPG Public Key Here>
+      -----END PGP PUBLIC KEY BLOCK-----
+    KEY
+  end

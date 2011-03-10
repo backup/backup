@@ -1,0 +1,31 @@
+
+There seemed to be a problem backing up <%= @model.label %> (<%= @model.trigger %>).
+
+===========================================================================
+Exception that got raised:
+<%= @exception.to_s %>
+===========================================================================
+<%= @exception.backtrace.join("\n") %>
+===========================================================================
+
+
+You are running Backup version:
+<%= Backup::Version.current %>
+
+You are running Ruby version:
+<%= ENV["RUBY_VERSION"] %>
+
+
+---------------------------------------------------------------------------
+
+View all Backup gem releases here:
+http://rubygems.org/gems/backup
+
+View the Backup git repository here:
+https://github.com/meskyanichi/backup
+
+View the Backup issues here:
+https://github.com/meskyanichi/backup/issues
+
+View the Backup wiki here:
+https://github.com/meskyanichi/backup/wiki
