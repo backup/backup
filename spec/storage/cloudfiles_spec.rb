@@ -71,7 +71,7 @@ describe Backup::Storage::CloudFiles do
     it 'should transfer the provided file to the container' do
       Backup::Model.new('blah', 'blah') {}
       file = mock("Backup::Storage::CloudFiles::File")
-      File.expects(:read).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
+      File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
       cf.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
       connection.expects(:put_object).with('my_container', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
       cf.send(:transfer!)

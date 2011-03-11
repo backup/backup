@@ -197,8 +197,8 @@ module Backup
         databases.each   { |d| d.perform! }
         archives.each    { |a| a.perform! }
         package!
-        encryptors.each  { |e| e.perform! }
         compressors.each { |c| c.perform! }
+        encryptors.each  { |e| e.perform! }
         storages.each    { |s| s.perform! }
         notifiers.each   { |n| n.perform!(self) }
         clean!

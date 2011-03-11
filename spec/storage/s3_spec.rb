@@ -77,7 +77,7 @@ describe Backup::Storage::S3 do
     it 'should transfer the provided file to the bucket' do
       Backup::Model.new('blah', 'blah') {}
       file = mock("Backup::Storage::S3::File")
-      File.expects(:read).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
+      File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
       s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
       connection.expects(:sync_clock)
       connection.expects(:put_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
