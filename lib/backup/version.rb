@@ -22,7 +22,7 @@ module Backup
     #  Defines the patch version
     # BUILD:
     #  Defines the build version ( use 'false' if no build )
-    MAJOR, MINOR, PATCH, BUILD = 3, 0, 2, false
+    MAJOR, MINOR, PATCH, BUILD = 3, 0, 2, 0
 
     # ========================================================= #
     #  ADJUST THE CONSTANTS ABOVE TO CHANGE THE BACKUP VERSION  #
