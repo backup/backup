@@ -88,11 +88,10 @@ module Backup
       ##
       # RSync options
       # -z     = Compresses the bytes that will be transferred to reduce bandwidth usage
-      # -e     = Allow the usage of SSH remote shell
       # --port = the port to connect to through SSH
       # -Phv   = debug options
       def options
-        "-z -e ssh --port='#{ port }'"
+        "-z --port='#{ port }'"
       end
 
     end

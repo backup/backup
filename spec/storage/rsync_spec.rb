@@ -72,7 +72,7 @@ describe Backup::Storage::RSync do
 
       rsync.expects(:create_remote_directories!)
       rsync.expects(:utility).returns('rsync')
-      rsync.expects(:run).with("rsync -z -e ssh --port='22' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar'")
+      rsync.expects(:run).with("rsync -z --port='22' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar'")
 
       rsync.send(:transfer!)
     end
