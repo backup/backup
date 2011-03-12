@@ -17,7 +17,7 @@ Gem::Specification.new do |gem|
                     It supports various databases (MySQL, PostgreSQL, MongoDB and Redis), it supports various storage locations
                     (Amazon S3, Rackspace Cloud Files, Dropbox, any remote server through FTP, SFTP, SCP and RSync), it can archive files and folders,
                     it can cycle backups, it can do incremental backups, it can compress backups, it can encrypt backups (OpenSSL or GPG),
-                    it can notify you about successful and/or failed backups. It is very extensible and easy to add new functionality to. It\'s easy to use.'
+                    it can notify you about successful and/or failed backups (Email, Twitter). It is very extensible and easy to add new functionality to. It\'s easy to use.'
 
   ##
   # Files and folder that need to be compiled in to the Ruby Gem
@@ -37,5 +37,6 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'mail',     ['~> 2.2.15'] # Mail
   gem.add_dependency 'net-sftp', ['~> 2.0.5' ] # SFTP Protocol
   gem.add_dependency 'net-scp',  ['~> 1.0.4' ] # SCP Protocol
+  gem.add_dependency 'twitter',  ['~> 1.1.2' ] # Twitter
 
 end
