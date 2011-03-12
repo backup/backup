@@ -203,7 +203,7 @@ Check out the Wiki for more information on all the above subjects.
 
 ### And that's it!
 
-So as you can see the DSL is straightforward and should be simple to understand and extend to your needs. You can have as many databases, archives, storage locations, compressors, encryptors and notifiers inside the above example as you need and it'll bundle all of it up in a nice packaged archive and transfer it to every specified location (as redundant as you like).
+So as you can see the DSL is straightforward and should be simple to understand and extend to your needs. You can have as many databases, archives, storage locations, syncers, compressors, encryptors and notifiers inside the above example as you need and it'll bundle all of it up in a nice packaged archive and transfer it to every specified location (as redundant as you like).
 
 ### Running the example
 
