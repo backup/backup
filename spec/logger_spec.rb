@@ -34,4 +34,13 @@ describe Backup::Logger do
       Backup::Logger.warn "This has been logged."
     end
   end
+
+  context 'when logging silent messages' do
+    it do
+      Backup::Logger.expects(:puts).never
+      File.expects(:open).with(File.join(Backup::LOG_PATH, 'backup.log'), 'a')
+
+      Backup::Logger.silent "This has been logged."
+    end
+  end
 end

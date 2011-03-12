@@ -1,0 +1,14 @@
+  sync_with RSync do |rsync|
+    rsync.ip       = "123.45.678.90"
+    rsync.port     = 22
+    rsync.username = "my_username"
+    rsync.password = "my_password"
+    rsync.path     = "~/backups/"
+    rsync.mirror   = true
+    rsync.compress = true
+
+    rsync.folders do |folder|
+      folder.add "/var/apps/my_app/public/uploads"
+      folder.add "/var/apps/my_app/logs"
+    end
+  end
