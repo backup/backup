@@ -102,6 +102,7 @@ class BackupCLI < Thor
   method_option :path,        :type => :string
   method_option :databases,   :type => :string
   method_option :storages,    :type => :string
+  method_option :syncers,     :type => :string
   method_option :encryptors,  :type => :string
   method_option :compressors, :type => :string
   method_option :notifiers,   :type => :string
@@ -115,7 +116,7 @@ class BackupCLI < Thor
       temp_file << File.read( File.join(TEMPLATE_DIR, 'archive') ) + "\n\n"
     end
 
-    [:databases, :storages, :encryptors, :compressors, :notifiers].each do |item|
+    [:databases, :storages, :syncers, :encryptors, :compressors, :notifiers].each do |item|
       if options[item]
         options[item].split(',').map(&:strip).uniq.each do |entry|
           if File.exist?( File.join(TEMPLATE_DIR, item.to_s[0..-2], entry) )
