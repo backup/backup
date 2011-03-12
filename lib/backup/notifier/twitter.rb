@@ -62,7 +62,7 @@ module Backup
       # Sends a tweet informing the user that the backup operation
       # raised an exception and will send the user the error details
       def notify_failure!(exception)
-        twitter_client.update("[Backup::Failed] #{model.label} (#{model.trigger})")
+        twitter_client.update("[Backup::Failed] #{model.label} (#{model.trigger}) - #{@exception}")
       end
 
       ##
