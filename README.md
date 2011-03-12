@@ -6,7 +6,7 @@ Backup is a RubyGem (for UNIX-like operating systems: Linux, Mac OSX) that allow
 Author
 ------
 
-Michael van Rooijen ( [@meskyanichi](http://twitter.com/#!/meskyanichi) )
+**Michael van Rooijen ( [@meskyanichi](http://twitter.com/#!/meskyanichi) )**
 
 Drop me a message for any questions, suggestions, requests, bugs or submit them to the [issue log](https://github.com/meskyanichi/backup/issues).
 
@@ -19,6 +19,10 @@ To get the latest stable version
 
 You can view the list of released versions over at [RubyGems.org (Backup)](https://rubygems.org/gems/backup/versions)
 
+Getting Started
+---------------
+
+I recommend you read this README first, and refer to the [Wiki pages](https://github.com/meskyanichi/backup/wiki) afterwards. There's also a [Getting Started wiki page](https://github.com/meskyanichi/backup/wiki/Getting-Started).
 
 What Backup 3 currently supports
 ================================
@@ -234,6 +238,19 @@ Suggestions, Bugs, Requests, Questions
 
 View the [issue log](https://github.com/meskyanichi/backup/issues) and post them there.
 
+Contributors
+------------
+
+<table>
+  <tr>
+    <th>Contributor</th>
+    <th>Contribution</th>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/asanghi" target="_blank">Aditya Sanghi ( asanghi )</a></td>
+    <td>Twitter Notifier</td>
+  </tr>
+</table>
 
 Want to contribute?
 -------------------
