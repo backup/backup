@@ -17,12 +17,6 @@ To get the latest stable version
 
     gem install backup
 
-To get the latest *build* of the latest stable version
-
-    gem install backup --pre
-
-Builds **aim** to be stable, but cannot guarantee it. Builds tend to be released a lot more frequent than the stable versions. So if you want to live on the edge and want the latest improvements, install the build gems.
-
 You can view the list of released versions over at [RubyGems.org (Backup)](https://rubygems.org/gems/backup/versions)
 
 

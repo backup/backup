@@ -7,7 +7,7 @@ Gem::Specification.new do |gem|
   ##
   # General configuration / information
   gem.name        = 'backup'
-  gem.version     = Backup::Version.gemspec
+  gem.version     = Backup::Version.current
   gem.platform    = Gem::Platform::RUBY
   gem.authors     = 'Michael van Rooijen'
   gem.email       = 'meskyanichi@gmail.com'
