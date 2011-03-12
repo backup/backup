@@ -21,6 +21,7 @@ module Backup
   COMPRESSORS = ['Gzip']
   ENCRYPTORS  = ['OpenSSL', 'GPG']
   NOTIFIERS   = ['Mail']
+  SYNCERS     = ['RSpec']
 
   ##
   # Backup's internal paths
@@ -31,6 +32,7 @@ module Backup
   COMPRESSOR_PATH    = File.join(LIBRARY_PATH, 'compressor')
   ENCRYPTOR_PATH     = File.join(LIBRARY_PATH, 'encryptor')
   NOTIFIER_PATH      = File.join(LIBRARY_PATH, 'notifier')
+  SYNCER_PATH        = File.join(LIBRARY_PATH, 'syncer')
 
   ##
   # Backup's Environment paths
@@ -82,6 +84,10 @@ module Backup
       autoload :RSync,      File.join(CONFIGURATION_PATH, 'storage', 'rsync')
     end
 
+    module Syncer
+      autoload :RSync, File.join(CONFIGURATION_PATH, 'syncer', 'rsync')
+    end
+
     module Database
       autoload :Base,       File.join(CONFIGURATION_PATH, 'database', 'base')
       autoload :MySQL,      File.join(CONFIGURATION_PATH, 'database', 'mysql')
@@ -103,6 +109,12 @@ module Backup
     autoload :SFTP,       File.join(STORAGE_PATH, 'sftp')
     autoload :SCP,        File.join(STORAGE_PATH, 'scp')
     autoload :RSync,      File.join(STORAGE_PATH, 'rsync')
+  end
+
+  ##
+  # Autoload Backup syncer files
+  module Syncer
+    autoload :RSync, File.join(SYNCER_PATH, 'rsync')
   end
 
   ##
@@ -141,7 +153,7 @@ module Backup
   ##
   # Dynamically defines all the available database, storage, compressor, encryptor and notifier
   # classes inside Backup::Finder to improve the DSL for the configuration file
-  (DATABASES + STORAGES + COMPRESSORS + ENCRYPTORS + NOTIFIERS).each do |constant|
+  (DATABASES + STORAGES + COMPRESSORS + ENCRYPTORS + NOTIFIERS + SYNCERS).each do |constant|
     Backup::Finder.const_set(constant, Class.new)
   end
 

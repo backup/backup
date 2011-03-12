@@ -38,6 +38,10 @@ module Backup
     attr_accessor :storages
 
     ##
+    # The syncers attribute holds an array of syncer objects
+    attr_accessor :syncers
+
+    ##
     # The time when the backup initiated (in format: 2011.02.20.03.29.59)
     attr_accessor :time
 
@@ -101,6 +105,7 @@ module Backup
       @compressors = Array.new
       @storages    = Array.new
       @notifiers   = Array.new
+      @syncers     = Array.new
 
       instance_eval(&block)
       Backup::Model.all << self
@@ -159,6 +164,15 @@ module Backup
     end
 
     ##
+    # Adds a syncer method to the array of syncer
+    # methods to use during the backup process
+    def sync_with(syncer, &block)
+      @syncers << Backup::Syncer.const_get(
+        last_constant(syncer)
+      ).new(&block)
+    end
+
+    ##
     # Performs the backup process
     ##
     # [Databases]
@@ -183,6 +197,11 @@ module Backup
     # and (if configured) it'll cycle the files on the remote location to limit the
     # amount of backups stored on each individual location
     ##
+    # [Syncers]
+    # Runs all (if any) sync objects to store the backups to remote locations.
+    # A Syncer does not go through the process of packaging, compressing, encrypting backups.
+    # A Syncer directly transfers data from the filesystem to the remote location
+    ##
     # [Notifiers]
     # Runs all (if any) notifier objects when a backup proces finished with or without
     # any errors.
@@ -194,14 +213,18 @@ module Backup
     # to avoid mass consumption of storage space on the machine
     def perform!
       begin
-        databases.each   { |d| d.perform! }
-        archives.each    { |a| a.perform! }
-        package!
-        compressors.each { |c| c.perform! }
-        encryptors.each  { |e| e.perform! }
-        storages.each    { |s| s.perform! }
-        notifiers.each   { |n| n.perform!(self) }
-        clean!
+        if databases.any? or archives.any?
+          databases.each   { |d| d.perform! }
+          archives.each    { |a| a.perform! }
+          package!
+          compressors.each { |c| c.perform! }
+          encryptors.each  { |e| e.perform! }
+          storages.each    { |s| s.perform! }
+          clean!
+        end
+
+        syncers.each   { |s| s.perform!       }
+        notifiers.each { |n| n.perform!(self) }
       rescue Exception => exception
         clean!
         notifiers.each   { |n| n.perform!(self, exception) }
