@@ -7,8 +7,11 @@ module Backup
         class << self
 
           ##
-          # Twitter API credentials
+          # Twitter consumer key credentials
           attr_accessor :consumer_key, :consumer_secret
+
+          ##
+          # OAuth credentials
           attr_accessor :oauth_token, :oauth_token_secret
 
         end

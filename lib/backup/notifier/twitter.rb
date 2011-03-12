@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 ##
-# Only load the Mail gem and Erb library when using Mail notifications
+# Only load the Twitter gem when using Twitter notifications
 require 'twitter'
 
 module Backup
@@ -9,7 +9,7 @@ module Backup
     class Twitter < Base
 
       ##
-      # Container for the Mail object
+      # Container for the Twitter Client object
       attr_accessor :twitter_client
 
       ##
@@ -17,11 +17,15 @@ module Backup
       attr_accessor :model
 
       ##
-      # Twitter API credentials
-      attr_accessor :consumer_key, :consumer_secret, :oauth_token, :oauth_token_secret
+      # Twitter consumer key credentials
+      attr_accessor :consumer_key, :consumer_secret
 
       ##
-      # Instantiates a new Backup::Notifier::Mail object
+      # OAuth credentials
+      attr_accessor :oauth_token, :oauth_token_secret
+
+      ##
+      # Instantiates a new Backup::Notifier::Twitter object
       def initialize(&block)
         load_defaults!
 
@@ -62,22 +66,20 @@ module Backup
       # Sends a tweet informing the user that the backup operation
       # raised an exception and will send the user the error details
       def notify_failure!(exception)
-        twitter_client.update("[Backup::Failed] #{model.label} (#{model.trigger}) - #{@exception}")
+        twitter_client.update("[Backup::Failed] #{model.label} (#{model.trigger})")
       end
 
       ##
-      # Configures the Mail gem by setting the defaults.
-      # Instantiates the @mail object with the @to and @from attributes
+      # Configures the Twitter object by passing in the @consumer_key, @consumer_secret
+      # @oauth_token and @oauth_token_secret. Instantiates and sets the @twitter_client object
       def set_defaults!
-
         ::Twitter.configure do |config|
-          config.consumer_key = @consumer_key
-          config.consumer_secret = @consumer_secret
-          config.oauth_token = @oauth_token
+          config.consumer_key       = @consumer_key
+          config.consumer_secret    = @consumer_secret
+          config.oauth_token        = @oauth_token
           config.oauth_token_secret = @oauth_token_secret
         end
         @twitter_client = ::Twitter.client
-
       end
 
     end

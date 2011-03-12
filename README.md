@@ -165,14 +165,6 @@ Below you see a sample configuration file you could create for Backup 3. Just re
         mail.on_failure = true
       end
 
-      notify_by Twitter do |tweet|
-        tweet.consumer_key       = 'my_consumer_key'
-        tweet.consumer_secret    = 'my_consumer_secret'
-        tweet.oauth_token        = 'my_oauth_token'
-        tweet.oauth_token_secret = 'my_oauth_token_secret'
-        tweet.on_success = true
-        tweet.on_failure = true
-      end
     end
 
 ### Explanation for the above example
@@ -187,7 +179,6 @@ The __RSync__ protocol doesn't utilize the __keep__ option. RSync is used to do 
 
 The __Mail__ notifier. I have not provided the SMTP options to use my Gmail account to notify myself when exceptions are raised during the process. So this won't work, check out the wiki on how to configure this. I left it out in this example.
 
-The __Twitter__ notifier requires you to register a new Twitter application for yourself. You can do that via http://dev.twitter.com/apps. You will need your consumer and oauth keys and secrets after registering a desktop client app.
 
 ### And that's it!
 
