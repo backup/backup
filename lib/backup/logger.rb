@@ -25,6 +25,12 @@ module Backup
     end
 
     ##
+    # Silently logs data to the log file
+    def self.silent(string)
+      to_file loggify(:silent, string)
+    end
+
+    ##
     # Returns the time in [YYYY/MM/DD HH:MM:SS] format
     def self.time
       Time.now.strftime("%Y/%m/%d %H:%M:%S")
