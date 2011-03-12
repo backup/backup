@@ -21,7 +21,7 @@ module Backup
   COMPRESSORS = ['Gzip']
   ENCRYPTORS  = ['OpenSSL', 'GPG']
   NOTIFIERS   = ['Mail']
-  SYNCERS     = ['RSpec']
+  SYNCERS     = ['RSync']
 
   ##
   # Backup's internal paths
@@ -154,7 +154,9 @@ module Backup
   # Dynamically defines all the available database, storage, compressor, encryptor and notifier
   # classes inside Backup::Finder to improve the DSL for the configuration file
   (DATABASES + STORAGES + COMPRESSORS + ENCRYPTORS + NOTIFIERS + SYNCERS).each do |constant|
-    Backup::Finder.const_set(constant, Class.new)
+    unless Backup::Finder.const_defined?(constant)
+      Backup::Finder.const_set(constant, Class.new)
+    end
   end
 
 end
