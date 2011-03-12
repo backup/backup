@@ -15,9 +15,9 @@ describe Backup::Syncer::RSync do
       rsync.compress  = true
       rsync.additional_options = []
 
-      rsync.folders do |folder|
-        folder.add "/some/random/folder"
-        folder.add "/another/random/folder"
+      rsync.directories do |directory|
+        directory.add "/some/random/directory"
+        directory.add "/another/random/directory"
       end
     end
   end
@@ -64,7 +64,7 @@ describe Backup::Syncer::RSync do
     rsync.path.should     == 'backups'
     rsync.compress.should == nil
     rsync.mirror.should   == nil
-    rsync.folders.should  == ''
+    rsync.directories.should  == ''
     rsync.additional_options.should == []
   end
 
@@ -122,18 +122,18 @@ describe Backup::Syncer::RSync do
     end
   end
 
-  describe '#folders' do
+  describe '#directories' do
     context 'when its empty' do
       it do
-        rsync.folders = []
-        rsync.folders.should == ''
+        rsync.directories = []
+        rsync.directories.should == ''
       end
     end
 
     context 'when it has items' do
       it do
-        rsync.folders = ['folder1', 'folder1/folder2', 'folder1/folder2/folder3']
-        rsync.folders.should == "'folder1' 'folder1/folder2' 'folder1/folder2/folder3'"
+        rsync.directories = ['directory1', 'directory1/directory2', 'directory1/directory2/directory3']
+        rsync.directories.should == "'directory1' 'directory1/directory2' 'directory1/directory2/directory3'"
       end
     end
   end
@@ -146,9 +146,9 @@ describe Backup::Syncer::RSync do
 
   describe '#perform' do
     it 'should invoke transfer!' do
-      Backup::Logger.expects(:message).with("Backup::Syncer::RSync started syncing '/some/random/folder' '/another/random/folder'.")
+      Backup::Logger.expects(:message).with("Backup::Syncer::RSync started syncing '/some/random/directory' '/another/random/directory'.")
       rsync.expects(:utility).with(:rsync).returns(:rsync)
-      rsync.expects(:run).with("rsync -vhP --archive --delete -z --port='22' '/some/random/folder' '/another/random/folder' 'my_username@123.45.678.90:backups/'")
+      rsync.expects(:run).with("rsync -vhP --archive --delete -z --port='22' '/some/random/directory' '/another/random/directory' 'my_username@123.45.678.90:backups/'")
       rsync.perform!
     end
   end
