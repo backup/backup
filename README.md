@@ -1,7 +1,7 @@
 Backup 3
 ========
 
-Backup is a RubyGem (for UNIX-like operating systems: Linux, Mac OSX) that allows you to configure and perform backups in a simple manner using an elegant Ruby DSL. It supports various databases (MySQL, PostgreSQL, MongoDB and Redis), it supports various storage locations (Amazon S3, Rackspace Cloud Files, Dropbox, any remote server through FTP, SFTP, SCP and RSync), it can archive files and folders, it can cycle backups, it can do incremental backups, it can compress backups, it can encrypt backups (OpenSSL or GPG), it can notify you about successful and/or failed backups. It is very extensible and easy to add new functionality to. It's easy to use.
+Backup is a RubyGem (for UNIX-like operating systems: Linux, Mac OSX) that allows you to configure and perform backups in a simple manner using an elegant Ruby DSL. It supports various databases (MySQL, PostgreSQL, MongoDB and Redis), it supports various storage locations (Amazon S3, Rackspace Cloud Files, Dropbox, any remote server through FTP, SFTP, SCP and RSync), it can archive files and folders, it can cycle backups, it can do incremental backups, it can compress backups, it can encrypt backups (OpenSSL or GPG), it can notify you about successful and/or failed backups (Email or Twitter). It is very extensible and easy to add new functionality to. It's easy to use.
 
 Author
 ------
@@ -91,6 +91,7 @@ Notifiers
 ---------
 
 - Mail
+- Twitter
 
 [Notifiers Wiki Page](https://github.com/meskyanichi/backup/wiki/Notifiers)
 
@@ -169,6 +170,15 @@ Below you see a sample configuration file you could create for Backup 3. Just re
         mail.on_success = false
         mail.on_failure = true
       end
+
+      notify_by Twitter do |tweet|
+        tweet.consumer_key       = 'my_consumer_key'
+        tweet.consumer_secret    = 'my_consumer_secret'
+        tweet.oauth_token        = 'my_oauth_token'
+        tweet.oauth_token_secret = 'my_oauth_token_secret'
+        tweet.on_success = true
+        tweet.on_failure = true
+      end
     end
 
 ### Explanation for the above example
@@ -182,6 +192,8 @@ The __keep__ option I passed in to the S3 storage location enables "Backup Cycli
 The __RSync__ protocol doesn't utilize the __keep__ option. RSync is used to do incremental backups, and only stores a single file on your remote server, which gets incrementally updated with each run. For example, if everything you dump ends up to be about 2000MB, the first time, you'll be transferring the full 2000MB. If by the time the next backup run starts this dump has increased to 2100MB, it'll calculate the difference between the source and destination file and only transfer the remaining 100MB, rather than the full 2100MB. (Note: To reduce bandwidth as much as possible with RSync, ensure you don't use compression or encryption, otherwise RSync isn't able to calculate the difference very well and bandwidth usage greatly increases.)
 
 The __Mail__ notifier. I have not provided the SMTP options to use my Gmail account to notify myself when exceptions are raised during the process. So this won't work, check out the wiki on how to configure this. I left it out in this example.
+
+The __Twitter__ notifier requires you to register a new Twitter application for yourself. You can do that via http://dev.twitter.com/apps. You will need your consumer and oauth keys and secrets after registering a desktop client app.
 
 ### And that's it!
 
