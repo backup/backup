@@ -101,8 +101,15 @@ PLATFORMS
 
 DEPENDENCIES
   backup!
+  dropbox (~> 1.2.3)
+  fog (~> 0.5.3)
   fuubar
   infinity_test
+  mail (~> 2.2.15)
   mocha
+  net-scp (~> 1.0.4)
+  net-sftp (~> 2.0.5)
   rspec
+  thor (~> 0.14.6)
   timecop
+  twitter (~> 1.1.2)
