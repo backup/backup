@@ -19,15 +19,15 @@ module Backup
           attr_accessor :port
 
           ##
-          # Files/Folders to Sync
-          attr_accessor :folders
+          # Directories to sync
+          attr_accessor :directories
 
           ##
-          # Path to store the synced files/folders to
+          # Path to store the synced files/directories to
           attr_accessor :path
 
           ##
-          # Flag for mirroring the files/folders
+          # Flag for mirroring the files/directories
           attr_accessor :mirror
 
           ##

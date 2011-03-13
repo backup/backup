@@ -1,32 +1,19 @@
 # encoding: utf-8
 
 module Backup
-
-  ##
-  # Usage:
-  #
-  #  # Returns the current backup version based on the defined constants
-  #    Backup::Version.current
-  #
-  #  # Returns a gemspec compatible version number based on the defined constants
-  #    Backup::Version.gemspec
-  #
   class Version
 
     ##
+    # Change the MAJOR, MINOR and PATCH constants below
+    # to adjust the version of the Backup gem
+    #
     # MAJOR:
     #  Defines the major version
     # MINOR:
     #  Defines the minor version
     # PATCH:
     #  Defines the patch version
-    # BUILD:
-    #  Defines the build version ( use 'false' if no build )
-    MAJOR, MINOR, PATCH, BUILD = 3, 0, 3, false
-
-    # ========================================================= #
-    #  ADJUST THE CONSTANTS ABOVE TO CHANGE THE BACKUP VERSION  #
-    # ========================================================= #
+    MAJOR, MINOR, PATCH = 3, 0, 4
 
     ##
     # Returns the major version ( big release based off of multiple minor releases )
@@ -41,31 +28,15 @@ module Backup
     end
 
     ##
-    # Returns the patch version ( updates, features and (crucial) bug fixes based off of multiple builds )
+    # Returns the patch version ( updates, features and (crucial) bug fixes )
     def self.patch
       PATCH
     end
 
     ##
-    # Returns the build version ( improvements, small additions, frequent releases )
-    def self.build
-      BUILD
-    end
-
-    ##
-    # Returns the current version ( not for gemspec / rubygems )
+    # Returns the current version of the Backup gem ( qualified for the gemspec )
     def self.current
-      "#{major}.#{minor}.#{patch} / build #{build or 0}"
-    end
-
-    ##
-    # Returns the (gemspec qualified) current version
-    def self.gemspec
-      if build.eql?(false)
-        "#{major}.#{minor}.#{patch}"
-      else
-        "#{major}.#{minor}.#{patch}.build.#{build}"
-      end
+      "#{major}.#{minor}.#{patch}"
     end
 
   end

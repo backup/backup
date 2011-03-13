@@ -7,8 +7,8 @@
     rsync.mirror   = true
     rsync.compress = true
 
-    rsync.folders do |folder|
-      folder.add "/var/apps/my_app/public/uploads"
-      folder.add "/var/apps/my_app/logs"
+    rsync.directories do |directory|
+      directory.add "/var/apps/my_app/public/uploads"
+      directory.add "/var/apps/my_app/logs"
     end
   end

@@ -19,15 +19,15 @@ module Backup
       attr_writer :port
 
       ##
-      # Files/Folders to Sync
-      attr_writer :folders
+      # Directories to sync
+      attr_writer :directories
 
       ##
-      # Path to store the synced files/folders to
+      # Path to store the synced files/directories to
       attr_accessor :path
 
       ##
-      # Flag for mirroring the files/folders
+      # Flag for mirroring the files/directories
       attr_writer :mirror
 
       ##
@@ -46,7 +46,7 @@ module Backup
       def initialize(&block)
         load_defaults!
 
-        @folders              = Array.new
+        @directories          = Array.new
         @additional_options ||= Array.new
         @path               ||= 'backups'
         @port               ||= 22
@@ -62,8 +62,8 @@ module Backup
       # Performs the RSync operation
       # debug options: -vhP
       def perform!
-        Logger.message("#{ self.class } started syncing #{ folders }.")
-        Logger.silent( run("#{ utility(:rsync) } -vhP #{ options } #{ folders } '#{ username }@#{ ip }:#{ path }'") )
+        Logger.message("#{ self.class } started syncing #{ directories }.")
+        Logger.silent( run("#{ utility(:rsync) } -vhP #{ options } #{ directories } '#{ username }@#{ ip }:#{ path }'") )
       end
 
       ##
@@ -97,21 +97,21 @@ module Backup
       end
 
       ##
-      # If no block has been provided, it'll return the array of @folders.
-      # If a block has been provided, it'll evaluate it and add the defined paths to the @folders
-      def folders(&block)
+      # If no block has been provided, it'll return the array of @directories.
+      # If a block has been provided, it'll evaluate it and add the defined paths to the @directories
+      def directories(&block)
         unless block_given?
-          return @folders.map do |folder|
-            "'#{folder}'"
+          return @directories.map do |directory|
+            "'#{directory}'"
           end.join("\s")
         end
         instance_eval(&block)
       end
 
       ##
-      # Adds a path to the @folder array
+      # Adds a path to the @directories array
       def add(path)
-        @folders << path
+        @directories << path
       end
 
     end
