@@ -9,6 +9,8 @@ describe Backup::Archive do
       a.add '/home/rspecuser/somefile'
       a.add '/home/rspecuser/logs/'
       a.add '/home/rspecuser/dotfiles/'
+      a.exclude '/home/rspecuser/excludefile'
+      a.exclude '/home/rspecuser/excludedir/'
     end
   end
 
@@ -17,8 +19,17 @@ describe Backup::Archive do
     archive.paths.count.should == 0
   end
 
+  it 'should have no excludes' do
+    archive = Backup::Archive.new(:dummy_archive) { |a| }
+    archive.excludes.count.should == 0
+  end
+
   it 'should have 3 paths' do
     archive.paths.count.should == 3
+  end
+
+  it 'should have 2 excludes' do
+    archive.excludes.count.should == 2
   end
 
   it do
@@ -32,6 +43,18 @@ describe Backup::Archive do
     end
   end
 
+  describe '#paths_to_exclude' do
+    it 'should be empty' do
+      archive = Backup::Archive.new(:dummy_archive) { |a| }
+      archive.send(:paths_to_exclude).should be_nil
+    end
+
+    it 'should return a tar -c friendly string' do
+      archive.send(:paths_to_exclude).should ==
+      "--exclude={'/home/rspecuser/excludefile','/home/rspecuser/excludedir/'}"
+    end
+  end
+
   describe '#perform!' do
     before do
       [:mkdir, :run, :utility].each { |method| archive.stubs(method) }
@@ -40,7 +63,7 @@ describe Backup::Archive do
 
     it 'should tar all the specified paths' do
       archive.expects(:mkdir).with(File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive'))
-      archive.expects(:run).with("tar -c '/home/rspecuser/somefile' '/home/rspecuser/logs/' '/home/rspecuser/dotfiles/' 1> '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}' 2> /dev/null")
+      archive.expects(:run).with("tar -c --exclude={'/home/rspecuser/excludefile','/home/rspecuser/excludedir/'} '/home/rspecuser/somefile' '/home/rspecuser/logs/' '/home/rspecuser/dotfiles/' 1> '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}' 2> /dev/null")
       archive.expects(:utility).with(:tar).returns(:tar)
       archive.perform!
     end
