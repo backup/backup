@@ -11,6 +11,7 @@ describe Backup::Configuration::Storage::Dropbox do
       db.api_secret  = 'my_secret'
       db.path        = 'my_backups'
       db.keep        = 20
+      db.timeout     = 500
     end
   end
 
@@ -22,6 +23,7 @@ describe Backup::Configuration::Storage::Dropbox do
     db.api_secret.should  == 'my_secret'
     db.path.should        == 'my_backups'
     db.keep.should        == 20
+    db.timeout.should     == 500
   end
 
   describe '#clear_defaults!' do
@@ -35,6 +37,7 @@ describe Backup::Configuration::Storage::Dropbox do
       db.api_secret.should  == nil
       db.path.should        == nil
       db.keep.should        == nil
+      db.timeout.should     == nil
     end
   end
 end

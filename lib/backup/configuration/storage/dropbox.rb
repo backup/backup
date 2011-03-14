@@ -18,6 +18,10 @@ module Backup
           # Path to where the backups will be stored
           attr_accessor :path
 
+          ##
+          # Dropbox connection timeout
+          attr_accessor :timeout
+
         end
       end
     end
