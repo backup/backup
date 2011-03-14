@@ -31,12 +31,15 @@ class BackupCLI < Thor
   # Performs the backup process. The only required option is the --trigger [-t].
   # If the other options (--config_file, --data_path, --tmp_path) aren't specified
   # it'll fallback to the (good) defaults
-  method_option :trigger,     :type => :array,  :aliases => '-t', :required => true
+  method_option :trigger,     :type => :string, :aliases => ['-t', '--triggers'], :required => true
   method_option :config_file, :type => :string, :aliases => '-c'
   method_option :data_path,   :type => :string, :aliases => '-d'
   method_option :log_path,    :type => :string, :aliases => '-l'
   method_option :tmp_path,    :type => :string
-  desc 'perform', 'Performs the backup for the specified trigger'
+  desc 'perform', "Performs the backup for the specified trigger.\n" + 
+                  "You may perform multiple backups by providing multiple triggers, separated by commas.\n\n" +
+                  "Example:\n\s\s$ backup perform --triggers backup1,backup2,backup3,backup4\n\n" +
+                  "This will invoke 4 backups, and they will run in the order specified (not asynchronous)."
   def perform
 
     ##
@@ -68,26 +71,22 @@ class BackupCLI < Thor
     end
 
     ##
-    # Ensure the TMP_PATH and LOG_PATH
-    # are created if they do not yet exist
-    Array.new([
-      Backup::TMP_PATH,
-      Backup::LOG_PATH
-    ]).each do |path|
+    # Ensure the TMP_PATH and LOG_PATH are created if they do not yet exist
+    Array.new([Backup::TMP_PATH, Backup::LOG_PATH]).each do |path|
       FileUtils.mkdir_p(path)
     end
 
     ##
-    # Define the TIME constants
-    Backup.send(:const_set, :TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
-
-    ##
     # Process each trigger
-    options[:trigger].each do |trigger|
+    options[:trigger].split(",").map(&:strip).each do |trigger|
 
       ##
       # Defines the TRIGGER constant
       Backup.send(:const_set, :TRIGGER, trigger)
+
+      ##
+      # Define the TIME constants
+      Backup.send(:const_set, :TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
 
       ##
       # Ensure DATA_PATH and DATA_PATH/TRIGGER are created if they do not yet exist
@@ -105,6 +104,24 @@ class BackupCLI < Thor
       ##
       # Removes the TRIGGER constant
       Backup.send(:remove_const, :TRIGGER) if defined? Backup::TRIGGER
+
+      ##
+      # Removes the TIME constant
+      Backup.send(:remove_const, :TIME) if defined? Backup::TIME
+
+      ##
+      # Reset the Backup::Model.current to nil for the next potential run
+      Backup::Model.current = nil
+
+      ##
+      # Reset the Backup::Model.all to an empty array since this will be
+      # re-filled during the next Backup::Finder.new(arg1, arg2).find
+      Backup::Model.all = Array.new
+
+      ##
+      # Reset the Backup::Model.extension to 'tar' so it's at it's
+      # initial state when the next Backup::Model initializes
+      Backup::Model.extension = 'tar'
     end
   end
 
