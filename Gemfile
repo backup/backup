@@ -3,7 +3,7 @@
 source 'http://rubygems.org'
 
 ##
-# Bundle gems definde inside the gemspec file
+# Bundle gems defined inside the gemspec file
 gemspec
 
 ##
