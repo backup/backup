@@ -21,6 +21,10 @@ module Backup
       attr_accessor :path
 
       ##
+      # Dropbox connection timeout
+      attr_accessor :timeout
+
+      ##
       # Creates a new instance of the Dropbox storage object
       # First it sets the defaults (if any exist) and then evaluates
       # the configuration block which may overwrite these defaults
@@ -31,6 +35,7 @@ module Backup
 
         instance_eval(&block) if block_given?
 
+        @timeout ||= 300
         @time = TIME
       end
 
@@ -68,7 +73,7 @@ module Backup
       # Transfers the archived file to the specified Dropbox folder
       def transfer!
         Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
-        connection.upload(File.join(local_path, local_file), remote_path, :timeout => 300)
+        connection.upload(File.join(local_path, local_file), remote_path, :timeout => timeout)
       end
 
       ##

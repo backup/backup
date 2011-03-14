@@ -11,6 +11,7 @@ describe Backup::Storage::Dropbox do
       db.api_key     = 'my_api_key'
       db.api_secret  = 'my_secret'
       db.keep        = 20
+      db.timeout     = 500
     end
   end
 
@@ -30,6 +31,21 @@ describe Backup::Storage::Dropbox do
     db.api_secret.should  == 'my_secret'
     db.path.should        == 'backups'
     db.keep.should        == 20
+    db.timeout.should     == 500
+  end
+
+  it 'should overwrite the default timeout' do
+    db = Backup::Storage::Dropbox.new do |db|
+      db.timeout = 500
+    end
+
+    db.timeout.should == 500
+  end
+
+  it 'should provide a default timeout' do
+    db = Backup::Storage::Dropbox.new
+
+    db.timeout.should == 300
   end
 
   it 'should overwrite the default path' do
@@ -69,7 +85,7 @@ describe Backup::Storage::Dropbox do
       connection.expects(:upload).with(
         File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"),
         File.join('backups', Backup::TRIGGER),
-        :timeout => 300
+        :timeout => db.timeout
       )
 
       db.send(:transfer!)
