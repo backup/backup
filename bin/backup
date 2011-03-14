@@ -31,18 +31,13 @@ class BackupCLI < Thor
   # Performs the backup process. The only required option is the --trigger [-t].
   # If the other options (--config_file, --data_path, --tmp_path) aren't specified
   # it'll fallback to the (good) defaults
-  method_option :trigger,     :type => :string, :aliases => '-t', :required => true
+  method_option :trigger,     :type => :array,  :aliases => '-t', :required => true
   method_option :config_file, :type => :string, :aliases => '-c'
   method_option :data_path,   :type => :string, :aliases => '-d'
   method_option :log_path,    :type => :string, :aliases => '-l'
   method_option :tmp_path,    :type => :string
   desc 'perform', 'Performs the backup for the specified trigger'
   def perform
-
-    ##
-    # Defines the TRIGGER and TIME constants
-    Backup.send(:const_set, :TRIGGER, options[:trigger])
-    Backup.send(:const_set, :TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
 
     ##
     # Overwrites the CONFIG_FILE location, if --config-file was specified
@@ -73,24 +68,44 @@ class BackupCLI < Thor
     end
 
     ##
-    # Ensure the TMP_PATH, LOG_PATH, DATA_PATH and DATA_PATH/TRIGGER
+    # Ensure the TMP_PATH and LOG_PATH
     # are created if they do not yet exist
     Array.new([
       Backup::TMP_PATH,
-      Backup::LOG_PATH,
-      File.join(Backup::DATA_PATH, Backup::TRIGGER)
+      Backup::LOG_PATH
     ]).each do |path|
       FileUtils.mkdir_p(path)
     end
 
     ##
-    # Parses the backup configuration file and returns the model instance by trigger
-    model = Backup::Finder.new(Backup::TRIGGER, Backup::CONFIG_FILE).find
+    # Define the TIME constants
+    Backup.send(:const_set, :TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
 
     ##
-    # Runs the returned model
-    Backup::Logger.message "Performing backup for #{model.label}!"
-    model.perform!
+    # Process each trigger
+    options[:trigger].each do |trigger|
+
+      ##
+      # Defines the TRIGGER constant
+      Backup.send(:const_set, :TRIGGER, trigger)
+
+      ##
+      # Ensure DATA_PATH and DATA_PATH/TRIGGER are created if they do not yet exist
+      FileUtils.mkdir_p(File.join(Backup::DATA_PATH, Backup::TRIGGER))
+
+      ##
+      # Parses the backup configuration file and returns the model instance by trigger
+      model = Backup::Finder.new(trigger, Backup::CONFIG_FILE).find
+
+      ##
+      # Runs the returned model
+      Backup::Logger.message "Performing backup for #{model.label}!"
+      model.perform!
+
+      ##
+      # Removes the TRIGGER constant
+      Backup.send(:remove_const, :TRIGGER) if defined? Backup::TRIGGER
+    end
   end
 
   ##
