@@ -1,7 +1,7 @@
 Backup 3
 ========
 
-Backup is a RubyGem (for UNIX-like operating systems: Linux, Mac OSX) that allows you to configure and perform backups in a simple manner using an elegant Ruby DSL. It supports various databases (MySQL, PostgreSQL, MongoDB and Redis), it supports various storage locations (Amazon S3, Rackspace Cloud Files, Dropbox, any remote server through FTP, SFTP, SCP and RSync), it can archive files and folders, it can cycle backups, it can do incremental backups, it can compress backups, it can encrypt backups (OpenSSL or GPG), it can notify you about successful and/or failed backups (Email or Twitter). It is very extensible and easy to add new functionality to. It's easy to use.
+Backup is a RubyGem (for UNIX-like operating systems: Linux, Mac OSX) that allows you to configure and perform backups in a simple manner using an elegant Ruby DSL. It supports various databases (MySQL, PostgreSQL, MongoDB and Redis), it supports various storage locations (Amazon S3, Rackspace Cloud Files, Dropbox, any remote server through FTP, SFTP, SCP and RSync), it can archive files and directories, it can cycle backups, it can do incremental backups, it can compress backups, it can encrypt backups (OpenSSL or GPG), it can notify you about successful and/or failed backups (Email or Twitter). It is very extensible and easy to add new functionality to. It's easy to use.
 
 Author
 ------
@@ -43,7 +43,7 @@ Filesystem Support
 ------------------
 
 - Files
-- Folders
+- Directories
 
 [Archive Wiki Page](https://github.com/meskyanichi/backup/wiki/Archives)
 
@@ -191,7 +191,7 @@ Below you see a sample configuration file you could create for Backup 3. Just re
 
 ### Explanation for the above example
 
-First it dumps all the tables inside the MySQL database "my_sample_mysql_db", except for the "logs" table. It also dumps the MongoDB database "my_sample_mongo_db", but only the collections "users", "events" and "posts". After that it'll create a "user_avatars.tar" archive with all the uploaded avatars of the users. After that it'll create a "logs.tar" archive with the "production.log", "newrelic_agent.log" and "other.log" logs. After that it'll compress the backup file using Gzip (with the mode set to "best", rather than "fast" for best compression). After that it'll encrypt the whole backup file (everything included: databases, archives) using "OpenSSL". Now the Backup can only be extracted when you know the password to decrypt it ("my_secret_password" in this case). Then it'll store the backup file to Amazon S3 in to 'my_bucket/backups'. Next, we're going to use the RSync Syncer to create a mirror of the `/var/apps/my_app/public/videos` and `/var/apps/my_app/public/music` folders on a remote server. (This will not package, compress, encrypt - but will directly sync these folders "as is" to the desired location). Finally, it'll notify me by email if the backup raises an error/exception during the process, indicating that something went wrong. However, it does not notify me by email when successful backups occur because I set `mail.on_success` to `false`. It'll also notify me by Twitter when failed backups occur, but also when successful ones occur because I set the `tweet.on_success` to `true`.
+First it dumps all the tables inside the MySQL database "my_sample_mysql_db", except for the "logs" table. It also dumps the MongoDB database "my_sample_mongo_db", but only the collections "users", "events" and "posts". After that it'll create a "user_avatars.tar" archive with all the uploaded avatars of the users. After that it'll create a "logs.tar" archive with the "production.log", "newrelic_agent.log" and "other.log" logs. After that it'll compress the backup file using Gzip (with the mode set to "best", rather than "fast" for best compression). After that it'll encrypt the whole backup file (everything included: databases, archives) using "OpenSSL". Now the Backup can only be extracted when you know the password to decrypt it ("my_secret_password" in this case). Then it'll store the backup file to Amazon S3 in to 'my_bucket/backups'. Next, we're going to use the RSync Syncer to create a mirror of the `/var/apps/my_app/public/videos` and `/var/apps/my_app/public/music` directories on a remote server. (This will not package, compress, encrypt - but will directly sync these directories "as is" to the desired location). Finally, it'll notify me by email if the backup raises an error/exception during the process, indicating that something went wrong. However, it does not notify me by email when successful backups occur because I set `mail.on_success` to `false`. It'll also notify me by Twitter when failed backups occur, but also when successful ones occur because I set the `tweet.on_success` to `true`.
 
 ### Things to note
 
@@ -249,6 +249,10 @@ Contributors
   <tr>
     <td><a href="https://github.com/asanghi" target="_blank">Aditya Sanghi ( asanghi )</a></td>
     <td>Twitter Notifier</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/phlipper" target="_blank">Phil Cohen ( phlipper )</a></td>
+    <td>Exclude Option for Archives</td>
   </tr>
 </table>
 
