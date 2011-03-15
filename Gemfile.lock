@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    backup (3.0.6)
+    backup (3.0.7)
       dropbox (~> 1.2.3)
       fog (~> 0.5.3)
       mail (~> 2.2.15)
