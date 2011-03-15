@@ -3,6 +3,7 @@
     db.password   = 'my_password'
     db.api_key    = 'my_api_key'
     db.api_secret = 'my_api_secret'
+    db.timeout    = 300
     db.path       = '/path/to/my/backups'
     db.keep       = 25
   end
