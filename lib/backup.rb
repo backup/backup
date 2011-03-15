@@ -20,7 +20,7 @@ module Backup
   STORAGES    = ['S3', 'CloudFiles', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync']
   COMPRESSORS = ['Gzip']
   ENCRYPTORS  = ['OpenSSL', 'GPG']
-  SYNCERS     = ['RSync']
+  SYNCERS     = ['RSync', 'S3']
   NOTIFIERS   = ['Mail', 'Twitter']
 
   ##
@@ -87,6 +87,7 @@ module Backup
 
     module Syncer
       autoload :RSync, File.join(CONFIGURATION_PATH, 'syncer', 'rsync')
+      autoload :S3,    File.join(CONFIGURATION_PATH, 'syncer', 's3')
     end
 
     module Database
@@ -115,7 +116,9 @@ module Backup
   ##
   # Autoload Backup syncer files
   module Syncer
+    autoload :Base,  File.join(SYNCER_PATH, 'base')
     autoload :RSync, File.join(SYNCER_PATH, 'rsync')
+    autoload :S3,    File.join(SYNCER_PATH, 's3')
   end
 
   ##
