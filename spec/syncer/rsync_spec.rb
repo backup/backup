@@ -33,7 +33,7 @@ describe Backup::Syncer::RSync do
     rsync.port.should     == "--port='22'"
     rsync.path.should     == 'backups/'
     rsync.mirror.should   == "--delete"
-    rsync.compress.should == "-z"
+    rsync.compress.should == "--compress"
   end
 
   it 'should use the defaults if a particular attribute has not been defined' do
@@ -93,7 +93,7 @@ describe Backup::Syncer::RSync do
     context 'when true' do
       it do
         rsync.compress = true
-        rsync.compress.should == '-z'
+        rsync.compress.should == '--compress'
       end
     end
 
@@ -140,15 +140,15 @@ describe Backup::Syncer::RSync do
 
   describe '#options' do
     it do
-      rsync.options.should == "--archive --delete -z --port='22'"
+      rsync.options.should == "--archive --delete --compress --port='22'"
     end
   end
 
   describe '#perform' do
-    it 'should invoke transfer!' do
+    it 'should invoke the rsync command to transfer the files and directories' do
       Backup::Logger.expects(:message).with("Backup::Syncer::RSync started syncing '/some/random/directory' '/another/random/directory'.")
       rsync.expects(:utility).with(:rsync).returns(:rsync)
-      rsync.expects(:run).with("rsync -vhP --archive --delete -z --port='22' '/some/random/directory' '/another/random/directory' 'my_username@123.45.678.90:backups/'")
+      rsync.expects(:run).with("rsync -vhP --archive --delete --compress --port='22' '/some/random/directory' '/another/random/directory' 'my_username@123.45.678.90:backups/'")
       rsync.perform!
     end
   end

@@ -2,9 +2,7 @@
 
 module Backup
   module Syncer
-    class RSync
-      include Backup::CLI
-      include Backup::Configuration::Helpers
+    class RSync < Base
 
       ##
       # Server credentials
@@ -73,25 +71,25 @@ module Backup
       end
 
       ##
-      # Returns Rsync syntax for specifying the --delete option (to enable mirroring)
+      # Returns Rsync syntax for enabling mirroring
       def mirror
         '--delete' if @mirror
       end
 
       ##
-      # Returns Rsync syntax for specifying the the 'compress' option
+      # Returns Rsync syntax for compressing the file transfers
       def compress
-        '-z' if @compress
+        '--compress' if @compress
       end
 
       ##
-      # Returns Rsync syntax for specifying the --archive option
+      # Returns Rsync syntax for invoking "archive" mode
       def archive
         '--archive'
       end
 
       ##
-      # Returns Rsync syntax for specifying a port to connect to
+      # Returns Rsync syntax for defining a port to connect to
       def port
         "--port='#{@port}'"
       end
