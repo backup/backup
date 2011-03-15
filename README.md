@@ -1,7 +1,7 @@
 Backup 3
 ========
 
-Backup is a RubyGem (for UNIX-like operating systems: Linux, Mac OSX) that allows you to configure and perform backups in a simple manner using an elegant Ruby DSL. It supports various databases (MySQL, PostgreSQL, MongoDB and Redis), it supports various storage locations (Amazon S3, Rackspace Cloud Files, Dropbox, any remote server through FTP, SFTP, SCP and RSync), it can archive files and directories, it can cycle backups, it can do incremental backups, it can compress backups, it can encrypt backups (OpenSSL or GPG), it can notify you about successful and/or failed backups (Email or Twitter). It is very extensible and easy to add new functionality to. It's easy to use.
+Backup is a RubyGem (for UNIX-like operating systems: Linux, Mac OSX) that allows you to configure and perform backups in a simple manner using an elegant Ruby DSL. It supports various databases (MySQL, PostgreSQL, MongoDB and Redis), it supports various storage locations (Amazon S3, Rackspace Cloud Files, Dropbox, any remote server through FTP, SFTP, SCP and RSync), it provide Syncers (RSync, S3) for efficient backups, it can archive files and directories, it can cycle backups, it can do incremental backups, it can compress backups, it can encrypt backups (OpenSSL or GPG), it can notify you about successful and/or failed backups (Email or Twitter). It is very extensible and easy to add new functionality to. It's easy to use.
 
 Author
 ------
@@ -248,7 +248,7 @@ Contributors
   </tr>
   <tr>
     <td><a href="https://github.com/asanghi" target="_blank">Aditya Sanghi ( asanghi )</a></td>
-    <td>Twitter Notifier</td>
+    <td>Twitter Notifier, Dropbox Timeout Configuration</td>
   </tr>
   <tr>
     <td><a href="https://github.com/phlipper" target="_blank">Phil Cohen ( phlipper )</a></td>
