@@ -4,7 +4,9 @@ source 'http://rubygems.org'
 
 ##
 # Load Backup::Dependency
-require File.expand_path("../lib/backup/dependency", __FILE__)
+%w[cli dependency].each do |path|
+  require File.expand_path("../lib/backup/#{path}", __FILE__)
+end
 
 ##
 # Dynamically define the dependencies specified in Backup::Dependency.all
