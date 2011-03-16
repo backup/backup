@@ -9,19 +9,54 @@ module Backup
   # has not been installed, or when the gem's version is incorrect, and provide the
   # command to install the gem. These dependencies are dynamically loaded in the Gemfile
   class Dependency
+    extend Backup::CLI
 
     ##
     # Returns a hash of dependencies that Backup requires
     # in order to run every available feature
     def self.all
       {
-        'fog'      => '~> 0.6.0',  # Amazon S3, Rackspace Cloud Files
-        'dropbox'  => '~> 1.2.3',  # Dropbox
-        'net-sftp' => '~> 2.0.5',  # SFTP Protocol
-        'net-scp'  => '~> 1.0.4',  # SCP Protocol
-        'net-ssh'  => '~> 2.1.3',  # SSH Protocol
-        'mail'     => '~> 2.2.15', # Mail
-        'twitter'  => '~> 1.1.2'   # Twitter
+        'fog' => {
+          :require => 'fog',
+          :version => '~> 0.6.0',
+          :for     => 'Amazon S3, Rackspace Cloud Files (S3, CloudFiles Storages)'
+        },
+
+        'dropbox' => {
+          :require => 'dropbox',
+          :version => '~> 1.2.3',
+          :for     => 'Dropbox Web Service (Dropbox Storage)'
+        },
+
+        'net-sftp' => {
+          :require => 'net/sftp',
+          :version => '~> 2.0.5',
+          :for     => 'SFTP Protocol (SFTP Storage)'
+        },
+
+        'net-scp' => {
+          :require => 'net/scp',
+          :version => '~> 1.0.4',
+          :for     => 'SCP Protocol (SCP Storage)'
+        },
+
+        'net-ssh' => {
+          :require => 'net/ssh',
+          :version => '~> 2.1.3',
+          :for     => 'SSH Protocol (SSH Storage)'
+        },
+
+        'mail' => {
+          :require => 'mail',
+          :version => '~> 2.2.15',
+          :for     => 'Sending Emails (Mail Notifier)'
+        },
+
+        'twitter' => {
+          :require => 'twitter',
+          :version => '~> 1.1.2',
+          :for     => 'Send Twitter Updates (Twitter Notifier)'
+        }
       }
     end
 
@@ -31,11 +66,16 @@ module Backup
     # to the user with instructions on how to install the required gem
     def self.load(name)
       begin
-        gem(name, Backup::Dependency.all[name.to_s])
-        require(name.gsub('-','/'))
+        gem(name, all[name][:version])
+        require(all[name][:require])
       rescue LoadError
-        Backup::Logger.error("Dependency missing. Please install #{name} version #{Backup::Dependency.all[name.to_s]}.")
-        puts "\n\s\sgem install #{name} -v '#{Backup::Dependency.all[name.to_s]}'"
+        Backup::Logger.error("Dependency missing. Please install #{name} version #{all[name][:version]} and try again.")
+        puts "\n\s\sgem install #{name} -v '#{all[name][:version]}'\n\n"
+        puts "Dependency required for:"
+        puts "\n\s\s#{all[name][:for]}"
+        puts "\nTrying to install the #{name} gem for you.. please wait."
+        puts "Once installed, retry the backup procedure.\n\n"
+        puts run("#{ utility(:gem) } install #{name} -v '#{all[name][:version]}'")
         exit
       end
     end
