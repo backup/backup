@@ -2,7 +2,7 @@
 
 ##
 # Only load the Twitter gem when using Twitter notifications
-require 'twitter'
+Backup::Dependency.load('twitter')
 
 module Backup
   module Notifier

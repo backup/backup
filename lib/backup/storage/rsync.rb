@@ -2,7 +2,7 @@
 
 ##
 # Only load the Net::SSH library when the Backup::Storage::RSync class is loaded
-require 'net/ssh'
+Backup::Dependency.load('net-ssh')
 
 module Backup
   module Storage

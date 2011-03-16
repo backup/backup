@@ -2,7 +2,7 @@
 
 ##
 # Only load the Fog gem when the Backup::Storage::CloudFiles class is loaded
-require 'fog'
+Backup::Dependency.load('fog')
 
 module Backup
   module Storage
