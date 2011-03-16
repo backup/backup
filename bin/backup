@@ -160,7 +160,7 @@ class BackupCLI < Thor
 
     temp_file << "end\n\n"
     temp_file.close
-    
+
     path   = options[:path] || Backup::PATH
     config = File.join(path, 'config.rb')
 
