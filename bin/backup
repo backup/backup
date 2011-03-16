@@ -200,6 +200,44 @@ class BackupCLI < Thor
   end
 
   ##
+  # [Dependencies]
+  # Returns a list of Backup's dependencies
+  desc 'dependencies', 'Display the list of dependencies for Backup, or install them through Backup.'
+  method_option :install, :type => :string
+  method_option :list,    :type => :boolean
+  def dependencies
+    unless options.any?
+      puts
+      puts "To display a list of available dependencies, run:\n\n"
+      puts "  backup dependencies --list"
+      puts
+      puts "To install one of these dependencies (with the correct version), run:\n\n"
+      puts "  backup dependencies --install <name>"
+      exit
+    end
+
+    if options[:list]
+      Backup::Dependency.all.each do |name, gemspec|
+        puts
+        puts name
+        puts "--------------------------------------------------"
+        puts "version:       #{gemspec[:version]}"
+        puts "lib required:  #{gemspec[:require]}"
+        puts "used for:      #{gemspec[:for]}"
+      end
+    end
+
+    if options[:install]
+      puts
+      puts "Installing \"#{options[:install]}\" version \"#{Backup::Dependency.all[options[:install]][:version]}\".."
+      puts "If this doesn't work, please issue the following command yourself:\n\n"
+      puts "  gem install #{options[:install]} -v '#{Backup::Dependency.all[options[:install]][:version]}'\n\n"
+      puts "Please wait..\n\n"
+      puts %x[gem install #{options[:install]} -v '#{Backup::Dependency.all[options[:install]][:version]}']
+    end
+  end
+
+  ##
   # [Version]
   # Returns the current version of the Backup gem
   map '-v' => :version

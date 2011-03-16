@@ -3,8 +3,16 @@
 source 'http://rubygems.org'
 
 ##
-# Bundle gems defined inside the gemspec file
-gemspec
+# Load Backup::Dependency
+%w[cli dependency].each do |path|
+  require File.expand_path("../lib/backup/#{path}", __FILE__)
+end
+
+##
+# Dynamically define the dependencies specified in Backup::Dependency.all
+Backup::Dependency.all.each do |name, gemspec|
+  gem(name, gemspec[:version])
+end
 
 ##
 # Define gems to be used in the 'test' environment

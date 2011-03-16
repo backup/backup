@@ -44,12 +44,13 @@ module Backup
 
   ##
   # Autoload Backup base files
-  autoload :Model,   File.join(LIBRARY_PATH, 'model')
-  autoload :Archive, File.join(LIBRARY_PATH, 'archive')
-  autoload :CLI,     File.join(LIBRARY_PATH, 'cli')
-  autoload :Finder,  File.join(LIBRARY_PATH, 'finder')
-  autoload :Logger,  File.join(LIBRARY_PATH, 'logger')
-  autoload :Version, File.join(LIBRARY_PATH, 'version')
+  autoload :Model,      File.join(LIBRARY_PATH, 'model')
+  autoload :Archive,    File.join(LIBRARY_PATH, 'archive')
+  autoload :CLI,        File.join(LIBRARY_PATH, 'cli')
+  autoload :Finder,     File.join(LIBRARY_PATH, 'finder')
+  autoload :Dependency, File.join(LIBRARY_PATH, 'dependency')
+  autoload :Logger,     File.join(LIBRARY_PATH, 'logger')
+  autoload :Version,    File.join(LIBRARY_PATH, 'version')
 
   ##
   # Autoload Backup configuration files

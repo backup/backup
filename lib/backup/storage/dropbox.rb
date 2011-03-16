@@ -2,7 +2,7 @@
 
 ##
 # Only load the Dropbox gem when the Backup::Storage::Dropbox class is loaded
-require 'dropbox'
+Backup::Dependency.load('dropbox')
 
 module Backup
   module Storage
