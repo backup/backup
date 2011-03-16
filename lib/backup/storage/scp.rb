@@ -3,8 +3,9 @@
 ##
 # Only load the Net::SSH and Net::SCP library/gems
 # when the Backup::Storage::SCP class is loaded
-require 'net/ssh'
-require 'net/scp'
+Backup::Dependency.load('net-ssh')
+Backup::Dependency.load('net-scp')
+
 
 module Backup
   module Storage

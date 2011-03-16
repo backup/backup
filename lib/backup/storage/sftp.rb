@@ -2,7 +2,7 @@
 
 ##
 # Only load the Net::SFTP library/gem when the Backup::Storage::SFTP class is loaded
-require 'net/sftp'
+Backup::Dependency.load('net-sftp')
 
 module Backup
   module Storage
