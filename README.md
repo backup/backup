@@ -74,6 +74,7 @@ Syncers
 -------
 
 - RSync
+- Amazon Simple Storage Service (S3)
 
 [Syncer Wiki Page](https://github.com/meskyanichi/backup/wiki/Syncers)
 
