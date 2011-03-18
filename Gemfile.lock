@@ -17,10 +17,10 @@ GEM
       rack (< 2, >= 1.1.0)
     faraday_middleware (0.3.2)
       faraday (~> 0.5.4)
-    fog (0.6.0)
+    fog (0.7.0)
       builder
       excon (>= 0.5.5)
-      formatador (>= 0.0.16)
+      formatador (>= 0.1.1)
       json
       mime-types
       net-ssh (>= 2.0.23)
@@ -88,7 +88,7 @@ PLATFORMS
 
 DEPENDENCIES
   dropbox (~> 1.2.3)
-  fog (~> 0.6.0)
+  fog (~> 0.7.0)
   fuubar
   infinity_test
   mail (~> 2.2.15)
