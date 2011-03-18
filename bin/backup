@@ -160,21 +160,17 @@ class BackupCLI < Thor
 
     temp_file << "end\n\n"
     temp_file.close
-    if options[:path]
-      FileUtils.mkdir_p(options[:path])
-      overwrite?(File.join(Backup::PATH, 'config.rb'))
-      File.open(File.join(options[:path], 'config.rb'), 'w') do |file|
+
+    path   = options[:path] || Backup::PATH
+    config = File.join(path, 'config.rb')
+
+    if overwrite?(config)
+      FileUtils.mkdir_p(path)
+      File.open(config, 'w') do |file|
         file.write( File.read(temp_file.path) )
-        puts "Generated configuration file in '#{File.join(options[:path], 'config.rb')}'"
+        puts "Generated configuration file in '#{ config }'"
       end
-    else
-      FileUtils.mkdir_p(Backup::PATH)
-      overwrite?(File.join(Backup::PATH, 'config.rb'))
-      File.open(File.join(Backup::PATH, 'config.rb'), 'w') do |file|
-        file.write( File.read(temp_file.path) )
-        puts "Generated configuration file in '#{File.join(Backup::PATH, 'config.rb')}'"
-      end
-    end
+    end    
     temp_file.unlink
   end
 
@@ -252,8 +248,9 @@ private
   # Helper method for asking the user if he/she wants to overwrite the file
   def overwrite?(path)
     if File.exist?(path)
-      exit if no? "A configuration file already exists in #{ path }. Do you want to overwrite? [y/n]"
+      return yes? "A configuration file already exists in #{ path }. Do you want to overwrite? [y/n]"
     end
+    true
   end
 
 end
