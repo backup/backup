@@ -57,6 +57,7 @@ describe Backup::Syncer::S3 do
     s3.path.should        == 'backups'
     s3.directories.should == Array.new
     s3.mirror.should      == nil
+    s3.additional_options.should == []
   end
 
   describe '#mirror' do
