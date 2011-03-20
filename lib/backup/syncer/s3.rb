@@ -32,9 +32,10 @@ module Backup
       def initialize(&block)
         load_defaults!
 
-        @path        ||= 'backups'
-        @directories ||= Array.new
-        @mirror      ||= false
+        @path               ||= 'backups'
+        @directories        ||= Array.new
+        @mirror             ||= false
+        @additional_options ||= []
 
         instance_eval(&block) if block_given?
 

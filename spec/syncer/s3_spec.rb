@@ -87,6 +87,13 @@ describe Backup::Syncer::S3 do
     end
   end
 
+  describe '#additional_options' do
+    it do
+      s3.additional_options = ['--exclude="*.rb"']
+      s3.options.should == '--verbose --recursive --delete --exclude="*.rb"'
+    end
+  end
+
   describe '#verbose' do
     it do
       s3.verbose.should == '--verbose'
