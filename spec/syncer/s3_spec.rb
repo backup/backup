@@ -57,6 +57,7 @@ describe Backup::Syncer::S3 do
     s3.path.should        == 'backups'
     s3.directories.should == Array.new
     s3.mirror.should      == nil
+    s3.additional_options.should == []
   end
 
   describe '#mirror' do
@@ -83,6 +84,13 @@ describe Backup::Syncer::S3 do
   describe '#recursive' do
     it do
       s3.recursive.should == '--recursive'
+    end
+  end
+
+  describe '#additional_options' do
+    it do
+      s3.additional_options = ['--exclude="*.rb"']
+      s3.options.should == '--verbose --recursive --delete --exclude="*.rb"'
     end
   end
 

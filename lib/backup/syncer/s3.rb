@@ -21,6 +21,10 @@ module Backup
       attr_accessor :mirror
 
       ##
+      # Additional options for the s3sync cli
+      attr_accessor :additional_options
+
+      ##
       # Instantiates a new S3 Syncer object and sets the default configuration
       # specified in the Backup::Configuration::Syncer::S3. Then it sets the object
       # defaults if particular properties weren't set. Finally it'll evaluate the users
@@ -28,9 +32,10 @@ module Backup
       def initialize(&block)
         load_defaults!
 
-        @path        ||= 'backups'
-        @directories ||= Array.new
-        @mirror      ||= false
+        @path               ||= 'backups'
+        @directories        ||= Array.new
+        @mirror             ||= false
+        @additional_options ||= []
 
         instance_eval(&block) if block_given?
 
@@ -56,7 +61,7 @@ module Backup
       ##
       # Returns all the specified S3Sync options, concatenated, ready for the CLI
       def options
-        [verbose, recursive, mirror].compact.join("\s")
+        ([verbose, recursive, mirror] + additional_options).compact.join("\s")
       end
 
       ##
