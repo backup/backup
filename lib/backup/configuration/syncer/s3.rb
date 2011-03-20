@@ -22,6 +22,10 @@ module Backup
           # Flag to enable mirroring
           attr_accessor :mirror
 
+          ##
+          # Additional options for the s3sync cli
+          attr_accessor :additional_options
+
         end
       end
     end
