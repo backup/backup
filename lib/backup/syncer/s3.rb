@@ -21,7 +21,7 @@ module Backup
       attr_accessor :mirror
 
       ##
-      # Additional options for the rsync cli
+      # Additional options for the s3sync cli
       attr_accessor :additional_options
 
       ##
