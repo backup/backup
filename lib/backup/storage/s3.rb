@@ -34,14 +34,13 @@ module Backup
 
         instance_eval(&block) if block_given?
 
-        @path = path.sub(/^\//, '')
         @time = TIME
       end
 
       ##
       # This is the remote path to where the backup files will be stored
       def remote_path
-        File.join(path, TRIGGER, '/')
+        File.join(path, TRIGGER).sub(/^\//, '')
       end
 
       ##
