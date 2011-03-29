@@ -19,8 +19,16 @@ module Backup
     class Campfire < Base
 
       ##
-      # Campfire credentials
-      attr_accessor :token, :subdomain, :room_id
+      # Campfire api authentication token
+      attr_accessor :token
+
+      ##
+      # Campfire account's subdomain
+      attr_accessor :subdomain
+
+      ##
+      # Campfire account's room id
+      attr_accessor :room_id
 
       ##
       # Container for the Model object
@@ -124,9 +132,16 @@ module Backup
       class Room
 
         ##
-        # These are the necessary attributes that Campfire requires
-        # in order to communicate with the correct chat rooms
-        attr_reader :room_id, :subdomain, :token
+        # Campfire api authentication token
+        attr_accessor :token
+
+        ##
+        # Campfire account's subdomain
+        attr_accessor :subdomain
+
+        ##
+        # Campfire account's room id
+        attr_accessor :room_id
 
         ##
         # Instantiates a new Campfire::Room object and sets all the
