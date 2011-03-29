@@ -260,6 +260,10 @@ Contributors
     <td><a href="https://github.com/arunagw" target="_blank">Arun Agrawal ( arunagw )</a></td>
     <td>Campfire notifier</td>
   </tr>
+  <tr>
+    <td><a href="https://github.com/szimmermann" target="_blank">Stefan Zimmermann ( szimmermann )</a></td>
+    <td>Enabling package/archive (tar utility) support for more Linux distro's (FreeBSD, etc)</td>
+  </tr>
 </table>
 
 Want to contribute?
