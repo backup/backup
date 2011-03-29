@@ -2,7 +2,7 @@
     campfire.on_success = true
     campfire.on_failure = true
 
-    campfire.token     = 'my_api_authentication_token'
+    campfire.api_token = 'my_api_authentication_token'
     campfire.subdomain = 'my_subdomain'
     campfire.room_id   = 'my_room_id'
   end

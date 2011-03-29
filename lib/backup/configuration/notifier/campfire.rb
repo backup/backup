@@ -8,7 +8,7 @@ module Backup
 
           ##
           # Campfire api authentication token
-          attr_accessor :token
+          attr_accessor :api_token
 
           ##
           # Campfire account's subdomain

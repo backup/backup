@@ -20,7 +20,7 @@ module Backup
 
       ##
       # Campfire api authentication token
-      attr_accessor :token
+      attr_accessor :api_token
 
       ##
       # Campfire account's subdomain
@@ -83,7 +83,7 @@ module Backup
       # Setting up credentials
       def set_defaults!
         @campfire_client = {
-          :token     => @token,
+          :api_token => @api_token,
           :subdomain => @subdomain,
           :room_id   => @room_id
         }
@@ -91,13 +91,13 @@ module Backup
 
       ##
       # Creates a new Campfire::Interface object and passes in the
-      # campfire clients "room_id", "subdomain" and "token". Using this object
+      # campfire clients "room_id", "subdomain" and "api_token". Using this object
       # the provided "message" will be sent to the desired Campfire chat room
       def send_message(message)
         room = Interface.room(
           @campfire_client[:room_id],
           @campfire_client[:subdomain],
-          @campfire_client[:token]
+          @campfire_client[:api_token]
         )
         room.message(message)
       end
@@ -120,20 +120,20 @@ module Backup
         ##
         # Instantiates a new Campfire::Room object with
         # the provided arguments and returns this object
-        def self.room(room_id, subdomain, token)
-          Room.new(room_id, subdomain, token)
+        def self.room(room_id, subdomain, api_token)
+          Room.new(room_id, subdomain, api_token)
         end
       end
 
       ##
       # The Campfire::Room acts as a model for an actual room on the Campfire service.
       # And it uses the Campfire::Interface's (HTTParty) class methods to communicate based
-      # on the provided parameters (room_id, subdomain and token)
+      # on the provided parameters (room_id, subdomain and api_token)
       class Room
 
         ##
-        # Campfire api authentication token
-        attr_accessor :token
+        # Campfire api authentication api_token
+        attr_accessor :api_token
 
         ##
         # Campfire account's subdomain
@@ -145,11 +145,11 @@ module Backup
 
         ##
         # Instantiates a new Campfire::Room object and sets all the
-        # necessary arguments (@room_id, @subdomain, @token)
-        def initialize(room_id, subdomain, token)
+        # necessary arguments (@room_id, @subdomain, @api_token)
+        def initialize(room_id, subdomain, api_token)
           @room_id   = room_id
           @subdomain = subdomain
-          @token     = token
+          @api_token = api_token
         end
 
         ##
@@ -178,7 +178,7 @@ module Backup
         # the POST request that was built in the #send_message (private) method
         def post(action, options = {})
           Interface.base_uri("https://#{subdomain}.campfirenow.com")
-          Interface.basic_auth(token, 'x')
+          Interface.basic_auth(api_token, 'x')
           Interface.post(room_url_for(action), options)
         end
 
