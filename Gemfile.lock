@@ -95,6 +95,7 @@ DEPENDENCIES
   fuubar
   httparty (~> 0.7.4)
   infinity_test
+  json (~> 1.5.1)
   mail (~> 2.2.15)
   mocha
   net-scp (~> 1.0.4)

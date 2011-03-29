@@ -2,9 +2,6 @@
 
 require 'fileutils'
 require 'yaml'
-require 'httparty'
-require "json"
-require 'campfire'
 
 ##
 # The Backup Ruby Gem
@@ -154,10 +151,10 @@ module Backup
   ##
   # Autoload notification files
   module Notifier
-    autoload :Base,    File.join(NOTIFIER_PATH, 'base')
-    autoload :Binder,  File.join(NOTIFIER_PATH, 'binder')
-    autoload :Mail,    File.join(NOTIFIER_PATH, 'mail')
-    autoload :Twitter, File.join(NOTIFIER_PATH, 'twitter')
+    autoload :Base,     File.join(NOTIFIER_PATH, 'base')
+    autoload :Binder,   File.join(NOTIFIER_PATH, 'binder')
+    autoload :Mail,     File.join(NOTIFIER_PATH, 'mail')
+    autoload :Twitter,  File.join(NOTIFIER_PATH, 'twitter')
     autoload :Campfire, File.join(NOTIFIER_PATH, 'campfire')
   end
 
