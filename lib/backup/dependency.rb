@@ -56,7 +56,13 @@ module Backup
           :require => 'twitter',
           :version => '~> 1.1.2',
           :for     => 'Send Twitter Updates (Twitter Notifier)'
-        }
+        },
+
+      'httparty' => {
+        :require => 'httparty',
+        :version => '~> 0.7.4',
+        :for     => 'Send Http Updates'
+      }
       }
     end
 
