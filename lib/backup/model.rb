@@ -240,7 +240,7 @@ module Backup
     # becomes a single (transferrable) packaged file.
     def package!
       Logger.message "Backup started packaging everything to a single archive file."
-      run("#{ utility(:tar) } -c -C '#{ TMP_PATH }' '#{ TRIGGER }' > '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar") }'")
+      run(%|#{ utility(:tar) } -c -f '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar") }' -C '#{ TMP_PATH }' '#{ TRIGGER }'|)
     end
 
     ##

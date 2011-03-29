@@ -4,6 +4,7 @@ GEM
     activesupport (3.0.5)
     addressable (2.2.4)
     builder (3.0.0)
+    crack (0.1.8)
     diff-lcs (1.1.2)
     dropbox (1.2.3)
       json (>= 1.2.0)
@@ -32,6 +33,8 @@ GEM
       rspec-instafail (~> 0.1.4)
       ruby-progressbar (~> 0.0.9)
     hashie (1.0.0)
+    httparty (0.7.4)
+      crack (= 0.1.8)
     i18n (0.5.0)
     infinity_test (1.0.2)
       notifiers (>= 1.1.0)
@@ -90,7 +93,9 @@ DEPENDENCIES
   dropbox (~> 1.2.3)
   fog (~> 0.7.0)
   fuubar
+  httparty (~> 0.7.4)
   infinity_test
+  json (~> 1.5.1)
   mail (~> 2.2.15)
   mocha
   net-scp (~> 1.0.4)
