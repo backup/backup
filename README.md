@@ -98,6 +98,7 @@ Notifiers
 
 - Mail
 - Twitter
+- Campfire
 
 [Notifiers Wiki Page](https://github.com/meskyanichi/backup/wiki/Notifiers)
 
@@ -254,6 +255,10 @@ Contributors
   <tr>
     <td><a href="https://github.com/phlipper" target="_blank">Phil Cohen ( phlipper )</a></td>
     <td>Exclude Option for Archives</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/arunagw" target="_blank">Arun Agrawal ( arunagw )</a></td>
+    <td>Campfire notifier</td>
   </tr>
 </table>
 
