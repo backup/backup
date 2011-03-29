@@ -1,7 +1,7 @@
 Backup 3
 ========
 
-Backup is a RubyGem (for UNIX-like operating systems: Linux, Mac OSX) that allows you to configure and perform backups in a simple manner using an elegant Ruby DSL. It supports various databases (MySQL, PostgreSQL, MongoDB and Redis), it supports various storage locations (Amazon S3, Rackspace Cloud Files, Dropbox, any remote server through FTP, SFTP, SCP and RSync), it provide Syncers (RSync, S3) for efficient backups, it can archive files and directories, it can cycle backups, it can do incremental backups, it can compress backups, it can encrypt backups (OpenSSL or GPG), it can notify you about successful and/or failed backups (Email or Twitter). It is very extensible and easy to add new functionality to. It's easy to use.
+Backup is a RubyGem (for UNIX-like operating systems: Linux, Mac OSX) that allows you to configure and perform backups in a simple manner using an elegant Ruby DSL. It supports various databases (MySQL, PostgreSQL, MongoDB and Redis), it supports various storage locations (Amazon S3, Rackspace Cloud Files, Dropbox, any remote server through FTP, SFTP, SCP and RSync), it provide Syncers (RSync, S3) for efficient backups, it can archive files and directories, it can cycle backups, it can do incremental backups, it can compress backups, it can encrypt backups (OpenSSL or GPG), it can notify you about successful and/or failed backups (Email, Twitter or Campfire). It is very extensible and easy to add new functionality to. It's easy to use.
 
 Author
 ------
@@ -98,6 +98,7 @@ Notifiers
 
 - Mail
 - Twitter
+- Campfire
 
 [Notifiers Wiki Page](https://github.com/meskyanichi/backup/wiki/Notifiers)
 
@@ -254,6 +255,14 @@ Contributors
   <tr>
     <td><a href="https://github.com/phlipper" target="_blank">Phil Cohen ( phlipper )</a></td>
     <td>Exclude Option for Archives</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/arunagw" target="_blank">Arun Agrawal ( arunagw )</a></td>
+    <td>Campfire notifier</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/szimmermann" target="_blank">Stefan Zimmermann ( szimmermann )</a></td>
+    <td>Enabling package/archive (tar utility) support for more Linux distro's (FreeBSD, etc)</td>
   </tr>
 </table>
 

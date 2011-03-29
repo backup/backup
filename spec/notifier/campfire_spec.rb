@@ -5,14 +5,14 @@ require File.dirname(__FILE__) + '/../spec_helper'
 describe Backup::Notifier::Campfire do
   let(:notifier) do
     Backup::Notifier::Campfire.new do |campfire|
-      campfire.token     = 'token'
+      campfire.api_token = 'token'
       campfire.subdomain = 'subdomain'
       campfire.room_id   = 'room_id'
     end
   end
 
   it do
-    notifier.token.should     == 'token'
+    notifier.api_token.should == 'token'
     notifier.subdomain.should == 'subdomain'
     notifier.room_id.should   == 'room_id'
 
@@ -22,16 +22,16 @@ describe Backup::Notifier::Campfire do
 
   describe 'defaults' do
     it do
-      Backup::Configuration::Notifier::Campfire.defaults do |twitter|
-        twitter.token      = 'old_token'
-        twitter.on_success = false
-        twitter.on_failure = true
+      Backup::Configuration::Notifier::Campfire.defaults do |campfire|
+        campfire.api_token  = 'old_token'
+        campfire.on_success = false
+        campfire.on_failure = true
       end
-        notifier      = Backup::Notifier::Campfire.new do |twitter|
-        twitter.token = 'new_token'
+        notifier           = Backup::Notifier::Campfire.new do |campfire|
+        campfire.api_token = 'new_token'
       end
 
-      notifier.token.should      == 'new_token'
+      notifier.api_token.should  == 'new_token'
       notifier.on_success.should == false
       notifier.on_failure.should == true
     end
@@ -88,7 +88,7 @@ describe Backup::Notifier::Campfire do
     end
 
     it do
-      room.token.should     == 'token'
+      room.api_token.should == 'token'
       room.subdomain.should == 'subdomain'
       room.room_id.should   == 'room_id'
     end
