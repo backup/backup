@@ -79,7 +79,11 @@ module Backup
       ##
       # Removes the transferred archive file from the Dropbox folder
       def remove!
-        connection.delete(File.join(remote_path, remote_file))
+        begin
+          connection.delete(File.join(remote_path, remote_file))
+        rescue ::Dropbox::FileNotFoundError
+          Logger.warn "File \"#{ File.join(remote_path, remote_file) }\" does not exist, skipping removal."
+        end
       end
 
     end
