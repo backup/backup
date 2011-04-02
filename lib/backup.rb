@@ -33,6 +33,7 @@ module Backup
   ENCRYPTOR_PATH     = File.join(LIBRARY_PATH, 'encryptor')
   NOTIFIER_PATH      = File.join(LIBRARY_PATH, 'notifier')
   SYNCER_PATH        = File.join(LIBRARY_PATH, 'syncer')
+  EXCEPTION_PATH     = File.join(LIBRARY_PATH, 'exception')
 
   ##
   # Backup's Environment paths
@@ -156,6 +157,12 @@ module Backup
     autoload :Mail,     File.join(NOTIFIER_PATH, 'mail')
     autoload :Twitter,  File.join(NOTIFIER_PATH, 'twitter')
     autoload :Campfire, File.join(NOTIFIER_PATH, 'campfire')
+  end
+
+  ##
+  # Autoload exception classes
+  module Exception
+    autoload :CommandNotFound, File.join(EXCEPTION_PATH, 'command_not_found')
   end
 
   ##

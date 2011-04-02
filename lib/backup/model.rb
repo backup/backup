@@ -225,7 +225,7 @@ module Backup
 
         syncers.each   { |s| s.perform!       }
         notifiers.each { |n| n.perform!(self) }
-      rescue Exception => exception
+      rescue => exception
         clean!
         notifiers.each   { |n| n.perform!(self, exception) }
         show_exception!(exception)
@@ -263,9 +263,9 @@ module Backup
     ##
     # Formats an exception
     def show_exception!(exception)
-      puts ("=" * 75) + "\nException that got raised:\n#{exception}\n" + ("=" * 75) + "\n" + exception.backtrace.join("\n")
-      puts ("=" * 75) + "\n\nYou are running Backup version \"#{Backup::Version.current}\" and Ruby version \"#{ENV['RUBY_VERSION']}\".\n"
-      puts "If you've setup a \"Notification\" in your configuration file, the above error will have been sent."
+      Logger.normal "=" * 75 + "\nException that got raised:\n#{exception.class} - #{exception} \n" + "=" * 75 + "\n" + exception.backtrace.join("\n")
+      Logger.normal "=" * 75 + "\n\nYou are running Backup version \"#{Backup::Version.current}\" and Ruby version \"#{RUBY_VERSION} (patchlevel #{RUBY_PATCHLEVEL})\" on platform \"#{RUBY_PLATFORM}\".\n"
+      Logger.normal "If you've setup a \"Notification\" in your configuration file, the above error will have been sent."
     end
 
   end

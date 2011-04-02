@@ -3,7 +3,7 @@ There seemed to be a problem backing up <%= @model.label %> (<%= @model.trigger 
 
 ===========================================================================
 Exception that got raised:
-<%= @exception.to_s %>
+<%= @exception.class %> - <%= @exception.to_s %>
 ===========================================================================
 <%= @exception.backtrace.join("\n") %>
 ===========================================================================
@@ -13,8 +13,10 @@ You are running Backup version:
 <%= Backup::Version.current %>
 
 You are running Ruby version:
-<%= ENV["RUBY_VERSION"] %>
+<%= RUBY_VERSION %> (patchlevel <%= RUBY_PATCHLEVEL %>)
 
+On platform:
+<%= RUBY_PLATFORM %>
 
 ---------------------------------------------------------------------------
 
