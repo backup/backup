@@ -25,6 +25,14 @@ module Backup
     end
 
     ##
+    # Outputs the data as if it were a regular 'puts' command,
+    # but also logs it to the backup.log
+    def self.normal(string)
+      puts    string
+      to_file string
+    end
+
+    ##
     # Silently logs data to the log file
     def self.silent(string)
       to_file loggify(:silent, string)
