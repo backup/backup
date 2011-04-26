@@ -29,8 +29,8 @@ module Backup
       attr_accessor :additional_options
 
       ##
-      # 'safe' dump meaning wrapping mongodump with fsync & lock
-      attr_accessor :safe
+      # 'lock' dump meaning wrapping mongodump with fsync & lock
+      attr_accessor :lock
 
       ##
       # Creates a new instance of the MongoDB database object
@@ -40,7 +40,7 @@ module Backup
         @only_collections   ||= Array.new
         @additional_options ||= Array.new
         @ipv6               ||= false
-        @safe               ||= false
+        @lock               ||= false
 
         instance_eval(&block)
         prepare!
@@ -114,16 +114,16 @@ module Backup
       def perform!
         log!
 
-        lock_database if @safe.eql?(true)
+        lock_database if @lock.eql?(true)
         if collections_to_dump.is_a?(Array) and not collections_to_dump.empty?
           specific_collection_dump!
         else
           dump!
         end
-        unlock_database if @safe.eql?(true)
+        unlock_database if @lock.eql?(true)
       # This should be tested, but I can't find method for catching exception if Mocha...
       rescue => e
-        unlock_database if @safe.eql?(true)
+        unlock_database if @lock.eql?(true)
         raise e
       end
 

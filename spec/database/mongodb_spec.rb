@@ -129,29 +129,29 @@ describe Backup::Database::MongoDB do
       db.perform!
     end
 
-    it 'should lock database before dump if safe mode is enabled' do
-      db.safe = true
+    it 'should lock database before dump if lock mode is enabled' do
+      db.lock = true
       db.expects(:lock_database)
 
       db.perform!
     end
 
-    it 'should not lock database before dump if safe mode is disabled' do
-      db.safe = false
+    it 'should not lock database before dump if lock mode is disabled' do
+      db.lock = false
       db.expects(:lock_database).never
 
       db.perform!
     end
 
-    it 'should unlock database after dump if safe mode is enabled' do
-      db.safe = true
+    it 'should unlock database after dump if lock mode is enabled' do
+      db.lock = true
       db.expects(:unlock_database)
 
       db.perform!
     end
 
-    it 'should not unlock database after dump if safe mode is disabled' do
-      db.safe = false
+    it 'should not unlock database after dump if lock mode is disabled' do
+      db.lock = false
       db.expects(:unlock_database).never
 
       db.perform!
