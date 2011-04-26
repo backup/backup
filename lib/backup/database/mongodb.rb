@@ -29,6 +29,10 @@ module Backup
       attr_accessor :additional_options
 
       ##
+      # 'safe' dump meaning wrapping mongodump with fsync & lock
+      attr_accessor :safe
+
+      ##
       # Creates a new instance of the MongoDB database object
       def initialize(&block)
         load_defaults!
@@ -36,6 +40,7 @@ module Backup
         @only_collections   ||= Array.new
         @additional_options ||= Array.new
         @ipv6               ||= false
+        @safe               ||= false
 
         instance_eval(&block)
         prepare!
@@ -109,11 +114,17 @@ module Backup
       def perform!
         log!
 
+        lock_database if @safe.eql?(true)
         if collections_to_dump.is_a?(Array) and not collections_to_dump.empty?
           specific_collection_dump!
         else
           dump!
         end
+        unlock_database if @safe.eql?(true)
+      # This should be tested, but I can't find method for catching exception if Mocha...
+      rescue => e
+        unlock_database if @safe.eql?(true)
+        raise e
       end
 
       ##
@@ -130,6 +141,32 @@ module Backup
         collections_to_dump.each do |collection|
           run("#{mongodump} --collection='#{collection}'")
         end
+      end
+
+      ##
+      # Builds the full mongo string based on all attributes
+      def mongo_shell
+        [utility(:mongo), database, credential_options, connectivity_options, ipv6].join(' ')
+      end
+
+      ##
+      # Locks database for dump
+      def lock_database
+        lock_command = <<EOF
+echo 'use admin
+db.runCommand({"fsync" : 1, "lock" : 1})' | #{mongo_shell}
+EOF
+        run(lock_command)
+      end
+
+      ##
+      # Unlocks database for dump
+      def unlock_database
+        unlock_command = <<EOF
+echo 'use admin
+db.$cmd.sys.unlock.findOne()' | #{mongo_shell}
+EOF
+        run(unlock_command)
       end
 
     end
