@@ -105,6 +105,18 @@ describe Backup::Database::MongoDB do
       "mongodump --db='mydatabase' --username='someuser' --password='secret' " +
       "--host='localhost' --port='123' --ipv6 --query --out='#{ File.join(Backup::TMP_PATH, Backup::TRIGGER, 'MongoDB') }'"
     end
+    
+    it 'should return full chain of commands for safe mongodump' do
+      db = Backup::Database::MongoDB.new do |db|
+        db.name      = 'mydatabase'
+        db.safe      = true
+      end
+      db.expects(:utility).with(:mongodump).returns('mongodump')
+      db.expects(:utility).with(:mongo).returns('mongo')
+      db.mongodump.should ==
+      "echo 'use admin \ndb.runCommand({'fsync' : 1, 'lock' : 1}) | mongo --db='mydatabase'    \n mongodump --db='mydatabase'     --out='#{ File.join(Backup::TMP_PATH, Backup::TRIGGER, 'MongoDB') }' \n echo 'use admin \ndb.$cmd.sys.unlock.findOne() | mongo --db='mydatabase'   "
+
+    end
   end
 
   describe '#perform!' do

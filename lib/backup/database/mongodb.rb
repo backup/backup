@@ -27,6 +27,9 @@ module Backup
       ##
       # Additional "mongodump" options
       attr_accessor :additional_options
+      
+      # 'safe' dump meaning wrapping mongodump with fsync & lock
+      attr_accessor :safe
 
       ##
       # Creates a new instance of the MongoDB database object
@@ -36,6 +39,7 @@ module Backup
         @only_collections   ||= Array.new
         @additional_options ||= Array.new
         @ipv6               ||= false
+        @safe               ||= false
 
         instance_eval(&block)
         prepare!
@@ -96,6 +100,22 @@ module Backup
       ##
       # Builds the full mongodump string based on all attributes
       def mongodump
+        @safe.eql?(true) ? mongodump_safe : mongodump_raw
+      end
+      
+      def mongodump_safe
+        puts "performing safe mongodump!"
+        pipe_mongo_shell = " | #{ utility(:mongo) } #{ database } #{ credential_options } " +
+        "#{ connectivity_options } #{ ipv6 }"
+        
+        lock_command = "echo 'use admin 
+db.runCommand({'fsync' : 1, 'lock' : 1})" + pipe_mongo_shell
+        unlock_command = lock = "echo 'use admin 
+db.$cmd.sys.unlock.findOne()" + pipe_mongo_shell
+        "#{lock_command} \n #{mongodump_raw} \n #{unlock_command}"
+      end
+        
+      def mongodump_raw
         "#{ utility(:mongodump) } #{ database } #{ credential_options } " +
         "#{ connectivity_options } #{ ipv6 } #{ additional_options } #{ dump_directory }"
       end
