@@ -80,6 +80,18 @@ describe Backup::Storage::RSync do
 
       rsync.send(:transfer!)
     end
+
+    it 'should not provide the --password-file option' do
+      Backup::Model.new('blah', 'blah') {}
+      file = mock("Backup::Storage::RSync::File")
+
+      rsync.password = nil
+      rsync.expects(:create_remote_directories!)
+      rsync.expects(:utility).returns('rsync')
+      rsync.expects(:run).with("rsync -z --port='22'  '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar'")
+
+      rsync.send(:transfer!)
+    end
   end
 
   describe '#remove!' do

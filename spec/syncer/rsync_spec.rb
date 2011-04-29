@@ -180,6 +180,16 @@ describe Backup::Syncer::RSync do
                                "'/some/random/directory' '/another/random/directory' 'my_username@123.45.678.90:backups/'")
       rsync.perform!
     end
+
+    it 'should not pass in the --password-file option' do
+      Backup::Logger.expects(:message).with("Backup::Syncer::RSync started syncing '/some/random/directory' '/another/random/directory'.")
+      rsync.password = nil
+      rsync.expects(:utility).with(:rsync).returns(:rsync)
+      rsync.expects(:remove_password_file!)
+      rsync.expects(:run).with("rsync -vhP --archive --delete --compress --port='22' " +
+                               "'/some/random/directory' '/another/random/directory' 'my_username@123.45.678.90:backups/'")
+      rsync.perform!
+    end
   end
 
 end
