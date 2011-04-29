@@ -30,6 +30,10 @@ module Backup
           # Additional "mongodump" options
           attr_accessor :additional_options
 
+          ##
+          # 'lock' dump meaning wrapping mongodump with fsync & lock
+          attr_accessor :lock
+
         end
       end
     end
