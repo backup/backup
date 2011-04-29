@@ -13,7 +13,7 @@ describe Backup::Database::MongoDB do
       db.name      = 'mydatabase'
       db.username  = 'someuser'
       db.password  = 'secret'
-      db.host      = 'localhost'
+      db.host      = 'examplehost.com'
       db.port      = 123
 
       db.ipv6               = true
@@ -27,7 +27,7 @@ describe Backup::Database::MongoDB do
       db.name.should      == 'mydatabase'
       db.username.should  == 'someuser'
       db.password.should  == 'secret'
-      db.host.should      == 'localhost'
+      db.host.should      == 'examplehost.com'
       db.port.should      == 123
 
       db.only_collections.should == ['users', 'pirates']
@@ -73,7 +73,7 @@ describe Backup::Database::MongoDB do
 
   describe '#connectivity_options' do
     it 'should return the mongo syntax for the connectivity options' do
-      db.connectivity_options.should == "--host='localhost' --port='123'"
+      db.connectivity_options.should == "--host='examplehost.com:123'"
     end
 
     it 'should return only the socket' do
@@ -82,7 +82,7 @@ describe Backup::Database::MongoDB do
         db.port   = 123
       end
 
-      db.connectivity_options.should == "--port='123'"
+      db.connectivity_options.should == "--host='localhost:123'"
     end
   end
 
@@ -103,7 +103,7 @@ describe Backup::Database::MongoDB do
       db.expects(:utility).with(:mongodump).returns('mongodump')
       db.mongodump.should ==
       "mongodump --db='mydatabase' --username='someuser' --password='secret' " +
-      "--host='localhost' --port='123' --ipv6 --query --out='#{ File.join(Backup::TMP_PATH, Backup::TRIGGER, 'MongoDB') }'"
+      "--host='examplehost.com:123' --ipv6 --query --out='#{ File.join(Backup::TMP_PATH, Backup::TRIGGER, 'MongoDB') }'"
     end
   end
 

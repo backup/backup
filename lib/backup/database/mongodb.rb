@@ -60,10 +60,8 @@ module Backup
       # Builds the MongoDB connectivity options syntax to connect the user
       # to perform the database dumping process
       def connectivity_options
-        %w[host port].map do |option|
-          next if send(option).nil? or (send(option).respond_to?(:empty?) and send(option).empty?)
-          "--#{option}='#{send(option)}'"
-        end.compact.join("\s")
+        h = host.to_s.empty? ? 'localhost' : host
+        "--host='#{h}#{ port ? ":"+port.to_s : ''}'"
       end
 
       ##
