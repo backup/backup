@@ -19,11 +19,13 @@ describe Backup::Storage::RSync do
   end
 
   it 'should have defined the configuration properly' do
-    rsync.username.should == 'my_username'
-    rsync.password.should == 'my_password'
-    rsync.ip.should       == '123.45.678.90'
-    rsync.port.should     == 22
-    rsync.path.should     == 'backups/'
+    rsync.username.should        == 'my_username'
+    rsync.send(:password).should =~ /backup-rsync-password/
+    rsync.ip.should              == '123.45.678.90'
+    rsync.port.should            == 22
+    rsync.path.should            == 'backups/'
+
+    File.read(rsync.instance_variable_get('@password_file').path).should == 'my_password'
   end
 
   it 'should use the defaults if a particular attribute has not been defined' do
@@ -38,10 +40,12 @@ describe Backup::Storage::RSync do
       rsync.ip       = '123.45.678.90'
     end
 
-    rsync.username.should == 'my_default_username'
-    rsync.password.should == 'my_password'
-    rsync.ip.should       == '123.45.678.90'
-    rsync.port.should     == 22
+    rsync.username.should        == 'my_default_username'
+    rsync.send(:password).should =~ /backup-rsync-password/
+    rsync.ip.should              == '123.45.678.90'
+    rsync.port.should            == 22
+
+    File.read(rsync.instance_variable_get('@password_file').path).should == 'my_password'
   end
 
   it 'should have its own defaults' do
@@ -72,7 +76,7 @@ describe Backup::Storage::RSync do
 
       rsync.expects(:create_remote_directories!)
       rsync.expects(:utility).returns('rsync')
-      rsync.expects(:run).with("rsync -z --port='22' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar'")
+      rsync.expects(:run).with("rsync -z --port='22' --password-file='#{rsync.instance_variable_get('@password_file').path}' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar'")
 
       rsync.send(:transfer!)
     end

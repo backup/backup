@@ -56,7 +56,7 @@ module Backup
         @compress           ||= false
 
         instance_eval(&block) if block_given?
-        write_password_file!  unless @password.nil?
+        write_password_file!
 
         @path = path.sub(/^\~\//, '')
       end
@@ -70,7 +70,7 @@ module Backup
           run("#{ utility(:rsync) } -vhP #{ options } #{ directories } '#{ username }@#{ ip }:#{ path }'")
         )
 
-        remove_password_file! unless @password.nil?
+        remove_password_file!
       end
 
       ##
@@ -106,7 +106,7 @@ module Backup
       ##
       # Returns Rsync syntax for setting a password (via a file)
       def password
-        "--password-file='#{@password_file.path}'" if @password
+        "--password-file='#{@password_file.path}'" unless @password.nil?
       end
 
       ##

@@ -165,7 +165,7 @@ describe Backup::Syncer::RSync do
 
     it do
       rsync.password = nil
-      rsync.expects(:remove_password_file!).never
+      rsync.expects(:remove_password_file!)
 
       rsync.perform!
     end

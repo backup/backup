@@ -1,6 +1,10 @@
 # encoding: utf-8
 
 ##
+# Require the tempfile Ruby library when Backup::Storage::RSync is loaded
+require 'tempfile'
+
+##
 # Only load the Net::SSH library when the Backup::Storage::RSync class is loaded
 Backup::Dependency.load('net-ssh')
 
@@ -32,6 +36,7 @@ module Backup
         @path ||= 'backups'
 
         instance_eval(&block) if block_given?
+        write_password_file!
 
         @time = TIME
         @path = path.sub(/^\~\//, '')
@@ -47,6 +52,7 @@ module Backup
       # Performs the backup transfer
       def perform!
         transfer!
+        remove_password_file!
       end
 
     private
@@ -58,7 +64,7 @@ module Backup
       # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
       # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
-        Net::SSH.start(ip, username, :password => password, :port => port)
+        Net::SSH.start(ip, username, :password => @password, :port => port)
       end
 
       ##
@@ -66,7 +72,7 @@ module Backup
       def transfer!
         Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
         create_remote_directories!
-        run("#{ utility(:rsync) } #{ options } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file[20..-1]) }'")
+        run("#{ utility(:rsync) } #{ options } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file[20..-1]) }'")
       end
 
       ##
@@ -92,6 +98,30 @@ module Backup
       # -Phv   = debug options
       def options
         "-z --port='#{ port }'"
+      end
+
+      ##
+      # Returns Rsync syntax for using a password file
+      def password
+        "--password-file='#{@password_file.path}'" unless @password.nil?
+      end
+
+      ##
+      # Writes the provided password to a temporary file so that
+      # the rsync utility can read the password from this file
+      def write_password_file!
+        unless @password.nil?
+          @password_file = Tempfile.new('backup-rsync-password')
+          @password_file.write(@password)
+          @password_file.close
+        end
+      end
+
+      ##
+      # Removes the previously created @password_file
+      # (temporary file containing the password)
+      def remove_password_file!
+        @password_file.unlink unless @password.nil?
       end
 
     end
