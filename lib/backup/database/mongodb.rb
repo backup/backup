@@ -114,17 +114,18 @@ module Backup
       def perform!
         log!
 
-        lock_database if @lock.eql?(true)
-        if collections_to_dump.is_a?(Array) and not collections_to_dump.empty?
-          specific_collection_dump!
-        else
-          dump!
+        begin
+          lock_database if @lock.eql?(true)
+          if collections_to_dump.is_a?(Array) and not collections_to_dump.empty?
+            specific_collection_dump!
+          else
+            dump!
+          end
+          unlock_database if @lock.eql?(true)
+        rescue => exception
+          unlock_database if @lock.eql?(true)
+          raise exception
         end
-        unlock_database if @lock.eql?(true)
-      # This should be tested, but I can't find method for catching exception if Mocha...
-      rescue => e
-        unlock_database if @lock.eql?(true)
-        raise e
       end
 
       ##
@@ -150,22 +151,26 @@ module Backup
       end
 
       ##
-      # Locks database for dump
+      # Locks and FSyncs the database to bring it up to sync
+      # and ensure no 'write operations' are performed during the
+      # dump process
       def lock_database
-        lock_command = <<EOF
-echo 'use admin
-db.runCommand({"fsync" : 1, "lock" : 1})' | #{mongo_shell}
-EOF
+        lock_command = <<-EOS
+          echo 'use admin
+          db.runCommand({"fsync" : 1, "lock" : 1})' | #{mongo_shell}
+        EOS
+
         run(lock_command)
       end
 
       ##
-      # Unlocks database for dump
+      # Unlocks the (locked) database
       def unlock_database
-        unlock_command = <<EOF
-echo 'use admin
-db.$cmd.sys.unlock.findOne()' | #{mongo_shell}
-EOF
+        unlock_command = <<-EOS
+          echo 'use admin
+          db.$cmd.sys.unlock.findOne()' | #{mongo_shell}
+        EOS
+
         run(unlock_command)
       end
 
