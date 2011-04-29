@@ -205,7 +205,7 @@ The __Mail__ notifier. I have not provided the SMTP options to use my Gmail acco
 
 The __Twitter__ notifier. You will require your consumer and oauth credentials, which I have also left out of this example.
 
-MongoDB backup utility (mongodump) by default does not fsync & lock the database, opening a possibility for inconsistent data dump. This is addressed by setting safe = true which causes mongodump to be wrapped with lock&fsync calls (with a lock takedown after the dump). Please check the Wiki on this subject and remember this is a very fresh feature, needing some more real-world testing. Disabled at default.
+MongoDB backup utility (mongodump) by default does not fsync & lock the database, opening a possibility for inconsistent data dump. This is addressed by setting lock = true which causes mongodump to be wrapped with lock&fsync calls (with a lock takedown after the dump). Please check the Wiki on this subject and remember this is a very fresh feature, needing some more real-world testing. Disabled at default.
 
 Check out the Wiki for more information on all the above subjects.
 
