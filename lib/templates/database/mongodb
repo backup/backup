@@ -7,4 +7,5 @@
     db.ipv6               = false
     db.only_collections   = ['only', 'these' 'collections']
     db.additional_options = []
+    db.lock               = false
   end
