@@ -43,4 +43,16 @@ describe Backup::Logger do
       Backup::Logger.silent "This has been logged."
     end
   end
+
+  context 'when quieted' do
+    it do
+      Backup::Logger.send(:const_set, :QUIET, true)
+      Backup::Logger.expects(:puts).never
+
+      Backup::Logger.message "This has been logged."
+      Backup::Logger.error   "This has been logged."
+      Backup::Logger.warn    "This has been logged."
+      Backup::Logger.normal  "This has been logged."
+    end
+  end
 end
