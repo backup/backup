@@ -72,7 +72,9 @@ module Backup
     # and notify the user via the built-in notifiers if these are set.
     def raise_if_command_not_found!(utility)
       if $?.to_i.eql?(32512)
-        raise Exception::CommandNotFound , "Could not find the utility \"#{utility}\" on \"#{RUBY_PLATFORM}\"."
+        raise Exception::CommandNotFound , "Could not find the utility \"#{utility}\" on \"#{RUBY_PLATFORM}\".\n" +
+                                           "If this is a database utility, try defining the 'utility_path' option in the configuration file.\n" +
+                                           "See the Database Wiki for more information about the Utility Path option."
       end
     end
 
