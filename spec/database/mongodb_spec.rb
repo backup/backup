@@ -150,6 +150,15 @@ describe Backup::Database::MongoDB do
       db.perform!
     end
 
+    it 'should unlock the database if an exception is raised after it was locked' do
+      db.lock = true
+      db.expects(:unlock_database)
+      db.expects(:lock_database).raises(RuntimeError, 'something went wrong')
+      db.expects(:raise)
+
+      db.perform!
+    end
+
     it 'should not unlock database after dump if lock mode is disabled' do
       db.lock = false
       db.expects(:unlock_database).never
