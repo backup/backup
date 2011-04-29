@@ -90,6 +90,10 @@ module Backup
       "\e[#{code}m#{string}\e[0m"
     end
 
+    ##
+    # Returns 'true' (boolean) if the QUIET constant is defined
+    # By default it isn't defined, only when initializing Backup using
+    # the '--quite' (or '-q') option in the CLI (e.g. backup perform -t my_backup --quiet)
     def self.quiet?
       const_defined?(:QUIET) && QUIET
     end
