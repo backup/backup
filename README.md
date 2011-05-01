@@ -266,6 +266,34 @@ Contributors
     <td><a href="https://github.com/szimmermann" target="_blank">Stefan Zimmermann ( szimmermann )</a></td>
     <td>Enabling package/archive (tar utility) support for more Linux distro's (FreeBSD, etc)</td>
   </tr>
+  <tr>
+    <td><a href="https://github.com/trystant" target="_blank">Mark Nyon ( trystant )</a></td>
+    <td>Helping discuss MongoDump Lock/FSync problem</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/imanel" target="_blank">Bernard Potocki ( imanel )</a></td>
+    <td>Helping discuss MongoDump Lock/FSync problem + Submitting a patch</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/tomash" target="_blank">Tomasz Stachewicz ( tomash )</a></td>
+    <td>Helping discuss MongoDump Lock/FSync problem + Submitting a patch</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/lapluviosilla" target="_blank">Paul Strong ( lapluviosilla )</a></td>
+    <td>Helping discuss MongoDump Lock/FSync problem</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/rgnitz" target="_blank">( Ryan ) rgnitz</a></td>
+    <td>Helping discuss MongoDump Lock/FSync problem</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/tsigo" target="_blank">Robert Speicher ( tsigo )</a></td>
+    <td>Adding the --quiet [-q] feature to Backup to silence console logging</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/jwhitcraft" target="_blank"> Jon Whitcraft ( jwhitcraft )</a></td>
+    <td>Adding the ability to add additional options to the S3Syncer</td>
+  </tr>
 </table>
 
 Want to contribute?
