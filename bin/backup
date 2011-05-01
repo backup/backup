@@ -31,11 +31,12 @@ class BackupCLI < Thor
   # Performs the backup process. The only required option is the --trigger [-t].
   # If the other options (--config_file, --data_path, --tmp_path) aren't specified
   # it'll fallback to the (good) defaults
-  method_option :trigger,     :type => :string, :aliases => ['-t', '--triggers'], :required => true
-  method_option :config_file, :type => :string, :aliases => '-c'
-  method_option :data_path,   :type => :string, :aliases => '-d'
-  method_option :log_path,    :type => :string, :aliases => '-l'
+  method_option :trigger,     :type => :string,  :aliases => ['-t', '--triggers'], :required => true
+  method_option :config_file, :type => :string,  :aliases => '-c'
+  method_option :data_path,   :type => :string,  :aliases => '-d'
+  method_option :log_path,    :type => :string,  :aliases => '-l'
   method_option :tmp_path,    :type => :string
+  method_option :quiet,       :type => :boolean, :aliases => '-q'
   desc 'perform', "Performs the backup for the specified trigger.\n" + 
                   "You may perform multiple backups by providing multiple triggers, separated by commas.\n\n" +
                   "Example:\n\s\s$ backup perform --triggers backup1,backup2,backup3,backup4\n\n" +
@@ -74,6 +75,12 @@ class BackupCLI < Thor
     # Ensure the TMP_PATH and LOG_PATH are created if they do not yet exist
     Array.new([Backup::TMP_PATH, Backup::LOG_PATH]).each do |path|
       FileUtils.mkdir_p(path)
+    end
+
+    ##
+    # Silence Backup::Logger from printing to STDOUT, if --quiet was specified
+    if options[:quiet]
+      Backup::Logger.send(:const_set, :QUIET, options[:quiet])
     end
 
     ##

@@ -8,6 +8,10 @@ module Backup
     # through a ruby method. This helps with test coverage and
     # improves readability.
     #
+    # It'll first remove all prefixing slashes ( / ) by using .gsub(/^\s+/, '')
+    # This allows for the EOS blocks to be indented without actually using any
+    # prefixing spaces. This cleans up the implementation code.
+    #
     # Every time the Backup::CLI#run method is invoked, it'll invoke
     # the Backup::CLI#raise_if_command_not_found method after running the
     # requested command on the OS.
@@ -17,6 +21,7 @@ module Backup
     # name (e.g. mongodump, pgdump, etc) from a command like "/usr/local/bin/mongodump <options>"
     # and pass that in to the Backup::CLI#raise_if_command_not_found
     def run(command)
+      command.gsub!(/^\s+/, '')
       %x[#{command}]
       raise_if_command_not_found!(
         command.slice(0, command.index(/\s/)).split('/')[-1]
@@ -67,7 +72,9 @@ module Backup
     # and notify the user via the built-in notifiers if these are set.
     def raise_if_command_not_found!(utility)
       if $?.to_i.eql?(32512)
-        raise Exception::CommandNotFound , "Could not find the utility \"#{utility}\" on \"#{RUBY_PLATFORM}\"."
+        raise Exception::CommandNotFound , "Could not find the utility \"#{utility}\" on \"#{RUBY_PLATFORM}\".\n" +
+                                           "If this is a database utility, try defining the 'utility_path' option in the configuration file.\n" +
+                                           "See the Database Wiki for more information about the Utility Path option."
       end
     end
 

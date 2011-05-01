@@ -29,6 +29,10 @@ module Backup
       attr_accessor :additional_options
 
       ##
+      # 'lock' dump meaning wrapping mongodump with fsync & lock
+      attr_accessor :lock
+
+      ##
       # Creates a new instance of the MongoDB database object
       def initialize(&block)
         load_defaults!
@@ -36,6 +40,7 @@ module Backup
         @only_collections   ||= Array.new
         @additional_options ||= Array.new
         @ipv6               ||= false
+        @lock               ||= false
 
         instance_eval(&block)
         prepare!
@@ -109,10 +114,17 @@ module Backup
       def perform!
         log!
 
-        if collections_to_dump.is_a?(Array) and not collections_to_dump.empty?
-          specific_collection_dump!
-        else
-          dump!
+        begin
+          lock_database if @lock.eql?(true)
+          if collections_to_dump.is_a?(Array) and not collections_to_dump.empty?
+            specific_collection_dump!
+          else
+            dump!
+          end
+          unlock_database if @lock.eql?(true)
+        rescue => exception
+          unlock_database if @lock.eql?(true)
+          raise exception
         end
       end
 
@@ -130,6 +142,36 @@ module Backup
         collections_to_dump.each do |collection|
           run("#{mongodump} --collection='#{collection}'")
         end
+      end
+
+      ##
+      # Builds the full mongo string based on all attributes
+      def mongo_shell
+        [utility(:mongo), database, credential_options, connectivity_options, ipv6].join(' ')
+      end
+
+      ##
+      # Locks and FSyncs the database to bring it up to sync
+      # and ensure no 'write operations' are performed during the
+      # dump process
+      def lock_database
+        lock_command = <<-EOS
+          echo 'use admin
+          db.runCommand({"fsync" : 1, "lock" : 1})' | #{mongo_shell}
+        EOS
+
+        run(lock_command)
+      end
+
+      ##
+      # Unlocks the (locked) database
+      def unlock_database
+        unlock_command = <<-EOS
+          echo 'use admin
+          db.$cmd.sys.unlock.findOne()' | #{mongo_shell}
+        EOS
+
+        run(unlock_command)
       end
 
     end

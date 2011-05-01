@@ -6,21 +6,21 @@ module Backup
     ##
     # Outputs a messages to the console and writes it to the backup.log
     def self.message(string)
-      puts    loggify(:message, string, :green)
+      puts    loggify(:message, string, :green) unless quiet?
       to_file loggify(:message, string)
     end
 
     ##
     # Outputs an error to the console and writes it to the backup.log
     def self.error(string)
-      puts    loggify(:error, string, :red)
+      puts    loggify(:error, string, :red) unless quiet?
       to_file loggify(:error, string)
     end
 
     ##
     # Outputs a notice to the console and writes it to the backup.log
     def self.warn(string)
-      puts    loggify(:warning, string, :yellow)
+      puts    loggify(:warning, string, :yellow) unless quiet?
       to_file loggify(:warning, string)
     end
 
@@ -28,7 +28,7 @@ module Backup
     # Outputs the data as if it were a regular 'puts' command,
     # but also logs it to the backup.log
     def self.normal(string)
-      puts    string
+      puts    string unless quiet?
       to_file string
     end
 
@@ -88,6 +88,14 @@ module Backup
     # easier to view output to the client
     def self.colorize(string, code)
       "\e[#{code}m#{string}\e[0m"
+    end
+
+    ##
+    # Returns 'true' (boolean) if the QUIET constant is defined
+    # By default it isn't defined, only when initializing Backup using
+    # the '--quite' (or '-q') option in the CLI (e.g. backup perform -t my_backup --quiet)
+    def self.quiet?
+      const_defined?(:QUIET) && QUIET
     end
 
   end
