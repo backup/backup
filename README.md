@@ -283,7 +283,7 @@ Contributors
     <td>Helping discuss MongoDump Lock/FSync problem</td>
   </tr>
   <tr>
-    <td><a href="https://github.com/rgnitz" target="_blank">( Ryan ) rgnitz</a></td>
+    <td><a href="https://github.com/rgnitz" target="_blank">Ryan ( rgnitz )</a></td>
     <td>Helping discuss MongoDump Lock/FSync problem</td>
   </tr>
   <tr>
