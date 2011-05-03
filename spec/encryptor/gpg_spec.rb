@@ -20,19 +20,19 @@ describe Backup::Encryptor::GPG do
   end
 
   context "when a block is provided" do
-    it do
+    it "should strip initial whitespace from key lines" do
       key = <<-KEY
-        -----BEGIN PGP PUBLIC KEY BLOCK-----
-        Version: GnuPG v1.4.11 (Darwin)
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1.4.11 (Darwin)
 
-        mQENBE12G/8BCAC4mnlSMYMBwBYTHe5zURcnYYNCORPWOr0iXGiLWuKxYtrDQyLm
-        X2Nws44Iz7Wp7AuJRAjkitf1cRBgXyDu8wuogXO7JqPmtsUdBCABz9w5NH6IQjgR
-        WNa3g2n0nokA7Zr5FA4GXoEaYivfbvGiyNpd6P4okH+//G2p+3FIryu5xz+89D1b
-        =Yvhg
-        -----END PGP PUBLIC KEY BLOCK-----
+mQENBE12G/8BCAC4mnlSMYMBwBYTHe5zURcnYYNCORPWOr0iXGiLWuKxYtrDQyLm
+X2Nws44Iz7Wp7AuJRAjkitf1cRBgXyDu8wuogXO7JqPmtsUdBCABz9w5NH6IQjgR
+WNa3g2n0nokA7Zr5FA4GXoEaYivfbvGiyNpd6P4okH+//G2p+3FIryu5xz+89D1b
+=Yvhg
+-----END PGP PUBLIC KEY BLOCK-----
       KEY
 
-      encryptor.key.should == key.gsub(/^(\s|\t)+/, '')
+      encryptor.key.should == key
     end
   end
 
