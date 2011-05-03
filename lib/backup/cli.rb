@@ -22,10 +22,10 @@ module Backup
     # and pass that in to the Backup::CLI#raise_if_command_not_found
     def run(command)
       command.gsub!(/^\s+/, '')
-      %x[#{command}]
       raise_if_command_not_found!(
         command.slice(0, command.index(/\s/)).split('/')[-1]
       )
+      %x[#{command}]
     end
 
     ##
