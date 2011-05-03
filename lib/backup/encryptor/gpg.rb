@@ -30,7 +30,7 @@ module Backup
 
         instance_eval(&block) if block_given?
 
-        @key = key.gsub(/^(\s|\t)+/, '')
+        @key = key.gsub(/^[[:blank:]]+/, '')
       end
 
       ##
