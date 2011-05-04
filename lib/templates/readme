@@ -11,5 +11,5 @@
 # When you're finished configuring this configuration file,
 # you can run it from the command line by issuing the following command:
 #
-# $ backup -t my_backup [-c <path_to_configuration_file>]
+# $ backup perform -t my_backup [-c <path_to_configuration_file>]
 
