@@ -82,6 +82,7 @@ Compressors
 -----------
 
 - Gzip
+- Bzip2
 
 [Compressors Wiki Page](https://github.com/meskyanichi/backup/wiki/Compressors)
 
