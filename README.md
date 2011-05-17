@@ -310,6 +310,16 @@ Want to contribute?
 I can't guarantee I'll pull every pull request. Also, I may accept your pull request and drastically change parts to improve readability/maintainability. Feel free to discuss about improvements, new functionality/features in the [issue log](https://github.com/meskyanichi/backup/issues) before contributing if you need/want more information.
 
 
+Or contribute by writing blogs/tutorials
+----------------------------------------
+
+- http://erik.debill.org/2011/03/26/csing-backup-with-rails
+- http://blog.noizeramp.com/2011/03/31/backing-up-backup-ruby-gem/
+- http://www.sebaugereau.com/using-ruby-to-backup-with-beauty
+- http://outofti.me/post/4159686269/backup-with-pgbackups
+- http://h2ik.co/2011/03/backing-up-with-ruby/
+
+
 Backup 2 - Issues, Wiki, Source, Gems
 =====================================
 
