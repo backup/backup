@@ -84,12 +84,8 @@ module Backup
             File.join(remote_path, remote_file),
             File.open(File.join(local_path, local_file))
           )
-        rescue Excon::Errors::SocketError
-          puts "\nAn error occurred while trying to transfer the backup."
-          puts "Make sure the bucket exists, and that you specified the correct bucket region.\n\n"
-          puts "The available regions are:\n\n"
-          puts %w[eu-west-1 us-east-1 ap-southeast-1 us-west-1].map{ |region| "\s\s* #{region}" }.join("\n")
-          exit
+        rescue Excon::Errors::NotFound
+          raise "An error occurred while trying to transfer the backup, please make sure the bucket exists."
         end
       end
 
