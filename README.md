@@ -11,10 +11,10 @@ Author
 Drop me a message for any questions, suggestions, requests, bugs or submit them to the [issue log](https://github.com/meskyanichi/backup/issues).
 
 
-HireFireApp.com - The Heroku Worker Monitor - BETA
+HireFireApp.com - The Heroku Worker Manager - BETA
 --------------------------------------------------
 
-*This has nothing to do with the Backup gem, but it could potentially help support me for my time spent on open source projects, hope you don't mind!*
+*This has nothing to do with the Backup gem, but it could potentially help support my open source projects!*
 
 I would like to announce the release of a **new service** I've been working on, called **HireFireApp**. If you're using Heroku as your deployment platform, chances are that you're using **Workers**. If this is the case, then HireFireApp may be of interested to you. The goal is to reduce the Heroku Worker monthly fees and enable faster job processing.
 
