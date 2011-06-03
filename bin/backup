@@ -1,4 +1,4 @@
-#! /usr/bin/env ruby
+#!/usr/bin/env ruby
 
 ##
 # Load RubyGems for Ruby <= 1.8.7
