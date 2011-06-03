@@ -28,7 +28,7 @@ I recommend you read this README first, and refer to the [Wiki pages](https://gi
 What Backup 3 currently supports
 ================================
 
-**Below you find a summary of what the Backup gem currently supports. Each of the items below is more or less isolated from each other, meaning that adding new databases, storage locations, compressors, encryptors, notifiers, and such is relatively easy to do.**
+Below you find a summary of what the Backup gem currently supports. Each of the items below is more or less isolated from each other, meaning that adding new databases, storage locations, compressors, encryptors, notifiers, and such is relatively easy to do.
 
 Database Support
 ----------------
