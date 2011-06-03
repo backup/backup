@@ -1,3 +1,6 @@
+  ##
+  # OpenSSL [Encryptor]
+  #
   encrypt_with OpenSSL do |encryption|
     encryption.password = 'my_password'
     encryption.base64   = true

@@ -1,3 +1,6 @@
+  ##
+  # Dropbox File Hosting Service [Storage]
+  #
   store_with Dropbox do |db|
     db.email      = 'my@email.com'
     db.password   = 'my_password'

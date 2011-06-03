@@ -66,7 +66,7 @@ module Backup
     # Returns a "tar-ready" string of all the specified excludes combined
     def paths_to_exclude
       if excludes.any?
-        "--exclude={" + excludes.map{ |e| "'#{e}'" }.join(",") + "}"
+        excludes.map{ |e| "--exclude='#{e}'" }.join(" ")
       end
     end
   end

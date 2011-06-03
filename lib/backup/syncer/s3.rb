@@ -48,14 +48,14 @@ module Backup
       # and once it's finished syncing the files and directories to Amazon S3, it'll
       # unset these credentials (back to nil values)
       def perform!
-        set_s3sync_credentials!
+        set_environment_variables!
 
         directories.each do |directory|
           Logger.message("#{ self.class } started syncing '#{ directory }'.")
           Logger.silent( run("#{ utility(:s3sync) } #{ options } '#{ directory }' '#{ bucket }:#{ path }'") )
         end
 
-        unset_s3sync_credentials!
+        unset_environment_variables!
       end
 
       ##
@@ -99,16 +99,18 @@ module Backup
       # In order for S3Sync to know what credentials to use, we have to set the
       # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables, these
       # evironment variables will be used by S3Sync
-      def set_s3sync_credentials!
+      def set_environment_variables!
         ENV['AWS_ACCESS_KEY_ID']     = access_key_id
         ENV['AWS_SECRET_ACCESS_KEY'] = secret_access_key
+        ENV['AWS_CALLING_FORMAT']    = 'SUBDOMAIN'
       end
 
       ##
       # Sets the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY back to nil
-      def unset_s3sync_credentials!
+      def unset_environment_variables!
         ENV['AWS_ACCESS_KEY_ID']     = nil
         ENV['AWS_SECRET_ACCESS_KEY'] = nil
+        ENV['AWS_CALLING_FORMAT']    = nil
       end
 
     end

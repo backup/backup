@@ -1,0 +1,12 @@
+  ##
+  # Presently [Notifier]
+  #
+  notify_by Presently do |presently|
+    presently.on_success = true
+    presently.on_failure = true
+
+    presently.subdomain = 'my_subdomain'
+    presently.user_name = 'my_user_name'
+    presently.password  = 'my_password'
+    presently.group_id  = 'my_group_id' # optional
+  end

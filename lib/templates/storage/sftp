@@ -1,3 +1,6 @@
+  ##
+  # SFTP (Secure File Transfer Protocol) [Storage]
+  #
   store_with SFTP do |server|
     server.username = 'my_username'
     server.password = 'my_password'

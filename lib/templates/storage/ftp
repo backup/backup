@@ -1,3 +1,6 @@
+  ##
+  # FTP (File Transfer Protocol) [Storage]
+  #
   store_with FTP do |server|
     server.username = 'my_username'
     server.password = 'my_password'

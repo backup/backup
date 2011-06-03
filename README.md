@@ -1,14 +1,16 @@
 Backup 3
 ========
 
-Backup is a RubyGem (for UNIX-like operating systems: Linux, Mac OSX) that allows you to configure and perform backups in a simple manner using an elegant Ruby DSL. It supports various databases (MySQL, PostgreSQL, MongoDB and Redis), it supports various storage locations (Amazon S3, Rackspace Cloud Files, Dropbox, any remote server through FTP, SFTP, SCP and RSync), it provide Syncers (RSync, S3) for efficient backups, it can archive files and directories, it can cycle backups, it can do incremental backups, it can compress backups, it can encrypt backups (OpenSSL or GPG), it can notify you about successful and/or failed backups (Email, Twitter or Campfire). It is very extensible and easy to add new functionality to. It's easy to use.
+Backup is a RubyGem, written for Linux and Mac OSX, that allows you to easily perform backup operations on both your remote, as well as your local environment. It provides you with an elegant DSL in Ruby for modeling (configuring) your backups. Backup has built-in support for various databases, storage protocols/services, syncers, compressors, encryptors and notifiers which you can mix and match. It was built with modularity, extensibility and simplicity in mind.
+
 
 Author
 ------
 
-**Michael van Rooijen ( [@meskyanichi](http://twitter.com/#!/meskyanichi) )**
+**[Michael van Rooijen](http://michaelvanrooijen.com/) ( [@meskyanichi](http://twitter.com/#!/meskyanichi) )**
 
 Drop me a message for any questions, suggestions, requests, bugs or submit them to the [issue log](https://github.com/meskyanichi/backup/issues).
+
 
 Installation
 ------------
@@ -27,7 +29,7 @@ I recommend you read this README first, and refer to the [Wiki pages](https://gi
 What Backup 3 currently supports
 ================================
 
-**Below you find a summary of what the Backup gem currently supports. Each of the items below is more or less isolated from each other, meaning that adding new databases, storage locations, compressors, encryptors, notifiers, and such is relatively easy to do.**
+Below you find a list of components that Backup currently supports. Each of these compontents is isolated, meaning that adding new databases, storage location / service, compressor, encryptor or notifier is easy to do.
 
 Database Support
 ----------------
@@ -47,8 +49,8 @@ Filesystem Support
 
 [Archive Wiki Page](https://github.com/meskyanichi/backup/wiki/Archives)
 
-Storage Locations
------------------
+Storage Locations and Services
+------------------------------
 
 - Amazon Simple Storage Service (S3)
 - Rackspace Cloud Files (Mosso)
@@ -82,6 +84,7 @@ Compressors
 -----------
 
 - Gzip
+- Bzip2
 
 [Compressors Wiki Page](https://github.com/meskyanichi/backup/wiki/Compressors)
 
@@ -99,6 +102,7 @@ Notifiers
 - Mail
 - Twitter
 - Campfire
+- Presently
 
 [Notifiers Wiki Page](https://github.com/meskyanichi/backup/wiki/Notifiers)
 
@@ -109,21 +113,11 @@ Supported Ruby versions (Tested with RSpec)
 - Ruby 1.8.7
 - Ruby Enterprise Edition 1.8.7
 
-Environments
-------------
 
-Backup **3** runs in **UNIX**-based operating systems: Linux, Mac OSX, etc. It does **NOT** run on the Windows operating system, and there are currently no plans to support it.
+A sample Backup configuration file
+==================================
 
-Compatibility
--------------
-
-Backup **3** is **NOT** backwards compatible with Backup **2**. The command line interface has changed. The DSL has changed. And a lot more has changed. All for the better.
-
-
-A sample "Backup" configuration file
-====================================
-
-Below you see a sample configuration file you could create for Backup 3. Just read through it slowly and I'm quite sure you will already know what's going to happen before I explain it to you. **(see explanation after the example)**
+This is a Backup configuration file. Check it out and read the explanation below. Backup has a [great wiki](https://github.com/meskyanichi/backup/wiki) which explains each component of Backup in detail.
 
     Backup::Model.new(:sample_backup, 'A sample backup configuration') do
 
@@ -191,45 +185,33 @@ Below you see a sample configuration file you could create for Backup 3. Just re
 
     end
 
-### Explanation for the above example
+### Brief explanation for the above example configuration
 
-First it dumps all the tables inside the MySQL database "my_sample_mysql_db", except for the "logs" table. It also dumps the MongoDB database "my_sample_mongo_db", but only the collections "users", "events" and "posts". After that it'll create a "user_avatars.tar" archive with all the uploaded avatars of the users. After that it'll create a "logs.tar" archive with the "production.log", "newrelic_agent.log" and "other.log" logs. After that it'll compress the backup file using Gzip (with the mode set to "best", rather than "fast" for best compression). After that it'll encrypt the whole backup file (everything included: databases, archives) using "OpenSSL". Now the Backup can only be extracted when you know the password to decrypt it ("my_secret_password" in this case). Then it'll store the backup file to Amazon S3 in to 'my_bucket/backups'. Next, we're going to use the S3 Syncer to create a mirror of the `/var/apps/my_app/public/videos` and `/var/apps/my_app/public/music` directories on Amazon S3. (This will not package, compress, encrypt - but will directly sync the specified directories "as is" to your S3 bucket). Finally, it'll notify me by email if the backup raises an error/exception during the process, indicating that something went wrong. However, it does not notify me by email when successful backups occur because I set `mail.on_success` to `false`. It'll also notify me by Twitter when failed backups occur, but also when successful ones occur because I set the `tweet.on_success` to `true`.
+It will dump two databases (MySQL and MongoDB), it'll create two (.t)archives (user_avatars and logs). It'll package the two database and two archives together in a single (.t)archive. It'll run the Gzip compressor to compress that archive, and then it'll run the OpenSSL encryptor to encrypt the compressed archive. Then that encrypted archive will be stored to your Amazon S3 account. If all goes well, and no exceptions are raised, you'll be notified via the Twitter notifier that the backup succeeded. If there was an exception raised during the backup process, then you'd receive an email in your inbox containing detailed exception information, as well as receive a simple Twitter message that something went wrong.
 
-### Things to note
+As you can see, you can freely mix and match **archives**, **databases**, **compressors**, **encryptors**, **storages** and **notifiers** for your backups. You could even specify 3 storage locations: Amazon S3, Rackspace Cloud Files and Dropbox, it'd then store your packaged backup to 3 separate locations for high redundancy. This also applies to encryptors, you could double encrypt your backup with OpenSSL followed by GPG if you wanted.
 
-The __keep__ option I passed in to the S3 storage location enables "Backup Cycling". In this case, after the 21st backup file gets pushed, it'll exceed the 20 backup limit, and remove the oldest backup from the S3 bucket.
+Additionally we have also defined a **S3 Syncer** ( `sync_with S3` ), which does not follow the above process of archiving/compression/encryption, but instead will directly sync the whole `videos` and `music` folder structures from your machine to your Amazon S3 account. (very efficient and cost-effective since it will only transfer files that were changed!)
 
-The __S3__ Syncer ( `sync_with` ) is a different kind of __Storage__ method. As mentioned above, it does not follow the same procedure as the __Storage__ ( `store_with` ) method. A Storage method stores the final result of a copied/organized/packaged/compressed/encrypted file to the desired remote location. A Syncer directly syncs the specified directories and **completely bypasses** the copy/organize/package/compress/encrypt process. This is especially good for backing up directories containing gigabytes of data, such as images, music, videos, and similar large formats. Also, rather than transferring the whole directory every time, it'll only transfer files in all these directories that have been modified or added, thus, saving huge amounts of bandwidth, cpu load and time. You're also not bound to the 5GB per file restriction like the **Storage** method, unless you actually have files in these directories that are >= 5GB, which often is unlikely. Even if the whole directory (and sub-directories) are > 5GB (split over multiple files), it shouldn't be a problem as long as you don't have any *single* file that is 5GB in size. Also, in the above example you see `s3.mirror = true`, this tells the S3 Syncer to keep a "mirror" of the local directories in the S3 bucket. This means that if you delete a file locally, the next time it syncs, it'll also delete the file from the S3 bucket, keeping the local filesystem 1:1 with the S3 bucket.
-
-The __Mail__ notifier. I have not provided the SMTP options to use my Gmail account to notify myself when exceptions are raised during the process. So this won't work, check out the wiki on how to configure this. I left it out in this example.
-
-The __Twitter__ notifier. You will require your consumer and oauth credentials, which I have also left out of this example.
-
-MongoDB backup utility (mongodump) by default does not fsync & lock the database, opening a possibility for inconsistent data dump. This is addressed by setting lock = true which causes mongodump to be wrapped with lock&fsync calls (with a lock takedown after the dump). Please check the Wiki on this subject and remember this is a very fresh feature, needing some more real-world testing. Disabled at default.
-
-Check out the Wiki for more information on all the above subjects.
-
-### And that's it!
-
-So as you can see the DSL is straightforward and should be simple to understand and extend to your needs. You can have as many databases, archives, storage locations, syncers, compressors, encryptors and notifiers inside the above example as you need and it'll bundle all of it up in a nice packaged archive and transfer it to every specified location (as redundant as you like).
+There are more **archives**, **databases**, **compressors**, **encryptors**, **storages** and **notifiers** than displayed in the example, all available components are listed at the top of this README, as well as in the [Wiki](https://github.com/meskyanichi/backup/wiki).
 
 ### Running the example
 
-Remember the `Backup::Model.new(:sample_backup, 'A sample backup configuration') do`?
-The `:sample_backup` is called the "id", or "trigger". This is used to identify the backup procedure/file and initialize it.
+Notice the `Backup::Model.new(:sample_backup, 'A sample backup configuration') do` at the top of the above example. The `:sample_backup` is called the **trigger**. This is used to identify the backup procedure/file and initialize it.
 
-    backup perform -t sample_backup
+    backup perform -t [--trigger] sample_backup
 
-That's it.
+Now it'll run the backup, it's as simple as that.
 
 ### Automatic backups
 
-Since it's a simple command line utility, just write a cron to invoke it whenever you want. I recommend you use the [Whenever Gem](https://github.com/javan/whenever) to manage your cron tasks. It'll enable you to write such elegant automatic backup syntax in Ruby:
+Since Backup is a simple command line utility, you should write a crontask to invoke it periodically. I recommend you use [Whenever](https://github.com/javan/whenever) to manage your crontab. It'll allow you to write to the crontab in pure Ruby, it provides an elegant DSL to do so, for example:
 
     every 6.hours do
-      command "backup perform -t sample_backup"
+      command "backup perform --trigger sample_backup"
     end
 
+With this in place, run `whenever --update-crontab backup` to write this Ruby syntax to the crontab in cron-syntax. The operating system will now invoke `backup perform --trigger sample_backup` every 6 hours. Check out the Whenever project page for more information.
 
 Documentation
 -------------
@@ -266,7 +248,40 @@ Contributors
     <td><a href="https://github.com/szimmermann" target="_blank">Stefan Zimmermann ( szimmermann )</a></td>
     <td>Enabling package/archive (tar utility) support for more Linux distro's (FreeBSD, etc)</td>
   </tr>
+  <tr>
+    <td><a href="https://github.com/trystant" target="_blank">Mark Nyon ( trystant )</a></td>
+    <td>Helping discuss MongoDump Lock/FSync problem</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/imanel" target="_blank">Bernard Potocki ( imanel )</a></td>
+    <td>Helping discuss MongoDump Lock/FSync problem + Submitting a patch</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/tomash" target="_blank">Tomasz Stachewicz ( tomash )</a></td>
+    <td>Helping discuss MongoDump Lock/FSync problem + Submitting a patch</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/lapluviosilla" target="_blank">Paul Strong ( lapluviosilla )</a></td>
+    <td>Helping discuss MongoDump Lock/FSync problem</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/rgnitz" target="_blank">Ryan ( rgnitz )</a></td>
+    <td>Helping discuss MongoDump Lock/FSync problem</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/tsigo" target="_blank">Robert Speicher ( tsigo )</a></td>
+    <td>Adding the --quiet [-q] feature to Backup to silence console logging</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/jwhitcraft" target="_blank">Jon Whitcraft ( jwhitcraft )</a></td>
+    <td>Adding the ability to add additional options to the S3Syncer</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/bgarret" target="_blank">Benoit Garret ( bgarret )</a></td>
+    <td>Presently notifier</td>
+  </tr>
 </table>
+
 
 Want to contribute?
 -------------------
@@ -279,6 +294,36 @@ Want to contribute?
 - Try to keep the overall *structure / design* of the gem the same
 
 I can't guarantee I'll pull every pull request. Also, I may accept your pull request and drastically change parts to improve readability/maintainability. Feel free to discuss about improvements, new functionality/features in the [issue log](https://github.com/meskyanichi/backup/issues) before contributing if you need/want more information.
+
+Easily run tests against all three Ruby versions
+------------------------------------------------
+
+Install [RVM](https://rvm.beginrescueend.com/) and use it to install Ruby 1.9.2, 1.8.7 and REE.
+
+    rvm install 1.9.2 && rvm install 1.8.7 && rvm install ree
+
+Once these are installed, go ahead and install all the necessary dependencies.
+
+    cd backup
+    rvm use 1.9.2 && gem install bundler && bundle install
+    rvm use 1.8.7 && gem install bundler && bundle install
+    rvm use ree   && gem install bundler && bundle install
+
+The Backup gem uses [Guard](https://github.com/guard/guard) along with [Guard::RSpec](https://github.com/guard/guard-rspec) to quickly and easily test Backup's code against all three Rubies. If you've done the above, all you have to do is run:
+
+    guard start
+
+from Backup's root and that's it. It'll now test against all three Rubies each time you adjust a file in the `lib` or `spec` directories.
+
+
+Or contribute by writing blogs/tutorials
+----------------------------------------
+
+- http://erik.debill.org/2011/03/26/csing-backup-with-rails
+- http://blog.noizeramp.com/2011/03/31/backing-up-backup-ruby-gem/
+- http://www.sebaugereau.com/using-ruby-to-backup-with-beauty
+- http://outofti.me/post/4159686269/backup-with-pgbackups
+- http://h2ik.co/2011/03/backing-up-with-ruby/
 
 
 Backup 2 - Issues, Wiki, Source, Gems

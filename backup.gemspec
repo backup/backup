@@ -12,15 +12,7 @@ Gem::Specification.new do |gem|
   gem.authors     = 'Michael van Rooijen'
   gem.email       = 'meskyanichi@gmail.com'
   gem.homepage    = 'http://rubygems.org/gems/backup'
-  gem.summary     = 'Backup is a RubyGem (for UNIX-like operating systems: Linux, Mac OSX)
-                    that allows you to configure and perform backups in a simple manner using
-                    an elegant Ruby DSL. It supports various databases (MySQL, PostgreSQL, MongoDB and Redis),
-                    it supports various storage locations (Amazon S3, Rackspace Cloud Files, Dropbox, any remote
-                    server through FTP, SFTP, SCP and RSync), it provide Syncers (RSync, S3) for efficient backups,
-                    it can archive files and directories, it can cycle backups, it can do incremental backups, it
-                    can compress backups, it can encrypt backups (OpenSSL or GPG), it can notify you about
-                    successful and/or failed backups (Email, Twitter and Campfire). It is very extensible and easy to add new
-                    functionality to. It\'s easy to use.'
+  gem.summary     = 'Backup is a RubyGem, written for Linux and Mac OSX, that allows you to easily perform backup operations on both your remote, as well as your local environment. It provides you with an elegant DSL in Ruby for modeling (configuring) your backups. Backup has built-in support for various databases, storage protocols/services, syncers, compressors, encryptors and notifiers which you can mix and match. It was built with modularity, extensibility and simplicity in mind.'
 
   ##
   # Files and folder that need to be compiled in to the Ruby Gem

@@ -18,10 +18,10 @@ module Backup
   #  database MySQL do |mysql|
   DATABASES   = ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis']
   STORAGES    = ['S3', 'CloudFiles', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync']
-  COMPRESSORS = ['Gzip']
+  COMPRESSORS = ['Gzip', 'Bzip2']
   ENCRYPTORS  = ['OpenSSL', 'GPG']
   SYNCERS     = ['RSync', 'S3']
-  NOTIFIERS   = ['Mail', 'Twitter', 'Campfire']
+  NOTIFIERS   = ['Mail', 'Twitter', 'Campfire', 'Presently']
 
   ##
   # Backup's internal paths
@@ -64,6 +64,7 @@ module Backup
       autoload :Mail,    File.join(CONFIGURATION_PATH, 'notifier', 'mail')
       autoload :Twitter, File.join(CONFIGURATION_PATH, 'notifier', 'twitter')
       autoload :Campfire, File.join(CONFIGURATION_PATH, 'notifier', 'campfire')
+      autoload :Presently, File.join(CONFIGURATION_PATH, 'notifier', 'presently')
     end
 
     module Encryptor
@@ -75,6 +76,7 @@ module Backup
     module Compressor
       autoload :Base, File.join(CONFIGURATION_PATH, 'compressor', 'base')
       autoload :Gzip, File.join(CONFIGURATION_PATH, 'compressor', 'gzip')
+      autoload :Bzip2, File.join(CONFIGURATION_PATH, 'compressor', 'bzip2')
     end
 
     module Storage
@@ -139,6 +141,7 @@ module Backup
   module Compressor
     autoload :Base, File.join(COMPRESSOR_PATH, 'base')
     autoload :Gzip, File.join(COMPRESSOR_PATH, 'gzip')
+    autoload :Bzip2, File.join(COMPRESSOR_PATH, 'bzip2')
   end
 
   ##
@@ -157,6 +160,7 @@ module Backup
     autoload :Mail,     File.join(NOTIFIER_PATH, 'mail')
     autoload :Twitter,  File.join(NOTIFIER_PATH, 'twitter')
     autoload :Campfire, File.join(NOTIFIER_PATH, 'campfire')
+    autoload :Presently, File.join(NOTIFIER_PATH, 'presently')
   end
 
   ##

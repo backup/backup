@@ -1,3 +1,6 @@
+  ##
+  # Rackspace Cloud Files [Storage]
+  #
   store_with CloudFiles do |cf|
     cf.api_key   = 'my_api_key'
     cf.username  = 'my_username'

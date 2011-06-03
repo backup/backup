@@ -1,3 +1,6 @@
+  ##
+  # RSync [Storage]
+  #
   store_with RSync do |server|
     server.username = 'my_username'
     server.password = 'my_password'

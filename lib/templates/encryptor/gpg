@@ -1,3 +1,6 @@
+  ##
+  # GPG [Encryptor]
+  #
   encrypt_with GPG do |encryption|
     encryption.key = <<-KEY
       -----BEGIN PGP PUBLIC KEY BLOCK-----

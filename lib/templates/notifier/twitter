@@ -1,3 +1,6 @@
+  ##
+  # Twitter [Notifier]
+  #
   notify_by Twitter do |tweet|
     tweet.on_success = true
     tweet.on_failure = true

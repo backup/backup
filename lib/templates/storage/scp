@@ -1,3 +1,6 @@
+  ##
+  # SCP (Secure Copy) [Storage]
+  #
   store_with SCP do |server|
     server.username = 'my_username'
     server.password = 'my_password'
