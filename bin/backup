@@ -82,10 +82,21 @@ class BackupCLI < Thor
     if options[:quiet]
       Backup::Logger.send(:const_set, :QUIET, options[:quiet])
     end
-
+    
+    ##
+    # Prepare all trigger names by splitting them by ','
+    # and finding trigger names matching wildcard
+    triggers = options[:trigger].split(",")
+    triggers.map!(&:strip).map!{ |t|
+      t.include?(Backup::Finder::WILDCARD) ? 
+        Backup::Finder.new(t).matching : t
+    }.flatten!
+    
+    #triggers.unique! # Uncomment if its undesirable to call triggers twice
+    
     ##
     # Process each trigger
-    options[:trigger].split(",").map(&:strip).each do |trigger|
+    triggers.each do |trigger|
 
       ##
       # Defines the TRIGGER constant
@@ -101,7 +112,7 @@ class BackupCLI < Thor
 
       ##
       # Parses the backup configuration file and returns the model instance by trigger
-      model = Backup::Finder.new(trigger, Backup::CONFIG_FILE).find
+      model = Backup::Finder.new(trigger).find
 
       ##
       # Runs the returned model
