@@ -306,10 +306,15 @@ Contributors
     <td>Adding the --quiet [-q] feature to Backup to silence console logging</td>
   </tr>
   <tr>
-    <td><a href="https://github.com/jwhitcraft" target="_blank"> Jon Whitcraft ( jwhitcraft )</a></td>
+    <td><a href="https://github.com/jwhitcraft" target="_blank">Jon Whitcraft ( jwhitcraft )</a></td>
     <td>Adding the ability to add additional options to the S3Syncer</td>
   </tr>
+  <tr>
+    <td><a href="https://github.com/bgarret" target="_blank">Benoit Garret ( bgarret )</a></td>
+    <td>Presently notifier</td>
+  </tr>
 </table>
+
 
 Want to contribute?
 -------------------
