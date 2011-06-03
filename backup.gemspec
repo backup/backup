@@ -19,7 +19,7 @@ Gem::Specification.new do |gem|
                     server through FTP, SFTP, SCP and RSync), it provide Syncers (RSync, S3) for efficient backups,
                     it can archive files and directories, it can cycle backups, it can do incremental backups, it
                     can compress backups, it can encrypt backups (OpenSSL or GPG), it can notify you about
-                    successful and/or failed backups (Email, Twitter and Campfire). It is very extensible and easy to add new
+                    successful and/or failed backups (Email, Twitter, Campfire and Presently). It is very extensible and easy to add new
                     functionality to. It\'s easy to use.'
 
   ##
