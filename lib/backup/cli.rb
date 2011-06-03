@@ -8,7 +8,7 @@ module Backup
     # through a ruby method. This helps with test coverage and
     # improves readability.
     #
-    # It'll first remove all prefixing slashes ( / ) by using .gsub(/^\s+/, '')
+    # It'll first remove all prefixing and postfix spaces by using .strip!
     # This allows for the EOS blocks to be indented without actually using any
     # prefixing spaces. This cleans up the implementation code.
     #
@@ -17,15 +17,17 @@ module Backup
     # requested command on the OS.
     #
     # Backup::CLI#raise_if_command_not_found takes a single argument, the utility name.
-    # the command.slice(0, command.index(/\s/)).split('/')[-1] line will extract only the utility
+    # the command.slice(0, command.index(/\s/) || command.size).split('/')[-1] line will extract only the utility
     # name (e.g. mongodump, pgdump, etc) from a command like "/usr/local/bin/mongodump <options>"
     # and pass that in to the Backup::CLI#raise_if_command_not_found
     def run(command)
-      command.gsub!(/^\s+/, '')
+      command.strip!
+      # %x[#{command}]
+      `nice -n 20 #{command}`
+    ensure
       raise_if_command_not_found!(
-        command.slice(0, command.index(/\s/)).split('/')[-1]
+        command.slice(0, command.index(/\s/) || command.size).split('/')[-1]
       )
-      %x[#{command}]
     end
 
     ##
