@@ -1,3 +1,6 @@
+  ##
+  # Mail [Notifier]
+  #
   notify_by Mail do |mail|
     mail.on_success           = true
     mail.on_failure           = true

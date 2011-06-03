@@ -1,3 +1,6 @@
+  ##
+  # Redis [Database]
+  #
   database Redis do |db|
     db.name               = "my_database_name"
     db.path               = "/usr/local/var/db/redis"

@@ -1,3 +1,6 @@
+  ##
+  # MongoDB [Database]
+  #
   database MongoDB do |db|
     db.name               = "my_database_name"
     db.username           = "my_username"

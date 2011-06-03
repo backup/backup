@@ -1,3 +1,6 @@
+  ##
+  # RSync [Syncer]
+  #
   sync_with RSync do |rsync|
     rsync.ip       = "123.45.678.90"
     rsync.port     = 22

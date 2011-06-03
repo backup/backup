@@ -1,3 +1,6 @@
+  ##
+  # Campfire [Notifier]
+  #
   notify_by Campfire do |campfire|
     campfire.on_success = true
     campfire.on_failure = true

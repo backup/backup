@@ -1,3 +1,6 @@
+  ##
+  # MySQL [Database]
+  #
   database MySQL do |db|
     db.name               = "my_database_name"
     db.username           = "my_username"
