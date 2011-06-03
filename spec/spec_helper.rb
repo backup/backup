@@ -19,3 +19,7 @@ module Backup
   TRIGGER = 'myapp'
   TIME = Time.now.strftime("%Y.%m.%d.%H.%M.%S")
 end
+
+unless @put_ruby_version
+  puts @put_ruby_version = "\n\nRuby version: #{ENV['rvm_ruby_string']}\n\n"
+end

@@ -1,7 +1,0 @@
-infinity_test do
-  heuristics do
-    add('lib/') do |file|
-      run :all => :tests
-    end
-  end
-end

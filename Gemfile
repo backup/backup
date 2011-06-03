@@ -19,7 +19,13 @@ end
 group :test do
   gem 'rspec'
   gem 'mocha'
-  gem 'infinity_test'
-  gem 'fuubar'
   gem 'timecop'
+  gem 'fuubar'
+
+  gem 'guard'
+  gem 'guard-rspec'
+  gem 'rb-fsevent' # guard notifications for osx 
+  gem 'growl'      # $ brew install growlnotify
+  gem 'rb-inotify' # guard notifications for linux
+  gem 'libnotify'  # $ apt-get install ???
 end

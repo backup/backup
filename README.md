@@ -316,6 +316,26 @@ Want to contribute?
 
 I can't guarantee I'll pull every pull request. Also, I may accept your pull request and drastically change parts to improve readability/maintainability. Feel free to discuss about improvements, new functionality/features in the [issue log](https://github.com/meskyanichi/backup/issues) before contributing if you need/want more information.
 
+Easily run tests against all three Ruby versions
+------------------------------------------------
+
+Install [RVM](https://rvm.beginrescueend.com/) and use it to install Ruby 1.9.2, 1.8.7 and REE.
+
+    rvm install 1.9.2 && rvm install 1.8.7 && rvm install ree
+
+Once these are installed, go ahead and install all the necessary dependencies.
+
+    cd backup
+    rvm use 1.9.2 && gem install bundler && bundle install
+    rvm use 1.8.7 && gem install bundler && bundle install
+    rvm use ree   && gem install bundler && bundle install
+
+The Backup gem uses [Guard](https://github.com/guard/guard) along with [Guard::RSpec](https://github.com/guard/guard-rspec) to quickly and easily test Backup's code against all three Rubies. If you've done the above, all you have to do is run:
+
+    guard start
+
+from Backup's root and that's it. It'll now test against all three Rubies each time you adjust a file in the `lib` or `spec` directories.
+
 
 Or contribute by writing blogs/tutorials
 ----------------------------------------
