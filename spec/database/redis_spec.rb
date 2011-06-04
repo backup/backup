@@ -51,7 +51,7 @@ describe Backup::Database::Redis do
   end
 
   describe '#credential_options' do
-    it 'should return the mongo syntax for the credential options' do
+    it 'should return the redis-cli syntax for the credential options' do
       db.credential_options.should == "-a 'secret'"
     end
   end
@@ -72,7 +72,7 @@ describe Backup::Database::Redis do
   end
 
   describe '#invoke_save!' do
-    it 'should return the full mongodump string' do
+    it 'should return the full redis-cli string' do
       db.expects(:utility).with('redis-cli').returns('redis-cli')
       db.expects(:run).with("redis-cli -a 'secret' -h 'localhost' -p '123' -s '/redis.sock' --query SAVE")
       db.invoke_save!
