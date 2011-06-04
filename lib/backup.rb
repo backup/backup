@@ -17,7 +17,7 @@ module Backup
   # You can do:
   #  database MySQL do |mysql|
   DATABASES   = ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis']
-  STORAGES    = ['S3', 'CloudFiles', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync']
+  STORAGES    = ['S3', 'CloudFiles', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync', 'Local']
   COMPRESSORS = ['Gzip', 'Bzip2']
   ENCRYPTORS  = ['OpenSSL', 'GPG']
   SYNCERS     = ['RSync', 'S3']
@@ -88,6 +88,7 @@ module Backup
       autoload :SFTP,       File.join(CONFIGURATION_PATH, 'storage', 'sftp')
       autoload :SCP,        File.join(CONFIGURATION_PATH, 'storage', 'scp')
       autoload :RSync,      File.join(CONFIGURATION_PATH, 'storage', 'rsync')
+      autoload :Local,      File.join(CONFIGURATION_PATH, 'storage', 'local')
     end
 
     module Syncer
@@ -116,6 +117,7 @@ module Backup
     autoload :SFTP,       File.join(STORAGE_PATH, 'sftp')
     autoload :SCP,        File.join(STORAGE_PATH, 'scp')
     autoload :RSync,      File.join(STORAGE_PATH, 'rsync')
+    autoload :Local,      File.join(STORAGE_PATH, 'local')
   end
 
   ##

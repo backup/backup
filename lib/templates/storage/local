@@ -1,0 +1,7 @@
+  ##
+  # Local (Copy) [Storage]
+  #
+  store_with Local do |local|
+    local.path = '~/backups/'
+    local.keep = 5
+  end
