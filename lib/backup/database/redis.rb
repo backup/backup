@@ -98,7 +98,11 @@ module Backup
           exit
         end
 
+        # Temporarily remove a custom `utility_path` setting so that the system
+        # `cp` utility can be found, then restore the old value just in case.
+        old_path, self.utility_path = self.utility_path, nil
         run("#{ utility(:cp) } '#{ File.join(path, database) }' '#{ File.join(dump_path, database) }'")
+        self.utility_path = old_path
       end
     end
   end

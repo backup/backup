@@ -86,6 +86,13 @@ describe Backup::Database::Redis do
       db.expects(:run).with("cp '#{ File.join('/var/lib/redis/db/mydatabase.rdb') }' '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER, 'Redis', 'mydatabase.rdb') }'")
       db.copy!
     end
+
+    it 'should find the cp utility when utility_path is set' do
+      File.expects(:exist?).returns(true)
+      db.utility_path = '/usr/local/bin/redis-cli'
+      db.expects(:run).with { |v| v =~ %r{^/bin/cp .+} }
+      db.copy!
+    end
   end
 
   describe '#perform!' do
