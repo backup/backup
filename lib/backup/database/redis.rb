@@ -85,7 +85,7 @@ module Backup
       def invoke_save!
         response = run("#{ utility('redis-cli') } #{ credential_options } #{ connectivity_options } #{ additional_options } SAVE")
         unless response =~ /OK/
-          Logger.error "Could not invoke the Redis SAVE command. The #{ database } file might not be contain the most recent data."
+          Logger.error "Could not invoke the Redis SAVE command. The #{ database } file might not contain the most recent data."
           Logger.error "Please check if the server is running, the credentials (if any) are correct, and the host/port/socket are correct."
         end
       end
@@ -98,7 +98,11 @@ module Backup
           exit
         end
 
+        # Temporarily remove a custom `utility_path` setting so that the system
+        # `cp` utility can be found, then restore the old value just in case.
+        old_path, self.utility_path = self.utility_path, nil
         run("#{ utility(:cp) } '#{ File.join(path, database) }' '#{ File.join(dump_path, database) }'")
+        self.utility_path = old_path
       end
     end
   end
