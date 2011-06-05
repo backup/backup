@@ -107,6 +107,8 @@ module Backup
           File.join(remote_path, remote_file),
           File.open(File.join(local_path, local_file))
         )
+      rescue Excon::Errors::Forbidden
+        raise "An error occurred while trying to access this bucket.  It look like this bucket exists under a different account which you do not have access to."
       end
 
       ##

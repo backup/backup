@@ -74,17 +74,30 @@ describe Backup::Storage::S3 do
   describe '#transfer!' do
     before do
       Fog::Storage.stubs(:new).returns(connection)
+      @file = mock("Backup::Storage::S3::File")
+      File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(@file)
     end
 
     it 'should transfer the provided file to the bucket' do
       Backup::Model.new('blah', 'blah') {}
-      file = mock("Backup::Storage::S3::File")
-      File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
       s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
       connection.expects(:sync_clock)
-      connection.expects(:put_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
+      connection.expects(:put_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", @file)
       s3.send(:transfer!)
     end
+    
+    it 'should raise an exception if bucket exists but for someone else, with a nice err msg' do
+      connection.expects(:sync_clock)
+      connection.expects(:put_object).raises(Excon::Errors::Forbidden, "some s3 error msg")
+      lambda{ s3.send(:transfer!) }.should raise_exception(Exception, "An error occurred while trying to access this bucket.  It look like this bucket exists under a different account which you do not have access to." )
+    end
+
+    it 'should pass through a general exception an exception if bucket exists but for someone else, with a nice err msg' do
+      connection.expects(:sync_clock)
+      connection.expects(:put_object).raises(Exception, "some s3 error msg")
+      lambda{ s3.send(:transfer!) }.should raise_exception(Exception, "some s3 error msg" )
+    end
+    
   end
 
   describe '#remove!' do
