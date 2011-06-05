@@ -72,15 +72,35 @@ describe Backup::Storage::S3 do
     before do
       Fog::Storage.stubs(:new).returns(connection)
       Backup::Logger.stubs(:message)
+      @file = mock("Backup::Storage::S3::File")
+    end
+    
+    it 'should create a bucket if one does not previously exist' do
+      Backup::Model.new('blah', 'blah') {}
+
+      File.stubs(:open => @file)
+      s3.stubs(:remote_file => "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+
+      connection.stubs(:sync_clock => nil, :put_object => nil)
+      directories = mock('directories')
+      directories.expects(:get).returns(nil)
+      directories.expects(:create).with(:key => 'my-bucket', :public => false)
+      connection.expects(:directories).returns(directories).at_least_once
+      s3.send(:transfer!)
     end
 
     it 'should transfer the provided file to the bucket' do
       Backup::Model.new('blah', 'blah') {}
-      file = mock("Backup::Storage::S3::File")
-      File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
-      s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
+
+      File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(@file)
+      s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").at_least_once
+
+      directories = mock('directories')
+      directories.expects(:get).returns('my-bucket')
+      connection.expects(:directories).returns(directories)
+
       connection.expects(:sync_clock)
-      connection.expects(:put_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
+      connection.expects(:put_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", @file)
       s3.send(:transfer!)
     end
   end
