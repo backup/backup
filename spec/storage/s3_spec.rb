@@ -162,6 +162,13 @@ describe Backup::Storage::S3 do
       s3.send(:create_bucket!)
     end
 
+    it 'should create a bucket and default the location' do
+      @directories.expects(:create).with do |args|
+        args[:location].should == s3.region
+      end
+      s3.send(:create_bucket!)
+    end
+
     it 'should raise an exception if bucket exists but for someone else, with a nice err msg' do
       @directories.expects(:create).raises(Excon::Errors::Forbidden, "some s3 error msg")
       lambda{ s3.send(:create_bucket!) }.should raise_exception(Exception, "An error occurred while trying to create this bucket.  It look like this bucket already exists but does so under a different account which you do not have access to." )

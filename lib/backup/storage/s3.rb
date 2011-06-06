@@ -91,7 +91,8 @@ module Backup
         Logger.message("\"#{ bucket }\" does not exist; creating a private bucket")
         connection.directories.create(
           :key    => bucket,
-          :public => false
+          :public => false,
+          :location => region
         )
       rescue Excon::Errors::Forbidden
         raise "An error occurred while trying to create this bucket.  It look like this bucket already exists but does so under a different account which you do not have access to."
