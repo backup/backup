@@ -89,10 +89,11 @@ module Backup
       # then an exception is raised
       def create_bucket!
         Logger.message("\"#{ bucket }\" does not exist; creating a private bucket")
+        location = region == 'us-east-1' ? nil : region
         connection.directories.create(
           :key    => bucket,
           :public => false,
-          :location => region
+          :location => location
         )
       rescue Excon::Errors::Forbidden
         raise "An error occurred while trying to create this bucket.  It look like this bucket already exists but does so under a different account which you do not have access to."

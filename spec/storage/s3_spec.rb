@@ -148,26 +148,38 @@ describe Backup::Storage::S3 do
       connection.expects(:directories).returns(@directories).at_least_once
     end
     
-    it 'should create a bucket with the correct bucket name' do
-      @directories.expects(:create).with do |args|
-        args[:key].should == 'my-bucket'
+    describe 'creating a bucket' do
+      it 'should with the correct bucket name' do
+        @directories.expects(:create).with do |args|
+          args[:key].should == 'my-bucket'
+        end
+        s3.send(:create_bucket!)
       end
-      s3.send(:create_bucket!)
-    end
 
-    it 'should create a bucket and default to it being private' do
-      @directories.expects(:create).with do |args|
-        args[:public].should be_false
+      it 'should and default to it being private' do
+        @directories.expects(:create).with do |args|
+          args[:public].should be_false
+        end
+        s3.send(:create_bucket!)
       end
-      s3.send(:create_bucket!)
-    end
 
-    it 'should create a bucket and default the location' do
-      @directories.expects(:create).with do |args|
-        args[:location].should == s3.region
+      it 'should and default the location if the region is not us-east-1' do
+        s3.region = 'eu-west-1'
+        @directories.expects(:create).with do |args|
+          args[:location].should == 'eu-west-1'
+        end
+        s3.send(:create_bucket!)
       end
-      s3.send(:create_bucket!)
+
+      it 'should and not set the location if the region is us-east-1' do
+        s3.region = 'us-east-1'
+        @directories.expects(:create).with do |args|
+          args[:location].should be_nil
+        end
+        s3.send(:create_bucket!)
+      end
     end
+    
 
     it 'should raise an exception if bucket exists but for someone else, with a nice err msg' do
       @directories.expects(:create).raises(Excon::Errors::Forbidden, "some s3 error msg")
