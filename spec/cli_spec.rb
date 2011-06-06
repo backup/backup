@@ -9,8 +9,8 @@ end
 describe Backup::CLI do
   let(:utility){ TestBackupCLI.new }
   before do
-    nice_path = `which nice`
-    utility.stubs(:utility).with('nice').returns(nice_path)
+    utility.stubs(:utility).with('nice').returns(`which nice`.strip)
+    utility.stubs(:utility).with('ls').returns(`which ls`.strip)
   end
   describe '#run' do    
     it 'should return the value of the command' do
@@ -20,12 +20,12 @@ describe Backup::CLI do
     end
 
     it 'should be wrapped in a nice command' do
-      utility.expects(:`).with('nice -n 20 ls -lah 2>/dev/null')
+      utility.expects(:`).with('nice -n 20 ls -lah')
       utility.run('ls -lah')
     end
     
     it 'should strip out leading and trailing white space' do
-      utility.expects(:`).with('nice -n 20 ls -lah 2>/dev/null')
+      utility.expects(:`).with('nice -n 20 ls -lah')
       utility.run('    ls -lah ')
     end
     
@@ -36,10 +36,12 @@ describe Backup::CLI do
     end
     
     it 'should raise an exception if a command with no options cannot be found' do
+      utility.stubs(:utility).with('some_junk_command').returns('some_junk_command')
       lambda{ utility.run('some_junk_command') }.should raise_exception(Backup::Exception::CommandNotFound)
     end
 
     it 'should raise an exception if a command with options cannot be found' do
+      utility.stubs(:utility).with('some_junk_command').returns('some_junk_command')
       lambda{ utility.run('some_junk_command -cdl') }.should raise_exception(Backup::Exception::CommandNotFound)
     end
   end
