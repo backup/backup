@@ -20,12 +20,12 @@ describe Backup::CLI do
     end
 
     it 'should be wrapped in a nice command' do
-      utility.expects(:`).with('nice -n 20 ls -lah')
+      utility.expects(:`).with('nice -n 20 ls -lah 2>/dev/null')
       utility.run('ls -lah')
     end
     
     it 'should strip out leading and trailing white space' do
-      utility.expects(:`).with('nice -n 20 ls -lah')
+      utility.expects(:`).with('nice -n 20 ls -lah 2>/dev/null')
       utility.run('    ls -lah ')
     end
     

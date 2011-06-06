@@ -25,7 +25,7 @@ module Backup
       @nice_utility ||= utility('nice')
       if @nice_utility != 'nice'
         #it exists on the system; lets use it!
-        `nice -n 20 #{command}`
+        `nice -n 20 #{command} 2>/dev/null`
       else
         `#{command}`
       end
