@@ -5,30 +5,32 @@ require File.dirname(__FILE__) + '/spec_helper'
 describe Backup::Model do
 
   before do
+    # stub out the creation of an archive, for this spec's purpose
+    Backup::Archive.stubs(:new).returns(true)
+
+    # create mockup classes for testing the behavior of Backup::Model
     class Backup::Database::TestDatabase
       def initialize(&block); end
     end
     class Backup::Storage::TestStorage
       def initialize(&block); end
     end
-    class Backup::Archive
-      def initialize(name, &block); end
-    end
-    class Backup::Compressor::Gzip
+    class Backup::Compressor::TestGzip
       def initialize(&block); end
     end
-    class Backup::Compressor::SevenZip
+    class Backup::Compressor::TestSevenZip
       def initialize(&block); end
     end
-    class Backup::Encryptor::OpenSSL
+    class Backup::Encryptor::TestOpenSSL
       def initialize(&block); end
     end
-    class Backup::Encryptor::GPG
+    class Backup::Encryptor::TestGPG
       def initialize(&block); end
     end
     class Backup::Notifier::TestMail
       def initialize(&block); end
     end
+
   end
 
   let(:model) { Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {} }
@@ -143,7 +145,7 @@ describe Backup::Model do
   describe '#compress_with' do
     it 'should add a compressor to the array of compressors to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        compress_with('Gzip')
+        compress_with('TestGzip')
       end
 
       model.compressors.count.should == 1
@@ -151,8 +153,8 @@ describe Backup::Model do
 
     it 'should add a compressor to the array of compressors to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        compress_with('Gzip')
-        compress_with('SevenZip')
+        compress_with('TestGzip')
+        compress_with('TestSevenZip')
       end
 
       model.compressors.count.should == 2
@@ -162,7 +164,7 @@ describe Backup::Model do
   describe '#encrypt_with' do
     it 'should add a encryptor to the array of encryptors to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        encrypt_with('OpenSSL')
+        encrypt_with('TestOpenSSL')
       end
 
       model.encryptors.count.should == 1
@@ -170,8 +172,8 @@ describe Backup::Model do
 
     it 'should add a encryptor to the array of encryptors to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        encrypt_with('OpenSSL')
-        encrypt_with('GPG')
+        encrypt_with('TestOpenSSL')
+        encrypt_with('TestGPG')
       end
 
       model.encryptors.count.should == 2
