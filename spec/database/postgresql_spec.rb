@@ -49,18 +49,20 @@ describe Backup::Database::PostgreSQL do
       db.additional_options.should == []
     end
 
-    it do
+    it 'handles an empty username' do
       db = Backup::Database::PostgreSQL.new {}
       db.username = ''
 
-      db.credential_options.should == ''
+      db.username_options.should == ''
+      db.password_options.should == ''
     end
 
-    it do
+    it 'handles a nil username' do
       db = Backup::Database::PostgreSQL.new {}
       db.username = nil
 
-      db.credential_options.should == ''
+      db.username_options.should == ''
+      db.password_options.should == ''
     end
 
     it 'should ensure the directory is available' do
@@ -91,9 +93,9 @@ describe Backup::Database::PostgreSQL do
     end
   end
 
-  describe '#credential_options' do
-    it 'should return the postgresql syntax for the credential options' do
-      db.credential_options.should == "--username='someuser'"
+  describe '#username_options' do
+    it 'should return the postgresql syntax for the username options' do
+      db.username_options.should == "--username='someuser'"
     end
 
     it 'should only return the postgresql syntax for the user' do
@@ -101,7 +103,13 @@ describe Backup::Database::PostgreSQL do
         db.username = 'someuser'
       end
 
-      db.credential_options.should == "--username='someuser'"
+      db.username_options.should == "--username='someuser'"
+    end
+  end
+
+  describe '#password_options' do
+    it 'returns the environment variable set for the password' do
+      db.password_options.should == "PGPASSWORD='secret'"
     end
   end
 
@@ -133,13 +141,26 @@ describe Backup::Database::PostgreSQL do
   end
 
   describe '#pg_dump_string' do
-    it 'should return the full pg_dump string' do
+    before do
       db.expects(:utility).with(:pg_dump).returns('pg_dump')
+    end
+
+    it 'should return the full pg_dump string' do
       db.pgdump.should ==
-      "pg_dump --username='someuser' " +
+      "PGPASSWORD='secret' pg_dump --username='someuser' " +
       "--host='localhost' --port='123' --host='/pg.sock' " +
       "--single-transaction --quick --table='users' --table='pirates' " +
       "--exclude-table='logs' --exclude-table='profiles' mydatabase"
+    end
+
+    it 'returns the full pg_dump string when a password is not specified' do
+      db.password = nil
+      db.pgdump.should ==
+          "pg_dump --username='someuser' " +
+          "--host='localhost' --port='123' --host='/pg.sock' " +
+          "--single-transaction --quick --table='users' --table='pirates' " +
+          "--exclude-table='logs' --exclude-table='profiles' mydatabase"
+
     end
   end
 
