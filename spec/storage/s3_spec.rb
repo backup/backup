@@ -130,15 +130,11 @@ describe Backup::Storage::S3 do
       s3.send(:bucket_exists?).should be_false
     end
 
-    it 'should raise an exception if bucket exists but for someone else, with a nice err msg' do
+    it 'should return false if an exception is raised because the bucket exists but for someone else, with a nice err msg' do
       @directories.expects(:get).raises(Excon::Errors::Forbidden, "some s3 error msg")
-      lambda{ s3.send(:bucket_exists?) }.should raise_exception(Exception, "An error occurred while trying to access this bucket.  It look like this bucket already exists but does so under a different account which you do not have access to." )
+      s3.send(:bucket_exists?).should be_false
     end
 
-    it 'should pass through a general exception an exception if bucket exists but for someone else, with a nice err msg' do
-      @directories.expects(:get).raises(Exception, "some s3 error msg")
-      lambda{ s3.send(:bucket_exists?) }.should raise_exception(Exception, "some s3 error msg" )
-    end
   end
 
   describe '#create_bucket!' do
@@ -179,11 +175,15 @@ describe Backup::Storage::S3 do
         s3.send(:create_bucket!)
       end
     end
-    
 
     it 'should raise an exception if bucket exists but for someone else, with a nice err msg' do
       @directories.expects(:create).raises(Excon::Errors::Forbidden, "some s3 error msg")
       lambda{ s3.send(:create_bucket!) }.should raise_exception(Exception, "An error occurred while trying to create this bucket.  It look like this bucket already exists but does so under a different account which you do not have access to." )
+    end
+
+    it 'should raise an exception if bucket exists for this user but under a different region' do
+      @directories.expects(:create).raises(Excon::Errors::Conflict, "some s3 error msg")
+      lambda{ s3.send(:create_bucket!) }.should raise_exception(Exception, "An error occurred while trying to create this bucket.  This bucket probably already exists under your account but in a different region." )
     end
 
     it 'should pass through a general exception an exception if bucket exists but for someone else, with a nice err msg' do

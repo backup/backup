@@ -77,10 +77,10 @@ module Backup
       ##
       # Checks to see if the bucket exists and also if we have access to it
       def bucket_exists?
-        #will throw an exception if do not have permission to view it...
-        !connection.directories.get(bucket).nil?
-      rescue Excon::Errors::Forbidden
-        raise "An error occurred while trying to access this bucket.  It look like this bucket already exists but does so under a different account which you do not have access to."
+        # will throw an exception if do not have permission to view it, 
+        # it exists but in a different region, has a different owner, etc.  
+        # Have create_bucket! handle those exceptions
+        !connection.directories.get(bucket).nil? rescue false
       end
       
       ##
@@ -97,6 +97,8 @@ module Backup
         )
       rescue Excon::Errors::Forbidden
         raise "An error occurred while trying to create this bucket.  It look like this bucket already exists but does so under a different account which you do not have access to."
+      rescue Excon::Errors::Conflict => e
+        raise "An error occurred while trying to create this bucket.  This bucket probably already exists under your account but in a different region."
       end
 
       ##
