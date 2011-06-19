@@ -22,7 +22,7 @@ module Backup
 
       ##
       # Loads the backup configuration file
-      instance_eval(File.read(config))
+      instance_eval(File.read(config), config, 1)
 
       ##
       # Iterates through all the instantiated backup models and returns
