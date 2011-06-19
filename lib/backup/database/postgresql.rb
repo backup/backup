@@ -65,9 +65,17 @@ module Backup
       ##
       # Builds the credentials PostgreSQL syntax to authenticate the user
       # to perform the database dumping process
-      def credential_options
+      def username_options
         return '' unless username.is_a?(String) and not username.empty?
         "--username='#{username}'"
+      end
+
+      ##
+      # Builds the password syntax PostgreSQL uses to authenticate the user
+      # to perform database dumping
+      def password_options
+        return '' unless password.is_a?(String) and not username.empty?
+        "PGPASSWORD='#{password}'"
       end
 
       ##
@@ -92,8 +100,9 @@ module Backup
       ##
       # Builds the full pgdump string based on all attributes
       def pgdump
-        "#{ utility(:pg_dump) } #{ credential_options } #{ connectivity_options } " +
-        "#{ options } #{ tables_to_dump } #{ tables_to_skip } #{ name }"
+        ("#{password_options} " +
+        "#{ utility(:pg_dump) } #{ username_options } #{ connectivity_options } " +
+        "#{ options } #{ tables_to_dump } #{ tables_to_skip } #{ name }").strip
       end
 
       ##
