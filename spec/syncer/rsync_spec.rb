@@ -152,6 +152,7 @@ describe Backup::Syncer::RSync do
   describe '#password' do
     before do
       Backup::Logger.stubs(:message)
+      Backup::Logger.stubs(:silent)
       rsync.stubs(:utility).with(:rsync).returns(:rsync)
       rsync.stubs(:run)
     end
@@ -172,6 +173,12 @@ describe Backup::Syncer::RSync do
   end
 
   describe '#perform' do
+
+    before do
+      # don't do anything about the silent method, because we don't care about it
+      Backup::Logger.stubs(:silent)
+    end
+
     it 'should invoke the rsync command to transfer the files and directories' do
       Backup::Logger.expects(:message).with("Backup::Syncer::RSync started syncing '/some/random/directory' '/another/random/directory'.")
       rsync.expects(:utility).with(:rsync).returns(:rsync)
