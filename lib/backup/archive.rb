@@ -19,6 +19,10 @@ module Backup
     ##
     # Stores the path to the archive directory
     attr_accessor :archive_path
+    
+    ##
+    # Stores the path to the local archive directory
+    attr_accessor :local_path
 
     ##
     # Takes the name of the archive and the configuration block
@@ -27,6 +31,8 @@ module Backup
       @paths        = Array.new
       @excludes     = Array.new
       @archive_path = File.join(TMP_PATH, TRIGGER, 'archive')
+      @local        = false
+      @local_path   = File.join(DATA_PATH, TRIGGER, 'archive')
 
       instance_eval(&block)
     end
@@ -42,6 +48,12 @@ module Backup
     def exclude(path)
       @excludes << path
     end
+    
+    ##
+    # When true, stores a local copy of the final archive
+    def local(boolean)
+      @local = boolean
+    end
 
     ##
     # Archives all the provided paths in to a single .tar file
@@ -50,6 +62,11 @@ module Backup
       mkdir(archive_path)
       Logger.message("#{ self.class } started packaging and archiving #{ paths.map { |path| "\"#{path}\""}.join(", ") }.")
       run("#{ utility(:tar) } -c -f '#{ File.join(archive_path, "#{name}.tar") }' #{ paths_to_exclude } #{ paths_to_package } 2> /dev/null")
+      if @local
+        Logger.message("#{ self.class } is copying: #{ File.join(archive_path, "#{name}.tar") } to #{ File.join(local_path, "#{TIME}.#{name}.tar") }")
+        mkdir(local_path)
+        run("#{ utility(:cp) } '#{ File.join(archive_path, "#{name}.tar") }' '#{ File.join(local_path, "#{TIME}.#{name}.tar") }'")
+      end
     end
 
   private
