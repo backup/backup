@@ -21,14 +21,19 @@ module Backup
       attr_accessor :path
 
       ##
+      # use passive mode?
+      attr_accessor :passive_mode
+
+      ##
       # Creates a new instance of the FTP storage object
       # First it sets the defaults (if any exist) and then evaluates
       # the configuration block which may overwrite these defaults
       def initialize(&block)
         load_defaults!
 
-        @port ||= 21
-        @path ||= 'backups'
+        @port         ||= 21
+        @path         ||= 'backups'
+        @passive_mode ||= false
 
         instance_eval(&block) if block_given?
 
@@ -66,7 +71,9 @@ module Backup
           Net::FTP.send(:remove_const, :FTP_PORT)
         end; Net::FTP.send(:const_set, :FTP_PORT, port)
 
-        Net::FTP.new(ip, username, password)
+        ftp = Net::FTP.new(ip, username, password)
+        ftp.passive = true if passive_mode
+        ftp
       end
 
       ##
