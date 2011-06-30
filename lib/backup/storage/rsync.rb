@@ -26,7 +26,7 @@ module Backup
       attr_accessor :path
 
       ##
-      # Path to store backups to
+      # Flag to use local backups
       attr_accessor :local
 
       ##
