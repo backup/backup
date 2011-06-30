@@ -78,7 +78,7 @@ module Backup
         Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
         create_remote_directories!
         if @local
-          run("#{ utility(:rsync) } #{ options } #{ password } '#{ File.join(local_path, local_file) }' '#{ File.join(remote_path, TIME+'.'+remote_file[20..-1]) }'")
+          run("#{ utility(:rsync) } '#{ File.join(local_path, local_file) }' '#{ File.join(remote_path, TIME+'.'+remote_file[20..-1]) }'")
         else
           run("#{ utility(:rsync) } #{ options } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file[20..-1]) }'")
         end
