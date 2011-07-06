@@ -2,6 +2,7 @@
 
 require 'fileutils'
 require 'yaml'
+require 'etc'
 
 ##
 # The Backup Ruby Gem
@@ -37,6 +38,7 @@ module Backup
 
   ##
   # Backup's Environment paths
+  USER               = ENV['USER'] || Etc.getpwuid.name # The user the backup is running as.
   PATH               = File.join(ENV['HOME'], 'Backup')
   DATA_PATH          = File.join(ENV['HOME'], 'Backup', 'data')
   CONFIG_FILE        = File.join(ENV['HOME'], 'Backup', 'config.rb')

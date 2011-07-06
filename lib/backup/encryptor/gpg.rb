@@ -62,6 +62,8 @@ module Backup
       # Creates a new temp file and writes the provided public gpg key to it
       def write_tmp_file!
         @tmp_file = Tempfile.new('backup.pub')
+        FileUtils.chown(USER, nil, @tmp_file)
+        FileUtils.chmod(0600, @tmp_file)
         @tmp_file.write(key)
         @tmp_file.close
       end
