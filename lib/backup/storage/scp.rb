@@ -69,20 +69,27 @@ module Backup
       ##
       # Transfers the archived file to the specified remote server
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
+        Logger.message("#{ self.class } started transferring files to #{ ip }")
         create_remote_directories!
-        connection.scp.upload!(
-          File.join(local_path, local_file),
-          File.join(remote_path, remote_file)
-        )
+        c = connection
+        local_files.each do |local_file|
+          c.scp.upload!(
+            File.join(local_path, local_file),
+            File.join(remote_path, remote_file)
+          )
+        end
       end
 
       ##
       # Removes the transferred archive file from the server
       def remove!
-        response = connection.exec!("rm #{ File.join(remote_path, remote_file) }")
-        if response =~ /No such file or directory/
-          Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+        create_remote_file_list
+        c = connection
+        remote_files.each do |remote_file|
+          response = c.exec!("rm #{ File.join(remote_path, remote_file) }")
+          if response =~ /No such file or directory/
+            Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+          end
         end
       end
 

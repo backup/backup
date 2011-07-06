@@ -21,15 +21,31 @@ module Backup
       end
 
       ##
-      # Returns the local archive filename
-      def local_file
-        @local_file ||= File.basename(Backup::Model.file)
+      # See if there are multiple files that this backup model resulted in.
+      def multiple_files?
+        Backup::Model.current.file.is_a?(Array)
       end
 
       ##
-      # Returns the name of the file that's stored on the remote location
-      def remote_file
-        @remote_file ||= local_file
+      # Returns a list of local filenames
+      def local_files
+        @local_files ||= Backup::Model.file
+        # Make sure that @local_files is an Array, regardless of being a single name or multiple names.
+        [@local_files].flatten!
+        # Just pull out the names
+        @local_files.map! { |file_path| File.basename(file_path) }
+      end
+
+      ##
+      # Returns the name(s) of the file(s) that('re) to be stored on the remote location
+      def remote_files
+        @remote_files ||= local_files
+      end
+
+      ##
+      # Re-populates the list of remote files to sync to
+      def create_remote_file_list
+        @remote_files = local_files
       end
 
       ##
@@ -54,7 +70,7 @@ module Backup
         if keep.is_a?(Integer) and keep > 0 and objects.count > keep
           objects_to_remove = objects[keep..-1]
           objects_to_remove.each do |object|
-            Logger.message "#{ self.class } started removing (cycling) \"#{ object.remote_file }\"."
+            Logger.message "#{ self.class } started removing (cycling) files from #{ object.class.name.split("::").last }"
             object.send(:remove!)
           end
           objects = objects - objects_to_remove

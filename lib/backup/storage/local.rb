@@ -47,18 +47,23 @@ module Backup
       ##
       # Transfers the archived file to the specified local path
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
+        Logger.message("#{ self.class } started transferring files.")
         create_local_directories!
-        FileUtils.cp(
-          File.join(local_path, local_file),
-          File.join(remote_path, remote_file)
-        )
+        local_files.each do |local_file|
+          FileUtils.cp(
+            File.join(local_path, local_file),
+            File.join(remote_path, remote_files.shift)
+          )
+        end
       end
 
       ##
       # Removes the transferred archive file from the local path
       def remove!
-        FileUtils.rm(File.join(remote_path, remote_file))
+        create_remote_file_list
+        remote_files.each do |remote_file|
+          FileUtils.rm(File.join(remote_path, remote_file))
+        end
       end
 
       ##
