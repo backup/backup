@@ -115,10 +115,19 @@ module Backup
       @notifiers   = Array.new
       @syncers     = Array.new
 
+      @split       = nil
       @files       = nil
 
       instance_eval(&block)
       Backup::Model.all << self
+    end
+
+    ##
+    # Sets the size that the resultant backup
+    # archive should be split into before copying
+    # elsewhere.
+    def split(size)
+      @split = Backup::Split.new(size)
     end
 
     ##
@@ -229,6 +238,8 @@ module Backup
           package!
           compressors.each { |c| c.perform! }
           encryptors.each  { |e| e.perform! }
+          @split.perform! if @split
+
           storages.each    { |s| s.perform! }
           clean!
         end
