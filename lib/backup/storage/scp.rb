@@ -75,7 +75,7 @@ module Backup
         local_files.each do |local_file|
           c.scp.upload!(
             File.join(local_path, local_file),
-            File.join(remote_path, remote_file)
+            File.join(remote_path, remote_files.shift)
           )
         end
       end

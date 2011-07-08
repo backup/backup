@@ -31,7 +31,7 @@ module Backup
       def local_files
         @local_files ||= Backup::Model.file
         # Make sure that @local_files is an Array, regardless of being a single name or multiple names.
-        [@local_files].flatten!
+        @local_files = [@local_files].flatten
         # Just pull out the names
         @local_files.map! { |file_path| File.basename(file_path) }
       end
