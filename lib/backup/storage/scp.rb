@@ -55,7 +55,7 @@ module Backup
     private
 
       ##
-      # Establishes a connection to the remote server and returns the Net::SCP object.
+      # Establishes a connection to the remote server and returns the Net::SSH object.
       # Not doing any instance variable caching because this object gets persisted in YAML
       # format to a file and will issues. This, however has no impact on performance since it only
       # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
