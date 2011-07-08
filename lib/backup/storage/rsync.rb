@@ -70,17 +70,24 @@ module Backup
       ##
       # Transfers the archived file to the specified remote server
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
+        Logger.message("#{ self.class } started transferring files with rsync.")
         create_remote_directories!
-        run("#{ utility(:rsync) } #{ options } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file[20..-1]) }'")
+        local_files.each do |local_file|
+          # run("#{ utility(:rsync) } #{ options } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file[20..-1]) }'") # WTF? Why just remote_file[20..-1] and not the whole name?
+          run("#{ utility(:rsync) } #{ options } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_files.shift) }'") # WTF? Why just remote_file[20..-1] and not the whole name?
+        end
       end
 
       ##
       # Removes the transferred archive file from the server
       def remove!
-        response = connection.exec!("rm #{ File.join(remote_path, remote_file) }")
-        if response =~ /No such file or directory/
-          Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+        create_remote_directories
+        c = connection
+        remote_files.each do |remote_file|
+          c.exec!("rm #{ File.join(remote_path, remote_file) }")
+          if response =~ /No such file or directory/
+            Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+          end
         end
       end
 

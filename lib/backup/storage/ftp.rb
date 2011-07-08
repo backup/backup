@@ -79,23 +79,26 @@ module Backup
       ##
       # Transfers the archived file to the specified remote server
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
+        Logger.message("#{ self.class } started transferring files to FTP for trigger #{ TRIGGER }")
         create_remote_directories!
-        connection.put(
-          File.join(local_path, local_file),
-          File.join(remote_path, remote_file)
-        )
+        c = connection
+        local_files.each do |local_file|
+          Logger.message("#{ self.class } started transferring \"#{ local_file }\" to FTP")
+          c.put( File.join(local_path, local_file), File.join(remote_path, remote_files.shift) )
+        end
       end
 
       ##
       # Removes the transferred archive file from the server
       def remove!
-        begin
-          connection.delete(
-            File.join(remote_path, remote_file)
-          )
-        rescue Net::FTPPermError
-          Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+        create_remote_file_list
+        c = connection
+        remote_files.each do |remote_file|
+          begin
+            c.delete( File.join(remote_path, remote_file) )
+          rescue Net::FTPPermError
+            Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+          end
         end
       end
 
