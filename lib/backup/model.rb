@@ -45,6 +45,10 @@ module Backup
     # The time when the backup initiated (in format: 2011.02.20.03.29.59)
     attr_accessor :time
 
+    ##
+    # The list of files (if we're splitting) that this Model is working with
+    attr_accessor :files
+
     class << self
       ##
       # The Backup::Model.all class method keeps track of all the models
@@ -67,7 +71,11 @@ module Backup
       # Returns the full path to the current file (including the current extension).
       # To just return the filename and extension without the path, use File.basename(Backup::Model.file)
       def file
-        File.join(TMP_PATH, "#{ TIME }.#{ TRIGGER }.#{ Backup::Model.extension }")
+        if @files.is_a?(Array) then
+          @files
+        else
+          File.join(TMP_PATH, "#{ TIME }.#{ TRIGGER }.#{ Backup::Model.extension }")
+        end
       end
 
       ##
@@ -107,8 +115,19 @@ module Backup
       @notifiers   = Array.new
       @syncers     = Array.new
 
+      @split       = nil
+      @files       = nil
+
       instance_eval(&block)
       Backup::Model.all << self
+    end
+
+    ##
+    # Sets the size that the resultant backup
+    # archive should be split into before copying
+    # elsewhere.
+    def split(size)
+      @split = Backup::Split.new(size)
     end
 
     ##
@@ -219,6 +238,8 @@ module Backup
           package!
           compressors.each { |c| c.perform! }
           encryptors.each  { |e| e.perform! }
+          @split.perform! if @split
+
           storages.each    { |s| s.perform! }
           clean!
         end
