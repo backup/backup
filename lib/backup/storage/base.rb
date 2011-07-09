@@ -39,7 +39,7 @@ module Backup
       ##
       # Returns the name(s) of the file(s) that('re) to be stored on the remote location
       def remote_files
-        @remote_files = local_files
+        @remote_files ||= local_files
       end
 
       ##

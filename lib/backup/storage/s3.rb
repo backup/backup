@@ -79,11 +79,10 @@ module Backup
         Logger.message("#{ self.class } started transferring files to #{ provider }")
         connection.sync_clock
         c = connection
-        remote_file_list = remote_files
-        local_files.each do |local_file|
+        local_files.zip(remote_files).each do |local_file, remote_file|
           begin
             c.put_object( bucket,
-                         File.join(remote_path, remote_file_list.shift),
+                         File.join(remote_path, remoteo_file),
                          File.open(File.join(local_path, local_file))
             )
           rescue Excon::Errors::NotFound

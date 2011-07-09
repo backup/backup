@@ -72,11 +72,10 @@ module Backup
         Logger.message("#{ self.class } started transferring files to #{ ip }")
         create_remote_directories!
         c = connection
-        remote_file_list = remote_files
-        local_files.each do |local_file|
+        local_files.zip(remote_files).each do |local_file, remote_file|
           c.scp.upload!(
             File.join(local_path, local_file),
-            File.join(remote_path, remote_file_list.shift)
+            File.join(remote_path, remote_file)
           )
         end
       end

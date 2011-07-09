@@ -71,11 +71,10 @@ module Backup
         begin
           Logger.message("#{ self.class } started transferring files to #{ provider }.")
           c = connection
-          remote_file_list = remote_files
-          local_files.each do |local_file|
+          local_files.zip(remote_files).each do |local_file, remote_file|
             Logger.message("#{ self.class } started transferring \"#{ local_file }\" to #{ provider }")
             c.put_object( container,
-                          File.join(remote_path, remote_file_list.shift),
+                          File.join(remote_path, remote_file),
                           File.join(local_path, local_file)
             )
           end

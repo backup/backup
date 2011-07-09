@@ -72,9 +72,8 @@ module Backup
       def transfer!
         Logger.message("#{ self.class } started transferring files with rsync.")
         create_remote_directories!
-        remote_file_list = remote_files
-        local_files.each do |local_file|
-          run("#{ utility(:rsync) } #{ options } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file_list.shift) }'")
+        local_files.zip(remote_files).each do |local_file, remote_file|
+          run("#{ utility(:rsync) } #{ options } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file) }'")
         end
       end
 
