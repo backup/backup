@@ -49,10 +49,11 @@ module Backup
       def transfer!
         Logger.message("#{ self.class } started transferring files.")
         create_local_directories!
+        remote_file_list = remote_files
         local_files.each do |local_file|
           FileUtils.cp(
             File.join(local_path, local_file),
-            File.join(remote_path, remote_files.shift)
+            File.join(remote_path, remote_file_list.shift)
           )
         end
       end
@@ -60,7 +61,6 @@ module Backup
       ##
       # Removes the transferred archive file from the local path
       def remove!
-        create_remote_file_list
         remote_files.each do |remote_file|
           FileUtils.rm(File.join(remote_path, remote_file))
         end

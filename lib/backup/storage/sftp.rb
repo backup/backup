@@ -67,10 +67,11 @@ module Backup
         Logger.message("#{ self.class } started transferring files to #{ ip }")
         create_remote_directories!
         c = conenction
+        remote_file_list = remote_files
         local_files.each do |local_file|
           connection.upload!(
             File.join(local_path, local_file),
-            File.join(remote_path, remote_files.shift)
+            File.join(remote_path, remote_file_list.shift)
           )
         end
       end
@@ -78,7 +79,6 @@ module Backup
       ##
       # Removes the transferred archive file from the server
       def remove!
-        create_remote_file_list
         c = connection
         remote_files.each do |remote_file|
           begin

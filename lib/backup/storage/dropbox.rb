@@ -83,7 +83,6 @@ module Backup
       ##
       # Removes the transferred archive file from the Dropbox folder
       def remove!
-        create_remote_file_list
         c = connection
         remote_files.each do |remote_file|
           Logger.message("#{ self.class } removing #{ remote_file } from #{ provider }")

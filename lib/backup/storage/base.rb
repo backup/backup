@@ -39,12 +39,6 @@ module Backup
       ##
       # Returns the name(s) of the file(s) that('re) to be stored on the remote location
       def remote_files
-        @remote_files ||= local_files
-      end
-
-      ##
-      # Re-populates the list of remote files to sync to
-      def create_remote_file_list
         @remote_files = local_files
       end
 

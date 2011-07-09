@@ -79,10 +79,11 @@ module Backup
         Logger.message("#{ self.class } started transferring files to #{ provider }")
         connection.sync_clock
         c = connection
+        remote_file_list = remote_files
         local_files.each do |local_file|
           begin
             c.put_object( bucket,
-                         File.join(remote_path, remote_file),
+                         File.join(remote_path, remote_file_list.shift),
                          File.open(File.join(local_path, local_file))
             )
           rescue Excon::Errors::NotFound
@@ -95,7 +96,6 @@ module Backup
       # Removes the transferred archive file from the Amazon S3 bucket
       def remove!
         connection.sync_clock
-        create_remote_file_list
         c = connection
         remote_files.each do |remote_file|
           begin

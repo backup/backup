@@ -72,9 +72,9 @@ module Backup
       def transfer!
         Logger.message("#{ self.class } started transferring files with rsync.")
         create_remote_directories!
+        remote_file_list = remote_files
         local_files.each do |local_file|
-          # run("#{ utility(:rsync) } #{ options } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file[20..-1]) }'") # WTF? Why just remote_file[20..-1] and not the whole name?
-          run("#{ utility(:rsync) } #{ options } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_files.shift) }'") # WTF? Why just remote_file[20..-1] and not the whole name?
+          run("#{ utility(:rsync) } #{ options } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file_list.shift) }'")
         end
       end
 

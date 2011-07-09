@@ -71,10 +71,11 @@ module Backup
         begin
           Logger.message("#{ self.class } started transferring files to #{ provider }.")
           c = connection
+          remote_file_list = remote_files
           local_files.each do |local_file|
             Logger.message("#{ self.class } started transferring \"#{ local_file }\" to #{ provider }")
             c.put_object( container,
-                          File.join(remote_path, remote_files.shift),
+                          File.join(remote_path, remote_file_list.shift),
                           File.join(local_path, local_file)
             )
           end
@@ -88,7 +89,6 @@ module Backup
       ##
       # Removes the transferred archive file(s) from the Cloud Files container
       def remove!
-        create_remote_file_list
         c = connection
         remote_files.each do |remote_file|
           Logger.message("#{ self.class } removing #{ remote_file } from #{ provider }")
