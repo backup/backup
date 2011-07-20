@@ -85,6 +85,7 @@ Compressors
 
 - Gzip
 - Bzip2
+- Lzma
 
 [Compressors Wiki Page](https://github.com/meskyanichi/backup/wiki/Compressors)
 

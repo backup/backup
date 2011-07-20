@@ -19,7 +19,7 @@ module Backup
   #  database MySQL do |mysql|
   DATABASES   = ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis']
   STORAGES    = ['S3', 'CloudFiles', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync', 'Local']
-  COMPRESSORS = ['Gzip', 'Bzip2']
+  COMPRESSORS = ['Gzip', 'Bzip2', 'Lzma']
   ENCRYPTORS  = ['OpenSSL', 'GPG']
   SYNCERS     = ['RSync', 'S3']
   NOTIFIERS   = ['Mail', 'Twitter', 'Campfire', 'Presently']
@@ -79,6 +79,7 @@ module Backup
       autoload :Base, File.join(CONFIGURATION_PATH, 'compressor', 'base')
       autoload :Gzip, File.join(CONFIGURATION_PATH, 'compressor', 'gzip')
       autoload :Bzip2, File.join(CONFIGURATION_PATH, 'compressor', 'bzip2')
+      autoload :Lzma, File.join(CONFIGURATION_PATH, 'compressor', 'lzma')
     end
 
     module Storage
@@ -146,6 +147,7 @@ module Backup
     autoload :Base, File.join(COMPRESSOR_PATH, 'base')
     autoload :Gzip, File.join(COMPRESSOR_PATH, 'gzip')
     autoload :Bzip2, File.join(COMPRESSOR_PATH, 'bzip2')
+    autoload :Lzma, File.join(COMPRESSOR_PATH, 'lzma')
   end
 
   ##
