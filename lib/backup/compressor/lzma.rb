@@ -33,8 +33,7 @@ module Backup
       # Performs the compression of the packages backup file
       def perform!
         log!
-        p "#{ utility(:lzma) } #{ options } '#{ Backup::Model.file }'"
-        p run("#{ utility(:lzma) } #{ options } '#{ Backup::Model.file }'")
+        run("#{ utility(:lzma) } #{ options } '#{ Backup::Model.file }'")
         Backup::Model.extension += '.lzma'
       end
 
