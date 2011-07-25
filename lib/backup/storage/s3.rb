@@ -76,17 +76,93 @@ module Backup
       ##
       # Transfers the archived file to the specified Amazon S3 bucket
       def transfer!
+        # maximum file size 5GB
+        max_file_size = 5368709120
+        # split size must be between 5MB and 5GB
+        max_split_size = max_file_size - 5242880
+
         begin
+          local_file_path = File.join(local_path, local_file)
+
           Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
           connection.sync_clock
-          connection.put_object(
+          if File.stat(local_file_path).size <= max_file_size
+            connection.put_object(
+              bucket,
+              File.join(remote_path, remote_file),
+              File.open(File.join(local_path, local_file))
+            )
+          else
+            Logger.message("#{ self.class } started multipart uploading \"#{ remote_file }\".")
+
+            workspace_path = local_path + "/workspace"
+            create_workspace(workspace_path)
+
+            `split -b #{max_split_size}  #{local_file_path} #{workspace_path}/#{local_file}.0`
+
+            upload_id = initiate_multipart_upload
+            etags = upload_part(workspace_path, upload_id)
+
+            s3_md5 = complete_multipart_upload(etags, upload_id)
+            ## please check etag
+            # if it's differrent from local_file, try to upload again.
+            # ex)
+            # require 'digest/md5'
+            # original_md5 = Digest::MD5.hexdigest(File.open(local_file_path).read)
+
+            remove_workspace(workspace_path)
+          end
+        rescue Excon::Errors::NotFound => e
+          raise "An error occurred while trying to transfer the backup, please make sure the bucket exists.\n #{e.inspect}"
+        end
+      end
+
+      def initiate_multipart_upload
+        res = connection.initiate_multipart_upload(
+          bucket,
+          File.join(remote_path, remote_file)
+        )
+        res.body['UploadId']
+      end
+
+      def upload_part workspace_path, upload_id
+        etags = []
+        split_files = Dir.entries(workspace_path).select{|file| file != ".." and file != "."}.sort
+
+        split_files.each_with_index do |split_file, index|
+          Logger.message("uploading #{index + 1} / #{split_files.size}")
+          res = connection.upload_part(
             bucket,
             File.join(remote_path, remote_file),
-            File.open(File.join(local_path, local_file))
+            upload_id,
+            index + 1,
+            File.open(File.join(workspace_path, split_file))
           )
-        rescue Excon::Errors::NotFound
-          raise "An error occurred while trying to transfer the backup, please make sure the bucket exists."
+          etags << res.headers['ETag']
         end
+        etags
+      end
+
+      def complete_multipart_upload etags, upload_id
+        res = connection.complete_multipart_upload(
+          bucket,
+          File.join(remote_path, remote_file),
+          upload_id,
+          etags
+        )
+        res.body['ETag']
+      end
+
+      def create_workspace workspace_path
+        Dir.mkdir(workspace_path)
+      end
+
+      def remove_workspace workspace_path
+        split_files = Dir.entries(workspace_path).select{|file| file != ".." and file != "."}.sort
+        split_files.each do |split_file|
+          File.delete(File.join(workspace_path, split_file))
+        end
+        Dir.rmdir(workspace_path)
       end
 
       ##
