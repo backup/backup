@@ -100,7 +100,7 @@ module Backup
       ##
       # Returns Rsync syntax for defining a port to connect to
       def port
-        "--port='#{@port}'"
+        "-e 'ssh -p #{@port}'"
       end
 
       ##
