@@ -67,18 +67,19 @@ module Backup
       end
 
       ##
-      # Transfers the archived file to the specified Amazon S3 bucket
+      # Transfers the archived file to the specified directory
       def transfer!
         begin
           Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
           connection.sync_clock
-          connection.put_object(
-            bucket,
-            File.join(remote_path, remote_file),
-            File.open(File.join(local_path, local_file))
+          directory   = connection.directories.get remote_path
+          directory ||= connection.directories.create(:key => remote_path)
+          directory.files.create(
+            :key  => remote_file,
+            :body => File.open(File.join(local_path, local_file))
           )
         rescue Excon::Errors::NotFound
-          raise "An error occurred while trying to transfer the backup, please make sure the bucket exists."
+          raise "An error occurred while trying to transfer the file."
         end
       end
 
@@ -87,7 +88,8 @@ module Backup
       def remove!
         begin
           connection.sync_clock
-          connection.delete_object(bucket, File.join(remote_path, remote_file))
+          directory = connection.directories.get remote_path
+          directory.files.get(remote_file).destroy
         rescue Excon::Errors::SocketError; end
       end
 
