@@ -76,7 +76,6 @@ describe Backup::Storage::Ninefold do
         file = mock("Backup::Storage::Ninefold::File")
         File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
         ninefold.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
-        connection.expects(:sync_clock)
         
         directories.expects(:get).with('backups/myapp').returns(directory)
         files.expects(:create) do |options|
@@ -94,7 +93,6 @@ describe Backup::Storage::Ninefold do
         file = mock("Backup::Storage::Ninefold::File")
         File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
         ninefold.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
-        connection.expects(:sync_clock)
         
         directories.expects(:get).with('backups/myapp').returns(nil)
         directories.expects(:create) { |options|
@@ -126,7 +124,6 @@ describe Backup::Storage::Ninefold do
 
     it 'should remove the file from the bucket' do
       ninefold.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
-      connection.expects(:sync_clock)
       
       directories.expects(:get).with('backups/myapp').returns(directory)
       files.expects(:get).with("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").returns(file)

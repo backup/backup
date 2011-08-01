@@ -71,7 +71,6 @@ module Backup
       def transfer!
         begin
           Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
-          connection.sync_clock
           directory   = connection.directories.get remote_path
           directory ||= connection.directories.create(:key => remote_path)
           directory.files.create(
@@ -87,7 +86,6 @@ module Backup
       # Removes the transferred archive file from the Amazon S3 bucket
       def remove!
         begin
-          connection.sync_clock
           directory = connection.directories.get remote_path
           directory.files.get(remote_file).destroy
         rescue Excon::Errors::SocketError; end
