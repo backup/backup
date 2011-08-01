@@ -18,7 +18,7 @@ module Backup
   # You can do:
   #  database MySQL do |mysql|
   DATABASES   = ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis']
-  STORAGES    = ['S3', 'CloudFiles', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync', 'Local']
+  STORAGES    = ['S3', 'CloudFiles', 'Ninefold', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync', 'Local']
   COMPRESSORS = ['Gzip', 'Bzip2', 'Lzma']
   ENCRYPTORS  = ['OpenSSL', 'GPG']
   SYNCERS     = ['RSync', 'S3']
