@@ -23,9 +23,15 @@ module Backup
     def run(command)
       command.gsub!(/^\s+/, '')
       raise_if_command_not_found!(
-        command.slice(0, command.index(/\s/)).split('/')[-1]
+        command_name(command)
       )
-      %x[#{command}]
+
+      pid, stdin, stdout, stderr = Open4::popen4(command)
+      ignored, @status = Process::waitpid2(pid)
+      @stdout = stdout.read
+      @stderr = stderr.read
+
+      raise_if_command_failed!(command_name(command), @status)
     end
 
     ##
@@ -63,6 +69,10 @@ module Backup
       name
     end
 
+    def command_name(command)
+      command.slice(0, command.index(/\s/)).split('/')[-1]
+    end
+
     ##
     # If the command that was previously run via this Ruby process returned
     # error code "32512", the invoked utility (e.g. mysqldump, pgdump, etc) could not be found.
@@ -75,6 +85,24 @@ module Backup
         raise Exception::CommandNotFound , "Could not find the utility \"#{utility}\" on \"#{RUBY_PLATFORM}\".\n" +
                                            "If this is a database utility, try defining the 'utility_path' option in the configuration file.\n" +
                                            "See the Database Wiki for more information about the Utility Path option."
+      end
+    end
+
+    ##
+    # If the command that was previously run via this Ruby process returned
+    # a non-zero error code, the invoked utility (e.g. mysqldump, pgdump, etc) failed to run.
+    # If this is the case then this method will throw an exception, informing the user of this problem.
+    #
+    # Since this raises an exception, it'll stop the entire backup process, clean up the temp files
+    # and notify the user via the built-in notifiers if these are set.
+    def raise_if_command_failed!(utility, status)
+      unless status.to_i.eql?(0)
+        raise Exception::CommandFailed , "Failed to run \"#{utility}\" on \"#{RUBY_PLATFORM}\".\n" +
+                                         "The status code returned was #{status}\n" +
+                                         "STDOUT was:\n" +
+                                         @stdout +
+                                         "STDERR was:\n" +
+                                         @stderr
       end
     end
 
