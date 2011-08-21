@@ -301,6 +301,7 @@ Easily run tests against all three Ruby versions
 
 Install [RVM](https://rvm.beginrescueend.com/) and use it to install Ruby 1.9.2, 1.8.7 and REE.
 
+    rvm get latest && rvm reload
     rvm install 1.9.2 && rvm install 1.8.7 && rvm install ree
 
 Once these are installed, go ahead and install all the necessary dependencies.
