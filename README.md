@@ -313,7 +313,7 @@ Once these are installed, go ahead and install all the necessary dependencies.
 
 The Backup gem uses [Guard](https://github.com/guard/guard) along with [Guard::RSpec](https://github.com/guard/guard-rspec) to quickly and easily test Backup's code against all three Rubies. If you've done the above, all you have to do is run:
 
-    guard start
+    bundle exec guard
 
 from Backup's root and that's it. It'll now test against all three Rubies each time you adjust a file in the `lib` or `spec` directories.
 
