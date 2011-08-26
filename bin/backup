@@ -250,6 +250,25 @@ class BackupCLI < Thor
       puts %x[gem install #{options[:install]} -v '#{Backup::Dependency.all[options[:install]][:version]}']
     end
   end
+  
+  ##
+  # [authenticate]
+  # Perform oauth authentication
+  # Bring the dropbox gem along with this definition since we need it
+  begin
+    require 'dropbox'
+
+    desc 'authenticate-dropbox', 'Authenticate with dropbox via OAuth and store credentials'
+    method_option :key, :type => :string, :required => true
+    method_option :secret, :type => :string, :required => true
+    method_option :output, :type => :string, :default => 'serialized_session.txt'
+    def authenticate_dropbox
+      serialize_dropbox_oauth( options[:key], options[:secret], options[:output] )
+    end
+  rescue LoadError
+    #we don't care if we can't load
+    #We just won't allow the user to authenticate with dropbox
+  end
 
   ##
   # [Version]
@@ -261,6 +280,34 @@ class BackupCLI < Thor
   end
 
 private
+  def serialize_dropbox_oauth( api_key, api_secret, filename )
+    if File.exist?( filename )
+      if( no? "A file named #{ filename } already exists. Do you want to overwrite? [y/n]" )
+        say "Ok, aborting! Please choose a new filename."
+        exit
+      end
+    end
+
+    session = Dropbox::Session.new( api_key, api_secret)
+    session.mode = :dropbox
+    say "Visit #{ session.authorize_url } to log in to Dropbox. Hit enter when you have done this.\n"
+    ask("")
+    if( session.authorize )
+      say "Authorization successful!"
+      say "Storing serialized session in #{filename}"
+
+      File.open(filename, 'w') do |f|
+        f.puts session.serialize
+      end
+
+      exit
+    end
+
+  rescue OAuth::Unauthorized
+    puts "Authorization failed! Please check your credentials and try again." 
+  end
+
+
 
   ##
   # Helper method for asking the user if he/she wants to overwrite the file
