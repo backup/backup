@@ -22,7 +22,7 @@ Gem::Specification.new do |gem|
 
   ##
   # The Backup CLI executable
-  gem.executables   = ['backup']
+  gem.executables   = ['backup', 'backup-dropbox']
 
   ##
   # Production gem dependencies
