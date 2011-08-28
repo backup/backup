@@ -101,8 +101,8 @@ class BackupDropboxCLI < Thor
       ##
       # Get the dropbox storage from the model
       storages = model.storages.clone
-      storages.keep_if do |s|
-        s.class == Backup::Storage::Dropbox
+      storages.delete_if do |s|
+        s.class != Backup::Storage::Dropbox
       end
 
       dropbox_storage = storages[0]
