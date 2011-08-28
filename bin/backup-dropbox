@@ -1,0 +1,200 @@
+#!/usr/bin/env ruby
+
+##
+# Load RubyGems for Ruby <= 1.8.7
+require 'rubygems'
+require 'tempfile'
+require 'fileutils'
+
+##
+# Load Thor for the Command Line Interface
+begin
+  require 'thor'
+rescue LoadError
+  puts 'Backup uses Thor as CLI (Command Line Interface).'
+  puts 'Please install Thor first: `gem install thor`'
+end
+
+##
+# Load the Dropbox gem for this executable
+begin
+  require 'dropbox'
+rescue LoadError
+  puts 'Backup uses the Dropbox gem to interact with Dropbox.'
+  puts 'Please install Dropbox first: `gem install dropbox`'
+end
+
+##
+# Load the Backup source
+require File.expand_path("../../lib/backup", __FILE__)
+
+##
+# Build the Backup Command Line Interface using Thor
+class BackupDropboxCLI < Thor
+  include Thor::Actions
+
+  TEMPLATE_DIR = File.expand_path("../../lib/templates", __FILE__)
+
+  ##
+  # [Perform]
+  # Performs the backup process. The only required option is the --trigger [-t].
+  # If the other options (--config_file, --data_path, --tmp_path) aren't specified
+  # it'll fallback to the (good) defaults
+  method_option :trigger,     :type => :string,  :aliases => ['-t', '--triggers'], :required => true
+  method_option :config_file, :type => :string,  :aliases => '-c'
+  method_option :data_path,   :type => :string,  :aliases => '-d'
+  desc 'migrate-config', "Migrate the Dropbox datafile for a given trigger trigger.\n" + 
+                  "You may perform multiple migrations by providing multiple triggers, separated by commas.\n\n" +
+                  "Example:\n\s\s$ backup-dropbox migrate-config --triggers backup1,backup2,backup3,backup4\n\n" +
+                  "This will invoke 4 migrations, and they will run in the order specified (not asynchronous)."
+  def migrate_config
+
+    ##
+    # Overwrites the CONFIG_FILE location, if --config-file was specified
+    if options[:config_file]
+      Backup.send(:remove_const, :CONFIG_FILE)
+      Backup.send(:const_set, :CONFIG_FILE, options[:config_file])
+    end
+
+    ##
+    # Overwrites the DATA_PATH location, if --data-path was specified
+    if options[:data_path]
+      Backup.send(:remove_const, :DATA_PATH)
+      Backup.send(:const_set, :DATA_PATH, options[:data_path])
+    end
+
+    ##
+    # Prepare all trigger names by splitting them by ','
+    # and finding trigger names matching wildcard
+    triggers = options[:trigger].split(",")
+    triggers.map!(&:strip).map!{ |t|
+      t.include?(Backup::Finder::WILDCARD) ? 
+        Backup::Finder.new(t).matching : t
+    }.flatten!
+    
+    #triggers.unique! # Uncomment if its undesirable to call triggers twice
+    
+    ##
+    # Process each trigger
+    triggers.each do |trigger|
+
+      ##
+      # Defines the TRIGGER constant
+      Backup.send(:const_set, :TRIGGER, trigger)
+
+      ##
+      # Define the TIME constants
+      Backup.send(:const_set, :TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
+
+      ##
+      # Ensure DATA_PATH and DATA_PATH/TRIGGER are created if they do not yet exist
+      FileUtils.mkdir_p(File.join(Backup::DATA_PATH, Backup::TRIGGER))
+
+      ##
+      # Parses the backup configuration file and returns the model instance by trigger
+      model = Backup::Finder.new(trigger).find
+
+      ##
+      # Runs the returned model
+      Backup::Logger.message "Converting Dropbox data cache to use a serialized OAuth session for `#{model.label}'!"
+
+      ##
+      # Get the dropbox storage from the model
+      storages = model.storages.clone
+      storages.keep_if do |s|
+        s.class == Backup::Storage::Dropbox
+      end
+
+      dropbox_storage = storages[0]
+
+      if dropbox_storage.serialized_session.nil?
+        Backup::Logger.error "This migration requires that the Dropbox storage have `serialized_session' set. "
+        Backup::Logger.error "Please update you Backup config file."
+        exit
+      end
+
+      ##
+      # Load the Dropbox object array
+      dropbox_storage_obj = Backup::Storage::Object.new('Dropbox')
+      backup_file_objects = dropbox_storage_obj.load
+
+      ##
+      # Set the serialized_session to the value from the config file
+      backup_file_objects.each do | bof |
+        bof.serialized_session = dropbox_storage.serialized_session
+      end
+
+      ##
+      # Save the modified objects back
+      dropbox_storage_obj.write( backup_file_objects )
+
+      ##
+      # Removes the TRIGGER constant
+      Backup.send(:remove_const, :TRIGGER) if defined? Backup::TRIGGER
+
+      ##
+      # Removes the TIME constant
+      Backup.send(:remove_const, :TIME) if defined? Backup::TIME
+
+      ##
+      # Reset the Backup::Model.current to nil for the next potential run
+      Backup::Model.current = nil
+
+      ##
+      # Reset the Backup::Model.all to an empty array since this will be
+      # re-filled during the next Backup::Finder.new(arg1, arg2).find
+      Backup::Model.all = Array.new
+
+      ##
+      # Reset the Backup::Model.extension to 'tar' so it's at it's
+      # initial state when the next Backup::Model initializes
+      Backup::Model.extension = 'tar'
+    end
+  end
+
+  ##
+  # [authenticate]
+  # Perform oauth authentication
+  # Bring the dropbox gem along with this definition since we need it
+  desc 'authenticate', 'Authenticate with dropbox via OAuth and store credentials'
+  method_option :key, :type => :string, :required => true
+  method_option :secret, :type => :string, :required => true
+  method_option :output, :type => :string, :default => 'serialized_session.txt'
+  def authenticate
+    serialize_dropbox_oauth( options[:key], options[:secret], options[:output] )
+  end
+
+private
+
+  def serialize_dropbox_oauth( api_key, api_secret, filename )
+    if File.exist?( filename )
+      if( no? "A file named #{ filename } already exists. Do you want to overwrite? [y/n]" )
+        say "Ok, aborting! Please choose a new filename."
+        exit
+      end
+    end
+
+    session = Dropbox::Session.new( api_key, api_secret)
+    session.mode = :dropbox
+    say "Visit #{ session.authorize_url } to log in to Dropbox. Hit enter when you have done this.\n"
+    ask("")
+    if( session.authorize )
+      say "Authorization successful!"
+      say "Storing serialized session in #{filename}"
+
+      File.open(filename, 'w') do |f|
+        f.puts session.serialize
+      end
+
+      exit
+    end
+
+  rescue OAuth::Unauthorized
+    puts "Authorization failed! Please check your credentials and try again." 
+  end
+
+end
+
+##
+# Enable the CLI for the Backup binary
+BackupDropboxCLI.start
