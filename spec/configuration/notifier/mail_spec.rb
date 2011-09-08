@@ -14,6 +14,7 @@ describe Backup::Configuration::Notifier::Mail do
       mail.password             = 'secret'
       mail.authentication       = 'plain'
       mail.enable_starttls_auto = true
+      mail.openssl_verify_mode  = true
     end
   end
 
@@ -28,6 +29,7 @@ describe Backup::Configuration::Notifier::Mail do
     mail.password.should             == 'secret'
     mail.authentication.should       == 'plain'
     mail.enable_starttls_auto.should == true
+    mail.openssl_verify_mode.should  == true
   end
 
   describe '#clear_defaults!' do
@@ -44,6 +46,7 @@ describe Backup::Configuration::Notifier::Mail do
       mail.password.should             == nil
       mail.authentication.should       == nil
       mail.enable_starttls_auto.should == nil
+      mail.openssl_verify_mode.should  == nil
     end
   end
 end
