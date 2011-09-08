@@ -19,4 +19,16 @@ describe Backup::Configuration::Notifier::Presently do
     presently.password.should  == 'my_password'
     presently.group_id.should  == 'my_group_id'
   end
+
+  describe '#clear_defaults!' do
+    it 'should clear all the defaults, resetting them to nil' do
+      Backup::Configuration::Notifier::Presently.clear_defaults!
+
+      presently = Backup::Configuration::Notifier::Presently
+      presently.subdomain.should == nil
+      presently.user_name.should == nil
+      presently.password.should  == nil
+      presently.group_id.should  == nil
+    end
+  end
 end

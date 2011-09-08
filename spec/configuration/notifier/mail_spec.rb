@@ -29,4 +29,21 @@ describe Backup::Configuration::Notifier::Mail do
     mail.authentication.should       == 'plain'
     mail.enable_starttls_auto.should == true
   end
+
+  describe '#clear_defaults!' do
+    it 'should clear all the defaults, resetting them to nil' do
+      Backup::Configuration::Notifier::Mail.clear_defaults!
+
+      mail = Backup::Configuration::Notifier::Mail
+      mail.from.should                 == nil
+      mail.to.should                   == nil
+      mail.address.should              == nil
+      mail.port.should                 == nil
+      mail.domain.should               == nil
+      mail.user_name.should            == nil
+      mail.password.should             == nil
+      mail.authentication.should       == nil
+      mail.enable_starttls_auto.should == nil
+    end
+  end
 end

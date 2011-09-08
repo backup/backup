@@ -19,4 +19,16 @@ describe Backup::Configuration::Notifier::Twitter do
     tweet.oauth_token.should        == 'my_oauth_token'
     tweet.oauth_token_secret.should == 'my_oauth_token_secret'
   end
+
+  describe '#clear_defaults!' do
+    it 'should clear all the defaults, resetting them to nil' do
+      Backup::Configuration::Notifier::Twitter.clear_defaults!
+
+      tweet = Backup::Configuration::Notifier::Twitter
+      tweet.consumer_key.should       == nil
+      tweet.consumer_secret.should    == nil
+      tweet.oauth_token.should        == nil
+      tweet.oauth_token_secret.should == nil
+    end
+  end
 end

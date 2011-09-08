@@ -17,4 +17,15 @@ describe Backup::Configuration::Notifier::Campfire do
     campfire.subdomain.should == 'my_subdomain'
     campfire.room_id.should   == 'my_room_id'
   end
+
+  describe '#clear_defaults!' do
+    it 'should clear all the defaults, resetting them to nil' do
+      Backup::Configuration::Notifier::Campfire.clear_defaults!
+
+      campfire = Backup::Configuration::Notifier::Campfire
+      campfire.api_token.should == nil
+      campfire.subdomain.should == nil
+      campfire.room_id.should   == nil
+    end
+  end
 end

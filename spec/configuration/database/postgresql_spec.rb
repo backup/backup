@@ -29,4 +29,21 @@ describe Backup::Configuration::Database::PostgreSQL do
     db.only_tables.should        == %w[my other tables]
     db.additional_options.should == %w[my options]
   end
+
+  describe '#clear_defaults!' do
+    it 'should clear all the defaults, resetting them to nil' do
+      Backup::Configuration::Database::PostgreSQL.clear_defaults!
+
+      db = Backup::Configuration::Database::PostgreSQL
+      db.name.should               == nil
+      db.username.should           == nil
+      db.password.should           == nil
+      db.host.should               == nil
+      db.port.should               == nil
+      db.socket.should             == nil
+      db.skip_tables.should        == nil
+      db.only_tables.should        == nil
+      db.additional_options.should == nil
+    end
+  end
 end
