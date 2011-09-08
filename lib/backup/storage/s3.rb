@@ -52,6 +52,7 @@ module Backup
       ##
       # Performs the backup transfer
       def perform!
+        create_bucket! unless bucket_exists?
         transfer!
         cycle!
       end
@@ -72,21 +73,46 @@ module Backup
           :region                 => region
         )
       end
+      
+      ##
+      # Checks to see if the bucket exists and also if we have access to it
+      def bucket_exists?
+        # will throw an exception if do not have permission to view it, 
+        # it exists but in a different region, has a different owner, etc.  
+        # Have create_bucket! handle those exceptions
+        !connection.directories.get(bucket).nil? rescue false
+      end
+      
+      ##
+      # Creates the bucket.  If the bucket already exists under this key, then the 
+      # command doesn't have any impact.  If it exists but under a different owner
+      # then an exception is raised
+      def create_bucket!
+        Logger.message("\"#{ bucket }\" does not exist; creating a private bucket")
+        location = region == 'us-east-1' ? nil : region
+        connection.directories.create(
+          :key    => bucket,
+          :public => false,
+          :location => location
+        )
+      rescue Excon::Errors::Forbidden
+        raise "An error occurred while trying to create this bucket.  It look like this bucket already exists but does so under a different account which you do not have access to."
+      rescue Excon::Errors::Conflict => e
+        raise "An error occurred while trying to create this bucket.  This bucket probably already exists under your account but in a different region."
+      end
 
       ##
       # Transfers the archived file to the specified Amazon S3 bucket
       def transfer!
-        begin
-          Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
-          connection.sync_clock
-          connection.put_object(
-            bucket,
-            File.join(remote_path, remote_file),
-            File.open(File.join(local_path, local_file))
-          )
-        rescue Excon::Errors::NotFound
-          raise "An error occurred while trying to transfer the backup, please make sure the bucket exists."
-        end
+        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
+        connection.sync_clock
+        connection.put_object(
+          bucket,
+          File.join(remote_path, remote_file),
+          File.open(File.join(local_path, local_file))
+        )
+      rescue Excon::Errors::Forbidden
+        raise "An error occurred while trying to access this bucket.  It look like this bucket exists under a different account which you do not have access to."
       end
 
       ##

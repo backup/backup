@@ -6,7 +6,7 @@ require File.dirname(__FILE__) + '/../spec_helper'
 # available S3 regions:
 # eu-west-1, us-east-1, ap-southeast-1, us-west-1
 describe Backup::Storage::S3 do
-
+  let(:connection) { mock('Fog::Storage') }
   let(:s3) do
     Backup::Storage::S3.new do |s3|
       s3.access_key_id      = 'my_access_key_id'
@@ -18,8 +18,10 @@ describe Backup::Storage::S3 do
     end
   end
 
+
   before do
     Backup::Configuration::Storage::S3.clear_defaults!
+    Backup::Logger.stubs(:message)
   end
 
   it 'should have defined the configuration properly' do
@@ -70,25 +72,35 @@ describe Backup::Storage::S3 do
   end
 
   describe '#transfer!' do
-    let(:connection) { mock('Fog::Storage') }
     before do
       Fog::Storage.stubs(:new).returns(connection)
-      Backup::Logger.stubs(:message)
+      @file = mock("Backup::Storage::S3::File")
+      File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(@file)
     end
 
     it 'should transfer the provided file to the bucket' do
       Backup::Model.new('blah', 'blah') {}
-      file = mock("Backup::Storage::S3::File")
-      File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
       s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
       connection.expects(:sync_clock)
-      connection.expects(:put_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
+      connection.expects(:put_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", @file)
       s3.send(:transfer!)
     end
+    
+    it 'should raise an exception if bucket exists but for someone else, with a nice err msg' do
+      connection.expects(:sync_clock)
+      connection.expects(:put_object).raises(Excon::Errors::Forbidden, "some s3 error msg")
+      lambda{ s3.send(:transfer!) }.should raise_exception(Exception, "An error occurred while trying to access this bucket.  It look like this bucket exists under a different account which you do not have access to." )
+    end
+
+    it 'should pass through a general exception an exception if bucket exists but for someone else, with a nice err msg' do
+      connection.expects(:sync_clock)
+      connection.expects(:put_object).raises(Exception, "some s3 error msg")
+      lambda{ s3.send(:transfer!) }.should raise_exception(Exception, "some s3 error msg" )
+    end
+    
   end
 
   describe '#remove!' do
-    let(:connection) { mock('Fog::Storage') }
     before do
       Fog::Storage.stubs(:new).returns(connection)
     end
@@ -100,9 +112,105 @@ describe Backup::Storage::S3 do
       s3.send(:remove!)
     end
   end
+  
+  describe '#bucket_exists?' do
+    before do
+      Fog::Storage.stubs(:new).returns(connection)
+      @directories = mock('directories')
+      connection.expects(:directories).returns(@directories).at_least_once
+    end
+    
+    it 'should return true if the bucket exists' do
+      @directories.expects(:get).with('my-bucket').returns(mock('bucket'))
+      s3.send(:bucket_exists?).should be_true
+    end
+
+    it 'should return true if the bucket exists' do
+      @directories.expects(:get).with('my-bucket').returns(nil)
+      s3.send(:bucket_exists?).should be_false
+    end
+
+    it 'should return false if an exception is raised because the bucket exists but for someone else, with a nice err msg' do
+      @directories.expects(:get).raises(Excon::Errors::Forbidden, "some s3 error msg")
+      s3.send(:bucket_exists?).should be_false
+    end
+
+  end
+
+  describe '#create_bucket!' do
+    before do
+      Fog::Storage.stubs(:new).returns(connection)
+      @directories = mock('directories')
+      connection.expects(:directories).returns(@directories).at_least_once
+    end
+    
+    describe 'creating a bucket' do
+      it 'should with the correct bucket name' do
+        @directories.expects(:create).with do |args|
+          args[:key].should == 'my-bucket'
+        end
+        s3.send(:create_bucket!)
+      end
+
+      it 'should and default to it being private' do
+        @directories.expects(:create).with do |args|
+          args[:public].should be_false
+        end
+        s3.send(:create_bucket!)
+      end
+
+      it 'should and default the location if the region is not us-east-1' do
+        s3.region = 'eu-west-1'
+        @directories.expects(:create).with do |args|
+          args[:location].should == 'eu-west-1'
+        end
+        s3.send(:create_bucket!)
+      end
+
+      it 'should and not set the location if the region is us-east-1' do
+        s3.region = 'us-east-1'
+        @directories.expects(:create).with do |args|
+          args[:location].should be_nil
+        end
+        s3.send(:create_bucket!)
+      end
+    end
+
+    it 'should raise an exception if bucket exists but for someone else, with a nice err msg' do
+      @directories.expects(:create).raises(Excon::Errors::Forbidden, "some s3 error msg")
+      lambda{ s3.send(:create_bucket!) }.should raise_exception(Exception, "An error occurred while trying to create this bucket.  It look like this bucket already exists but does so under a different account which you do not have access to." )
+    end
+
+    it 'should raise an exception if bucket exists for this user but under a different region' do
+      @directories.expects(:create).raises(Excon::Errors::Conflict, "some s3 error msg")
+      lambda{ s3.send(:create_bucket!) }.should raise_exception(Exception, "An error occurred while trying to create this bucket.  This bucket probably already exists under your account but in a different region." )
+    end
+
+    it 'should pass through a general exception an exception if bucket exists but for someone else, with a nice err msg' do
+      @directories.expects(:create).raises(Exception, "some s3 error msg")
+      lambda{ s3.send(:create_bucket!) }.should raise_exception(Exception, "some s3 error msg" )
+    end
+  end
 
   describe '#perform' do
-    it 'should invoke transfer! and cycle!' do
+    it 'should invoke a chain of helpers' do
+      s3.expects(:bucket_exists?)
+      s3.expects(:create_bucket!)
+      s3.expects(:transfer!)
+      s3.expects(:cycle!)
+      s3.perform!
+    end
+    
+    it 'should not create a bucket if bucket_exists? is true' do
+      s3.expects(:bucket_exists?).returns(true)
+      s3.expects(:transfer!)
+      s3.expects(:cycle!)
+      s3.perform!
+    end
+
+    it 'should create a bucket if bucket_exists? is false' do
+      s3.expects(:bucket_exists?).returns(false)
+      s3.expects(:create_bucket!)
       s3.expects(:transfer!)
       s3.expects(:cycle!)
       s3.perform!
