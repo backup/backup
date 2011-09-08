@@ -30,7 +30,7 @@ describe Backup::Syncer::RSync do
     rsync.username.should == 'my_username'
     rsync.password.should =~ /backup-rsync-password/
     rsync.ip.should       == '123.45.678.90'
-    rsync.port.should     == "--port='22'"
+    rsync.port.should     == "-e 'ssh -p 22'"
     rsync.path.should     == 'backups/'
     rsync.mirror.should   == "--delete"
     rsync.compress.should == "--compress"
@@ -55,7 +55,7 @@ describe Backup::Syncer::RSync do
     rsync.username.should == 'my_default_username'
     rsync.password.should =~ /backup-rsync-password/
     rsync.ip.should       == '123.45.678.90'
-    rsync.port.should     == "--port='22'"
+    rsync.port.should     == "-e 'ssh -p 22'"
     rsync.mirror.should   == nil
     rsync.compress.should == nil
 
@@ -64,7 +64,7 @@ describe Backup::Syncer::RSync do
 
   it 'should have its own defaults' do
     rsync = Backup::Syncer::RSync.new
-    rsync.port.should     == "--port='22'"
+    rsync.port.should     == "-e 'ssh -p 22'"
     rsync.path.should     == 'backups'
     rsync.compress.should == nil
     rsync.mirror.should   == nil
@@ -122,7 +122,7 @@ describe Backup::Syncer::RSync do
 
   describe '#port' do
     it do
-      rsync.port.should == "--port='22'"
+      rsync.port.should == "-e 'ssh -p 22'"
     end
   end
 
@@ -144,7 +144,7 @@ describe Backup::Syncer::RSync do
 
   describe '#options' do
     it do
-      rsync.options.should == "--archive --delete --compress --port='22' " +
+      rsync.options.should == "--archive --delete --compress -e 'ssh -p 22' " +
                               "--password-file='#{rsync.instance_variable_get('@password_file').path}'"
     end
   end
@@ -183,7 +183,7 @@ describe Backup::Syncer::RSync do
       Backup::Logger.expects(:message).with("Backup::Syncer::RSync started syncing '/some/random/directory' '/another/random/directory'.")
       rsync.expects(:utility).with(:rsync).returns(:rsync)
       rsync.expects(:remove_password_file!)
-      rsync.expects(:run).with("rsync -vhP --archive --delete --compress --port='22' --password-file='#{rsync.instance_variable_get('@password_file').path}' " +
+      rsync.expects(:run).with("rsync -vhP --archive --delete --compress -e 'ssh -p 22' --password-file='#{rsync.instance_variable_get('@password_file').path}' " +
                                "'/some/random/directory' '/another/random/directory' 'my_username@123.45.678.90:backups/'")
       rsync.perform!
     end
@@ -193,7 +193,7 @@ describe Backup::Syncer::RSync do
       rsync.password = nil
       rsync.expects(:utility).with(:rsync).returns(:rsync)
       rsync.expects(:remove_password_file!)
-      rsync.expects(:run).with("rsync -vhP --archive --delete --compress --port='22' " +
+      rsync.expects(:run).with("rsync -vhP --archive --delete --compress -e 'ssh -p 22' " +
                                "'/some/random/directory' '/another/random/directory' 'my_username@123.45.678.90:backups/'")
       rsync.perform!
     end

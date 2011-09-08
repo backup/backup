@@ -20,7 +20,7 @@ describe Backup::Configuration::Storage::RSync do
     rsync.ip.should       == '123.45.678.90'
     rsync.port.should     == 21
     rsync.path.should     == 'my_backups'
-    rsync.local.should    == false
+    rsync.local.should    == nil
   end
 
   describe '#clear_defaults!' do
