@@ -5,12 +5,13 @@ require File.dirname(__FILE__) + '/../../spec_helper'
 describe Backup::Configuration::Storage::FTP do
   before do
     Backup::Configuration::Storage::FTP.defaults do |ftp|
-      ftp.username  = 'my_username'
-      ftp.password  = 'my_password'
-      ftp.ip        = '123.45.678.90'
-      ftp.port      = 21
-      ftp.path      = 'my_backups'
-      ftp.keep      = 20
+      ftp.username     = 'my_username'
+      ftp.password     = 'my_password'
+      ftp.ip           = '123.45.678.90'
+      ftp.port         = 21
+      ftp.path         = 'my_backups'
+      ftp.keep         = 20
+      ftp.passive_mode = false
     end
   end
 
@@ -22,6 +23,7 @@ describe Backup::Configuration::Storage::FTP do
     ftp.port.should     == 21
     ftp.path.should     == 'my_backups'
     ftp.keep.should     == 20
+    ftp.passive_mode    == false
   end
 
   describe '#clear_defaults!' do
@@ -29,12 +31,13 @@ describe Backup::Configuration::Storage::FTP do
       Backup::Configuration::Storage::FTP.clear_defaults!
 
       ftp = Backup::Configuration::Storage::FTP
-      ftp.username.should == nil
-      ftp.password.should == nil
-      ftp.ip.should       == nil
-      ftp.port.should     == nil
-      ftp.path.should     == nil
-      ftp.keep.should     == nil
+      ftp.username.should     == nil
+      ftp.password.should     == nil
+      ftp.ip.should           == nil
+      ftp.port.should         == nil
+      ftp.path.should         == nil
+      ftp.keep.should         == nil
+      ftp.passive_mode.should == nil
     end
   end
 end

@@ -18,6 +18,10 @@ module Backup
           # Path to store backups to
           attr_accessor :path
 
+          ##
+          # use passive mode?
+          attr_accessor :passive_mode
+
         end
       end
     end
