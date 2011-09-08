@@ -55,6 +55,11 @@ module Backup
       # Automatically set TLS
       # Example: true
       attr_accessor :enable_starttls_auto
+      
+      ##
+      # OpenSSL Verify Mode
+      # Example: none - Only use this option for a self-signed and/or wildcard certificate
+      attr_accessor :openssl_verify_mode
 
       ##
       # Instantiates a new Backup::Notifier::Mail object
@@ -116,7 +121,8 @@ module Backup
           :user_name            => @user_name,
           :password             => @password,
           :authentication       => @authentication,
-          :enable_starttls_auto => @enable_starttls_auto
+          :enable_starttls_auto => @enable_starttls_auto,
+          :openssl_verify_mode  => @openssl_verify_mode
         }
 
         ::Mail.defaults do
