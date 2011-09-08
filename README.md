@@ -314,10 +314,6 @@ Contributors
     <td>Fixed PostgreSQL Password issues</td>
   </tr>
   <tr>
-    <td><a href="https://github.com/dkowis" target="_blank">David Kowis ( dkowis )</a></td>
-    <td>Fixed PostgreSQL Password issues</td>
-  </tr>
-  <tr>
     <td><a href="https://github.com/jotto" target="_blank">Jonathan Otto ( jotto )</a></td>
     <td>Allow for running PostgreSQL as another UNIX user</td>
   </tr>
