@@ -6,8 +6,6 @@ describe Backup::Storage::Dropbox do
 
   let(:db) do
     Backup::Storage::Dropbox.new do |db|
-      db.email       = 'my@email.com'
-      db.password    = 'my_password'
       db.api_key     = 'my_api_key'
       db.api_secret  = 'my_secret'
       db.keep        = 20
@@ -21,12 +19,11 @@ describe Backup::Storage::Dropbox do
   end
 
   before do
+    Backup::Logger.stubs(:warn)
     Backup::Configuration::Storage::Dropbox.clear_defaults!
   end
 
   it 'should have defined the configuration properly' do
-    db.email.should       == 'my@email.com'
-    db.password.should    == 'my_password'
     db.api_key.should     == 'my_api_key'
     db.api_secret.should  == 'my_secret'
     db.path.should        == 'backups'
@@ -57,15 +54,51 @@ describe Backup::Storage::Dropbox do
   end
 
   describe '#connection' do
-    it do
-      session = mock("Dropbox::Session")
-      Dropbox::Session.expects(:new).with('my_api_key', 'my_secret').returns(session)
-      session.expects(:mode=).with(:dropbox)
-      session.expects(:authorizing_user=).with('my@email.com')
-      session.expects(:authorizing_password=).with('my_password')
-      session.expects(:authorize!)
+    context "when the session cache has not yet been written" do
+      before do
+        Backup::Logger.stubs(:message)
+        db.stubs(:gets)
+      end
 
-      db.send(:connection)
+      it do
+        session = mock("Dropbox::Session")
+        Dropbox::Session.expects(:new).with('my_api_key', 'my_secret').returns(session)
+        session.expects(:mode=).with(:dropbox)
+        session.expects(:authorize)
+        session.expects(:authorize_url)
+        db.expects(:cache_exists?).returns(false)
+        db.expects(:write_cache!).with(session)
+        db.send(:connection)
+      end
+    end
+
+    context "when the session cache has already been written" do
+      before do
+        Backup::Logger.stubs(:message)
+        db.stubs(:gets)
+      end
+
+      it "should load the session from cache, instead of creating a new one" do
+        db.expects(:cache_exists?).returns(true)
+        File.expects(:read).with("#{ENV['HOME']}/Backup/.cache/my_api_keymy_secret").returns("foo")
+        session = mock("Dropbox::Session")
+        session.expects(:authorized?).returns(true)
+        Dropbox::Session.expects(:deserialize).with("foo").returns(session)
+
+        db.expects(:create_write_and_return_new_session!).never
+        db.send(:connection)
+      end
+
+      it "should load it from cache, but if it's invalid/corrupt, the create a session anyway" do
+        db.expects(:cache_exists?).returns(true)
+        File.expects(:read).with("#{ENV['HOME']}/Backup/.cache/my_api_keymy_secret").returns("foo")
+        session = mock("Dropbox::Session")
+        session.expects(:authorized?).returns(false)
+        Dropbox::Session.expects(:deserialize).with("foo").returns(session)
+
+        db.expects(:create_write_and_return_new_session!)
+        db.send(:connection)
+      end
     end
   end
 
