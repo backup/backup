@@ -3,6 +3,7 @@
 require 'fileutils'
 require 'yaml'
 require 'etc'
+require 'open4'
 
 ##
 # The Backup Ruby Gem

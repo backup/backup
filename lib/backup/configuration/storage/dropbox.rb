@@ -7,12 +7,8 @@ module Backup
         class << self
 
           ##
-          # Dropbox user credentials
-          attr_accessor :email, :password
-
-          ##
           # Dropbox API credentials
-          attr_accessor :api_key, :api_secret
+          attr_accessor :serialized_session
 
           ##
           # Path to where the backups will be stored

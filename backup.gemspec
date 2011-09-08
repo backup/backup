@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.expand_path(File.dirname(__FILE__) + '/lib/backup')
+require File.expand_path(File.dirname(__FILE__) + '/lib/backup/version')
 
 Gem::Specification.new do |gem|
 
@@ -22,10 +22,11 @@ Gem::Specification.new do |gem|
 
   ##
   # The Backup CLI executable
-  gem.executables   = ['backup']
+  gem.executables   = ['backup', 'backup-dropbox']
 
   ##
   # Production gem dependencies
   gem.add_dependency 'thor', ['~> 0.14.6']
+  gem.add_dependency 'open4', ['~> 1.1.0']
 
 end

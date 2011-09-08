@@ -6,10 +6,7 @@ describe Backup::Storage::Dropbox do
 
   let(:db) do
     Backup::Storage::Dropbox.new do |db|
-      db.email       = 'my@email.com'
-      db.password    = 'my_password'
-      db.api_key     = 'my_api_key'
-      db.api_secret  = 'my_secret'
+      db.serialized_session = '/file/path/here'
       db.keep        = 20
       db.timeout     = 500
     end
@@ -25,10 +22,7 @@ describe Backup::Storage::Dropbox do
   end
 
   it 'should have defined the configuration properly' do
-    db.email.should       == 'my@email.com'
-    db.password.should    == 'my_password'
-    db.api_key.should     == 'my_api_key'
-    db.api_secret.should  == 'my_secret'
+    db.serialized_session.should     == '/file/path/here'
     db.path.should        == 'backups'
     db.keep.should        == 20
     db.timeout.should     == 500
@@ -58,12 +52,13 @@ describe Backup::Storage::Dropbox do
 
   describe '#connection' do
     it do
+      file = mock('File')
+      File.expects(:read).once.with('/file/path/here').returns(file)
+
       session = mock("Dropbox::Session")
-      Dropbox::Session.expects(:new).with('my_api_key', 'my_secret').returns(session)
+      Dropbox::Session.expects(:deserialize).with(file).returns(session)
+
       session.expects(:mode=).with(:dropbox)
-      session.expects(:authorizing_user=).with('my@email.com')
-      session.expects(:authorizing_password=).with('my_password')
-      session.expects(:authorize!)
 
       db.send(:connection)
     end

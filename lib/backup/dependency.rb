@@ -24,7 +24,7 @@ module Backup
 
         'dropbox' => {
           :require => 'dropbox',
-          :version => '~> 1.2.3',
+          :version => '~> 1.3.0',
           :for     => 'Dropbox Web Service (Dropbox Storage)'
         },
 
@@ -70,9 +70,9 @@ module Backup
           :for     => 'Parsing JSON for HTTParty'
         },
 
-        'popen4' => {
-          :require => 'popen4',
-          :version => '~> 0.1.2',
+        'open4' => {
+          :require => 'open4',
+          :version => '~> 1.1.0',
           :for     => 'Executing system commands and receiving output'
         }
       }

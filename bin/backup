@@ -250,7 +250,7 @@ class BackupCLI < Thor
       puts %x[gem install #{options[:install]} -v '#{Backup::Dependency.all[options[:install]][:version]}']
     end
   end
-
+  
   ##
   # [Version]
   # Returns the current version of the Backup gem

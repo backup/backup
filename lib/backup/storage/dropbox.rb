@@ -9,12 +9,8 @@ module Backup
     class Dropbox < Base
 
       ##
-      # Dropbox user credentials
-      attr_accessor :email, :password
-
-      ##
       # Dropbox API credentials
-      attr_accessor :api_key, :api_secret
+      attr_accessor :serialized_session
 
       ##
       # Path to where the backups will be stored
@@ -61,11 +57,8 @@ module Backup
       # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
       # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
-        session                      = ::Dropbox::Session.new(api_key, api_secret)
+        session                      = ::Dropbox::Session.deserialize(File.read(serialized_session))
         session.mode                 = :dropbox
-        session.authorizing_user     = email
-        session.authorizing_password = password
-        session.authorize!
         session
       end
 
