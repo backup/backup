@@ -281,6 +281,50 @@ Contributors
     <td><a href="https://github.com/bgarret" target="_blank">Benoit Garret ( bgarret )</a></td>
     <td>Presently notifier</td>
   </tr>
+  <tr>
+    <td><a href="https://github.com/lleirborras" target="_blank">Lleïr Borràs Metje ( lleirborras )</a></td>
+    <td>Lzma Compressor</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/jof" target="_blank">Jonathan Lassoff ( jof )</a></td>
+    <td>Bugfixes and more secure GPG storage</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mikz" target="_blank">Michal Cichra ( mikz )</a></td>
+    <td>Wildcard Triggers</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/trybeee" target="_blank">Dmitry Novotochinov ( trybeee )</a></td>
+    <td>Dropbox Storage</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/Emerson" target="_blank">Emerson Lackey ( Emerson )</a></td>
+    <td>Local RSync Storage</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/digilord" target="_blank">digilord</a></td>
+    <td>OpenSSL Verify Mode for Mail Notifier</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/stemps" target="_blank">stemps</a></td>
+    <td>FTP Passive Mode</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/dkowis" target="_blank">David Kowis ( dkowis )</a></td>
+    <td>Fixed PostgreSQL Password issues</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/dkowis" target="_blank">David Kowis ( dkowis )</a></td>
+    <td>Fixed PostgreSQL Password issues</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/jotto" target="_blank">Jonathan Otto ( jotto )</a></td>
+    <td>Allow for running PostgreSQL as another UNIX user</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/joaovitor" target="_blank">João Vitor ( joaovitor )</a></td>
+    <td>Changed default PostgreSQL example options to appropriate ones</td>
+  </tr>
 </table>
 
 
