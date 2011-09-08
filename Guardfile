@@ -9,8 +9,8 @@ guard 'rspec',
   :version => 2,
   :rvm     => ['1.9.2', '1.8.7', 'ree'],
   :bundler => true,
-  :cli     => '--color --format Fuubar --fail-fast' do
-  
+  :cli     => '--color --format Fuubar' do
+
   watch(%r{^spec/.+_spec\.rb})
   watch(%r{^lib/(.+)\.rb})     { 'spec' }
   watch('spec/spec_helper.rb') { 'spec' }
