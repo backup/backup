@@ -60,6 +60,25 @@ module Backup
         remove_password_file!
       end
 
+      ##
+      # Returns Rsync syntax for defining a port to connect to
+      def port
+        "-e 'ssh -p #{@port}'"
+      end
+
+      ##
+      # Returns Rsync syntax for using a password file
+      def password
+        "--password-file='#{@password_file.path}'" unless @password.nil?
+      end
+
+      ##
+      # RSync options
+      # -z = Compresses the bytes that will be transferred to reduce bandwidth usage
+      def options
+        "-z"
+      end
+
     private
 
       ##
@@ -69,7 +88,7 @@ module Backup
       # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
       # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
-        Net::SSH.start(ip, username, :password => @password, :port => port)
+        Net::SSH.start(ip, username, :password => @password, :port => @port)
       end
 
       ##
@@ -80,7 +99,7 @@ module Backup
         if @local
           run("#{ utility(:rsync) } '#{ File.join(local_path, local_file) }' '#{ File.join(remote_path, TIME+'.'+remote_file[20..-1]) }'")
         else
-          run("#{ utility(:rsync) } #{ options } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file[20..-1]) }'")
+          run("#{ utility(:rsync) } #{ options } #{ port } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file[20..-1]) }'")
         end
       end
 
@@ -102,21 +121,6 @@ module Backup
         else
           connection.exec!("mkdir -p '#{ remote_path }'")
         end
-      end
-
-      ##
-      # RSync options
-      # -z     = Compresses the bytes that will be transferred to reduce bandwidth usage
-      # --port = the port to connect to through SSH
-      # -Phv   = debug options
-      def options
-        "-z --port='#{ port }'"
-      end
-
-      ##
-      # Returns Rsync syntax for using a password file
-      def password
-        "--password-file='#{@password_file.path}'" unless @password.nil?
       end
 
       ##
