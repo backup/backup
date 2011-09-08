@@ -18,7 +18,7 @@ module Backup
   # You can do:
   #  database MySQL do |mysql|
   DATABASES   = ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis']
-  STORAGES    = ['S3', 'CloudFiles', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync', 'Local']
+  STORAGES    = ['S3', 'CloudFiles', 'Ninefold', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync', 'Local']
   COMPRESSORS = ['Gzip', 'Bzip2', 'Lzma']
   ENCRYPTORS  = ['OpenSSL', 'GPG']
   SYNCERS     = ['RSync', 'S3']
@@ -86,6 +86,7 @@ module Backup
       autoload :Base,       File.join(CONFIGURATION_PATH, 'storage', 'base')
       autoload :S3,         File.join(CONFIGURATION_PATH, 'storage', 's3')
       autoload :CloudFiles, File.join(CONFIGURATION_PATH, 'storage', 'cloudfiles')
+      autoload :Ninefold,   File.join(CONFIGURATION_PATH, 'storage', 'ninefold')
       autoload :Dropbox,    File.join(CONFIGURATION_PATH, 'storage', 'dropbox')
       autoload :FTP,        File.join(CONFIGURATION_PATH, 'storage', 'ftp')
       autoload :SFTP,       File.join(CONFIGURATION_PATH, 'storage', 'sftp')
@@ -115,6 +116,7 @@ module Backup
     autoload :Object,     File.join(STORAGE_PATH, 'object')
     autoload :S3,         File.join(STORAGE_PATH, 's3')
     autoload :CloudFiles, File.join(STORAGE_PATH, 'cloudfiles')
+    autoload :Ninefold,   File.join(STORAGE_PATH, 'ninefold')
     autoload :Dropbox,    File.join(STORAGE_PATH, 'dropbox')
     autoload :FTP,        File.join(STORAGE_PATH, 'ftp')
     autoload :SFTP,       File.join(STORAGE_PATH, 'sftp')
