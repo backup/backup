@@ -66,9 +66,8 @@ module Backup
           begin
             cached_session = ::Dropbox::Session.deserialize(File.read(cached_file))
             return cached_session if cached_session.authorized?
-            Logger.warn "Cached session found, but the session was not authorized."
           rescue ArgumentError => error
-            Logger.warn "Could not read from cache, data might be corrupt."
+            Logger.warn "Could not read from cache, session data might be corrupt."
           end
         end
 
@@ -101,7 +100,7 @@ module Backup
         session.mode = :dropbox
         Logger.message "Visit: #{session.authorize_url}"
         Logger.message "to authorize a session for your Dropbox account."
-        Logger.message
+        Logger.message ""
         Logger.message "When you've successfully authorized the session, hit enter."
         Timeout::timeout(180) do
           gets
