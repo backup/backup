@@ -1,5 +1,5 @@
   ##
-  # Ninefold [Storage]
+  # Ninefold Cloud Storage [Storage]
   #
   store_with Ninefold do |nf|
     nf.storage_token   = 'my_storage_token'
