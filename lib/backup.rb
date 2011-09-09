@@ -63,10 +63,10 @@ module Backup
     autoload :Helpers,  File.join(CONFIGURATION_PATH, 'helpers')
 
     module Notifier
-      autoload :Base,    File.join(CONFIGURATION_PATH, 'notifier', 'base')
-      autoload :Mail,    File.join(CONFIGURATION_PATH, 'notifier', 'mail')
-      autoload :Twitter, File.join(CONFIGURATION_PATH, 'notifier', 'twitter')
-      autoload :Campfire, File.join(CONFIGURATION_PATH, 'notifier', 'campfire')
+      autoload :Base,      File.join(CONFIGURATION_PATH, 'notifier', 'base')
+      autoload :Mail,      File.join(CONFIGURATION_PATH, 'notifier', 'mail')
+      autoload :Twitter,   File.join(CONFIGURATION_PATH, 'notifier', 'twitter')
+      autoload :Campfire,  File.join(CONFIGURATION_PATH, 'notifier', 'campfire')
       autoload :Presently, File.join(CONFIGURATION_PATH, 'notifier', 'presently')
     end
 
@@ -77,10 +77,10 @@ module Backup
     end
 
     module Compressor
-      autoload :Base, File.join(CONFIGURATION_PATH, 'compressor', 'base')
-      autoload :Gzip, File.join(CONFIGURATION_PATH, 'compressor', 'gzip')
+      autoload :Base,  File.join(CONFIGURATION_PATH, 'compressor', 'base')
+      autoload :Gzip,  File.join(CONFIGURATION_PATH, 'compressor', 'gzip')
       autoload :Bzip2, File.join(CONFIGURATION_PATH, 'compressor', 'bzip2')
-      autoload :Lzma, File.join(CONFIGURATION_PATH, 'compressor', 'lzma')
+      autoload :Lzma,  File.join(CONFIGURATION_PATH, 'compressor', 'lzma')
     end
 
     module Storage
@@ -147,10 +147,10 @@ module Backup
   ##
   # Autoload compressor files
   module Compressor
-    autoload :Base, File.join(COMPRESSOR_PATH, 'base')
-    autoload :Gzip, File.join(COMPRESSOR_PATH, 'gzip')
+    autoload :Base,  File.join(COMPRESSOR_PATH, 'base')
+    autoload :Gzip,  File.join(COMPRESSOR_PATH, 'gzip')
     autoload :Bzip2, File.join(COMPRESSOR_PATH, 'bzip2')
-    autoload :Lzma, File.join(COMPRESSOR_PATH, 'lzma')
+    autoload :Lzma,  File.join(COMPRESSOR_PATH, 'lzma')
   end
 
   ##
@@ -164,11 +164,11 @@ module Backup
   ##
   # Autoload notification files
   module Notifier
-    autoload :Base,     File.join(NOTIFIER_PATH, 'base')
-    autoload :Binder,   File.join(NOTIFIER_PATH, 'binder')
-    autoload :Mail,     File.join(NOTIFIER_PATH, 'mail')
-    autoload :Twitter,  File.join(NOTIFIER_PATH, 'twitter')
-    autoload :Campfire, File.join(NOTIFIER_PATH, 'campfire')
+    autoload :Base,      File.join(NOTIFIER_PATH, 'base')
+    autoload :Binder,    File.join(NOTIFIER_PATH, 'binder')
+    autoload :Mail,      File.join(NOTIFIER_PATH, 'mail')
+    autoload :Twitter,   File.join(NOTIFIER_PATH, 'twitter')
+    autoload :Campfire,  File.join(NOTIFIER_PATH, 'campfire')
     autoload :Presently, File.join(NOTIFIER_PATH, 'presently')
   end
 
@@ -176,6 +176,7 @@ module Backup
   # Autoload exception classes
   module Exception
     autoload :CommandNotFound, File.join(EXCEPTION_PATH, 'command_not_found')
+    autoload :CommandFailed,   File.join(EXCEPTION_PATH, 'command_failed')
   end
 
   ##
