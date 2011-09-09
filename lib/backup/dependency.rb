@@ -18,7 +18,7 @@ module Backup
       {
         'fog' => {
           :require => 'fog',
-          :version => '>= 0.8.2',
+          :version => '>= 0.11.0',
           :for     => 'Amazon S3, Rackspace Cloud Files (S3, CloudFiles Storages)'
         },
 
@@ -48,13 +48,13 @@ module Backup
 
         'mail' => {
           :require => 'mail',
-          :version => '~> 2.2.15',
+          :version => '~> 2.3.0',
           :for     => 'Sending Emails (Mail Notifier)'
         },
 
         'twitter' => {
           :require => 'twitter',
-          :version => '~> 1.1.2',
+          :version => '>= 1.7.0',
           :for     => 'Sending Twitter Updates (Twitter Notifier)'
         },
 
