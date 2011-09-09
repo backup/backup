@@ -54,6 +54,7 @@ Storage Locations and Services
 
 - Amazon Simple Storage Service (S3)
 - Rackspace Cloud Files (Mosso)
+- Ninefold
 - Dropbox
 - Remote Servers *(Available Protocols: FTP, SFTP, SCP and RSync)*
 
