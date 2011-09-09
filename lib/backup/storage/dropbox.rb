@@ -29,7 +29,7 @@ module Backup
       # First it sets the defaults (if any exist) and then evaluates
       # the configuration block which may overwrite these defaults
       def initialize(&block)
-        load_defaults!
+        load_defaults!(:except => ['password', 'email'])
 
         @path ||= 'backups'
 
