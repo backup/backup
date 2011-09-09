@@ -7,4 +7,5 @@
     server.ip       = '123.45.678.90'
     server.port     = 22
     server.path     = '~/backups/'
+    server.local    = false
   end
