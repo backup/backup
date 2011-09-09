@@ -87,13 +87,12 @@ module Backup
         gem(name, all[name][:version])
         require(all[name][:require])
       rescue LoadError
-        Backup::Logger.error("Dependency missing. Please install #{name} version #{all[name][:version]} and try again.")
-        puts "\n\s\sgem install #{name} -v '#{all[name][:version]}'\n\n"
-        puts "Dependency required for:"
+        Backup::Logger.error("Dependency missing.")
+        puts "\nDependency required for:"
         puts "\n\s\s#{all[name][:for]}"
-        puts "\nTrying to install the #{name} gem for you.. please wait."
-        puts "Once installed, retry the backup procedure.\n\n"
-        puts run("#{ utility(:gem) } install #{name} -v '#{all[name][:version]}'")
+        puts "\nTo install the gem, issue the following command:"
+        puts "\n\s\sgem install #{name} -v '#{all[name][:version]}'"
+        puts "\nPlease try again after installing the missing dependency."
         exit
       end
     end
