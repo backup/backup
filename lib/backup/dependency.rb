@@ -54,7 +54,7 @@ module Backup
 
         'twitter' => {
           :require => 'twitter',
-          :version => '>= 1.7.0',
+          :version => '>= 1.7.1',
           :for     => 'Sending Twitter Updates (Twitter Notifier)'
         },
 
