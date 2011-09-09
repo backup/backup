@@ -332,6 +332,7 @@ Want to contribute?
 
 - Fork/Clone the **develop** branch
 - Write RSpec tests, and test against:
+  - Ruby 1.9.3-preview1
   - Ruby 1.9.2
   - Ruby 1.8.7
   - Ruby Enterprise Edition 1.8.7
@@ -342,7 +343,7 @@ I can't guarantee I'll pull every pull request. Also, I may accept your pull req
 Easily run tests against all three Ruby versions
 ------------------------------------------------
 
-Install [RVM](https://rvm.beginrescueend.com/) and use it to install Ruby 1.9.2, 1.8.7 and REE.
+Install [RVM](https://rvm.beginrescueend.com/) and use it to install Ruby 1.9.3, 1.9.2, 1.8.7 and REE.
 
     rvm get latest && rvm reload
     rvm install 1.9.3 && rvm install 1.9.2 && rvm install 1.8.7 && rvm install ree
