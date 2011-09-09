@@ -19,6 +19,8 @@ end
 # Load the Backup source
 require File.expand_path("../../lib/backup", __FILE__)
 
+Backup::Dependency.load('popen4')
+
 ##
 # Build the Backup Command Line Interface using Thor
 class BackupCLI < Thor
