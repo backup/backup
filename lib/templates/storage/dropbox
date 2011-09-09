@@ -1,9 +1,9 @@
   ##
   # Dropbox File Hosting Service [Storage]
+  # Note: Initial backup must be performed manually to authorize
+  #       this machine with your Dropbox account.
   #
   store_with Dropbox do |db|
-    db.email      = 'my@email.com'
-    db.password   = 'my_password'
     db.api_key    = 'my_api_key'
     db.api_secret = 'my_api_secret'
     db.timeout    = 300
