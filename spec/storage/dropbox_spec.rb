@@ -21,6 +21,7 @@ describe Backup::Storage::Dropbox do
   before do
     Backup::Logger.stubs(:warn)
     Backup::Configuration::Storage::Dropbox.clear_defaults!
+    STDIN.stubs(:gets)
   end
 
   it 'should have defined the configuration properly' do
