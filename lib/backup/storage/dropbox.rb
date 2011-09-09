@@ -103,7 +103,7 @@ module Backup
         Logger.message ""
         Logger.message "When you've successfully authorized the session, hit enter."
         Timeout::timeout(180) do
-          gets
+          STDIN.gets
         end
         Logger.message "Authorizing.."
         begin
