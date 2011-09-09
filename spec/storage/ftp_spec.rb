@@ -6,12 +6,13 @@ describe Backup::Storage::FTP do
 
   let(:ftp) do
     Backup::Storage::FTP.new do |ftp|
-      ftp.username  = 'my_username'
-      ftp.password  = 'my_password'
-      ftp.ip        = '123.45.678.90'
-      ftp.port      = 21
-      ftp.path      = '~/backups/'
-      ftp.keep      = 20
+      ftp.username     = 'my_username'
+      ftp.password     = 'my_password'
+      ftp.ip           = '123.45.678.90'
+      ftp.port         = 21
+      ftp.path         = '~/backups/'
+      ftp.keep         = 20
+      ftp.passive_mode = false
     end
   end
 
@@ -20,12 +21,13 @@ describe Backup::Storage::FTP do
   end
 
   it 'should have defined the configuration properly' do
-    ftp.username.should == 'my_username'
-    ftp.password.should == 'my_password'
-    ftp.ip.should       == '123.45.678.90'
-    ftp.port.should     == 21
-    ftp.path.should     == 'backups/'
-    ftp.keep.should     == 20
+    ftp.username.should     == 'my_username'
+    ftp.password.should     == 'my_password'
+    ftp.ip.should           == '123.45.678.90'
+    ftp.port.should         == 21
+    ftp.path.should         == 'backups/'
+    ftp.keep.should         == 20
+    ftp.passive_mode.should == false
   end
 
   it 'should use the defaults if a particular attribute has not been defined' do
@@ -48,11 +50,14 @@ describe Backup::Storage::FTP do
 
   it 'should have its own defaults' do
     ftp = Backup::Storage::FTP.new
-    ftp.port.should == 21
-    ftp.path.should == 'backups'
+    ftp.port.should         == 21
+    ftp.path.should         == 'backups'
+    ftp.passive_mode.should == false
   end
 
   describe '#connection' do
+    let(:connection) { mock('Fog::Storage') }
+
     it 'should establish a connection to the remote server using the provided ip address and credentials' do
       Net::FTP.expects(:new).with('123.45.678.90', 'my_username', 'my_password')
       ftp.send(:connection)
@@ -63,6 +68,13 @@ describe Backup::Storage::FTP do
       ftp.port = 40
       ftp.send(:connection)
       Net::FTP::FTP_PORT.should == 40
+    end
+
+    it 'configures net/ftp to use passive mode if passive_mode set to true' do
+      ftp.passive_mode = true
+      Net::FTP.stubs(:new).returns(connection)
+      connection.expects(:passive=).with(true)
+      ftp.send(:connection)
     end
   end
 

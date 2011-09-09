@@ -32,8 +32,9 @@ describe Backup::Storage::S3 do
 
   it 'should use the defaults if a particular attribute has not been defined' do
     Backup::Configuration::Storage::S3.defaults do |s3|
-      s3.access_key_id      = 'my_access_key_id'
-      s3.region             = 'us-east-1'
+      s3.access_key_id = 'my_access_key_id'
+      s3.region        = 'us-east-1'
+      s3.keep          = 500
     end
 
     s3 = Backup::Storage::S3.new do |s3|
@@ -46,6 +47,7 @@ describe Backup::Storage::S3 do
     s3.region.should            == 'us-west-1'        # defined, overwrites default
     s3.bucket.should            == nil                # not defined, no default
     s3.path.should              == 'my/backups'       # overwritten from Backup::Storage::S3
+    s3.keep.should              == 500                # comes from the default configuration
   end
 
   describe '#connection' do

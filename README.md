@@ -85,6 +85,7 @@ Compressors
 
 - Gzip
 - Bzip2
+- Lzma
 
 [Compressors Wiki Page](https://github.com/meskyanichi/backup/wiki/Compressors)
 
@@ -280,6 +281,46 @@ Contributors
     <td><a href="https://github.com/bgarret" target="_blank">Benoit Garret ( bgarret )</a></td>
     <td>Presently notifier</td>
   </tr>
+  <tr>
+    <td><a href="https://github.com/lleirborras" target="_blank">Lleïr Borràs Metje ( lleirborras )</a></td>
+    <td>Lzma Compressor</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/jof" target="_blank">Jonathan Lassoff ( jof )</a></td>
+    <td>Bugfixes and more secure GPG storage</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mikz" target="_blank">Michal Cichra ( mikz )</a></td>
+    <td>Wildcard Triggers</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/trybeee" target="_blank">Dmitry Novotochinov ( trybeee )</a></td>
+    <td>Dropbox Storage</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/Emerson" target="_blank">Emerson Lackey ( Emerson )</a></td>
+    <td>Local RSync Storage</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/digilord" target="_blank">digilord</a></td>
+    <td>OpenSSL Verify Mode for Mail Notifier</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/stemps" target="_blank">stemps</a></td>
+    <td>FTP Passive Mode</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/dkowis" target="_blank">David Kowis ( dkowis )</a></td>
+    <td>Fixed PostgreSQL Password issues</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/jotto" target="_blank">Jonathan Otto ( jotto )</a></td>
+    <td>Allow for running PostgreSQL as another UNIX user</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/joaovitor" target="_blank">João Vitor ( joaovitor )</a></td>
+    <td>Changed default PostgreSQL example options to appropriate ones</td>
+  </tr>
 </table>
 
 
@@ -300,6 +341,7 @@ Easily run tests against all three Ruby versions
 
 Install [RVM](https://rvm.beginrescueend.com/) and use it to install Ruby 1.9.2, 1.8.7 and REE.
 
+    rvm get latest && rvm reload
     rvm install 1.9.2 && rvm install 1.8.7 && rvm install ree
 
 Once these are installed, go ahead and install all the necessary dependencies.
@@ -311,7 +353,7 @@ Once these are installed, go ahead and install all the necessary dependencies.
 
 The Backup gem uses [Guard](https://github.com/guard/guard) along with [Guard::RSpec](https://github.com/guard/guard-rspec) to quickly and easily test Backup's code against all three Rubies. If you've done the above, all you have to do is run:
 
-    guard start
+    bundle exec guard
 
 from Backup's root and that's it. It'll now test against all three Rubies each time you adjust a file in the `lib` or `spec` directories.
 

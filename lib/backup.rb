@@ -2,6 +2,7 @@
 
 require 'fileutils'
 require 'yaml'
+require 'etc'
 
 ##
 # The Backup Ruby Gem
@@ -17,8 +18,8 @@ module Backup
   # You can do:
   #  database MySQL do |mysql|
   DATABASES   = ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis']
-  STORAGES    = ['S3', 'CloudFiles', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync']
-  COMPRESSORS = ['Gzip', 'Bzip2']
+  STORAGES    = ['S3', 'CloudFiles', 'Ninefold', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync', 'Local']
+  COMPRESSORS = ['Gzip', 'Bzip2', 'Lzma']
   ENCRYPTORS  = ['OpenSSL', 'GPG']
   SYNCERS     = ['RSync', 'S3']
   NOTIFIERS   = ['Mail', 'Twitter', 'Campfire', 'Presently']
@@ -37,10 +38,12 @@ module Backup
 
   ##
   # Backup's Environment paths
+  USER               = ENV['USER'] || Etc.getpwuid.name # The user the backup is running as.
   PATH               = File.join(ENV['HOME'], 'Backup')
   DATA_PATH          = File.join(ENV['HOME'], 'Backup', 'data')
   CONFIG_FILE        = File.join(ENV['HOME'], 'Backup', 'config.rb')
   LOG_PATH           = File.join(ENV['HOME'], 'Backup', 'log')
+  CACHE_PATH         = File.join(ENV['HOME'], 'Backup', '.cache')
   TMP_PATH           = File.join(ENV['HOME'], 'Backup', '.tmp')
 
   ##
@@ -60,10 +63,10 @@ module Backup
     autoload :Helpers,  File.join(CONFIGURATION_PATH, 'helpers')
 
     module Notifier
-      autoload :Base,    File.join(CONFIGURATION_PATH, 'notifier', 'base')
-      autoload :Mail,    File.join(CONFIGURATION_PATH, 'notifier', 'mail')
-      autoload :Twitter, File.join(CONFIGURATION_PATH, 'notifier', 'twitter')
-      autoload :Campfire, File.join(CONFIGURATION_PATH, 'notifier', 'campfire')
+      autoload :Base,      File.join(CONFIGURATION_PATH, 'notifier', 'base')
+      autoload :Mail,      File.join(CONFIGURATION_PATH, 'notifier', 'mail')
+      autoload :Twitter,   File.join(CONFIGURATION_PATH, 'notifier', 'twitter')
+      autoload :Campfire,  File.join(CONFIGURATION_PATH, 'notifier', 'campfire')
       autoload :Presently, File.join(CONFIGURATION_PATH, 'notifier', 'presently')
     end
 
@@ -74,20 +77,23 @@ module Backup
     end
 
     module Compressor
-      autoload :Base, File.join(CONFIGURATION_PATH, 'compressor', 'base')
-      autoload :Gzip, File.join(CONFIGURATION_PATH, 'compressor', 'gzip')
+      autoload :Base,  File.join(CONFIGURATION_PATH, 'compressor', 'base')
+      autoload :Gzip,  File.join(CONFIGURATION_PATH, 'compressor', 'gzip')
       autoload :Bzip2, File.join(CONFIGURATION_PATH, 'compressor', 'bzip2')
+      autoload :Lzma,  File.join(CONFIGURATION_PATH, 'compressor', 'lzma')
     end
 
     module Storage
       autoload :Base,       File.join(CONFIGURATION_PATH, 'storage', 'base')
       autoload :S3,         File.join(CONFIGURATION_PATH, 'storage', 's3')
       autoload :CloudFiles, File.join(CONFIGURATION_PATH, 'storage', 'cloudfiles')
+      autoload :Ninefold,   File.join(CONFIGURATION_PATH, 'storage', 'ninefold')
       autoload :Dropbox,    File.join(CONFIGURATION_PATH, 'storage', 'dropbox')
       autoload :FTP,        File.join(CONFIGURATION_PATH, 'storage', 'ftp')
       autoload :SFTP,       File.join(CONFIGURATION_PATH, 'storage', 'sftp')
       autoload :SCP,        File.join(CONFIGURATION_PATH, 'storage', 'scp')
       autoload :RSync,      File.join(CONFIGURATION_PATH, 'storage', 'rsync')
+      autoload :Local,      File.join(CONFIGURATION_PATH, 'storage', 'local')
     end
 
     module Syncer
@@ -111,11 +117,13 @@ module Backup
     autoload :Object,     File.join(STORAGE_PATH, 'object')
     autoload :S3,         File.join(STORAGE_PATH, 's3')
     autoload :CloudFiles, File.join(STORAGE_PATH, 'cloudfiles')
+    autoload :Ninefold,   File.join(STORAGE_PATH, 'ninefold')
     autoload :Dropbox,    File.join(STORAGE_PATH, 'dropbox')
     autoload :FTP,        File.join(STORAGE_PATH, 'ftp')
     autoload :SFTP,       File.join(STORAGE_PATH, 'sftp')
     autoload :SCP,        File.join(STORAGE_PATH, 'scp')
     autoload :RSync,      File.join(STORAGE_PATH, 'rsync')
+    autoload :Local,      File.join(STORAGE_PATH, 'local')
   end
 
   ##
@@ -139,9 +147,10 @@ module Backup
   ##
   # Autoload compressor files
   module Compressor
-    autoload :Base, File.join(COMPRESSOR_PATH, 'base')
-    autoload :Gzip, File.join(COMPRESSOR_PATH, 'gzip')
+    autoload :Base,  File.join(COMPRESSOR_PATH, 'base')
+    autoload :Gzip,  File.join(COMPRESSOR_PATH, 'gzip')
     autoload :Bzip2, File.join(COMPRESSOR_PATH, 'bzip2')
+    autoload :Lzma,  File.join(COMPRESSOR_PATH, 'lzma')
   end
 
   ##
@@ -155,11 +164,11 @@ module Backup
   ##
   # Autoload notification files
   module Notifier
-    autoload :Base,     File.join(NOTIFIER_PATH, 'base')
-    autoload :Binder,   File.join(NOTIFIER_PATH, 'binder')
-    autoload :Mail,     File.join(NOTIFIER_PATH, 'mail')
-    autoload :Twitter,  File.join(NOTIFIER_PATH, 'twitter')
-    autoload :Campfire, File.join(NOTIFIER_PATH, 'campfire')
+    autoload :Base,      File.join(NOTIFIER_PATH, 'base')
+    autoload :Binder,    File.join(NOTIFIER_PATH, 'binder')
+    autoload :Mail,      File.join(NOTIFIER_PATH, 'mail')
+    autoload :Twitter,   File.join(NOTIFIER_PATH, 'twitter')
+    autoload :Campfire,  File.join(NOTIFIER_PATH, 'campfire')
     autoload :Presently, File.join(NOTIFIER_PATH, 'presently')
   end
 
@@ -167,6 +176,7 @@ module Backup
   # Autoload exception classes
   module Exception
     autoload :CommandNotFound, File.join(EXCEPTION_PATH, 'command_not_found')
+    autoload :CommandFailed,   File.join(EXCEPTION_PATH, 'command_failed')
   end
 
   ##

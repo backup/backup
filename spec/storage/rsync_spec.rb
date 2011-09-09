@@ -22,7 +22,7 @@ describe Backup::Storage::RSync do
     rsync.username.should        == 'my_username'
     rsync.send(:password).should =~ /backup-rsync-password/
     rsync.ip.should              == '123.45.678.90'
-    rsync.port.should            == 22
+    rsync.port.should            == "-e 'ssh -p 22'"
     rsync.path.should            == 'backups/'
 
     File.read(rsync.instance_variable_get('@password_file').path).should == 'my_password'
@@ -43,15 +43,16 @@ describe Backup::Storage::RSync do
     rsync.username.should        == 'my_default_username'
     rsync.send(:password).should =~ /backup-rsync-password/
     rsync.ip.should              == '123.45.678.90'
-    rsync.port.should            == 22
+    rsync.port.should            == "-e 'ssh -p 22'"
 
     File.read(rsync.instance_variable_get('@password_file').path).should == 'my_password'
   end
 
   it 'should have its own defaults' do
     rsync = Backup::Storage::RSync.new
-    rsync.port.should == 22
-    rsync.path.should == 'backups'
+    rsync.port.should  == "-e 'ssh -p 22'"
+    rsync.path.should  == 'backups'
+    rsync.local.should == false
   end
 
   describe '#connection' do
@@ -76,7 +77,7 @@ describe Backup::Storage::RSync do
 
       rsync.expects(:create_remote_directories!)
       rsync.expects(:utility).returns('rsync')
-      rsync.expects(:run).with("rsync -z --port='22' --password-file='#{rsync.instance_variable_get('@password_file').path}' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar'")
+      rsync.expects(:run).with("rsync -z -e 'ssh -p 22' --password-file='#{rsync.instance_variable_get('@password_file').path}' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar'")
 
       rsync.send(:transfer!)
     end
@@ -88,7 +89,7 @@ describe Backup::Storage::RSync do
       rsync.password = nil
       rsync.expects(:create_remote_directories!)
       rsync.expects(:utility).returns('rsync')
-      rsync.expects(:run).with("rsync -z --port='22'  '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar'")
+      rsync.expects(:run).with("rsync -z -e 'ssh -p 22'  '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar'")
 
       rsync.send(:transfer!)
     end
@@ -125,6 +126,15 @@ describe Backup::Storage::RSync do
     it 'should invoke transfer!' do
       rsync.expects(:transfer!)
       rsync.perform!
+    end
+  end
+
+  describe '#local backups' do
+    it 'should save a local copy of backups' do
+      rsync.local = true
+      rsync.expects(:utility).returns('rsync')
+      rsync.expects(:run).with("rsync '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'backups/#{ Backup::TRIGGER }/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar'")
+      rsync.send(:transfer!)
     end
   end
 

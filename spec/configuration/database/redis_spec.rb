@@ -27,4 +27,20 @@ describe Backup::Configuration::Database::Redis do
     db.socket.should              == '/redis.sock'
     db.additional_options.should  == %w[my options]
   end
+
+  describe '#clear_defaults!' do
+    it 'should clear all the defaults, resetting them to nil' do
+      Backup::Configuration::Database::Redis.clear_defaults!
+
+      db = Backup::Configuration::Database::Redis
+      db.name.should                == nil
+      db.path.should                == nil
+      db.password.should            == nil
+      db.invoke_save.should         == nil
+      db.host.should                == nil
+      db.port.should                == nil
+      db.socket.should              == nil
+      db.additional_options.should  == nil
+    end
+  end
 end

@@ -79,7 +79,7 @@ module Backup
           config.oauth_token        = @oauth_token
           config.oauth_token_secret = @oauth_token_secret
         end
-        @twitter_client = ::Twitter.client
+        @twitter_client = ::Twitter::Client.new
       end
 
     end

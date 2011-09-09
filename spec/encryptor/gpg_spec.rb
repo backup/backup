@@ -45,7 +45,7 @@ WNa3g2n0nokA7Zr5FA4GXoEaYivfbvGiyNpd6P4okH+//G2p+3FIryu5xz+89D1b
 
   describe '#write_tmp_file!' do
     it do
-      tmp_file = mock('TmpFile')
+      tmp_file = Tempfile.new("foo")
       Tempfile.expects(:new).returns(tmp_file)
       tmp_file.expects(:write).with('secret')
       tmp_file.expects(:close)

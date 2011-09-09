@@ -27,4 +27,20 @@ describe Backup::Configuration::Database::MongoDB do
     db.additional_options.should == %w[my options]
     db.ipv6.should               == true
   end
+
+  describe '#clear_defaults!' do
+    it 'should clear all the defaults, resetting them to nil' do
+      Backup::Configuration::Database::MongoDB.clear_defaults!
+
+      db = Backup::Configuration::Database::MongoDB
+      db.name.should               == nil
+      db.username.should           == nil
+      db.password.should           == nil
+      db.host.should               == nil
+      db.port.should               == nil
+      db.only_collections.should   == nil
+      db.additional_options.should == nil
+      db.ipv6.should               == nil
+    end
+  end
 end

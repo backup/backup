@@ -8,13 +8,19 @@ module Backup
       # Finds all the object's getter methods and checks the global
       # configuration for these methods, if they respond then they will
       # assign the object's attribute(s) to that particular global configuration's attribute
-      def load_defaults!
-        c             = self.class.name.split('::')
-        configuration = Backup::Configuration.const_get(c[1]).const_get(c[2])
+      def load_defaults!(options = {})
+        c                  = self.class.name.split('::')
+        configuration      = Backup::Configuration.const_get(c[1]).const_get(c[2])
+        options[:except] ||= []
+        options[:only]   ||= []
 
         getter_methods.each do |attribute|
           if configuration.respond_to?(attribute)
-            unless configuration.send(attribute).nil?
+            if options[:only].any? and options[:only].include?(attribute)
+              self.send("#{attribute}=", configuration.send(attribute))
+            elsif options[:except].any? and !options[:except].include?(attribute)
+              self.send("#{attribute}=", configuration.send(attribute))
+            elsif options[:only].empty? and options[:except].empty?
               self.send("#{attribute}=", configuration.send(attribute))
             end
           end

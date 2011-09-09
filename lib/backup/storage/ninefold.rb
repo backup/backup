@@ -1,32 +1,26 @@
 # encoding: utf-8
 
 ##
-# Only load the Fog gem when the Backup::Storage::S3 class is loaded
+# Only load the Fog gem when the Backup::Storage::Ninefold class is loaded
 Backup::Dependency.load('fog')
 
 module Backup
   module Storage
-    class S3 < Base
+    class Ninefold < Base
 
       ##
-      # Amazon Simple Storage Service (S3) Credentials
-      attr_accessor :access_key_id, :secret_access_key
+      # Ninefold Credentials
+      attr_accessor :storage_token, :storage_secret
 
       ##
-      # Amazon S3 bucket name and path
-      attr_accessor :bucket, :path
+      # Ninefold directory path
+      attr_accessor :path
 
       ##
-      # Region of the specified S3 bucket
-      attr_accessor :region
-
-      ##
-      # Creates a new instance of the Amazon S3 storage object
+      # Creates a new instance of the Ninefold storage object
       # First it sets the defaults (if any exist) and then evaluates
       # the configuration block which may overwrite these defaults
       #
-      # Currently available regions:
-      #   eu-west-1, us-east-1, ap-southeast-1, us-west-1
       def initialize(&block)
         load_defaults!
 
@@ -44,9 +38,9 @@ module Backup
       end
 
       ##
-      # This is the provider that Fog uses for the S3 Storage
+      # This is the provider that Fog uses for the Ninefold storage
       def provider
-        'AWS'
+        'Ninefold'
       end
 
       ##
@@ -66,26 +60,25 @@ module Backup
       # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
         Fog::Storage.new(
-          :provider               => provider,
-          :aws_access_key_id      => access_key_id,
-          :aws_secret_access_key  => secret_access_key,
-          :region                 => region
+          :provider                => provider,
+          :ninefold_storage_token  => storage_token,
+          :ninefold_storage_secret => storage_secret
         )
       end
 
       ##
-      # Transfers the archived file to the specified Amazon S3 bucket
+      # Transfers the archived file to the specified directory
       def transfer!
         begin
-          Logger.message("#{ self.class } started transferring \"#{ remote_file }\" to bucket \"#{ bucket }\"")
-          connection.sync_clock
-          connection.put_object(
-            bucket,
-            File.join(remote_path, remote_file),
-            File.open(File.join(local_path, local_file))
+          Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
+          directory   = connection.directories.get remote_path
+          directory ||= connection.directories.create(:key => remote_path)
+          directory.files.create(
+            :key  => remote_file,
+            :body => File.open(File.join(local_path, local_file))
           )
         rescue Excon::Errors::NotFound
-          raise "An error occurred while trying to transfer the backup, please make sure the bucket exists."
+          raise "An error occurred while trying to transfer the file."
         end
       end
 
@@ -93,8 +86,8 @@ module Backup
       # Removes the transferred archive file from the Amazon S3 bucket
       def remove!
         begin
-          connection.sync_clock
-          connection.delete_object(bucket, File.join(remote_path, remote_file))
+          directory = connection.directories.get remote_path
+          directory.files.get(remote_file).destroy
         rescue Excon::Errors::SocketError; end
       end
 

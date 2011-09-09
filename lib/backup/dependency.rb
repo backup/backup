@@ -18,13 +18,13 @@ module Backup
       {
         'fog' => {
           :require => 'fog',
-          :version => '~> 0.7.0',
+          :version => '>= 0.11.0',
           :for     => 'Amazon S3, Rackspace Cloud Files (S3, CloudFiles Storages)'
         },
 
         'dropbox' => {
           :require => 'dropbox',
-          :version => '~> 1.2.3',
+          :version => '~> 1.3.0',
           :for     => 'Dropbox Web Service (Dropbox Storage)'
         },
 
@@ -42,19 +42,19 @@ module Backup
 
         'net-ssh' => {
           :require => 'net/ssh',
-          :version => '~> 2.1.3',
+          :version => '~> 2.1.4',
           :for     => 'SSH Protocol (SSH Storage)'
         },
 
         'mail' => {
           :require => 'mail',
-          :version => '~> 2.2.15',
+          :version => '~> 2.3.0',
           :for     => 'Sending Emails (Mail Notifier)'
         },
 
         'twitter' => {
           :require => 'twitter',
-          :version => '~> 1.1.2',
+          :version => '>= 1.7.1',
           :for     => 'Sending Twitter Updates (Twitter Notifier)'
         },
 
@@ -68,6 +68,12 @@ module Backup
           :require => 'json',
           :version => '~> 1.5.1',
           :for     => 'Parsing JSON for HTTParty'
+        },
+
+        'popen4' => {
+          :require => 'popen4',
+          :version => '~> 0.1.2',
+          :for     => 'Executing system commands and receiving output'
         }
       }
     end
@@ -81,13 +87,12 @@ module Backup
         gem(name, all[name][:version])
         require(all[name][:require])
       rescue LoadError
-        Backup::Logger.error("Dependency missing. Please install #{name} version #{all[name][:version]} and try again.")
-        puts "\n\s\sgem install #{name} -v '#{all[name][:version]}'\n\n"
-        puts "Dependency required for:"
+        Backup::Logger.error("Dependency missing.")
+        puts "\nDependency required for:"
         puts "\n\s\s#{all[name][:for]}"
-        puts "\nTrying to install the #{name} gem for you.. please wait."
-        puts "Once installed, retry the backup procedure.\n\n"
-        puts run("#{ utility(:gem) } install #{name} -v '#{all[name][:version]}'")
+        puts "\nTo install the gem, issue the following command:"
+        puts "\n\s\sgem install #{name} -v '#{all[name][:version]}'"
+        puts "\nPlease try again after installing the missing dependency."
         exit
       end
     end

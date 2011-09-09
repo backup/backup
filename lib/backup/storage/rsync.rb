@@ -26,14 +26,19 @@ module Backup
       attr_accessor :path
 
       ##
+      # Flag to use local backups
+      attr_accessor :local
+
+      ##
       # Creates a new instance of the RSync storage object
       # First it sets the defaults (if any exist) and then evaluates
       # the configuration block which may overwrite these defaults
       def initialize(&block)
         load_defaults!
 
-        @port ||= 22
-        @path ||= 'backups'
+        @port   ||= 22
+        @path   ||= 'backups'
+        @local  ||= false
 
         instance_eval(&block) if block_given?
         write_password_file!
@@ -55,6 +60,25 @@ module Backup
         remove_password_file!
       end
 
+      ##
+      # Returns Rsync syntax for defining a port to connect to
+      def port
+        "-e 'ssh -p #{@port}'"
+      end
+
+      ##
+      # Returns Rsync syntax for using a password file
+      def password
+        "--password-file='#{@password_file.path}'" unless @password.nil?
+      end
+
+      ##
+      # RSync options
+      # -z = Compresses the bytes that will be transferred to reduce bandwidth usage
+      def options
+        "-z"
+      end
+
     private
 
       ##
@@ -64,7 +88,7 @@ module Backup
       # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
       # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
-        Net::SSH.start(ip, username, :password => @password, :port => port)
+        Net::SSH.start(ip, username, :password => @password, :port => @port)
       end
 
       ##
@@ -72,7 +96,11 @@ module Backup
       def transfer!
         Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
         create_remote_directories!
-        run("#{ utility(:rsync) } #{ options } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file[20..-1]) }'")
+        if @local
+          run("#{ utility(:rsync) } '#{ File.join(local_path, local_file) }' '#{ File.join(remote_path, TIME+'.'+remote_file[20..-1]) }'")
+        else
+          run("#{ utility(:rsync) } #{ options } #{ port } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file[20..-1]) }'")
+        end
       end
 
       ##
@@ -88,22 +116,11 @@ module Backup
       # Creates (if they don't exist yet) all the directories on the remote
       # server in order to upload the backup file.
       def create_remote_directories!
-        connection.exec!("mkdir -p '#{ remote_path }'")
-      end
-
-      ##
-      # RSync options
-      # -z     = Compresses the bytes that will be transferred to reduce bandwidth usage
-      # --port = the port to connect to through SSH
-      # -Phv   = debug options
-      def options
-        "-z --port='#{ port }'"
-      end
-
-      ##
-      # Returns Rsync syntax for using a password file
-      def password
-        "--password-file='#{@password_file.path}'" unless @password.nil?
+        if @local
+          mkdir(remote_path)
+        else
+          connection.exec!("mkdir -p '#{ remote_path }'")
+        end
       end
 
       ##
