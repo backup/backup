@@ -7,7 +7,7 @@
 
 guard 'rspec',
   :version => 2,
-  :rvm     => ['1.9.2', '1.8.7', 'ree'],
+  :rvm     => ['1.9.3', '1.9.2', '1.8.7', 'ree'],
   :bundler => true,
   :cli     => '--color --format Fuubar' do
 

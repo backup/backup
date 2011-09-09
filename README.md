@@ -66,7 +66,8 @@ Storage Features
 - Backup Cycling, applies to:
   - Amazon Simple Storage Service (S3)
   - Rackspace Cloud Files (Mosso)
-  - Dropbox
+  - Ninefold Cloud Storage
+  - Dropbox Web Service
   - Remote Servers *(Only Protocols: FTP, SFTP, SCP)*
 - Incremental Backups, applies to:
   - Remote Servers *(Only Protocols: RSync)*
@@ -111,6 +112,7 @@ Notifiers
 Supported Ruby versions (Tested with RSpec)
 -------------------------------------------
 
+- Ruby 1.9.3-preview1
 - Ruby 1.9.2
 - Ruby 1.8.7
 - Ruby Enterprise Edition 1.8.7
@@ -343,11 +345,12 @@ Easily run tests against all three Ruby versions
 Install [RVM](https://rvm.beginrescueend.com/) and use it to install Ruby 1.9.2, 1.8.7 and REE.
 
     rvm get latest && rvm reload
-    rvm install 1.9.2 && rvm install 1.8.7 && rvm install ree
+    rvm install 1.9.3 && rvm install 1.9.2 && rvm install 1.8.7 && rvm install ree
 
 Once these are installed, go ahead and install all the necessary dependencies.
 
     cd backup
+    rvm use 1.9.3 && gem install bundler && bundle install
     rvm use 1.9.2 && gem install bundler && bundle install
     rvm use 1.8.7 && gem install bundler && bundle install
     rvm use ree   && gem install bundler && bundle install
