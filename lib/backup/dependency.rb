@@ -42,7 +42,7 @@ module Backup
 
         'net-ssh' => {
           :require => 'net/ssh',
-          :version => '~> 2.1.3',
+          :version => '~> 2.1.4',
           :for     => 'SSH Protocol (SSH Storage)'
         },
 
