@@ -65,9 +65,12 @@ module Backup
         if cache_exists?
           begin
             cached_session = ::Dropbox::Session.deserialize(File.read(cached_file))
-            return cached_session if cached_session.authorized?
+            if cached_session.authorized?
+              Logger.message "Session data loaded from cache!"
+              return cached_session
+            end
           rescue ArgumentError => error
-            Logger.warn "Could not read from cache, session data might be corrupt."
+            Logger.warn "Could not read session data from cache. Cache data might be corrupt."
           end
         end
 
@@ -98,14 +101,12 @@ module Backup
       def create_write_and_return_new_session!
         session      = ::Dropbox::Session.new(api_key, api_secret)
         session.mode = :dropbox
-        Logger.message "Visit: #{session.authorize_url}"
-        Logger.message "to authorize a session for your Dropbox account."
+        Logger.message "Open the following URL in a browser to authorize a session for your Dropbox account:"
         Logger.message ""
-        Logger.message "When you've successfully authorized the session, hit enter."
-        Timeout::timeout(180) do
-          STDIN.gets
-        end
-        Logger.message "Authorizing.."
+        Logger.message "\s\s#{session.authorize_url}"
+        Logger.message ""
+        Logger.message "Once Dropbox says you're authorized, hit enter to proceed."
+        Timeout::timeout(180) { STDIN.gets }
         begin
           session.authorize
         rescue OAuth::Unauthorized => error
@@ -114,10 +115,12 @@ module Backup
         end
         Logger.message "Authorized!"
 
-        Logger.message "Caching session data to #{cached_file}.."
+        Logger.message "Caching session data to file: #{cached_file}.."
         write_cache!(session)
-        Logger.message "Done! You will no longer need to manually authorize via an URL on this machine for this Dropbox account."
-        Logger.message "Note: If you run Backup with Dropbox on other machines, you will need to authorize them to use your Dropbox account as well."
+        Logger.message "Cache data written! You will no longer need to manually authorize this Dropbox account via an URL on this machine."
+        Logger.message "Note: If you run Backup with this Dropbox account on other machines, you will need to either authorize them the same way,"
+        Logger.message "\s\sor simply copy over #{cached_file} to the cache directory"
+        Logger.message "\s\son your other machines to use this Dropbox account there as well."
 
         session
       end
