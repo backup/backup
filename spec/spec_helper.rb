@@ -23,3 +23,5 @@ end
 unless @put_ruby_version
   puts @put_ruby_version = "\n\nRuby version: #{ENV['rvm_ruby_string']}\n\n"
 end
+
+Backup::Logger.stubs(:to_file)
