@@ -131,6 +131,8 @@ describe Backup::Storage::RSync do
 
   describe '#local backups' do
     it 'should save a local copy of backups' do
+      Backup::Logger.stubs(:message)
+      rsync.expects(:create_remote_directories!)
       rsync.local = true
       rsync.expects(:utility).returns('rsync')
       rsync.expects(:run).with("rsync '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'backups/#{ Backup::TRIGGER }/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar'")
