@@ -54,7 +54,6 @@ describe Backup::Encryptor::OpenSSL do
     let(:encryptor) { Backup::Encryptor::OpenSSL.new }
     before do
       Backup::Model.extension = 'tar'
-      Backup::Logger.stubs(:message)
       [:utility, :run, :rm].each { |method| encryptor.stubs(method) }
     end
 

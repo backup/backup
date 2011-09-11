@@ -109,7 +109,6 @@ describe Backup::Database::MongoDB do
 
   describe '#perform!' do
     before do
-      Backup::Logger.stubs(:message)
       db.stubs(:utility).returns('mongodump')
       db.stubs(:mkdir)
       db.stubs(:run)

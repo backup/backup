@@ -6,7 +6,6 @@ describe Backup::Database::Redis do
 
   before do
     Backup::Database::Redis.any_instance.stubs(:load_defaults!)
-    Backup::Logger.stubs(:error)
   end
 
   let(:db) do
@@ -97,7 +96,6 @@ describe Backup::Database::Redis do
 
   describe '#perform!' do
     before do
-      Backup::Logger.stubs(:message)
       File.stubs(:exist?).returns(true)
       db.stubs(:utility).returns('redis-cli')
       db.stubs(:mkdir)

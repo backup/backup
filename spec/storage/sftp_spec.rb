@@ -65,7 +65,6 @@ describe Backup::Storage::SFTP do
     before do
       Net::SFTP.stubs(:start).returns(connection)
       sftp.stubs(:create_remote_directories!)
-      Backup::Logger.stubs(:message)
     end
 
     it 'should transfer the provided file to the path' do

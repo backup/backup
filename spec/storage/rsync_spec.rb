@@ -68,7 +68,6 @@ describe Backup::Storage::RSync do
     before do
       Net::SSH.stubs(:start).returns(connection)
       rsync.stubs(:create_remote_directories!)
-      Backup::Logger.stubs(:message)
     end
 
     it 'should transfer the provided file to the path' do
@@ -131,7 +130,6 @@ describe Backup::Storage::RSync do
 
   describe '#local backups' do
     it 'should save a local copy of backups' do
-      Backup::Logger.stubs(:message)
       rsync.expects(:create_remote_directories!)
       rsync.local = true
       rsync.expects(:utility).returns('rsync')

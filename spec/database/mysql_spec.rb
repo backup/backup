@@ -131,7 +131,6 @@ describe Backup::Database::MySQL do
 
   describe '#perform!' do
     before do
-      Backup::Logger.stubs(:message)
       db.stubs(:utility).returns('mysqldump')
       db.stubs(:mkdir)
       db.stubs(:run)

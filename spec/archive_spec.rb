@@ -58,7 +58,6 @@ describe Backup::Archive do
   describe '#perform!' do
     before do
       [:mkdir, :run, :utility].each { |method| archive.stubs(method) }
-      Backup::Logger.stubs(:message)
     end
 
     context 'when both paths were added and paths that should be excluded were added' do

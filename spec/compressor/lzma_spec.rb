@@ -22,7 +22,6 @@ describe Backup::Compressor::Lzma do
   describe '#perform!' do
     before do
       [:run, :utility].each { |method| compressor.stubs(method) }
-      Backup::Logger.stubs(:message)
     end
 
     it 'should perform the compression' do

@@ -4,7 +4,6 @@ require File.dirname(__FILE__) + '/../../spec_helper'
 
 describe Backup::Configuration::Storage::Dropbox do
   before do
-    Backup::Logger.stubs(:warn)
     Backup::Configuration::Storage::Dropbox.defaults do |db|
       db.api_key     = 'my_api_key'
       db.api_secret  = 'my_secret'
