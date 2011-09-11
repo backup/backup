@@ -55,7 +55,7 @@ module Backup
       # Automatically set TLS
       # Example: true
       attr_accessor :enable_starttls_auto
-      
+
       ##
       # OpenSSL Verify Mode
       # Example: none - Only use this option for a self-signed and/or wildcard certificate
