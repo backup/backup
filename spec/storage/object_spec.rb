@@ -59,7 +59,7 @@ describe Backup::Storage::Object do
         obj_1 = Backup::Storage::S3.new; obj_1.time = '2009.00.00.00.00.00'
         obj_2 = Backup::Storage::S3.new; obj_2.time = '2011.00.00.00.00.00'
 
-        File.expects(:exist?).returns(true)
+        File.expects(:exist?).at_least_once.returns(true)
         YAML.expects(:load_file).with(
           File.join(Backup::DATA_PATH, Backup::TRIGGER, 's3.yml')
         ).returns(YAML.load([obj_1, obj_2, obj_3].to_yaml))
