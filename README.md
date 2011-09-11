@@ -3,6 +3,7 @@ Backup 3
 
 Backup is a RubyGem, written for Linux and Mac OSX, that allows you to easily perform backup operations on both your remote, as well as your local environment. It provides you with an elegant DSL in Ruby for modeling (configuring) your backups. Backup has built-in support for various databases, storage protocols/services, syncers, compressors, encryptors and notifiers which you can mix and match. It was built with modularity, extensibility and simplicity in mind.
 
+[![Build Status](https://secure.travis-ci.org/meskyanichi/backup.png)](http://travis-ci.org/meskyanichi/backup)
 
 Author
 ------
