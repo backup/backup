@@ -22,7 +22,7 @@ module Backup
   COMPRESSORS = ['Gzip', 'Bzip2', 'Lzma']
   ENCRYPTORS  = ['OpenSSL', 'GPG']
   SYNCERS     = ['RSync', 'S3']
-  NOTIFIERS   = ['Mail', 'Twitter', 'Campfire', 'Presently']
+  NOTIFIERS   = ['Mail', 'Twitter', 'Campfire', 'Presently', 'Sendmail']
 
   ##
   # Backup's internal paths
@@ -65,6 +65,7 @@ module Backup
     module Notifier
       autoload :Base,      File.join(CONFIGURATION_PATH, 'notifier', 'base')
       autoload :Mail,      File.join(CONFIGURATION_PATH, 'notifier', 'mail')
+      autoload :Sendmail,  File.join(CONFIGURATION_PATH, 'notifier', 'sendmail')
       autoload :Twitter,   File.join(CONFIGURATION_PATH, 'notifier', 'twitter')
       autoload :Campfire,  File.join(CONFIGURATION_PATH, 'notifier', 'campfire')
       autoload :Presently, File.join(CONFIGURATION_PATH, 'notifier', 'presently')
@@ -167,6 +168,7 @@ module Backup
     autoload :Base,      File.join(NOTIFIER_PATH, 'base')
     autoload :Binder,    File.join(NOTIFIER_PATH, 'binder')
     autoload :Mail,      File.join(NOTIFIER_PATH, 'mail')
+    autoload :Sendmail,  File.join(NOTIFIER_PATH, 'sendmail')
     autoload :Twitter,   File.join(NOTIFIER_PATH, 'twitter')
     autoload :Campfire,  File.join(NOTIFIER_PATH, 'campfire')
     autoload :Presently, File.join(NOTIFIER_PATH, 'presently')

@@ -1,0 +1,10 @@
+  ##
+  # Mail [Notifier]
+  #
+  notify_by Sendmail do |mail|
+    mail.on_success           = true
+    mail.on_failure           = true
+
+    mail.from                 = 'sender@email.com'
+    mail.to                   = 'receiver@email.com'
+  end
