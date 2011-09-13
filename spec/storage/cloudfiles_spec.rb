@@ -65,7 +65,6 @@ describe Backup::Storage::CloudFiles do
     let(:connection) { mock('Fog::Storage') }
     before do
       Fog::Storage.stubs(:new).returns(connection)
-      Backup::Logger.stubs(:message)
     end
 
     it 'should transfer the provided file to the container' do

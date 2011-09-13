@@ -123,11 +123,6 @@ describe Backup::Syncer::S3 do
   end
 
   describe '#perform' do
-    before do
-      # stub out the silent, because we're not testing logger logic here
-      Backup::Logger.stubs(:silent)
-    end
-
     it 'should sync two directories' do
       s3.expects(:utility).with(:s3sync).returns(:s3sync).twice
 

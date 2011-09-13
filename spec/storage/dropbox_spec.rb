@@ -19,7 +19,6 @@ describe Backup::Storage::Dropbox do
   end
 
   before do
-    Backup::Logger.stubs(:warn)
     Backup::Configuration::Storage::Dropbox.clear_defaults!
     STDIN.stubs(:gets)
   end
@@ -57,7 +56,6 @@ describe Backup::Storage::Dropbox do
   describe '#connection' do
     context "when the session cache has not yet been written" do
       before do
-        Backup::Logger.stubs(:message)
         db.stubs(:gets)
       end
 
@@ -75,7 +73,6 @@ describe Backup::Storage::Dropbox do
 
     context "when the session cache has already been written" do
       before do
-        Backup::Logger.stubs(:message)
         db.stubs(:gets)
       end
 
@@ -105,7 +102,6 @@ describe Backup::Storage::Dropbox do
 
   describe '#transfer!' do
     before do
-      Backup::Logger.stubs(:message)
       connection.stubs(:upload)
       connection.stubs(:delete)
     end

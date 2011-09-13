@@ -202,7 +202,6 @@ describe Backup::Model do
   describe '#package!' do
     before do
       [:utility, :run].each { |method| model.stubs(method) }
-      Backup::Logger.stubs(:message)
     end
 
     it 'should package the folder' do
@@ -220,7 +219,6 @@ describe Backup::Model do
   describe '#clean!' do
     before do
       [:utility, :run, :rm].each { |method| model.stubs(method) }
-      Backup::Logger.stubs(:message)
     end
 
     it 'should remove the temporary files and folders that were created' do

@@ -84,7 +84,6 @@ describe Backup::Storage::FTP do
     before do
       Net::FTP.stubs(:new).returns(connection)
       ftp.stubs(:create_remote_directories!)
-      Backup::Logger.stubs(:message)
     end
 
     it 'should transfer the provided file to the path' do

@@ -65,7 +65,6 @@ describe Backup::Storage::SCP do
     before do
       Net::SSH.stubs(:start).returns(connection)
       scp.stubs(:create_remote_directories!)
-      Backup::Logger.stubs(:message)
     end
 
     it 'should transfer the provided file to the path' do

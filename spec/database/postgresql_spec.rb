@@ -166,7 +166,6 @@ describe Backup::Database::PostgreSQL do
 
   describe '#perform!' do
     before do
-      Backup::Logger.stubs(:message)
       db.stubs(:utility).returns('pg_dump')
       db.stubs(:mkdir)
       db.stubs(:run)

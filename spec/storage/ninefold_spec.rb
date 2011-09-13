@@ -62,48 +62,47 @@ describe Backup::Storage::Ninefold do
     let(:directories) { mock('Fog::Storage::Ninefold::Directories') }
     let(:directory)   { mock('Fog::Storage::Ninefold::Directory') }
     let(:files)       { mock('Fog::Storage::Ninefold::Files') }
-    
+
     before do
       Fog::Storage.stubs(:new).returns(connection)
-      Backup::Logger.stubs(:message)
       connection.stubs(:directories).returns(directories)
       directory.stubs(:files).returns(files)
     end
-    
+
     context 'directory already exists' do
       it 'should transfer the provided file to the directory' do
         Backup::Model.new('blah', 'blah') {}
         file = mock("Backup::Storage::Ninefold::File")
         File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
         ninefold.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
-        
+
         directories.expects(:get).with('backups/myapp').returns(directory)
         files.expects(:create) do |options|
           options[:key].should == "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"
           options[:body].should == file
         end
-        
+
         ninefold.send(:transfer!)
       end
     end
-    
+
     context 'directory does not yet exist' do
       it 'should transfer the provided file to the directory' do
         Backup::Model.new('blah', 'blah') {}
         file = mock("Backup::Storage::Ninefold::File")
         File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
         ninefold.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
-        
+
         directories.expects(:get).with('backups/myapp').returns(nil)
         directories.expects(:create) { |options|
           options[:key].should == 'backups/myapp'
         }.returns(directory)
-        
+
         files.expects(:create) do |options|
           options[:key].should == "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"
           options[:body].should == file
         end
-        
+
         ninefold.send(:transfer!)
       end
     end
@@ -115,7 +114,7 @@ describe Backup::Storage::Ninefold do
     let(:directory)   { mock('Fog::Storage::Ninefold::Directory') }
     let(:files)       { mock('Fog::Storage::Ninefold::Files') }
     let(:file)        { mock('Fog::Storage::Ninefold::File') }
-    
+
     before do
       Fog::Storage.stubs(:new).returns(connection)
       connection.stubs(:directories).returns(directories)
@@ -124,11 +123,11 @@ describe Backup::Storage::Ninefold do
 
     it 'should remove the file from the bucket' do
       ninefold.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
-      
+
       directories.expects(:get).with('backups/myapp').returns(directory)
       files.expects(:get).with("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").returns(file)
       file.expects(:destroy)
-      
+
       ninefold.send(:remove!)
     end
   end

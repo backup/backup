@@ -40,7 +40,6 @@ describe Backup::Storage::Local do
   describe '#transfer!' do
     before do
       local.stubs(:create_local_directories!)
-      Backup::Logger.stubs(:message)
     end
 
     it 'should transfer the provided file to the path' do

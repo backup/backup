@@ -7,19 +7,19 @@ require 'tempfile'
 require 'fileutils'
 
 ##
-# Load Thor for the Command Line Interface
+# Load Thor for the CLI and POpen4 for reading unix process status
 begin
   require 'thor'
+  require 'popen4'
 rescue LoadError
-  puts 'Backup uses Thor as CLI (Command Line Interface).'
-  puts 'Please install Thor first: `gem install thor`'
+  puts "\nBackup requires Thor to load the CLI (Command Line Interface) and POpen4 to determine the status of unix processes."
+  puts "Please install both Thor and POpen4 first:\n\ngem install thor -v '~> 0.14.6'\ngem install popen4 -v '~> 0.1.2'"
+  exit 1
 end
 
 ##
 # Load the Backup source
 require File.expand_path("../../lib/backup", __FILE__)
-
-Backup::Dependency.load('popen4')
 
 ##
 # Build the Backup Command Line Interface using Thor
@@ -82,15 +82,15 @@ class BackupCLI < Thor
     end
 
     ##
-    # Ensure the CACHE_PATH, TMP_PATH and LOG_PATH are created if they do not yet exist
-    Array.new([Backup::CACHE_PATH, Backup::TMP_PATH, Backup::LOG_PATH]).each do |path|
-      FileUtils.mkdir_p(path)
-    end
-
-    ##
     # Silence Backup::Logger from printing to STDOUT, if --quiet was specified
     if options[:quiet]
       Backup::Logger.send(:const_set, :QUIET, options[:quiet])
+    end
+
+    ##
+    # Ensure the CACHE_PATH, TMP_PATH and LOG_PATH are created if they do not yet exist
+    Array.new([Backup::CACHE_PATH, Backup::TMP_PATH, Backup::LOG_PATH]).each do |path|
+      FileUtils.mkdir_p(path)
     end
 
     ##
