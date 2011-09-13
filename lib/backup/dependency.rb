@@ -69,12 +69,6 @@ module Backup
           :version => '~> 1.5.1',
           :for     => 'Parsing JSON for HTTParty'
         },
-
-        'popen4' => {
-          :require => 'popen4',
-          :version => '~> 0.1.2',
-          :for     => 'Executing system commands and receiving output'
-        }
       }
     end
 

@@ -25,7 +25,8 @@ Gem::Specification.new do |gem|
   gem.executables   = ['backup']
 
   ##
-  # Production gem dependencies
-  gem.add_dependency 'thor', ['~> 0.14.6']
+  # Gem dependencies
+  gem.add_dependency 'thor',   ['~> 0.14.6']
+  gem.add_dependency 'popen4', ['~> 0.1.2']
 
 end
