@@ -10,7 +10,7 @@ module Backup
 
       ##
       # Rackspace Cloud Files Credentials
-      attr_accessor :username, :api_key
+      attr_accessor :username, :api_key, :auth_url
 
       ##
       # Rackspace Cloud Files container name and path
@@ -61,7 +61,8 @@ module Backup
         Fog::Storage.new(
           :provider           => provider,
           :rackspace_username => username,
-          :rackspace_api_key  => api_key
+          :rackspace_api_key  => api_key,
+          :rackspace_auth_url => auth_url
         )
       end
 
