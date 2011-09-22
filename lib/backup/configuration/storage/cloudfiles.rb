@@ -8,7 +8,7 @@ module Backup
 
           ##
           # Rackspace Cloud Files Credentials
-          attr_accessor :api_key, :username
+          attr_accessor :api_key, :username, :auth_url
 
           ##
           # Rackspace Cloud Files container name and path
