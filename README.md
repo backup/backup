@@ -4,6 +4,8 @@ Backup 3
 Backup is a RubyGem, written for Linux and Mac OSX, that allows you to easily perform backup operations on both your remote, as well as your local environment. It provides you with an elegant DSL in Ruby for modeling (configuring) your backups. Backup has built-in support for various databases, storage protocols/services, syncers, compressors, encryptors and notifiers which you can mix and match. It was built with modularity, extensibility and simplicity in mind.
 
 [![Build Status](https://secure.travis-ci.org/meskyanichi/backup.png)](http://travis-ci.org/meskyanichi/backup)
+[![Still Maintained](http://stillmaintained.com/meskyanichi/backup.png)](http://stillmaintained.com/meskyanichi/backup)
+
 
 Author
 ------
@@ -11,6 +13,14 @@ Author
 **[Michael van Rooijen](http://michaelvanrooijen.com/) ( [@meskyanichi](http://twitter.com/#!/meskyanichi) )**
 
 Drop me a message for any questions, suggestions, requests, bugs or submit them to the [issue log](https://github.com/meskyanichi/backup/issues).
+
+
+Please Donate!
+--------------
+
+Please [DONATE](http://pledgie.com/campaigns/16065) to the Backup project. Backup was a huge amount of work and every donation received is encouraging and supports Backup's continued development! Thanks!
+
+[![Donate to Backup](http://pledgie.com/campaigns/16065.png)](http://pledgie.com/campaigns/16065)
 
 
 Installation
@@ -21,6 +31,7 @@ To get the latest stable version
     gem install backup
 
 You can view the list of released versions over at [RubyGems.org (Backup)](https://rubygems.org/gems/backup/versions)
+
 
 Getting Started
 ---------------
