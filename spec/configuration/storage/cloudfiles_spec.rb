@@ -9,6 +9,7 @@ describe Backup::Configuration::Storage::CloudFiles do
       cf.api_key   = 'my_api_key'
       cf.container = 'my_container'
       cf.path      = 'my_backups'
+      cf.auth_url  = 'lon.auth.api.rackspacecloud.com'
     end
   end
 
@@ -18,6 +19,7 @@ describe Backup::Configuration::Storage::CloudFiles do
     cf.api_key.should   == 'my_api_key'
     cf.container.should == 'my_container'
     cf.path.should      == 'my_backups'
+    cf.auth_url.should  == 'lon.auth.api.rackspacecloud.com'
   end
 
   describe '#clear_defaults!' do
@@ -29,6 +31,7 @@ describe Backup::Configuration::Storage::CloudFiles do
       cf.api_key.should   == nil
       cf.container.should == nil
       cf.path.should      == nil
+      cf.auth_url.should  == nil
     end
   end
 end
