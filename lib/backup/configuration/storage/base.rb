@@ -11,6 +11,10 @@ module Backup
           # If the limit exceeds it will remove the oldest backup to make room for the newest
           attr_accessor :keep
 
+          attr_accessor :split_archive_file
+
+          attr_accessor :archive_file_chunk_size
+
         end
       end
     end

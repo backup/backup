@@ -52,7 +52,7 @@ module Backup
         cycle!
       end
 
-    private
+      private
 
       ##
       # The initial connection to Dropbox will provide the user with an authorization url.
@@ -81,17 +81,22 @@ module Backup
       ##
       # Transfers the archived file to the specified Dropbox folder
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
-        connection.upload(File.join(local_path, local_file), remote_path, :timeout => timeout)
+        split!
+        local_chunks.each do |chunk|
+          Logger.message("#{ self.class } started transferring \"#{ File.basename(chunk) }\".")
+          connection.upload(chunk, remote_path, :timeout => timeout)
+        end
       end
 
       ##
       # Removes the transferred archive file from the Dropbox folder
       def remove!
-        begin
-          connection.delete(File.join(remote_path, remote_file))
-        rescue ::Dropbox::FileNotFoundError
-          Logger.warn "File \"#{ File.join(remote_path, remote_file) }\" does not exist, skipping removal."
+        remote_chunks.each do |chunk|
+          begin
+            connection.delete(chunk)
+          rescue ::Dropbox::FileNotFoundError
+            Logger.warn "File \"#{ chunk }\" does not exist, skipping removal."
+          end
         end
       end
 
@@ -99,7 +104,7 @@ module Backup
       # Create a new session, write a serialized version of it to the
       # .cache directory, and return the session object
       def create_write_and_return_new_session!
-        session      = ::Dropbox::Session.new(api_key, api_secret)
+        session = ::Dropbox::Session.new(api_key, api_secret)
         session.mode = :dropbox
         Logger.message "Open the following URL in a browser to authorize a session for your Dropbox account:"
         Logger.message ""
@@ -145,7 +150,7 @@ module Backup
         end
       end
 
-    public # DEPRECATED METHODS #############################################
+      public # DEPRECATED METHODS #############################################
 
       def email
         Logger.warn "[DEPRECATED] Backup::Storage::Dropbox.email is deprecated and will be removed at some point."

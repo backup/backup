@@ -4,6 +4,7 @@ module Backup
   module Storage
     class Base
       include Backup::Configuration::Helpers
+      include Backup::Splitter
 
       ##
       # The time when the backup initiated (in format: 2011.02.20.03.29.59)

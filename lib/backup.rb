@@ -55,6 +55,7 @@ module Backup
   autoload :Dependency, File.join(LIBRARY_PATH, 'dependency')
   autoload :Logger,     File.join(LIBRARY_PATH, 'logger')
   autoload :Version,    File.join(LIBRARY_PATH, 'version')
+  autoload :Splitter,   File.join(LIBRARY_PATH, 'splitter')
 
   ##
   # Autoload Backup configuration files

@@ -109,6 +109,7 @@ describe Backup::Storage::Dropbox do
     it do
       Backup::Logger.expects(:message).with("Backup::Storage::Dropbox started transferring \"#{ Backup::TIME }.#{ Backup::TRIGGER }.tar\".")
       db.send(:transfer!)
+      db.number_of_archive_chunks.should == 1
     end
 
     it do
@@ -119,7 +120,29 @@ describe Backup::Storage::Dropbox do
       )
 
       db.send(:transfer!)
+      db.number_of_archive_chunks.should == 1
     end
+
+    it do
+      db.split_archive_file = true
+      db.archive_file_chunk_size = 100
+      File.expects(:size?).with(File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")).returns(130 * 1000 * 1000)
+      db.expects(:run).once
+      connection.expects(:upload).with(
+        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-0"),
+        File.join('backups', Backup::TRIGGER),
+        :timeout => db.timeout
+      )
+      connection.expects(:upload).with(
+        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-1"),
+        File.join('backups', Backup::TRIGGER),
+        :timeout => db.timeout
+      )
+
+      db.send(:transfer!)
+      db.number_of_archive_chunks.should == 2
+    end
+
   end
 
   describe '#remove!' do
@@ -130,6 +153,21 @@ describe Backup::Storage::Dropbox do
 
       db.send(:remove!)
     end
+
+    it do
+      db.split_archive_file = true
+      db.archive_file_chunk_size = 100
+      db.number_of_archive_chunks = 2
+      connection.expects(:delete).with(
+        File.join('backups', Backup::TRIGGER, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-0")
+      )
+      connection.expects(:delete).with(
+        File.join('backups', Backup::TRIGGER, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-1")
+      )
+
+      db.send(:remove!)
+    end
+
   end
 
 end

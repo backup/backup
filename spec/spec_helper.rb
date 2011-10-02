@@ -14,6 +14,9 @@ RSpec.configure do |config|
       Backup::Logger.stubs(message_type)
     end
   end
+  config.after(:each) do
+    Backup::Model.extension = 'tar'
+  end
 end
 
 Backup.send(:remove_const, :TRIGGER) if defined? Backup::TRIGGER
