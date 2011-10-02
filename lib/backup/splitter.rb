@@ -32,7 +32,7 @@ module Backup
       return [absolute_path_to_local_file] unless split_archive_file
       local_files = []
       for i in 0..number_of_archive_chunks-1
-        local_files << "#{absolute_path_to_local_file}-#{i}"
+        local_files << "#{absolute_path_to_local_file + SUFFIX_SEPARATOR}#{"%02d" % i}"
       end
       local_files
     end
@@ -41,7 +41,7 @@ module Backup
       return [absolute_path_to_remote_file] unless split_archive_file
       remote_files = []
       for i in 0..number_of_archive_chunks-1
-        remote_files << "#{absolute_path_to_remote_file}-#{i}"
+        remote_files << "#{absolute_path_to_remote_file + SUFFIX_SEPARATOR }#{"%02d" % i}"
       end
       remote_files
     end

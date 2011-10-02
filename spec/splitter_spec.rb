@@ -32,9 +32,9 @@ describe "Storage File Splitter" do
   end
 
   it "should split into chunks of configured size" do
-    test_split 230, 600, ["#{splitter_file_location}-0", "#{splitter_file_location}-1", "#{splitter_file_location}-2"]
-    test_split 350, 600, ["#{splitter_file_location}-0", "#{splitter_file_location}-1"]
-    test_split 350, 100, ["#{splitter_file_location}-0"]
+    test_split 230, 600, ["#{splitter_file_location}-00", "#{splitter_file_location}-01", "#{splitter_file_location}-02"]
+    test_split 350, 600, ["#{splitter_file_location}-00", "#{splitter_file_location}-01"]
+    test_split 350, 100, ["#{splitter_file_location}-00"]
   end
 
   it "should not split by default" do

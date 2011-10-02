@@ -129,12 +129,12 @@ describe Backup::Storage::Dropbox do
       File.expects(:size?).with(File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")).returns(130 * 1000 * 1000)
       db.expects(:run).once
       connection.expects(:upload).with(
-        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-0"),
+        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00"),
         File.join('backups', Backup::TRIGGER),
         :timeout => db.timeout
       )
       connection.expects(:upload).with(
-        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-1"),
+        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01"),
         File.join('backups', Backup::TRIGGER),
         :timeout => db.timeout
       )
@@ -159,10 +159,10 @@ describe Backup::Storage::Dropbox do
       db.archive_file_chunk_size = 100
       db.number_of_archive_chunks = 2
       connection.expects(:delete).with(
-        File.join('backups', Backup::TRIGGER, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-0")
+        File.join('backups', Backup::TRIGGER, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00")
       )
       connection.expects(:delete).with(
-        File.join('backups', Backup::TRIGGER, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-1")
+        File.join('backups', Backup::TRIGGER, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01")
       )
 
       db.send(:remove!)
