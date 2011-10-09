@@ -80,13 +80,15 @@ module Backup
       begin
         gem(name, all[name][:version])
         require(all[name][:require])
-      rescue LoadError
+      rescue LoadError => error
         Backup::Logger.error("Dependency missing.")
         puts "\nDependency required for:"
         puts "\n\s\s#{all[name][:for]}"
         puts "\nTo install the gem, issue the following command:"
         puts "\n\s\sgem install #{name} -v '#{all[name][:version]}'"
         puts "\nPlease try again after installing the missing dependency."
+        puts "\nError:"
+        puts "\n\s\s#{error}"
         exit
       end
     end
