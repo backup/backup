@@ -1,5 +1,4 @@
 require "rspec"
-require 'popen4'
 
 require File.dirname(__FILE__) + '/spec_helper'
 module Backup

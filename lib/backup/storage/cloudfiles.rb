@@ -49,7 +49,7 @@ module Backup
         cycle!
       end
 
-    private
+      private
 
       ##
       # Establishes a connection to Rackspace Cloud Files and returns the Fog object.
@@ -59,35 +59,44 @@ module Backup
       # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
         Fog::Storage.new(
-          :provider           => provider,
-          :rackspace_username => username,
-          :rackspace_api_key  => api_key
+                :provider => provider,
+                :rackspace_username => username,
+                :rackspace_api_key => api_key
         )
       end
 
       ##
       # Transfers the archived file to the specified Cloud Files container
       def transfer!
-        begin
-          Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
-          connection.put_object(
-            container,
-            File.join(remote_path, remote_file),
-            File.open(File.join(local_path, local_file))
-          )
-        rescue Excon::Errors::SocketError => e
-          puts "\nAn error occurred while trying to transfer the backup."
-          puts "Make sure the container exists and try again.\n\n"
-          exit
+        split!
+        chunks = Hash[local_chunks.zip(remote_chunks)]
+        chunks.each_pair do |local_chunk, remote_chunk|
+          Logger.message("#{ self.class } started transferring local file \"#{ local_chunk }\".")
+          begin
+            connection.put_object(
+                    container,
+                    remote_chunk,
+                    File.open(local_chunk)
+            )
+          rescue Excon::Errors::SocketError => e
+            puts "\nAn error occurred while trying to transfer the backup."
+            puts "Make sure the container exists and try again.\n\n"
+            exit
+          end
         end
       end
 
       ##
       # Removes the transferred archive file from the Cloud Files container
       def remove!
-        begin
-          connection.delete_object(container, File.join(remote_path, remote_file))
-        rescue Excon::Errors::SocketError; end
+        remote_chunks.each do |chunk|
+          begin
+            Logger.message("#{ self.class } deleting remote file \"#{ chunk }\".")
+            connection.delete_object(container, chunk)
+          rescue Excon::Errors::SocketError;
+            Logger.warn("#{ self.class } unable to delete \"#{ chunk }\".")
+          end
+        end
       end
 
     end

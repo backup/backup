@@ -4,6 +4,8 @@
 # Load Backup
 require File.expand_path( '../../lib/backup', __FILE__ )
 
+require 'popen4'
+
 ##
 # Use Mocha to mock with RSpec
 RSpec.configure do |config|

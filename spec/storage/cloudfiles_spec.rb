@@ -71,8 +71,23 @@ describe Backup::Storage::CloudFiles do
       Backup::Model.new('blah', 'blah') {}
       file = mock("Backup::Storage::CloudFiles::File")
       File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
-      cf.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
+      cf.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
       connection.expects(:put_object).with('my_container', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
+      cf.send(:transfer!)
+    end
+
+    it 'should transfer the file chunks to the container' do
+      cf.split_archive_file = true
+      cf.archive_file_chunk_size = 100
+      File.expects(:size?).with(File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")).returns(130 * 1000 * 1000)
+      cf.expects(:run).once
+      Backup::Model.new('blah', 'blah') {}
+      file = mock("Backup::Storage::CloudFiles::File")
+      File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar-00").returns(file)
+      File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar-01").returns(file)
+      cf.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
+      connection.expects(:put_object).with('my_container', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00", file)
+      connection.expects(:put_object).with('my_container', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01", file)
       cf.send(:transfer!)
     end
   end
@@ -88,6 +103,17 @@ describe Backup::Storage::CloudFiles do
       connection.expects(:delete_object).with('my_container', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
       cf.send(:remove!)
     end
+
+    it 'should remote the file chunks from the container' do
+      cf.split_archive_file = true
+      cf.archive_file_chunk_size = 100
+      cf.number_of_archive_chunks = 2
+      cf.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
+      connection.expects(:delete_object).with('my_container', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00")
+      connection.expects(:delete_object).with('my_container', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01")
+      cf.send(:remove!)
+    end
+
   end
 
   describe '#perform' do

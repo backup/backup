@@ -54,10 +54,7 @@ module Backup
 
     def do_split
       run("split -b #{archive_file_chunk_size}MB -d #{absolute_path_to_local_file} #{absolute_path_to_local_file + SUFFIX_SEPARATOR}")
-      chunks = []
-      for i in 0..number_of_archive_chunks-1
-        chunks << "#{absolute_path_to_local_file + SUFFIX_SEPARATOR + i.to_s}"
-      end
+      local_chunks
     end
 
     def set_number_of_chunks
