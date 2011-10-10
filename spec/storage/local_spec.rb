@@ -55,11 +55,44 @@ describe Backup::Storage::Local do
 
       local.send(:transfer!)
     end
+
+    it 'should transfer the provided file chunk to the path' do
+      local.split_archive_file = true
+      local.archive_file_chunk_size = 100
+      File.expects(:size?).with(File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")).returns(130 * 1000 * 1000)
+      local.expects(:run).once
+
+      Backup::Model.new('blah', 'blah') {}
+      file = mock("Backup::Storage::Local::File")
+
+      local.expects(:create_local_directories!)
+
+      FileUtils.expects(:cp).with(
+        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00"),
+        File.join("#{ENV['HOME']}/backups/myapp", "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00")
+      )
+      FileUtils.expects(:cp).with(
+        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01"),
+        File.join("#{ENV['HOME']}/backups/myapp", "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01")
+      )
+
+      local.send(:transfer!)
+    end
+
   end
 
   describe '#remove!' do
-    it 'should remove the file from the remote server path' do
+    it 'should remove the file from the path' do
       FileUtils.expects(:rm).with("#{ENV['HOME']}/backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      local.send(:remove!)
+    end
+    it 'should remove the file chunks from the path' do
+      local.split_archive_file = true
+      local.archive_file_chunk_size = 100
+      local.number_of_archive_chunks = 2
+
+      FileUtils.expects(:rm).with("#{ENV['HOME']}/backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00")
+      FileUtils.expects(:rm).with("#{ENV['HOME']}/backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01")
       local.send(:remove!)
     end
   end

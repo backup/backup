@@ -98,6 +98,29 @@ describe Backup::Storage::FTP do
 
       ftp.send(:transfer!)
     end
+
+    it 'should transfer the file chunks to the path' do
+      ftp.split_archive_file = true
+      ftp.archive_file_chunk_size = 100
+      File.expects(:size?).with(File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")).returns(130 * 1000 * 1000)
+      ftp.expects(:run).once
+
+      Backup::Model.new('blah', 'blah') {}
+      file = mock("Backup::Storage::FTP::File")
+
+      ftp.expects(:create_remote_directories!)
+      connection.expects(:put).with(
+        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00"),
+        File.join('backups/myapp', "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00")
+      )
+      connection.expects(:put).with(
+        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01"),
+        File.join('backups/myapp', "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01")
+      )
+
+      ftp.send(:transfer!)
+    end
+
   end
 
   describe '#remove!' do
@@ -111,6 +134,16 @@ describe Backup::Storage::FTP do
       connection.expects(:delete).with("backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
       ftp.send(:remove!)
     end
+
+    it 'should remote the file chunks from the remote server path' do
+      ftp.split_archive_file = true
+      ftp.archive_file_chunk_size = 100
+      ftp.number_of_archive_chunks = 2
+      connection.expects(:delete).with("backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00")
+      connection.expects(:delete).with("backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01")
+      ftp.send(:remove!)
+    end
+
   end
 
   describe '#create_remote_directories!' do

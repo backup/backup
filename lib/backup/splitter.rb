@@ -46,6 +46,10 @@ module Backup
       remote_files
     end
 
+    def local_to_remote_chunks
+      Hash[local_chunks.zip(remote_chunks)]
+    end
+
     private
 
     def do_no_split

@@ -42,23 +42,25 @@ module Backup
         cycle!
       end
 
-    private
+      private
 
       ##
       # Transfers the archived file to the specified local path
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
+        split!
         create_local_directories!
-        FileUtils.cp(
-          File.join(local_path, local_file),
-          File.join(remote_path, remote_file)
-        )
+        local_to_remote_chunks.each_pair do |local_chunk, remote_chunk|
+          Logger.message("#{ self.class } started transferring \"#{ local_chunk }\".")
+          FileUtils.cp(local_chunk, remote_chunk)
+        end
       end
 
       ##
       # Removes the transferred archive file from the local path
       def remove!
-        FileUtils.rm(File.join(remote_path, remote_file))
+        remote_chunks.each do |remote_chunk|
+          FileUtils.rm(remote_chunk)
+        end
       end
 
       ##

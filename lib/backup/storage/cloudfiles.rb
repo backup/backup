@@ -69,8 +69,7 @@ module Backup
       # Transfers the archived file to the specified Cloud Files container
       def transfer!
         split!
-        chunks = Hash[local_chunks.zip(remote_chunks)]
-        chunks.each_pair do |local_chunk, remote_chunk|
+        local_to_remote_chunks.each_pair do |local_chunk, remote_chunk|
           Logger.message("#{ self.class } started transferring local file \"#{ local_chunk }\".")
           begin
             connection.put_object(
