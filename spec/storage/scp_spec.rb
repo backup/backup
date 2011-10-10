@@ -83,6 +83,33 @@ describe Backup::Storage::SCP do
 
       scp.send(:transfer!)
     end
+
+    it 'should transfer the provided file chunks to the path' do
+      scp.split_archive_file = true
+      scp.archive_file_chunk_size = 100
+      File.expects(:size?).with(File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")).returns(130 * 1000 * 1000)
+      scp.expects(:run).once
+
+      Backup::Model.new('blah', 'blah') {}
+      file = mock("Backup::Storage::SCP::File")
+
+      scp.expects(:create_remote_directories!)
+
+      ssh_scp = mock('Net::SSH::SCP')
+      connection.expects(:scp).returns(ssh_scp).twice
+
+      ssh_scp.expects(:upload!).with(
+        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00"),
+        File.join('backups/myapp', "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00")
+      )
+
+      ssh_scp.expects(:upload!).with(
+        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01"),
+        File.join('backups/myapp', "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01")
+      )
+
+      scp.send(:transfer!)
+    end
   end
 
   describe '#remove!' do
@@ -94,6 +121,16 @@ describe Backup::Storage::SCP do
 
     it 'should remove the file from the remote server path' do
       connection.expects(:exec!).with("rm backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      scp.send(:remove!)
+    end
+
+    it 'should remove the file from the remote server path' do
+      scp.split_archive_file = true
+      scp.archive_file_chunk_size = 100
+      scp.number_of_archive_chunks = 2
+
+      connection.expects(:exec!).with("rm backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00")
+      connection.expects(:exec!).with("rm backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01")
       scp.send(:remove!)
     end
   end

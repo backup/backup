@@ -52,7 +52,7 @@ module Backup
         cycle!
       end
 
-    private
+      private
 
       ##
       # Establishes a connection to the remote server and returns the Net::SSH object.
@@ -69,20 +69,22 @@ module Backup
       ##
       # Transfers the archived file to the specified remote server
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
+        split!
         create_remote_directories!
-        connection.scp.upload!(
-          File.join(local_path, local_file),
-          File.join(remote_path, remote_file)
-        )
+        local_to_remote_chunks.each_pair do |local_chunk, remote_chunk|
+          Logger.message("#{ self.class } started transferring \"#{ remote_chunk }\".")
+          connection.scp.upload!(local_chunk, remote_chunk)
+        end
       end
 
       ##
       # Removes the transferred archive file from the server
       def remove!
-        response = connection.exec!("rm #{ File.join(remote_path, remote_file) }")
-        if response =~ /No such file or directory/
-          Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+        remote_chunks.each do |remote_chunk|
+          response = connection.exec!("rm #{ remote_chunk }")
+          if response =~ /No such file or directory/
+            Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+          end
         end
       end
 

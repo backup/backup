@@ -49,7 +49,7 @@ module Backup
         cycle!
       end
 
-    private
+      private
 
       ##
       # Establishes a connection to the remote server and returns the Net::SFTP object.
@@ -64,23 +64,23 @@ module Backup
       ##
       # Transfers the archived file to the specified remote server
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
+        split!
         create_remote_directories!
-        connection.upload!(
-          File.join(local_path, local_file),
-          File.join(remote_path, remote_file)
-        )
+        local_to_remote_chunks.each_pair do |local_chunk, remote_chunk|
+          Logger.message("#{ self.class } started transferring \"#{ remote_chunk }\".")
+          connection.upload!(local_chunk, remote_chunk)
+        end
       end
 
       ##
       # Removes the transferred archive file from the server
       def remove!
-        begin
-          connection.remove!(
-            File.join(remote_path, remote_file)
-          )
-        rescue Net::SFTP::StatusException
-          Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+        remote_chunks.each do |remote_chunk|
+          begin
+            connection.remove!(remote_chunk)
+          rescue Net::SFTP::StatusException
+            Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+          end
         end
       end
 
@@ -97,7 +97,8 @@ module Backup
           path_parts << path_part
           begin
             connection.mkdir!(path_parts.join('/'))
-          rescue Net::SFTP::StatusException; end
+          rescue Net::SFTP::StatusException;
+          end
         end
       end
 

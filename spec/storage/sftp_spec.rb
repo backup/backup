@@ -79,6 +79,28 @@ describe Backup::Storage::SFTP do
 
       sftp.send(:transfer!)
     end
+
+    it 'should transfer the provided file chunks to the path' do
+      sftp.split_archive_file = true
+      sftp.archive_file_chunk_size = 100
+      File.expects(:size?).with(File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")).returns(130 * 1000 * 1000)
+      sftp.expects(:run).once
+
+      Backup::Model.new('blah', 'blah') {}
+      file = mock("Backup::Storage::SFTP::File")
+
+      sftp.expects(:create_remote_directories!)
+      connection.expects(:upload!).with(
+        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00"),
+        File.join('backups/myapp', "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00")
+      )
+      connection.expects(:upload!).with(
+        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01"),
+        File.join('backups/myapp', "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01")
+      )
+
+      sftp.send(:transfer!)
+    end
   end
 
   describe '#remove!' do
@@ -90,6 +112,16 @@ describe Backup::Storage::SFTP do
 
     it 'should remove the file from the remote server path' do
       connection.expects(:remove!).with("backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      sftp.send(:remove!)
+    end
+
+    it 'should remove the file chunks from the remote server path' do
+      sftp.split_archive_file = true
+      sftp.archive_file_chunk_size = 100
+      sftp.number_of_archive_chunks = 2
+
+      connection.expects(:remove!).with("backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00")
+      connection.expects(:remove!).with("backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01")
       sftp.send(:remove!)
     end
   end
