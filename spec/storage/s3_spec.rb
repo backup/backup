@@ -84,6 +84,23 @@ describe Backup::Storage::S3 do
       connection.expects(:put_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
       s3.send(:transfer!)
     end
+
+    it 'should transfer the provided file chunks to the bucket' do
+      s3.split_archive_file = true
+      s3.archive_file_chunk_size = 100
+      File.expects(:size?).with(File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")).returns(130 * 1000 * 1000)
+      s3.expects(:run).once
+
+      Backup::Model.new('blah', 'blah') {}
+      file = mock("Backup::Storage::S3::File")
+      File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar-00").returns(file)
+      File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar-01").returns(file)
+      s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
+      connection.expects(:sync_clock)
+      connection.expects(:put_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00", file)
+      connection.expects(:put_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01", file)
+      s3.send(:transfer!)
+    end
   end
 
   describe '#remove!' do
@@ -96,6 +113,18 @@ describe Backup::Storage::S3 do
       s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
       connection.expects(:sync_clock)
       connection.expects(:delete_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      s3.send(:remove!)
+    end
+
+    it 'should remove the file chunks from the bucket' do
+      s3.split_archive_file = true
+      s3.archive_file_chunk_size = 100
+      s3.number_of_archive_chunks = 2
+
+      s3.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
+      connection.expects(:sync_clock)
+      connection.expects(:delete_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00")
+      connection.expects(:delete_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01")
       s3.send(:remove!)
     end
   end

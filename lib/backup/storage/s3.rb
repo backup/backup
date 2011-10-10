@@ -56,7 +56,7 @@ module Backup
         cycle!
       end
 
-    private
+      private
 
       ##
       # Establishes a connection to Amazon S3 and returns the Fog object.
@@ -66,36 +66,42 @@ module Backup
       # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
         Fog::Storage.new(
-          :provider               => provider,
-          :aws_access_key_id      => access_key_id,
-          :aws_secret_access_key  => secret_access_key,
-          :region                 => region
+                :provider => provider,
+                :aws_access_key_id => access_key_id,
+                :aws_secret_access_key => secret_access_key,
+                :region => region
         )
       end
 
       ##
       # Transfers the archived file to the specified Amazon S3 bucket
       def transfer!
-        begin
-          Logger.message("#{ self.class } started transferring \"#{ remote_file }\" to bucket \"#{ bucket }\"")
-          connection.sync_clock
-          connection.put_object(
-            bucket,
-            File.join(remote_path, remote_file),
-            File.open(File.join(local_path, local_file))
-          )
-        rescue Excon::Errors::NotFound
-          raise "An error occurred while trying to transfer the backup, please make sure the bucket exists."
+        split!
+        connection.sync_clock
+        local_to_remote_chunks.each_pair do |local_chunk, remote_chunk|
+          begin
+            Logger.message("#{ self.class } started transferring \"#{ File.basename(remote_chunk) }\" to bucket \"#{ bucket }\"")
+            connection.put_object(
+                    bucket,
+                    remote_chunk,
+                    File.open(local_chunk)
+            )
+          rescue Excon::Errors::NotFound
+            raise "An error occurred while trying to transfer the backup, please make sure the bucket exists."
+          end
         end
       end
 
       ##
       # Removes the transferred archive file from the Amazon S3 bucket
       def remove!
-        begin
-          connection.sync_clock
-          connection.delete_object(bucket, File.join(remote_path, remote_file))
-        rescue Excon::Errors::SocketError; end
+        connection.sync_clock
+        remote_chunks.each do |remote_chunk|
+          begin
+            connection.delete_object(bucket, remote_chunk)
+          rescue Excon::Errors::SocketError;
+          end
+        end
       end
 
     end
