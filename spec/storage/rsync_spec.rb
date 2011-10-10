@@ -6,11 +6,11 @@ describe Backup::Storage::RSync do
 
   let(:rsync) do
     Backup::Storage::RSync.new do |rsync|
-      rsync.username  = 'my_username'
-      rsync.password  = 'my_password'
-      rsync.ip        = '123.45.678.90'
-      rsync.port      = 22
-      rsync.path      = '~/backups/'
+      rsync.username = 'my_username'
+      rsync.password = 'my_password'
+      rsync.ip = '123.45.678.90'
+      rsync.port = 22
+      rsync.path = '~/backups/'
     end
   end
 
@@ -19,11 +19,11 @@ describe Backup::Storage::RSync do
   end
 
   it 'should have defined the configuration properly' do
-    rsync.username.should        == 'my_username'
+    rsync.username.should == 'my_username'
     rsync.send(:password).should =~ /backup-rsync-password/
-    rsync.ip.should              == '123.45.678.90'
-    rsync.port.should            == "-e 'ssh -p 22'"
-    rsync.path.should            == 'backups/'
+    rsync.ip.should == '123.45.678.90'
+    rsync.port.should == "-e 'ssh -p 22'"
+    rsync.path.should == 'backups/'
 
     File.read(rsync.instance_variable_get('@password_file').path).should == 'my_password'
   end
@@ -32,26 +32,26 @@ describe Backup::Storage::RSync do
     Backup::Configuration::Storage::RSync.defaults do |rsync|
       rsync.username = 'my_default_username'
       rsync.password = 'my_default_password'
-      rsync.path     = '~/backups'
+      rsync.path = '~/backups'
     end
 
     rsync = Backup::Storage::RSync.new do |rsync|
       rsync.password = 'my_password'
-      rsync.ip       = '123.45.678.90'
+      rsync.ip = '123.45.678.90'
     end
 
-    rsync.username.should        == 'my_default_username'
+    rsync.username.should == 'my_default_username'
     rsync.send(:password).should =~ /backup-rsync-password/
-    rsync.ip.should              == '123.45.678.90'
-    rsync.port.should            == "-e 'ssh -p 22'"
+    rsync.ip.should == '123.45.678.90'
+    rsync.port.should == "-e 'ssh -p 22'"
 
     File.read(rsync.instance_variable_get('@password_file').path).should == 'my_password'
   end
 
   it 'should have its own defaults' do
     rsync = Backup::Storage::RSync.new
-    rsync.port.should  == "-e 'ssh -p 22'"
-    rsync.path.should  == 'backups'
+    rsync.port.should == "-e 'ssh -p 22'"
+    rsync.path.should == 'backups'
     rsync.local.should == false
   end
 
@@ -92,6 +92,23 @@ describe Backup::Storage::RSync do
 
       rsync.send(:transfer!)
     end
+
+    it 'should transfer the provided file chunks to the path' do
+      rsync.split_archive_file = true
+      rsync.archive_file_chunk_size = 100
+      File.expects(:size?).with(File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")).returns(130 * 1000 * 1000)
+      rsync.expects(:run).once
+
+      Backup::Model.new('blah', 'blah') {}
+      file = mock("Backup::Storage::RSync::File")
+
+      rsync.expects(:create_remote_directories!)
+      rsync.expects(:utility).returns('rsync').twice
+      rsync.expects(:run).with("rsync -z -e 'ssh -p 22' --password-file='#{rsync.instance_variable_get('@password_file').path}' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar-00'")
+      rsync.expects(:run).with("rsync -z -e 'ssh -p 22' --password-file='#{rsync.instance_variable_get('@password_file').path}' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar-01'")
+
+      rsync.send(:transfer!)
+    end
   end
 
   describe '#remove!' do
@@ -103,6 +120,16 @@ describe Backup::Storage::RSync do
 
     it 'should remove the file from the remote server path' do
       connection.expects(:exec!).with("rm backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      rsync.send(:remove!)
+    end
+
+    it 'should remove the file chunks from the remote server path' do
+      rsync.split_archive_file = true
+      rsync.archive_file_chunk_size = 100
+      rsync.number_of_archive_chunks = 2
+
+      connection.expects(:exec!).with("rm backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00")
+      connection.expects(:exec!).with("rm backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01")
       rsync.send(:remove!)
     end
   end

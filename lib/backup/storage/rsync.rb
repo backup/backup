@@ -36,9 +36,9 @@ module Backup
       def initialize(&block)
         load_defaults!
 
-        @port   ||= 22
-        @path   ||= 'backups'
-        @local  ||= false
+        @port ||= 22
+        @path ||= 'backups'
+        @local ||= false
 
         instance_eval(&block) if block_given?
         write_password_file!
@@ -79,7 +79,7 @@ module Backup
         "-z"
       end
 
-    private
+      private
 
       ##
       # Establishes a connection to the remote server and returns the Net::SSH object.
@@ -94,21 +94,26 @@ module Backup
       ##
       # Transfers the archived file to the specified remote server
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
+        split!
         create_remote_directories!
-        if @local
-          run("#{ utility(:rsync) } '#{ File.join(local_path, local_file) }' '#{ File.join(remote_path, TIME+'.'+remote_file[20..-1]) }'")
-        else
-          run("#{ utility(:rsync) } #{ options } #{ port } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file[20..-1]) }'")
+        local_to_remote_chunks.each_pair do |local_chunk, remote_chunk|
+          Logger.message("#{ self.class } started transferring \"#{ remote_chunk }\".")
+          if @local
+            run("#{ utility(:rsync) } '#{ local_chunk }' '#{ remote_chunk }'")
+          else
+            run("#{ utility(:rsync) } #{ options } #{ port } #{ password } '#{ local_chunk }' '#{ username }@#{ ip }:#{ File.join(remote_path, File.basename(remote_chunk)[20..-1]) }'")
+          end
         end
       end
 
       ##
       # Removes the transferred archive file from the server
       def remove!
-        response = connection.exec!("rm #{ File.join(remote_path, remote_file) }")
-        if response =~ /No such file or directory/
-          Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+        remote_chunks.each do |remote_chunk|
+          response = connection.exec!("rm #{ remote_chunk }")
+          if response =~ /No such file or directory/
+            Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+          end
         end
       end
 
