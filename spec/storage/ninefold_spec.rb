@@ -6,10 +6,10 @@ describe Backup::Storage::Ninefold do
 
   let(:ninefold) do
     Backup::Storage::Ninefold.new do |nf|
-      nf.storage_token  = 'my_storage_token'
+      nf.storage_token = 'my_storage_token'
       nf.storage_secret = 'my_storage_secret'
-      nf.path           = 'backups'
-      nf.keep           = 20
+      nf.path = 'backups'
+      nf.keep = 20
     end
   end
 
@@ -18,34 +18,34 @@ describe Backup::Storage::Ninefold do
   end
 
   it 'should have defined the configuration properly' do
-    ninefold.storage_token.should  == 'my_storage_token'
+    ninefold.storage_token.should == 'my_storage_token'
     ninefold.storage_secret.should == 'my_storage_secret'
-    ninefold.keep.should           == 20
+    ninefold.keep.should == 20
   end
 
   it 'should use the defaults if a particular attribute has not been defined' do
     Backup::Configuration::Storage::Ninefold.defaults do |nf|
       nf.storage_token = 'my_storage_token'
-      nf.keep          = 500
+      nf.keep = 500
     end
 
     ninefold = Backup::Storage::Ninefold.new do |nf|
       nf.path = 'my/backups'
     end
 
-    ninefold.storage_token.should  == 'my_storage_token' # not defined, uses default
-    ninefold.storage_secret.should == nil                # not defined, no default
-    ninefold.path.should           == 'my/backups'       # overwritten from Backup::Storage::Ninefold
-    ninefold.keep.should           == 500                # comes from the default configuration
+    ninefold.storage_token.should == 'my_storage_token' # not defined, uses default
+    ninefold.storage_secret.should == nil # not defined, no default
+    ninefold.path.should == 'my/backups' # overwritten from Backup::Storage::Ninefold
+    ninefold.keep.should == 500 # comes from the default configuration
   end
 
   describe '#connection' do
     it 'should establish a connection to Ninefold using the provided credentials' do
       Fog::Storage.expects(:new).with({
-        :provider                => 'Ninefold',
-        :ninefold_storage_token  => 'my_storage_token',
-        :ninefold_storage_secret => 'my_storage_secret'
-      })
+                                              :provider => 'Ninefold',
+                                              :ninefold_storage_token => 'my_storage_token',
+                                              :ninefold_storage_secret => 'my_storage_secret'
+                                      })
 
       ninefold.send(:connection)
     end
@@ -58,10 +58,10 @@ describe Backup::Storage::Ninefold do
   end
 
   describe '#transfer!' do
-    let(:connection)  { mock('Fog::Storage') }
+    let(:connection) { mock('Fog::Storage') }
     let(:directories) { mock('Fog::Storage::Ninefold::Directories') }
-    let(:directory)   { mock('Fog::Storage::Ninefold::Directory') }
-    let(:files)       { mock('Fog::Storage::Ninefold::Files') }
+    let(:directory) { mock('Fog::Storage::Ninefold::Directory') }
+    let(:files) { mock('Fog::Storage::Ninefold::Files') }
 
     before do
       Fog::Storage.stubs(:new).returns(connection)
@@ -83,6 +83,32 @@ describe Backup::Storage::Ninefold do
         end
 
         ninefold.send(:transfer!)
+      end
+
+      it 'should transfer the provided file chunks to the directory' do
+        ninefold.split_archive_file = true
+        ninefold.archive_file_chunk_size = 100
+        File.expects(:size?).with(File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")).returns(130 * 1000 * 1000)
+        ninefold.expects(:run).once
+
+        Backup::Model.new('blah', 'blah') {}
+        file = mock("Backup::Storage::Ninefold::File")
+        File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar-00").returns(file)
+        File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar-01").returns(file)
+        ninefold.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").at_most(4)
+
+        directories.expects(:get).with('backups/myapp').returns(directory).twice
+        files.expects(:create) do |options|
+          options[:key].should == "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00"
+          options[:body].should == file
+        end
+        files.expects(:create) do |options|
+          options[:key].should == "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01"
+          options[:body].should == file
+        end
+
+        ninefold.send(:transfer!)
+
       end
     end
 
@@ -109,11 +135,11 @@ describe Backup::Storage::Ninefold do
   end
 
   describe '#remove!' do
-    let(:connection)  { mock('Fog::Storage') }
+    let(:connection) { mock('Fog::Storage') }
     let(:directories) { mock('Fog::Storage::Ninefold::Directories') }
-    let(:directory)   { mock('Fog::Storage::Ninefold::Directory') }
-    let(:files)       { mock('Fog::Storage::Ninefold::Files') }
-    let(:file)        { mock('Fog::Storage::Ninefold::File') }
+    let(:directory) { mock('Fog::Storage::Ninefold::Directory') }
+    let(:files) { mock('Fog::Storage::Ninefold::Files') }
+    let(:file) { mock('Fog::Storage::Ninefold::File') }
 
     before do
       Fog::Storage.stubs(:new).returns(connection)
@@ -127,6 +153,21 @@ describe Backup::Storage::Ninefold do
       directories.expects(:get).with('backups/myapp').returns(directory)
       files.expects(:get).with("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").returns(file)
       file.expects(:destroy)
+
+      ninefold.send(:remove!)
+    end
+
+    it 'should remove the file chunks from the bucket' do
+      ninefold.split_archive_file = true
+      ninefold.archive_file_chunk_size = 100
+      ninefold.number_of_archive_chunks = 2
+
+      ninefold.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
+
+      directories.expects(:get).with('backups/myapp').returns(directory).twice
+      files.expects(:get).with("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-00").returns(file)
+      files.expects(:get).with("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-01").returns(file)
+      file.expects(:destroy).twice
 
       ninefold.send(:remove!)
     end

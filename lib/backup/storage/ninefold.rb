@@ -50,7 +50,7 @@ module Backup
         cycle!
       end
 
-    private
+      private
 
       ##
       # Establishes a connection to Amazon S3 and returns the Fog object.
@@ -60,35 +60,41 @@ module Backup
       # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
         Fog::Storage.new(
-          :provider                => provider,
-          :ninefold_storage_token  => storage_token,
-          :ninefold_storage_secret => storage_secret
+                :provider => provider,
+                :ninefold_storage_token => storage_token,
+                :ninefold_storage_secret => storage_secret
         )
       end
 
       ##
       # Transfers the archived file to the specified directory
       def transfer!
-        begin
-          Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
-          directory   = connection.directories.get remote_path
-          directory ||= connection.directories.create(:key => remote_path)
-          directory.files.create(
-            :key  => remote_file,
-            :body => File.open(File.join(local_path, local_file))
-          )
-        rescue Excon::Errors::NotFound
-          raise "An error occurred while trying to transfer the file."
+        split!
+        local_chunks.each do |local_chunk|
+          begin
+            Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
+            directory = connection.directories.get remote_path
+            directory ||= connection.directories.create(:key => remote_path)
+            directory.files.create(
+                    :key => remote_file,
+                    :body => File.open(local_chunk)
+            )
+          rescue Excon::Errors::NotFound
+            raise "An error occurred while trying to transfer the file."
+          end
         end
       end
 
       ##
       # Removes the transferred archive file from the Amazon S3 bucket
       def remove!
-        begin
-          directory = connection.directories.get remote_path
-          directory.files.get(remote_file).destroy
-        rescue Excon::Errors::SocketError; end
+        remote_chunks.each do |remote_chunk|
+          begin
+            directory = connection.directories.get remote_path
+            directory.files.get(File.basename(remote_chunk)).destroy
+          rescue Excon::Errors::SocketError;
+          end
+        end
       end
 
     end
