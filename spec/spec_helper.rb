@@ -13,6 +13,7 @@ RSpec.configure do |config|
     [:message, :error, :warn, :normal, :silent].each do |message_type|
       Backup::Logger.stubs(message_type)
     end
+    Backup::Model.extension = 'tar'
   end
 end
 

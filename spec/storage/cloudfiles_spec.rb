@@ -11,6 +11,7 @@ describe Backup::Storage::CloudFiles do
       cf.container = 'my_container'
       cf.path      = 'backups'
       cf.keep      = 20
+      cf.auth_url  = 'lon.auth.api.rackspacecloud.com'
     end
   end
 
@@ -24,6 +25,7 @@ describe Backup::Storage::CloudFiles do
     cf.container.should == 'my_container'
     cf.path.should      == 'backups'
     cf.keep.should      == 20
+    cf.auth_url.should  == 'lon.auth.api.rackspacecloud.com'
   end
 
   it 'should use the defaults if a particular attribute has not been defined' do
@@ -48,7 +50,8 @@ describe Backup::Storage::CloudFiles do
       Fog::Storage.expects(:new).with({
         :provider           => 'Rackspace',
         :rackspace_username => 'my_username',
-        :rackspace_api_key  => 'my_api_key'
+        :rackspace_api_key  => 'my_api_key',
+        :rackspace_auth_url => 'lon.auth.api.rackspacecloud.com'
       })
 
       cf.send(:connection)
