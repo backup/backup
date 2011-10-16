@@ -114,7 +114,8 @@ Encryptors
 Notifiers
 ---------
 
-- Mail
+- Mail (SMTP)
+- Sendmail
 - Twitter
 - Campfire
 - Presently
@@ -343,6 +344,10 @@ Contributors
     <td><a href="https://github.com/joaovitor" target="_blank">João Vitor ( joaovitor )</a></td>
     <td>Changed default PostgreSQL example options to appropriate ones</td>
   </tr>
+  <tr>
+    <td><a href="https://github.com/silent-e" target="_blank">Matte Edens ( silent-e )</a></td>
+    <td>Quick Sendmail Notifier hack</td>
+  </tr>
 </table>
 
 
@@ -370,10 +375,10 @@ Install [RVM](https://rvm.beginrescueend.com/) and use it to install Ruby 1.9.3,
 Once these are installed, go ahead and install all the necessary dependencies.
 
     cd backup
-    rvm use 1.9.3 && gem install bundler && bundle install
-    rvm use 1.9.2 && gem install bundler && bundle install
-    rvm use 1.8.7 && gem install bundler && bundle install
-    rvm use ree   && gem install bundler && bundle install
+    rvm use 1.9.3@backupgem --create && gem install bundler && bundle install
+    rvm use 1.9.2@backupgem --create && gem install bundler && bundle install
+    rvm use 1.8.7@backupgem --create && gem install bundler && bundle install
+    rvm use ree@backupgem --create   && gem install bundler && bundle install
 
 The Backup gem uses [Guard](https://github.com/guard/guard) along with [Guard::RSpec](https://github.com/guard/guard-rspec) to quickly and easily test Backup's code against all four Rubies. If you've done the above, all you have to do is run:
 
