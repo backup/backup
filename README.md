@@ -118,6 +118,7 @@ Notifiers
 - Twitter
 - Campfire
 - Presently
+- Prowl
 
 [Notifiers Wiki Page](https://github.com/meskyanichi/backup/wiki/Notifiers)
 
@@ -342,6 +343,10 @@ Contributors
   <tr>
     <td><a href="https://github.com/joaovitor" target="_blank">João Vitor ( joaovitor )</a></td>
     <td>Changed default PostgreSQL example options to appropriate ones</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/swissmanu" target="_blank">Manuel Alabor ( swissmanu )</a></td>
+    <td>Prowl Notifier</td>
   </tr>
 </table>
 
