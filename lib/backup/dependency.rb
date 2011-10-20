@@ -69,6 +69,13 @@ module Backup
           :version => '~> 1.5.1',
           :for     => 'Parsing JSON for HTTParty'
         },
+        
+        'prowler' => {
+          :require => 'prowler',
+          :version => '>= 1.3.1',
+          :for     => 'Sending iOS push notifications (Prowl Notifier)'
+        },
+        
       }
     end
 
