@@ -114,7 +114,7 @@ describe Backup::Storage::Dropbox do
     it do
       connection.expects(:upload).with(
         File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"),
-        File.join('backups', Backup::TRIGGER),
+        File.join('backups', Backup::TRIGGER, Backup::TIME, "#{ Backup::TRIGGER }.tar"),
         :timeout => db.timeout
       )
 
@@ -125,7 +125,7 @@ describe Backup::Storage::Dropbox do
   describe '#remove!' do
     it do
       connection.expects(:delete).with(
-        File.join('backups', Backup::TRIGGER, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+        File.join('backups', Backup::TRIGGER, Backup::TIME, "#{ Backup::TRIGGER }.tar")
       )
 
       db.send(:remove!)

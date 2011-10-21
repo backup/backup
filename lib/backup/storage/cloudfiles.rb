@@ -33,7 +33,7 @@ module Backup
       ##
       # This is the remote path to where the backup files will be stored
       def remote_path
-        File.join(path, TRIGGER)
+        File.join(path, TRIGGER, @time)
       end
 
       ##
@@ -45,6 +45,7 @@ module Backup
       ##
       # Performs the backup transfer
       def perform!
+        super
         transfer!
         cycle!
       end
@@ -69,26 +70,27 @@ module Backup
       ##
       # Transfers the archived file to the specified Cloud Files container
       def transfer!
-        begin
-          Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
+        files_to_transfer do |local_file, remote_file|
+          Logger.message("#{ self.class } started transferring \"#{ local_file }\".")
           connection.put_object(
             container,
             File.join(remote_path, remote_file),
             File.open(File.join(local_path, local_file))
           )
-        rescue Excon::Errors::SocketError => e
-          puts "\nAn error occurred while trying to transfer the backup."
-          puts "Make sure the container exists and try again.\n\n"
-          exit
         end
+      rescue Excon::Errors::SocketError => error
+        puts "\nAn error occurred while trying to transfer the backup."
+        puts "Make sure the container exists and try again.\n\n"
+        raise error
       end
 
       ##
       # Removes the transferred archive file from the Cloud Files container
       def remove!
-        begin
+        transferred_files do |local_file, remote_file|
           connection.delete_object(container, File.join(remote_path, remote_file))
-        rescue Excon::Errors::SocketError; end
+        end
+      rescue Excon::Errors::SocketError
       end
 
     end

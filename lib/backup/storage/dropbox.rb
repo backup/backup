@@ -42,12 +42,13 @@ module Backup
       ##
       # This is the remote path to where the backup files will be stored
       def remote_path
-        File.join(path, TRIGGER)
+        File.join(path, TRIGGER, @time)
       end
 
       ##
       # Performs the backup transfer
       def perform!
+        super
         transfer!
         cycle!
       end
@@ -81,18 +82,23 @@ module Backup
       ##
       # Transfers the archived file to the specified Dropbox folder
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
-        connection.upload(File.join(local_path, local_file), remote_path, :timeout => timeout)
+        files_to_transfer do |local_file, remote_file|
+          Logger.message("#{ self.class } started transferring \"#{ local_file }\".")
+          connection.upload(
+            File.join(local_path, local_file),
+            File.join(remote_path, remote_file),
+            :timeout => timeout
+          )
+        end
       end
 
       ##
       # Removes the transferred archive file from the Dropbox folder
       def remove!
-        begin
+        transferred_files do |local_file, remote_file|
           connection.delete(File.join(remote_path, remote_file))
-        rescue ::Dropbox::FileNotFoundError
-          Logger.warn "File \"#{ File.join(remote_path, remote_file) }\" does not exist, skipping removal."
         end
+      rescue ::Dropbox::FileNotFoundError
       end
 
       ##

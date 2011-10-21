@@ -42,6 +42,10 @@ module Backup
     attr_accessor :syncers
 
     ##
+    # The chunk_size attribute holds the size of the chunks in megabytes
+    attr_accessor :chunk_size
+
+    ##
     # The time when the backup initiated (in format: 2011.02.20.03.29.59)
     attr_accessor :time
 
@@ -62,6 +66,10 @@ module Backup
       # Contains the currently-in-use model. This attribute should get set by Backup::Finder.
       # Use Backup::Model.current to retrieve the actual data of the model
       attr_accessor :current
+
+      ##
+      # Contains an array of chunk suffixes for a given file
+      attr_accessor :chunk_suffixes
 
       ##
       # Returns the full path to the current file (including the current extension).
@@ -173,6 +181,20 @@ module Backup
     end
 
     ##
+    # Adds a method that allows the user to set the @chunk_size.
+    # The chunk_size (in megabytes) will later determine in how many chunks the
+    # backup needs to be split
+    def split_into_chunks_of(chunk_size = nil)
+      @chunk_size = chunk_size
+    end
+
+    ##
+    # Returns the path to the current file (including proper extension)
+    def file
+      Backup::Model.file
+    end
+
+    ##
     # Performs the backup process
     ##
     # [Databases]
@@ -219,6 +241,7 @@ module Backup
           package!
           compressors.each { |c| c.perform! }
           encryptors.each  { |e| e.perform! }
+          split!
           storages.each    { |s| s.perform! }
           clean!
         end
@@ -244,10 +267,17 @@ module Backup
     end
 
     ##
+    # Small wrapper for the Backup::Splitter.new(self).split!
+    def split!
+      Backup::Splitter.new(self).split!
+    end
+
+    ##
     # Cleans up the temporary files that were created after the backup process finishes
     def clean!
       Logger.message "Backup started cleaning up the temporary files."
-      run("#{ utility(:rm) } -rf '#{ File.join(TMP_PATH, TRIGGER) }' '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.#{Backup::Model.extension}") }'")
+      paths = [File.join(TMP_PATH, TRIGGER), file, (file + "-*")]
+      run("#{ utility(:rm) } -rf #{ paths.map { |path| "'#{ path }'" }.join(" ") }")
     end
 
     ##
@@ -267,7 +297,7 @@ module Backup
       Logger.normal "=" * 75 + "\n\nYou are running Backup version \"#{Backup::Version.current}\" and Ruby version \"#{RUBY_VERSION} (patchlevel #{RUBY_PATCHLEVEL})\" on platform \"#{RUBY_PLATFORM}\".\n"
       Logger.normal "If you've setup a \"Notification\" in your configuration file, the above error will have been sent."
       #Notifies the shell an exception occured.
-      exit 1 
+      exit 1
     end
 
   end

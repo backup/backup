@@ -34,7 +34,7 @@ module Backup
       ##
       # This is the remote path to where the backup files will be stored
       def remote_path
-        File.join(path, TRIGGER).sub(/^\//, '')
+        File.join(path, TRIGGER, @time).sub(/^\//, '')
       end
 
       ##
@@ -46,6 +46,7 @@ module Backup
       ##
       # Performs the backup transfer
       def perform!
+        super
         transfer!
         cycle!
       end
@@ -69,26 +70,27 @@ module Backup
       ##
       # Transfers the archived file to the specified directory
       def transfer!
-        begin
-          Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
-          directory   = connection.directories.get remote_path
+        files_to_transfer do |local_file, remote_file|
+          Logger.message("#{ self.class } started transferring \"#{ local_file }\".")
+          directory   = connection.directories.get(remote_path)
           directory ||= connection.directories.create(:key => remote_path)
           directory.files.create(
             :key  => remote_file,
             :body => File.open(File.join(local_path, local_file))
           )
-        rescue Excon::Errors::NotFound
-          raise "An error occurred while trying to transfer the file."
         end
+      rescue Excon::Errors::NotFound
+        raise "An error occurred while trying to transfer the file."
       end
 
       ##
       # Removes the transferred archive file from the Amazon S3 bucket
       def remove!
-        begin
-          directory = connection.directories.get remote_path
+        transferred_files do |local_file, remote_file|
+          directory = connection.directories.get(remote_path)
           directory.files.get(remote_file).destroy
-        rescue Excon::Errors::SocketError; end
+        end
+        rescue Excon::Errors::SocketError
       end
 
     end
