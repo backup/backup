@@ -229,6 +229,7 @@ module Backup
         clean!
         notifiers.each   { |n| n.perform!(self, exception) }
         show_exception!(exception)
+        exit(1)
       end
     end
 
@@ -266,8 +267,6 @@ module Backup
       Logger.normal "=" * 75 + "\nException that got raised:\n#{exception.class} - #{exception} \n" + "=" * 75 + "\n" + exception.backtrace.join("\n")
       Logger.normal "=" * 75 + "\n\nYou are running Backup version \"#{Backup::Version.current}\" and Ruby version \"#{RUBY_VERSION} (patchlevel #{RUBY_PATCHLEVEL})\" on platform \"#{RUBY_PLATFORM}\".\n"
       Logger.normal "If you've setup a \"Notification\" in your configuration file, the above error will have been sent."
-      #Notifies the shell an exception occured.
-      exit 1 
     end
 
   end
