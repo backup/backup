@@ -79,6 +79,12 @@ module Backup
       end
 
       ##
+      # Returns the @chunk_suffixes variable, sets it to an emtpy array if nil
+      def chunk_suffixes
+        @chunk_suffixes ||= Array.new
+      end
+
+      ##
       # Returns the temporary trigger path of the current model
       # e.g. /Users/Michael/tmp/backup/my_trigger
       def tmp_path
@@ -276,7 +282,12 @@ module Backup
     # Cleans up the temporary files that were created after the backup process finishes
     def clean!
       Logger.message "Backup started cleaning up the temporary files."
-      paths = [File.join(TMP_PATH, TRIGGER), file, (file + "-*")]
+      paths = [
+        File.join(TMP_PATH, TRIGGER),
+        Backup::Model.file,
+        Backup::Model.chunk_suffixes.map { |chunk_suffix| "#{Backup::Model.file}-#{chunk_suffix}" }
+      ].flatten
+
       run("#{ utility(:rm) } -rf #{ paths.map { |path| "'#{ path }'" }.join(" ") }")
     end
 

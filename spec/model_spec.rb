@@ -223,7 +223,20 @@ describe Backup::Model do
 
     it 'should remove the temporary files and folders that were created' do
       model.expects(:utility).with(:rm).returns(:rm)
-      model.expects(:run).with("rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-*") }'")
+      model.expects(:run).with "rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' " +
+                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'"
+
+      model.send(:clean!)
+    end
+
+    it 'should remove the temporary files and folders that were created' do
+      model.expects(:utility).with(:rm).returns(:rm)
+      Backup::Model.chunk_suffixes = ["aa", "ab", "ac"]
+      model.expects(:run).with "rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' " +
+                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' " +
+                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-aa") }' " +
+                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-ab") }' " +
+                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-ac") }'"
       model.send(:clean!)
     end
 
