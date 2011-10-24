@@ -123,6 +123,7 @@ describe Backup::Storage::Ninefold do
       directories.expects(:get).with("backups/myapp/#{ Backup::TIME }").returns(directory)
       files.expects(:get).with("#{ Backup::TRIGGER }.tar").returns(file)
       file.expects(:destroy)
+      directory.expects(:destroy)
 
       ninefold.send(:remove!)
     end

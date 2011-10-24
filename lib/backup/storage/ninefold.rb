@@ -86,10 +86,12 @@ module Backup
       ##
       # Removes the transferred archive file from the Amazon S3 bucket
       def remove!
+        directory = connection.directories.get(remote_path)
         transferred_files do |local_file, remote_file|
-          directory = connection.directories.get(remote_path)
+          Logger.message("#{ self.class } started removing '#{ local_file }' from Ninefold.'")
           directory.files.get(remote_file).destroy
         end
+        directory.destroy
         rescue Excon::Errors::SocketError
       end
 
