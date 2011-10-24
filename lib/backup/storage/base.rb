@@ -16,8 +16,9 @@ module Backup
 
       ##
       # Contains an array of chunk suffixes (if any)
-      # If none are set, this will be nil, in which case Backup assumes
-      # no splitting
+      # If none are set, this will be an empty array, in which case Backup assumes
+      # we haven't been splitting the backup in to multiple chunks. The storage object
+      # will only attempt to transfer/remove chunks if this array contains chunk suffixes.
       attr_accessor :chunk_suffixes
 
       ##

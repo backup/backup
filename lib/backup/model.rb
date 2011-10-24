@@ -273,7 +273,8 @@ module Backup
     end
 
     ##
-    # Small wrapper for the Backup::Splitter.new(self).split!
+    # Create a new instance of Backup::Splitter,
+    # passing it the current model instance and runs it.
     def split!
       Backup::Splitter.new(self).split!
     end

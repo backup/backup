@@ -14,9 +14,11 @@ module Backup
 
     ##
     # Instantiates a new instance of Backup::Splitter and takes
-    # a Backup model as an argument
+    # a Backup model as an argument.
+    # Also, (re)set the Backup::Model.chunk_suffixes to an empty array.
     def initialize(model)
       @model = model
+      Backup::Model.chunk_suffixes = Array.new
     end
 
     ##
