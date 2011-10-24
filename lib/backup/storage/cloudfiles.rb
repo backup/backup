@@ -88,6 +88,7 @@ module Backup
       # Removes the transferred archive file from the Cloud Files container
       def remove!
         transferred_files do |local_file, remote_file|
+          Logger.message("#{ self.class } started removing '#{ local_file }' from container '#{ container }'")
           connection.delete_object(container, File.join(remote_path, remote_file))
         end
       rescue Excon::Errors::SocketError
