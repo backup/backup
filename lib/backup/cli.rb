@@ -4,34 +4,30 @@ module Backup
   module CLI
 
     ##
-    # Wrapper method for %x[] to run CL commands
-    # through a ruby method. This helps with test coverage and
-    # improves readability.
+    # Runs a given command in an isolated (sub) process using POpen4.
+    # The STDOUT, STDERR and the returned exit code of the utility will be stored in the process_data Hash.
     #
-    # It'll first remove all prefixing slashes ( / ) by using .gsub(/^\s+/, '')
-    # This allows for the EOS blocks to be indented without actually using any
-    # prefixing spaces. This cleans up the implementation code.
+    # If a command returns an exit code other than 0, an exception will raise and the backup process will abort.
+    # Some utilities return exit codes other than 0 which aren't an issue in Backup's context. If this is the case,
+    # you can pass in an array of exit codes to ignore (whitelist), for example:
     #
-    # Every time the Backup::CLI#run method is invoked, it'll invoke
-    # the Backup::CLI#raise_if_command_not_found method after running the
-    # requested command on the OS.
+    #   run("tar -cf /output.tar /some/folder", :ignore_exit_codes => [1])
     #
-    # Backup::CLI#raise_if_command_not_found takes a single argument, the utility name.
-    # the command.slice(0, command.index(/\s/)).split('/')[-1] line will extract only the utility
-    # name (e.g. mongodump, pgdump, etc) from a command like "/usr/local/bin/mongodump <options>"
-    # and pass that in to the Backup::CLI#raise_if_command_not_found
-    def run(command)
-      command.gsub!(/^\s+/, '')
-      raise_if_command_not_found!(
-        command_name(command)
-      )
+    # So if the `tar` utility returns in this case 1, Backup will consider it an acceptable return code.
+    #
+    # Note: Exit code 0 is always automatically added to the :ignore_exit_codes array, regardless of whether you specify an
+    #       array to ignore or not.
+    def run(command, options = {})
+      command.gsub!(/^\s+/, "")
 
-      pid, stdin, stdout, stderr = Open4::popen4(command)
-      ignored, @status = Process::waitpid2(pid)
-      @stdout = stdout.read
-      @stderr = stderr.read
+      process_data                     = Hash.new
+      pid, stdin, stdout, stderr       = Open4::popen4(command)
+      ignored, process_data[:status]   = Process::waitpid2(pid)
+      process_data[:stdout]            = stdout.read
+      process_data[:stderr]            = stderr.read
+      process_data[:ignore_exit_codes] = ((options[:ignore_exit_codes] || Array.new) << 0).uniq
 
-      raise_if_command_failed!(command_name(command), @status)
+      raise_if_command_failed!(command_name(command), process_data)
     end
 
     ##
@@ -69,40 +65,28 @@ module Backup
       name
     end
 
+    ##
+    # Returns the name of the command
     def command_name(command)
       command.slice(0, command.index(/\s/)).split('/')[-1]
     end
 
     ##
-    # If the command that was previously run via this Ruby process returned
-    # error code "32512", the invoked utility (e.g. mysqldump, pgdump, etc) could not be found.
-    # If this is the case then this method will throw an exception, informing the user of this problem.
+    # Inspects the exit code returned from the POpen4 child process. If the exit code isn't listed
+    # in the process_data[:ignore_exit_codes] array, an exception will be raised, aborting the backup process.
     #
-    # Since this raises an exception, it'll stop the entire backup process, clean up the temp files
-    # and notify the user via the built-in notifiers if these are set.
-    def raise_if_command_not_found!(utility)
-      if $?.to_i.eql?(32512)
-        raise Exception::CommandNotFound , "Could not find the utility \"#{utility}\" on \"#{RUBY_PLATFORM}\".\n" +
-                                           "If this is a database utility, try defining the 'utility_path' option in the configuration file.\n" +
-                                           "See the Database Wiki for more information about the Utility Path option."
-      end
-    end
+    # Information regarding the error ( EXIT CODE and STDERR ) will be returned to the shell so the user can
+    # investigate the issue.
+    #
+    # The "Exception::CommandFailed" exception will be raised.
+    def raise_if_command_failed!(utility, process_data)
+      unless process_data[:ignore_exit_codes].include?(process_data[:status].to_i)
+        exception_string =  "Failed to run \"#{ utility }\" on \"#{ RUBY_PLATFORM }\".\n\n" +
+                            "Exit code was:\n\n\s\s#{ process_data[:status].to_i }\n\n"
+        exception_string << "STDOUT was:\n\n\s\s#{ process_data[:stdout].gsub("\n", "\n\s\s") }" unless process_data[:stdout].empty?
+        exception_string << "STDERR was:\n\n\s\s#{ process_data[:stderr].gsub("\n", "\n\s\s") }" unless process_data[:stderr].empty?
 
-    ##
-    # If the command that was previously run via this Ruby process returned
-    # a non-zero error code, the invoked utility (e.g. mysqldump, pgdump, etc) failed to run.
-    # If this is the case then this method will throw an exception, informing the user of this problem.
-    #
-    # Since this raises an exception, it'll stop the entire backup process, clean up the temp files
-    # and notify the user via the built-in notifiers if these are set.
-    def raise_if_command_failed!(utility, status)
-      unless status.to_i.eql?(0)
-        raise Exception::CommandFailed , "Failed to run \"#{utility}\" on \"#{RUBY_PLATFORM}\".\n" +
-                                         "The status code returned was #{status}\n" +
-                                         "STDOUT was:\n" +
-                                         @stdout +
-                                         "STDERR was:\n" +
-                                         @stderr
+        raise Exception::CommandFailed, exception_string
       end
     end
 
