@@ -24,7 +24,7 @@ module Backup
       # descending. The newest backup storage object comes in Backup::Storage::Object.load[0]
       # and the oldest in Backup::Storage::Object.load[-1]
       def load
-        if File.exist?(storage_file) && !File.zero?(storage_file)
+        if File.exist?(storage_file) and not File.zero?(storage_file)
           YAML.load_file(storage_file).sort { |a,b| b.time <=> a.time }
         else
           []
