@@ -24,7 +24,7 @@ module Backup
         instance_eval(&block) if block_given?
 
         @time = TIME
-        fix_path!
+        @path = File.expand_path(path)
       end
 
       ##
@@ -65,12 +65,6 @@ module Backup
       # Creates the path to where the backups are stored if it doesn't exist yet
       def create_local_directories!
         FileUtils.mkdir_p(remote_path)
-      end
-
-      ##
-      # Replaces ~/ with the full path to the users $HOME directory
-      def fix_path!
-        @path = path.sub(/^\~\//, "#{ENV['HOME']}/")
       end
 
     end

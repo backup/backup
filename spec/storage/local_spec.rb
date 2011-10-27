@@ -16,7 +16,7 @@ describe Backup::Storage::Local do
   end
 
   it 'should have defined the configuration properly' do
-    local.path.should == "#{ENV['HOME']}/backups/"
+    local.path.should == "#{ENV['HOME']}/backups"
     local.keep.should == 20
   end
 

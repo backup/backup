@@ -39,7 +39,7 @@ describe Backup::Archive do
   describe '#paths_to_package' do
     it 'should return a tar -c friendly string' do
       archive.send(:paths_to_package).should ==
-      "'/home/rspecuser/somefile' '/home/rspecuser/logs/' '/home/rspecuser/dotfiles/'"
+      "'/home/rspecuser/somefile' '/home/rspecuser/logs' '/home/rspecuser/dotfiles'"
     end
   end
 
@@ -51,7 +51,7 @@ describe Backup::Archive do
 
     it 'should return a tar -c friendly string' do
       archive.send(:paths_to_exclude).should ==
-      "--exclude='/home/rspecuser/badfile' --exclude='/home/rspecuser/wrongdir/'"
+      "--exclude='/home/rspecuser/badfile' --exclude='/home/rspecuser/wrongdir'"
     end
   end
 
@@ -63,7 +63,7 @@ describe Backup::Archive do
     context 'when both paths were added and paths that should be excluded were added' do
       it 'should render both the syntax for the paths that be included as well as excluded' do
         archive.expects(:mkdir).with(File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive'))
-        archive.expects(:run).with("tar -c -f '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}' --exclude='/home/rspecuser/badfile' --exclude='/home/rspecuser/wrongdir/' '/home/rspecuser/somefile' '/home/rspecuser/logs/' '/home/rspecuser/dotfiles/' 2> /dev/null")
+        archive.expects(:run).with("tar -c -f '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}' --exclude='/home/rspecuser/badfile' --exclude='/home/rspecuser/wrongdir' '/home/rspecuser/somefile' '/home/rspecuser/logs' '/home/rspecuser/dotfiles' 2> /dev/null")
         archive.expects(:utility).with(:tar).returns(:tar)
         archive.perform!
       end
@@ -82,7 +82,7 @@ describe Backup::Archive do
     end
 
     it 'should log the status' do
-      Backup::Logger.expects(:message).with("Backup::Archive started packaging and archiving \"/home/rspecuser/somefile\", \"/home/rspecuser/logs/\", \"/home/rspecuser/dotfiles/\".")
+      Backup::Logger.expects(:message).with("Backup::Archive started packaging and archiving \"/home/rspecuser/somefile\", \"/home/rspecuser/logs\", \"/home/rspecuser/dotfiles\".")
       archive.perform!
     end
   end

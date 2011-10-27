@@ -33,13 +33,13 @@ module Backup
     ##
     # Adds new paths to the @paths instance variable array
     def add(path)
-      @paths << path
+      @paths << File.expand_path(path)
     end
 
     ##
     # Adds new paths to the @excludes instance variable array
     def exclude(path)
-      @excludes << path
+      @excludes << File.expand_path(path)
     end
 
     ##
