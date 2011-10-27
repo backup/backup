@@ -43,7 +43,6 @@ module Backup
         @lock               ||= false
 
         instance_eval(&block)
-        prepare!
       end
 
       ##
@@ -112,20 +111,18 @@ module Backup
       # collections to dump, it'll loop through the array of collections and invoke the
       # 'mongodump' command once per collection
       def perform!
-        log!
+        super
 
-        begin
-          lock_database if @lock.eql?(true)
-          if collections_to_dump.is_a?(Array) and not collections_to_dump.empty?
-            specific_collection_dump!
-          else
-            dump!
-          end
-          unlock_database if @lock.eql?(true)
-        rescue => exception
-          unlock_database if @lock.eql?(true)
-          raise exception
+        lock_database if @lock.eql?(true)
+        if collections_to_dump.is_a?(Array) and not collections_to_dump.empty?
+          specific_collection_dump!
+        else
+          dump!
         end
+        unlock_database if @lock.eql?(true)
+      rescue => exception
+        unlock_database if @lock.eql?(true)
+        raise exception
       end
 
       ##

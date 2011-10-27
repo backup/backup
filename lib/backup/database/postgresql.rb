@@ -40,7 +40,6 @@ module Backup
         @additional_options ||= Array.new
 
         instance_eval(&block)
-        prepare!
         ENV['PGPASSWORD'] = password
       end
 
@@ -110,7 +109,8 @@ module Backup
       # data to the specified path based on the 'trigger'
       # and resets the 'PGPASSWORD' environment variable to nil
       def perform!
-        log!
+        super
+
         run("#{pgdump} > '#{File.join(dump_path, name)}.sql'")
         ENV['PGPASSWORD'] = nil
       end

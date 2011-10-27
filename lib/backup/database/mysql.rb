@@ -38,7 +38,6 @@ module Backup
         @additional_options ||= Array.new
 
         instance_eval(&block)
-        prepare!
       end
 
       ##
@@ -95,7 +94,8 @@ module Backup
       # Performs the mysqldump command and outputs the
       # data to the specified path based on the 'trigger'
       def perform!
-        log!
+        super
+
         run("#{mysqldump} > '#{File.join(dump_path, name)}.sql'")
       end
 

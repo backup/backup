@@ -16,6 +16,14 @@ module Backup
       attr_accessor :utility_path
 
       ##
+      # Super method for all child (database) objects. Every database object's #perform!
+      # method should call #super before anything else to prepare
+      def perform!
+        prepare!
+        log!
+      end
+
+      ##
       # Defines the @dump_path and ensures it exists by creating it
       def prepare!
         @dump_path = File.join(TMP_PATH, TRIGGER, self.class.name.split('::').last)

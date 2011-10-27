@@ -27,4 +27,13 @@ describe Backup::Database::Base do
     db.utility(:my_database_util).should == :my_database_util
   end
 
+  describe '#perform!' do
+    it 'should invoke prepare! and log!' do
+      db.expects(:prepare!)
+      db.expects(:log!)
+
+      db.perform!
+    end
+  end
+
 end

@@ -48,11 +48,6 @@ describe Backup::Database::MySQL do
       db.only_tables.should == []
       db.additional_options.should == []
     end
-
-    it 'should ensure the directory is available' do
-      Backup::Database::MySQL.any_instance.expects(:mkdir).with("#{Backup::TMP_PATH}/myapp/MySQL")
-      Backup::Database::MySQL.new {}
-    end
   end
 
   describe '#skip_tables' do
@@ -134,6 +129,11 @@ describe Backup::Database::MySQL do
       db.stubs(:utility).returns('mysqldump')
       db.stubs(:mkdir)
       db.stubs(:run)
+    end
+
+    it 'should ensure the directory is available' do
+      db.expects(:mkdir).with(File.join(Backup::TMP_PATH, "myapp", "MySQL"))
+      db.perform!
     end
 
     it 'should run the mysqldump command and dump it to the specified path' do

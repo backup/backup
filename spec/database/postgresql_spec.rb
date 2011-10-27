@@ -64,11 +64,6 @@ describe Backup::Database::PostgreSQL do
       db.username_options.should == ''
       db.password_options.should == ''
     end
-
-    it 'should ensure the directory is available' do
-      Backup::Database::PostgreSQL.any_instance.expects(:mkdir).with("#{Backup::TMP_PATH}/myapp/PostgreSQL")
-      Backup::Database::PostgreSQL.new {}
-    end
   end
 
   describe '#skip_tables' do
@@ -169,6 +164,11 @@ describe Backup::Database::PostgreSQL do
       db.stubs(:utility).returns('pg_dump')
       db.stubs(:mkdir)
       db.stubs(:run)
+    end
+
+    it 'should ensure the directory is available' do
+      db.expects(:mkdir).with(File.join(Backup::TMP_PATH, "myapp", "PostgreSQL"))
+      db.perform!
     end
 
     it 'should run the pg_dump command and dump it to the specified path' do

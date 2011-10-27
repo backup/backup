@@ -42,11 +42,6 @@ describe Backup::Database::Redis do
 
       db.additional_options.should == ""
     end
-
-    it 'should ensure the directory is available' do
-      Backup::Database::Redis.any_instance.expects(:mkdir).with("#{Backup::TMP_PATH}/myapp/Redis")
-      Backup::Database::Redis.new {}
-    end
   end
 
   describe '#credential_options' do
@@ -83,6 +78,8 @@ describe Backup::Database::Redis do
       File.expects(:exist?).returns(true)
       db.stubs(:utility).returns('cp')
       db.expects(:run).with("cp '#{ File.join('/var/lib/redis/db/mydatabase.rdb') }' '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER, 'Redis', 'mydatabase.rdb') }'")
+      db.expects(:mkdir).with(File.join(Backup::TMP_PATH, "myapp", "Redis"))
+      db.prepare!
       db.copy!
     end
 
@@ -90,6 +87,8 @@ describe Backup::Database::Redis do
       File.expects(:exist?).returns(true)
       db.utility_path = '/usr/local/bin/redis-cli'
       db.expects(:run).with { |v| v =~ %r{^/bin/cp .+} }
+      db.expects(:mkdir).with(File.join(Backup::TMP_PATH, "myapp", "Redis"))
+      db.prepare!
       db.copy!
     end
   end
@@ -100,6 +99,11 @@ describe Backup::Database::Redis do
       db.stubs(:utility).returns('redis-cli')
       db.stubs(:mkdir)
       db.stubs(:run)
+    end
+
+    it 'should ensure the directory is available' do
+      db.expects(:mkdir).with(File.join(Backup::TMP_PATH, "myapp", "Redis"))
+      db.perform!
     end
 
     it 'should copy over without persisting (saving) first' do

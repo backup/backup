@@ -23,10 +23,9 @@ module Backup
     ##
     # Takes the name of the archive and the configuration block
     def initialize(name, &block)
-      @name         = name.to_sym
-      @paths        = Array.new
-      @excludes     = Array.new
-      @archive_path = File.join(TMP_PATH, TRIGGER, 'archive')
+      @name     = name.to_sym
+      @paths    = Array.new
+      @excludes = Array.new
 
       instance_eval(&block)
     end
@@ -47,7 +46,9 @@ module Backup
     # Archives all the provided paths in to a single .tar file
     # and places that .tar file in the folder which later will be packaged
     def perform!
+      @archive_path = File.join(TMP_PATH, TRIGGER, 'archive')
       mkdir(archive_path)
+
       Logger.message("#{ self.class } started packaging and archiving #{ paths.map { |path| "\"#{path}\""}.join(", ") }.")
       run("#{ utility(:tar) } -c -f '#{ File.join(archive_path, "#{name}.tar") }' #{ paths_to_exclude } #{ paths_to_package } 2> /dev/null")
     end

@@ -34,7 +34,6 @@ module Backup
         @additional_options ||= Array.new
 
         instance_eval(&block)
-        prepare!
       end
 
       ##
@@ -73,7 +72,7 @@ module Backup
       # the Redis server to persist the current state to the dump file
       # before copying the dump to get the most recent updates in to the backup
       def perform!
-        log!
+        super
 
         invoke_save! if invoke_save
         copy!

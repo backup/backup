@@ -44,11 +44,6 @@ describe Backup::Database::MongoDB do
       db.only_collections.should   == []
       db.additional_options.should == ""
     end
-
-    it 'should ensure the directory is available' do
-      Backup::Database::MongoDB.any_instance.expects(:mkdir).with("#{Backup::TMP_PATH}/myapp/MongoDB")
-      Backup::Database::MongoDB.new {}
-    end
   end
 
   describe '#only_collections' do
@@ -101,6 +96,7 @@ describe Backup::Database::MongoDB do
   describe '#mongodump_string' do
     it 'should return the full mongodump string' do
       db.expects(:utility).with(:mongodump).returns('mongodump')
+      db.prepare!
       db.mongodump.should ==
       "mongodump --db='mydatabase' --username='someuser' --password='secret' " +
       "--host='localhost' --port='123' --ipv6 --query --out='#{ File.join(Backup::TMP_PATH, Backup::TRIGGER, 'MongoDB') }'"
@@ -112,6 +108,11 @@ describe Backup::Database::MongoDB do
       db.stubs(:utility).returns('mongodump')
       db.stubs(:mkdir)
       db.stubs(:run)
+    end
+
+    it 'should ensure the directory is available' do
+      db.expects(:mkdir).with(File.join(Backup::TMP_PATH, "myapp", "MongoDB"))
+      db.perform!
     end
 
     it 'should run the mongodump command and dump all collections' do
