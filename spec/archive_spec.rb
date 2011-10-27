@@ -63,7 +63,10 @@ describe Backup::Archive do
     context 'when both paths were added and paths that should be excluded were added' do
       it 'should render both the syntax for the paths that be included as well as excluded' do
         archive.expects(:mkdir).with(File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive'))
-        archive.expects(:run).with("tar -c -f '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}' --exclude='/home/rspecuser/badfile' --exclude='/home/rspecuser/wrongdir' '/home/rspecuser/somefile' '/home/rspecuser/logs' '/home/rspecuser/dotfiles'")
+        archive.expects(:run).with(
+          "tar -c -f '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}' --exclude='/home/rspecuser/badfile' --exclude='/home/rspecuser/wrongdir' '/home/rspecuser/somefile' '/home/rspecuser/logs' '/home/rspecuser/dotfiles'",
+          :ignore_exit_codes => [1]
+        )
         archive.expects(:utility).with(:tar).returns(:tar)
         archive.perform!
       end
@@ -76,7 +79,10 @@ describe Backup::Archive do
         end
 
         archive.stubs(:utility).returns(:tar)
-        archive.expects(:run).with("tar -c -f '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}'  '/path/to/archive'")
+        archive.expects(:run).with(
+          "tar -c -f '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}'  '/path/to/archive'",
+          :ignore_exit_codes => [1]
+        )
         archive.perform!
       end
     end
