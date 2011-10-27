@@ -48,9 +48,10 @@ module Backup
       ##
       # Transfers the archived file to the specified local path
       def transfer!
+        create_local_directories!
+
         files_to_transfer do |local_file, remote_file|
           Logger.message("#{ self.class } started transferring \"#{ local_file }\".")
-          create_local_directories!
           FileUtils.cp(
             File.join(local_path, local_file),
             File.join(remote_path, remote_file)
@@ -62,8 +63,10 @@ module Backup
       # Removes the transferred archive file from the local path
       def remove!
         transferred_files do |local_file, remote_file|
-          FileUtils.rm(File.join(remote_path, remote_file))
+          Logger.message("#{ self.class } started removing \"#{ local_file }\".")
         end
+
+        FileUtils.rm_rf(remote_path)
       rescue => error
         Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
       end

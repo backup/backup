@@ -109,6 +109,7 @@ describe Backup::Storage::FTP do
 
     it 'should remove the file from the remote server path' do
       connection.expects(:delete).with("backups/myapp/#{ Backup::TIME }/#{ Backup::TRIGGER }.tar")
+      connection.expects(:rmdir).with("backups/myapp/#{ Backup::TIME }")
       ftp.send(:remove!)
     end
   end

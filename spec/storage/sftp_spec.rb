@@ -90,6 +90,7 @@ describe Backup::Storage::SFTP do
 
     it 'should remove the file from the remote server path' do
       connection.expects(:remove!).with("backups/myapp/#{ Backup::TIME }/#{ Backup::TRIGGER }.tar")
+      connection.expects(:rmdir!).with("backups/myapp/#{ Backup::TIME }")
       sftp.send(:remove!)
     end
   end

@@ -76,7 +76,7 @@ describe Backup::Storage::RSync do
 
       rsync.expects(:create_remote_directories!)
       rsync.expects(:utility).returns('rsync')
-      rsync.expects(:run).with("rsync -z -e 'ssh -p 22' --password-file='#{rsync.instance_variable_get('@password_file').path}' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TIME }/#{ Backup::TRIGGER }.tar'")
+      rsync.expects(:run).with("rsync -z -e 'ssh -p 22' --password-file='#{rsync.instance_variable_get('@password_file').path}' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar'")
 
       rsync.send(:transfer!)
     end
@@ -88,7 +88,7 @@ describe Backup::Storage::RSync do
       rsync.password = nil
       rsync.expects(:create_remote_directories!)
       rsync.expects(:utility).returns('rsync')
-      rsync.expects(:run).with("rsync -z -e 'ssh -p 22'  '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TIME }/#{ Backup::TRIGGER }.tar'")
+      rsync.expects(:run).with("rsync -z -e 'ssh -p 22'  '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'my_username@123.45.678.90:backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar'")
 
       rsync.send(:transfer!)
     end
@@ -101,9 +101,8 @@ describe Backup::Storage::RSync do
       Net::SSH.stubs(:start).returns(connection)
     end
 
-    it 'should remove the file from the remote server path' do
-      connection.expects(:exec!).with("rm backups/myapp/#{ Backup::TIME }/#{ Backup::TRIGGER }.tar")
-      rsync.send(:remove!)
+    it 'should return nil' do
+      rsync.send(:remove!).should == nil
     end
   end
 
@@ -116,7 +115,7 @@ describe Backup::Storage::RSync do
 
     it 'should properly create remote directories one by one' do
       rsync.path = 'backups/some_other_folder/another_folder'
-      connection.expects(:exec!).with("mkdir -p 'backups/some_other_folder/another_folder/myapp/#{ Backup::TIME }'")
+      connection.expects(:exec!).with("mkdir -p 'backups/some_other_folder/another_folder/myapp'")
       rsync.send(:create_remote_directories!)
     end
   end
@@ -133,7 +132,7 @@ describe Backup::Storage::RSync do
       rsync.expects(:create_remote_directories!)
       rsync.local = true
       rsync.expects(:utility).returns('rsync')
-      rsync.expects(:run).with("rsync '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'backups/#{ Backup::TRIGGER }/#{ Backup::TIME }/#{ Backup::TRIGGER }.tar'")
+      rsync.expects(:run).with("rsync '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar'")
       rsync.send(:transfer!)
     end
   end

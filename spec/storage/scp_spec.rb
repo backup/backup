@@ -92,8 +92,8 @@ describe Backup::Storage::SCP do
       Net::SSH.stubs(:start).returns(connection)
     end
 
-    it 'should remove the file from the remote server path' do
-      connection.expects(:exec!).with("rm backups/myapp/#{ Backup::TIME }/#{ Backup::TRIGGER }.tar")
+    it 'should remove the remote path from the remote server' do
+      connection.expects(:exec!).with("rm -rf 'backups/myapp/#{ Backup::TIME }'")
       scp.send(:remove!)
     end
   end

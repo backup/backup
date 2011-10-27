@@ -80,9 +80,10 @@ module Backup
       ##
       # Transfers the archived file to the specified remote server
       def transfer!
+        create_remote_directories!
+
         files_to_transfer do |local_file, remote_file|
-          Logger.message("#{ self.class } started transferring \"#{ local_file }\".")
-          create_remote_directories!
+          Logger.message("#{ self.class } started transferring \"#{ local_file }\" to \"#{ ip }\".")
           connection.put(
             File.join(local_path, local_file),
             File.join(remote_path, remote_file)
@@ -94,12 +95,13 @@ module Backup
       # Removes the transferred archive file from the server
       def remove!
         transferred_files do |local_file, remote_file|
-          connection.delete(
-            File.join(remote_path, remote_file)
-          )
+          Logger.message("#{ self.class } started removing \"#{ local_file }\" from \"#{ ip }\".")
+          connection.delete(File.join(remote_path, remote_file))
         end
+
+        connection.rmdir(remote_path)
       rescue Net::FTPPermError
-        Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+        Logger.warn "Could not remove path \"#{ remote_path }\" and underlying file(s)."
       end
 
       ##
