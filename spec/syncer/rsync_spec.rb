@@ -176,7 +176,7 @@ describe Backup::Syncer::RSync do
       Backup::Logger.expects(:message).with("Backup::Syncer::RSync started syncing '/some/random/directory' '/another/random/directory'.")
       rsync.expects(:utility).with(:rsync).returns(:rsync)
       rsync.expects(:remove_password_file!)
-      rsync.expects(:run).with("rsync -vhP --archive --delete --compress -e 'ssh -p 22' --password-file='#{rsync.instance_variable_get('@password_file').path}' " +
+      rsync.expects(:run).with("rsync --archive --delete --compress -e 'ssh -p 22' --password-file='#{rsync.instance_variable_get('@password_file').path}' " +
                                "'/some/random/directory' '/another/random/directory' 'my_username@123.45.678.90:backups/'")
       rsync.perform!
     end
@@ -186,7 +186,7 @@ describe Backup::Syncer::RSync do
       rsync.password = nil
       rsync.expects(:utility).with(:rsync).returns(:rsync)
       rsync.expects(:remove_password_file!)
-      rsync.expects(:run).with("rsync -vhP --archive --delete --compress -e 'ssh -p 22' " +
+      rsync.expects(:run).with("rsync --archive --delete --compress -e 'ssh -p 22' " +
                                "'/some/random/directory' '/another/random/directory' 'my_username@123.45.678.90:backups/'")
       rsync.perform!
     end
