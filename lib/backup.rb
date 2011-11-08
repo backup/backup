@@ -97,9 +97,9 @@ module Backup
     end
 
     module Syncer
-      autoload :RSync, File.join(CONFIGURATION_PATH, 'syncer', 'rsync')
+      autoload :RSync,        File.join(CONFIGURATION_PATH, 'syncer', 'rsync')
       autoload :InverseRSync, File.join(CONFIGURATION_PATH, 'syncer', 'inverse_rsync')
-      autoload :S3,    File.join(CONFIGURATION_PATH, 'syncer', 's3')
+      autoload :S3,           File.join(CONFIGURATION_PATH, 'syncer', 's3')
     end
 
     module Database
@@ -130,10 +130,10 @@ module Backup
   ##
   # Autoload Backup syncer files
   module Syncer
-    autoload :Base,  File.join(SYNCER_PATH, 'base')
-    autoload :RSync, File.join(SYNCER_PATH, 'rsync')
+    autoload :Base,         File.join(SYNCER_PATH, 'base')
+    autoload :RSync,        File.join(SYNCER_PATH, 'rsync')
     autoload :InverseRSync, File.join(SYNCER_PATH, 'inverse_rsync')
-    autoload :S3,    File.join(SYNCER_PATH, 's3')
+    autoload :S3,           File.join(SYNCER_PATH, 's3')
   end
 
   ##

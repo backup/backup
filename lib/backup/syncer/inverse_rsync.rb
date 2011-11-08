@@ -9,7 +9,7 @@ module Backup
     class InverseRSync < RSync
       ##
       # Directories to sync
-      attr_writer :remote_path
+      attr_accessor :remote_path
 
       ##
       # Path to store the synced files/directories to
@@ -32,8 +32,6 @@ module Backup
 
         instance_eval(&block) if block_given?
         write_password_file!
-
-        @path = path.sub(/^\~\//, '')
       end
 
       ##
@@ -43,7 +41,7 @@ module Backup
       def perform!
         Logger.message("#{ self.class } started syncing #{ remote_path }.")
         Logger.silent(
-          run("#{ utility(:rsync) } -vhPr #{ options } '#{ username }@#{ ip }:#{ remote_path } #{ local_path }'")
+          run("#{ utility(:rsync) } -vhPr #{ options } '#{ username }@#{ ip }:#{ remote_path }' '#{ local_path }'")
         )
 
         remove_password_file!
