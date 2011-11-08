@@ -40,6 +40,7 @@ module Backup
       # recursively (-r option)
       def perform!
         Logger.message("#{ self.class } started syncing #{ remote_path }.")
+        Logger.silent(run("mkdir -p #{ local_path }"))
         Logger.silent(
           run("#{ utility(:rsync) } -vhPr #{ options } '#{ username }@#{ ip }:#{ remote_path }' '#{ local_path }'")
         )
