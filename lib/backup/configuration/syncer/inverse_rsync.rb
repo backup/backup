@@ -28,7 +28,7 @@ module Backup
           
           ##
           # Path to store the synced files/directories to
-          attr_accessor :local_path
+          attr_accessor :path
 
           ##
           # Flag for mirroring the files/directories
