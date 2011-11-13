@@ -25,21 +25,6 @@ module Backup
       attr_accessor :timeout
 
       ##
-      # Creates a new instance of the Dropbox storage object
-      # First it sets the defaults (if any exist) and then evaluates
-      # the configuration block which may overwrite these defaults
-      def initialize(&block)
-        load_defaults!(:except => ['password', 'email'])
-
-        @path ||= 'backups'
-
-        instance_eval(&block) if block_given?
-
-        @timeout ||= 300
-        @time = TIME
-      end
-
-      ##
       # This is the remote path to where the backup files will be stored
       def remote_path
         File.join(path, TRIGGER, @time)
@@ -54,6 +39,22 @@ module Backup
       end
 
     private
+
+      ##
+      # Set configuration defaults before evaluating configuration block,
+      # after setting defaults from Storage::Base
+      def pre_configure
+        super
+        @path ||= 'backups'
+      end
+
+      ##
+      # Adjust configuration after evaluating configuration block,
+      # after adjustments from Storage::Base
+      def post_configure
+        super
+        @timeout ||= 300
+      end
 
       ##
       # The initial connection to Dropbox will provide the user with an authorization url.

@@ -30,23 +30,6 @@ module Backup
       attr_accessor :local
 
       ##
-      # Creates a new instance of the RSync storage object
-      # First it sets the defaults (if any exist) and then evaluates
-      # the configuration block which may overwrite these defaults
-      def initialize(&block)
-        load_defaults!
-
-        @port   ||= 22
-        @path   ||= 'backups'
-        @local  ||= false
-
-        instance_eval(&block) if block_given?
-        write_password_file!
-
-        @path = path.sub(/^\~\//, '')
-      end
-
-      ##
       # This is the remote path to where the backup files will be stored
       def remote_path
         File.join(path, TRIGGER)
@@ -80,6 +63,25 @@ module Backup
       end
 
     private
+
+      ##
+      # Set configuration defaults before evaluating configuration block,
+      # after setting defaults from Storage::Base
+      def pre_configure
+        super
+        @port   ||= 22
+        @path   ||= 'backups'
+        @local  ||= false
+      end
+
+      ##
+      # Adjust configuration after evaluating configuration block,
+      # after adjustments from Storage::Base
+      def post_configure
+        super
+        write_password_file!
+        @path = path.sub(/^\~\//, '')
+      end
 
       ##
       # Establishes a connection to the remote server and returns the Net::SSH object.

@@ -13,21 +13,6 @@ module Backup
       attr_accessor :path
 
       ##
-      # Creates a new instance of the Local storage object
-      # First it sets the defaults (if any exist) and then evaluates
-      # the configuration block which may overwrite these defaults
-      def initialize(&block)
-        load_defaults!
-
-        @path ||= "#{ENV['HOME']}/backups"
-
-        instance_eval(&block) if block_given?
-
-        @time = TIME
-        @path = File.expand_path(path)
-      end
-
-      ##
       # This is the remote path to where the backup files will be stored.
       # Eventhough it says "remote", it's actually the "local" path, but
       # the naming is necessary for compatibility reasons
@@ -44,6 +29,22 @@ module Backup
       end
 
     private
+
+      ##
+      # Set configuration defaults before evaluating configuration block,
+      # after setting defaults from Storage::Base
+      def pre_configure
+        super
+        @path ||= "#{ENV['HOME']}/backups"
+      end
+
+      ##
+      # Adjust configuration after evaluating configuration block,
+      # after adjustments from Storage::Base
+      def post_configure
+        super
+        @path = File.expand_path(path)
+      end
 
       ##
       # Transfers the archived file to the specified local path

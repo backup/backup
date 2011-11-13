@@ -25,23 +25,6 @@ module Backup
       attr_accessor :passive_mode
 
       ##
-      # Creates a new instance of the FTP storage object
-      # First it sets the defaults (if any exist) and then evaluates
-      # the configuration block which may overwrite these defaults
-      def initialize(&block)
-        load_defaults!
-
-        @port         ||= 21
-        @path         ||= 'backups'
-        @passive_mode ||= false
-
-        instance_eval(&block) if block_given?
-
-        @time = TIME
-        @path = path.sub(/^\~\//, '')
-      end
-
-      ##
       # This is the remote path to where the backup files will be stored
       def remote_path
         File.join(path, TRIGGER, @time)
@@ -56,6 +39,24 @@ module Backup
       end
 
     private
+
+      ##
+      # Set configuration defaults before evaluating configuration block,
+      # after setting defaults from Storage::Base
+      def pre_configure
+        super
+        @port         ||= 21
+        @path         ||= 'backups'
+        @passive_mode ||= false
+      end
+
+      ##
+      # Adjust configuration after evaluating configuration block,
+      # after adjustments from Storage::Base
+      def post_configure
+        super
+        @path = path.sub(/^\~\//, '')
+      end
 
       ##
       # Establishes a connection to the remote server and returns the Net::FTP object.
