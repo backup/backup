@@ -16,7 +16,7 @@ module Backup
       # debug options: -vhP
       # recursively (-r option)
       def perform!
-        Logger.message("#{ self.class } started syncing #{ remote_path }.")
+        Logger.message("#{ self.class } started syncing '#{ remote_path }'.")
         Logger.silent(run("mkdir -p #{ path }"))
         Logger.silent(
           run("#{ utility(:rsync) } -vhPr #{ options } '#{ username }@#{ ip }:#{ remote_path }' '#{ path }'")
