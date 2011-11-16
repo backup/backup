@@ -68,7 +68,7 @@ module Backup
     # Tries to find and load the configuration file
     def load_config!
       unless File.exist?(config)
-        puts "Could not find a configuration file in '#{config}'."; exit
+        puts "Could not find a configuration file in '#{config}'."; exit(1)
       end
 
       ##
