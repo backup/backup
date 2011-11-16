@@ -63,7 +63,7 @@ describe Backup::Splitter do
       File.expects(:size).with(model.file).returns(419430400) # 400mb
       model.stubs(:chunk_size).returns(300)
 
-      splitter.expects(:utility).with("split").returns("split")
+      splitter.expects(:utility).with(:split).returns("split")
       splitter.expects(:run).with("split -b 300m '/some/file.tar.gz.enc' '/some/file.tar.gz.enc-'")
       splitter.split!
     end

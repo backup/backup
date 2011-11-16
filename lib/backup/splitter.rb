@@ -29,7 +29,7 @@ module Backup
 
       if File.size(model.file) > bytes_representation_of(model.chunk_size)
         Logger.message "Backup started splitting the packaged archive in to chunks of #{ model.chunk_size } megabytes."
-        run("#{ utility("split") } -b #{ model.chunk_size }m '#{ model.file }' '#{ model.file + SUFFIX_SEPARATOR }'")
+        run("#{ utility(:split) } -b #{ model.chunk_size }m '#{ model.file }' '#{ model.file + SUFFIX_SEPARATOR }'")
         Backup::Model.chunk_suffixes = chunk_suffixes
       end
     end
