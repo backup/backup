@@ -157,6 +157,7 @@ class BackupCLI < Thor
   # For example, running $ backup generate --databases='mongodb' will generate a pre-populated
   # configuration file with a base MongoDB setup
   desc 'generate', 'Generates configuration blocks based on the arguments you pass in'
+  method_option :name,        :type => :string, :required => true
   method_option :path,        :type => :string
   method_option :databases,   :type => :string
   method_option :storages,    :type => :string
@@ -166,9 +167,17 @@ class BackupCLI < Thor
   method_option :notifiers,   :type => :string
   method_option :archives,    :type => :boolean
   def generate
+    config_path = options[:path] || Backup::PATH
+    models_path = File.join(config_path, "models")
+    config      = File.join(config_path, "config.rb")
+    model       = File.join(models_path, "#{options[:name]}.rb")
+
     temp_file = Tempfile.new('backup.rb')
-    temp_file << File.read( File.join(TEMPLATE_DIR, 'readme') )
-    temp_file << "Backup::Model.new(:my_backup, 'My Backup') do\n\n"
+    temp_file << "# encoding: utf-8\n\n##\n# Backup Generated: #{options[:name]}\n"
+    temp_file << "# Once configured, you can run the backup with the following command:\n#\n"
+    temp_file << "# $ backup perform -t #{options[:name]} [-c <path_to_configuration_file>]\n#\n"
+    temp_file << "Backup::Model.new(:#{options[:name]}, 'Description for #{options[:name]}') do\n\n"
+    temp_file << "\s\s# split_into_chunks_of 500 # in megabytes\n\n"
 
     if options[:archives]
       temp_file << File.read( File.join(TEMPLATE_DIR, 'archive') ) + "\n\n"
@@ -187,17 +196,21 @@ class BackupCLI < Thor
     temp_file << "end\n\n"
     temp_file.close
 
-    path   = options[:path] || Backup::PATH
-    config = File.join(path, 'config.rb')
-
-    if overwrite?(config)
-      FileUtils.mkdir_p(path)
-      File.open(config, 'w') do |file|
+    if overwrite?(model)
+      FileUtils.mkdir_p(models_path)
+      File.open(model, 'w') do |file|
         file.write( File.read(temp_file.path) )
-        puts "Generated configuration file in '#{ config }'"
       end
+      puts "Generated configuration file in '#{ model }'"
     end
     temp_file.unlink
+
+    if overwrite?(config)
+      File.open(config, "w") do |file|
+        file.write(File.read(File.join(TEMPLATE_DIR, "config")))
+      end
+      puts "Generated configuration file in '#{ config }'"
+    end
   end
 
   ##

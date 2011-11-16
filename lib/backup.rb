@@ -191,5 +191,4 @@ module Backup
       Backup::Finder.const_set(constant, Class.new)
     end
   end
-
 end
