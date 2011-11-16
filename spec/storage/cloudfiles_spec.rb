@@ -74,8 +74,7 @@ describe Backup::Storage::CloudFiles do
       Backup::Model.new('blah', 'blah') {}
       file = mock("Backup::Storage::CloudFiles::File")
       File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
-      cf.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
-      connection.expects(:put_object).with('my_container', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar", file)
+      connection.expects(:put_object).with('my_container', "backups/myapp/#{ Backup::TIME }/#{ Backup::TRIGGER }.tar", file)
       cf.send(:transfer!)
     end
   end
@@ -87,8 +86,7 @@ describe Backup::Storage::CloudFiles do
     end
 
     it 'should remove the file from the container' do
-      cf.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
-      connection.expects(:delete_object).with('my_container', "backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      connection.expects(:delete_object).with('my_container', "backups/myapp/#{ Backup::TIME }/#{ Backup::TRIGGER }.tar")
       cf.send(:remove!)
     end
   end

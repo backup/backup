@@ -78,7 +78,7 @@ describe Backup::Storage::SCP do
 
       ssh_scp.expects(:upload!).with(
         File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"),
-        File.join('backups/myapp', "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+        File.join('backups/myapp', Backup::TIME, "#{ Backup::TRIGGER }.tar")
       )
 
       scp.send(:transfer!)
@@ -92,8 +92,8 @@ describe Backup::Storage::SCP do
       Net::SSH.stubs(:start).returns(connection)
     end
 
-    it 'should remove the file from the remote server path' do
-      connection.expects(:exec!).with("rm backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+    it 'should remove the remote path from the remote server' do
+      connection.expects(:exec!).with("rm -rf 'backups/myapp/#{ Backup::TIME }'")
       scp.send(:remove!)
     end
   end
@@ -112,6 +112,7 @@ describe Backup::Storage::SCP do
       connection.expects(:exec!).with("mkdir 'backups/some_other_folder'")
       connection.expects(:exec!).with("mkdir 'backups/some_other_folder/another_folder'")
       connection.expects(:exec!).with("mkdir 'backups/some_other_folder/another_folder/myapp'")
+      connection.expects(:exec!).with("mkdir 'backups/some_other_folder/another_folder/myapp/#{ Backup::TIME }'")
 
       scp.send(:create_remote_directories!)
     end

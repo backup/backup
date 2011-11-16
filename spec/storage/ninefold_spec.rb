@@ -74,11 +74,10 @@ describe Backup::Storage::Ninefold do
         Backup::Model.new('blah', 'blah') {}
         file = mock("Backup::Storage::Ninefold::File")
         File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
-        ninefold.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
 
-        directories.expects(:get).with('backups/myapp').returns(directory)
+        directories.expects(:get).with("backups/myapp/#{ Backup::TIME }").returns(directory)
         files.expects(:create) do |options|
-          options[:key].should == "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"
+          options[:key].should == "#{ Backup::TRIGGER }.tar"
           options[:body].should == file
         end
 
@@ -91,15 +90,14 @@ describe Backup::Storage::Ninefold do
         Backup::Model.new('blah', 'blah') {}
         file = mock("Backup::Storage::Ninefold::File")
         File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
-        ninefold.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
 
-        directories.expects(:get).with('backups/myapp').returns(nil)
+        directories.expects(:get).with("backups/myapp/#{ Backup::TIME }").returns(nil)
         directories.expects(:create) { |options|
-          options[:key].should == 'backups/myapp'
+          options[:key].should == "backups/myapp/#{ Backup::TIME }"
         }.returns(directory)
 
         files.expects(:create) do |options|
-          options[:key].should == "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"
+          options[:key].should == "#{ Backup::TRIGGER }.tar"
           options[:body].should == file
         end
 
@@ -122,11 +120,10 @@ describe Backup::Storage::Ninefold do
     end
 
     it 'should remove the file from the bucket' do
-      ninefold.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
-
-      directories.expects(:get).with('backups/myapp').returns(directory)
-      files.expects(:get).with("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").returns(file)
+      directories.expects(:get).with("backups/myapp/#{ Backup::TIME }").returns(directory)
+      files.expects(:get).with("#{ Backup::TRIGGER }.tar").returns(file)
       file.expects(:destroy)
+      directory.expects(:destroy)
 
       ninefold.send(:remove!)
     end

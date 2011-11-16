@@ -15,21 +15,63 @@ module Backup
       attr_accessor :keep
 
       ##
+      # Contains an array of chunk suffixes (if any)
+      # If none are set, this will be an empty array, in which case Backup assumes
+      # we haven't been splitting the backup in to multiple chunks. The storage object
+      # will only attempt to transfer/remove chunks if this array contains chunk suffixes.
+      attr_accessor :chunk_suffixes
+
+      ##
+      # Super method for the child classes' perform! method. "super" should
+      # always be invoked from the child classes' perform! method to ensure that the
+      # @chunk_suffixes array gets set to the storage object, which will be used to transfer all the
+      # chunks to the remote location, rather than the single backup file. Also, this will be persisted
+      # and loaded back in during the cycling process, so it gets properly deleted from the remote location.
+      def perform!
+        @chunk_suffixes ||= Backup::Model.chunk_suffixes
+      end
+
+      ##
+      # Returns the full filename of the processed backup file
+      def filename
+        @filename ||= File.basename(Backup::Model.file)
+      end
+
+      ##
       # Returns the local path
       def local_path
         TMP_PATH
       end
 
       ##
-      # Returns the local archive filename
-      def local_file
-        @local_file ||= File.basename(Backup::Model.file)
+      # Returns an array of backup chunks
+      def chunks
+        chunk_suffixes.map do |chunk_suffix|
+          "#{ filename }-#{ chunk_suffix }"
+        end.sort
       end
 
       ##
-      # Returns the name of the file that's stored on the remote location
-      def remote_file
-        @remote_file ||= local_file
+      # Returns a block with two arguments: "local_file, remote_file"
+      # The local_file is the full file name: "2011.08.30.11.00.02.backup.tar.gz.enc"
+      # The remote_file is the full file name, minus the timestamp: "backup.tar.gz.enc"
+      def files_to_transfer
+        if chunks?
+          chunks.each do |chunk|
+            yield chunk, chunk[20..-1]
+          end
+        else
+          yield filename, filename[20..-1]
+        end
+      end
+
+      alias :transferred_files :files_to_transfer
+
+      ##
+      # Returns true if we're working with chunks
+      # that were splitted by Backup
+      def chunks?
+        chunk_suffixes.is_a?(Array) and chunk_suffixes.count > 0
       end
 
       ##
@@ -54,7 +96,7 @@ module Backup
         if keep.is_a?(Integer) and keep > 0 and objects.count > keep
           objects_to_remove = objects[keep..-1]
           objects_to_remove.each do |object|
-            Logger.message "#{ self.class } started removing (cycling) \"#{ object.remote_file }\"."
+            Logger.message "#{ self.class } started removing (cycling) \"#{ object.filename }\"."
             object.send(:remove!)
           end
           objects = objects - objects_to_remove

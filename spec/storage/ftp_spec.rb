@@ -93,7 +93,7 @@ describe Backup::Storage::FTP do
       ftp.expects(:create_remote_directories!)
       connection.expects(:put).with(
         File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"),
-        File.join('backups/myapp', "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+        File.join('backups/myapp', Backup::TIME, "#{ Backup::TRIGGER }.tar")
       )
 
       ftp.send(:transfer!)
@@ -108,7 +108,8 @@ describe Backup::Storage::FTP do
     end
 
     it 'should remove the file from the remote server path' do
-      connection.expects(:delete).with("backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      connection.expects(:delete).with("backups/myapp/#{ Backup::TIME }/#{ Backup::TRIGGER }.tar")
+      connection.expects(:rmdir).with("backups/myapp/#{ Backup::TIME }")
       ftp.send(:remove!)
     end
   end
@@ -123,11 +124,12 @@ describe Backup::Storage::FTP do
     it 'should properly create remote directories one by one' do
       ftp.path = '~/backups/some_other_folder/another_folder'
 
-      connection.expects(:mkdir).with('~')
-      connection.expects(:mkdir).with('~/backups')
-      connection.expects(:mkdir).with('~/backups/some_other_folder')
-      connection.expects(:mkdir).with('~/backups/some_other_folder/another_folder')
-      connection.expects(:mkdir).with('~/backups/some_other_folder/another_folder/myapp')
+      connection.expects(:mkdir).with("~")
+      connection.expects(:mkdir).with("~/backups")
+      connection.expects(:mkdir).with("~/backups/some_other_folder")
+      connection.expects(:mkdir).with("~/backups/some_other_folder/another_folder")
+      connection.expects(:mkdir).with("~/backups/some_other_folder/another_folder/myapp")
+      connection.expects(:mkdir).with("~/backups/some_other_folder/another_folder/myapp/#{ Backup::TIME }")
 
       ftp.send(:create_remote_directories!)
     end

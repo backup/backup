@@ -43,7 +43,6 @@ module Backup
         instance_eval(&block) if block_given?
         write_password_file!
 
-        @time = TIME
         @path = path.sub(/^\~\//, '')
       end
 
@@ -56,6 +55,7 @@ module Backup
       ##
       # Performs the backup transfer
       def perform!
+        super
         transfer!
         remove_password_file!
       end
@@ -83,10 +83,6 @@ module Backup
 
       ##
       # Establishes a connection to the remote server and returns the Net::SSH object.
-      # Not doing any instance variable caching because this object gets persisted in YAML
-      # format to a file and will issues. This, however has no impact on performance since it only
-      # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
-      # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
         Net::SSH.start(ip, username, :password => @password, :port => @port)
       end
@@ -94,22 +90,20 @@ module Backup
       ##
       # Transfers the archived file to the specified remote server
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
         create_remote_directories!
+
+        Logger.message("#{ self.class } started transferring \"#{ filename }\" to \"#{ ip }\".")
         if @local
-          run("#{ utility(:rsync) } '#{ File.join(local_path, local_file) }' '#{ File.join(remote_path, TIME+'.'+remote_file[20..-1]) }'")
+          run("#{ utility(:rsync) } '#{ File.join(local_path, filename) }' '#{ File.join(remote_path, filename[20..-1]) }'")
         else
-          run("#{ utility(:rsync) } #{ options } #{ port } #{ password } '#{ File.join(local_path, local_file) }' '#{ username }@#{ ip }:#{ File.join(remote_path, remote_file[20..-1]) }'")
+          run("#{ utility(:rsync) } #{ options } #{ port } #{ password } '#{ File.join(local_path, filename) }' '#{ username }@#{ ip }:#{ File.join(remote_path, filename[20..-1]) }'")
         end
       end
 
       ##
-      # Removes the transferred archive file from the server
+      # Note: RSync::Storage doesn't cycle
       def remove!
-        response = connection.exec!("rm #{ File.join(remote_path, remote_file) }")
-        if response =~ /No such file or directory/
-          Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
-        end
+        nil
       end
 
       ##

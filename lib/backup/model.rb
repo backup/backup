@@ -42,6 +42,10 @@ module Backup
     attr_accessor :syncers
 
     ##
+    # The chunk_size attribute holds the size of the chunks in megabytes
+    attr_accessor :chunk_size
+
+    ##
     # The time when the backup initiated (in format: 2011.02.20.03.29.59)
     attr_accessor :time
 
@@ -64,10 +68,20 @@ module Backup
       attr_accessor :current
 
       ##
+      # Contains an array of chunk suffixes for a given file
+      attr_accessor :chunk_suffixes
+
+      ##
       # Returns the full path to the current file (including the current extension).
       # To just return the filename and extension without the path, use File.basename(Backup::Model.file)
       def file
         File.join(TMP_PATH, "#{ TIME }.#{ TRIGGER }.#{ Backup::Model.extension }")
+      end
+
+      ##
+      # Returns the @chunk_suffixes variable, sets it to an emtpy array if nil
+      def chunk_suffixes
+        @chunk_suffixes ||= Array.new
       end
 
       ##
@@ -173,6 +187,20 @@ module Backup
     end
 
     ##
+    # Adds a method that allows the user to set the @chunk_size.
+    # The chunk_size (in megabytes) will later determine in how many chunks the
+    # backup needs to be split
+    def split_into_chunks_of(chunk_size = nil)
+      @chunk_size = chunk_size
+    end
+
+    ##
+    # Returns the path to the current file (including proper extension)
+    def file
+      Backup::Model.file
+    end
+
+    ##
     # Performs the backup process
     ##
     # [Databases]
@@ -219,6 +247,7 @@ module Backup
           package!
           compressors.each { |c| c.perform! }
           encryptors.each  { |e| e.perform! }
+          split!
           storages.each    { |s| s.perform! }
           clean!
         end
@@ -245,10 +274,23 @@ module Backup
     end
 
     ##
+    # Create a new instance of Backup::Splitter,
+    # passing it the current model instance and runs it.
+    def split!
+      Backup::Splitter.new(self).split!
+    end
+
+    ##
     # Cleans up the temporary files that were created after the backup process finishes
     def clean!
       Logger.message "Backup started cleaning up the temporary files."
-      run("#{ utility(:rm) } -rf '#{ File.join(TMP_PATH, TRIGGER) }' '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.#{Backup::Model.extension}") }'")
+      paths = [
+        File.join(TMP_PATH, TRIGGER),
+        Backup::Model.file,
+        Backup::Model.chunk_suffixes.map { |chunk_suffix| "#{Backup::Model.file}-#{chunk_suffix}" }
+      ].flatten
+
+      run("#{ utility(:rm) } -rf #{ paths.map { |path| "'#{ path }'" }.join(" ") }")
     end
 
     ##

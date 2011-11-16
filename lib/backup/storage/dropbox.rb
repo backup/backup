@@ -42,12 +42,13 @@ module Backup
       ##
       # This is the remote path to where the backup files will be stored
       def remote_path
-        File.join(path, TRIGGER)
+        File.join(path, TRIGGER, @time)
       end
 
       ##
       # Performs the backup transfer
       def perform!
+        super
         transfer!
         cycle!
       end
@@ -62,12 +63,14 @@ module Backup
       # in Backup::CACHE_PATH. The cached file will be used from that point on to re-establish a connection with
       # Dropbox at a later time. This allows the user to avoid having to go to a new Dropbox URL to authorize over and over again.
       def connection
+        return @connection if @connection
+
         if cache_exists?
           begin
             cached_session = ::Dropbox::Session.deserialize(File.read(cached_file))
             if cached_session.authorized?
               Logger.message "Session data loaded from cache!"
-              return cached_session
+              return @connection = cached_session
             end
           rescue ArgumentError => error
             Logger.warn "Could not read session data from cache. Cache data might be corrupt."
@@ -81,17 +84,49 @@ module Backup
       ##
       # Transfers the archived file to the specified Dropbox folder
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
-        connection.upload(File.join(local_path, local_file), remote_path, :timeout => timeout)
+        files_to_transfer do |local_file, remote_file|
+          Logger.message("#{ self.class } started transferring \"#{ local_file }\".")
+          connection.upload(
+            File.join(local_path, local_file),
+            remote_path,
+            :as      => remote_file,
+            :timeout => timeout
+          )
+        end
+
+        remove_instance_variable(:@connection) if instance_variable_defined?(:@connection)
       end
 
       ##
       # Removes the transferred archive file from the Dropbox folder
       def remove!
-        begin
-          connection.delete(File.join(remote_path, remote_file))
-        rescue ::Dropbox::FileNotFoundError
-          Logger.warn "File \"#{ File.join(remote_path, remote_file) }\" does not exist, skipping removal."
+        transferred_files do |local_file, remote_file|
+          Logger.message("#{ self.class } started removing '#{ local_file }' from Dropbox.'")
+        end
+
+        connection.delete(remote_path)
+      rescue ::Dropbox::FileNotFoundError
+      ensure
+        remove_instance_variable(:@connection) if instance_variable_defined?(:@connection)
+      end
+
+      ##
+      # Returns the path to the cached file
+      def cached_file
+        File.join(Backup::CACHE_PATH, "#{api_key + api_secret}")
+      end
+
+      ##
+      # Checks to see if the cache file exists
+      def cache_exists?
+        File.exist?(cached_file)
+      end
+
+      ##
+      # Serializes and writes the Dropbox session to a cache file
+      def write_cache!(session)
+        File.open(cached_file, "w") do |cache_file|
+          cache_file.write(session.serialize)
         end
       end
 
@@ -123,26 +158,6 @@ module Backup
         Logger.message "\s\son your other machines to use this Dropbox account there as well."
 
         session
-      end
-
-      ##
-      # Returns the path to the cached file
-      def cached_file
-        File.join(Backup::CACHE_PATH, "#{api_key + api_secret}")
-      end
-
-      ##
-      # Checks to see if the cache file exists
-      def cache_exists?
-        File.exist?(cached_file)
-      end
-
-      ##
-      # Serializes and writes the Dropbox session to a cache file
-      def write_cache!(session)
-        File.open(cached_file, "w") do |cache_file|
-          cache_file.write(session.serialize)
-        end
       end
 
     public # DEPRECATED METHODS #############################################
