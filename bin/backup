@@ -102,8 +102,6 @@ class BackupCLI < Thor
         Backup::Finder.new(t).matching : t
     }.flatten!
 
-    #triggers.unique! # Uncomment if its undesirable to call triggers twice
-
     ##
     # Process each trigger
     triggers.each do |trigger|
