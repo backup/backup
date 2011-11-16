@@ -223,13 +223,41 @@ describe Backup::Model do
 
     it 'should remove the temporary files and folders that were created' do
       model.expects(:utility).with(:rm).returns(:rm)
-      model.expects(:run).with("rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'")
+      model.expects(:run).with "rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' " +
+                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'"
+
+      model.send(:clean!)
+    end
+
+    it 'should remove the temporary files and folders that were created' do
+      model.expects(:utility).with(:rm).returns(:rm)
+      Backup::Model.chunk_suffixes = ["aa", "ab", "ac"]
+      model.expects(:run).with "rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' " +
+                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' " +
+                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-aa") }' " +
+                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-ab") }' " +
+                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-ac") }'"
       model.send(:clean!)
     end
 
     it do
       Backup::Logger.expects(:message).with("Backup started cleaning up the temporary files.")
       model.send(:clean!)
+    end
+  end
+
+  describe '#split_into_chunks_of' do
+    it do
+      model.should respond_to(:split_into_chunks_of)
+    end
+
+    it do
+      model.split_into_chunks_of(500)
+      model.chunk_size.should == 500
+    end
+
+    it do
+      model.chunk_size.should == nil
     end
   end
 

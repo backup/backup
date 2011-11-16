@@ -147,7 +147,7 @@ class BackupCLI < Thor
       Backup::Model.all = Array.new
 
       ##
-      # Reset the Backup::Model.extension to 'tar' so it's at it's
+      # Reset the Backup::Model.extension to 'tar' so it's at its
       # initial state when the next Backup::Model initializes
       Backup::Model.extension = 'tar'
     end

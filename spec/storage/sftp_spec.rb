@@ -74,7 +74,7 @@ describe Backup::Storage::SFTP do
       sftp.expects(:create_remote_directories!)
       connection.expects(:upload!).with(
         File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"),
-        File.join('backups/myapp', "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+        File.join('backups/myapp', Backup::TIME, "#{ Backup::TRIGGER }.tar")
       )
 
       sftp.send(:transfer!)
@@ -89,7 +89,8 @@ describe Backup::Storage::SFTP do
     end
 
     it 'should remove the file from the remote server path' do
-      connection.expects(:remove!).with("backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      connection.expects(:remove!).with("backups/myapp/#{ Backup::TIME }/#{ Backup::TRIGGER }.tar")
+      connection.expects(:rmdir!).with("backups/myapp/#{ Backup::TIME }")
       sftp.send(:remove!)
     end
   end
@@ -104,10 +105,11 @@ describe Backup::Storage::SFTP do
     it 'should properly create remote directories one by one' do
       sftp.path = 'backups/some_other_folder/another_folder'
 
-      connection.expects(:mkdir!).with('backups')
-      connection.expects(:mkdir!).with('backups/some_other_folder')
-      connection.expects(:mkdir!).with('backups/some_other_folder/another_folder')
-      connection.expects(:mkdir!).with('backups/some_other_folder/another_folder/myapp')
+      connection.expects(:mkdir!).with("backups")
+      connection.expects(:mkdir!).with("backups/some_other_folder")
+      connection.expects(:mkdir!).with("backups/some_other_folder/another_folder")
+      connection.expects(:mkdir!).with("backups/some_other_folder/another_folder/myapp")
+      connection.expects(:mkdir!).with("backups/some_other_folder/another_folder/myapp/#{ Backup::TIME }")
 
       sftp.send(:create_remote_directories!)
     end

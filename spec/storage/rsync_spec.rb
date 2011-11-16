@@ -101,9 +101,8 @@ describe Backup::Storage::RSync do
       Net::SSH.stubs(:start).returns(connection)
     end
 
-    it 'should remove the file from the remote server path' do
-      connection.expects(:exec!).with("rm backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
-      rsync.send(:remove!)
+    it 'should return nil' do
+      rsync.send(:remove!).should == nil
     end
   end
 
@@ -133,7 +132,7 @@ describe Backup::Storage::RSync do
       rsync.expects(:create_remote_directories!)
       rsync.local = true
       rsync.expects(:utility).returns('rsync')
-      rsync.expects(:run).with("rsync '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'backups/#{ Backup::TRIGGER }/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar'")
+      rsync.expects(:run).with("rsync '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' 'backups/#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar'")
       rsync.send(:transfer!)
     end
   end

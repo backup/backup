@@ -32,12 +32,13 @@ module Backup
       # Eventhough it says "remote", it's actually the "local" path, but
       # the naming is necessary for compatibility reasons
       def remote_path
-        File.join(path, TRIGGER)
+        File.join(path, TRIGGER, @time)
       end
 
       ##
       # Performs the backup transfer
       def perform!
+        super
         transfer!
         cycle!
       end
@@ -47,18 +48,27 @@ module Backup
       ##
       # Transfers the archived file to the specified local path
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
         create_local_directories!
-        FileUtils.cp(
-          File.join(local_path, local_file),
-          File.join(remote_path, remote_file)
-        )
+
+        files_to_transfer do |local_file, remote_file|
+          Logger.message("#{ self.class } started transferring \"#{ local_file }\".")
+          FileUtils.cp(
+            File.join(local_path, local_file),
+            File.join(remote_path, remote_file)
+          )
+        end
       end
 
       ##
       # Removes the transferred archive file from the local path
       def remove!
-        FileUtils.rm(File.join(remote_path, remote_file))
+        transferred_files do |local_file, remote_file|
+          Logger.message("#{ self.class } started removing \"#{ local_file }\".")
+        end
+
+        FileUtils.rm_rf(remote_path)
+      rescue => error
+        Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
       end
 
       ##

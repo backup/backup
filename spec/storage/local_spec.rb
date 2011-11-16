@@ -50,7 +50,7 @@ describe Backup::Storage::Local do
 
       FileUtils.expects(:cp).with(
         File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"),
-        File.join("#{ENV['HOME']}/backups/myapp", "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+        File.join("#{ENV['HOME']}/backups/myapp", Backup::TIME, "#{ Backup::TRIGGER }.tar")
       )
 
       local.send(:transfer!)
@@ -59,15 +59,15 @@ describe Backup::Storage::Local do
 
   describe '#remove!' do
     it 'should remove the file from the remote server path' do
-      FileUtils.expects(:rm).with("#{ENV['HOME']}/backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+      FileUtils.expects(:rm_rf).with("#{ENV['HOME']}/backups/myapp/#{ Backup::TIME }")
       local.send(:remove!)
     end
   end
 
-  describe '#create_remote_directories!' do
+  describe '#create_local_directories!' do
     it 'should properly create remote directories one by one' do
       local.path = "#{ENV['HOME']}/backups/some_other_folder/another_folder"
-      FileUtils.expects(:mkdir_p).with("#{ENV['HOME']}/backups/some_other_folder/another_folder/myapp")
+      FileUtils.expects(:mkdir_p).with("#{ENV['HOME']}/backups/some_other_folder/another_folder/myapp/#{ Backup::TIME }")
       local.send(:create_local_directories!)
     end
   end

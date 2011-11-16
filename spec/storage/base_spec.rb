@@ -26,4 +26,19 @@ describe Backup::Storage::Base do
 
     base.cycle!
   end
+
+  it do
+    base = Backup::Storage::Base.new
+    base.chunk_suffixes = ["aa", "ab", "ac", "ad", "ae"]
+    base.stubs(:filename).returns("file.tar")
+    base.chunks.should == [
+      "#{base.filename}-aa",
+      "#{base.filename}-ab",
+      "#{base.filename}-ac",
+      "#{base.filename}-ad",
+      "#{base.filename}-ae",
+    ]
+
+    base.chunk_suffixes.should == ["aa", "ab", "ac", "ad", "ae"]
+  end
 end
