@@ -69,6 +69,7 @@ Storage Locations and Services
 - Ninefold Cloud Storage
 - Dropbox Web Service
 - Remote Servers *(Available Protocols: FTP, SFTP, SCP and RSync)*
+- Local Storage
 
 [Storage Wiki Page](https://github.com/meskyanichi/backup/wiki/Storages)
 
@@ -81,6 +82,7 @@ Storage Features
   - Ninefold Cloud Storage
   - Dropbox Web Service
   - Remote Servers *(Only Protocols: FTP, SFTP, SCP)*
+  - Local Storage
 - Incremental Backups, applies to:
   - Remote Servers *(Only Protocols: RSync)*
 
