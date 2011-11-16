@@ -177,7 +177,8 @@ class BackupCLI < Thor
     temp_file << "# Once configured, you can run the backup with the following command:\n#\n"
     temp_file << "# $ backup perform -t #{options[:name]} [-c <path_to_configuration_file>]\n#\n"
     temp_file << "Backup::Model.new(:#{options[:name]}, 'Description for #{options[:name]}') do\n\n"
-    temp_file << "\s\s# split_into_chunks_of 500 # in megabytes\n\n"
+    temp_file << "\s\s##\n\s\s# Split the backup file in to chunks of 500 megabytes\n"
+    temp_file << "\s\s# if the backup file size exceeds 500 megabytes\n\s\ssplit_into_chunks_of 500\n\n"
 
     if options[:archives]
       temp_file << File.read( File.join(TEMPLATE_DIR, 'archive') ) + "\n\n"
