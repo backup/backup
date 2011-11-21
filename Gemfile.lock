@@ -38,6 +38,8 @@ GEM
     guard-rspec (0.3.1)
       guard (>= 0.2.2)
     hashie (1.1.0)
+    hipchat (0.4.1)
+      httparty
     httparty (0.7.4)
       crack (= 0.1.8)
     i18n (0.6.0)
@@ -100,6 +102,7 @@ DEPENDENCIES
   growl
   guard
   guard-rspec
+  hipchat (~> 0.4.1)
   httparty (~> 0.7.4)
   json (~> 1.5.1)
   libnotify

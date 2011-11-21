@@ -28,6 +28,11 @@ module Backup
       # The background color of an error message. One of :yellow, :red, :green, :purple, or :random. (default: yellow)
       attr_accessor :failure_color
 
+      # Notify users in the room
+      attr_accessor :notify_users
+
+      attr_accessor :model
+
       def initialize(&block)
         load_defaults!
 
@@ -36,10 +41,44 @@ module Backup
         set_defaults!
       end
 
+      def perform!(model, exception = false)
+        @model = model
+
+        if notify_on_success? and exception.eql?(false)
+          log!
+          notify_success!
+        elsif notify_on_failure? and not exception.eql?(false)
+          log!
+          notify_failure!(exception)
+        end
+      end
+
       private
 
-      def set_defaults
-        @client = HipChat::Client.new(@token)
+      def send_message(msg, color, notify)
+        client = HipChat::Client.new(@hipchat_options[:token])
+        @hipchat_options[:rooms_notified].each do |room|
+          client[room].send(@hipchat_options[:from], msg, :color => color, :notify => notify)
+        end
+      end
+
+      def notify_success!
+        send_message("[Backup::Succeeded] #{model.label} (#{ File.basename(Backup::Model.file) })", @hipchat_options[:success_color], @hipchat_options[:notify_users])
+      end
+
+      def notify_failure!(exception)
+        send_message("[Backup::Failed] #{model.label} (#{ File.basename(Backup::Model.file) })", @hipchat_options[:failure_color], @hipchat_options[:notify_users])
+      end
+
+      def set_defaults!
+        @hipchat_options = {
+          :token => @token,
+          :from => @from,
+          :rooms_notified => @rooms_notified,
+          :success_color => @success_color || 'yellow',
+          :failure_color => @failure_color || 'yellow',
+          :notify_users => @notify_users
+        }
       end
     end
   end
