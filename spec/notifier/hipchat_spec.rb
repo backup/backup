@@ -135,5 +135,18 @@ describe Backup::Notifier::Hipchat do
         HipChat::Client.any_instance.expects(:[]).returns(hipchat_mock)
         notifier.perform!(model, Exception.new)
     end
+
+    it "will convert a single room param to an array" do
+      notifier = Backup::Notifier::Hipchat.new do |notifier|
+        notifier.from = 'application'
+        notifier.token = 'token'
+        notifier.rooms_notified = 'room1'
+      end
+
+      HipChat::Client.any_instance.expects(:[]).returns(stub(:send))
+
+      notifier.perform!(model)
+      notifier.instance_variable_get("@rooms_notified").should be_a_kind_of Array
+    end
   end
 end

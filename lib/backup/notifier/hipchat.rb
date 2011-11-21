@@ -44,6 +44,8 @@ module Backup
       def perform!(model, exception = false)
         @model = model
 
+        @rooms_notified = [@hipchat_options[:rooms_notified]] unless @hipchat_options[:rooms_notified].is_a? Array
+
         if notify_on_success? and exception.eql?(false)
           log!
           notify_success!
@@ -57,7 +59,7 @@ module Backup
 
       def send_message(msg, color, notify)
         client = HipChat::Client.new(@hipchat_options[:token])
-        @hipchat_options[:rooms_notified].each do |room|
+        @rooms_notified.each do |room|
           client[room].send(@hipchat_options[:from], msg, :color => color, :notify => notify)
         end
       end
