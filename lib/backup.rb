@@ -21,7 +21,7 @@ module Backup
   STORAGES    = ['S3', 'CloudFiles', 'Ninefold', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync', 'Local']
   COMPRESSORS = ['Gzip', 'Bzip2', 'Lzma']
   ENCRYPTORS  = ['OpenSSL', 'GPG']
-  SYNCERS     = ['RSync', 'S3']
+  SYNCERS     = ['RSync', 'S3', 'SVNSync']
   NOTIFIERS   = ['Mail', 'Twitter', 'Campfire', 'Presently']
 
   ##
@@ -97,8 +97,9 @@ module Backup
     end
 
     module Syncer
-      autoload :RSync, File.join(CONFIGURATION_PATH, 'syncer', 'rsync')
-      autoload :S3,    File.join(CONFIGURATION_PATH, 'syncer', 's3')
+      autoload :RSync,   File.join(CONFIGURATION_PATH, 'syncer', 'rsync')
+      autoload :S3,      File.join(CONFIGURATION_PATH, 'syncer', 's3')
+      autoload :SVNSync, File.join(CONFIGURATION_PATH, 'syncer', 'svnsync')
     end
 
     module Database
@@ -129,9 +130,10 @@ module Backup
   ##
   # Autoload Backup syncer files
   module Syncer
-    autoload :Base,  File.join(SYNCER_PATH, 'base')
-    autoload :RSync, File.join(SYNCER_PATH, 'rsync')
-    autoload :S3,    File.join(SYNCER_PATH, 's3')
+    autoload :Base,    File.join(SYNCER_PATH, 'base')
+    autoload :RSync,   File.join(SYNCER_PATH, 'rsync')
+    autoload :S3,      File.join(SYNCER_PATH, 's3')
+    autoload :SVNSync, File.join(SYNCER_PATH, 'svnsync')
   end
 
   ##
