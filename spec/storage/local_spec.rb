@@ -44,7 +44,6 @@ describe Backup::Storage::Local do
 
     it 'should transfer the provided file to the path' do
       Backup::Model.new('blah', 'blah') {}
-      file = mock("Backup::Storage::Local::File")
 
       local.expects(:create_local_directories!)
 

@@ -3,6 +3,10 @@
 module Backup
   module CLI
 
+    def stderr
+      @stderr
+    end
+
     ##
     # Wrapper method for %x[] to run CL commands
     # through a ruby method. This helps with test coverage and
