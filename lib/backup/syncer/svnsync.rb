@@ -20,27 +20,42 @@ module Backup
         "#{protocol}://#{host}:#{port}#{repo_path}"
       end
 
-      def local_repo_exists?
-        run "svn info #{path}"
-        return !self.stderr.end_with?('is not a working copy')
+      def local_repository_exists?
+        run "svnadmin verify #{path}"
+        return true
+      rescue Exception::CommandFailed
+        Logger.message("#{path} is not a repository")
+        return false
       end
 
-      def initialize_repo
-        Logger.message("Initializing repo")
+      def initialize_repository
+        Logger.message("Initializing empty repository")
         run "svnadmin create '#{path}'"
-        change_path = File.join(path, 'hooks', 'pre-revprop-change')
-        run "echo '#!/bin/sh' > '#{change_path}'"
-        run "chmod +x '#{change_path}'"
-        run "svnsync init file://#{path} #{url} --source-username #{username} --source-password #{password}"
+        hook_path = File.join(path, 'hooks', 'pre-revprop-change')
+        run "echo '#!/bin/sh' > '#{hook_path}'"
+        run "chmod +x '#{hook_path}'"
+        run "svnsync init file://#{path} #{url} #{options}"
       end
 
       def perform!
-        Logger.message("#{ self.class } started syncing '#{ url }' '#{ path }'.")
+        Logger.message("#{ self.class } started syncing '#{ url }'.")
         mkdir(path)
-        initialize_repo unless local_repo_exists?
-        run "svnsync sync file://#{path} --source-username #{username} --source-password #{password} --non-interactive"
+        initialize_repository unless local_repository_exists?
+        Logger.message("Syncing with remote repository")
+        run "svnsync sync file://#{path} --non-interactive #{options}"
       end
-
+      
+      def options
+        ([remote_repository_username, remote_repository_password]).compact.join("\s")
+      end
+      
+      def remote_repository_username
+        return "--source-username #{username}" if self.username
+      end
+      
+      def remote_repository_password
+        return "--source-password #{password}" if self.password
+      end
 
     end
   end
