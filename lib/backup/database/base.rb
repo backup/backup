@@ -3,7 +3,7 @@
 module Backup
   module Database
     class Base
-      include Backup::CLI
+      include Backup::CLI::Helpers
       include Backup::Configuration::Helpers
 
       ##

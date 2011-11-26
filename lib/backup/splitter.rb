@@ -2,7 +2,7 @@
 
 module Backup
   class Splitter
-    include Backup::CLI
+    include Backup::CLI::Helpers
 
     ##
     # Separates the end of the file from the chunk extension name

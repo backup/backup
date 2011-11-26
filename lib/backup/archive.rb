@@ -2,7 +2,7 @@
 
 module Backup
   class Archive
-    include Backup::CLI
+    include Backup::CLI::Helpers
 
     ##
     # Stores the name of the archive

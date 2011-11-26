@@ -27,13 +27,14 @@ module Backup
   ##
   # Backup's internal paths
   LIBRARY_PATH       = File.join(File.dirname(__FILE__), 'backup')
-  CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
+  CLI_PATH           = File.join(LIBRARY_PATH, 'cli')
   STORAGE_PATH       = File.join(LIBRARY_PATH, 'storage')
   DATABASE_PATH      = File.join(LIBRARY_PATH, 'database')
   COMPRESSOR_PATH    = File.join(LIBRARY_PATH, 'compressor')
   ENCRYPTOR_PATH     = File.join(LIBRARY_PATH, 'encryptor')
   NOTIFIER_PATH      = File.join(LIBRARY_PATH, 'notifier')
   SYNCER_PATH        = File.join(LIBRARY_PATH, 'syncer')
+  CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
   EXCEPTION_PATH     = File.join(LIBRARY_PATH, 'exception')
 
   ##
@@ -52,66 +53,16 @@ module Backup
   autoload :Model,      File.join(LIBRARY_PATH, 'model')
   autoload :Archive,    File.join(LIBRARY_PATH, 'archive')
   autoload :Splitter,   File.join(LIBRARY_PATH, 'splitter')
-  autoload :CLI,        File.join(LIBRARY_PATH, 'cli')
   autoload :Finder,     File.join(LIBRARY_PATH, 'finder')
   autoload :Dependency, File.join(LIBRARY_PATH, 'dependency')
   autoload :Logger,     File.join(LIBRARY_PATH, 'logger')
   autoload :Version,    File.join(LIBRARY_PATH, 'version')
 
   ##
-  # Autoload Backup configuration files
-  module Configuration
-    autoload :Base,     File.join(CONFIGURATION_PATH, 'base')
-    autoload :Helpers,  File.join(CONFIGURATION_PATH, 'helpers')
-
-    module Notifier
-      autoload :Base,      File.join(CONFIGURATION_PATH, 'notifier', 'base')
-      autoload :Mail,      File.join(CONFIGURATION_PATH, 'notifier', 'mail')
-      autoload :Twitter,   File.join(CONFIGURATION_PATH, 'notifier', 'twitter')
-      autoload :Campfire,  File.join(CONFIGURATION_PATH, 'notifier', 'campfire')
-      autoload :Presently, File.join(CONFIGURATION_PATH, 'notifier', 'presently')
-      autoload :Prowl,     File.join(CONFIGURATION_PATH, 'notifier', 'prowl')
-      autoload :Hipchat,   File.join(CONFIGURATION_PATH, 'notifier', 'hipchat')
-    end
-
-    module Encryptor
-      autoload :Base,    File.join(CONFIGURATION_PATH, 'encryptor', 'base')
-      autoload :OpenSSL, File.join(CONFIGURATION_PATH, 'encryptor', 'open_ssl')
-      autoload :GPG,     File.join(CONFIGURATION_PATH, 'encryptor', 'gpg')
-    end
-
-    module Compressor
-      autoload :Base,  File.join(CONFIGURATION_PATH, 'compressor', 'base')
-      autoload :Gzip,  File.join(CONFIGURATION_PATH, 'compressor', 'gzip')
-      autoload :Bzip2, File.join(CONFIGURATION_PATH, 'compressor', 'bzip2')
-      autoload :Lzma,  File.join(CONFIGURATION_PATH, 'compressor', 'lzma')
-    end
-
-    module Storage
-      autoload :Base,       File.join(CONFIGURATION_PATH, 'storage', 'base')
-      autoload :S3,         File.join(CONFIGURATION_PATH, 'storage', 's3')
-      autoload :CloudFiles, File.join(CONFIGURATION_PATH, 'storage', 'cloudfiles')
-      autoload :Ninefold,   File.join(CONFIGURATION_PATH, 'storage', 'ninefold')
-      autoload :Dropbox,    File.join(CONFIGURATION_PATH, 'storage', 'dropbox')
-      autoload :FTP,        File.join(CONFIGURATION_PATH, 'storage', 'ftp')
-      autoload :SFTP,       File.join(CONFIGURATION_PATH, 'storage', 'sftp')
-      autoload :SCP,        File.join(CONFIGURATION_PATH, 'storage', 'scp')
-      autoload :RSync,      File.join(CONFIGURATION_PATH, 'storage', 'rsync')
-      autoload :Local,      File.join(CONFIGURATION_PATH, 'storage', 'local')
-    end
-
-    module Syncer
-      autoload :RSync, File.join(CONFIGURATION_PATH, 'syncer', 'rsync')
-      autoload :S3,    File.join(CONFIGURATION_PATH, 'syncer', 's3')
-    end
-
-    module Database
-      autoload :Base,       File.join(CONFIGURATION_PATH, 'database', 'base')
-      autoload :MySQL,      File.join(CONFIGURATION_PATH, 'database', 'mysql')
-      autoload :PostgreSQL, File.join(CONFIGURATION_PATH, 'database', 'postgresql')
-      autoload :MongoDB,    File.join(CONFIGURATION_PATH, 'database', 'mongodb')
-      autoload :Redis,      File.join(CONFIGURATION_PATH, 'database', 'redis')
-    end
+  # Autoload Backup CLI files
+  module CLI
+    autoload :Helpers, File.join(CLI_PATH, 'helpers')
+    autoload :Utility, File.join(CLI_PATH, 'utility')
   end
 
   ##
@@ -176,6 +127,62 @@ module Backup
     autoload :Presently, File.join(NOTIFIER_PATH, 'presently')
     autoload :Prowl,     File.join(NOTIFIER_PATH, 'prowl')
     autoload :Hipchat,   File.join(NOTIFIER_PATH, 'hipchat')
+  end
+
+  ##
+  # Autoload Backup configuration files
+  module Configuration
+    autoload :Base,     File.join(CONFIGURATION_PATH, 'base')
+    autoload :Helpers,  File.join(CONFIGURATION_PATH, 'helpers')
+
+    module Notifier
+      autoload :Base,      File.join(CONFIGURATION_PATH, 'notifier', 'base')
+      autoload :Mail,      File.join(CONFIGURATION_PATH, 'notifier', 'mail')
+      autoload :Twitter,   File.join(CONFIGURATION_PATH, 'notifier', 'twitter')
+      autoload :Campfire,  File.join(CONFIGURATION_PATH, 'notifier', 'campfire')
+      autoload :Presently, File.join(CONFIGURATION_PATH, 'notifier', 'presently')
+      autoload :Prowl,     File.join(CONFIGURATION_PATH, 'notifier', 'prowl')
+      autoload :Hipchat,   File.join(CONFIGURATION_PATH, 'notifier', 'hipchat')
+    end
+
+    module Encryptor
+      autoload :Base,    File.join(CONFIGURATION_PATH, 'encryptor', 'base')
+      autoload :OpenSSL, File.join(CONFIGURATION_PATH, 'encryptor', 'open_ssl')
+      autoload :GPG,     File.join(CONFIGURATION_PATH, 'encryptor', 'gpg')
+    end
+
+    module Compressor
+      autoload :Base,  File.join(CONFIGURATION_PATH, 'compressor', 'base')
+      autoload :Gzip,  File.join(CONFIGURATION_PATH, 'compressor', 'gzip')
+      autoload :Bzip2, File.join(CONFIGURATION_PATH, 'compressor', 'bzip2')
+      autoload :Lzma,  File.join(CONFIGURATION_PATH, 'compressor', 'lzma')
+    end
+
+    module Storage
+      autoload :Base,       File.join(CONFIGURATION_PATH, 'storage', 'base')
+      autoload :S3,         File.join(CONFIGURATION_PATH, 'storage', 's3')
+      autoload :CloudFiles, File.join(CONFIGURATION_PATH, 'storage', 'cloudfiles')
+      autoload :Ninefold,   File.join(CONFIGURATION_PATH, 'storage', 'ninefold')
+      autoload :Dropbox,    File.join(CONFIGURATION_PATH, 'storage', 'dropbox')
+      autoload :FTP,        File.join(CONFIGURATION_PATH, 'storage', 'ftp')
+      autoload :SFTP,       File.join(CONFIGURATION_PATH, 'storage', 'sftp')
+      autoload :SCP,        File.join(CONFIGURATION_PATH, 'storage', 'scp')
+      autoload :RSync,      File.join(CONFIGURATION_PATH, 'storage', 'rsync')
+      autoload :Local,      File.join(CONFIGURATION_PATH, 'storage', 'local')
+    end
+
+    module Syncer
+      autoload :RSync, File.join(CONFIGURATION_PATH, 'syncer', 'rsync')
+      autoload :S3,    File.join(CONFIGURATION_PATH, 'syncer', 's3')
+    end
+
+    module Database
+      autoload :Base,       File.join(CONFIGURATION_PATH, 'database', 'base')
+      autoload :MySQL,      File.join(CONFIGURATION_PATH, 'database', 'mysql')
+      autoload :PostgreSQL, File.join(CONFIGURATION_PATH, 'database', 'postgresql')
+      autoload :MongoDB,    File.join(CONFIGURATION_PATH, 'database', 'mongodb')
+      autoload :Redis,      File.join(CONFIGURATION_PATH, 'database', 'redis')
+    end
   end
 
   ##

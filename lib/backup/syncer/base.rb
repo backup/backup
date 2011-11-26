@@ -3,7 +3,7 @@
 module Backup
   module Syncer
     class Base
-      include Backup::CLI
+      include Backup::CLI::Helpers
       include Backup::Configuration::Helpers
     end
   end

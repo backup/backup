@@ -2,7 +2,7 @@
 
 module Backup
   class Model
-    include Backup::CLI
+    include Backup::CLI::Helpers
 
     ##
     # The trigger is used as an identifier for
