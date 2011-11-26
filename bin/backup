@@ -174,6 +174,7 @@ class BackupCLI < Thor
   method_option :compressors, :type => :string
   method_option :notifiers,   :type => :string
   method_option :archives,    :type => :boolean
+  method_option :splitter,    :type => :boolean, :default => true, :desc => "use `--no-splitter` to disable"
   def generate
     config_path = options[:path] || Backup::PATH
     models_path = File.join(config_path, "models")
@@ -185,8 +186,10 @@ class BackupCLI < Thor
     temp_file << "# Once configured, you can run the backup with the following command:\n#\n"
     temp_file << "# $ backup perform -t #{options[:name]} [-c <path_to_configuration_file>]\n#\n"
     temp_file << "Backup::Model.new(:#{options[:name]}, 'Description for #{options[:name]}') do\n\n"
-    temp_file << "\s\s##\n\s\s# Split the backup file in to chunks of 500 megabytes\n"
-    temp_file << "\s\s# if the backup file size exceeds 500 megabytes\n\s\ssplit_into_chunks_of 500\n\n"
+
+    if options[:splitter]
+      temp_file << File.read( File.join(TEMPLATE_DIR, 'splitter') ) + "\n\n"
+    end
 
     if options[:archives]
       temp_file << File.read( File.join(TEMPLATE_DIR, 'archive') ) + "\n\n"
