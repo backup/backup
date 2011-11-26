@@ -10,7 +10,7 @@ require 'fileutils'
 # Load Thor for the CLI and POpen4 for reading unix process status
 begin
   require 'thor'
-  require 'POpen4'
+  require 'popen4'
 rescue LoadError
   puts "\nBackup requires Thor to load the CLI (Command Line Interface) and POpen4 to determine the status of unix processes."
   puts "Please install both Thor and POpen4 first:\n\ngem install thor -v '~> 0.14.6'\ngem install POpen4 -v '~> 0.1.4'"
