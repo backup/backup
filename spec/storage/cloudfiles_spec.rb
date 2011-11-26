@@ -48,12 +48,26 @@ describe Backup::Storage::CloudFiles do
   describe '#connection' do
     it 'should establish a connection to Rackspace Cloud Files. using the provided credentials' do
       Fog::Storage.expects(:new).with({
-        :provider           => 'Rackspace',
-        :rackspace_username => 'my_username',
-        :rackspace_api_key  => 'my_api_key',
-        :rackspace_auth_url => 'lon.auth.api.rackspacecloud.com'
+        :provider             => 'Rackspace',
+        :rackspace_username   => 'my_username',
+        :rackspace_api_key    => 'my_api_key',
+        :rackspace_auth_url   => 'lon.auth.api.rackspacecloud.com',
+        :rackspace_servicenet => false
       })
 
+      cf.send(:connection)
+    end
+
+    it 'should establish a connection to Rackspace Cloud Files with LAN (servicenet) enabled' do
+      Fog::Storage.expects(:new).with({
+        :provider             => 'Rackspace',
+        :rackspace_username   => 'my_username',
+        :rackspace_api_key    => 'my_api_key',
+        :rackspace_auth_url   => 'lon.auth.api.rackspacecloud.com',
+        :rackspace_servicenet => true
+      })
+
+      cf.servicenet = true
       cf.send(:connection)
     end
   end

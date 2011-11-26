@@ -13,6 +13,10 @@ module Backup
       attr_accessor :username, :api_key, :auth_url
 
       ##
+      # Rackspace Service Net (Allows for LAN-based transfers to avoid charges and improve performance)
+      attr_accessor :servicenet
+
+      ##
       # Rackspace Cloud Files container name and path
       attr_accessor :container, :path
 
@@ -23,7 +27,8 @@ module Backup
       def initialize(&block)
         load_defaults!
 
-        @path ||= 'backups'
+        @servicenet ||= false
+        @path       ||= 'backups'
 
         instance_eval(&block) if block_given?
 
@@ -60,10 +65,11 @@ module Backup
       # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
         Fog::Storage.new(
-          :provider           => provider,
-          :rackspace_username => username,
-          :rackspace_api_key  => api_key,
-          :rackspace_auth_url => auth_url
+          :provider             => provider,
+          :rackspace_username   => username,
+          :rackspace_api_key    => api_key,
+          :rackspace_auth_url   => auth_url,
+          :rackspace_servicenet => servicenet
         )
       end
 

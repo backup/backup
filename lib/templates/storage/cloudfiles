@@ -2,10 +2,11 @@
   # Rackspace Cloud Files [Storage]
   #
   store_with CloudFiles do |cf|
-    cf.api_key   = 'my_api_key'
-    cf.username  = 'my_username'
-    cf.container = 'my_container'
-    cf.path      = '/path/to/my/backups'
-    cf.keep      = 5
-    cf.auth_url  = 'lon.auth.api.rackspacecloud.com'
+    cf.api_key    = 'my_api_key'
+    cf.username   = 'my_username'
+    cf.container  = 'my_container'
+    cf.path       = '/path/to/my/backups'
+    cf.keep       = 5
+    cf.auth_url   = 'lon.auth.api.rackspacecloud.com'
+    cf.servicenet = false
   end
