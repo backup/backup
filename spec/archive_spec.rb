@@ -7,10 +7,10 @@ describe Backup::Archive do
   let(:archive) do
     Backup::Archive.new(:dummy_archive) do |a|
       a.add '/home/rspecuser/somefile'
-      a.add '/home/rspecuser/logs/'
-      a.add '/home/rspecuser/dotfiles/'
+      a.add '/home/rspecuser/logs'
+      a.add '/home/rspecuser/dotfiles'
       a.exclude '/home/rspecuser/badfile'
-      a.exclude '/home/rspecuser/wrongdir/'
+      a.exclude '/home/rspecuser/wrongdir'
     end
   end
 
