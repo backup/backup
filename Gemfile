@@ -4,8 +4,8 @@ source 'http://rubygems.org'
 
 ##
 # Load Backup::Dependency
-%w[cli dependency].each do |path|
-  require File.expand_path("../lib/backup/#{path}", __FILE__)
+["cli/helpers", "dependency"].each do |library|
+  require File.expand_path("../lib/backup/#{library}", __FILE__)
 end
 
 ##
@@ -24,7 +24,7 @@ group :test do
 
   gem 'guard'
   gem 'guard-rspec'
-  gem 'rb-fsevent' # guard notifications for osx 
+  gem 'rb-fsevent' # guard notifications for osx
   gem 'growl'      # $ brew install growlnotify
   gem 'rb-inotify' # guard notifications for linux
   gem 'libnotify'  # $ apt-get install ???
