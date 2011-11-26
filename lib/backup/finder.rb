@@ -73,7 +73,7 @@ module Backup
 
       ##
       # Loads the backup configuration file
-      instance_eval(File.read(config))
+      Backup.module_eval(File.read(config), config, 1)
     end
   end
 end
