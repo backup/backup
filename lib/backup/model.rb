@@ -5,6 +5,10 @@ module Backup
     include Backup::CLI::Helpers
 
     ##
+    # The parent is used to extend a config
+    attr_accessor :parent
+
+    ##
     # The trigger is used as an identifier for
     # initializing the backup process
     attr_accessor :trigger
@@ -108,10 +112,11 @@ module Backup
     # configuration for the model, it will append the newly created "model" instance
     # to the @all class variable (Array) so it can be accessed by Backup::Finder
     # and any other location
-    def initialize(trigger, label, &block)
+    def initialize(trigger, label, parent, &block)
       @trigger     = trigger
       @label       = label
       @time        = TIME
+      @parent      = parent
 
       @databases   = Array.new
       @archives    = Array.new
@@ -120,8 +125,22 @@ module Backup
       @storages    = Array.new
       @notifiers   = Array.new
       @syncers     = Array.new
-
+      
       instance_eval(&block)
+
+      Backup::Model.all.each {
+        |model|
+        if model.trigger == @parent
+          @databases   = self.databases   | model.databases
+          @archives    = self.archives    | model.archives
+          @encryptors  = self.encryptors  | model.encryptors
+          @compressors = self.compressors | model.compressors
+          @storages    = self.storages    | model.storages
+          @notifiers   = self.notifiers   | model.notifiers
+          @syncers     = self.syncers     | model.syncers
+        end
+      }
+
       Backup::Model.all << self
     end
 
