@@ -82,10 +82,12 @@ module Backup
       # Tells Redis to persist the current state of the
       # in-memory database to the persisted dump file
       def invoke_save!
-        response = `#{ utility('redis-cli') } #{ credential_options } #{ connectivity_options } #{ additional_options } SAVE`
+        response = run("#{ utility('redis-cli') } #{ credential_options } #{ connectivity_options } #{ additional_options } SAVE")
         unless response =~ /OK/
-          Logger.error "Could not invoke the Redis SAVE command. The #{ database } file might not contain the most recent data."
-          Logger.error "Please check if the server is running, the credentials (if any) are correct, and the host/port/socket are correct."
+          raise Exception::CommandFailed,
+            "Could not invoke the Redis SAVE command. The #{ database } file might not contain the most recent data. " +
+            "Please check if the server is running, the credentials (if any) are correct, and the host/port/socket are correct.\n\n" +
+            "Redis CLI response: #{ response }"
         end
       end
 

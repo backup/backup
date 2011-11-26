@@ -69,6 +69,7 @@ describe Backup::Database::Redis do
     it 'should return the full redis-cli string' do
       db.expects(:utility).with('redis-cli').returns('redis-cli')
       db.expects(:run).with("redis-cli -a 'secret' -h 'localhost' -p '123' -s '/redis.sock' --query SAVE")
+      db.stubs(:raise)
       db.invoke_save!
     end
   end
@@ -99,6 +100,7 @@ describe Backup::Database::Redis do
       db.stubs(:utility).returns('redis-cli')
       db.stubs(:mkdir)
       db.stubs(:run)
+      db.stubs(:raise)
     end
 
     it 'should ensure the directory is available' do
