@@ -86,8 +86,6 @@ module Backup
             File.open(File.join(local_path, local_file))
           )
         end
-      rescue Excon::Errors::NotFound
-        raise "An error occurred while trying to transfer the backup, please make sure the bucket exists."
       end
 
       ##
@@ -98,7 +96,6 @@ module Backup
           Logger.message("#{ self.class } started removing '#{ local_file }' from bucket '#{ bucket }'")
           connection.delete_object(bucket, File.join(remote_path, remote_file))
         end
-      rescue Excon::Errors::SocketError
       end
 
     end

@@ -79,8 +79,6 @@ module Backup
             :body => File.open(File.join(local_path, local_file))
           )
         end
-      rescue Excon::Errors::NotFound
-        raise "An error occurred while trying to transfer the file."
       end
 
       ##
@@ -92,7 +90,6 @@ module Backup
           directory.files.get(remote_file).destroy
         end
         directory.destroy
-        rescue Excon::Errors::SocketError
       end
 
     end

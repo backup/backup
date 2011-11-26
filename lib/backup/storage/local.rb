@@ -67,8 +67,6 @@ module Backup
         end
 
         FileUtils.rm_rf(remote_path)
-      rescue => error
-        Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
       end
 
       ##

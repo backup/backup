@@ -105,7 +105,6 @@ module Backup
         end
 
         connection.delete(remote_path)
-      rescue ::Dropbox::FileNotFoundError
       ensure
         remove_instance_variable(:@connection) if instance_variable_defined?(:@connection)
       end

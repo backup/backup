@@ -85,8 +85,6 @@ module Backup
         end
 
         connection.rmdir!(remote_path)
-      rescue Net::SFTP::StatusException
-        Logger.warn "Could not remove path \"#{ remote_path }\" and underlying file(s)."
       end
 
       ##

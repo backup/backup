@@ -78,10 +78,6 @@ module Backup
             File.open(File.join(local_path, local_file))
           )
         end
-      rescue Excon::Errors::SocketError => error
-        puts "\nAn error occurred while trying to transfer the backup."
-        puts "Make sure the container exists and try again.\n\n"
-        raise error
       end
 
       ##
@@ -91,7 +87,6 @@ module Backup
           Logger.message("#{ self.class } started removing '#{ local_file }' from container '#{ container }'")
           connection.delete_object(container, File.join(remote_path, remote_file))
         end
-      rescue Excon::Errors::SocketError
       end
 
     end
