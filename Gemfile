@@ -4,7 +4,8 @@
 source 'http://rubygems.org'
 
 # Include gem dependencies from the gemspec for development purposes
-gemspec
+gem 'thor',   '~> 0.14.6'
+gem 'POpen4', '~> 0.1.4'
 
 # Load Backup::Dependency
 ["cli/helpers", "dependency"].each do |library|
