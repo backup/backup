@@ -1,4 +1,5 @@
-##
+# encoding: utf-8
+
 # To run the test suite against all 3 rubies: 1.9.3, 1.9.2, and 1.8.7, simply run the following command:
 #
 # $ guard start
