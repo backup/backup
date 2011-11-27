@@ -67,6 +67,8 @@ module Backup
   # Autoload Backup base files
   autoload :Model,      File.join(LIBRARY_PATH, 'model')
   autoload :Archive,    File.join(LIBRARY_PATH, 'archive')
+  autoload :Packager,   File.join(LIBRARY_PATH, 'packager')
+  autoload :Cleaner,    File.join(LIBRARY_PATH, 'cleaner')
   autoload :Splitter,   File.join(LIBRARY_PATH, 'splitter')
   autoload :Finder,     File.join(LIBRARY_PATH, 'finder')
   autoload :Dependency, File.join(LIBRARY_PATH, 'dependency')

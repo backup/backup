@@ -200,44 +200,43 @@ describe Backup::Model do
   end
 
   describe '#package!' do
+    let(:packager) { Backup::Packager.new(model) }
+
     before do
       [:utility, :run].each { |method| model.stubs(method) }
     end
 
     it 'should package the folder' do
-      model.expects(:utility).with(:tar).returns(:tar)
-      model.expects(:run).with(%|tar -c -f '#{ File.join( Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar" ) }' -C '#{ Backup::TMP_PATH }' '#{ Backup::TRIGGER }'|)
-      model.send(:package!)
-    end
-
-    it 'should log' do
+      packager.expects(:utility).with(:tar).returns(:tar)
+      packager.expects(:run).with(%|tar -c -f '#{ File.join( Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar" ) }' -C '#{ Backup::TMP_PATH }' '#{ Backup::TRIGGER }'|)
       Backup::Logger.expects(:message).with("Backup started packaging everything to a single archive file.")
-      model.send(:package!)
+      packager.package!
     end
   end
 
   describe '#clean!' do
+    let(:cleaner) { Backup::Cleaner.new(model) }
+
     before do
       [:utility, :run, :rm].each { |method| model.stubs(method) }
     end
 
     it 'should remove the temporary files and folders that were created' do
-      model.expects(:utility).with(:rm).returns(:rm)
-      model.expects(:run).with "rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' " +
+      cleaner.expects(:utility).with(:rm).returns(:rm)
+      cleaner.expects(:run).with "rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' " +
                                "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'"
-
-      model.send(:clean!)
+      cleaner.clean!
     end
 
     it 'should remove the temporary files and folders that were created' do
-      model.expects(:utility).with(:rm).returns(:rm)
+      cleaner.expects(:utility).with(:rm).returns(:rm)
       Backup::Model.chunk_suffixes = ["aa", "ab", "ac"]
-      model.expects(:run).with "rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' " +
+      cleaner.expects(:run).with "rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' " +
                                "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' " +
                                "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-aa") }' " +
                                "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-ab") }' " +
                                "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-ac") }'"
-      model.send(:clean!)
+      cleaner.clean!
     end
 
     it do

@@ -113,13 +113,9 @@ module Backup
       @label       = label
       @time        = TIME
 
-      @databases   = Array.new
-      @archives    = Array.new
-      @encryptors  = Array.new
-      @compressors = Array.new
-      @storages    = Array.new
-      @notifiers   = Array.new
-      @syncers     = Array.new
+      procedure_instance_variables.each do |variable|
+        instance_variable_set(variable, Array.new)
+      end
 
       instance_eval(&block)
       Backup::Model.all << self
@@ -210,7 +206,7 @@ module Backup
     # Runs all (if any) archive objects to package all their
     # paths in to a single tar file and places it in the backup folder
     ##
-    # [Package]
+    # [Packaging]
     # After all the database dumps and archives are placed inside
     # the folder, it'll make a single .tar package (archive) out of it
     ##
@@ -219,6 +215,9 @@ module Backup
     ##
     # [Compression]
     # Optionally compresses the packaged file with one or more compressors
+    ##
+    # [Splitting]
+    # Optionally splits the backup file in to multiple smaller chunks before transferring them
     ##
     # [Storages]
     # Runs all (if any) storage objects to store the backups to remote locations
@@ -240,26 +239,20 @@ module Backup
     # breaks the process, it'll always ensure it removes the temporary files regardless
     # to avoid mass consumption of storage space on the machine
     def perform!
-      begin
-        if databases.any? or archives.any?
-          databases.each   { |d| d.perform! }
-          archives.each    { |a| a.perform! }
-          package!
-          compressors.each { |c| c.perform! }
-          encryptors.each  { |e| e.perform! }
-          split!
-          storages.each    { |s| s.perform! }
-          clean!
+      if databases.any? or archives.any?
+        procedures.each do |procedure|
+          (procedure.call; next) if procedure.is_a?(Proc)
+          procedure.each(&:perform!)
         end
-
-        syncers.each   { |s| s.perform!       }
-        notifiers.each { |n| n.perform!(self) }
-      rescue => exception
-        clean!
-        notifiers.each   { |n| n.perform!(self, exception) }
-        show_exception!(exception)
-        exit(1)
       end
+
+      syncers.each(&:perform!)
+      notifiers.each { |n| n.perform!(self) }
+    rescue => exception
+      clean!
+      notifiers.each { |n| n.perform!(self, exception) }
+      display_exception(exception)
+      exit(1)
     end
 
   private
@@ -269,8 +262,7 @@ module Backup
     # these files will be bundled in to a .tar archive (uncompressed) so it
     # becomes a single (transferrable) packaged file.
     def package!
-      Logger.message "Backup started packaging everything to a single archive file."
-      run(%|#{ utility(:tar) } -c -f '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar") }' -C '#{ TMP_PATH }' '#{ TRIGGER }'|)
+      Backup::Packager.new(self).package!
     end
 
     ##
@@ -283,29 +275,34 @@ module Backup
     ##
     # Cleans up the temporary files that were created after the backup process finishes
     def clean!
-      Logger.message "Backup started cleaning up the temporary files."
-      paths = [
-        File.join(TMP_PATH, TRIGGER),
-        Backup::Model.file,
-        Backup::Model.chunk_suffixes.map { |chunk_suffix| "#{Backup::Model.file}-#{chunk_suffix}" }
-      ].flatten
+      Backup::Cleaner.new(self).clean!
+    end
 
-      run("#{ utility(:rm) } -rf #{ paths.map { |path| "'#{ path }'" }.join(" ") }")
+    ##
+    # Returns an array of procedures
+    def procedures
+      Array.new([
+        databases, archives, lambda { package! }, compressors,
+        encryptors, lambda { split! }, storages, lambda { clean! }
+      ])
+    end
+
+    ##
+    # Returns an Array of the names (String) of the procedure instance variables
+    def procedure_instance_variables
+      ["@databases", "@archives", "@encryptors", "@compressors", "@storages", "@notifiers", "@syncers"]
     end
 
     ##
     # Returns the string representation of the last value of a nested constant
-    # example:
-    #  Backup::Model::MySQL
-    # becomes and returns:
-    #  "MySQL"
+    # example: last_constant(Backup::Model::MySQL) becomes and returns "MySQL"
     def last_constant(constant)
       constant.to_s.split("::").last
     end
 
     ##
     # Formats an exception
-    def show_exception!(exception)
+    def display_exception(exception)
       Logger.normal "=" * 75 + "\nException that got raised:\n#{exception.class} - #{exception} \n" + "=" * 75 + "\n" + exception.backtrace.join("\n")
       Logger.normal "=" * 75 + "\n\nYou are running Backup version \"#{Backup::Version.current}\" and Ruby version \"#{RUBY_VERSION} (patchlevel #{RUBY_PATCHLEVEL})\" on platform \"#{RUBY_PLATFORM}\".\n"
       Logger.normal "If you've setup a \"Notification\" in your configuration file, the above error will have been sent."
