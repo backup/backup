@@ -1,34 +1,13 @@
 # encoding: utf-8
 
 ##
-# Load RubyGems for Ruby <= 1.8.7
-require 'rubygems'
-require 'tempfile'
-require 'fileutils'
-
-##
-# Load Thor for the CLI and POpen4 for reading unix process status
-begin
-  require 'thor'
-  require 'popen4'
-rescue LoadError
-  puts "\nBackup requires Thor to load the CLI (Command Line Interface) and POpen4 to determine the status of unix processes."
-  puts "Please install both Thor and POpen4 first:\n\ngem install thor -v '~> 0.14.6'\ngem install POpen4 -v '~> 0.1.4'"
-  exit 1
-end
-
-##
-# Load the Backup source
-require File.expand_path("../../../backup", __FILE__)
-
-##
 # Build the Backup Command Line Interface using Thor
 module Backup
   module CLI
     class Utility < Thor
       include Thor::Actions
 
-      TEMPLATE_DIR = File.expand_path("../../templates", __FILE__)
+      TEMPLATE_DIR = File.expand_path("../../../templates", __FILE__)
 
       ##
       # [Perform]
