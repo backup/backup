@@ -1,20 +1,21 @@
-##
+# encoding: utf-8
+
 # RubyGems Source
 source 'http://rubygems.org'
 
-##
+# Include gem dependencies from the gemspec for development purposes
+gemspec
+
 # Load Backup::Dependency
 ["cli/helpers", "dependency"].each do |library|
   require File.expand_path("../lib/backup/#{library}", __FILE__)
 end
 
-##
 # Dynamically define the dependencies specified in Backup::Dependency.all
 Backup::Dependency.all.each do |name, gemspec|
   gem(name, gemspec[:version])
 end
 
-##
 # Define gems to be used in the 'test' environment
 group :test do
   gem 'rspec'
