@@ -50,6 +50,7 @@ Database Support
 - PostgreSQL
 - MongoDB
 - Redis
+- Riak
 
 [Database Wiki Page](https://github.com/meskyanichi/backup/wiki/Databases)
 
