@@ -122,6 +122,7 @@ Notifiers
 - Campfire
 - Presently
 - Prowl
+- Hipchat
 
 [Notifiers Wiki Page](https://github.com/meskyanichi/backup/wiki/Notifiers)
 
