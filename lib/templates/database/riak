@@ -1,0 +1,8 @@
+##
+# Riak [Database]
+#
+database Riak do |db|
+  db.name               = "hostname"
+  db.node           = "riak@hostname"
+  db.cookie           = "cookie"
+end
