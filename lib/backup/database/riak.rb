@@ -27,7 +27,7 @@ module Backup
       ##
       # Builds the full riak-admin string based on all attributes
       def riakadmin
-        "riak-admin backup #{node} #{cookie} #{File.join(dump_path, name)} node"
+        "riak-admin backup #{node} #{cookie}"
       end
 
       ##
@@ -35,7 +35,7 @@ module Backup
       # data to the specified path based on the 'trigger'
       def perform!
         super
-        run("#{riakadmin}")
+        run("#{riakadmin} #{File.join(dump_path, name)} node")
       end
 
     end
