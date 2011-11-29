@@ -35,6 +35,8 @@ module Backup
       # data to the specified path based on the 'trigger'
       def perform!
         super
+        # have to make riak the owner since the riak-admin tool runs as the riak user in a default setup.
+        run("chown -R riak.riak #{dump_path}")
         run("#{riakadmin} #{File.join(dump_path, name)} node")
       end
 
