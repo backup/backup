@@ -32,7 +32,7 @@ module Backup
   #  database "MySQL" do |mysql|
   # You can do:
   #  database MySQL do |mysql|
-  DATABASES   = ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis']
+  DATABASES   = ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Riak']
   STORAGES    = ['S3', 'CloudFiles', 'Ninefold', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync', 'Local']
   COMPRESSORS = ['Gzip', 'Bzip2', 'Lzma']
   ENCRYPTORS  = ['OpenSSL', 'GPG']
@@ -114,6 +114,7 @@ module Backup
     autoload :PostgreSQL, File.join(DATABASE_PATH, 'postgresql')
     autoload :MongoDB,    File.join(DATABASE_PATH, 'mongodb')
     autoload :Redis,      File.join(DATABASE_PATH, 'redis')
+    autoload :Riak,       File.join(DATABASE_PATH, 'riak')
   end
 
   ##
@@ -199,6 +200,7 @@ module Backup
       autoload :PostgreSQL, File.join(CONFIGURATION_PATH, 'database', 'postgresql')
       autoload :MongoDB,    File.join(CONFIGURATION_PATH, 'database', 'mongodb')
       autoload :Redis,      File.join(CONFIGURATION_PATH, 'database', 'redis')
+      autoload :Riak,      File.join(CONFIGURATION_PATH, 'database', 'riak')
     end
   end
 
