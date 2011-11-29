@@ -178,4 +178,29 @@ describe Backup::Database::MongoDB do
       db.perform!
     end
   end
+
+  describe "#mongo_uri" do
+    before do
+      db.host     = "flame.mongohq.com"
+      db.port     = 12345
+      db.username = "sample_username"
+      db.password = "sample_password"
+      db.ipv6     = nil
+    end
+
+    it "should return URI without database" do
+      db.name = nil
+      db.mongo_uri.should == "flame.mongohq.com:12345 --username='sample_username' --password='sample_password'"
+    end
+
+    it "should return URI without database" do
+      db.name = ""
+      db.mongo_uri.should == "flame.mongohq.com:12345 --username='sample_username' --password='sample_password'"
+    end
+
+    it "should return URI without database" do
+      db.name = "sample_db"
+      db.mongo_uri.should == "flame.mongohq.com:12345/sample_db --username='sample_username' --password='sample_password'"
+    end
+  end
 end
