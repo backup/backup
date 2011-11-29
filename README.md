@@ -15,14 +15,6 @@ Author
 Drop me a message for any questions, suggestions, requests, bugs or submit them to the [issue log](https://github.com/meskyanichi/backup/issues).
 
 
-Please Donate!
---------------
-
-Please [DONATE](http://pledgie.com/campaigns/16065) to the Backup project. Backup was a huge amount of work and every donation received is encouraging and supports Backup's continued development! Thanks!
-
-[![Donate to Backup](http://pledgie.com/campaigns/16065.png)](http://pledgie.com/campaigns/16065)
-
-
 Installation
 ------------
 
