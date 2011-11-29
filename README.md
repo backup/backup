@@ -344,6 +344,26 @@ Contributors
     <td><a href="https://github.com/swissmanu" target="_blank">Manuel Alabor ( swissmanu )</a></td>
     <td>Prowl Notifier</td>
   </tr>
+  <tr>
+    <td><a href="https://github.com/josephcrim" target="_blank">Joseph Crim ( josephcrim )</a></td>
+    <td>Riak Database, exit() suggestions</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/fearoffish" target="_blank">Jamie van Dyke ( fearoffish )</a></td>
+    <td>POpen4 implementation</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/hmarr" target="_blank">Harry Marr ( hmarr )</a></td>
+    <td>Auth URL for Rackspace Cloud Files Storage</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/manuelmeurer" target="_blank">Manuel Meurer ( manuelmeurer )</a></td>
+    <td>Ensure the storage file (YAML dump) has content before reading it</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/jessedearing" target="_blank">Jesse Dearing ( jessedearing )</a></td>
+    <td>Hipchat Notifier</td>
+  </tr>
 </table>
 
 
