@@ -125,7 +125,6 @@ Supported Ruby versions (Tested with RSpec)
 - Ruby 1.9.3
 - Ruby 1.9.2
 - Ruby 1.8.7
-- Ruby Enterprise Edition 1.8.7
 
 
 A sample Backup configuration file
