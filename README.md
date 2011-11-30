@@ -365,6 +365,14 @@ Contributors
     <td><a href="https://github.com/jessedearing" target="_blank">Jesse Dearing ( jessedearing )</a></td>
     <td>Hipchat Notifier</td>
   </tr>
+  <tr>
+    <td><a href="https://github.com/szymonpk" target="_blank">Szymon ( szymonpk )</a></td>
+    <td>Pbzip2 compressor</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/burns" target="_blank">burns ( burns )</a></td>
+    <td>Improved Backup cycling implementation by refreshing all user configuration during the cycle procedure</td>
+  </tr>
 </table>
 
 
