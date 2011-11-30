@@ -143,7 +143,7 @@ module Backup
       # Generates a configuration file based on the arguments passed in.
       # For example, running $ backup generate --databases='mongodb' will generate a pre-populated
       # configuration file with a base MongoDB setup
-      desc 'generate', 'Generates configuration blocks based on the arguments you pass in'
+      desc 'generate:model', 'Generates a Backup model'
       method_option :name,        :type => :string, :required => true
       method_option :path,        :type => :string
       method_option :databases,   :type => :string
@@ -154,7 +154,7 @@ module Backup
       method_option :notifiers,   :type => :string
       method_option :archives,    :type => :boolean
       method_option :splitter,    :type => :boolean, :default => true, :desc => "use `--no-splitter` to disable"
-      def generate
+      define_method "generate:model" do
         config_path = options[:path] || Backup::PATH
         models_path = File.join(config_path, "models")
         config      = File.join(config_path, "config.rb")
@@ -195,6 +195,20 @@ module Backup
           puts "Generated configuration file in '#{ model }'"
         end
         temp_file.unlink
+
+        if not File.exist?(config)
+          File.open(config, "w") do |file|
+            file.write(File.read(File.join(Backup::TEMPLATE_PATH, 'model', "config")))
+          end
+          puts "Generated configuration file in '#{ config }'"
+        end
+      end
+
+      desc 'generate:config', 'Generates the main Backup bootstrap/configuration file'
+      method_option :path, :type => :string
+      define_method 'generate:config' do
+        config_path = options[:path] || Backup::PATH
+        config      = File.join(config_path, "config.rb")
 
         if overwrite?(config)
           File.open(config, "w") do |file|
