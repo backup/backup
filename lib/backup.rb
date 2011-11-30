@@ -51,6 +51,7 @@ module Backup
   SYNCER_PATH        = File.join(LIBRARY_PATH, 'syncer')
   CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
   EXCEPTION_PATH     = File.join(LIBRARY_PATH, 'exception')
+  TEMPLATE_PATH      = File.expand_path('../../templates', __FILE__)
 
   ##
   # Backup's Environment paths

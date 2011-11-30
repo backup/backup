@@ -24,6 +24,14 @@ module Backup
         Logger.message "#{ self.class } started notifying about the process."
       end
 
+      ##
+      # Returns the path to the templates, appended by the passed in argument
+      def read_template(file, binder)
+        ERB.new(File.read(
+          File.join(Backup::TEMPLATE_PATH, "notifier", "#{file}.erb")
+        )).result(binder)
+      end
+
     end
   end
 end
