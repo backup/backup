@@ -156,11 +156,9 @@ module Backup
           objects = objects - objects_to_remove
         end
 
-        ## TODO: keep it from even showing up in the YAML file?
-        # objects.map! do |obj|
-        #   obj.send(:remove_instance_variable, :@configure_block); obj
-        # end
-        objects.map! {|obj| obj.configure_block = nil; obj }
+        objects.each do |object|
+          object.send(:remove_instance_variable, :@configure_block)
+        end
 
         storage_object.write(objects)
       end
