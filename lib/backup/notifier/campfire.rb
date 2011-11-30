@@ -50,7 +50,7 @@ module Backup
       ##
       # Sends a message informing the user that the backup operation
       # raised an exception
-      def notify_failure!(exception)
+      def notify_failure!
         send_message("[Backup::Failed] #{model.label} (#{ File.basename(Backup::Model.file) })")
       end
 

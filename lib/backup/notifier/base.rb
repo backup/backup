@@ -10,6 +10,14 @@ module Backup
       attr_accessor :model
 
       ##
+      # Contains the Exception object or False
+      attr_accessor :exception
+
+      ##
+      # Contains the Backup::Template object
+      attr_accessor :template
+
+      ##
       # When set to true, the user will be notified by email
       # when a backup process ends without raising any exceptions
       attr_accessor :on_success
@@ -29,8 +37,6 @@ module Backup
         instance_eval(&block) if block_given?
 
         set_defaults!
-
-        @template = Backup::Template.new(binding)
       end
 
       ##
@@ -41,14 +47,16 @@ module Backup
       #
       # If'll only perform these if on_success is true or on_failure is true
       def perform!(model, exception = false)
-        @model = model
+        @model     = model
+        @exception = exception
+        @template  = Backup::Template.new(binding)
 
         if notify_on_success? and exception.eql?(false)
           log!
           notify_success!
         elsif notify_on_failure? and not exception.eql?(false)
           log!
-          notify_failure!(exception)
+          notify_failure!
         end
       end
 
@@ -57,14 +65,6 @@ module Backup
       # the client that Backup is notifying about the process
       def log!
         Logger.message "#{ self.class } started notifying about the process."
-      end
-
-      ##
-      # Returns the path to the templates, appended by the passed in argument
-      def read_template(file, binder)
-        ERB.new(File.read(
-          File.join(Backup::TEMPLATE_PATH, "notifier", "#{file}.erb")
-        )).result(binder)
       end
 
     end

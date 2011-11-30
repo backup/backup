@@ -42,7 +42,7 @@ module Backup
       ##
       # Sends a tweet informing the user that the backup operation
       # raised an exception
-      def notify_failure!(exception)
+      def notify_failure!
         presently_client.update("[Backup::Failed] #{model.label} (#{ File.basename(Backup::Model.file) })")
       end
 

@@ -42,7 +42,7 @@ module Backup
       ##
       # Sends a push message informing the user that the backup operation
       # raised an exception
-      def notify_failure!(exception)
+      def notify_failure!
         prowl_client.notify("[Backup::Failed]", "#{model.label} (#{ File.basename(Backup::Model.file) })")
       end
 

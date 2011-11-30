@@ -72,16 +72,16 @@ module Backup
       # proceeded without any errors
       def notify_success!
         mail[:subject] = "[Backup::Succeeded] #{model.label} (#{model.trigger})"
-        mail[:body]    = read_template('success', Binder.bind(:model => @model))
+        mail[:body]    = template.result('notifier/mail/success') # @model needs to be avail
         mail.deliver!
       end
 
       ##
       # Sends an email informing the user that the backup operation
       # raised an exception and will send the user the error details
-      def notify_failure!(exception)
+      def notify_failure!
         mail[:subject] = "[Backup::Failed] #{model.label} (#{model.trigger})"
-        mail[:body]    = read_template('failure', Binder.bind(:model => @model, :exception => exception))
+        mail[:body]    = template.result('notifier/mail/failure') # @model, @exception need to be avail
         mail.deliver!
       end
 

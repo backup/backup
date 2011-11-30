@@ -59,7 +59,7 @@ module Backup
         send_message("[Backup::Succeeded] #{model.label} (#{ File.basename(Backup::Model.file) })", @hipchat_options[:success_color], @hipchat_options[:notify_users])
       end
 
-      def notify_failure!(exception)
+      def notify_failure!
         send_message("[Backup::Failed] #{model.label} (#{ File.basename(Backup::Model.file) })", @hipchat_options[:failure_color], @hipchat_options[:notify_users])
       end
 
