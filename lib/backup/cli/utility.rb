@@ -226,11 +226,15 @@ module Backup
       method_option :in,        :type => :string,  :required => true
       method_option :out,       :type => :string,  :required => true
       method_option :base64,    :type => :boolean, :default  => false
+      method_option :pass_file, :type => :string,  :default => ''
+      method_option :salt,      :type => :boolean, :default => false
       def decrypt
         case options[:encryptor].downcase
         when 'openssl'
           base64 = options[:base64] ? '-base64' : ''
-          %x[openssl aes-256-cbc -d #{base64} -in '#{options[:in]}' -out '#{options[:out]}']
+          pass   = options[:pass_file] ? "-pass file:#{options[:pass_file]}" : ''
+          salt   = options[:salt] ? '-salt' : ''
+          %x[openssl aes-256-cbc -d #{base64} #{pass} #{salt} -in '#{options[:in]}' -out '#{options[:out]}']
         when 'gpg'
           %x[gpg -o '#{options[:out]}' -d '#{options[:in]}']
         else
