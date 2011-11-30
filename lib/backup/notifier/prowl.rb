@@ -13,46 +13,21 @@ module Backup
       attr_accessor :prowl_client
 
       ##
-      # Container for the Model object
-      attr_accessor :model
-
-      ##
       # Application name
       # Tell something like your server name. Example: "Server1 Backup"
       attr_accessor :application
-      
+
       ##
       # API-Key
       # Create a Prowl account and request an API key on prowlapp.com.
       attr_accessor :api_key
 
       ##
-      # Instantiates a new Backup::Notifier::Prowl object
-      def initialize(&block)
-        load_defaults!
-
-        instance_eval(&block) if block_given?
-
-        set_defaults!
-      end
-
-      ##
       # Performs the notification
-      # Takes an exception object that might've been created if an exception occurred.
-      # If this is the case it'll invoke notify_failure!(exception), otherwise, if no
-      # error was raised, it'll go ahead and notify_success!
-      #
-      # If'll only perform these if on_success is true or on_failure is true
+      # Extends from super class. Must call super(model, exception).
+      # If any pre-configuration needs to be done, put it above the super(model, exception)
       def perform!(model, exception = false)
-        @model = model
-
-        if notify_on_success? and exception.eql?(false)
-          log!
-          notify_success!
-        elsif notify_on_failure? and not exception.eql?(false)
-          log!
-          notify_failure!(exception)
-        end
+        super(model, exception)
       end
 
     private

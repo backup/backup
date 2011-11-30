@@ -13,49 +13,40 @@ module Backup
   module Notifier
     class Hipchat < Base
 
+      ##
       # The Hipchat API token
       attr_accessor :token
 
+      ##
       # Who the notification should appear from
       attr_accessor :from
 
+      ##
       # The rooms that should be notified
       attr_accessor :rooms_notified
 
+      ##
       # The background color of a success message. One of :yellow, :red, :green, :purple, or :random. (default: yellow)
       attr_accessor :success_color
 
+      ##
       # The background color of an error message. One of :yellow, :red, :green, :purple, or :random. (default: yellow)
       attr_accessor :failure_color
 
+      ##
       # Notify users in the room
       attr_accessor :notify_users
 
-      attr_accessor :model
-
-      def initialize(&block)
-        load_defaults!
-
-        instance_eval(&block) if block_given?
-
-        set_defaults!
-      end
-
+      ##
+      # Performs the notification
+      # Extends from super class. Must call super(model, exception).
+      # If any pre-configuration needs to be done, put it above the super(model, exception)
       def perform!(model, exception = false)
-        @model = model
-
         @rooms_notified = [@hipchat_options[:rooms_notified]] unless @hipchat_options[:rooms_notified].is_a? Array
-
-        if notify_on_success? and exception.eql?(false)
-          log!
-          notify_success!
-        elsif notify_on_failure? and not exception.eql?(false)
-          log!
-          notify_failure!(exception)
-        end
+        super(model, exception)
       end
 
-      private
+    private
 
       def send_message(msg, color, notify)
         client = HipChat::Client.new(@hipchat_options[:token])
