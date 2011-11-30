@@ -136,26 +136,21 @@ module Backup
       def create_write_and_return_new_session!
         session      = ::Dropbox::Session.new(api_key, api_secret)
         session.mode = :dropbox
-        Logger.message "Open the following URL in a browser to authorize a session for your Dropbox account:"
-        Logger.message ""
-        Logger.message "\s\s#{session.authorize_url}"
-        Logger.message ""
-        Logger.message "Once Dropbox says you're authorized, hit enter to proceed."
-        Timeout::timeout(180) { STDIN.gets }
+
+        template = Backup::Template.new(binding)
+        template.render("storage/dropbox/authorization_url")
+
         begin
+          Timeout::timeout(180) { STDIN.gets }
           session.authorize
         rescue OAuth::Unauthorized => error
           Logger.error "Authorization failed!"
           raise error
         end
-        Logger.message "Authorized!"
 
-        Logger.message "Caching session data to file: #{cached_file}.."
+        template.render("storage/dropbox/authorized")
         write_cache!(session)
-        Logger.message "Cache data written! You will no longer need to manually authorize this Dropbox account via an URL on this machine."
-        Logger.message "Note: If you run Backup with this Dropbox account on other machines, you will need to either authorize them the same way,"
-        Logger.message "\s\sor simply copy over #{cached_file} to the cache directory"
-        Logger.message "\s\son your other machines to use this Dropbox account there as well."
+        template.render("storage/dropbox/cache_file_written")
 
         session
       end
