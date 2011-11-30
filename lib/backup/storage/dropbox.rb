@@ -160,24 +160,6 @@ module Backup
         session
       end
 
-    public # DEPRECATED METHODS #############################################
-
-      def email
-        Logger.warn "[DEPRECATED] Backup::Storage::Dropbox.email is deprecated and will be removed at some point."
-      end
-
-      def email=(value)
-        Logger.warn "[DEPRECATED] Backup::Storage::Dropbox.email= is deprecated and will be removed at some point."
-      end
-
-      def password
-        Logger.warn "[DEPRECATED] Backup::Storage::Dropbox.password is deprecated and will be removed at some point."
-      end
-
-      def password=(value)
-        Logger.warn "[DEPRECATED] Backup::Storage::Dropbox.password= is deprecated and will be removed at some point."
-      end
-
     end
   end
 end
