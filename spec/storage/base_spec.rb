@@ -11,7 +11,7 @@ describe Backup::Storage::Base do
     storage_object.stubs(:load).returns([])
     storage_object.expects(:write)
     base.keep = 1
-    base.cycle!
+    base.send(:cycle!)
   end
 
   it do
@@ -24,7 +24,7 @@ describe Backup::Storage::Base do
     storage_object.expects(:write)
     Backup::Storage::Base.any_instance.expects(:remove!).times(2)
 
-    base.cycle!
+    base.send(:cycle!)
   end
 
   it do
