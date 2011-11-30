@@ -72,6 +72,7 @@ module Backup
   autoload :Cleaner,    File.join(LIBRARY_PATH, 'cleaner')
   autoload :Splitter,   File.join(LIBRARY_PATH, 'splitter')
   autoload :Finder,     File.join(LIBRARY_PATH, 'finder')
+  autoload :Template,   File.join(LIBRARY_PATH, 'template')
   autoload :Dependency, File.join(LIBRARY_PATH, 'dependency')
   autoload :Logger,     File.join(LIBRARY_PATH, 'logger')
   autoload :Version,    File.join(LIBRARY_PATH, 'version')
