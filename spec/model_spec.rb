@@ -209,7 +209,7 @@ describe Backup::Model do
     it 'should package the folder' do
       packager.expects(:utility).with(:tar).returns(:tar)
       packager.expects(:run).with(%|tar -c -f '#{ File.join( Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar" ) }' -C '#{ Backup::TMP_PATH }' '#{ Backup::TRIGGER }'|)
-      Backup::Logger.expects(:message).with("Backup started packaging everything to a single archive file.")
+      Backup::Logger.expects(:message).with("Backup::Packager started packaging the backup files.")
       packager.package!
     end
   end
@@ -240,7 +240,7 @@ describe Backup::Model do
     end
 
     it do
-      Backup::Logger.expects(:message).with("Backup started cleaning up the temporary files.")
+      Backup::Logger.expects(:message).with("Backup::Cleaner started cleaning up the temporary files.")
       model.send(:clean!)
     end
   end
