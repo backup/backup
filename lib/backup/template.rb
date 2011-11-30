@@ -16,12 +16,15 @@ module Backup
     end
 
     ##
-    # Renders the given file in the context of the provided binding (if any)
-    # and directly outputs the data to the console. The file path is relative from the
-    # root of the templates directory (Backup::TEMPLATE_PATH).
-    # The erb extension should be omitted from the file argument.
+    # Renders the provided file (in the context of the binding if any) to the console
     def render(file)
-      puts ERB.new(file_contents(file)).result(binding)
+      puts result(file)
+    end
+
+    ##
+    # Returns a String object containing the contents of the file (in the context of the binding if any)
+    def result(file)
+      ERB.new(file_contents(file)).result(binding)
     end
 
   private
