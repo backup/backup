@@ -8,9 +8,9 @@ module Backup
       # The password that'll be used to encrypt the backup. This
       # password will be required to decrypt the backup later on.
       attr_accessor :password
-      
+
       ##
-      # The password file to use to encrypt the backup. 
+      # The password file to use to encrypt the backup.
       attr_accessor :password_file
 
       ##
@@ -27,8 +27,8 @@ module Backup
       def initialize(&block)
         load_defaults!
 
-        @base64 ||= false
-        @salt   ||= false
+        @base64        ||= false
+        @salt          ||= false
         @password_file ||= nil
 
         instance_eval(&block) if block_given?
@@ -66,7 +66,7 @@ module Backup
       def salt
         return ['-salt'] if @salt; []
       end
-      
+
       ##
       # Returns '-pass file:<password file>' when @password_file has been set.
       def pass
