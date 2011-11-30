@@ -28,8 +28,8 @@ module Backup
       def initialize(&block)
         load_defaults!
 
-        @best ||= false
-        @fast ||= false
+        @best       ||= false
+        @fast       ||= false
         @processors ||= nil
 
         instance_eval(&block) if block_given?
