@@ -1,7 +1,7 @@
 Backup 3
 ========
 
-Backup is a RubyGem, written for Linux and Mac OSX, that allows you to easily perform backup operations on both your remote, as well as your local environment. It provides you with an elegant DSL in Ruby for modeling (configuring) your backups. Backup has built-in support for various databases, storage protocols/services, syncers, compressors, encryptors and notifiers which you can mix and match. It was built with modularity, extensibility and simplicity in mind.
+Backup is a RubyGem, written for Linux and Mac OSX, that allows you to easily perform backup operations on both your remote and local environments. It provides you with an elegant DSL in Ruby for modeling your backups. Backup has built-in support for various databases, storage protocols/services, syncers, compressors, encryptors and notifiers which you can mix and match. It was built with modularity, extensibility and simplicity in mind.
 
 [![Build Status](https://secure.travis-ci.org/meskyanichi/backup.png)](http://travis-ci.org/meskyanichi/backup)
 [![Still Maintained](http://stillmaintained.com/meskyanichi/backup.png)](http://stillmaintained.com/meskyanichi/backup)
@@ -384,7 +384,6 @@ Want to contribute?
   - Ruby 1.9.3
   - Ruby 1.9.2
   - Ruby 1.8.7
-  - Ruby Enterprise Edition 1.8.7
 - Try to keep the overall *structure / design* of the gem the same
 
 I can't guarantee I'll pull every pull request. Also, I may accept your pull request and drastically change parts to improve readability/maintainability. Feel free to discuss about improvements, new functionality/features in the [issue log](https://github.com/meskyanichi/backup/issues) before contributing if you need/want more information.
@@ -392,10 +391,10 @@ I can't guarantee I'll pull every pull request. Also, I may accept your pull req
 Easily run tests against all four Ruby versions
 -----------------------------------------------
 
-Install [RVM](https://rvm.beginrescueend.com/) and use it to install Ruby 1.9.3, 1.9.2, 1.8.7 and REE.
+Install [RVM](https://rvm.beginrescueend.com/) and use it to install Ruby 1.9.3, 1.9.2 and 1.8.7.
 
     rvm get latest && rvm reload
-    rvm install 1.9.3 && rvm install 1.9.2 && rvm install 1.8.7 && rvm install ree
+    rvm install 1.9.3 && rvm install 1.9.2 && rvm install 1.8.7
 
 Once these are installed, go ahead and install all the necessary dependencies.
 
@@ -403,17 +402,16 @@ Once these are installed, go ahead and install all the necessary dependencies.
     rvm use 1.9.3 && gem install bundler && bundle install
     rvm use 1.9.2 && gem install bundler && bundle install
     rvm use 1.8.7 && gem install bundler && bundle install
-    rvm use ree   && gem install bundler && bundle install
 
 The Backup gem uses [Guard](https://github.com/guard/guard) along with [Guard::RSpec](https://github.com/guard/guard-rspec) to quickly and easily test Backup's code against all four Rubies. If you've done the above, all you have to do is run:
 
     bundle exec guard
 
-from Backup's root and that's it. It'll now test against all four Rubies each time you adjust a file in the `lib` or `spec` directories.
+from Backup's root and that's it. It'll now test against all Ruby versions each time you adjust a file in the `lib` or `spec` directories.
 
 
-Or contribute by writing blogs/tutorials
-----------------------------------------
+Or contribute by writing blogs/tutorials/use cases
+--------------------------------------------------
 
 - http://erik.debill.org/2011/03/26/csing-backup-with-rails
 - http://blog.noizeramp.com/2011/03/31/backing-up-backup-ruby-gem/
@@ -425,4 +423,6 @@ Or contribute by writing blogs/tutorials
 Backup 2 - Issues, Wiki, Source, Gems
 =====================================
 
-I won't actively support Backup 2 anymore. The source will remain on [a separate branch](https://github.com/meskyanichi/backup/tree/backup-2). [The Issues](https://github.com/meskyanichi/backup/issues) that belong to Backup 2 have been tagged with a black label "Backup 2". The Backup 2 specific [Wiki pages](https://github.com/meskyanichi/backup/wiki) have been prefixed with "Backup 2) <Article>". [The Backup 2 Gems](http://rubygems.org/gems/backup) will always remain so you can still use Backup 2. I might still accept pull requests, but would highly encourage anyone to [move to __Backup 3__ once it's here](https://github.com/meskyanichi/backup).
+**DON'T USE IT! USE BACKUP 3 INSTEAD.**
+
+I don't support Backup 2 anymore. The source will remain on [a separate branch](https://github.com/meskyanichi/backup/tree/backup-2). [The Issues](https://github.com/meskyanichi/backup/issues) that belong to Backup 2 have been tagged with a black label "Backup 2". The Backup 2 specific [Wiki pages](https://github.com/meskyanichi/backup/wiki) have been prefixed with "Backup 2) <Article>". [The Backup 2 Gems](http://rubygems.org/gems/backup) will always remain so you can still use Backup 2.
