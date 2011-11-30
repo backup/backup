@@ -54,28 +54,28 @@ describe Backup::Storage::Dropbox do
   end
 
   describe '#connection' do
-    context "when the session cache has not yet been written" do
-      before do
-        db.stubs(:gets)
-      end
+    before do
+      db.stubs(:gets)
+    end
 
+    context "when the session cache has not yet been written" do
       it do
         session = mock("Dropbox::Session")
         Dropbox::Session.expects(:new).with('my_api_key', 'my_secret').returns(session)
         session.expects(:mode=).with(:dropbox)
         session.expects(:authorize)
-        session.expects(:authorize_url)
         db.expects(:cache_exists?).returns(false)
         db.expects(:write_cache!).with(session)
+
+        template = Backup::Template.new(db.send(:binding))
+        Backup::Template.expects(:new).returns(template)
+
+        template.expects(:render).times(3)
         db.send(:connection)
       end
     end
 
     context "when the session cache has already been written" do
-      before do
-        db.stubs(:gets)
-      end
-
       it "should load the session from cache, instead of creating a new one" do
         db.expects(:cache_exists?).returns(true)
         File.expects(:read).with("#{ENV['HOME']}/Backup/.cache/my_api_keymy_secret").returns("foo")
