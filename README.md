@@ -387,8 +387,8 @@ Want to contribute?
 
 I can't guarantee I'll pull every pull request. Also, I may accept your pull request and drastically change parts to improve readability/maintainability. Feel free to discuss about improvements, new functionality/features in the [issue log](https://github.com/meskyanichi/backup/issues) before contributing if you need/want more information.
 
-Easily run tests against all four Ruby versions
------------------------------------------------
+Easily run tests against all three Ruby versions
+------------------------------------------------
 
 Install [RVM](https://rvm.beginrescueend.com/) and use it to install Ruby 1.9.3, 1.9.2 and 1.8.7.
 
