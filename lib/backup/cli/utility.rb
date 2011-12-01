@@ -165,14 +165,14 @@ module Backup
           File.open(model, 'w') do |file|
             file.write(Backup::Template.new({:options => options}).result("cli/utility/model.erb"))
           end
-          puts "Generated configuration file in '#{ model }'"
+          puts "Generated model file in '#{ model }'."
         end
 
         if not File.exist?(config)
           File.open(config, "w") do |file|
             file.write(Backup::Template.new.result("cli/utility/config"))
           end
-          puts "Generated configuration file in '#{ config }'"
+          puts "Generated configuration file in '#{ config }'."
         end
       end
 
@@ -268,7 +268,7 @@ module Backup
       # Helper method for asking the user if he/she wants to overwrite the file
       def overwrite?(path)
         if File.exist?(path)
-          return yes? "A configuration file already exists in #{ path }. Do you want to overwrite? [y/n]"
+          return yes? "A file already exists at '#{ path }'. Do you want to overwrite? [y/n]"
         end
         true
       end
