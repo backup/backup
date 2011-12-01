@@ -3,7 +3,6 @@
 ##
 # Only load the Mail gem and Erb library when using Mail notifications
 Backup::Dependency.load('mail')
-require 'erb'
 
 module Backup
   module Notifier
