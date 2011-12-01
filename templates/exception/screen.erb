@@ -1,0 +1,26 @@
+
+===========================================================================
+
+  EXCEPTION RAISED
+
+===========================================================================
+
+Exception that got raised:
+
+  <%= @exception.class %> - <%= @exception.to_s %>Backtrace:
+
+  <%= @exception.backtrace.join("\n\s\s") %>
+
+
+Runtime Environment:
+
+  You are running Backup version "<%= Backup::Version.current %>" and Ruby version "<%= RUBY_VERSION %>-p<%= RUBY_PATCHLEVEL %>" on platform "<%= RUBY_PLATFORM %>".
+
+
+Notifications:
+
+  If you've setup one or more "Backup::Notifier" in your configuration file, you should have been be notified.
+
+===========================================================================
+
+<%= Backup::Template.new.result("general/links") %>

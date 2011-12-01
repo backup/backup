@@ -290,7 +290,7 @@ module Backup
     ##
     # Returns an Array of the names (String) of the procedure instance variables
     def procedure_instance_variables
-      ["@databases", "@archives", "@encryptors", "@compressors", "@storages", "@notifiers", "@syncers"]
+      [:@databases, :@archives, :@encryptors, :@compressors, :@storages, :@notifiers, :@syncers]
     end
 
     ##
@@ -303,9 +303,7 @@ module Backup
     ##
     # Formats an exception
     def display_exception(exception)
-      Logger.normal "=" * 75 + "\nException that got raised:\n#{exception.class} - #{exception} \n" + "=" * 75 + "\n" + exception.backtrace.join("\n")
-      Logger.normal "=" * 75 + "\n\nYou are running Backup version \"#{Backup::Version.current}\" and Ruby version \"#{RUBY_VERSION} (patchlevel #{RUBY_PATCHLEVEL})\" on platform \"#{RUBY_PLATFORM}\".\n"
-      Logger.normal "If you've setup a \"Notification\" in your configuration file, the above error will have been sent."
+      Backup::Template.new({:exception => exception}).render("exception/screen.erb")
     end
 
   end

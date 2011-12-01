@@ -1,0 +1,17 @@
+Failed to run "<%= @utility %>" on "<%= RUBY_PLATFORM %>".
+
+
+Exit code:
+
+  <%= @process_data[:status].to_i %>
+
+<% unless @process_data[:stderr].empty? %>
+STDERR:
+
+  <%= @process_data[:stderr].gsub("\n", "\n\s\s") %>
+<% end %>
+<% unless @process_data[:stdout].empty? %>
+STDOUT:
+
+  <%= @process_data[:stdout].gsub("\n", "\n\s\s") %>
+<% end %>

@@ -83,12 +83,10 @@ module Backup
       # The "Exception::CommandFailed" exception will be raised.
       def raise_if_command_failed!(utility, process_data)
         unless process_data[:ignore_exit_codes].include?(process_data[:status].to_i)
-          exception_string =  "Failed to run \"#{ utility }\" on \"#{ RUBY_PLATFORM }\".\n\n" +
-                              "Exit code was:\n\n\s\s#{ process_data[:status].to_i }\n\n"
-          exception_string << "STDOUT was:\n\n\s\s#{ process_data[:stdout].gsub("\n", "\n\s\s") }" unless process_data[:stdout].empty?
-          exception_string << "STDERR was:\n\n\s\s#{ process_data[:stderr].gsub("\n", "\n\s\s") }" unless process_data[:stderr].empty?
-
-          raise Exception::CommandFailed, exception_string
+          raise Exception::CommandFailed, Backup::Template.new({
+            :utility      => utility,
+            :process_data => process_data
+          }).result("exception/command_failed.erb")
         end
       end
 

@@ -10,9 +10,15 @@ module Backup
 
     ##
     # Creates a new instance of the Backup::Template class
-    # and optionally takes a binding object to render templates in the context of another object
-    def initialize(binding = nil)
-      @binding = binding
+    # and optionally takes an argument that can be either a binding object, a Hash or nil
+    def initialize(object = nil)
+      if object.is_a?(Binding)
+        @binding = object
+      elsif object.is_a?(Hash)
+        @binding = Backup::Binder.new(object).get_binding
+      else
+        @binding = nil
+      end
     end
 
     ##
@@ -33,7 +39,7 @@ module Backup
     # Reads and returns the contents of the provided file path,
     # relative from the Backup::TEMPLATE_PATH
     def file_contents(file)
-      File.read(File.join(Backup::TEMPLATE_PATH, "#{ file }.erb"))
+      File.read(File.join(Backup::TEMPLATE_PATH, file))
     end
 
   end

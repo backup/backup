@@ -167,18 +167,18 @@ module Backup
         temp_file << "Backup::Model.new(:#{options[:name]}, 'Description for #{options[:name]}') do\n\n"
 
         if options[:splitter]
-          temp_file << File.read( File.join(Backup::TEMPLATE_PATH, 'model', 'splitter') ) + "\n\n"
+          temp_file << File.read(File.join(Backup::TEMPLATE_PATH, 'cli', 'utility', 'splitter')) + "\n\n"
         end
 
         if options[:archives]
-          temp_file << File.read( File.join(Backup::TEMPLATE_PATH, 'model', 'archive') ) + "\n\n"
+          temp_file << File.read(File.join(Backup::TEMPLATE_PATH, 'cli', 'utility', 'archive')) + "\n\n"
         end
 
         [:databases, :storages, :syncers, :encryptors, :compressors, :notifiers].each do |item|
           if options[item]
             options[item].split(',').map(&:strip).uniq.each do |entry|
-              if File.exist?( File.join(Backup::TEMPLATE_PATH, 'model', item.to_s[0..-2], entry) )
-                temp_file << File.read( File.join(Backup::TEMPLATE_PATH, 'model', item.to_s[0..-2], entry) ) + "\n\n"
+              if File.exist?( File.join(Backup::TEMPLATE_PATH, 'cli', 'utility', item.to_s[0..-2], entry) )
+                temp_file << File.read(File.join(Backup::TEMPLATE_PATH, 'cli', 'utility', item.to_s[0..-2], entry)) + "\n\n"
               end
             end
           end
@@ -190,7 +190,7 @@ module Backup
         if overwrite?(model)
           FileUtils.mkdir_p(models_path)
           File.open(model, 'w') do |file|
-            file.write( File.read(temp_file.path) )
+            file.write(File.read(temp_file.path))
           end
           puts "Generated configuration file in '#{ model }'"
         end
@@ -198,7 +198,7 @@ module Backup
 
         if not File.exist?(config)
           File.open(config, "w") do |file|
-            file.write(File.read(File.join(Backup::TEMPLATE_PATH, 'model', "config")))
+            file.write(Backup::Template.new.result("cli/utility/config"))
           end
           puts "Generated configuration file in '#{ config }'"
         end
@@ -212,7 +212,7 @@ module Backup
 
         if overwrite?(config)
           File.open(config, "w") do |file|
-            file.write(File.read(File.join(Backup::TEMPLATE_PATH, 'model', "config")))
+            file.write(Backup::Template.new.result("cli/utility/config"))
           end
           puts "Generated configuration file in '#{ config }'"
         end

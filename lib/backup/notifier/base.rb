@@ -10,10 +10,6 @@ module Backup
       attr_accessor :model
 
       ##
-      # Contains the Exception object or False
-      attr_accessor :exception
-
-      ##
       # Contains the Backup::Template object
       attr_accessor :template
 
@@ -48,8 +44,7 @@ module Backup
       # If'll only perform these if on_success is true or on_failure is true
       def perform!(model, exception = false)
         @model     = model
-        @exception = exception
-        @template  = Backup::Template.new(binding)
+        @template  = Backup::Template.new({:model => model, :exception => exception})
 
         if notify_on_success? and exception.eql?(false)
           log!

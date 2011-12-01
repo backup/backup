@@ -71,7 +71,7 @@ module Backup
       # proceeded without any errors
       def notify_success!
         mail[:subject] = "[Backup::Succeeded] #{model.label} (#{model.trigger})"
-        mail[:body]    = template.result('notifier/mail/success') # @model needs to be avail
+        mail[:body]    = template.result('notifier/mail/success.erb')
         mail.deliver!
       end
 
@@ -80,7 +80,7 @@ module Backup
       # raised an exception and will send the user the error details
       def notify_failure!
         mail[:subject] = "[Backup::Failed] #{model.label} (#{model.trigger})"
-        mail[:body]    = template.result('notifier/mail/failure') # @model, @exception need to be avail
+        mail[:body]    = template.result('notifier/mail/failure.erb')
         mail.deliver!
       end
 

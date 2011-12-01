@@ -72,6 +72,7 @@ module Backup
   autoload :Cleaner,    File.join(LIBRARY_PATH, 'cleaner')
   autoload :Splitter,   File.join(LIBRARY_PATH, 'splitter')
   autoload :Finder,     File.join(LIBRARY_PATH, 'finder')
+  autoload :Binder,     File.join(LIBRARY_PATH, 'binder')
   autoload :Template,   File.join(LIBRARY_PATH, 'template')
   autoload :Dependency, File.join(LIBRARY_PATH, 'dependency')
   autoload :Logger,     File.join(LIBRARY_PATH, 'logger')
@@ -211,8 +212,7 @@ module Backup
   ##
   # Autoload exception classes
   module Exception
-    autoload :CommandNotFound, File.join(EXCEPTION_PATH, 'command_not_found')
-    autoload :CommandFailed,   File.join(EXCEPTION_PATH, 'command_failed')
+    autoload :CommandFailed, File.join(EXCEPTION_PATH, 'command_failed')
   end
 
   ##

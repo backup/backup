@@ -138,7 +138,7 @@ module Backup
         session.mode = :dropbox
 
         template = Backup::Template.new(binding)
-        template.render("storage/dropbox/authorization_url")
+        template.render("storage/dropbox/authorization_url.erb")
 
         begin
           Timeout::timeout(180) { STDIN.gets }
@@ -148,9 +148,9 @@ module Backup
           raise error
         end
 
-        template.render("storage/dropbox/authorized")
+        template.render("storage/dropbox/authorized.erb")
         write_cache!(session)
-        template.render("storage/dropbox/cache_file_written")
+        template.render("storage/dropbox/cache_file_written.erb")
 
         session
       end
