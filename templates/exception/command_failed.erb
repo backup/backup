@@ -9,8 +9,7 @@ Exit code:
 STDERR:
 
   <%= @process_data[:stderr].gsub("\n", "\n\s\s") %>
-<% end %>
-<% unless @process_data[:stdout].empty? %>
+<% end; unless @process_data[:stdout].empty? %>
 STDOUT:
 
   <%= @process_data[:stdout].gsub("\n", "\n\s\s") %>
