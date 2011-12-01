@@ -155,46 +155,18 @@ module Backup
       method_option :archives,    :type => :boolean
       method_option :splitter,    :type => :boolean, :default => true, :desc => "use `--no-splitter` to disable"
       define_method "generate:model" do
-        config_path = options[:path] || Backup::PATH
-        models_path = File.join(config_path, "models")
-        config      = File.join(config_path, "config.rb")
-        model       = File.join(models_path, "#{options[:name]}.rb")
-
-        temp_file = Tempfile.new('backup.rb')
-        temp_file << "# encoding: utf-8\n\n##\n# Backup Generated: #{options[:name]}\n"
-        temp_file << "# Once configured, you can run the backup with the following command:\n#\n"
-        temp_file << "# $ backup perform -t #{options[:name]} [-c <path_to_configuration_file>]\n#\n"
-        temp_file << "Backup::Model.new(:#{options[:name]}, 'Description for #{options[:name]}') do\n\n"
-
-        if options[:splitter]
-          temp_file << File.read(File.join(Backup::TEMPLATE_PATH, 'cli', 'utility', 'splitter')) + "\n\n"
-        end
-
-        if options[:archives]
-          temp_file << File.read(File.join(Backup::TEMPLATE_PATH, 'cli', 'utility', 'archive')) + "\n\n"
-        end
-
-        [:databases, :storages, :syncers, :encryptors, :compressors, :notifiers].each do |item|
-          if options[item]
-            options[item].split(',').map(&:strip).uniq.each do |entry|
-              if File.exist?( File.join(Backup::TEMPLATE_PATH, 'cli', 'utility', item.to_s[0..-2], entry) )
-                temp_file << File.read(File.join(Backup::TEMPLATE_PATH, 'cli', 'utility', item.to_s[0..-2], entry)) + "\n\n"
-              end
-            end
-          end
-        end
-
-        temp_file << "end\n\n"
-        temp_file.close
+        config_path    = options[:path] || Backup::PATH
+        models_path    = File.join(config_path, "models")
+        config         = File.join(config_path, "config.rb")
+        model          = File.join(models_path, "#{options[:name]}.rb")
 
         if overwrite?(model)
           FileUtils.mkdir_p(models_path)
           File.open(model, 'w') do |file|
-            file.write(File.read(temp_file.path))
+            file.write(Backup::Template.new({:options => options}).result("cli/utility/model.erb"))
           end
           puts "Generated configuration file in '#{ model }'"
         end
-        temp_file.unlink
 
         if not File.exist?(config)
           File.open(config, "w") do |file|

@@ -17,5 +17,3 @@
     s3.path               = '/path/to/my/backups'
     s3.keep               = 10
   end
-  
-  
