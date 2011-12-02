@@ -113,7 +113,7 @@ module Backup
       ##
       # Returns the path to the cached file
       def cached_file
-        File.join(Backup::CACHE_PATH, "#{api_key + api_secret}")
+        File.join(Backup::CACHE_PATH, api_key + api_secret)
       end
 
       ##
@@ -137,7 +137,7 @@ module Backup
         session      = ::Dropbox::Session.new(api_key, api_secret)
         session.mode = :dropbox
 
-        template = Backup::Template.new(binding)
+        template = Backup::Template.new({:session => session, :cached_file => cached_file})
         template.render("storage/dropbox/authorization_url.erb")
 
         begin
