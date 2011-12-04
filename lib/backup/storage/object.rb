@@ -11,8 +11,10 @@ module Backup
       ##
       # Instantiates a new Backup::Storage::Object and stores the
       # full path to the storage file (yaml) in the @storage_file attribute
-      def initialize(type)
-        @storage_file = File.join(DATA_PATH, TRIGGER, "#{type}.yml")
+      def initialize(type, storage_id)
+        suffix = storage_id.to_s.strip.gsub(/[\W\s]/, '_')
+        filename = suffix.empty? ? type : "#{type}-#{suffix}"
+        @storage_file = File.join(DATA_PATH, TRIGGER, "#{filename}.yml")
       end
 
       ##

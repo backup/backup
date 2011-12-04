@@ -32,6 +32,13 @@ module Backup
       # @chunk_suffixes array gets set to the storage object, which will be used to transfer all the
       # chunks to the remote location, rather than the single backup file. Also, this will be persisted
       # and loaded back in during the cycling process, so it gets properly deleted from the remote location.
+
+      ##
+      # (Optional)
+      # User-defined string used to uniquely identify multiple storages of the same type.
+      # This will be appended to the YAML storage file used for cycling backups.
+      attr_accessor :storage_id
+
       def perform!
         @chunk_suffixes ||= Backup::Model.chunk_suffixes
       end
@@ -162,7 +169,7 @@ module Backup
       def cycle!
         return unless keep.to_i > 0
         type           = self.class.name.split("::").last
-        storage_object = Backup::Storage::Object.new(type)
+        storage_object = Backup::Storage::Object.new(type, storage_id)
         objects        = storage_object.load
         objects.each {|object| object.send(:update!, @configure_block) }
         objects.unshift(self)
