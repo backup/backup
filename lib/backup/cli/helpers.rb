@@ -61,7 +61,7 @@ module Backup
           end
         end
 
-        if path = %x[which #{name}].chomp and not path.empty?
+        if path = %x[which #{name} 2>/dev/null].chomp and not path.empty?
           return path
         end
         name
