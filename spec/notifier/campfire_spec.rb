@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Notifier::Campfire do
   let(:notifier) do

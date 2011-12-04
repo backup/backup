@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 ##
 # available S3 regions:

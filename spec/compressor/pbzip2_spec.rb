@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Compressor::Pbzip2 do
   let(:compressor) { Backup::Compressor::Pbzip2.new }
@@ -17,7 +17,7 @@ describe Backup::Compressor::Pbzip2 do
     it do
       compressor.send(:fast).should == []
     end
-    
+
     it do
       compressor.send(:processors).should == []
     end

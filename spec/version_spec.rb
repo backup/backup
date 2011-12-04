@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/spec_helper'
+require File.expand_path('../spec_helper.rb', __FILE__)
 
 def set_version(major, minor, patch)
   Backup::Version.stubs(:major).returns(major)

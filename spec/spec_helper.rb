@@ -6,6 +6,7 @@ require File.expand_path( '../../lib/backup', __FILE__ )
 
 ##
 # Use Mocha to mock with RSpec
+require 'rspec'
 RSpec.configure do |config|
   config.mock_with :mocha
   config.before(:each) do

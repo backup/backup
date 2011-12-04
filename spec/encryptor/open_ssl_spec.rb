@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Encryptor::OpenSSL do
 
@@ -22,15 +22,15 @@ describe Backup::Encryptor::OpenSSL do
     it do
       encryptor.send(:pass).should == ["-k ''"]
     end
-    
+
     it do
       encryptor.send(:options).should == "aes-256-cbc -k ''"
     end
   end
 
   context "when a block is provided" do
-    
-    context "with a password" do    
+
+    context "with a password" do
       let(:encryptor) do
         Backup::Encryptor::OpenSSL.new do |e|
           e.password = "my_secret_password"
@@ -50,17 +50,17 @@ describe Backup::Encryptor::OpenSSL do
       it do
         encryptor.send(:base64).should == ['-base64']
       end
-      
+
       it do
         encryptor.send(:pass).should == ["-k 'my_secret_password'"]
       end
-      
+
       it do
         encryptor.send(:options).should == "aes-256-cbc -base64 -salt -k 'my_secret_password'"
       end
     end
-    
-    context "with a password file" do    
+
+    context "with a password file" do
       let(:encryptor) do
         Backup::Encryptor::OpenSSL.new do |e|
           e.password_file = "/path/to/password/file"
@@ -72,7 +72,7 @@ describe Backup::Encryptor::OpenSSL do
       it do
         encryptor.password.should == nil
       end
-      
+
       it do
         encryptor.password_file.should == "/path/to/password/file"
       end
@@ -93,7 +93,7 @@ describe Backup::Encryptor::OpenSSL do
         encryptor.send(:options).should == "aes-256-cbc -base64 -salt -pass file:/path/to/password/file"
       end
     end
-    
+
   end
 
   describe '#perform!' do
@@ -120,7 +120,7 @@ describe Backup::Encryptor::OpenSSL do
       encryptor.expects(:run).with("openssl aes-256-cbc -base64 -salt -k 'my_secret_password' -in '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar") }' -out '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar.enc") }'")
       encryptor.perform!
     end
-    
+
     it do
       encryptor = Backup::Encryptor::OpenSSL.new do |e|
         e.password_file = "/path/to/password/file"
