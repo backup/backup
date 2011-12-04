@@ -125,6 +125,28 @@ module Backup
       end
 
       ##
+      # Update the configuration with the given +configure_block+
+      # This is to update the configuration for this storage object
+      # once it's been loaded from the YAML storage file (within #cycle!)
+      # so that cycling operations can be performed using the latest
+      # configuration from the current backup job.
+      def update!(configure_block)
+        instance_exec(configure_block) do |block|
+          @configure_block = block; configure!
+        end
+      end
+
+      ##
+      # Clear all attributes except those which need to be stored
+      # in the YAML storage file for cycling.
+      def clean!
+        stored_attrs = [:@filename, :@time, :@chunk_suffixes]
+        (instance_variables.map(&:to_sym) - stored_attrs).each do |var|
+          remove_instance_variable var
+        end
+      end
+
+      ##
       # Checks the persisted storage data by type (S3, CloudFiles, SCP, etc)
       # to see if the amount of stored backups is greater than the amount of
       # backups allowed. If this is the case it'll invoke the #remove! method
@@ -142,11 +164,8 @@ module Backup
         type           = self.class.name.split("::").last
         storage_object = Backup::Storage::Object.new(type)
         objects        = storage_object.load
-        objects.map! do |obj|
-          obj.instance_exec(@configure_block) do |block|
-            @configure_block = block; configure!
-          end
-        end.unshift(self)
+        objects.each {|object| object.send(:update!, @configure_block) }
+        objects.unshift(self)
         if objects.count > keep
           objects_to_remove = objects[keep..-1]
           objects_to_remove.each do |object|
@@ -155,11 +174,7 @@ module Backup
           end
           objects = objects - objects_to_remove
         end
-
-        objects.each do |object|
-          object.send(:remove_instance_variable, :@configure_block)
-        end
-
+        objects.each {|object| object.send(:clean!) }
         storage_object.write(objects)
       end
 
