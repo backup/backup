@@ -26,11 +26,12 @@ module Backup
       # descending. The newest backup storage object comes in Backup::Storage::Object.load[0]
       # and the oldest in Backup::Storage::Object.load[-1]
       def load
+        objects = []
         if File.exist?(storage_file) and not File.zero?(storage_file)
-          YAML.load_file(storage_file).sort { |a,b| b.time <=> a.time }
-        else
-          []
+          objects = YAML.load_file(storage_file).sort { |a,b| b.time <=> a.time }
+          check(objects)
         end
+        objects
       end
 
       ##
@@ -39,6 +40,15 @@ module Backup
       def write(objects)
         File.open(storage_file, 'w') do |file|
           file.write(objects.to_yaml)
+        end
+      end
+
+      private
+
+      def check(objects)
+        if objects.any? {|object| object.instance_variable_defined?(:@remote_file) }
+          Backup::Logger.warn "Backup cycling changed in version 3.0.20 and is not backwards compatible with previous versions."
+          Backup::Logger.warn "Visit: https://github.com/meskyanichi/backup/wiki/Splitter for more information"
         end
       end
 

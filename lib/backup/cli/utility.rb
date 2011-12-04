@@ -19,7 +19,6 @@ module Backup
       method_option :cache_path,      :type => :string
       method_option :tmp_path,        :type => :string
       method_option :quiet,           :type => :boolean, :aliases => '-q'
-      method_option :silence_warning, :type => :boolean
       desc 'perform', "Performs the backup for the specified trigger.\n" +
                       "You may perform multiple backups by providing multiple triggers, separated by commas.\n\n" +
                       "Example:\n\s\s$ backup perform --triggers backup1,backup2,backup3,backup4\n\n" +
@@ -70,14 +69,6 @@ module Backup
         # Ensure the CACHE_PATH, TMP_PATH and LOG_PATH are created if they do not yet exist
         Array.new([Backup::CACHE_PATH, Backup::TMP_PATH, Backup::LOG_PATH]).each do |path|
           FileUtils.mkdir_p(path)
-        end
-
-        if !options[:silence_warning]
-          puts "-"*120
-          Backup::Logger.warn "Backup cycling changed in version 3.0.20 and is not backwards compatible with previous versions."
-          Backup::Logger.warn "Visit: https://github.com/meskyanichi/backup/wiki/Splitter for more information"
-          Backup::Logger.warn "Pass in --silence-warning to `backup perform` if you wish to remove this warning."
-          puts "-"*120
         end
 
         ##
