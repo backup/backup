@@ -221,22 +221,27 @@ describe Backup::Model do
       [:utility, :run, :rm].each { |method| model.stubs(method) }
     end
 
-    it 'should remove the temporary files and folders that were created' do
-      cleaner.expects(:utility).with(:rm).returns(:rm)
-      cleaner.expects(:run).with "rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' " +
-                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'"
-      cleaner.clean!
+    context 'when the backup archive is not chunked' do
+      it 'should remove the temporary files and folders that were created' do
+        cleaner.expects(:utility).with(:rm).returns(:rm)
+        Backup::Model.chunk_suffixes = []
+        cleaner.expects(:run).with "rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' " +
+                                "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'"
+        cleaner.clean!
+      end
     end
 
-    it 'should remove the temporary files and folders that were created' do
-      cleaner.expects(:utility).with(:rm).returns(:rm)
-      Backup::Model.chunk_suffixes = ["aa", "ab", "ac"]
-      cleaner.expects(:run).with "rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' " +
-                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' " +
-                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-aa") }' " +
-                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-ab") }' " +
-                               "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-ac") }'"
-      cleaner.clean!
+    context 'when the backup archive is chunked' do
+      it 'should remove the temporary files and folders that were created' do
+        cleaner.expects(:utility).with(:rm).returns(:rm)
+        Backup::Model.chunk_suffixes = ["aa", "ab", "ac"]
+        cleaner.expects(:run).with "rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' " +
+                                "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }' " +
+                                "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-aa") }' " +
+                                "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-ab") }' " +
+                                "'#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar-ac") }'"
+        cleaner.clean!
+      end
     end
 
     it do
