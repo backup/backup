@@ -2,6 +2,7 @@
   # FTP (File Transfer Protocol) [Storage]
   #
   store_with FTP do |server|
+    # server.storage_id   = 'my_storage_id' (optional)
     server.username     = 'my_username'
     server.password     = 'my_password'
     server.ip           = '123.45.678.90'

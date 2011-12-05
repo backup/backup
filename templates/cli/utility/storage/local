@@ -2,6 +2,7 @@
   # Local (Copy) [Storage]
   #
   store_with Local do |local|
-    local.path = '~/backups/'
-    local.keep = 5
+    # local.storage_id = 'my_storage_id' (optional)
+    local.path       = '~/backups/'
+    local.keep       = 5
   end
