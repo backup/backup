@@ -1,0 +1,10 @@
+
+Backup <%= @model.label %> (<%= @model.trigger %>) finished with warnings.
+
+Log Messages:
+
+  <%= Backup::Logger.messages.join("\n\s\s") %>
+
+===========================================================================
+
+<%= Backup::Template.new.result("general/links") %>

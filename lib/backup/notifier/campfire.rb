@@ -41,39 +41,44 @@ module Backup
     private
 
       ##
-      # Sends a message informing the user that the backup operation
-      # proceeded without any errors
-      def notify_success!
-        send_message("[Backup::Succeeded] #{model.label} (#{ File.basename(Backup::Model.file) })")
+      # Notify the user of the backup operation results.
+      # `status` indicates one of the following:
+      #
+      # `:success`
+      # : The backup completed successfully.
+      # : Notification will be sent if `on_success` was set to `true`
+      #
+      # `:warning`
+      # : The backup completed successfully, but warnings were logged
+      # : Notification will be sent, including a copy of the current
+      # : backup log, if `on_warning` was set to `true`
+      #
+      # `:failure`
+      # : The backup operation failed.
+      # : Notification will be sent, including the Exception which caused
+      # : the failure, the Exception's backtrace, a copy of the current
+      # : backup log and other information if `on_failure` was set to `true`
+      #
+      def notify!(status)
+        name = case status
+               when :success then 'Success'
+               when :warning then 'Warning'
+               when :failure then 'Failure'
+               end
+        message = "[Backup::%s] #{model.label} (#{model.trigger})" % name
+        send_message(message)
       end
 
       ##
-      # Sends a message informing the user that the backup operation
-      # raised an exception
-      def notify_failure!
-        send_message("[Backup::Failed] #{model.label} (#{ File.basename(Backup::Model.file) })")
-      end
-
-      ##
-      # Setting up credentials
-      def set_defaults!
-        @campfire_client = {
-          :api_token => @api_token,
-          :subdomain => @subdomain,
-          :room_id   => @room_id
-        }
-      end
+      # nothing to do
+      def set_defaults!; end
 
       ##
       # Creates a new Campfire::Interface object and passes in the
       # campfire clients "room_id", "subdomain" and "api_token". Using this object
       # the provided "message" will be sent to the desired Campfire chat room
       def send_message(message)
-        room = Interface.room(
-          @campfire_client[:room_id],
-          @campfire_client[:subdomain],
-          @campfire_client[:api_token]
-        )
+        room = Interface.room(room_id, subdomain, api_token)
         room.message(message)
       end
 

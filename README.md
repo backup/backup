@@ -190,11 +190,13 @@ Backup::Model.new(:sample_backup, 'A sample backup configuration') do
 
   notify_by Mail do |mail|
     mail.on_success = false
+    mail.on_warning = true
     mail.on_failure = true
   end
 
   notify_by Twitter do |tweet|
     tweet.on_success = true
+    tweet.on_warning = true
     tweet.on_failure = true
   end
 

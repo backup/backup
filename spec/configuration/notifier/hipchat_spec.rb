@@ -9,7 +9,9 @@ describe Backup::Configuration::Notifier::Hipchat do
       hipchat.from           = 'DB Backup'
       hipchat.rooms_notified = ['activity']
       hipchat.success_color  = 'green'
+      hipchat.warning_color  = 'yellow'
       hipchat.failure_color  = 'red'
+      hipchat.notify_users   = true
     end
   end
 
@@ -19,7 +21,9 @@ describe Backup::Configuration::Notifier::Hipchat do
     hipchat.from.should           == 'DB Backup'
     hipchat.rooms_notified.should == ['activity']
     hipchat.success_color.should  == 'green'
+    hipchat.warning_color.should  == 'yellow'
     hipchat.failure_color.should  == 'red'
+    hipchat.notify_users.should   == true
   end
 
   describe '#clear_defaults!' do
@@ -31,7 +35,9 @@ describe Backup::Configuration::Notifier::Hipchat do
       hipchat.from.should           == nil
       hipchat.rooms_notified.should == nil
       hipchat.success_color.should  == nil
+      hipchat.warning_color.should  == nil
       hipchat.failure_color.should  == nil
+      hipchat.notify_users.should   == nil
     end
   end
 end

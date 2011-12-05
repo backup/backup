@@ -13,6 +13,9 @@ Backtrace:
 
   <%= @exception.backtrace.join("\n\s\s") %>
 
+Log Messages:
+
+  <%= Backup::Logger.messages.join("\n\s\s") %>
 
 Runtime Environment:
 

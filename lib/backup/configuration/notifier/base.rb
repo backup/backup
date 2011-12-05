@@ -13,6 +13,11 @@ module Backup
 
           ##
           # When set to true, the user will be notified by email
+          # when a backup process ends successfully, but logged warnings
+          attr_writer :on_warning
+
+          ##
+          # When set to true, the user will be notified by email
           # when a backup process raises an exception before finishing
           attr_writer :on_failure
 
@@ -24,6 +29,14 @@ module Backup
         def self.on_success
           return true if @on_success.nil?
           @on_success
+        end
+
+        ##
+        # When @on_success is nil it means it hasn't been defined
+        # and will then default to true
+        def self.on_warning
+          return true if @on_warning.nil?
+          @on_warning
         end
 
         ##

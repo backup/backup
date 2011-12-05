@@ -21,6 +21,12 @@ module Backup
 
       ##
       # When set to true, the user will be notified by email
+      # when a backup process is successful, but has warnings
+      attr_accessor :on_warning
+      alias :notify_on_warning? :on_warning
+
+      ##
+      # When set to true, the user will be notified by email
       # when a backup process raises an exception before finishing
       attr_accessor :on_failure
       alias :notify_on_failure? :on_failure
@@ -46,12 +52,18 @@ module Backup
         @model     = model
         @template  = Backup::Template.new({:model => model, :exception => exception})
 
-        if notify_on_success? and exception.eql?(false)
+        action = false
+        if exception.eql?(false)
+          if notify_on_success? || (notify_on_warning? && Logger.has_warnings?)
+            action = Logger.has_warnings? ? :warning : :success
+          end
+        else
+          action = :failure if notify_on_failure?
+        end
+
+        if action
           log!
-          notify_success!
-        elsif notify_on_failure? and not exception.eql?(false)
-          log!
-          notify_failure!
+          notify!(action)
         end
       end
 

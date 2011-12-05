@@ -22,6 +22,10 @@ module Backup
           # The background color of a success message. One of :yellow, :red, :green, :purple, or :random. (default: yellow)
           attr_accessor :success_color
 
+          # Warning Color
+          # The background color of a success message. One of :yellow, :red, :green, :purple, or :random. (default: yellow)
+          attr_accessor :warning_color
+
           # Failure Color
           # The background color of an error message. One of :yellow, :red, :green, :purple, or :random. (default: yellow)
           attr_accessor :failure_color

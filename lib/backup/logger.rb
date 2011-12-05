@@ -20,6 +20,7 @@ module Backup
     ##
     # Outputs a notice to the console and writes it to the backup.log
     def self.warn(string)
+      @has_warnings = true
       puts    loggify(:warning, string, :yellow) unless quiet?
       to_file loggify(:warning, string)
     end
@@ -37,6 +38,20 @@ module Backup
     def self.silent(string)
       to_file loggify(:silent, string)
     end
+
+    ##
+    # Returns an Array of all messages written to the log file for this session
+    def self.messages
+      @messages ||= []
+    end
+
+    ##
+    # Returns true if any warnings have been issued
+    def self.has_warnings?
+      @has_warnings ||= false
+    end
+
+    private
 
     ##
     # Returns the time in [YYYY/MM/DD HH:MM:SS] format
@@ -57,6 +72,7 @@ module Backup
     ##
     # Writes (appends) a string to the backup.log file
     def self.to_file(string)
+      messages << string
       File.open(File.join(LOG_PATH, 'backup.log'), 'a') do |file|
         file.write("#{string}\n")
       end

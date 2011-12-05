@@ -30,6 +30,10 @@ module Backup
       attr_accessor :success_color
 
       ##
+      # The background color of a warning message. One of :yellow, :red, :green, :purple, or :random. (default: yellow)
+      attr_accessor :warning_color
+
+      ##
       # The background color of an error message. One of :yellow, :red, :green, :purple, or :random. (default: yellow)
       attr_accessor :failure_color
 
@@ -42,36 +46,53 @@ module Backup
       # Extends from super class. Must call super(model, exception).
       # If any pre-configuration needs to be done, put it above the super(model, exception)
       def perform!(model, exception = false)
-        @rooms_notified = [@hipchat_options[:rooms_notified]] unless @hipchat_options[:rooms_notified].is_a? Array
+        @rooms_notified = [rooms_notified].flatten
         super(model, exception)
       end
 
     private
 
       def send_message(msg, color, notify)
-        client = HipChat::Client.new(@hipchat_options[:token])
-        @rooms_notified.each do |room|
-          client[room].send(@hipchat_options[:from], msg, :color => color, :notify => notify)
+        client = HipChat::Client.new(token)
+        rooms_notified.each do |room|
+          client[room].send(from, msg, :color => color, :notify => notify)
         end
       end
 
-      def notify_success!
-        send_message("[Backup::Succeeded] #{model.label} (#{ File.basename(Backup::Model.file) })", @hipchat_options[:success_color], @hipchat_options[:notify_users])
-      end
-
-      def notify_failure!
-        send_message("[Backup::Failed] #{model.label} (#{ File.basename(Backup::Model.file) })", @hipchat_options[:failure_color], @hipchat_options[:notify_users])
+      ##
+      # Notify the user of the backup operation results.
+      # `status` indicates one of the following:
+      #
+      # `:success`
+      # : The backup completed successfully.
+      # : Notification will be sent if `on_success` was set to `true`
+      #
+      # `:warning`
+      # : The backup completed successfully, but warnings were logged
+      # : Notification will be sent, including a copy of the current
+      # : backup log, if `on_warning` was set to `true`
+      #
+      # `:failure`
+      # : The backup operation failed.
+      # : Notification will be sent, including the Exception which caused
+      # : the failure, the Exception's backtrace, a copy of the current
+      # : backup log and other information if `on_failure` was set to `true`
+      #
+      def notify!(status)
+        name, color = case status
+                      when :success then ['Success', success_color]
+                      when :warning then ['Warning', warning_color]
+                      when :failure then ['Failure', failure_color]
+                      end
+        message = "[Backup::%s] #{model.label} (#{model.trigger})" % name
+        send_message(message, color, notify_users)
       end
 
       def set_defaults!
-        @hipchat_options = {
-          :token => @token,
-          :from => @from,
-          :rooms_notified => @rooms_notified,
-          :success_color => @success_color || 'yellow',
-          :failure_color => @failure_color || 'yellow',
-          :notify_users => @notify_users
-        }
+        @success_color ||= 'yellow'
+        @warning_color ||= 'yellow'
+        @failure_color ||= 'yellow'
+        @notify_users  ||= false
       end
     end
   end

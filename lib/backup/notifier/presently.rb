@@ -25,7 +25,8 @@ module Backup
       ##
       # Performs the notification
       # Extends from super class. Must call super(model, exception).
-      # If any pre-configuration needs to be done, put it above the super(model, exception)
+      # If any pre-configuration needs to be done,
+      # put it above the super(model, exception)
       def perform!(model, exception = false)
         super(model, exception)
       end
@@ -33,23 +34,38 @@ module Backup
     private
 
       ##
-      # Sends a tweet informing the user that the backup operation
-      # proceeded without any errors
-      def notify_success!
-        presently_client.update("[Backup::Succeeded] #{model.label} (#{ File.basename(Backup::Model.file) })")
-      end
-
-      ##
-      # Sends a tweet informing the user that the backup operation
-      # raised an exception
-      def notify_failure!
-        presently_client.update("[Backup::Failed] #{model.label} (#{ File.basename(Backup::Model.file) })")
+      # Notify the user of the backup operation results.
+      # `status` indicates one of the following:
+      #
+      # `:success`
+      # : The backup completed successfully.
+      # : Notification will be sent if `on_success` was set to `true`
+      #
+      # `:warning`
+      # : The backup completed successfully, but warnings were logged
+      # : Notification will be sent, including a copy of the current
+      # : backup log, if `on_warning` was set to `true`
+      #
+      # `:failure`
+      # : The backup operation failed.
+      # : Notification will be sent, including the Exception which caused
+      # : the failure, the Exception's backtrace, a copy of the current
+      # : backup log and other information if `on_failure` was set to `true`
+      #
+      def notify!(status)
+        name = case status
+               when :success then 'Success'
+               when :warning then 'Warning'
+               when :failure then 'Failure'
+               end
+        message = "[Backup::%s] #{model.label} (#{model.trigger})" % name
+        presently_client.update(message)
       end
 
       ##
       # Create a default Presently::Client object
       def set_defaults!
-        @presently_client = Client.new subdomain, user_name, password, group_id
+        @presently_client = Client.new(subdomain, user_name, password, group_id)
       end
 
       class Client
