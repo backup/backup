@@ -84,12 +84,25 @@ module Backup
       ##
       # Removes the transferred archive file from the Amazon S3 bucket
       def remove!
-        directory = connection.directories.get(remote_path)
-        transferred_files do |local_file, remote_file|
-          Logger.message("#{ self.class } started removing '#{ local_file }' from Ninefold.'")
-          directory.files.get(remote_file).destroy
+        if directory = connection.directories.get(remote_path)
+          transferred_files do |local_file, remote_file|
+            Logger.message "#{ self.class } started removing " +
+                "'#{ local_file }' from Ninefold.'"
+
+            if file = directory.files.get(remote_file)
+              file.destroy
+            else
+              # Note: Fog-0.11.0 will return nil if remote_file is not found
+              raise Errors::Storage::Ninefold::NotFoundError,
+                  "#{remote_file} not found in #{remote_path}", caller(1)
+            end
+          end
+          directory.destroy
+        else
+          # Note: Fog-0.11.0 will return nil if remote_path is not found
+          raise Errors::Storage::Ninefold::NotFoundError,
+              "Directory at #{remote_path} not found", caller(1)
         end
-        directory.destroy
       end
 
     end

@@ -93,7 +93,7 @@ describe Backup::Storage::SCP do
     end
 
     it 'should remove the remote path from the remote server' do
-      connection.expects(:exec!).with("rm -rf 'backups/myapp/#{ Backup::TIME }'")
+      connection.expects(:exec!).with("rm -r 'backups/myapp/#{ Backup::TIME }'")
       scp.send(:remove!)
     end
   end

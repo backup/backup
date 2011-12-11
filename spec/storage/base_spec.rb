@@ -94,45 +94,62 @@ describe Backup::Storage::Base do
       base.send(:cycle!)
     end
 
-    it 'removes old stored objects' do
-      num_to_load = 5
-      num_to_keep = 3
+    context 'when removing old stored objects' do
 
-      s = sequence ''
-      storage_object = mock
-      loaded_objects = []
-      (1..num_to_load).each do |n|
-        instance_eval <<-EOS
-          loaded_object#{n} = mock
-          loaded_object#{n}.stubs(:filename).returns("file#{n}")
-          loaded_objects << loaded_object#{n}
-        EOS
+      it 'should warn and continue on errors' do
+        num_to_load = 6
+        num_to_keep = 3
+        obj_to_fail = 2 # we're removing 3, so fail the 2nd one.
+
+        s = sequence ''
+        storage_object = mock
+        raised_error = StandardError.new
+        loaded_objects = []
+        (1..num_to_load).each do |n|
+          instance_eval <<-EOS
+            loaded_object#{n} = mock
+            loaded_object#{n}.stubs(:filename).returns("file#{n}")
+            loaded_objects << loaded_object#{n}
+          EOS
+        end
+
+        Backup::Storage::Object.expects(:new).in_sequence(s).
+            with('Base', nil).returns(storage_object)
+        storage_object.expects(:load).in_sequence(s).
+            returns(loaded_objects)
+        loaded_objects.each do |loaded_object|
+          loaded_object.expects(:update!).in_sequence(s).
+              with(base.configure_block)
+        end
+        objects = [base] + loaded_objects
+
+        objects_to_remove = objects[num_to_keep..-1]
+        objects_to_remove.each_with_index do |object_to_remove, i|
+          Backup::Logger.expects(:message).in_sequence(s).
+              with {|msg| msg.include?(object_to_remove.filename) }
+          if i == obj_to_fail
+            object_to_remove.expects(:remove!).in_sequence(s).
+                raises(raised_error)
+            Backup::Errors::Storage::CycleError.expects(:wrap).in_sequence(s).
+                with(raised_error, "#{base.storage_name} failed to remove " +
+                    "'#{object_to_remove.filename}'").
+                returns(:wrapped_error)
+            Backup::Logger.expects(:warn).in_sequence(s).
+                with(:wrapped_error)
+          else
+            object_to_remove.expects(:remove!).in_sequence(s)
+          end
+        end
+
+        objects = objects - objects_to_remove
+        objects.each {|object| object.expects(:clean!).in_sequence(s) }
+        storage_object.expects(:write).in_sequence(s).
+            with(objects)
+
+        base.keep = num_to_keep
+        base.send(:cycle!)
       end
 
-      Backup::Storage::Object.expects(:new).in_sequence(s).
-          with('Base', nil).returns(storage_object)
-      storage_object.expects(:load).in_sequence(s).
-          returns(loaded_objects)
-      loaded_objects.each do |loaded_object|
-        loaded_object.expects(:update!).in_sequence(s).
-            with(base.configure_block)
-      end
-      objects = [base] + loaded_objects
-
-      objects_to_remove = objects[num_to_keep..-1]
-      objects_to_remove.each do |object_to_remove|
-        Backup::Logger.expects(:message).in_sequence(s).
-            with {|msg| msg.include?(object_to_remove.filename) }
-        object_to_remove.expects(:remove!).in_sequence(s)
-      end
-
-      objects = objects - objects_to_remove
-      objects.each {|object| object.expects(:clean!).in_sequence(s) }
-      storage_object.expects(:write).in_sequence(s).
-          with(objects)
-
-      base.keep = num_to_keep
-      base.send(:cycle!)
     end
 
   end

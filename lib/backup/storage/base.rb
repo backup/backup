@@ -177,7 +177,12 @@ module Backup
           objects_to_remove = objects[keep..-1]
           objects_to_remove.each do |object|
             Logger.message "#{ self.class } started removing (cycling) \"#{ object.filename }\"."
-            object.send(:remove!)
+            begin
+              object.send(:remove!)
+            rescue => err
+              Logger.warn Errors::Storage::CycleError.wrap(err,
+                  "#{self.class} failed to remove '#{object.filename}'")
+            end
           end
           objects = objects - objects_to_remove
         end

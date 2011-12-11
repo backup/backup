@@ -59,7 +59,7 @@ describe Backup::Storage::Local do
 
   describe '#remove!' do
     it 'should remove the file from the remote server path' do
-      FileUtils.expects(:rm_rf).with("#{ENV['HOME']}/backups/myapp/#{ Backup::TIME }")
+      FileUtils.expects(:rm_r).with("#{ENV['HOME']}/backups/myapp/#{ Backup::TIME }")
       local.send(:remove!)
     end
   end

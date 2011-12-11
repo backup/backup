@@ -89,7 +89,15 @@ module Backup
           Logger.message("#{ self.class } started removing \"#{ local_file }\" from \"#{ ip }\".")
         end
 
-        connection.exec!("rm -rf '#{ remote_path }'")
+        errors = []
+        connection.exec!("rm -r '#{ remote_path }'") do |ch, stream, data|
+          errors << data if stream == :stderr
+        end
+        unless errors.empty?
+          raise Errors::Storage::SCP::SSHError,
+            "Net::SSH reported the following errors:\n" +
+              errors.join("\n"), caller(1)
+        end
       end
 
       ##

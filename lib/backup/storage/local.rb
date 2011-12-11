@@ -67,7 +67,7 @@ module Backup
           Logger.message("#{ self.class } started removing \"#{ local_file }\".")
         end
 
-        FileUtils.rm_rf(remote_path)
+        FileUtils.rm_r(remote_path)
       end
 
       ##
