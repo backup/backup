@@ -7,37 +7,38 @@ module Backup
       ##
       # Outputs a messages to the console and writes it to the backup.log
       def message(string)
-        puts    loggify(:message, string, :green) unless quiet?
-        to_file loggify(:message, string)
+        to_console  loggify(string, :message, :green)
+        to_file     loggify(string, :message)
       end
 
       ##
       # Outputs an error to the console and writes it to the backup.log
+      # Called when an Exception has caused the backup process to abort.
       def error(string)
-        puts    loggify(:error, string, :red) unless quiet?
-        to_file loggify(:error, string)
+        to_console  loggify(string, :error,   :red), true
+        to_file     loggify(string, :error)
       end
 
       ##
       # Outputs a notice to the console and writes it to the backup.log
+      # Sets #has_warnings? true so :on_warning notifications will be sent
       def warn(string)
         @has_warnings = true
-        puts    loggify(:warning, string, :yellow) unless quiet?
-        to_file loggify(:warning, string)
+        to_console  loggify(string, :warning, :yellow), true
+        to_file     loggify(string, :warning)
       end
 
-      ##
       # Outputs the data as if it were a regular 'puts' command,
       # but also logs it to the backup.log
       def normal(string)
-        puts    string unless quiet?
-        to_file string
+        to_console  loggify(string)
+        to_file     loggify(string)
       end
 
       ##
       # Silently logs data to the log file
       def silent(string)
-        to_file loggify(:silent, string)
+        to_file     loggify(string, :silent)
       end
 
       ##
@@ -61,22 +62,36 @@ module Backup
       end
 
       ##
-      # Builds the string in a log format with the date/time, the type (colorized)
-      # based on whether it's a message, notice or error, and the message itself.
-      # ANSI color codes are only used in the console, and are not written to the log
-      # since it doesn't do anything and just adds more unnecessary bloat to the log file
-      def loggify(type, string, color = false)
-        return "[#{time}][#{type}] #{string}" unless color
-        "[#{time}][#{send(color, type)}] #{string}"
+      # Receives a String, or an Object that responds to #to_s (e.g. an
+      # Exception), from one of the messaging methods and converts it into an
+      # Array of Strings, split on newline separators. Each line is then
+      # formatted into a log format based on the given options, and the Array
+      # returned to be passed to to_console() and/or to_file().
+      def loggify(string, type = false, color = false)
+        lines = string.to_s.split("\n")
+        if type
+          type = send(color, type) if color
+          time_now = time
+          lines.map {|line| "[#{time_now}][#{type}] #{line}" }
+        else
+          lines
+        end
       end
 
       ##
-      # Writes (appends) a string to the backup.log file
-      def to_file(string)
-        messages << string
+      # Receives an Array of Strings to be written to the console.
+      def to_console(lines, stderr = false)
+        return if quiet?
+        lines.each {|line| stderr ? Kernel.warn(line) : puts(line) }
+      end
+
+      ##
+      # Receives an Array of Strings to be written to the log file.
+      def to_file(lines)
         File.open(File.join(LOG_PATH, 'backup.log'), 'a') do |file|
-          file.write("#{string}\n")
+          lines.each {|line| file.puts line }
         end
+        messages.push(*lines)
       end
 
       ##
@@ -110,7 +125,8 @@ module Backup
       ##
       # Returns 'true' (boolean) if the QUIET constant is defined
       # By default it isn't defined, only when initializing Backup using
-      # the '--quite' (or '-q') option in the CLI (e.g. backup perform -t my_backup --quiet)
+      # the '--quiet' (or '-q') option in the CLI
+      # (e.g. backup perform -t my_backup --quiet)
       def quiet?
         const_defined?(:QUIET) && QUIET
       end
