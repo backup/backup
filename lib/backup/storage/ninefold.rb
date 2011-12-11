@@ -71,7 +71,7 @@ module Backup
       # Transfers the archived file to the specified directory
       def transfer!
         files_to_transfer do |local_file, remote_file|
-          Logger.message("#{ self.class } started transferring \"#{ local_file }\".")
+          Logger.message "#{ self.class } started transferring '#{ local_file }'."
           directory   = connection.directories.get(remote_path)
           directory ||= connection.directories.create(:key => remote_path)
           directory.files.create(

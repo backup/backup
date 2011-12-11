@@ -94,11 +94,16 @@ module Backup
       def transfer!
         create_remote_directories!
 
-        Logger.message("#{ self.class } started transferring \"#{ filename }\" to \"#{ ip }\".")
+        Logger.message "#{ self.class } started transferring " +
+            "'#{ filename }' to '#{ ip }'."
+
         if @local
-          run("#{ utility(:rsync) } '#{ File.join(local_path, filename) }' '#{ File.join(remote_path, filename[20..-1]) }'")
+          run("#{ utility(:rsync) } '#{ File.join(local_path, filename) }' " +
+              "'#{ File.join(remote_path, filename[20..-1]) }'")
         else
-          run("#{ utility(:rsync) } #{ options } #{ port } #{ password } '#{ File.join(local_path, filename) }' '#{ username }@#{ ip }:#{ File.join(remote_path, filename[20..-1]) }'")
+          run("#{ utility(:rsync) } #{ options } #{ port } #{ password } " +
+              "'#{ File.join(local_path, filename) }' " +
+              "'#{ username }@#{ ip }:#{ File.join(remote_path, filename[20..-1]) }'")
         end
       end
 

@@ -62,7 +62,7 @@ module Backup
         ##
         # Silence Backup::Logger from printing to STDOUT, if --quiet was specified
         if options[:quiet]
-          Backup::Logger.send(:const_set, :QUIET, options[:quiet])
+          Logger.send(:const_set, :QUIET, options[:quiet])
         end
 
         ##
@@ -102,7 +102,7 @@ module Backup
 
           ##
           # Runs the returned model
-          Backup::Logger.message "Performing backup for #{model.label}!"
+          Logger.message "Performing backup for #{model.label}!"
           model.perform!
 
           ##

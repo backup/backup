@@ -34,7 +34,7 @@ module Backup
       # Logs a message to the console and log file to inform
       # the client that Backup is dumping the database
       def log!
-        Logger.message("#{ self.class } started dumping and archiving \"#{ name }\".")
+        Logger.message "#{self.class} started dumping and archiving '#{ name }'."
       end
     end
   end

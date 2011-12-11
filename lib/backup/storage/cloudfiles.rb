@@ -78,7 +78,7 @@ module Backup
       # Transfers the archived file to the specified Cloud Files container
       def transfer!
         files_to_transfer do |local_file, remote_file|
-          Logger.message("#{ self.class } started transferring \"#{ local_file }\".")
+          Logger.message "#{ self.class } started transferring '#{ local_file }'."
           connection.put_object(
             container,
             File.join(remote_path, remote_file),
@@ -91,7 +91,8 @@ module Backup
       # Removes the transferred archive file from the Cloud Files container
       def remove!
         transferred_files do |local_file, remote_file|
-          Logger.message("#{ self.class } started removing '#{ local_file }' from container '#{ container }'")
+          Logger.message "#{ self.class } started removing '#{ local_file }'" +
+              "from container '#{ container }'"
           connection.delete_object(container, File.join(remote_path, remote_file))
         end
       end

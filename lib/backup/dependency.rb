@@ -93,12 +93,14 @@ module Backup
         gem(name, all[name][:version])
         require(all[name][:require])
       rescue LoadError
-        Backup::Logger.error("Dependency missing.")
-        puts "\nDependency required for:"
-        puts "\n\s\s#{all[name][:for]}"
-        puts "\nTo install the gem, issue the following command:"
-        puts "\n\s\sgem install #{name} -v '#{all[name][:version]}'"
-        puts "\nPlease try again after installing the missing dependency."
+        Logger.error Errors::Dependency::LoadError.new(<<-EOS)
+          Dependency missing
+          Dependency required for:
+          #{all[name][:for]}
+          To install the gem, issue the following command:
+          > gem install #{name} -v '#{all[name][:version]}'
+          Please try again after installing the missing dependency.
+        EOS
         exit
       end
     end

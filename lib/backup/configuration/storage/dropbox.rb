@@ -22,19 +22,23 @@ module Backup
           # DEPRECATED METHODS #############################################
 
           def email
-            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.email is deprecated and will be removed at some point."
+            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.email\n" +
+                "  is deprecated and will be removed at some point."
           end
 
           def email=(value)
-            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.email= is deprecated and will be removed at some point."
+            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.email=\n" +
+                "  is deprecated and will be removed at some point."
           end
 
           def password
-            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.password is deprecated and will be removed at some point."
+            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.password\n" +
+                "  is deprecated and will be removed at some point."
           end
 
           def password=(value)
-            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.password= is deprecated and will be removed at some point."
+            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.password=\n" +
+                "  is deprecated and will be removed at some point."
           end
 
         end

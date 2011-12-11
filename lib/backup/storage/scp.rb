@@ -74,7 +74,9 @@ module Backup
         create_remote_directories!
 
         files_to_transfer do |local_file, remote_file|
-          Logger.message("#{ self.class } started transferring \"#{ local_file }\" to \"#{ ip }\".")
+          Logger.message "#{ self.class } started transferring " +
+              "'#{ local_file }' to '#{ ip }'."
+
           connection.scp.upload!(
             File.join(local_path, local_file),
             File.join(remote_path, remote_file)

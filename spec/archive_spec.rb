@@ -88,7 +88,11 @@ describe Backup::Archive do
     end
 
     it 'should log the status' do
-      Backup::Logger.expects(:message).with("Backup::Archive started packaging and archiving \"/home/rspecuser/somefile\", \"/home/rspecuser/logs\", \"/home/rspecuser/dotfiles\".")
+      Backup::Logger.expects(:message).
+          with("Backup::Archive started packaging and archiving:\n" +
+               "  /home/rspecuser/somefile\n" +
+               "  /home/rspecuser/logs\n" +
+               "  /home/rspecuser/dotfiles")
       archive.perform!
     end
   end

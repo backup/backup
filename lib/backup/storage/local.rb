@@ -52,7 +52,7 @@ module Backup
         create_local_directories!
 
         files_to_transfer do |local_file, remote_file|
-          Logger.message("#{ self.class } started transferring \"#{ local_file }\".")
+          Logger.message "#{ self.class } started transferring '#{ local_file }'."
           FileUtils.cp(
             File.join(local_path, local_file),
             File.join(remote_path, remote_file)

@@ -42,7 +42,8 @@ describe Backup::Database::Riak do
     end
 
     it do
-      Backup::Logger.expects(:message).with("Backup::Database::Riak started dumping and archiving \"mydatabase\".")
+      Backup::Logger.expects(:message).
+          with("Backup::Database::Riak started dumping and archiving 'mydatabase'.")
       db.perform!
     end
   end

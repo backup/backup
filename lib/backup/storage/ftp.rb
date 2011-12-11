@@ -84,7 +84,8 @@ module Backup
         create_remote_directories!
 
         files_to_transfer do |local_file, remote_file|
-          Logger.message("#{ self.class } started transferring \"#{ local_file }\" to \"#{ ip }\".")
+          Logger.message "#{ self.class } started transferring " +
+              "'#{ local_file }' to '#{ ip }'."
           connection.put(
             File.join(local_path, local_file),
             File.join(remote_path, remote_file)
@@ -96,7 +97,9 @@ module Backup
       # Removes the transferred archive file from the server
       def remove!
         transferred_files do |local_file, remote_file|
-          Logger.message("#{ self.class } started removing \"#{ local_file }\" from \"#{ ip }\".")
+          Logger.message "#{ self.class } started removing " +
+              "'#{ local_file }' from '#{ ip }'."
+
           connection.delete(File.join(remote_path, remote_file))
         end
 
@@ -109,7 +112,7 @@ module Backup
       # paths to directories that don't yet exist when creating new directories.
       # Instead, we split the parts up in to an array (for each '/') and loop through
       # that to create the directories one by one. Net::FTP raises an exception when
-      # the directory it's trying ot create already exists, so we have rescue it
+      # the directory it's trying to create already exists, so we have rescue it
       def create_remote_directories!
         path_parts = Array.new
         remote_path.split('/').each do |path_part|

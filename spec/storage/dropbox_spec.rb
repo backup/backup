@@ -107,7 +107,10 @@ describe Backup::Storage::Dropbox do
     end
 
     it do
-      Backup::Logger.expects(:message).with("Backup::Storage::Dropbox started transferring \"#{ Backup::TIME }.#{ Backup::TRIGGER }.tar\".")
+      Backup::Logger.expects(:message).with(
+        "Backup::Storage::Dropbox started transferring " +
+        "'#{ Backup::TIME }.#{ Backup::TRIGGER }.tar'."
+      )
       db.send(:transfer!)
     end
 

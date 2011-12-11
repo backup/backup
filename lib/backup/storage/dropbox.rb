@@ -73,8 +73,11 @@ module Backup
               Logger.message "Session data loaded from cache!"
               return @connection = cached_session
             end
-          rescue ArgumentError => error
-            Logger.warn "Could not read session data from cache. Cache data might be corrupt."
+          rescue ArgumentError => err
+            Logger.warn Errors::Storage::Dropbox::ConnectionError.wrap(err, <<-EOS)
+              Could not read session data from cache.
+              Cache data might be corrupt.
+            EOS
           end
         end
 
@@ -86,7 +89,7 @@ module Backup
       # Transfers the archived file to the specified Dropbox folder
       def transfer!
         files_to_transfer do |local_file, remote_file|
-          Logger.message("#{ self.class } started transferring \"#{ local_file }\".")
+          Logger.message "#{ self.class } started transferring '#{ local_file }'."
           connection.upload(
             File.join(local_path, local_file),
             remote_path,
@@ -145,9 +148,9 @@ module Backup
         begin
           Timeout::timeout(180) { STDIN.gets }
           session.authorize
-        rescue OAuth::Unauthorized => error
-          Logger.error "Authorization failed!"
-          raise error
+        rescue OAuth::Unauthorized => err
+          raise Errors::Storage::Dropbox::ConnectionError.
+              wrap(err, 'Authorization Failed!')
         end
 
         template.render("storage/dropbox/authorized.erb")

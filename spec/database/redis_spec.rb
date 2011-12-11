@@ -125,7 +125,8 @@ describe Backup::Database::Redis do
     end
 
     it do
-      Backup::Logger.expects(:message).with("Backup::Database::Redis started dumping and archiving \"mydatabase\".")
+      Backup::Logger.expects(:message).
+          with("Backup::Database::Redis started dumping and archiving 'mydatabase'.")
 
       db.perform!
     end

@@ -142,7 +142,8 @@ describe Backup::Database::MySQL do
     end
 
     it do
-      Backup::Logger.expects(:message).with("Backup::Database::MySQL started dumping and archiving \"mydatabase\".")
+      Backup::Logger.expects(:message).
+          with("Backup::Database::MySQL started dumping and archiving 'mydatabase'.")
       db.perform!
     end
   end

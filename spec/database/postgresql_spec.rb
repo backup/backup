@@ -177,7 +177,8 @@ describe Backup::Database::PostgreSQL do
     end
 
     it do
-      Backup::Logger.expects(:message).with("Backup::Database::PostgreSQL started dumping and archiving \"mydatabase\".")
+      Backup::Logger.expects(:message).
+          with("Backup::Database::PostgreSQL started dumping and archiving 'mydatabase'.")
       db.perform!
     end
   end

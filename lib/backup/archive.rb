@@ -49,8 +49,11 @@ module Backup
       @archive_path = File.join(TMP_PATH, TRIGGER, 'archive')
       mkdir(archive_path)
 
-      Logger.message("#{ self.class } started packaging and archiving #{ paths.map { |path| "\"#{path}\""}.join(", ") }.")
-      run("#{ utility(:tar) } -c -f '#{ File.join(archive_path, "#{name}.tar") }' #{ paths_to_exclude } #{ paths_to_package }", :ignore_exit_codes => [1])
+      Logger.message "#{ self.class } started packaging and archiving:\n" +
+          paths.map {|path| "  #{path}" }.join("\n")
+
+      run("#{ utility(:tar) } -c -f '#{ File.join(archive_path, "#{name}.tar") }' " +
+          "#{ paths_to_exclude } #{ paths_to_package }", :ignore_exit_codes => [1])
     end
 
   private

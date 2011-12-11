@@ -10,7 +10,7 @@ module Backup
       # Logs a message to the console and log file to inform
       # the client that Backup is compressing the archive
       def log!
-        Backup::Logger.message "#{ self.class } started compressing the archive."
+        Logger.message "#{ self.class } started compressing the archive."
       end
     end
   end

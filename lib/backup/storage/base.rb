@@ -176,7 +176,8 @@ module Backup
         if objects.count > keep
           objects_to_remove = objects[keep..-1]
           objects_to_remove.each do |object|
-            Logger.message "#{ self.class } started removing (cycling) \"#{ object.filename }\"."
+            Logger.message "#{ self.class } started removing (cycling) " +
+                "'#{ object.filename }'."
             begin
               object.send(:remove!)
             rescue => err
