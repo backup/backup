@@ -66,13 +66,27 @@ describe Backup::Database::Redis do
   end
 
   describe '#invoke_save!' do
+
     it 'should return the full redis-cli string' do
       db.expects(:utility).with('redis-cli').returns('redis-cli')
-      db.expects(:run).with("redis-cli -a 'secret' -h 'localhost' -p '123' -s '/redis.sock' --query SAVE")
+      db.expects(:run).with("redis-cli -a 'secret' -h 'localhost' " +
+                            "-p '123' -s '/redis.sock' --query SAVE")
       db.stubs(:raise)
       db.invoke_save!
     end
-  end
+
+    it 'should raise and error if response is not OK' do
+      db.stubs(:utility)
+      db.stubs(:run).returns('BAD')
+      expect { db.invoke_save! }.to raise_error do |err|
+        err.should be_an_instance_of Backup::Errors::Database::Redis::CommandError
+        err.message.should match(/Could not invoke the Redis SAVE command/)
+        err.message.should match(/The #{db.database} file/)
+        err.message.should match(/Redis CLI response: BAD/)
+      end
+    end
+
+  end # describe '#invoke_save!'
 
   describe '#copy!' do
     it do
@@ -91,6 +105,15 @@ describe Backup::Database::Redis do
       db.expects(:mkdir).with(File.join(Backup::TMP_PATH, "myapp", "Redis"))
       db.prepare!
       db.copy!
+    end
+
+    it 'should raise an error if the database dump file is not found' do
+      File.expects(:exist?).returns(false)
+      expect { db.copy! }.to raise_error do |err|
+        err.should be_an_instance_of Backup::Errors::Database::Redis::NotFoundError
+        err.message.should match(/Redis database dump not found/)
+        err.message.should match(/File path was #{File.join(db.path, db.database)}/)
+      end
     end
   end
 

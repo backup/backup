@@ -32,7 +32,8 @@ module Backup
         end
       end
 
-      puts "Could not find trigger '#{trigger}' in '#{config}'."; exit
+      raise Errors::Finder::MissingTriggerError,
+          "Could not find trigger '#{trigger}' in '#{config}'."
     end
 
     ##
@@ -68,7 +69,8 @@ module Backup
     # Tries to find and load the configuration file
     def load_config!
       unless File.exist?(config)
-        puts "Could not find a configuration file in '#{config}'."; exit(1)
+        raise Errors::Finder::MissingConfigError,
+            "Could not find configuration file: '#{config}'."
       end
 
       ##

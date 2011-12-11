@@ -80,13 +80,21 @@ module Backup
       # Information regarding the error ( EXIT CODE and STDERR ) will be returned to the shell so the user can
       # investigate the issue.
       #
-      # The "Exception::CommandFailed" exception will be raised.
+      # raises Backup::Errors::CLI::SystemCallError
       def raise_if_command_failed!(utility, process_data)
         unless process_data[:ignore_exit_codes].include?(process_data[:status].to_i)
-          raise Exception::CommandFailed, Backup::Template.new({
-            :utility      => utility,
-            :process_data => process_data
-          }).result("exception/command_failed.erb")
+
+          stderr = process_data[:stderr].empty? ?
+              nil : "STDERR:\n#{process_data[:stderr]}\n"
+          stdout = process_data[:stdout].empty? ?
+              nil : "STDOUT:\n#{process_data[:stdout]}\n"
+
+          raise Errors::CLI::SystemCallError, <<-EOS
+            Failed to run #{utility} on #{RUBY_PLATFORM}
+            The following information should help to determine the problem:
+            Exit Code: #{process_data[:status]}
+            #{stderr}#{stdout}
+          EOS
         end
       end
 

@@ -50,7 +50,6 @@ module Backup
   NOTIFIER_PATH      = File.join(LIBRARY_PATH, 'notifier')
   SYNCER_PATH        = File.join(LIBRARY_PATH, 'syncer')
   CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
-  EXCEPTION_PATH     = File.join(LIBRARY_PATH, 'exception')
   TEMPLATE_PATH      = File.expand_path('../../templates', __FILE__)
 
   ##
@@ -175,11 +174,11 @@ module Backup
     end
 
     module Compressor
-      autoload :Base,  File.join(CONFIGURATION_PATH, 'compressor', 'base')
-      autoload :Gzip,  File.join(CONFIGURATION_PATH, 'compressor', 'gzip')
-      autoload :Bzip2, File.join(CONFIGURATION_PATH, 'compressor', 'bzip2')
+      autoload :Base,   File.join(CONFIGURATION_PATH, 'compressor', 'base')
+      autoload :Gzip,   File.join(CONFIGURATION_PATH, 'compressor', 'gzip')
+      autoload :Bzip2,  File.join(CONFIGURATION_PATH, 'compressor', 'bzip2')
       autoload :Pbzip2, File.join(CONFIGURATION_PATH, 'compressor', 'pbzip2')
-      autoload :Lzma,  File.join(CONFIGURATION_PATH, 'compressor', 'lzma')
+      autoload :Lzma,   File.join(CONFIGURATION_PATH, 'compressor', 'lzma')
     end
 
     module Storage
@@ -206,14 +205,8 @@ module Backup
       autoload :PostgreSQL, File.join(CONFIGURATION_PATH, 'database', 'postgresql')
       autoload :MongoDB,    File.join(CONFIGURATION_PATH, 'database', 'mongodb')
       autoload :Redis,      File.join(CONFIGURATION_PATH, 'database', 'redis')
-      autoload :Riak,      File.join(CONFIGURATION_PATH, 'database', 'riak')
+      autoload :Riak,       File.join(CONFIGURATION_PATH, 'database', 'riak')
     end
-  end
-
-  ##
-  # Autoload exception classes
-  module Exception
-    autoload :CommandFailed, File.join(EXCEPTION_PATH, 'command_failed')
   end
 
   ##

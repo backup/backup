@@ -82,12 +82,17 @@ module Backup
       # Tells Redis to persist the current state of the
       # in-memory database to the persisted dump file
       def invoke_save!
-        response = run("#{ utility('redis-cli') } #{ credential_options } #{ connectivity_options } #{ additional_options } SAVE")
+        response = run("#{ utility('redis-cli') } #{ credential_options } " +
+                       "#{ connectivity_options } #{ additional_options } SAVE")
         unless response =~ /OK/
-          raise Exception::CommandFailed,
-            "Could not invoke the Redis SAVE command. The #{ database } file might not contain the most recent data. " +
-            "Please check if the server is running, the credentials (if any) are correct, and the host/port/socket are correct.\n\n" +
-            "Redis CLI response: #{ response }"
+          raise Errors::Database::Redis::CommandError, <<-EOS
+            Could not invoke the Redis SAVE command.
+            The #{ database } file might not contain the most recent data.
+            Please check if the server is running, the credentials (if any) are correct,
+            and the host/port/socket are correct.
+
+            Redis CLI response: #{ response }
+          EOS
         end
       end
 
@@ -95,8 +100,10 @@ module Backup
       # Performs the copy command to copy over the Redis dump file to the Backup archive
       def copy!
         unless File.exist?(File.join(path, database))
-          Logger.error "Redis database dump not found in '#{ File.join(path, database) }'"
-          exit
+          raise Errors::Database::Redis::NotFoundError, <<-EOS
+            Redis database dump not found
+            File path was #{ File.join(path, database) }
+          EOS
         end
 
         # Temporarily remove a custom `utility_path` setting so that the system

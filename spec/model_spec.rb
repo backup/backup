@@ -274,4 +274,68 @@ describe Backup::Model do
     end
   end
 
+  describe '#perform!' do
+
+    # for the purposes of testing the error handling, we're just going to
+    # stub the first thing this method calls and raise an error
+    describe 'when errors occur' do
+      let(:model) { Backup::Model.new('foo', 'foo') {} }
+
+      before do
+        # method ensures that #clean! is always run before exiting
+        model.expects(:clean!)
+      end
+
+      it 'logs, notifies and continues if a StandardError is rescued' do
+        model.stubs(:databases).raises(StandardError, 'non-fatal error')
+
+        Backup::Logger.expects(:error).twice
+        Backup::Logger.expects(:message).once
+
+        Backup::Errors::ModelError.expects(:wrap).with do |err, msg|
+          err.message.should == 'non-fatal error'
+          msg.should match(/Backup for foo \(foo\) Failed!/)
+        end
+
+        Backup::Errors::ModelError.expects(:new).with do |msg|
+          msg.should match(/Backup will now attempt to continue/)
+        end
+
+        # notifiers called, but any Exception is ignored
+        notifier = mock
+        notifier.expects(:perform!).raises(Exception)
+        model.expects(:notifiers).returns([notifier])
+
+        # returns to allow next trigger to run
+        expect { model.perform! }.not_to raise_error
+      end
+
+      it 'logs, notifies and exits if an Exception is rescued' do
+        model.stubs(:databases).raises(Exception, 'fatal error')
+
+        Backup::Logger.expects(:error).times(3)
+        Backup::Logger.expects(:message).never
+
+        Backup::Errors::ModelError.expects(:wrap).with do |err, msg|
+          err.message.should == 'fatal error'
+          msg.should match(/Backup for foo \(foo\) Failed!/)
+        end
+
+        Backup::Errors::ModelError.expects(:new).with do |msg|
+          msg.should match(/Backup will now exit/)
+        end
+
+        expect do
+          # notifiers called, but any Exception is ignored
+          notifier = mock
+          notifier.expects(:perform!).raises(Exception)
+          model.expects(:notifiers).returns([notifier])
+        end.not_to raise_error
+
+        expect { model.perform! }.to raise_error(SystemExit)
+      end
+
+    end # context 'when errors occur'
+
+  end # describe '#perform!'
 end

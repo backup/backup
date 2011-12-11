@@ -248,11 +248,40 @@ module Backup
 
       syncers.each(&:perform!)
       notifiers.each { |n| n.perform!(self) }
-    rescue => exception
+
+    rescue Exception => err
+      fatal = !err.is_a?(StandardError)
+
+      Logger.error Backup::Errors::ModelError.wrap(err, <<-EOS)
+        Backup for #{label} (#{trigger}) Failed!
+        An Error occured which has caused this Backup to abort before completion.
+        Please review the Log for this Backup to determine if steps need to be taken
+        to clean up, based on the point at which the failure occured.
+      EOS
+      Logger.error "\nBacktrace:\n" + err.backtrace.join("\n\s\s") + "\n\n"
+
+      if fatal
+        Logger.error Backup::Errors::ModelError.new(<<-EOS)
+          This Error was Fatal and Backup will now exit.
+          If you have other Backup jobs (triggers) configured to run,
+          they will not be processed.
+        EOS
+      else
+        Logger.message Backup::Errors::ModelError.new(<<-EOS)
+          If you have other Backup jobs (triggers) configured to run,
+          Backup will now attempt to continue...
+        EOS
+      end
+
+      notifiers.each do |n|
+        begin
+          n.perform!(self, err)
+        rescue Exception; end
+      end
+
+      exit(1) if fatal
+    ensure
       clean!
-      notifiers.each { |n| n.perform!(self, exception) }
-      display_exception(exception)
-      exit(1)
     end
 
   private
@@ -283,7 +312,7 @@ module Backup
     def procedures
       Array.new([
         databases, archives, lambda { package! }, compressors,
-        encryptors, lambda { split! }, storages, lambda { clean! }
+        encryptors, lambda { split! }, storages
       ])
     end
 
@@ -298,12 +327,6 @@ module Backup
     # example: last_constant(Backup::Model::MySQL) becomes and returns "MySQL"
     def last_constant(constant)
       constant.to_s.split("::").last
-    end
-
-    ##
-    # Formats an exception
-    def display_exception(exception)
-      Backup::Template.new({:exception => exception}).render("exception/screen.erb")
     end
 
   end

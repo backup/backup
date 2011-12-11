@@ -127,6 +127,10 @@ module Backup
           # initial state when the next Backup::Model initializes
           Backup::Model.extension = 'tar'
         end
+
+      rescue => err
+        Logger.error Backup::Errors::CLIError.wrap(err)
+        exit(1)
       end
 
       ##
