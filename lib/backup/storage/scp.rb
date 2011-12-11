@@ -85,9 +85,11 @@ module Backup
       ##
       # Removes the transferred archive file from the server
       def remove!
+        messages = []
         transferred_files do |local_file, remote_file|
-          Logger.message("#{ self.class } started removing \"#{ local_file }\" from \"#{ ip }\".")
+          messages << "#{ self.class } started removing '#{ local_file }' from '#{ ip }'."
         end
+        Logger.message messages.join("\n")
 
         errors = []
         connection.exec!("rm -r '#{ remote_path }'") do |ch, stream, data|

@@ -101,9 +101,11 @@ module Backup
       ##
       # Removes the transferred archive file from the Dropbox folder
       def remove!
+        messages = []
         transferred_files do |local_file, remote_file|
-          Logger.message("#{ self.class } started removing '#{ local_file }' from Dropbox.'")
+          messages << "#{ self.class } started removing '#{ local_file }' from Dropbox."
         end
+        Logger.message messages.join("\n")
 
         connection.delete(remote_path)
       ensure

@@ -63,9 +63,11 @@ module Backup
       ##
       # Removes the transferred archive file from the local path
       def remove!
+        messages = []
         transferred_files do |local_file, remote_file|
-          Logger.message("#{ self.class } started removing \"#{ local_file }\".")
+          messages << "#{ self.class } started removing '#{ local_file }'."
         end
+        Logger.message messages.join("\n")
 
         FileUtils.rm_r(remote_path)
       end

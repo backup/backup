@@ -47,8 +47,11 @@ module Backup
 
       def check(objects)
         if objects.any? {|object| object.instance_variable_defined?(:@remote_file) }
-          Backup::Logger.warn "Backup cycling changed in version 3.0.20 and is not backwards compatible with previous versions."
-          Backup::Logger.warn "Visit: https://github.com/meskyanichi/backup/wiki/Splitter for more information"
+          Backup::Logger.warn Errors::Storage::APIError.new(<<-EOS)
+            Backup cycling changed in version 3.0.20
+            and is not backwards compatible with previous versions.
+            See: https://github.com/meskyanichi/backup/wiki/Splitter
+          EOS
         end
       end
 
