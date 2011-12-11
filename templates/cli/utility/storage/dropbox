@@ -4,7 +4,6 @@
   #       this machine with your Dropbox account.
   #
   store_with Dropbox do |db|
-    # db.storage_id = 'my_storage_id' (optional)
     db.api_key    = 'my_api_key'
     db.api_secret = 'my_api_secret'
     db.timeout    = 300

@@ -13,7 +13,7 @@ describe Backup::Model do
       def initialize(&block); end
     end
     class Backup::Storage::TestStorage
-      def initialize(&block); end
+      def initialize(storage_id = nil, &block); end
     end
     class Backup::Compressor::TestGzip
       def initialize(&block); end
@@ -121,6 +121,15 @@ describe Backup::Model do
 
       model.storages.count.should == 2
     end
+
+    it 'should accept an optional storage_id parameter' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        store_with('TestStorage', 'test storage_id')
+      end
+
+      model.storages.count.should == 1
+    end
+
   end
 
   describe 'archives' do

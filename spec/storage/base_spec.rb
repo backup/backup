@@ -4,6 +4,59 @@ require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Storage::Base do
 
+  describe '#initialize' do
+
+    after do
+      Backup::Configuration::Storage::Base.clear_defaults!
+    end
+
+    it 'should create a new storage object with default values' do
+      base = Backup::Storage::Base.new
+      base.keep.should be_nil
+      base.time.should == Backup::TIME
+    end
+
+    it 'should set configured defaults' do
+      Backup::Configuration::Storage::Base.defaults do |base|
+        base.keep = 5
+      end
+
+      base = Backup::Storage::Base.new
+      base.keep.should == 5
+      base.time.should == Backup::TIME
+    end
+
+    it 'should override the configuration defaults with the configure block' do
+      Backup::Configuration::Storage::Base.defaults do |base|
+        base.keep = 5
+      end
+
+      base = Backup::Storage::Base.new do |base|
+        base.keep = 10
+      end
+      base.keep.should == 10
+      base.time.should == Backup::TIME
+    end
+
+    it 'should store the configuration block' do
+      config_block = lambda {|base| base.keep = 10 }
+      base = Backup::Storage::Base.new(&config_block)
+
+      base.keep.should == 10
+      base.configure_block.should be config_block
+    end
+
+    it 'should set the storage_id using an optional block parameter' do
+      base = Backup::Storage::Base.new('my storage_id') do |base|
+        base.keep = 10
+      end
+      base.keep.should == 10
+      base.time.should == Backup::TIME
+      base.storage_id.should == 'my storage_id'
+    end
+
+  end # describe '#inititalize'
+
   describe '#clean!' do
 
     it 'clears all instance variables except those needed for cycling' do

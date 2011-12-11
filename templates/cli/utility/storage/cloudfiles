@@ -2,7 +2,6 @@
   # Rackspace Cloud Files [Storage]
   #
   store_with CloudFiles do |cf|
-    # cf.storage_id = 'my_storage_id' (optional)
     cf.api_key    = 'my_api_key'
     cf.username   = 'my_username'
     cf.container  = 'my_container'

@@ -45,8 +45,9 @@ module Backup
 
       ##
       # Creates a new instance of the storage object
-      def initialize(&block)
+      def initialize(storage_id = nil, &block)
         @configure_block = block
+        @storage_id = storage_id
         configure!
       end
 

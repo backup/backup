@@ -167,10 +167,10 @@ module Backup
     ##
     # Adds a storage method to the array of storage
     # methods to use during the backup process
-    def store_with(storage, &block)
+    def store_with(storage, storage_id = nil, &block)
       @storages << Backup::Storage.const_get(
         last_constant(storage)
-      ).new(&block)
+      ).new(storage_id, &block)
     end
 
     ##
