@@ -77,7 +77,7 @@ module Backup
       def transfer!
         connection.sync_clock
         files_to_transfer do |local_file, remote_file|
-          Logger.message "#{ self.class } started transferring " +
+          Logger.message "#{storage_name} started transferring " +
               "'#{ local_file }' to bucket '#{ bucket }'"
 
           connection.put_object(
@@ -93,7 +93,7 @@ module Backup
       def remove!
         connection.sync_clock
         transferred_files do |local_file, remote_file|
-          Logger.message "#{ self.class } started removing " +
+          Logger.message "#{storage_name} started removing " +
               "'#{ local_file }' from bucket '#{ bucket }'"
 
           connection.delete_object(bucket, File.join(remote_path, remote_file))

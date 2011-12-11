@@ -89,7 +89,7 @@ module Backup
       # Transfers the archived file to the specified Dropbox folder
       def transfer!
         files_to_transfer do |local_file, remote_file|
-          Logger.message "#{ self.class } started transferring '#{ local_file }'."
+          Logger.message "#{storage_name} started transferring '#{ local_file }'."
           connection.upload(
             File.join(local_path, local_file),
             remote_path,
@@ -106,7 +106,7 @@ module Backup
       def remove!
         messages = []
         transferred_files do |local_file, remote_file|
-          messages << "#{ self.class } started removing '#{ local_file }' from Dropbox."
+          messages << "#{storage_name} started removing '#{ local_file }' from Dropbox."
         end
         Logger.message messages.join("\n")
 

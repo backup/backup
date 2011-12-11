@@ -74,7 +74,7 @@ module Backup
         create_remote_directories!
 
         files_to_transfer do |local_file, remote_file|
-          Logger.message "#{ self.class } started transferring " +
+          Logger.message "#{storage_name} started transferring " +
               "'#{ local_file }' to '#{ ip }'."
 
           connection.scp.upload!(
@@ -89,7 +89,7 @@ module Backup
       def remove!
         messages = []
         transferred_files do |local_file, remote_file|
-          messages << "#{ self.class } started removing '#{ local_file }' from '#{ ip }'."
+          messages << "#{storage_name} started removing '#{ local_file }' from '#{ ip }'."
         end
         Logger.message messages.join("\n")
 

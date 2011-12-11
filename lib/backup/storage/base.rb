@@ -52,6 +52,13 @@ module Backup
       end
 
       ##
+      # Return the storage name, with optional storage_id
+      def storage_name
+        self.class.to_s.sub('Backup::', '') +
+            (storage_id ? " (#{storage_id})" : '')
+      end
+
+      ##
       # Returns the full filename of the processed backup file
       def filename
         @filename ||= File.basename(Backup::Model.file)
@@ -177,13 +184,13 @@ module Backup
         if objects.count > keep
           objects_to_remove = objects[keep..-1]
           objects_to_remove.each do |object|
-            Logger.message "#{ self.class } started removing (cycling) " +
+            Logger.message "#{storage_name} started removing (cycling) " +
                 "'#{ object.filename }'."
             begin
               object.send(:remove!)
             rescue => err
               Logger.warn Errors::Storage::CycleError.wrap(err,
-                  "#{self.class} failed to remove '#{object.filename}'")
+                  "#{storage_name} failed to remove '#{object.filename}'")
             end
           end
           objects = objects - objects_to_remove

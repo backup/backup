@@ -71,7 +71,7 @@ module Backup
       # Transfers the archived file to the specified directory
       def transfer!
         files_to_transfer do |local_file, remote_file|
-          Logger.message "#{ self.class } started transferring '#{ local_file }'."
+          Logger.message "#{storage_name} started transferring '#{ local_file }'."
           directory   = connection.directories.get(remote_path)
           directory ||= connection.directories.create(:key => remote_path)
           directory.files.create(
@@ -86,7 +86,7 @@ module Backup
       def remove!
         if directory = connection.directories.get(remote_path)
           transferred_files do |local_file, remote_file|
-            Logger.message "#{ self.class } started removing " +
+            Logger.message "#{storage_name} started removing " +
                 "'#{ local_file }' from Ninefold.'"
 
             if file = directory.files.get(remote_file)

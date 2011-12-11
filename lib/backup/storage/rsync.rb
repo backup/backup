@@ -94,7 +94,7 @@ module Backup
       def transfer!
         create_remote_directories!
 
-        Logger.message "#{ self.class } started transferring " +
+        Logger.message "#{storage_name} started transferring " +
             "'#{ filename }' to '#{ ip }'."
 
         if @local

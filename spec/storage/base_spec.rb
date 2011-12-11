@@ -225,4 +225,27 @@ describe Backup::Storage::Base do
     end
 
   end
+
+  describe '#storage_name' do
+    let(:s3) { Backup::Storage::S3.new {} }
+
+    describe 'returns storage class name with the Backup:: namespace removed' do
+
+      context 'when storage_id is set' do
+        before { s3.storage_id = 'my storage' }
+
+        it 'appends the storage_id' do
+          s3.storage_name.should == 'Storage::S3 (my storage)'
+        end
+      end
+
+      context 'when storage_id is not set' do
+        it 'does not append the storage_id' do
+          s3.storage_name.should == 'Storage::S3'
+        end
+      end
+
+    end
+
+  end
 end
