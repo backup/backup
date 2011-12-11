@@ -1,4 +1,8 @@
 
-There seemed to be a problem backing up <%= @model.label %> (<%= @model.trigger %>).
+Backup <%= @model.label %> (<%= @model.trigger %>) Failed!
 
-<%= Backup::Template.new({:exception => @exception}).result("exception/screen.erb") %>
+See the attached backup log for details.
+
+===========================================================================
+<%= Backup::Template.new.result("general/version.erb") %>
+<%= Backup::Template.new.result("general/links") %>

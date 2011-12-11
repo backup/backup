@@ -1,10 +1,8 @@
 
 Backup <%= @model.label %> (<%= @model.trigger %>) finished with warnings.
 
-Log Messages:
-
-  <%= Backup::Logger.messages.join("\n\s\s") %>
+See the attached backup log for details.
 
 ===========================================================================
-
+<%= Backup::Template.new.result("general/version.erb") %>
 <%= Backup::Template.new.result("general/links") %>

@@ -124,13 +124,21 @@ module Backup
       # : backup log and other information if `on_failure` was set to `true`
       #
       def notify!(status)
-        name = case status
-               when :success then 'Success'
-               when :warning then 'Warning'
-               when :failure then 'Failure'
-               end
-        mail[:subject] = "[Backup::%s] #{model.label} (#{model.trigger})" % name
-        mail[:body]    = template.result('notifier/mail/%s.erb' % status.to_s)
+        name, send_log =
+            case status
+            when :success then [ 'Success', false ]
+            when :warning then [ 'Warning', true  ]
+            when :failure then [ 'Failure', true  ]
+            end
+        mail.subject = "[Backup::%s] #{model.label} (#{model.trigger})" % name
+        mail.body    = template.result('notifier/mail/%s.erb' % status.to_s)
+        if send_log
+          mail.convert_to_multipart
+          mail.attachments["#{model.time}.#{model.trigger}.log"] = {
+            :mime_type => 'text/plain;',
+            :content   => Logger.messages.join("\n")
+          }
+        end
         mail.deliver!
       end
 
@@ -168,9 +176,9 @@ module Backup
           delivery_method method, options
         end
 
-        @mail        = ::Mail.new
-        @mail[:from] = @from
-        @mail[:to]   = @to
+        @mail      = ::Mail.new
+        @mail.from = @from
+        @mail.to   = @to
       end
 
     end

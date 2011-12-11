@@ -186,7 +186,7 @@ describe Backup::Notifier::Mail do
       context 'when Notifier#on_success is true' do
         before { notifier.on_success = true }
 
-        it 'sends the notification' do
+        it 'sends the notification without an attached backup log' do
           notifier.expects(:log!)
           Backup::Template.any_instance.expects(:result).
               with('notifier/mail/success.erb').
@@ -195,7 +195,9 @@ describe Backup::Notifier::Mail do
           notifier.perform!(model)
           sent_message = ::Mail::TestMailer.deliveries.first
           sent_message.subject.should == message % 'Success'
+          sent_message.multipart?.should be_false
           sent_message.body.should == 'message body'
+          sent_message.has_attachments?.should be_false
         end
       end
 
@@ -212,12 +214,17 @@ describe Backup::Notifier::Mail do
     end # context 'success'
 
     context 'warning' do
-      before { Backup::Logger.stubs(:has_warnings?).returns(true) }
+      let(:log_messages){ ['line 1', 'line 2', 'line 3'] }
+
+      before do
+        Backup::Logger.stubs(:has_warnings?).returns(true)
+        Backup::Logger.stubs(:messages).returns(log_messages)
+      end
 
       context 'when Notifier#on_warning is true' do
         before { notifier.on_warning = true }
 
-        it 'sends the notification' do
+        it 'sends the notification with an attached backup log' do
           notifier.expects(:log!)
           Backup::Template.any_instance.expects(:result).
               with('notifier/mail/warning.erb').
@@ -226,14 +233,17 @@ describe Backup::Notifier::Mail do
           notifier.perform!(model)
           sent_message = ::Mail::TestMailer.deliveries.first
           sent_message.subject.should == message % 'Warning'
-          sent_message.body.should == 'message body'
+          sent_message.body.multipart?.should be_true
+          sent_message.text_part.decoded.should == 'message body'
+          sent_message.attachments["#{model.time}.#{model.trigger}.log"].
+              read.should == "line 1\nline 2\nline 3"
         end
       end
 
       context 'when Notifier#on_success is true' do
         before { notifier.on_success = true }
 
-        it 'sends the notification' do
+        it 'sends the notification with an attched backup log' do
           notifier.expects(:log!)
           Backup::Template.any_instance.expects(:result).
               with('notifier/mail/warning.erb').
@@ -242,7 +252,10 @@ describe Backup::Notifier::Mail do
           notifier.perform!(model)
           sent_message = ::Mail::TestMailer.deliveries.first
           sent_message.subject.should == message % 'Warning'
-          sent_message.body.should == 'message body'
+          sent_message.body.multipart?.should be_true
+          sent_message.text_part.decoded.should == 'message body'
+          sent_message.attachments["#{model.time}.#{model.trigger}.log"].
+              read.should == "line 1\nline 2\nline 3"
         end
       end
 
@@ -259,11 +272,16 @@ describe Backup::Notifier::Mail do
     end # context 'warning'
 
     context 'failure' do
+      let(:log_messages){ ['line 1', 'line 2', 'line 3'] }
+
+      before do
+        Backup::Logger.stubs(:messages).returns(log_messages)
+      end
 
       context 'when Notifier#on_failure is true' do
         before { notifier.on_failure = true }
 
-        it 'sends the notification' do
+        it 'sends the notification with an attached backup log' do
           notifier.expects(:log!)
           Backup::Template.any_instance.expects(:result).
               with('notifier/mail/failure.erb').
@@ -272,7 +290,10 @@ describe Backup::Notifier::Mail do
           notifier.perform!(model, Exception.new)
           sent_message = ::Mail::TestMailer.deliveries.first
           sent_message.subject.should == message % 'Failure'
-          sent_message.body.should == 'message body'
+          sent_message.body.multipart?.should be_true
+          sent_message.text_part.decoded.should == 'message body'
+          sent_message.attachments["#{model.time}.#{model.trigger}.log"].
+              read.should == "line 1\nline 2\nline 3"
         end
       end
 
