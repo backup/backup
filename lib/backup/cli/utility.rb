@@ -118,6 +118,10 @@ module Backup
           Backup::Model.current = nil
 
           ##
+          # Clear the Log Messages for the next potential run
+          Logger.messages.clear
+
+          ##
           # Reset the Backup::Model.extension to 'tar' so it's at its
           # initial state when the next Backup::Model initializes
           Backup::Model.extension = 'tar'
