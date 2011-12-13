@@ -39,7 +39,9 @@ module Backup
       # Performs the backup transfer
       def perform!
         super
+        write_password_file!
         transfer!
+      ensure
         remove_password_file!
       end
 
@@ -79,7 +81,6 @@ module Backup
       # after adjustments from Storage::Base
       def post_configure
         super
-        write_password_file!
         @path = path.sub(/^\~\//, '')
       end
 
