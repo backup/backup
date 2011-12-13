@@ -74,6 +74,12 @@ module Backup
       end
 
       ##
+      # Reset the Backup::Model.all to an empty array since this will be
+      # re-filled during the next Backup::Finder.new(arg1, arg2).find
+      # or Backup::Finder.new(arg).matching call
+      Backup::Model.all = Array.new
+
+      ##
       # Loads the backup configuration file
       Backup.module_eval(File.read(config), config, 1)
     end

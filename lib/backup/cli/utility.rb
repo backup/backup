@@ -118,11 +118,6 @@ module Backup
           Backup::Model.current = nil
 
           ##
-          # Reset the Backup::Model.all to an empty array since this will be
-          # re-filled during the next Backup::Finder.new(arg1, arg2).find
-          Backup::Model.all = Array.new
-
-          ##
           # Reset the Backup::Model.extension to 'tar' so it's at its
           # initial state when the next Backup::Model initializes
           Backup::Model.extension = 'tar'
