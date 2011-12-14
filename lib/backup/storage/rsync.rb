@@ -45,25 +45,6 @@ module Backup
         remove_password_file!
       end
 
-      ##
-      # Returns Rsync syntax for defining a port to connect to
-      def port
-        "-e 'ssh -p #{@port}'"
-      end
-
-      ##
-      # Returns Rsync syntax for using a password file
-      def password
-        "--password-file='#{@password_file.path}'" unless @password.nil?
-      end
-
-      ##
-      # RSync options
-      # -z = Compresses the bytes that will be transferred to reduce bandwidth usage
-      def options
-        "-z"
-      end
-
     private
 
       ##
@@ -87,7 +68,7 @@ module Backup
       ##
       # Establishes a connection to the remote server and returns the Net::SSH object.
       def connection
-        Net::SSH.start(ip, username, :password => @password, :port => @port)
+        Net::SSH.start(ip, username, :password => password, :port => port)
       end
 
       ##
@@ -98,13 +79,17 @@ module Backup
         Logger.message "#{storage_name} started transferring " +
             "'#{ filename }' to '#{ ip }'."
 
-        if @local
-          run("#{ utility(:rsync) } '#{ File.join(local_path, filename) }' " +
-              "'#{ File.join(remote_path, filename[20..-1]) }'")
+        if local
+          run(
+            "#{ utility(:rsync) } '#{ File.join(local_path, filename) }' " +
+            "'#{ File.join(remote_path, filename[20..-1]) }'"
+          )
         else
-          run("#{ utility(:rsync) } #{ options } #{ port } #{ password } " +
-              "'#{ File.join(local_path, filename) }' " +
-              "'#{ username }@#{ ip }:#{ File.join(remote_path, filename[20..-1]) }'")
+          run(
+            "#{ utility(:rsync) } #{ rsync_options } #{ rsync_port } " +
+            "#{ rsync_password_file } '#{ File.join(local_path, filename) }' " +
+            "'#{ username }@#{ ip }:#{ File.join(remote_path, filename[20..-1]) }'"
+          )
         end
       end
 
@@ -129,9 +114,9 @@ module Backup
       # Writes the provided password to a temporary file so that
       # the rsync utility can read the password from this file
       def write_password_file!
-        unless @password.nil?
+        unless password.nil?
           @password_file = Tempfile.new('backup-rsync-password')
-          @password_file.write(@password)
+          @password_file.write(password)
           @password_file.close
         end
       end
@@ -140,7 +125,26 @@ module Backup
       # Removes the previously created @password_file
       # (temporary file containing the password)
       def remove_password_file!
-        @password_file.unlink unless @password.nil?
+        @password_file.delete if @password_file
+      end
+
+      ##
+      # Returns Rsync syntax for using a password file
+      def rsync_password_file
+        "--password-file='#{@password_file.path}'" if @password_file
+      end
+
+      ##
+      # Returns Rsync syntax for defining a port to connect to
+      def rsync_port
+        "-e 'ssh -p #{port}'"
+      end
+
+      ##
+      # RSync options
+      # -z = Compresses the bytes that will be transferred to reduce bandwidth usage
+      def rsync_options
+        "-z"
       end
 
     end
