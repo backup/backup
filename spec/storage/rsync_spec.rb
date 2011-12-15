@@ -78,13 +78,17 @@ describe Backup::Storage::RSync do
 
   describe '#connection' do
     it 'should establish a connection to the remote server' do
+      connection = mock
       Net::SSH.expects(:start).with(
         '123.45.678.90',
         'my_username',
         :password => 'my_password',
         :port => 22
-      )
-      rsync.send(:connection)
+      ).yields(connection)
+
+      rsync.send(:connection) do |ssh|
+        ssh.should be connection
+      end
     end
   end
 
@@ -154,13 +158,13 @@ describe Backup::Storage::RSync do
   end
 
   describe '#create_remote_directories!' do
-    let(:connection) { mock }
 
     context 'when rsync.local is false' do
       it 'should create directories on the remote server' do
+        ssh = mock
         rsync.expects(:mkdir).never
-        rsync.expects(:connection).returns(connection)
-        connection.expects(:exec!).with("mkdir -p '#{rsync.remote_path}'")
+        rsync.expects(:connection).yields(ssh)
+        ssh.expects(:exec!).with("mkdir -p '#{rsync.remote_path}'")
 
         rsync.send(:create_remote_directories!)
       end

@@ -68,7 +68,9 @@ module Backup
       ##
       # Establishes a connection to the remote server and returns the Net::SSH object.
       def connection
-        Net::SSH.start(ip, username, :password => password, :port => port)
+        Net::SSH.start(ip, username, :password => password, :port => port) do |ssh|
+          yield ssh
+        end
       end
 
       ##
@@ -106,7 +108,9 @@ module Backup
         if @local
           mkdir(remote_path)
         else
-          connection.exec!("mkdir -p '#{ remote_path }'")
+          connection do |ssh|
+            ssh.exec!("mkdir -p '#{ remote_path }'")
+          end
         end
       end
 
