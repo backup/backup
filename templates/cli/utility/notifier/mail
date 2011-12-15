@@ -1,12 +1,15 @@
   ##
-  # SMTP Mail [Notifier]
+  # Mail [Notifier]
+  #
+  # The default delivery method for Mail Notifiers is 'SMTP'.
+  # See the Wiki for other delivery options.
+  # https://github.com/meskyanichi/backup/wiki/Notifiers
   #
   notify_by Mail do |mail|
     mail.on_success           = true
     mail.on_warning           = true
     mail.on_failure           = true
 
-    mail.delivery_method      = 'smtp'
     mail.from                 = 'sender@email.com'
     mail.to                   = 'receiver@email.com'
     mail.address              = 'smtp.gmail.com'
@@ -16,34 +19,4 @@
     mail.password             = 'my_password'
     mail.authentication       = 'plain'
     mail.enable_starttls_auto = true
-  end
-
-  ##
-  # Sendmail Mail [Notifier]
-  #
-  notify_by Mail do |mail|
-    mail.on_success           = true
-    mail.on_warning           = true
-    mail.on_failure           = true
-
-    mail.delivery_method      = 'sendmail'
-    mail.from                 = 'sender@email.com'
-    mail.to                   = 'receiver@email.com'
-    ## optional
-    # mail.sendmail           = '/path/to/sendmail'
-    # mail.sendmail_args      = '-i -t'
-  end
-
-  ##
-  # FileDelivery Mail [Notifier]
-  #
-  notify_by Mail do |mail|
-    mail.on_success           = true
-    mail.on_warning           = true
-    mail.on_failure           = true
-
-    mail.delivery_method      = 'file'
-    mail.from                 = 'sender@email.com'
-    mail.to                   = 'receiver@email.com'
-    mail.mail_folder          = '/path/to/backup/emails'
   end
