@@ -57,30 +57,30 @@ module Backup
       end
 
       ##
-      # Establishes a connection to the remote server and returns the Net::SSH object.
-      # Not doing any instance variable caching because this object gets persisted in YAML
-      # format to a file and will issues. This, however has no impact on performance since it only
-      # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
-      # background anyway so even if it were a bit slower it shouldn't matter.
-      #
-      # We will be using Net::SSH, and use Net::SCP through Net::SSH to transfer backups
+      # Establishes a connection to the remote server
+      # and yields the Net::SSH connection.
+      # Net::SCP will use this connection to transfer backups
       def connection
-        Net::SSH.start(ip, username, :password => password, :port => port)
+        Net::SSH.start(
+          ip, username, :password => password, :port => port
+        ) {|ssh| yield ssh }
       end
 
       ##
       # Transfers the archived file to the specified remote server
       def transfer!
-        create_remote_directories!
+        connection do |ssh|
+          create_remote_directories(ssh)
 
-        files_to_transfer do |local_file, remote_file|
-          Logger.message "#{storage_name} started transferring " +
-              "'#{ local_file }' to '#{ ip }'."
+          files_to_transfer do |local_file, remote_file|
+            Logger.message "#{storage_name} started transferring " +
+                "'#{local_file}' to '#{ip}'."
 
-          connection.scp.upload!(
-            File.join(local_path, local_file),
-            File.join(remote_path, remote_file)
-          )
+            ssh.scp.upload!(
+              File.join(local_path, local_file),
+              File.join(remote_path, remote_file)
+            )
+          end
         end
       end
 
@@ -89,13 +89,15 @@ module Backup
       def remove!
         messages = []
         transferred_files do |local_file, remote_file|
-          messages << "#{storage_name} started removing '#{ local_file }' from '#{ ip }'."
+          messages << "#{storage_name} started removing '#{local_file}' from '#{ip}'."
         end
         Logger.message messages.join("\n")
 
         errors = []
-        connection.exec!("rm -r '#{ remote_path }'") do |ch, stream, data|
-          errors << data if stream == :stderr
+        connection do |ssh|
+          ssh.exec!("rm -r '#{remote_path}'") do |ch, stream, data|
+            errors << data if stream == :stderr
+          end
         end
         unless errors.empty?
           raise Errors::Storage::SCP::SSHError,
@@ -111,11 +113,11 @@ module Backup
       # Instead, we split the parts up in to an array (for each '/') and loop through
       # that to create the directories one by one. Net::SCP raises an exception when
       # the directory it's trying ot create already exists, so we have rescue it
-      def create_remote_directories!
+      def create_remote_directories(ssh)
         path_parts = Array.new
         remote_path.split('/').each do |path_part|
           path_parts << path_part
-          connection.exec!("mkdir '#{ path_parts.join('/') }'")
+          ssh.exec!("mkdir '#{path_parts.join('/')}'")
         end
       end
 
