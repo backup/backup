@@ -154,8 +154,8 @@ module Backup
         config         = File.join(config_path, "config.rb")
         model          = File.join(models_path, "#{options[:name]}.rb")
 
+        FileUtils.mkdir_p(models_path)
         if overwrite?(model)
-          FileUtils.mkdir_p(models_path)
           File.open(model, 'w') do |file|
             file.write(Backup::Template.new({:options => options}).result("cli/utility/model.erb"))
           end
@@ -176,6 +176,7 @@ module Backup
         config_path = options[:path] || Backup::PATH
         config      = File.join(config_path, "config.rb")
 
+        FileUtils.mkdir_p(config_path)
         if overwrite?(config)
           File.open(config, "w") do |file|
             file.write(Backup::Template.new.result("cli/utility/config"))
