@@ -16,7 +16,7 @@ Backup::Model.new(:<%= @options[:name] %>, 'Description for <%= @options[:name] 
     @options[item].split(',').map(&:strip).uniq.each do |entry|
       if File.exist?(File.join(Backup::TEMPLATE_PATH, 'cli', 'utility', item.to_s[0..-2], entry)) %>
 <%= Backup::Template.new.result("cli/utility/#{item.to_s[0..-2]}/#{entry}") %>
-      <% end
+<%    end
     end
   end
 end %>
