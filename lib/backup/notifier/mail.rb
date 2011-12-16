@@ -90,7 +90,7 @@ module Backup
 
       ##
       # Folder where mail will be kept when using the `:file` `delivery_method` option.
-      # Default location is '$HOME/backup-mails'
+      # Default location is '$HOME/Backup/emails'
       # Example: '/tmp/test-mails'
       attr_accessor :mail_folder
 
@@ -162,12 +162,12 @@ module Backup
                 :openssl_verify_mode  => @openssl_verify_mode }
             when 'sendmail'
               opts = {}
-              opts.merge!(:location  => @sendmail) if @sendmail
+              opts.merge!(:location  => File.expand_path(@sendmail)) if @sendmail
               opts.merge!(:arguments => @sendmail_args) if @sendmail_args
               opts
             when 'file'
-              @mail_folder ||= "#{ENV['HOME']}/backup-mails"
-              { :location => @mail_folder }
+              @mail_folder ||= "#{ENV['HOME']}/Backup/emails"
+              { :location => File.expand_path(@mail_folder) }
             when 'test' then {}
             end
 
