@@ -133,31 +133,43 @@ module Backup
       end
 
       ##
-      # [Generate]
-      # Generates a configuration file based on the arguments passed in.
-      # For example, running $ backup generate --databases='mongodb' will generate a pre-populated
-      # configuration file with a base MongoDB setup
+      # [Generate:Model]
+      # Generates a model configuration file based on the arguments passed in.
+      # For example:
+      #   $ backup generate:model --trigger my_backup --databases='mongodb'
+      # will generate a pre-populated model with a base MongoDB setup
       desc 'generate:model', 'Generates a Backup model'
-      method_option :name,        :type => :string, :required => true
-      method_option :path,        :type => :string
-      method_option :databases,   :type => :string
-      method_option :storages,    :type => :string
-      method_option :syncers,     :type => :string
-      method_option :encryptors,  :type => :string
-      method_option :compressors, :type => :string
-      method_option :notifiers,   :type => :string
+      method_option :trigger,     :type => :string, :required => true
+      method_option :path,        :type => :string,
+                    :desc => "Default: #{Backup::PATH}"
+
+      # options with their available values
+      %w{ databases storages syncers
+          encryptors compressors notifiers }.map(&:to_sym).each do |name|
+        path = File.join(Backup::TEMPLATE_PATH, 'cli', 'utility', name.to_s[0..-2])
+        method_option name, :type => :string, :desc =>
+            "(#{Dir[path + '/*'].sort.map {|p| File.basename(p) }.join(', ')})"
+      end
+
       method_option :archives,    :type => :boolean
-      method_option :splitter,    :type => :boolean, :default => true, :desc => "use `--no-splitter` to disable"
+      method_option :splitter,    :type => :boolean, :default => true,
+                    :desc => "use `--no-splitter` to disable"
+
       define_method "generate:model" do
-        config_path    = options[:path] || Backup::PATH
+        opts = options.merge(
+          :trigger => options[:trigger].gsub(/[\W\s]/, '_'),
+          :path => options[:path] ? File.expand_path(options[:path]) : nil
+        )
+        config_path    = opts[:path] || Backup::PATH
         models_path    = File.join(config_path, "models")
         config         = File.join(config_path, "config.rb")
-        model          = File.join(models_path, "#{options[:name]}.rb")
+        model          = File.join(models_path, "#{opts[:trigger]}.rb")
 
         FileUtils.mkdir_p(models_path)
         if overwrite?(model)
           File.open(model, 'w') do |file|
-            file.write(Backup::Template.new({:options => options}).result("cli/utility/model.erb"))
+            file.write(Backup::Template.new({:options => opts}).
+                       result("cli/utility/model.erb"))
           end
           puts "Generated model file in '#{ model }'."
         end
@@ -170,10 +182,14 @@ module Backup
         end
       end
 
+      ##
+      # [Generate:Config]
+      # Generates the main configuration file
       desc 'generate:config', 'Generates the main Backup bootstrap/configuration file'
       method_option :path, :type => :string
       define_method 'generate:config' do
-        config_path = options[:path] || Backup::PATH
+        path = options[:path] ? File.expand_path(options[:path]) : nil
+        config_path = path || Backup::PATH
         config      = File.join(config_path, "config.rb")
 
         FileUtils.mkdir_p(config_path)

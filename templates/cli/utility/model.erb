@@ -1,12 +1,12 @@
 # encoding: utf-8
 
 ##
-# Backup Generated: <%= @options[:name] %>
+# Backup Generated: <%= @options[:trigger] %>
 # Once configured, you can run the backup with the following command:
 #
-# $ backup perform -t <%= @options[:name] %> [-c <path_to_configuration_file>]
+# $ backup perform -t <%= @options[:trigger] %> [-c <path_to_configuration_file>]
 #
-Backup::Model.new(:<%= @options[:name] %>, 'Description for <%= @options[:name] %>') do
+Backup::Model.new(:<%= @options[:trigger] %>, 'Description for <%= @options[:trigger] %>') do
 <% if @options[:splitter] %>
 <%= Backup::Template.new.result("cli/utility/splitter") %>
 <% end; if @options[:archives] %>
