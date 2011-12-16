@@ -138,10 +138,14 @@ module Backup
       # For example:
       #   $ backup generate:model --trigger my_backup --databases='mongodb'
       # will generate a pre-populated model with a base MongoDB setup
-      desc 'generate:model', 'Generates a Backup model'
       method_option :trigger,     :type => :string, :required => true
-      method_option :path,        :type => :string,
-                    :desc => "Default: #{Backup::PATH}"
+      method_option :config_path, :type => :string,
+                    :desc => 'Path to your Backup configuration directory'
+      desc 'generate:model', "Generates a Backup model file\n\n" +
+          "Note:\n" +
+          "\s\s'--config-path' is the path to the directory where 'config.rb' is located.\n" +
+          "\s\sThe model file will be created as '<config_path>/models/<trigger>.rb'\n" +
+          "\s\sDefault: #{Backup::PATH}\n"
 
       # options with their available values
       %w{ databases storages syncers
@@ -157,10 +161,10 @@ module Backup
 
       define_method "generate:model" do
         opts = options.merge(
-          :trigger => options[:trigger].gsub(/[\W\s]/, '_'),
-          :path => options[:path] ? File.expand_path(options[:path]) : nil
+          :trigger      => options[:trigger].gsub(/[\W\s]/, '_'),
+          :config_path  => options[:config_path] ? File.expand_path(options[:config_path]) : nil
         )
-        config_path    = opts[:path] || Backup::PATH
+        config_path    = opts[:config_path] || Backup::PATH
         models_path    = File.join(config_path, "models")
         config         = File.join(config_path, "config.rb")
         model          = File.join(models_path, "#{opts[:trigger]}.rb")
