@@ -30,7 +30,7 @@ module Backup
     ##
     # Returns a String object containing the contents of the file (in the context of the binding if any)
     def result(file)
-      ERB.new(file_contents(file)).result(binding)
+      ERB.new(file_contents(file), nil, '<>').result(binding)
     end
 
   private
