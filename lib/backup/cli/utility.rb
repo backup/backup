@@ -11,65 +11,31 @@ module Backup
       # [Perform]
       # Performs the backup process. The only required option is the --trigger [-t].
       # If the other options (--config-file, --data-path, --cache--path, --tmp-path) aren't specified
-      # it'll fallback to the (good) defaults
-      method_option :trigger,         :type => :string,  :aliases => ['-t', '--triggers'], :required => true
-      method_option :config_file,     :type => :string,  :aliases => '-c'
-      method_option :data_path,       :type => :string,  :aliases => '-d'
-      method_option :log_path,        :type => :string,  :aliases => '-l'
-      method_option :cache_path,      :type => :string
-      method_option :tmp_path,        :type => :string
-      method_option :quiet,           :type => :boolean, :aliases => '-q'
+      # they will fallback to the (good) defaults
+      #
+      # If --root-path is given, it will be used as the base (Backup::PATH) for our defaults,
+      # as well as the base path for any option specified as a relative path.
+      # Any option given as an absolute path will be used "as-is".
+      method_option :trigger,         :type => :string,  :required => true, :aliases => ['-t', '--triggers']
+      method_option :config_file,     :type => :string,  :default => '',    :aliases => '-c'
+      method_option :root_path,       :type => :string,  :default => '',    :aliases => '-r'
+      method_option :data_path,       :type => :string,  :default => '',    :aliases => '-d'
+      method_option :log_path,        :type => :string,  :default => '',    :aliases => '-l'
+      method_option :cache_path,      :type => :string,  :default => ''
+      method_option :tmp_path,        :type => :string,  :default => ''
+      method_option :quiet,           :type => :boolean, :default => false, :aliases => '-q'
       desc 'perform', "Performs the backup for the specified trigger.\n" +
                       "You may perform multiple backups by providing multiple triggers, separated by commas.\n\n" +
                       "Example:\n\s\s$ backup perform --triggers backup1,backup2,backup3,backup4\n\n" +
                       "This will invoke 4 backups, and they will run in the order specified (not asynchronous)."
       def perform
         ##
-        # Overwrites the CONFIG_FILE location, if --config-file was specified
-        if options[:config_file]
-          Backup.send(:remove_const, :CONFIG_FILE)
-          Backup.send(:const_set, :CONFIG_FILE, options[:config_file])
-        end
-
-        ##
-        # Overwrites the DATA_PATH location, if --data-path was specified
-        if options[:data_path]
-          Backup.send(:remove_const, :DATA_PATH)
-          Backup.send(:const_set, :DATA_PATH, options[:data_path])
-        end
-
-        ##
-        # Overwrites the LOG_PATH location, if --log-path was specified
-        if options[:log_path]
-          Backup.send(:remove_const, :LOG_PATH)
-          Backup.send(:const_set, :LOG_PATH, options[:log_path])
-        end
-
-        ##
-        # Overwrites the CACHE_PATH location, if --cache-path was specified
-        if options[:cache_path]
-          Backup.send(:remove_const, :CACHE_PATH)
-          Backup.send(:const_set, :CACHE_PATH, options[:cache_path])
-        end
-
-        ##
-        # Overwrites the TMP_PATH location, if --tmp-path was specified
-        if options[:tmp_path]
-          Backup.send(:remove_const, :TMP_PATH)
-          Backup.send(:const_set, :TMP_PATH, options[:tmp_path])
-        end
+        # Setup required paths based on the given options
+        setup_paths(options)
 
         ##
         # Silence Backup::Logger from printing to STDOUT, if --quiet was specified
-        if options[:quiet]
-          Logger.send(:const_set, :QUIET, options[:quiet])
-        end
-
-        ##
-        # Ensure the CACHE_PATH, TMP_PATH and LOG_PATH are created if they do not yet exist
-        Array.new([Backup::CACHE_PATH, Backup::TMP_PATH, Backup::LOG_PATH]).each do |path|
-          FileUtils.mkdir_p(path)
-        end
+        Logger.send(:const_set, :QUIET, options[:quiet])
 
         ##
         # Prepare all trigger names by splitting them by ','
@@ -277,7 +243,56 @@ module Backup
         puts "Backup #{Backup::Version.current}"
       end
 
-    private
+      private
+
+      ##
+      # Setup required paths based on the given options
+      #
+      def setup_paths(options)
+        ##
+        # Set PATH if --root-path is given and the directory exists
+        root_path = false
+        root_given = options[:root_path].strip
+        if !root_given.empty? && File.directory?(root_given)
+          root_path = File.expand_path(root_given)
+          Backup.send(:remove_const, :PATH)
+          Backup.send(:const_set, :PATH, root_path)
+        end
+
+        ##
+        # Update all defaults and given paths to use root_path (if given).
+        # Paths given as an absolute path will be used 'as-is'
+        { :config_file  => 'config.rb',
+          :data_path    => 'data',
+          :log_path     => 'log',
+          :cache_path   => '.cache',
+          :tmp_path     => '.tmp' }.each do |key, name|
+          # strip any trailing '/' in case the user supplied this as part of
+          # an absolute path, so we can match it against File.expand_path()
+          given = options[key].sub(/\/\s*$/, '').lstrip
+          path = false
+          if given.empty?
+            path = File.join(root_path, name) if root_path
+          else
+            path = File.expand_path(given)
+            unless given == path
+              path = File.join(root_path, given) if root_path
+            end
+          end
+
+          const = key.to_s.upcase
+          if path
+            Backup.send(:remove_const, const)
+            Backup.send(:const_set, const, path)
+          else
+            path = Backup.const_get(const)
+          end
+
+          ##
+          # Ensure the LOG_PATH, CACHE_PATH and TMP_PATH are created if they do not yet exist
+          FileUtils.mkdir_p(path) if [:log_path, :cache_path, :tmp_path].include?(key)
+        end
+      end
 
       ##
       # Helper method for asking the user if he/she wants to overwrite the file

@@ -26,6 +26,6 @@ end
 
 ##
 # Load all models from the models directory (after the above global configuration blocks)
-Dir[File.join(File.expand_path(File.dirname(Backup::CONFIG_FILE)), "models", "*.rb")].each do |model|
+Dir[File.join(File.dirname(Backup::CONFIG_FILE), "models", "*.rb")].each do |model|
   instance_eval(File.read(model))
 end

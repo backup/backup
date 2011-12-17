@@ -55,13 +55,13 @@ module Backup
   ##
   # Backup's Environment paths
   USER        = ENV['USER'] || Etc.getpwuid.name
-  HOME        = ENV['HOME'] || ""
+  HOME        = File.expand_path(ENV['HOME'] || '')
   PATH        = File.join(HOME, 'Backup')
-  DATA_PATH   = File.join(HOME, 'Backup', 'data')
-  CONFIG_FILE = File.join(HOME, 'Backup', 'config.rb')
-  LOG_PATH    = File.join(HOME, 'Backup', 'log')
-  CACHE_PATH  = File.join(HOME, 'Backup', '.cache')
-  TMP_PATH    = File.join(HOME, 'Backup', '.tmp')
+  CONFIG_FILE = File.join(PATH, 'config.rb')
+  DATA_PATH   = File.join(PATH, 'data')
+  LOG_PATH    = File.join(PATH, 'log')
+  CACHE_PATH  = File.join(PATH, '.cache')
+  TMP_PATH    = File.join(PATH, '.tmp')
 
   ##
   # Autoload Backup base files
