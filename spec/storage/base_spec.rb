@@ -59,22 +59,27 @@ describe Backup::Storage::Base do
 
   describe '#clean!' do
 
-    it 'clears all instance variables except those needed for cycling' do
-      cycle_required_variables = %w[ @filename @time @chunk_suffixes ].sort
+    context 'when clearing instance variables for cycling' do
+      it 'version stamps the object' do
+        cycle_required_variables = %w[ @filename @time @chunk_suffixes ]
+        expected_variables = (cycle_required_variables + ['@version']).sort
 
-      base = Backup::Storage::Base.new do |config|
-        config.storage_id = 'bar_id'
-        config.keep = 3
+        base = Backup::Storage::Base.new do |config|
+          config.storage_id = 'bar_id'
+          config.keep = 3
+        end
+        base.time = Time.utc(2011, 12, 2)
+        base.chunk_suffixes = ['aa', 'ab']
+        base.instance_variable_set(:@filename, 'foo.tar')
+        base.version.should be_nil
+
+        base.send(:clean!)
+        base.instance_variables.map(&:to_s).sort.should == expected_variables
+        base.time.should == Time.utc(2011, 12, 2)
+        base.chunk_suffixes.should == ['aa', 'ab']
+        base.filename.should == 'foo.tar'
+        base.version.should == Backup::Version.current
       end
-      base.time = Time.utc(2011, 12, 2)
-      base.chunk_suffixes = ['aa', 'ab']
-      base.instance_variable_set(:@filename, 'foo.tar')
-
-      base.send(:clean!)
-      base.instance_variables.map(&:to_s).sort.should == cycle_required_variables
-      base.time.should == Time.utc(2011, 12, 2)
-      base.chunk_suffixes.should == ['aa', 'ab']
-      base.filename.should == 'foo.tar'
     end
 
   end
@@ -90,6 +95,8 @@ describe Backup::Storage::Base do
         config.storage_id = 'bar_id'
         config.keep = 3
       end
+      base_b.expects(:upgrade_if_needed!)
+
       base_b.send(:update!, base_a.configure_block)
       base_b.storage_id.should == 'foo_id'
       base_b.keep.should == 5
@@ -113,6 +120,7 @@ describe Backup::Storage::Base do
       loaded.send(:clean!)
       loaded.storage_id.should == nil
       loaded.keep.should == nil
+      loaded.version.should == Backup::Version.current
 
       loaded.send(:update!, base.configure_block)
       loaded.storage_id.should == 'foo_id'
@@ -120,9 +128,40 @@ describe Backup::Storage::Base do
       loaded.time.should == Time.utc(2011, 12, 2)
       loaded.chunk_suffixes.should == ['aa', 'ab']
       loaded.filename.should == 'foo.tar'
+      loaded.version.should == Backup::Version.current
     end
 
-  end
+  end # describe '#update!'
+
+  describe '#upgrade_if_needed!' do
+
+    it 'upgrades <= 3.0.19' do
+      v_3_0_19_yaml = <<-EOF.gsub(/^\s+/,'  ').gsub(/^  -/,'-')
+        ---
+        !ruby/object:Backup::Storage::SCP
+        username: a_user
+        password: a_password
+        ip: an_address
+        port: a_port
+        path: a_path
+        keep: a_few
+        time: 2011.11.01.01.02.03
+        local_file: 2011.11.01.01.02.03.a_backup.tar
+        remote_file: 2011.11.01.01.02.03.a_backup.tar
+      EOF
+      loaded = YAML.load(v_3_0_19_yaml)
+      cycle_required_variables = %w[ @filename @time @chunk_suffixes ]
+      expected_variables = (cycle_required_variables + ['@version']).sort
+
+      loaded.send(:upgrade_if_needed!)
+      loaded.instance_variables.map(&:to_s).sort.should == expected_variables
+      loaded.filename.should == '2011.11.01.01.02.03.a_backup.tar'
+      loaded.time.should == '2011.11.01.01.02.03'
+      loaded.chunk_suffixes.should == []
+      loaded.version.should == Backup::Version.current
+    end
+
+  end # describe '#upgrade_if_needed!'
 
   describe '#cycle!' do
     let(:base) { Backup::Storage::Base.new {} }

@@ -40,7 +40,6 @@ describe Backup::Storage::Object do
       YAML.expects(:load_file).with(
         File.join(Backup::DATA_PATH, Backup::TRIGGER, 's3.yml')
       ).returns(loaded_objects)
-      storage_object.expects(:check).with(sorted_objects)
 
       objects = storage_object.load
       objects.should be_an(Array)
@@ -62,28 +61,12 @@ describe Backup::Storage::Object do
         YAML.expects(:load_file).with(
           File.join(Backup::DATA_PATH, Backup::TRIGGER, 's3.yml')
         ).returns(loaded_objects)
-        storage_object.expects(:check).with(sorted_objects)
 
         objects = storage_object.load
         objects[0].time.should == '2011.00.00.00.00.00'
         objects[1].time.should == '2009.00.00.00.00.00'
         objects[2].time.should == '2007.00.00.00.00.00'
       end
-    end
-
-  end
-
-  describe '#check' do
-    let(:storage_object) { Backup::Storage::Object.new(:s3, nil) }
-
-    it 'warns if incompatible with version 3.0.20 cycling changes' do
-      objects = [Backup::Storage::S3.new, Backup::Storage::S3.new]
-      objects.first.instance_variable_set(:@remote_file, 'foo.tar')
-      Backup::Logger.expects(:warn).with do |error|
-        error.message.start_with? 'Storage::APIError: ' +
-            'Backup cycling changed in version 3.0.20'
-      end
-      storage_object.send(:check, objects)
     end
 
   end

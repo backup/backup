@@ -39,6 +39,12 @@ module Backup
       # This will be appended to the YAML storage file used for cycling backups.
       attr_accessor :storage_id
 
+      ##
+      # Set to Backup::Version.current just before the object is stored
+      # in the YAML file for cycling. This way, we know when the object
+      # is loaded from the YAML file, which version of Backup stored it.
+      attr_reader :version
+
       def perform!
         @chunk_suffixes ||= Backup::Model.chunk_suffixes
       end
@@ -146,19 +152,36 @@ module Backup
       # so that cycling operations can be performed using the latest
       # configuration from the current backup job.
       def update!(configure_block)
+        upgrade_if_needed!
         instance_exec(configure_block) do |block|
           @configure_block = block; configure!
         end
       end
 
       ##
+      # Upgrades the format of an object loaded from the YAML storage file
+      # if it was stored with a previous, incompatible version of Backup,
+      # before it is updated using the new configure_block in #update!
+      def upgrade_if_needed!
+        return if version == Backup::Version.current
+        case
+        when version.nil? # <= 3.0.19
+          @filename = @remote_file
+          @chunk_suffixes = []
+          clean!
+        else; # upgrade not required
+        end
+      end
+
+      ##
       # Clear all attributes except those which need to be stored
-      # in the YAML storage file for cycling.
+      # in the YAML storage file for cycling, and version stamp it.
       def clean!
         stored_attrs = [:@filename, :@time, :@chunk_suffixes]
         (instance_variables.map(&:to_sym) - stored_attrs).each do |var|
           remove_instance_variable var
         end
+        @version = Backup::Version.current
       end
 
       ##
