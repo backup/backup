@@ -119,7 +119,7 @@ module Backup
 
           ##
           # Clear the Log Messages for the next potential run
-          Logger.messages.clear
+          Logger.clear!
 
           ##
           # Reset the Backup::Model.extension to 'tar' so it's at its

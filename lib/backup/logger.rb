@@ -53,6 +53,11 @@ module Backup
         @has_warnings ||= false
       end
 
+      def clear!
+        messages.clear
+        @has_warnings = false
+      end
+
       private
 
       ##

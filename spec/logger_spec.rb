@@ -132,6 +132,19 @@ describe Backup::Logger do
 
   end # describe '#messages'
 
+  describe '#clear!' do
+    it 'should clear the log and reset has_warnings?' do
+      subject.messages << 'foo'
+      subject.instance_variable_set(:@has_warnings, true)
+      subject.messages.count.should == 1
+      subject.has_warnings?.should be_true
+
+      subject.clear!
+      subject.messages.should be_empty
+      subject.has_warnings?.should be_false
+    end
+  end # describe '#clear!'
+
   describe '#loggify' do
 
     it 'returns an array of strings split on newline separators' do
