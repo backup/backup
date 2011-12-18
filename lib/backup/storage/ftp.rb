@@ -69,37 +69,42 @@ module Backup
           Net::FTP.send(:remove_const, :FTP_PORT)
         end; Net::FTP.send(:const_set, :FTP_PORT, port)
 
-        @ftp ||= Net::FTP.new(ip, username, password)
-        @ftp.passive = true if passive_mode
-        @ftp
+        Net::FTP.open(ip, username, password) do |ftp|
+          ftp.passive = true if passive_mode
+          yield ftp
+        end
       end
 
       ##
       # Transfers the archived file to the specified remote server
       def transfer!
-        create_remote_directories!
+        connection do |ftp|
+          create_remote_directories(ftp)
 
-        files_to_transfer do |local_file, remote_file|
-          Logger.message "#{storage_name} started transferring " +
-              "'#{ local_file }' to '#{ ip }'."
-          connection.put(
-            File.join(local_path, local_file),
-            File.join(remote_path, remote_file)
-          )
+          files_to_transfer do |local_file, remote_file|
+            Logger.message "#{storage_name} started transferring " +
+                "'#{ local_file }' to '#{ ip }'."
+            ftp.put(
+              File.join(local_path, local_file),
+              File.join(remote_path, remote_file)
+            )
+          end
         end
       end
 
       ##
       # Removes the transferred archive file from the server
       def remove!
-        transferred_files do |local_file, remote_file|
-          Logger.message "#{storage_name} started removing " +
-              "'#{ local_file }' from '#{ ip }'."
+        connection do |ftp|
+          transferred_files do |local_file, remote_file|
+            Logger.message "#{storage_name} started removing " +
+                "'#{ local_file }' from '#{ ip }'."
 
-          connection.delete(File.join(remote_path, remote_file))
+            ftp.delete(File.join(remote_path, remote_file))
+          end
+
+          ftp.rmdir(remote_path)
         end
-
-        connection.rmdir(remote_path)
       end
 
       ##
@@ -109,12 +114,12 @@ module Backup
       # Instead, we split the parts up in to an array (for each '/') and loop through
       # that to create the directories one by one. Net::FTP raises an exception when
       # the directory it's trying to create already exists, so we have rescue it
-      def create_remote_directories!
+      def create_remote_directories(ftp)
         path_parts = Array.new
         remote_path.split('/').each do |path_part|
           path_parts << path_part
           begin
-            connection.mkdir(path_parts.join('/'))
+            ftp.mkdir(path_parts.join('/'))
           rescue Net::FTPPermError; end
         end
       end
