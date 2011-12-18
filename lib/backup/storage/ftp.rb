@@ -60,10 +60,6 @@ module Backup
 
       ##
       # Establishes a connection to the remote server and returns the Net::FTP object.
-      # Not doing any instance variable caching because this object gets persisted in YAML
-      # format to a file and will issues. This, however has no impact on performance since it only
-      # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
-      # background anyway so even if it were a bit slower it shouldn't matter.
       #
       # Note *
       # Since the FTP port is defined as a constant in the Net::FTP class, and might be required
@@ -73,9 +69,9 @@ module Backup
           Net::FTP.send(:remove_const, :FTP_PORT)
         end; Net::FTP.send(:const_set, :FTP_PORT, port)
 
-        ftp = Net::FTP.new(ip, username, password)
-        ftp.passive = true if passive_mode
-        ftp
+        @ftp ||= Net::FTP.new(ip, username, password)
+        @ftp.passive = true if passive_mode
+        @ftp
       end
 
       ##
