@@ -39,21 +39,30 @@ describe Backup::Storage::Ninefold do
     ninefold.keep.should           == 500                # comes from the default configuration
   end
 
-  describe '#connection' do
-    it 'should establish a connection to Ninefold using the provided credentials' do
-      Fog::Storage.expects(:new).with({
-        :provider                => 'Ninefold',
-        :ninefold_storage_token  => 'my_storage_token',
-        :ninefold_storage_secret => 'my_storage_secret'
-      })
-
-      ninefold.send(:connection)
-    end
-  end
-
   describe '#provider' do
     it 'should be Ninefold' do
       ninefold.provider.should == 'Ninefold'
+    end
+  end
+
+  describe '#perform' do
+    it 'should invoke transfer! and cycle!' do
+      ninefold.expects(:transfer!)
+      ninefold.expects(:cycle!)
+      ninefold.perform!
+    end
+  end
+
+  describe '#connection' do
+    it 'should establish and re-use a connection to Ninefold' do
+      Fog::Storage.expects(:new).once.with({
+        :provider                => 'Ninefold',
+        :ninefold_storage_token  => 'my_storage_token',
+        :ninefold_storage_secret => 'my_storage_secret'
+      }).returns(true)
+
+      ninefold.send(:connection)
+      ninefold.send(:connection)
     end
   end
 
@@ -64,7 +73,7 @@ describe Backup::Storage::Ninefold do
     let(:files)       { mock('Fog::Storage::Ninefold::Files') }
 
     before do
-      Fog::Storage.stubs(:new).returns(connection)
+      Fog::Storage.expects(:new).once.returns(connection)
       connection.stubs(:directories).returns(directories)
       directory.stubs(:files).returns(files)
     end
@@ -114,14 +123,18 @@ describe Backup::Storage::Ninefold do
     let(:file)        { mock('Fog::Storage::Ninefold::File') }
 
     before do
-      Fog::Storage.stubs(:new).returns(connection)
+      Fog::Storage.expects(:new).once.returns(connection)
       connection.stubs(:directories).returns(directories)
       directory.stubs(:files).returns(files)
     end
 
     it 'should remove the file from the bucket' do
-      directories.expects(:get).with("backups/myapp/#{ Backup::TIME }").returns(directory)
-      files.expects(:get).with("#{ Backup::TRIGGER }.tar").returns(file)
+      directories.expects(:get).
+          with("backups/myapp/#{ Backup::TIME }").
+          returns(directory)
+      files.expects(:get).
+          with("#{ Backup::TRIGGER }.tar").
+          returns(file)
       file.expects(:destroy)
       directory.expects(:destroy)
 
@@ -129,11 +142,4 @@ describe Backup::Storage::Ninefold do
     end
   end
 
-  describe '#perform' do
-    it 'should invoke transfer! and cycle!' do
-      ninefold.expects(:transfer!)
-      ninefold.expects(:cycle!)
-      ninefold.perform!
-    end
-  end
 end

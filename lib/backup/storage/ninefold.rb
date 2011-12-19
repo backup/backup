@@ -60,7 +60,7 @@ module Backup
       # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
       # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
-        Fog::Storage.new(
+        @connection ||= Fog::Storage.new(
           :provider                => provider,
           :ninefold_storage_token  => storage_token,
           :ninefold_storage_secret => storage_secret
