@@ -140,6 +140,44 @@ describe Backup::Storage::Ninefold do
 
       ninefold.send(:remove!)
     end
+
+    it 'should raise an error if remote_path does not exist' do
+      directories.expects(:get).
+          with("backups/myapp/#{ Backup::TIME }").
+          returns(nil)
+      files.expects(:get).never
+      file.expects(:destroy).never
+      directory.expects(:destroy).never
+
+      expect do
+        ninefold.send(:remove!)
+      end.to raise_error(
+        Backup::Errors::Storage::Ninefold::NotFoundError,
+        "Storage::Ninefold::NotFoundError: " +
+        "Directory at 'backups/myapp/#{Backup::TIME}' not found"
+      )
+
+    end
+
+    it 'should raise an error if remote_file does not exist' do
+      directories.expects(:get).
+          with("backups/myapp/#{ Backup::TIME }").
+          returns(directory)
+      files.expects(:get).
+          with("#{ Backup::TRIGGER }.tar").
+          returns(nil)
+      file.expects(:destroy).never
+      directory.expects(:destroy).never
+
+      expect do
+        ninefold.send(:remove!)
+      end.to raise_error(
+        Backup::Errors::Storage::Ninefold::NotFoundError,
+        "Storage::Ninefold::NotFoundError: " +
+        "'#{Backup::TRIGGER}.tar' not found in 'backups/myapp/#{Backup::TIME}'"
+      )
+
+    end
   end
 
 end

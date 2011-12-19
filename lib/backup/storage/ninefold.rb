@@ -94,14 +94,14 @@ module Backup
             else
               # Note: Fog-0.11.0 will return nil if remote_file is not found
               raise Errors::Storage::Ninefold::NotFoundError,
-                  "#{remote_file} not found in #{remote_path}", caller(1)
+                  "'#{remote_file}' not found in '#{remote_path}'", caller(1)
             end
           end
           directory.destroy
         else
           # Note: Fog-0.11.0 will return nil if remote_path is not found
           raise Errors::Storage::Ninefold::NotFoundError,
-              "Directory at #{remote_path} not found", caller(1)
+              "Directory at '#{remote_path}' not found", caller(1)
         end
       end
 
