@@ -60,36 +60,44 @@ module Backup
       # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
       # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
-        Net::SFTP.start(ip, username, :password => password, :port => port)
+        Net::SFTP.start(
+          ip, username,
+          :password => password,
+          :port     => port
+        ) {|sftp| yield sftp }
       end
 
       ##
       # Transfers the archived file to the specified remote server
       def transfer!
-        create_remote_directories!
+        connection do |sftp|
+          create_remote_directories(sftp)
 
-        files_to_transfer do |local_file, remote_file|
-          Logger.message "#{storage_name} started transferring " +
-              "'#{ local_file }' to '#{ ip }'."
+          files_to_transfer do |local_file, remote_file|
+            Logger.message "#{storage_name} started transferring " +
+                "'#{ local_file }' to '#{ ip }'."
 
-          connection.upload!(
-            File.join(local_path, local_file),
-            File.join(remote_path, remote_file)
-          )
+            sftp.upload!(
+              File.join(local_path, local_file),
+              File.join(remote_path, remote_file)
+            )
+          end
         end
       end
 
       ##
       # Removes the transferred archive file from the server
       def remove!
-        transferred_files do |local_file, remote_file|
-          Logger.message "#{storage_name} started removing " +
-              "'#{ local_file }' from '#{ ip }'."
+        connection do |sftp|
+          transferred_files do |local_file, remote_file|
+            Logger.message "#{storage_name} started removing " +
+                "'#{ local_file }' from '#{ ip }'."
 
-          connection.remove!(File.join(remote_path, remote_file))
+            sftp.remove!(File.join(remote_path, remote_file))
+          end
+
+          sftp.rmdir!(remote_path)
         end
-
-        connection.rmdir!(remote_path)
       end
 
       ##
@@ -98,13 +106,13 @@ module Backup
       # paths to directories that don't yet exist when creating new directories.
       # Instead, we split the parts up in to an array (for each '/') and loop through
       # that to create the directories one by one. Net::SFTP raises an exception when
-      # the directory it's trying ot create already exists, so we have rescue it
-      def create_remote_directories!
+      # the directory it's trying to create already exists, so we have rescue it
+      def create_remote_directories(sftp)
         path_parts = Array.new
         remote_path.split('/').each do |path_part|
           path_parts << path_part
           begin
-            connection.mkdir!(path_parts.join('/'))
+            sftp.mkdir!(path_parts.join('/'))
           rescue Net::SFTP::StatusException; end
         end
       end
