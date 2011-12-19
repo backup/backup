@@ -45,30 +45,42 @@ describe Backup::Storage::CloudFiles do
     cf.path.should      == 'my/backups'
   end
 
+  describe '#perform' do
+    it 'should invoke transfer! and cycle!' do
+      cf.expects(:transfer!)
+      cf.expects(:cycle!)
+      cf.perform!
+    end
+  end
+
   describe '#connection' do
-    it 'should establish a connection to Rackspace Cloud Files. using the provided credentials' do
-      Fog::Storage.expects(:new).with({
+    it 'should establish and re-use a connection to Rackspace Cloud Files' do
+      Fog::Storage.expects(:new).once.with({
         :provider             => 'Rackspace',
         :rackspace_username   => 'my_username',
         :rackspace_api_key    => 'my_api_key',
         :rackspace_auth_url   => 'lon.auth.api.rackspacecloud.com',
         :rackspace_servicenet => false
-      })
+      }).returns(true)
 
+      cf.send(:connection)
       cf.send(:connection)
     end
 
-    it 'should establish a connection to Rackspace Cloud Files with LAN (servicenet) enabled' do
-      Fog::Storage.expects(:new).with({
-        :provider             => 'Rackspace',
-        :rackspace_username   => 'my_username',
-        :rackspace_api_key    => 'my_api_key',
-        :rackspace_auth_url   => 'lon.auth.api.rackspacecloud.com',
-        :rackspace_servicenet => true
-      })
+    context 'with LAN (servicenet) enabled' do
+      it 'should establish and re-use a connection to Rackspace Cloud Files' do
+        Fog::Storage.expects(:new).once.with({
+          :provider             => 'Rackspace',
+          :rackspace_username   => 'my_username',
+          :rackspace_api_key    => 'my_api_key',
+          :rackspace_auth_url   => 'lon.auth.api.rackspacecloud.com',
+          :rackspace_servicenet => true
+        }).returns(true)
 
-      cf.servicenet = true
-      cf.send(:connection)
+        cf.servicenet = true
+        cf.send(:connection)
+        cf.send(:connection)
+      end
     end
   end
 
@@ -81,7 +93,7 @@ describe Backup::Storage::CloudFiles do
   describe '#transfer!' do
     let(:connection) { mock('Fog::Storage') }
     before do
-      Fog::Storage.stubs(:new).returns(connection)
+      Fog::Storage.expects(:new).once.returns(connection)
     end
 
     it 'should transfer the provided file to the container' do
@@ -96,20 +108,12 @@ describe Backup::Storage::CloudFiles do
   describe '#remove!' do
     let(:connection) { mock('Fog::Storage') }
     before do
-      Fog::Storage.stubs(:new).returns(connection)
+      Fog::Storage.expects(:new).once.returns(connection)
     end
 
     it 'should remove the file from the container' do
       connection.expects(:delete_object).with('my_container', "backups/myapp/#{ Backup::TIME }/#{ Backup::TRIGGER }.tar")
       cf.send(:remove!)
-    end
-  end
-
-  describe '#perform' do
-    it 'should invoke transfer! and cycle!' do
-      cf.expects(:transfer!)
-      cf.expects(:cycle!)
-      cf.perform!
     end
   end
 
