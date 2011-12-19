@@ -50,29 +50,38 @@ describe Backup::Storage::S3 do
     s3.keep.should              == 500                # comes from the default configuration
   end
 
-  describe '#connection' do
-    it 'should establish a connection to Amazon S3 using the provided credentials' do
-      Fog::Storage.expects(:new).with({
-        :provider               => 'AWS',
-        :aws_access_key_id      => 'my_access_key_id',
-        :aws_secret_access_key  => 'my_secret_access_key',
-        :region                 => 'us-east-1'
-      })
-
-      s3.send(:connection)
-    end
-  end
-
   describe '#provider' do
     it 'should be AWS' do
       s3.provider == 'AWS'
     end
   end
 
+  describe '#perform' do
+    it 'should invoke transfer! and cycle!' do
+      s3.expects(:transfer!)
+      s3.expects(:cycle!)
+      s3.perform!
+    end
+  end
+
+  describe '#connection' do
+    it 'should establish and re-use a connection to Amazon S3' do
+      Fog::Storage.expects(:new).once.with({
+        :provider               => 'AWS',
+        :aws_access_key_id      => 'my_access_key_id',
+        :aws_secret_access_key  => 'my_secret_access_key',
+        :region                 => 'us-east-1'
+      }).returns(true)
+
+      s3.send(:connection)
+      s3.send(:connection)
+    end
+  end
+
   describe '#transfer!' do
     let(:connection) { mock('Fog::Storage') }
     before do
-      Fog::Storage.stubs(:new).returns(connection)
+      Fog::Storage.expects(:new).once.returns(connection)
     end
 
     it 'should transfer the provided file to the bucket' do
@@ -88,21 +97,13 @@ describe Backup::Storage::S3 do
   describe '#remove!' do
     let(:connection) { mock('Fog::Storage') }
     before do
-      Fog::Storage.stubs(:new).returns(connection)
+      Fog::Storage.expects(:new).once.returns(connection)
     end
 
     it 'should remove the file from the bucket' do
       connection.expects(:sync_clock)
       connection.expects(:delete_object).with('my-bucket', "backups/myapp/#{ Backup::TIME }/#{ Backup::TRIGGER }.tar")
       s3.send(:remove!)
-    end
-  end
-
-  describe '#perform' do
-    it 'should invoke transfer! and cycle!' do
-      s3.expects(:transfer!)
-      s3.expects(:cycle!)
-      s3.perform!
     end
   end
 
