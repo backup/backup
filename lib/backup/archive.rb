@@ -26,6 +26,7 @@ module Backup
       @name     = name.to_sym
       @paths    = Array.new
       @excludes = Array.new
+      @tar_options = ''
 
       instance_eval(&block)
     end
@@ -43,6 +44,13 @@ module Backup
     end
 
     ##
+    # Adds the given String of +options+ to the `tar` command.
+    # e.g. '-h --xattrs'
+    def tar_options(options)
+      @tar_options = options
+    end
+
+    ##
     # Archives all the provided paths in to a single .tar file
     # and places that .tar file in the folder which later will be packaged
     def perform!
@@ -52,7 +60,7 @@ module Backup
       Logger.message "#{ self.class } started packaging and archiving:\n" +
           paths.map {|path| "  #{path}" }.join("\n")
 
-      run("#{ utility(:tar) } -c -f '#{ File.join(archive_path, "#{name}.tar") }' " +
+      run("#{ utility(:tar) } #{ @tar_options } -cf '#{ File.join(archive_path, "#{name}.tar") }' " +
           "#{ paths_to_exclude } #{ paths_to_package }", :ignore_exit_codes => [1])
     end
 

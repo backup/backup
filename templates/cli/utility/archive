@@ -2,6 +2,12 @@
   # Archive [Archive]
   #
   archive :my_archive do |archive|
+    # add a file
     archive.add '/path/to/a/file.rb'
+    # add a folder (including sub-folders)
     archive.add '/path/to/a/folder/'
+    # exclude a file
+    archive.exclude '/path/to/a/excluded_file.rb'
+    # exclude a folder (including sub-folders)
+    archive.exclude '/path/to/a/excluded_folder/'
   end

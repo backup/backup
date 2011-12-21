@@ -64,7 +64,7 @@ describe Backup::Archive do
       it 'should render both the syntax for the paths that be included as well as excluded' do
         archive.expects(:mkdir).with(File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive'))
         archive.expects(:run).with(
-          "tar -c -f '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}' --exclude='/home/rspecuser/badfile' --exclude='/home/rspecuser/wrongdir' '/home/rspecuser/somefile' '/home/rspecuser/logs' '/home/rspecuser/dotfiles'",
+          "tar  -cf '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}' --exclude='/home/rspecuser/badfile' --exclude='/home/rspecuser/wrongdir' '/home/rspecuser/somefile' '/home/rspecuser/logs' '/home/rspecuser/dotfiles'",
           :ignore_exit_codes => [1]
         )
         archive.expects(:utility).with(:tar).returns(:tar)
@@ -80,13 +80,28 @@ describe Backup::Archive do
 
         archive.stubs(:utility).returns(:tar)
         archive.expects(:run).with(
-          "tar -c -f '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}'  '/path/to/archive'",
+          "tar  -cf '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}'  '/path/to/archive'",
           :ignore_exit_codes => [1]
         )
         archive.perform!
       end
     end
 
+    context 'when tar_options are given' do
+      it 'should add the options to the tar command' do
+        archive = Backup::Archive.new(:dummy_archive) do |a|
+          a.add '/path/to/archive'
+          a.tar_options '-h --xattrs'
+        end
+
+        archive.stubs(:utility).returns(:tar)
+        archive.expects(:run).with(
+          "tar -h --xattrs -cf '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}'  '/path/to/archive'",
+          :ignore_exit_codes => [1]
+        )
+        archive.perform!
+      end
+    end
     it 'should log the status' do
       Backup::Logger.expects(:message).
           with("Backup::Archive started packaging and archiving:\n" +
