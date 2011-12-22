@@ -28,12 +28,12 @@ You can view the list of released versions over at [RubyGems.org (Backup)](https
 Getting Started
 ---------------
 
-I recommend you read this README first, and refer to the [Wiki pages](https://github.com/meskyanichi/backup/wiki) afterwards. There's also a [Getting Started wiki page](https://github.com/meskyanichi/backup/wiki/Getting-Started).
+I recommend you read this README first, and refer to the [wiki pages](https://github.com/meskyanichi/backup/wiki) afterwards. There's also a [Getting Started wiki page](https://github.com/meskyanichi/backup/wiki/Getting-Started).
 
 What Backup 3 currently supports
 ================================
 
-Below you find a list of components that Backup currently supports. If you'd like support for components other than the ones listed here, feel free to request them or to fork Backup and add them yourself. Backup is modular and easy to extend with new components.
+Below you find a list of components that Backup currently supports. If you'd like support for components other than the ones listed here, feel free to request them or to fork Backup and add them yourself. Backup is modular and easy to extend.
 
 Database Support
 ----------------
@@ -69,17 +69,25 @@ Storage Locations and Services
 Storage Features
 ----------------
 
-- Backup Cycling, applies to:
+- **Backup Cycling, applies to:**
   - Amazon Simple Storage Service (S3)
   - Rackspace Cloud Files (Mosso)
   - Ninefold Cloud Storage
   - Dropbox Web Service
   - Remote Servers *(Only Protocols: FTP, SFTP, SCP)*
   - Local Storage
-- Incremental Backups, applies to:
+- **Backup Splitting, applies to:**
+  - Amazon Simple Storage Service (S3)
+  - Rackspace Cloud Files (Mosso)
+  - Ninefold Cloud Storage
+  - Dropbox Web Service
+  - Remote Servers *(Only Protocols: FTP, SFTP, SCP)*
+  - Local Storage
+- **Incremental Backups, applies to:**
   - Remote Servers *(Only Protocols: RSync)*
 
 [Storage Wiki Page](https://github.com/meskyanichi/backup/wiki/Storages)
+[Splitter Wiki Page](https://github.com/meskyanichi/backup/wiki/Splitter)
 
 Syncers
 -------
@@ -135,6 +143,8 @@ This is a Backup configuration file. Check it out and read the explanation below
 ``` rb
 Backup::Model.new(:sample_backup, 'A sample backup configuration') do
 
+  split_into_chunks_of 4000
+
   database MySQL do |database|
     database.name               = 'my_sample_mysql_db'
     database.username           = 'my_username'
@@ -165,6 +175,24 @@ Backup::Model.new(:sample_backup, 'A sample backup configuration') do
 
   compress_with Gzip do |compression|
     compression.best = true
+  end
+
+  store_with SFTP, "Server A" do |server|
+    server.username = 'my_username'
+    server.password = 'secret'
+    server.ip       = 'a.my-backup-server.com'
+    server.port     = 22
+    server.path     = '~/backups'
+    server.keep     = 25
+  end
+
+  store_with SFTP, "Server B" do |server|
+    server.username = 'my_username'
+    server.password = 'secret'
+    server.ip       = 'b.my-backup-server.com'
+    server.port     = 22
+    server.path     = '~/backups'
+    server.keep     = 25
   end
 
   store_with S3 do |s3|
@@ -207,7 +235,11 @@ end
 
 It will dump two databases (MySQL and MongoDB), it'll create two (.t)archives (user_avatars and logs). It'll package the two database and two archives together in a single (.t)archive. It'll run the Gzip compressor to compress that archive, and then it'll run the OpenSSL encryptor to encrypt the compressed archive. Then that encrypted archive will be stored to your Amazon S3 account. If all goes well, and no exceptions are raised, you'll be notified via the Twitter notifier that the backup succeeded. If there was an exception raised during the backup process, then you'd receive an email in your inbox containing detailed exception information, as well as receive a simple Twitter message that something went wrong.
 
+Aside of S3, we have also defined two `SFTP` storage methods, and given them two unique identifiers `Server A` and `Server B` to distinguish between the two. With these in place, a copy of the backup will now also be stored on two separate servers: `a.my-backup-server.com` and `b.my-backup-server.com`.
+
 As you can see, you can freely mix and match **archives**, **databases**, **compressors**, **encryptors**, **storages** and **notifiers** for your backups. You could even specify 4 storage locations if you wanted: Amazon S3, Rackspace Cloud Files, Ninefold and Dropbox, it'd then store your packaged backup to 4 separate locations for high redundancy. This also applies to compressors (like Gzip, Bzip2, Lzma) and encryptors, you could double encrypt your backup with OpenSSL followed by GPG if you wanted.
+
+Also, notice the `split_into_chunks_of 4000` at the top of the configuration. This tells Backup to split any backups that exceed in 4000 MEGABYTES of size in to multiple smaller chunks. Assuming your backup file is 12000 MEGABYTES (12GB) in size, then Backup will go ahead and split it in to 3 chunks of 4000 MEGABYTES and transfer them individually. This is useful for when you are using Amazon S3, Rackspace Cloud Files, or other 3rd party storage services which limit you to "5GB per file" uploads. So with this, the backup file size is no longer a constraint.
 
 Additionally we have also defined a **S3 Syncer** ( `sync_with S3` ), which does not follow the above process of archiving/compression/encryption, but instead will directly sync the whole `videos` and `music` folder structures from your machine to your Amazon S3 account. (very efficient and cost-effective since it will only transfer files that were added/changed. Additionally, since we flagged it to 'mirror', it'll also remove files from S3 that no longer exist). If you simply wanted to sync to a separate backup server that you own, you could also use the RSync syncer for even more efficient backups that only transfer the **bytes** of each file that changed.
 
