@@ -1,16 +1,16 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/spec_helper'
+require File.expand_path('../spec_helper.rb', __FILE__)
 
 describe Backup::Archive do
 
   let(:archive) do
     Backup::Archive.new(:dummy_archive) do |a|
       a.add '/home/rspecuser/somefile'
-      a.add '/home/rspecuser/logs/'
-      a.add '/home/rspecuser/dotfiles/'
+      a.add '/home/rspecuser/logs'
+      a.add '/home/rspecuser/dotfiles'
       a.exclude '/home/rspecuser/badfile'
-      a.exclude '/home/rspecuser/wrongdir/'
+      a.exclude '/home/rspecuser/wrongdir'
     end
   end
 
@@ -39,7 +39,7 @@ describe Backup::Archive do
   describe '#paths_to_package' do
     it 'should return a tar -c friendly string' do
       archive.send(:paths_to_package).should ==
-      "'/home/rspecuser/somefile' '/home/rspecuser/logs/' '/home/rspecuser/dotfiles/'"
+      "'/home/rspecuser/somefile' '/home/rspecuser/logs' '/home/rspecuser/dotfiles'"
     end
   end
 
@@ -51,7 +51,7 @@ describe Backup::Archive do
 
     it 'should return a tar -c friendly string' do
       archive.send(:paths_to_exclude).should ==
-      "--exclude='/home/rspecuser/badfile' --exclude='/home/rspecuser/wrongdir/'"
+      "--exclude='/home/rspecuser/badfile' --exclude='/home/rspecuser/wrongdir'"
     end
   end
 
@@ -63,7 +63,10 @@ describe Backup::Archive do
     context 'when both paths were added and paths that should be excluded were added' do
       it 'should render both the syntax for the paths that be included as well as excluded' do
         archive.expects(:mkdir).with(File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive'))
-        archive.expects(:run).with("tar -c -f '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}' --exclude='/home/rspecuser/badfile' --exclude='/home/rspecuser/wrongdir/' '/home/rspecuser/somefile' '/home/rspecuser/logs/' '/home/rspecuser/dotfiles/' 2> /dev/null")
+        archive.expects(:run).with(
+          "tar  -cf '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}' --exclude='/home/rspecuser/badfile' --exclude='/home/rspecuser/wrongdir' '/home/rspecuser/somefile' '/home/rspecuser/logs' '/home/rspecuser/dotfiles'",
+          :ignore_exit_codes => [1]
+        )
         archive.expects(:utility).with(:tar).returns(:tar)
         archive.perform!
       end
@@ -76,13 +79,35 @@ describe Backup::Archive do
         end
 
         archive.stubs(:utility).returns(:tar)
-        archive.expects(:run).with("tar -c -f '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}'  '/path/to/archive' 2> /dev/null")
+        archive.expects(:run).with(
+          "tar  -cf '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}'  '/path/to/archive'",
+          :ignore_exit_codes => [1]
+        )
         archive.perform!
       end
     end
 
+    context 'when tar_options are given' do
+      it 'should add the options to the tar command' do
+        archive = Backup::Archive.new(:dummy_archive) do |a|
+          a.add '/path/to/archive'
+          a.tar_options '-h --xattrs'
+        end
+
+        archive.stubs(:utility).returns(:tar)
+        archive.expects(:run).with(
+          "tar -h --xattrs -cf '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}'  '/path/to/archive'",
+          :ignore_exit_codes => [1]
+        )
+        archive.perform!
+      end
+    end
     it 'should log the status' do
-      Backup::Logger.expects(:message).with("Backup::Archive started packaging and archiving \"/home/rspecuser/somefile\", \"/home/rspecuser/logs/\", \"/home/rspecuser/dotfiles/\".")
+      Backup::Logger.expects(:message).
+          with("Backup::Archive started packaging and archiving:\n" +
+               "  /home/rspecuser/somefile\n" +
+               "  /home/rspecuser/logs\n" +
+               "  /home/rspecuser/dotfiles")
       archive.perform!
     end
   end

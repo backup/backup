@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Storage::SCP do
 
@@ -52,76 +52,151 @@ describe Backup::Storage::SCP do
     scp.path.should == 'backups'
   end
 
-  describe '#connection' do
-    it 'should establish a connection to the remote server using the provided ip address and credentials' do
-      Net::SSH.expects(:start).with('123.45.678.90', 'my_username', :password => 'my_password', :port => 22)
-      scp.send(:connection)
-    end
-  end
-
-  describe '#transfer!' do
-    let(:connection) { mock('Net::SCP') }
-
-    before do
-      Net::SSH.stubs(:start).returns(connection)
-      scp.stubs(:create_remote_directories!)
-    end
-
-    it 'should transfer the provided file to the path' do
-      Backup::Model.new('blah', 'blah') {}
-      file = mock("Backup::Storage::SCP::File")
-
-      scp.expects(:create_remote_directories!)
-
-      ssh_scp = mock('Net::SSH::SCP')
-      connection.expects(:scp).returns(ssh_scp)
-
-      ssh_scp.expects(:upload!).with(
-        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"),
-        File.join('backups/myapp', "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
-      )
-
-      scp.send(:transfer!)
-    end
-  end
-
-  describe '#remove!' do
-    let(:connection) { mock('Net::SCP') }
-
-    before do
-      Net::SSH.stubs(:start).returns(connection)
-    end
-
-    it 'should remove the file from the remote server path' do
-      connection.expects(:exec!).with("rm backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
-      scp.send(:remove!)
-    end
-  end
-
-  describe '#create_remote_directories!' do
-    let(:connection) { mock('Net::SSH') }
-
-    before do
-      Net::SSH.stubs(:start).returns(connection)
-    end
-
-    it 'should properly create remote directories one by one' do
-      scp.path = 'backups/some_other_folder/another_folder'
-
-      connection.expects(:exec!).with("mkdir 'backups'")
-      connection.expects(:exec!).with("mkdir 'backups/some_other_folder'")
-      connection.expects(:exec!).with("mkdir 'backups/some_other_folder/another_folder'")
-      connection.expects(:exec!).with("mkdir 'backups/some_other_folder/another_folder/myapp'")
-
-      scp.send(:create_remote_directories!)
-    end
-  end
-
   describe '#perform' do
     it 'should invoke transfer! and cycle!' do
       scp.expects(:transfer!)
       scp.expects(:cycle!)
       scp.perform!
+    end
+  end
+
+  describe '#connection' do
+    it 'should establish a connection to the remote server' do
+      connection = mock
+      Net::SSH.expects(:start).with(
+        '123.45.678.90',
+        'my_username',
+        :password => 'my_password',
+        :port => 22
+      ).yields(connection)
+
+      scp.send(:connection) do |ssh|
+        ssh.should be connection
+      end
+    end
+  end
+
+  describe '#transfer!' do
+
+    before do
+      scp.stubs(:storage_name).returns('Storage::SCP')
+    end
+
+    context 'when file chunking is not used' do
+      it 'should create remote paths and transfer using a single connection' do
+        ssh, ssh_scp = mock, mock
+        local_file  = "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"
+        remote_file = "#{ Backup::TRIGGER }.tar"
+
+        scp.expects(:connection).yields(ssh)
+        scp.expects(:create_remote_directories).with(ssh)
+
+        Backup::Logger.expects(:message).with(
+          "Storage::SCP started transferring '#{local_file}' to '#{scp.ip}'."
+        )
+
+        ssh.expects(:scp).returns(ssh_scp)
+        ssh_scp.expects(:upload!).with(
+          File.join(Backup::TMP_PATH, local_file),
+          File.join('backups/myapp', Backup::TIME, remote_file)
+        )
+
+        scp.send(:transfer!)
+      end
+    end
+
+    context 'when file chunking is used' do
+      it 'should transfer all the provided files using a single connection' do
+        s = sequence ''
+        ssh, ssh_scp = mock, mock
+
+        scp.expects(:connection).in_sequence(s).yields(ssh)
+        scp.expects(:create_remote_directories).in_sequence(s).with(ssh)
+
+        scp.expects(:files_to_transfer).in_sequence(s).multiple_yields(
+          ['local_file1', 'remote_file1'], ['local_file2', 'remote_file2']
+        )
+
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          "Storage::SCP started transferring 'local_file1' to '#{scp.ip}'."
+        )
+        ssh.expects(:scp).in_sequence(s).returns(ssh_scp)
+        ssh_scp.expects(:upload!).in_sequence(s).with(
+          File.join(Backup::TMP_PATH, 'local_file1'),
+          File.join('backups/myapp', Backup::TIME, 'remote_file1')
+        )
+
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          "Storage::SCP started transferring 'local_file2' to '#{scp.ip}'."
+        )
+        ssh.expects(:scp).in_sequence(s).returns(ssh_scp)
+        ssh_scp.expects(:upload!).in_sequence(s).with(
+          File.join(Backup::TMP_PATH, 'local_file2'),
+          File.join('backups/myapp', Backup::TIME, 'remote_file2')
+        )
+
+        scp.send(:transfer!)
+      end
+    end
+
+  end # describe '#transfer!'
+
+  describe '#remove!' do
+
+    before do
+      scp.stubs(:storage_name).returns('Storage::SCP')
+    end
+
+    it 'should remove all remote files with a single logger call' do
+      ssh = mock
+
+      scp.expects(:transferred_files).multiple_yields(
+        ['local_file1', 'remote_file1'], ['local_file2', 'remote_file2']
+      )
+
+      Backup::Logger.expects(:message).with(
+        "Storage::SCP started removing 'local_file1' from '#{scp.ip}'.\n" +
+        "Storage::SCP started removing 'local_file2' from '#{scp.ip}'."
+      )
+
+      scp.expects(:connection).yields(ssh)
+      ssh.expects(:exec!).with("rm -r 'backups/myapp/#{ Backup::TIME }'")
+
+      scp.send(:remove!)
+    end
+
+    it 'should raise an error if Net::SSH reports errors' do
+      ssh = mock
+
+      scp.expects(:transferred_files)
+      Backup::Logger.expects(:message)
+
+      scp.expects(:connection).yields(ssh)
+      ssh.expects(:exec!).yields('', :stderr, 'error message')
+
+      expect do
+        scp.send(:remove!)
+      end.to raise_error(
+        Backup::Errors::Storage::SCP::SSHError,
+        "Storage::SCP::SSHError: Net::SSH reported the following errors:\n" +
+        "  error message"
+      )
+    end
+
+  end # describe '#remove!'
+
+  describe '#create_remote_directories' do
+    it 'should properly create remote directories one by one' do
+      ssh = mock
+      scp.path = 'backups/some_other_folder/another_folder'
+
+      ssh.expects(:exec!).with("mkdir 'backups'")
+      ssh.expects(:exec!).with("mkdir 'backups/some_other_folder'")
+      ssh.expects(:exec!).with("mkdir 'backups/some_other_folder/another_folder'")
+      ssh.expects(:exec!).with("mkdir 'backups/some_other_folder/another_folder/myapp'")
+      ssh.expects(:exec!).with("mkdir 'backups/some_other_folder/another_folder/myapp/#{ Backup::TIME }'")
+
+      scp.send(:create_remote_directories, ssh)
     end
   end
 

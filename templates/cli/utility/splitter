@@ -1,0 +1,7 @@
+  ##
+  # Split [Splitter]
+  #
+  # Split the backup file in to chunks of 250 megabytes
+  # if the backup file size exceeds 250 megabytes
+  #
+  split_into_chunks_of 250

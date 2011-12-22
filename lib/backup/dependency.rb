@@ -48,7 +48,7 @@ module Backup
 
         'mail' => {
           :require => 'mail',
-          :version => '~> 2.3.0',
+          :version => '>= 2.2.15',
           :for     => 'Sending Emails (Mail Notifier)'
         },
 
@@ -69,6 +69,18 @@ module Backup
           :version => '~> 1.5.1',
           :for     => 'Parsing JSON for HTTParty'
         },
+
+        'prowler' => {
+          :require => 'prowler',
+          :version => '>= 1.3.1',
+          :for     => 'Sending iOS push notifications (Prowl Notifier)'
+        },
+
+        'hipchat' => {
+          :require => 'hipchat',
+          :version => '~> 0.4.1',
+          :for => 'Sending notifications to Hipchat'
+        }
       }
     end
 
@@ -81,12 +93,14 @@ module Backup
         gem(name, all[name][:version])
         require(all[name][:require])
       rescue LoadError
-        Backup::Logger.error("Dependency missing.")
-        puts "\nDependency required for:"
-        puts "\n\s\s#{all[name][:for]}"
-        puts "\nTo install the gem, issue the following command:"
-        puts "\n\s\sgem install #{name} -v '#{all[name][:version]}'"
-        puts "\nPlease try again after installing the missing dependency."
+        Logger.error Errors::Dependency::LoadError.new(<<-EOS)
+          Dependency missing
+          Dependency required for:
+          #{all[name][:for]}
+          To install the gem, issue the following command:
+          > gem install #{name} -v '#{all[name][:version]}'
+          Please try again after installing the missing dependency.
+        EOS
         exit
       end
     end

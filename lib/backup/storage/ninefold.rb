@@ -17,24 +17,9 @@ module Backup
       attr_accessor :path
 
       ##
-      # Creates a new instance of the Ninefold storage object
-      # First it sets the defaults (if any exist) and then evaluates
-      # the configuration block which may overwrite these defaults
-      #
-      def initialize(&block)
-        load_defaults!
-
-        @path ||= 'backups'
-
-        instance_eval(&block) if block_given?
-
-        @time = TIME
-      end
-
-      ##
       # This is the remote path to where the backup files will be stored
       def remote_path
-        File.join(path, TRIGGER).sub(/^\//, '')
+        File.join(path, TRIGGER, @time).sub(/^\//, '')
       end
 
       ##
@@ -46,11 +31,27 @@ module Backup
       ##
       # Performs the backup transfer
       def perform!
+        super
         transfer!
         cycle!
       end
 
     private
+
+      ##
+      # Set configuration defaults before evaluating configuration block,
+      # after setting defaults from Storage::Base
+      def pre_configure
+        super
+        @path ||= 'backups'
+      end
+
+      ##
+      # Adjust configuration after evaluating configuration block,
+      # after adjustments from Storage::Base
+      def post_configure
+        super
+      end
 
       ##
       # Establishes a connection to Amazon S3 and returns the Fog object.
@@ -59,7 +60,7 @@ module Backup
       # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
       # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
-        Fog::Storage.new(
+        @connection ||= Fog::Storage.new(
           :provider                => provider,
           :ninefold_storage_token  => storage_token,
           :ninefold_storage_secret => storage_secret
@@ -69,26 +70,39 @@ module Backup
       ##
       # Transfers the archived file to the specified directory
       def transfer!
-        begin
-          Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
-          directory   = connection.directories.get remote_path
+        files_to_transfer do |local_file, remote_file|
+          Logger.message "#{storage_name} started transferring '#{ local_file }'."
+          directory   = connection.directories.get(remote_path)
           directory ||= connection.directories.create(:key => remote_path)
           directory.files.create(
             :key  => remote_file,
             :body => File.open(File.join(local_path, local_file))
           )
-        rescue Excon::Errors::NotFound
-          raise "An error occurred while trying to transfer the file."
         end
       end
 
       ##
       # Removes the transferred archive file from the Amazon S3 bucket
       def remove!
-        begin
-          directory = connection.directories.get remote_path
-          directory.files.get(remote_file).destroy
-        rescue Excon::Errors::SocketError; end
+        if directory = connection.directories.get(remote_path)
+          transferred_files do |local_file, remote_file|
+            Logger.message "#{storage_name} started removing " +
+                "'#{ local_file }' from Ninefold.'"
+
+            if file = directory.files.get(remote_file)
+              file.destroy
+            else
+              # Note: Fog-0.11.0 will return nil if remote_file is not found
+              raise Errors::Storage::Ninefold::NotFoundError,
+                  "'#{remote_file}' not found in '#{remote_path}'", caller(1)
+            end
+          end
+          directory.destroy
+        else
+          # Note: Fog-0.11.0 will return nil if remote_path is not found
+          raise Errors::Storage::Ninefold::NotFoundError,
+              "Directory at '#{remote_path}' not found", caller(1)
+        end
       end
 
     end

@@ -21,26 +21,9 @@ module Backup
       attr_accessor :region
 
       ##
-      # Creates a new instance of the Amazon S3 storage object
-      # First it sets the defaults (if any exist) and then evaluates
-      # the configuration block which may overwrite these defaults
-      #
-      # Currently available regions:
-      #   eu-west-1, us-east-1, ap-southeast-1, us-west-1
-      def initialize(&block)
-        load_defaults!
-
-        @path ||= 'backups'
-
-        instance_eval(&block) if block_given?
-
-        @time = TIME
-      end
-
-      ##
       # This is the remote path to where the backup files will be stored
       def remote_path
-        File.join(path, TRIGGER).sub(/^\//, '')
+        File.join(path, TRIGGER, @time).sub(/^\//, '')
       end
 
       ##
@@ -52,11 +35,27 @@ module Backup
       ##
       # Performs the backup transfer
       def perform!
+        super
         transfer!
         cycle!
       end
 
     private
+
+      ##
+      # Set configuration defaults before evaluating configuration block,
+      # after setting defaults from Storage::Base
+      def pre_configure
+        super
+        @path ||= 'backups'
+      end
+
+      ##
+      # Adjust configuration after evaluating configuration block,
+      # after adjustments from Storage::Base
+      def post_configure
+        super
+      end
 
       ##
       # Establishes a connection to Amazon S3 and returns the Fog object.
@@ -65,7 +64,7 @@ module Backup
       # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
       # background anyway so even if it were a bit slower it shouldn't matter.
       def connection
-        Fog::Storage.new(
+        @connection ||= Fog::Storage.new(
           :provider               => provider,
           :aws_access_key_id      => access_key_id,
           :aws_secret_access_key  => secret_access_key,
@@ -76,26 +75,29 @@ module Backup
       ##
       # Transfers the archived file to the specified Amazon S3 bucket
       def transfer!
-        begin
-          Logger.message("#{ self.class } started transferring \"#{ remote_file }\" to bucket \"#{ bucket }\"")
-          connection.sync_clock
+        connection.sync_clock
+        files_to_transfer do |local_file, remote_file|
+          Logger.message "#{storage_name} started transferring " +
+              "'#{ local_file }' to bucket '#{ bucket }'"
+
           connection.put_object(
             bucket,
             File.join(remote_path, remote_file),
             File.open(File.join(local_path, local_file))
           )
-        rescue Excon::Errors::NotFound
-          raise "An error occurred while trying to transfer the backup, please make sure the bucket exists."
         end
       end
 
       ##
       # Removes the transferred archive file from the Amazon S3 bucket
       def remove!
-        begin
-          connection.sync_clock
+        connection.sync_clock
+        transferred_files do |local_file, remote_file|
+          Logger.message "#{storage_name} started removing " +
+              "'#{ local_file }' from bucket '#{ bucket }'"
+
           connection.delete_object(bucket, File.join(remote_path, remote_file))
-        rescue Excon::Errors::SocketError; end
+        end
       end
 
     end

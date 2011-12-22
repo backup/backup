@@ -25,31 +25,15 @@ module Backup
       attr_accessor :passive_mode
 
       ##
-      # Creates a new instance of the FTP storage object
-      # First it sets the defaults (if any exist) and then evaluates
-      # the configuration block which may overwrite these defaults
-      def initialize(&block)
-        load_defaults!
-
-        @port         ||= 21
-        @path         ||= 'backups'
-        @passive_mode ||= false
-
-        instance_eval(&block) if block_given?
-
-        @time = TIME
-        @path = path.sub(/^\~\//, '')
-      end
-
-      ##
       # This is the remote path to where the backup files will be stored
       def remote_path
-        File.join(path, TRIGGER)
+        File.join(path, TRIGGER, @time)
       end
 
       ##
       # Performs the backup transfer
       def perform!
+        super
         transfer!
         cycle!
       end
@@ -57,11 +41,25 @@ module Backup
     private
 
       ##
+      # Set configuration defaults before evaluating configuration block,
+      # after setting defaults from Storage::Base
+      def pre_configure
+        super
+        @port         ||= 21
+        @path         ||= 'backups'
+        @passive_mode ||= false
+      end
+
+      ##
+      # Adjust configuration after evaluating configuration block,
+      # after adjustments from Storage::Base
+      def post_configure
+        super
+        @path = path.sub(/^\~\//, '')
+      end
+
+      ##
       # Establishes a connection to the remote server and returns the Net::FTP object.
-      # Not doing any instance variable caching because this object gets persisted in YAML
-      # format to a file and will issues. This, however has no impact on performance since it only
-      # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
-      # background anyway so even if it were a bit slower it shouldn't matter.
       #
       # Note *
       # Since the FTP port is defined as a constant in the Net::FTP class, and might be required
@@ -71,31 +69,41 @@ module Backup
           Net::FTP.send(:remove_const, :FTP_PORT)
         end; Net::FTP.send(:const_set, :FTP_PORT, port)
 
-        ftp = Net::FTP.new(ip, username, password)
-        ftp.passive = true if passive_mode
-        ftp
+        Net::FTP.open(ip, username, password) do |ftp|
+          ftp.passive = true if passive_mode
+          yield ftp
+        end
       end
 
       ##
       # Transfers the archived file to the specified remote server
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
-        create_remote_directories!
-        connection.put(
-          File.join(local_path, local_file),
-          File.join(remote_path, remote_file)
-        )
+        connection do |ftp|
+          create_remote_directories(ftp)
+
+          files_to_transfer do |local_file, remote_file|
+            Logger.message "#{storage_name} started transferring " +
+                "'#{ local_file }' to '#{ ip }'."
+            ftp.put(
+              File.join(local_path, local_file),
+              File.join(remote_path, remote_file)
+            )
+          end
+        end
       end
 
       ##
       # Removes the transferred archive file from the server
       def remove!
-        begin
-          connection.delete(
-            File.join(remote_path, remote_file)
-          )
-        rescue Net::FTPPermError
-          Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+        connection do |ftp|
+          transferred_files do |local_file, remote_file|
+            Logger.message "#{storage_name} started removing " +
+                "'#{ local_file }' from '#{ ip }'."
+
+            ftp.delete(File.join(remote_path, remote_file))
+          end
+
+          ftp.rmdir(remote_path)
         end
       end
 
@@ -105,13 +113,13 @@ module Backup
       # paths to directories that don't yet exist when creating new directories.
       # Instead, we split the parts up in to an array (for each '/') and loop through
       # that to create the directories one by one. Net::FTP raises an exception when
-      # the directory it's trying ot create already exists, so we have rescue it
-      def create_remote_directories!
+      # the directory it's trying to create already exists, so we have rescue it
+      def create_remote_directories(ftp)
         path_parts = Array.new
         remote_path.split('/').each do |path_part|
           path_parts << path_part
           begin
-            connection.mkdir(path_parts.join('/'))
+            ftp.mkdir(path_parts.join('/'))
           rescue Net::FTPPermError; end
         end
       end

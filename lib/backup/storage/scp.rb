@@ -24,30 +24,15 @@ module Backup
       attr_accessor :path
 
       ##
-      # Creates a new instance of the SCP storage object
-      # First it sets the defaults (if any exist) and then evaluates
-      # the configuration block which may overwrite these defaults
-      def initialize(&block)
-        load_defaults!
-
-        @port ||= 22
-        @path ||= 'backups'
-
-        instance_eval(&block) if block_given?
-
-        @time = TIME
-        @path = path.sub(/^\~\//, '')
-      end
-
-      ##
       # This is the remote path to where the backup files will be stored
       def remote_path
-        File.join(path, TRIGGER)
+        File.join(path, TRIGGER, @time)
       end
 
       ##
       # Performs the backup transfer
       def perform!
+        super
         transfer!
         cycle!
       end
@@ -55,34 +40,69 @@ module Backup
     private
 
       ##
-      # Establishes a connection to the remote server and returns the Net::SSH object.
-      # Not doing any instance variable caching because this object gets persisted in YAML
-      # format to a file and will issues. This, however has no impact on performance since it only
-      # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
-      # background anyway so even if it were a bit slower it shouldn't matter.
-      #
-      # We will be using Net::SSH, and use Net::SCP through Net::SSH to transfer backups
+      # Set configuration defaults before evaluating configuration block,
+      # after setting defaults from Storage::Base
+      def pre_configure
+        super
+        @port ||= 22
+        @path ||= 'backups'
+      end
+
+      ##
+      # Adjust configuration after evaluating configuration block,
+      # after adjustments from Storage::Base
+      def post_configure
+        super
+        @path = path.sub(/^\~\//, '')
+      end
+
+      ##
+      # Establishes a connection to the remote server
+      # and yields the Net::SSH connection.
+      # Net::SCP will use this connection to transfer backups
       def connection
-        Net::SSH.start(ip, username, :password => password, :port => port)
+        Net::SSH.start(
+          ip, username, :password => password, :port => port
+        ) {|ssh| yield ssh }
       end
 
       ##
       # Transfers the archived file to the specified remote server
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
-        create_remote_directories!
-        connection.scp.upload!(
-          File.join(local_path, local_file),
-          File.join(remote_path, remote_file)
-        )
+        connection do |ssh|
+          create_remote_directories(ssh)
+
+          files_to_transfer do |local_file, remote_file|
+            Logger.message "#{storage_name} started transferring " +
+                "'#{local_file}' to '#{ip}'."
+
+            ssh.scp.upload!(
+              File.join(local_path, local_file),
+              File.join(remote_path, remote_file)
+            )
+          end
+        end
       end
 
       ##
       # Removes the transferred archive file from the server
       def remove!
-        response = connection.exec!("rm #{ File.join(remote_path, remote_file) }")
-        if response =~ /No such file or directory/
-          Logger.warn "Could not remove file \"#{ File.join(remote_path, remote_file) }\"."
+        messages = []
+        transferred_files do |local_file, remote_file|
+          messages << "#{storage_name} started removing '#{local_file}' from '#{ip}'."
+        end
+        Logger.message messages.join("\n")
+
+        errors = []
+        connection do |ssh|
+          ssh.exec!("rm -r '#{remote_path}'") do |ch, stream, data|
+            errors << data if stream == :stderr
+          end
+        end
+        unless errors.empty?
+          raise Errors::Storage::SCP::SSHError,
+            "Net::SSH reported the following errors:\n" +
+              errors.join("\n"), caller(1)
         end
       end
 
@@ -93,11 +113,11 @@ module Backup
       # Instead, we split the parts up in to an array (for each '/') and loop through
       # that to create the directories one by one. Net::SCP raises an exception when
       # the directory it's trying ot create already exists, so we have rescue it
-      def create_remote_directories!
+      def create_remote_directories(ssh)
         path_parts = Array.new
         remote_path.split('/').each do |path_part|
           path_parts << path_part
-          connection.exec!("mkdir '#{ path_parts.join('/') }'")
+          ssh.exec!("mkdir '#{path_parts.join('/')}'")
         end
       end
 

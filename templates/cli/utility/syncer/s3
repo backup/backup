@@ -1,0 +1,15 @@
+  ##
+  # Amazon Simple Storage Service [Syncer]
+  #
+  sync_with S3 do |s3|
+    s3.access_key_id     = "my_access_key_id"
+    s3.secret_access_key = "my_secret_access_key"
+    s3.bucket            = "my-bucket"
+    s3.path              = "/backups"
+    s3.mirror            = true
+
+    s3.directories do |directory|
+      directory.add "/path/to/directory/to/sync"
+      directory.add "/path/to/other/directory/to/sync"
+    end
+  end

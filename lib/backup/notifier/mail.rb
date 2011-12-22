@@ -3,7 +3,6 @@
 ##
 # Only load the Mail gem and Erb library when using Mail notifications
 Backup::Dependency.load('mail')
-require 'erb'
 
 module Backup
   module Notifier
@@ -11,11 +10,26 @@ module Backup
 
       ##
       # Container for the Mail object
-      attr_accessor :mail
+      attr_reader :mail
 
       ##
-      # Container for the Model object
-      attr_accessor :model
+      # Mail delivery method to be used by the Mail gem.
+      # Supported methods:
+      #
+      # `:smtp` [::Mail::SMTP] (default)
+      # : Settings used only by this method:
+      # : `address`, `port`, `domain`, `user_name`, `password`
+      # : `authentication`, `enable_starttls_auto`, `openssl_verify_mode`
+      #
+      # `:sendmail` [::Mail::Sendmail]
+      # : Settings used only by this method:
+      # : `sendmail`, `sendmail_args`
+      #
+      # `:file` [::Mail::FileDelivery]
+      # : Settings used only by this method:
+      # : `mail_folder`
+      #
+      attr_accessor :delivery_method
 
       ##
       # Sender and Receiver email addresses
@@ -62,51 +76,69 @@ module Backup
       attr_accessor :openssl_verify_mode
 
       ##
-      # Instantiates a new Backup::Notifier::Mail object
-      def initialize(&block)
-        load_defaults!
+      # When using the `:sendmail` `delivery_method` option,
+      # this may be used to specify the absolute path to `sendmail` (if needed)
+      # Example: '/usr/sbin/sendmail'
+      attr_accessor :sendmail
 
-        instance_eval(&block) if block_given?
+      ##
+      # Optional arguments to pass to `sendmail`
+      # Note that this will override the defaults set by the Mail gem (currently: '-i -t')
+      # So, if set here, be sure to set all the arguments you require.
+      # Example: '-i -t -X/tmp/traffic.log'
+      attr_accessor :sendmail_args
 
-        set_defaults!
-      end
+      ##
+      # Folder where mail will be kept when using the `:file` `delivery_method` option.
+      # Default location is '$HOME/Backup/emails'
+      # Example: '/tmp/test-mails'
+      attr_accessor :mail_folder
 
       ##
       # Performs the notification
-      # Takes an exception object that might've been created if an exception occurred.
-      # If this is the case it'll invoke notify_failure!(exception), otherwise, if no
-      # error was raised, it'll go ahead and notify_success!
-      #
-      # If'll only perform these if on_success is true or on_failure is true
+      # Extends from super class. Must call super(model, exception).
+      # If any pre-configuration needs to be done, put it above the super(model, exception)
       def perform!(model, exception = false)
-        @model = model
-
-        if notify_on_success? and exception.eql?(false)
-          log!
-          notify_success!
-        elsif notify_on_failure? and not exception.eql?(false)
-          log!
-          notify_failure!(exception)
-        end
+        super(model, exception)
       end
 
     private
 
       ##
-      # Sends an email informing the user that the backup operation
-      # proceeded without any errors
-      def notify_success!
-        mail[:subject] = "[Backup::Succeeded] #{model.label} (#{model.trigger})"
-        mail[:body]    = read_template('notify_success', Binder.bind(:model => @model))
-        mail.deliver!
-      end
-
-      ##
-      # Sends an email informing the user that the backup operation
-      # raised an exception and will send the user the error details
-      def notify_failure!(exception)
-        mail[:subject] = "[Backup::Failed] #{model.label} (#{model.trigger})"
-        mail[:body]    = read_template('notify_failure', Binder.bind(:model => @model, :exception => exception))
+      # Notify the user of the backup operation results.
+      # `status` indicates one of the following:
+      #
+      # `:success`
+      # : The backup completed successfully.
+      # : Notification will be sent if `on_success` was set to `true`
+      #
+      # `:warning`
+      # : The backup completed successfully, but warnings were logged
+      # : Notification will be sent, including a copy of the current
+      # : backup log, if `on_warning` was set to `true`
+      #
+      # `:failure`
+      # : The backup operation failed.
+      # : Notification will be sent, including the Exception which caused
+      # : the failure, the Exception's backtrace, a copy of the current
+      # : backup log and other information if `on_failure` was set to `true`
+      #
+      def notify!(status)
+        name, send_log =
+            case status
+            when :success then [ 'Success', false ]
+            when :warning then [ 'Warning', true  ]
+            when :failure then [ 'Failure', true  ]
+            end
+        mail.subject = "[Backup::%s] #{model.label} (#{model.trigger})" % name
+        mail.body    = template.result('notifier/mail/%s.erb' % status.to_s)
+        if send_log
+          mail.convert_to_multipart
+          mail.attachments["#{model.time}.#{model.trigger}.log"] = {
+            :mime_type => 'text/plain;',
+            :content   => Logger.messages.join("\n")
+          }
+        end
         mail.deliver!
       end
 
@@ -114,32 +146,39 @@ module Backup
       # Configures the Mail gem by setting the defaults.
       # Instantiates the @mail object with the @to and @from attributes
       def set_defaults!
-        defaults = {
-          :address              => @address,
-          :port                 => @port,
-          :domain               => @domain,
-          :user_name            => @user_name,
-          :password             => @password,
-          :authentication       => @authentication,
-          :enable_starttls_auto => @enable_starttls_auto,
-          :openssl_verify_mode  => @openssl_verify_mode
-        }
+        @delivery_method = %w{ smtp sendmail file test }.
+            index(@delivery_method.to_s) ? @delivery_method.to_s : 'smtp'
 
+        options =
+            case @delivery_method
+            when 'smtp'
+              { :address              => @address,
+                :port                 => @port,
+                :domain               => @domain,
+                :user_name            => @user_name,
+                :password             => @password,
+                :authentication       => @authentication,
+                :enable_starttls_auto => @enable_starttls_auto,
+                :openssl_verify_mode  => @openssl_verify_mode }
+            when 'sendmail'
+              opts = {}
+              opts.merge!(:location  => File.expand_path(@sendmail)) if @sendmail
+              opts.merge!(:arguments => @sendmail_args) if @sendmail_args
+              opts
+            when 'file'
+              @mail_folder ||= "#{ENV['HOME']}/Backup/emails"
+              { :location => File.expand_path(@mail_folder) }
+            when 'test' then {}
+            end
+
+        method = @delivery_method.to_sym
         ::Mail.defaults do
-          delivery_method :smtp, defaults
+          delivery_method method, options
         end
 
-        @mail        = ::Mail.new
-        @mail[:from] = @from
-        @mail[:to]   = @to
-      end
-
-      ##
-      # Returns the path to the templates, appended by the passed in argument
-      def read_template(file, binder)
-        ERB.new(File.read(
-          File.join( File.dirname(__FILE__), "templates", "#{file}.erb" )
-        )).result(binder)
+        @mail      = ::Mail.new
+        @mail.from = @from
+        @mail.to   = @to
       end
 
     end

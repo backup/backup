@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Database::MySQL do
 
@@ -47,11 +47,6 @@ describe Backup::Database::MySQL do
       db.skip_tables.should == []
       db.only_tables.should == []
       db.additional_options.should == []
-    end
-
-    it 'should ensure the directory is available' do
-      Backup::Database::MySQL.any_instance.expects(:mkdir).with("#{Backup::TMP_PATH}/myapp/MySQL")
-      Backup::Database::MySQL.new {}
     end
   end
 
@@ -136,13 +131,19 @@ describe Backup::Database::MySQL do
       db.stubs(:run)
     end
 
+    it 'should ensure the directory is available' do
+      db.expects(:mkdir).with(File.join(Backup::TMP_PATH, "myapp", "MySQL"))
+      db.perform!
+    end
+
     it 'should run the mysqldump command and dump it to the specified path' do
       db.expects(:run).with("#{db.mysqldump} > '#{Backup::TMP_PATH}/myapp/MySQL/mydatabase.sql'")
       db.perform!
     end
 
     it do
-      Backup::Logger.expects(:message).with("Backup::Database::MySQL started dumping and archiving \"mydatabase\".")
+      Backup::Logger.expects(:message).
+          with("Backup::Database::MySQL started dumping and archiving 'mydatabase'.")
       db.perform!
     end
   end

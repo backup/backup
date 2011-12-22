@@ -2,7 +2,7 @@
 
 module Backup
   class Archive
-    include Backup::CLI
+    include Backup::CLI::Helpers
 
     ##
     # Stores the name of the archive
@@ -23,10 +23,10 @@ module Backup
     ##
     # Takes the name of the archive and the configuration block
     def initialize(name, &block)
-      @name         = name.to_sym
-      @paths        = Array.new
-      @excludes     = Array.new
-      @archive_path = File.join(TMP_PATH, TRIGGER, 'archive')
+      @name     = name.to_sym
+      @paths    = Array.new
+      @excludes = Array.new
+      @tar_options = ''
 
       instance_eval(&block)
     end
@@ -34,22 +34,34 @@ module Backup
     ##
     # Adds new paths to the @paths instance variable array
     def add(path)
-      @paths << path
+      @paths << File.expand_path(path)
     end
 
     ##
     # Adds new paths to the @excludes instance variable array
     def exclude(path)
-      @excludes << path
+      @excludes << File.expand_path(path)
+    end
+
+    ##
+    # Adds the given String of +options+ to the `tar` command.
+    # e.g. '-h --xattrs'
+    def tar_options(options)
+      @tar_options = options
     end
 
     ##
     # Archives all the provided paths in to a single .tar file
     # and places that .tar file in the folder which later will be packaged
     def perform!
+      @archive_path = File.join(TMP_PATH, TRIGGER, 'archive')
       mkdir(archive_path)
-      Logger.message("#{ self.class } started packaging and archiving #{ paths.map { |path| "\"#{path}\""}.join(", ") }.")
-      run("#{ utility(:tar) } -c -f '#{ File.join(archive_path, "#{name}.tar") }' #{ paths_to_exclude } #{ paths_to_package } 2> /dev/null")
+
+      Logger.message "#{ self.class } started packaging and archiving:\n" +
+          paths.map {|path| "  #{path}" }.join("\n")
+
+      run("#{ utility(:tar) } #{ @tar_options } -cf '#{ File.join(archive_path, "#{name}.tar") }' " +
+          "#{ paths_to_exclude } #{ paths_to_package }", :ignore_exit_codes => [1])
     end
 
   private

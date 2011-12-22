@@ -1,0 +1,7 @@
+  ##
+  # Pbzip2 [Compressor]
+  #
+  compress_with Pbzip2 do |compression|
+    compression.best = true
+    compression.fast = false
+  end

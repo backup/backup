@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Storage::Ninefold do
 
@@ -39,21 +39,30 @@ describe Backup::Storage::Ninefold do
     ninefold.keep.should           == 500                # comes from the default configuration
   end
 
-  describe '#connection' do
-    it 'should establish a connection to Ninefold using the provided credentials' do
-      Fog::Storage.expects(:new).with({
-        :provider                => 'Ninefold',
-        :ninefold_storage_token  => 'my_storage_token',
-        :ninefold_storage_secret => 'my_storage_secret'
-      })
-
-      ninefold.send(:connection)
-    end
-  end
-
   describe '#provider' do
     it 'should be Ninefold' do
       ninefold.provider.should == 'Ninefold'
+    end
+  end
+
+  describe '#perform' do
+    it 'should invoke transfer! and cycle!' do
+      ninefold.expects(:transfer!)
+      ninefold.expects(:cycle!)
+      ninefold.perform!
+    end
+  end
+
+  describe '#connection' do
+    it 'should establish and re-use a connection to Ninefold' do
+      Fog::Storage.expects(:new).once.with({
+        :provider                => 'Ninefold',
+        :ninefold_storage_token  => 'my_storage_token',
+        :ninefold_storage_secret => 'my_storage_secret'
+      }).returns(true)
+
+      ninefold.send(:connection)
+      ninefold.send(:connection)
     end
   end
 
@@ -64,7 +73,7 @@ describe Backup::Storage::Ninefold do
     let(:files)       { mock('Fog::Storage::Ninefold::Files') }
 
     before do
-      Fog::Storage.stubs(:new).returns(connection)
+      Fog::Storage.expects(:new).once.returns(connection)
       connection.stubs(:directories).returns(directories)
       directory.stubs(:files).returns(files)
     end
@@ -74,11 +83,10 @@ describe Backup::Storage::Ninefold do
         Backup::Model.new('blah', 'blah') {}
         file = mock("Backup::Storage::Ninefold::File")
         File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
-        ninefold.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
 
-        directories.expects(:get).with('backups/myapp').returns(directory)
+        directories.expects(:get).with("backups/myapp/#{ Backup::TIME }").returns(directory)
         files.expects(:create) do |options|
-          options[:key].should == "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"
+          options[:key].should == "#{ Backup::TRIGGER }.tar"
           options[:body].should == file
         end
 
@@ -91,15 +99,14 @@ describe Backup::Storage::Ninefold do
         Backup::Model.new('blah', 'blah') {}
         file = mock("Backup::Storage::Ninefold::File")
         File.expects(:open).with("#{File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER}")}.tar").returns(file)
-        ninefold.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").twice
 
-        directories.expects(:get).with('backups/myapp').returns(nil)
+        directories.expects(:get).with("backups/myapp/#{ Backup::TIME }").returns(nil)
         directories.expects(:create) { |options|
-          options[:key].should == 'backups/myapp'
+          options[:key].should == "backups/myapp/#{ Backup::TIME }"
         }.returns(directory)
 
         files.expects(:create) do |options|
-          options[:key].should == "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"
+          options[:key].should == "#{ Backup::TRIGGER }.tar"
           options[:body].should == file
         end
 
@@ -116,27 +123,61 @@ describe Backup::Storage::Ninefold do
     let(:file)        { mock('Fog::Storage::Ninefold::File') }
 
     before do
-      Fog::Storage.stubs(:new).returns(connection)
+      Fog::Storage.expects(:new).once.returns(connection)
       connection.stubs(:directories).returns(directories)
       directory.stubs(:files).returns(files)
     end
 
     it 'should remove the file from the bucket' do
-      ninefold.expects(:remote_file).returns("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
-
-      directories.expects(:get).with('backups/myapp').returns(directory)
-      files.expects(:get).with("#{ Backup::TIME }.#{ Backup::TRIGGER }.tar").returns(file)
+      directories.expects(:get).
+          with("backups/myapp/#{ Backup::TIME }").
+          returns(directory)
+      files.expects(:get).
+          with("#{ Backup::TRIGGER }.tar").
+          returns(file)
       file.expects(:destroy)
+      directory.expects(:destroy)
 
       ninefold.send(:remove!)
     end
-  end
 
-  describe '#perform' do
-    it 'should invoke transfer! and cycle!' do
-      ninefold.expects(:transfer!)
-      ninefold.expects(:cycle!)
-      ninefold.perform!
+    it 'should raise an error if remote_path does not exist' do
+      directories.expects(:get).
+          with("backups/myapp/#{ Backup::TIME }").
+          returns(nil)
+      files.expects(:get).never
+      file.expects(:destroy).never
+      directory.expects(:destroy).never
+
+      expect do
+        ninefold.send(:remove!)
+      end.to raise_error(
+        Backup::Errors::Storage::Ninefold::NotFoundError,
+        "Storage::Ninefold::NotFoundError: " +
+        "Directory at 'backups/myapp/#{Backup::TIME}' not found"
+      )
+
+    end
+
+    it 'should raise an error if remote_file does not exist' do
+      directories.expects(:get).
+          with("backups/myapp/#{ Backup::TIME }").
+          returns(directory)
+      files.expects(:get).
+          with("#{ Backup::TRIGGER }.tar").
+          returns(nil)
+      file.expects(:destroy).never
+      directory.expects(:destroy).never
+
+      expect do
+        ninefold.send(:remove!)
+      end.to raise_error(
+        Backup::Errors::Storage::Ninefold::NotFoundError,
+        "Storage::Ninefold::NotFoundError: " +
+        "'#{Backup::TRIGGER}.tar' not found in 'backups/myapp/#{Backup::TIME}'"
+      )
+
     end
   end
+
 end

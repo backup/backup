@@ -2,7 +2,7 @@
 
 module Backup
   class Model
-    include Backup::CLI
+    include Backup::CLI::Helpers
 
     ##
     # The trigger is used as an identifier for
@@ -42,6 +42,10 @@ module Backup
     attr_accessor :syncers
 
     ##
+    # The chunk_size attribute holds the size of the chunks in megabytes
+    attr_accessor :chunk_size
+
+    ##
     # The time when the backup initiated (in format: 2011.02.20.03.29.59)
     attr_accessor :time
 
@@ -64,10 +68,20 @@ module Backup
       attr_accessor :current
 
       ##
+      # Contains an array of chunk suffixes for a given file
+      attr_accessor :chunk_suffixes
+
+      ##
       # Returns the full path to the current file (including the current extension).
       # To just return the filename and extension without the path, use File.basename(Backup::Model.file)
       def file
         File.join(TMP_PATH, "#{ TIME }.#{ TRIGGER }.#{ Backup::Model.extension }")
+      end
+
+      ##
+      # Returns the @chunk_suffixes variable, sets it to an emtpy array if nil
+      def chunk_suffixes
+        @chunk_suffixes ||= Array.new
       end
 
       ##
@@ -99,13 +113,9 @@ module Backup
       @label       = label
       @time        = TIME
 
-      @databases   = Array.new
-      @archives    = Array.new
-      @encryptors  = Array.new
-      @compressors = Array.new
-      @storages    = Array.new
-      @notifiers   = Array.new
-      @syncers     = Array.new
+      procedure_instance_variables.each do |variable|
+        instance_variable_set(variable, Array.new)
+      end
 
       instance_eval(&block)
       Backup::Model.all << self
@@ -157,10 +167,10 @@ module Backup
     ##
     # Adds a storage method to the array of storage
     # methods to use during the backup process
-    def store_with(storage, &block)
+    def store_with(storage, storage_id = nil, &block)
       @storages << Backup::Storage.const_get(
         last_constant(storage)
-      ).new(&block)
+      ).new(storage_id, &block)
     end
 
     ##
@@ -173,6 +183,20 @@ module Backup
     end
 
     ##
+    # Adds a method that allows the user to set the @chunk_size.
+    # The chunk_size (in megabytes) will later determine in how many chunks the
+    # backup needs to be split
+    def split_into_chunks_of(chunk_size = nil)
+      @chunk_size = chunk_size
+    end
+
+    ##
+    # Returns the path to the current file (including proper extension)
+    def file
+      Backup::Model.file
+    end
+
+    ##
     # Performs the backup process
     ##
     # [Databases]
@@ -182,7 +206,7 @@ module Backup
     # Runs all (if any) archive objects to package all their
     # paths in to a single tar file and places it in the backup folder
     ##
-    # [Package]
+    # [Packaging]
     # After all the database dumps and archives are placed inside
     # the folder, it'll make a single .tar package (archive) out of it
     ##
@@ -191,6 +215,9 @@ module Backup
     ##
     # [Compression]
     # Optionally compresses the packaged file with one or more compressors
+    ##
+    # [Splitting]
+    # Optionally splits the backup file in to multiple smaller chunks before transferring them
     ##
     # [Storages]
     # Runs all (if any) storage objects to store the backups to remote locations
@@ -212,24 +239,49 @@ module Backup
     # breaks the process, it'll always ensure it removes the temporary files regardless
     # to avoid mass consumption of storage space on the machine
     def perform!
-      begin
-        if databases.any? or archives.any?
-          databases.each   { |d| d.perform! }
-          archives.each    { |a| a.perform! }
-          package!
-          compressors.each { |c| c.perform! }
-          encryptors.each  { |e| e.perform! }
-          storages.each    { |s| s.perform! }
-          clean!
+      if databases.any? or archives.any?
+        procedures.each do |procedure|
+          (procedure.call; next) if procedure.is_a?(Proc)
+          procedure.each(&:perform!)
         end
-
-        syncers.each   { |s| s.perform!       }
-        notifiers.each { |n| n.perform!(self) }
-      rescue => exception
-        clean!
-        notifiers.each   { |n| n.perform!(self, exception) }
-        show_exception!(exception)
       end
+
+      syncers.each(&:perform!)
+      notifiers.each { |n| n.perform!(self) }
+
+    rescue Exception => err
+      fatal = !err.is_a?(StandardError)
+
+      Logger.error Backup::Errors::ModelError.wrap(err, <<-EOS)
+        Backup for #{label} (#{trigger}) Failed!
+        An Error occured which has caused this Backup to abort before completion.
+        Please review the Log for this Backup to determine if steps need to be taken
+        to clean up, based on the point at which the failure occured.
+      EOS
+      Logger.error "\nBacktrace:\n" + err.backtrace.join("\n\s\s") + "\n\n"
+
+      if fatal
+        Logger.error Backup::Errors::ModelError.new(<<-EOS)
+          This Error was Fatal and Backup will now exit.
+          If you have other Backup jobs (triggers) configured to run,
+          they will not be processed.
+        EOS
+      else
+        Logger.message Backup::Errors::ModelError.new(<<-EOS)
+          If you have other Backup jobs (triggers) configured to run,
+          Backup will now attempt to continue...
+        EOS
+      end
+
+      notifiers.each do |n|
+        begin
+          n.perform!(self, err)
+        rescue Exception; end
+      end
+
+      exit(1) if fatal
+    ensure
+      clean!
     end
 
   private
@@ -239,35 +291,42 @@ module Backup
     # these files will be bundled in to a .tar archive (uncompressed) so it
     # becomes a single (transferrable) packaged file.
     def package!
-      Logger.message "Backup started packaging everything to a single archive file."
-      run(%|#{ utility(:tar) } -c -f '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.tar") }' -C '#{ TMP_PATH }' '#{ TRIGGER }'|)
+      Backup::Packager.new(self).package!
+    end
+
+    ##
+    # Create a new instance of Backup::Splitter,
+    # passing it the current model instance and runs it.
+    def split!
+      Backup::Splitter.new(self).split!
     end
 
     ##
     # Cleans up the temporary files that were created after the backup process finishes
     def clean!
-      Logger.message "Backup started cleaning up the temporary files."
-      run("#{ utility(:rm) } -rf '#{ File.join(TMP_PATH, TRIGGER) }' '#{ File.join(TMP_PATH, "#{TIME}.#{TRIGGER}.#{Backup::Model.extension}") }'")
+      Backup::Cleaner.new(self).clean!
+    end
+
+    ##
+    # Returns an array of procedures
+    def procedures
+      Array.new([
+        databases, archives, lambda { package! }, compressors,
+        encryptors, lambda { split! }, storages
+      ])
+    end
+
+    ##
+    # Returns an Array of the names (String) of the procedure instance variables
+    def procedure_instance_variables
+      [:@databases, :@archives, :@encryptors, :@compressors, :@storages, :@notifiers, :@syncers]
     end
 
     ##
     # Returns the string representation of the last value of a nested constant
-    # example:
-    #  Backup::Model::MySQL
-    # becomes and returns:
-    #  "MySQL"
+    # example: last_constant(Backup::Model::MySQL) becomes and returns "MySQL"
     def last_constant(constant)
       constant.to_s.split("::").last
-    end
-
-    ##
-    # Formats an exception
-    def show_exception!(exception)
-      Logger.normal "=" * 75 + "\nException that got raised:\n#{exception.class} - #{exception} \n" + "=" * 75 + "\n" + exception.backtrace.join("\n")
-      Logger.normal "=" * 75 + "\n\nYou are running Backup version \"#{Backup::Version.current}\" and Ruby version \"#{RUBY_VERSION} (patchlevel #{RUBY_PATCHLEVEL})\" on platform \"#{RUBY_PLATFORM}\".\n"
-      Logger.normal "If you've setup a \"Notification\" in your configuration file, the above error will have been sent."
-      #Notifies the shell an exception occured.
-      exit 1 
     end
 
   end

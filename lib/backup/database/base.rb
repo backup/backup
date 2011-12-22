@@ -3,7 +3,7 @@
 module Backup
   module Database
     class Base
-      include Backup::CLI
+      include Backup::CLI::Helpers
       include Backup::Configuration::Helpers
 
       ##
@@ -16,6 +16,14 @@ module Backup
       attr_accessor :utility_path
 
       ##
+      # Super method for all child (database) objects. Every database object's #perform!
+      # method should call #super before anything else to prepare
+      def perform!
+        prepare!
+        log!
+      end
+
+      ##
       # Defines the @dump_path and ensures it exists by creating it
       def prepare!
         @dump_path = File.join(TMP_PATH, TRIGGER, self.class.name.split('::').last)
@@ -26,7 +34,7 @@ module Backup
       # Logs a message to the console and log file to inform
       # the client that Backup is dumping the database
       def log!
-        Logger.message("#{ self.class } started dumping and archiving \"#{ name }\".")
+        Logger.message "#{self.class} started dumping and archiving '#{ name }'."
       end
     end
   end

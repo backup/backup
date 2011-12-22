@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Database::PostgreSQL do
 
@@ -63,11 +63,6 @@ describe Backup::Database::PostgreSQL do
 
       db.username_options.should == ''
       db.password_options.should == ''
-    end
-
-    it 'should ensure the directory is available' do
-      Backup::Database::PostgreSQL.any_instance.expects(:mkdir).with("#{Backup::TMP_PATH}/myapp/PostgreSQL")
-      Backup::Database::PostgreSQL.new {}
     end
   end
 
@@ -171,13 +166,19 @@ describe Backup::Database::PostgreSQL do
       db.stubs(:run)
     end
 
+    it 'should ensure the directory is available' do
+      db.expects(:mkdir).with(File.join(Backup::TMP_PATH, "myapp", "PostgreSQL"))
+      db.perform!
+    end
+
     it 'should run the pg_dump command and dump it to the specified path' do
       db.expects(:run).with("#{db.pgdump} > '#{Backup::TMP_PATH}/myapp/PostgreSQL/mydatabase.sql'")
       db.perform!
     end
 
     it do
-      Backup::Logger.expects(:message).with("Backup::Database::PostgreSQL started dumping and archiving \"mydatabase\".")
+      Backup::Logger.expects(:message).
+          with("Backup::Database::PostgreSQL started dumping and archiving 'mydatabase'.")
       db.perform!
     end
   end

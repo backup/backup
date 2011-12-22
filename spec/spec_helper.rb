@@ -1,11 +1,17 @@
 # encoding: utf-8
 
 ##
+# Use Bundler
+require 'rubygems' if RUBY_VERSION < '1.9'
+require 'bundler/setup'
+
+##
 # Load Backup
-require File.expand_path( '../../lib/backup', __FILE__ )
+require 'backup'
 
 ##
 # Use Mocha to mock with RSpec
+require 'rspec'
 RSpec.configure do |config|
   config.mock_with :mocha
   config.before(:each) do
@@ -26,5 +32,5 @@ module Backup
 end
 
 unless @_put_ruby_version
-  puts @_put_ruby_version = "\n\nRuby version: #{ENV['rvm_ruby_string']}\n\n"
+  puts @_put_ruby_version = "\n\nRuby version: #{RUBY_DESCRIPTION}\n\n"
 end

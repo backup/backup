@@ -67,7 +67,7 @@ module Backup
       def perform!
         Logger.message("#{ self.class } started syncing #{ directories }.")
         Logger.silent(
-          run("#{ utility(:rsync) } -vhP #{ options } #{ directories } '#{ username }@#{ ip }:#{ path }'")
+          run("#{ utility(:rsync) } #{ options } #{ directories } '#{ username }@#{ ip }:#{ path }'")
         )
 
         remove_password_file!

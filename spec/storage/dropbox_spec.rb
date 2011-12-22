@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Storage::Dropbox do
 
@@ -54,28 +54,28 @@ describe Backup::Storage::Dropbox do
   end
 
   describe '#connection' do
-    context "when the session cache has not yet been written" do
-      before do
-        db.stubs(:gets)
-      end
+    before do
+      db.stubs(:gets)
+    end
 
+    context "when the session cache has not yet been written" do
       it do
         session = mock("Dropbox::Session")
         Dropbox::Session.expects(:new).with('my_api_key', 'my_secret').returns(session)
         session.expects(:mode=).with(:dropbox)
         session.expects(:authorize)
-        session.expects(:authorize_url)
         db.expects(:cache_exists?).returns(false)
         db.expects(:write_cache!).with(session)
+
+        template = Backup::Template.new(db.send(:binding))
+        Backup::Template.expects(:new).returns(template)
+
+        template.expects(:render).times(3)
         db.send(:connection)
       end
     end
 
     context "when the session cache has already been written" do
-      before do
-        db.stubs(:gets)
-      end
-
       it "should load the session from cache, instead of creating a new one" do
         db.expects(:cache_exists?).returns(true)
         File.expects(:read).with("#{ENV['HOME']}/Backup/.cache/my_api_keymy_secret").returns("foo")
@@ -107,14 +107,18 @@ describe Backup::Storage::Dropbox do
     end
 
     it do
-      Backup::Logger.expects(:message).with("Backup::Storage::Dropbox started transferring \"#{ Backup::TIME }.#{ Backup::TRIGGER }.tar\".")
+      Backup::Logger.expects(:message).with(
+        "Storage::Dropbox started transferring " +
+        "'#{ Backup::TIME }.#{ Backup::TRIGGER }.tar'."
+      )
       db.send(:transfer!)
     end
 
     it do
       connection.expects(:upload).with(
         File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"),
-        File.join('backups', Backup::TRIGGER),
+        File.join('backups', Backup::TRIGGER, Backup::TIME),
+        :as      => "#{ Backup::TRIGGER }.tar",
         :timeout => db.timeout
       )
 
@@ -125,7 +129,7 @@ describe Backup::Storage::Dropbox do
   describe '#remove!' do
     it do
       connection.expects(:delete).with(
-        File.join('backups', Backup::TRIGGER, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+        File.join('backups', Backup::TRIGGER, Backup::TIME)
       )
 
       db.send(:remove!)

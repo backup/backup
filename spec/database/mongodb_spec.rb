@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Database::MongoDB do
 
@@ -43,11 +43,6 @@ describe Backup::Database::MongoDB do
 
       db.only_collections.should   == []
       db.additional_options.should == ""
-    end
-
-    it 'should ensure the directory is available' do
-      Backup::Database::MongoDB.any_instance.expects(:mkdir).with("#{Backup::TMP_PATH}/myapp/MongoDB")
-      Backup::Database::MongoDB.new {}
     end
   end
 
@@ -101,6 +96,7 @@ describe Backup::Database::MongoDB do
   describe '#mongodump_string' do
     it 'should return the full mongodump string' do
       db.expects(:utility).with(:mongodump).returns('mongodump')
+      db.prepare!
       db.mongodump.should ==
       "mongodump --db='mydatabase' --username='someuser' --password='secret' " +
       "--host='localhost' --port='123' --ipv6 --query --out='#{ File.join(Backup::TMP_PATH, Backup::TRIGGER, 'MongoDB') }'"
@@ -112,6 +108,11 @@ describe Backup::Database::MongoDB do
       db.stubs(:utility).returns('mongodump')
       db.stubs(:mkdir)
       db.stubs(:run)
+    end
+
+    it 'should ensure the directory is available' do
+      db.expects(:mkdir).with(File.join(Backup::TMP_PATH, "myapp", "MongoDB"))
+      db.perform!
     end
 
     it 'should run the mongodump command and dump all collections' do
@@ -173,8 +174,34 @@ describe Backup::Database::MongoDB do
     end
 
     it do
-      Backup::Logger.expects(:message).with("Backup::Database::MongoDB started dumping and archiving \"mydatabase\".")
+      Backup::Logger.expects(:message).
+          with("Backup::Database::MongoDB started dumping and archiving 'mydatabase'.")
       db.perform!
+    end
+  end
+
+  describe "#mongo_uri" do
+    before do
+      db.host     = "flame.mongohq.com"
+      db.port     = 12345
+      db.username = "sample_username"
+      db.password = "sample_password"
+      db.ipv6     = nil
+    end
+
+    it "should return URI without database" do
+      db.name = nil
+      db.mongo_uri.should == "flame.mongohq.com:12345 --username='sample_username' --password='sample_password'"
+    end
+
+    it "should return URI without database" do
+      db.name = ""
+      db.mongo_uri.should == "flame.mongohq.com:12345 --username='sample_username' --password='sample_password'"
+    end
+
+    it "should return URI without database" do
+      db.name = "sample_db"
+      db.mongo_uri.should == "flame.mongohq.com:12345/sample_db --username='sample_username' --password='sample_password'"
     end
   end
 end

@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Database::Base do
 
@@ -25,6 +25,15 @@ describe Backup::Database::Base do
   it 'should ignore the utility_path when not defined' do
     db = Backup::Database::Base.new
     db.utility(:my_database_util).should == :my_database_util
+  end
+
+  describe '#perform!' do
+    it 'should invoke prepare! and log!' do
+      db.expects(:prepare!)
+      db.expects(:log!)
+
+      db.perform!
+    end
   end
 
 end

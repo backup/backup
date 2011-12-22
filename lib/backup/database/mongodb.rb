@@ -43,7 +43,6 @@ module Backup
         @lock               ||= false
 
         instance_eval(&block)
-        prepare!
       end
 
       ##
@@ -112,20 +111,18 @@ module Backup
       # collections to dump, it'll loop through the array of collections and invoke the
       # 'mongodump' command once per collection
       def perform!
-        log!
+        super
 
-        begin
-          lock_database if @lock.eql?(true)
-          if collections_to_dump.is_a?(Array) and not collections_to_dump.empty?
-            specific_collection_dump!
-          else
-            dump!
-          end
-          unlock_database if @lock.eql?(true)
-        rescue => exception
-          unlock_database if @lock.eql?(true)
-          raise exception
+        lock_database if @lock.eql?(true)
+        if collections_to_dump.is_a?(Array) and not collections_to_dump.empty?
+          specific_collection_dump!
+        else
+          dump!
         end
+        unlock_database if @lock.eql?(true)
+      rescue => exception
+        unlock_database if @lock.eql?(true)
+        raise exception
       end
 
       ##
@@ -145,9 +142,9 @@ module Backup
       end
 
       ##
-      # Builds the full mongo string based on all attributes
-      def mongo_shell
-        [utility(:mongo), database, credential_options, connectivity_options, ipv6].join(' ')
+      # Builds a Mongo URI based on the provided attributes
+      def mongo_uri
+        ["#{ host }:#{ port }#{ name.is_a?(String) && !name.empty? ? "/#{ name }" : "" }", credential_options, ipv6].join(' ').strip
       end
 
       ##
@@ -157,7 +154,7 @@ module Backup
       def lock_database
         lock_command = <<-EOS
           echo 'use admin
-          db.runCommand({"fsync" : 1, "lock" : 1})' | #{mongo_shell}
+          db.runCommand({"fsync" : 1, "lock" : 1})' | #{ "#{ utility(:mongo) } #{ mongo_uri }" }
         EOS
 
         run(lock_command)
@@ -168,7 +165,7 @@ module Backup
       def unlock_database
         unlock_command = <<-EOS
           echo 'use admin
-          db.$cmd.sys.unlock.findOne()' | #{mongo_shell}
+          db.$cmd.sys.unlock.findOne()' | #{ "#{ utility(:mongo) } #{ mongo_uri }" }
         EOS
 
         run(unlock_command)

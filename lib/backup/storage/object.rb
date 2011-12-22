@@ -11,8 +11,10 @@ module Backup
       ##
       # Instantiates a new Backup::Storage::Object and stores the
       # full path to the storage file (yaml) in the @storage_file attribute
-      def initialize(type)
-        @storage_file = File.join(DATA_PATH, TRIGGER, "#{type}.yml")
+      def initialize(type, storage_id)
+        suffix = storage_id.to_s.strip.gsub(/[\W\s]/, '_')
+        filename = suffix.empty? ? type : "#{type}-#{suffix}"
+        @storage_file = File.join(DATA_PATH, TRIGGER, "#{filename}.yml")
       end
 
       ##
@@ -24,11 +26,11 @@ module Backup
       # descending. The newest backup storage object comes in Backup::Storage::Object.load[0]
       # and the oldest in Backup::Storage::Object.load[-1]
       def load
-        if File.exist?(storage_file)
-          YAML.load_file(storage_file).sort { |a,b| b.time <=> a.time }
-        else
-          []
+        objects = []
+        if File.exist?(storage_file) and not File.zero?(storage_file)
+          objects = YAML.load_file(storage_file).sort { |a,b| b.time <=> a.time }
         end
+        objects
       end
 
       ##
