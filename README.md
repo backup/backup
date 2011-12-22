@@ -24,7 +24,7 @@ Core Contributor
 Installation
 ------------
 
-To get the latest stable version
+To get the latest stable version (3.0.20)
 
     gem install backup
 
@@ -264,7 +264,7 @@ Now it'll run the backup, it's as simple as that.
 
 ### Automatic backups
 
-Since Backup is a simple command line utility, you should write a crontask to invoke it periodically. I recommend you use [Whenever](https://github.com/javan/whenever) to manage your crontab. It'll allow you to write to the crontab in pure Ruby, it provides an elegant DSL to do so, for example:
+Since Backup is an easy-to-use command line utility, you should write a crontask to invoke it periodically. I recommend using [Whenever](https://github.com/javan/whenever) to manage your crontab. It'll allow you to write to the crontab using pure Ruby, and it provides an elegant DSL to do so. Here's an example:
 
 ``` rb
 every 6.hours do
@@ -272,7 +272,7 @@ every 6.hours do
 end
 ```
 
-With this in place, run `whenever --update-crontab backup` to write this Ruby syntax to the crontab in cron-syntax. The operating system will now invoke `backup perform --trigger sample_backup` every 6 hours. Check out the Whenever project page for more information.
+With this in place, run `whenever --update-crontab backup` to write the equivalent of the above Ruby syntax to the crontab in cron-syntax. Cron will now invoke `backup perform --trigger sample_backup` every 6 hours. Check out the Whenever project page for more information.
 
 Documentation
 -------------
