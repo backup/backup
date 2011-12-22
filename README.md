@@ -87,6 +87,7 @@ Storage Features
   - Remote Servers *(Only Protocols: RSync)*
 
 [Storage Wiki Page](https://github.com/meskyanichi/backup/wiki/Storages)
+
 [Splitter Wiki Page](https://github.com/meskyanichi/backup/wiki/Splitter)
 
 Syncers
