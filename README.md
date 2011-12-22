@@ -15,6 +15,12 @@ Author
 Drop me a message for any questions, suggestions, requests, bugs or submit them to the [issue log](https://github.com/meskyanichi/backup/issues).
 
 
+Core Contributor
+----------------
+
+**[Brian Burns](https://github.com/burns)**
+
+
 Installation
 ------------
 
