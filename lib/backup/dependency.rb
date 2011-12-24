@@ -101,7 +101,7 @@ module Backup
           > gem install #{name} -v '#{all[name][:version]}'
           Please try again after installing the missing dependency.
         EOS
-        exit
+        exit 1
       end
     end
 
