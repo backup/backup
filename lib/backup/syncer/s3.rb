@@ -17,19 +17,15 @@ module Backup
       attr_writer :directories
 
       ##
-      # Flag to enable mirroring
+      # Flag to enable mirroring - currently ignored.
       attr_accessor :mirror
 
       ##
-      # Additional options for the s3sync cli
-      attr_accessor :additional_options
-
-      ##
       # Instantiates a new S3 Syncer object and sets the default configuration
-      # specified in the Backup::Configuration::Syncer::S3.
-      # Then it sets the object defaults if particular properties weren't set.
-      # Finally it'll evaluate the users configuration file and overwrite
-      # anything that's been defined
+      # specified in the Backup::Configuration::Syncer::S3. Then it sets the
+      # object defaults if particular properties weren't set. Finally it'll
+      # evaluate the users configuration file and overwrite anything that's
+      # been defined
       def initialize(&block)
         load_defaults!
 
@@ -42,20 +38,22 @@ module Backup
       end
 
       ##
-      # Sets the Amazon S3 credentials for S3Sync, performs the S3Sync
-      # operation, then unsets the credentials (back to nil values)
+      # Performs the Sync operation
       def perform!
-        set_environment_variables!
+        directories.each do |directory|
+          Logger.message("#{ self.class } started syncing '#{ directory }'.")
 
-        @directories.each do |directory|
-          Logger.message("#{ syncer_name } started syncing '#{ directory }'.")
-          Logger.silent(
-            run("#{ utility(:s3sync) } #{ options } " +
-                "'#{ File.expand_path(directory) }' '#{ bucket }:#{ dest_path }'")
-          )
+          hashes_for_directory(directory).each do |full_path, md5|
+            relative_path = full_path.gsub %r{^#{directory}},
+              directory.split('/').last
+            remote_path   = "#{path}/#{relative_path}"
+
+            bucket.files.create(
+              :key  => remote_path,
+              :body => File.open(full_path)
+            ) unless remote_hashes[remote_path] == md5
+          end
         end
-
-        unset_environment_variables!
       end
 
       ##
@@ -73,56 +71,28 @@ module Backup
 
       private
 
-      ##
-      # Return @path with preceeding '/' slash removed
-      def dest_path
-        @dest_path ||= @path.sub(/^\//, '')
+      def connection
+        @connection ||= Fog::Storage.new(
+          :provider              => 'AWS'
+          :aws_access_key_id     => access_key_id
+          :aws_secret_access_key => secret_access_key
+        )
       end
 
-      ##
-      # Returns all the specified S3Sync options,
-      # concatenated, ready for the CLI
-      def options
-        ([verbose_option, recursive_option, mirror_option] +
-          additional_options).compact.join("\s")
+      def bucket_object
+        @bucket_object ||= connection.directories.get(bucket) ||
+                           connection.directories.create(:key => bucket)
       end
 
-      ##
-      # Returns S3Sync syntax for enabling mirroring
-      def mirror_option
-        '--delete' if @mirror
-      end
 
-      ##
-      # Returns S3Sync syntax for syncing recursively
-      def recursive_option
-        '--recursive'
+      def hashes_for_directory(directory)
+        hashes = `find #{directory} -print0 | xargs -0 openssl md5 2> /dev/null`
+        hashes.split("\n").inject({}) do |hash, line|
+          path, md5 = *line.chomp.match(/^MD5\(([^\)]+)\)= (\w+)$/).captures
+          hash[path] = md5
+          hash
+        end
       end
-
-      ##
-      # Returns S3Sync syntax for making output verbose
-      def verbose_option
-        '--verbose'
-      end
-
-      ##
-      # In order for S3Sync to know what credentials to use, we have to set the
-      # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables, these
-      # evironment variables will be used by S3Sync
-      def set_environment_variables!
-        ENV['AWS_ACCESS_KEY_ID']     = access_key_id
-        ENV['AWS_SECRET_ACCESS_KEY'] = secret_access_key
-        ENV['AWS_CALLING_FORMAT']    = 'SUBDOMAIN'
-      end
-
-      ##
-      # Sets the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY back to nil
-      def unset_environment_variables!
-        ENV['AWS_ACCESS_KEY_ID']     = nil
-        ENV['AWS_SECRET_ACCESS_KEY'] = nil
-        ENV['AWS_CALLING_FORMAT']    = nil
-      end
-
     end
   end
 end
