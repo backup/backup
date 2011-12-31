@@ -1,5 +1,9 @@
 # encoding: utf-8
 
+##
+# Only load the Fog gem when the Backup::Syncer::S3 class is loaded
+Backup::Dependency.load('fog')
+
 module Backup
   module Syncer
     class S3 < Base
