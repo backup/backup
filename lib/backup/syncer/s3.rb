@@ -90,7 +90,7 @@ module Backup
 
       def bucket_object
         @bucket_object ||= connection.directories.get(bucket) ||
-                           connection.directories.create(:key => bucket)
+          connection.directories.create(:key => bucket, :location => region)
       end
 
       def hashes_for_directory(directory)
