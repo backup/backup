@@ -54,7 +54,7 @@ module Backup
           hashes_for_directory(directory).each do |full_path, md5|
             relative_path = full_path.gsub %r{^#{directory}},
               directory.split('/').last
-            remote_path   = "#{path}/#{relative_path}"
+            remote_path   = "#{path}/#{relative_path}".gsub(/^\//, '')
 
             bucket_object.files.create(
               :key  => remote_path,
