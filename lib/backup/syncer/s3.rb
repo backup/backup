@@ -56,7 +56,7 @@ module Backup
               directory.split('/').last
             remote_path   = "#{path}/#{relative_path}"
 
-            bucket.files.create(
+            bucket_object.files.create(
               :key  => remote_path,
               :body => File.open(full_path)
             ) unless remote_hashes[remote_path] == md5
@@ -93,7 +93,6 @@ module Backup
                            connection.directories.create(:key => bucket)
       end
 
-
       def hashes_for_directory(directory)
         hashes = `find #{directory} -print0 | xargs -0 openssl md5 2> /dev/null`
         hashes.split("\n").inject({}) do |hash, line|
@@ -101,6 +100,13 @@ module Backup
           hash[path] = md5
           hash
         end
+      end
+
+      def remote_hashes
+        @remote_hashes ||= bucket_object.files.inject({}) { |hash, file|
+          hash[file.key] = file.etag
+          hash
+        }
       end
     end
   end
