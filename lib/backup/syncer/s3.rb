@@ -17,6 +17,10 @@ module Backup
       attr_accessor :bucket, :path
 
       ##
+      # Region of the specified S3 bucket
+      attr_accessor :region
+
+      ##
       # Directories to sync
       attr_writer :directories
 
@@ -79,7 +83,8 @@ module Backup
         @connection ||= Fog::Storage.new(
           :provider              => 'AWS'
           :aws_access_key_id     => access_key_id
-          :aws_secret_access_key => secret_access_key
+          :aws_secret_access_key => secret_access_key,
+          :region                => region
         )
       end
 
