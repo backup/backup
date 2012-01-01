@@ -44,6 +44,8 @@ module Backup
           Logger.message("#{ self.class } started syncing '#{ directory }'.")
 
           hashes_for_directory(directory).each do |full_path, md5|
+            next unless File.exist?(full_path)
+
             relative_path = full_path.gsub %r{^#{directory}},
               directory.split('/').last
             remote_path   = "#{path}/#{relative_path}".gsub(/^\//, '')
