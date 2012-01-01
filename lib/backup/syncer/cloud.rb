@@ -1,44 +1,40 @@
 # encoding: utf-8
 
 ##
-# Only load the Fog gem when the Backup::Syncer::S3 class is loaded
+# Only load the Fog gem when the Backup::Syncer::Cloud class is loaded
 Backup::Dependency.load('fog')
 
 module Backup
   module Syncer
-    class S3 < Cloud
+    class Cloud < Base
       ##
-      # Amazon Simple Storage Service (S3) Credentials
-      attr_accessor :access_key_id, :secret_access_key
+      # Bucket/container name and path to sync to
+      attr_accessor :bucket, :path
 
-      ##
-      # Region of the specified S3 bucket
-      attr_accessor :region
-
-<<<<<<< HEAD
       ##
       # Directories to sync
-      attr_writer :directories
+      attr_accessor :directories
 
       ##
       # Flag to enable mirroring - currently ignored.
       attr_accessor :mirror
 
       ##
-      # Instantiates a new S3 Syncer object and sets the default configuration
-      # specified in the Backup::Configuration::Syncer::S3. Then it sets the
-      # object defaults if particular properties weren't set. Finally it'll
-      # evaluate the users configuration file and overwrite anything that's
-      # been defined
+      # Instantiates a new Cloud Syncer object and sets the default
+      # configuration specified in the Backup::Configuration::Syncer::S3. Then
+      # it sets the object defaults if particular properties weren't set.
+      # Finally it'll evaluate the users configuration file and overwrite
+      # anything that's been defined.
       def initialize(&block)
         load_defaults!
 
         @path               ||= 'backups'
-        @directories          = Array.new
+        @directories        ||= Array.new
         @mirror             ||= false
-        @additional_options ||= []
 
         instance_eval(&block) if block_given?
+
+        @path = path.sub(/^\//, '')
       end
 
       ##
@@ -73,22 +69,31 @@ module Backup
         @directories << path
       end
 
-=======
->>>>>>> Rackspace Syncer
       private
 
       def connection
-        @connection ||= Fog::Storage.new(
-          :provider              => 'AWS',
-          :aws_access_key_id     => access_key_id,
-          :aws_secret_access_key => secret_access_key,
-          :region                => region
-        )
+        raise "Should be implemented by the subclass"
       end
 
       def bucket_object
         @bucket_object ||= connection.directories.get(bucket) ||
-          connection.directories.create(:key => bucket, :location => region)
+          connection.directories.create(:key => bucket)
+      end
+
+      def hashes_for_directory(directory)
+        hashes = `find #{directory} -print0 | xargs -0 openssl md5 2> /dev/null`
+        hashes.split("\n").inject({}) do |hash, line|
+          path, md5 = *line.chomp.match(/^MD5\(([^\)]+)\)= (\w+)$/).captures
+          hash[path] = md5
+          hash
+        end
+      end
+
+      def remote_hashes
+        @remote_hashes ||= bucket_object.files.inject({}) { |hash, file|
+          hash[file.key] = file.etag
+          hash
+        }
       end
     end
   end
