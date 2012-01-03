@@ -36,7 +36,7 @@ module Backup
   STORAGES    = ['S3', 'CloudFiles', 'Ninefold', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync', 'Local']
   COMPRESSORS = ['Gzip', 'Bzip2', 'Pbzip2', 'Lzma']
   ENCRYPTORS  = ['OpenSSL', 'GPG']
-  SYNCERS     = ['S3', 'Rsync' => ['Push']]
+  SYNCERS     = ['S3', 'Rsync' => ['Push', 'Pull']]
   NOTIFIERS   = ['Mail', 'Twitter', 'Campfire', 'Presently', 'Prowl', 'Hipchat']
 
   ##
@@ -108,6 +108,7 @@ module Backup
     autoload :S3,    File.join(SYNCER_PATH, 's3')
     module RSync
       autoload :Push, File.join(SYNCER_PATH, 'rsync', 'push')
+      autoload :Pull, File.join(SYNCER_PATH, 'rsync', 'pull')
     end
   end
 
@@ -200,6 +201,7 @@ module Backup
       autoload :S3,    File.join(CONFIGURATION_PATH, 'syncer', 's3')
       module RSync
         autoload :Push, File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'push')
+        autoload :Pull, File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'pull')
       end
     end
 
