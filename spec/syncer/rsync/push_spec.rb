@@ -1,11 +1,11 @@
 # encoding: utf-8
 
-require File.expand_path('../../spec_helper.rb', __FILE__)
+require File.expand_path('../../../spec_helper.rb', __FILE__)
 
-describe Backup::Syncer::RSync do
+describe Backup::Syncer::RSync::Push do
 
   let(:rsync) do
-    Backup::Syncer::RSync.new do |rsync|
+    Backup::Syncer::RSync::Push.new do |rsync|
       rsync.username  = 'my_username'
       rsync.password  = 'my_password'
       rsync.ip        = '123.45.678.90'
@@ -23,7 +23,7 @@ describe Backup::Syncer::RSync do
   end
 
   before do
-    Backup::Configuration::Syncer::RSync.clear_defaults!
+    Backup::Configuration::Syncer::RSync::Push.clear_defaults!
   end
 
   it 'should have defined the configuration properly' do
@@ -39,14 +39,14 @@ describe Backup::Syncer::RSync do
   end
 
   it 'should use the defaults if a particular attribute has not been defined' do
-    Backup::Configuration::Syncer::RSync.defaults do |rsync|
+    Backup::Configuration::Syncer::RSync::Push.defaults do |rsync|
       rsync.username = 'my_default_username'
       rsync.password = 'my_default_password'
       rsync.path     = '~/backups'
       rsync.mirror   = false
     end
 
-    rsync = Backup::Syncer::RSync.new do |rsync|
+    rsync = Backup::Syncer::RSync::Push.new do |rsync|
       rsync.password = 'my_password'
       rsync.ip       = '123.45.678.90'
       rsync.compress = false
@@ -63,7 +63,7 @@ describe Backup::Syncer::RSync do
   end
 
   it 'should have its own defaults' do
-    rsync = Backup::Syncer::RSync.new
+    rsync = Backup::Syncer::RSync::Push.new
     rsync.port.should     == "-e 'ssh -p 22'"
     rsync.path.should     == 'backups'
     rsync.compress.should == nil
@@ -173,7 +173,7 @@ describe Backup::Syncer::RSync do
   describe '#perform' do
 
     it 'should invoke the rsync command to transfer the files and directories' do
-      Backup::Logger.expects(:message).with("Backup::Syncer::RSync started syncing '/some/random/directory' '/another/random/directory'.")
+      Backup::Logger.expects(:message).with("Backup::Syncer::RSync::Push started syncing '/some/random/directory' '/another/random/directory'.")
       rsync.expects(:utility).with(:rsync).returns(:rsync)
       rsync.expects(:remove_password_file!)
       rsync.expects(:run).with("rsync --archive --delete --compress -e 'ssh -p 22' --password-file='#{rsync.instance_variable_get('@password_file').path}' " +
@@ -182,7 +182,7 @@ describe Backup::Syncer::RSync do
     end
 
     it 'should not pass in the --password-file option' do
-      Backup::Logger.expects(:message).with("Backup::Syncer::RSync started syncing '/some/random/directory' '/another/random/directory'.")
+      Backup::Logger.expects(:message).with("Backup::Syncer::RSync::Push started syncing '/some/random/directory' '/another/random/directory'.")
       rsync.password = nil
       rsync.expects(:utility).with(:rsync).returns(:rsync)
       rsync.expects(:remove_password_file!)
