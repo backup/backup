@@ -30,7 +30,12 @@ describe Backup::Model do
     class Backup::Notifier::TestMail
       def initialize(&block); end
     end
-
+    class Backup::Syncer::TestS3
+      def initialize(&block); end
+    end
+    class Backup::Syncer::TestRSync
+      def initialize(&block); end
+    end
   end
 
   let(:model) { Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {} }
@@ -188,6 +193,26 @@ describe Backup::Model do
       model.encryptors.count.should == 2
     end
   end
+
+  describe '#sync_with' do
+    it 'should add a syncer to the array of syncers to use' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        sync_with('TestRSync')
+      end
+
+      model.syncers.count.should == 1
+    end
+
+    it 'should add a Syncer to the array of syncers to use' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        sync_with('TestS3')
+        sync_with('TestRSync')
+      end
+
+      model.syncers.count.should == 2
+    end
+  end
+
 
   describe '#notify_by' do
     it 'should add a notifier to the array of notifiers to use' do
