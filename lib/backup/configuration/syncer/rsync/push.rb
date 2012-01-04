@@ -4,7 +4,7 @@ module Backup
   module Configuration
     module Syncer
       module RSync
-        class Push < Configuration::Base
+        class Push < Local
           class << self
 
             ##
@@ -20,24 +20,8 @@ module Backup
             attr_accessor :port
 
             ##
-            # Directories to sync
-            attr_accessor :directories
-
-            ##
-            # Path to store the synced files/directories to
-            attr_accessor :path
-
-            ##
-            # Flag for mirroring the files/directories
-            attr_accessor :mirror
-
-            ##
             # Flag for compressing (only compresses for the transfer)
             attr_accessor :compress
-
-            ##
-            # Additional options for the rsync cli
-            attr_accessor :additional_options
 
           end
         end
