@@ -30,7 +30,12 @@ describe Backup::Model do
     class Backup::Notifier::TestMail
       def initialize(&block); end
     end
-
+    class Backup::Syncer::TestS3
+      def initialize(&block); end
+    end
+    class Backup::Syncer::RSync::TestLocal
+      def initialize(&block); end
+    end
   end
 
   let(:model) { Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {} }
@@ -160,6 +165,15 @@ describe Backup::Model do
       model.compressors.count.should == 1
     end
 
+    it 'should accept compressor classes in addition to names' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        compress_with(Backup::Compressor::TestGzip)
+      end
+
+      model.compressors.count.should == 1
+    end
+
+
     it 'should add a compressor to the array of compressors to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
         compress_with('TestGzip')
@@ -179,6 +193,14 @@ describe Backup::Model do
       model.encryptors.count.should == 1
     end
 
+    it 'should accept encryptor classes in addition to names' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        encrypt_with(Backup::Encryptor::TestOpenSSL)
+      end
+
+      model.encryptors.count.should == 1
+    end
+
     it 'should add a encryptor to the array of encryptors to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
         encrypt_with('TestOpenSSL')
@@ -186,6 +208,33 @@ describe Backup::Model do
       end
 
       model.encryptors.count.should == 2
+    end
+  end
+
+  describe '#sync_with' do
+    it 'should add a syncer to the array of syncers to use' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        sync_with('RSync::TestLocal')
+      end
+
+      model.syncers.count.should == 1
+    end
+
+    it 'should accept sync classes in addition to names' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        sync_with(Backup::Syncer::RSync::TestLocal)
+      end
+
+      model.syncers.count.should == 1
+    end
+
+    it 'should add a Syncer to the array of syncers to use' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        sync_with('TestS3')
+        sync_with('RSync::TestLocal')
+      end
+
+      model.syncers.count.should == 2
     end
   end
 
