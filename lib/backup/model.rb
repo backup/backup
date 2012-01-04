@@ -125,61 +125,49 @@ module Backup
     # Adds a database to the array of databases
     # to dump during the backup process
     def database(database, &block)
-      @databases << Backup::Database.const_get(
-        last_constant(database)
-      ).new(&block)
+      @databases << get_class_from_scope(Backup::Database, database).new(&block)
     end
 
     ##
     # Adds an archive to the array of archives
     # to store during the backup process
-    def archive(name, &block)
-      @archives << Backup::Archive.new(name, &block)
+    def archive(archive_name, &block)
+      @archives << Backup::Archive.new(archive_name, &block)
     end
 
     ##
     # Adds an encryptor to the array of encryptors
     # to use during the backup process
-    def encrypt_with(name, &block)
-      @encryptors << Backup::Encryptor.const_get(
-        last_constant(name)
-      ).new(&block)
+    def encrypt_with(encryptor_name, &block)
+      @encryptors << get_class_from_scope(Backup::Encryptor, encryptor_name).new(&block)
     end
 
     ##
     # Adds a compressor to the array of compressors
     # to use during the backup process
-    def compress_with(name, &block)
-      @compressors << Backup::Compressor.const_get(
-        last_constant(name)
-      ).new(&block)
+    def compress_with(compressor_name, &block)
+      @compressors << get_class_from_scope(Backup::Compressor, compressor_name).new(&block)
     end
 
     ##
     # Adds a notifier to the array of notifiers
     # to use during the backup process
-    def notify_by(name, &block)
-      @notifiers << Backup::Notifier.const_get(
-        last_constant(name)
-      ).new(&block)
+    def notify_by(notifier_name, &block)
+      @notifiers << get_class_from_scope(Backup::Notifier, notifier_name).new(&block)
     end
 
     ##
     # Adds a storage method to the array of storage
     # methods to use during the backup process
-    def store_with(storage, storage_id = nil, &block)
-      @storages << Backup::Storage.const_get(
-        last_constant(storage)
-      ).new(storage_id, &block)
+    def store_with(storage_name, storage_id = nil, &block)
+      @storages << get_class_from_scope(Backup::Storage, storage_name).new(storage_id, &block)
     end
 
     ##
     # Adds a syncer method to the array of syncer
     # methods to use during the backup process
-    def sync_with(syncer, &block)
-      @syncers << Backup::Syncer.const_get(
-        last_constant(syncer)
-      ).new(&block)
+    def sync_with(syncer_name, &block)
+      @syncers << get_class_from_scope(Backup::Syncer, syncer_name).new(&block)
     end
 
     ##
@@ -323,11 +311,15 @@ module Backup
     end
 
     ##
-    # Returns the string representation of the last value of a nested constant
-    # example: last_constant(Backup::Model::MySQL) becomes and returns "MySQL"
-    def last_constant(constant)
-      constant.to_s.split("::").last
+    # Returns the class/model specified by a string inside a scope.
+    # For example, given the scope Backup::Model and the name "MySQL",
+    # it returns the class Backup::Model::MySQL. It accepts deeply nested class/modules
+    def get_class_from_scope(scope, name)
+      klass = scope
+      name.split('::').each do |name_chunk|
+        klass = klass.const_get(name_chunk)
+      end
+      klass
     end
-
   end
 end

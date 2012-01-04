@@ -33,7 +33,7 @@ describe Backup::Model do
     class Backup::Syncer::TestS3
       def initialize(&block); end
     end
-    class Backup::Syncer::TestRSync
+    class Backup::Syncer::RSync::TestLocal
       def initialize(&block); end
     end
   end
@@ -197,7 +197,7 @@ describe Backup::Model do
   describe '#sync_with' do
     it 'should add a syncer to the array of syncers to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        sync_with('TestRSync')
+        sync_with('RSync::TestLocal')
       end
 
       model.syncers.count.should == 1
@@ -206,7 +206,7 @@ describe Backup::Model do
     it 'should add a Syncer to the array of syncers to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
         sync_with('TestS3')
-        sync_with('TestRSync')
+        sync_with('RSync::TestLocal')
       end
 
       model.syncers.count.should == 2
