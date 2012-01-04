@@ -99,7 +99,7 @@ Storage Features
 Syncers
 -------
 
-- RSync
+- RSync (Push, Pull and Local)
 - Amazon Simple Storage Service (S3)
 
 [Syncer Wiki Page](https://github.com/meskyanichi/backup/wiki/Syncers)
