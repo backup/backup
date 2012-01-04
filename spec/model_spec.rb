@@ -165,6 +165,15 @@ describe Backup::Model do
       model.compressors.count.should == 1
     end
 
+    it 'should accept compressor classes in addition to names' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        compress_with(Backup::Compressor::TestGzip)
+      end
+
+      model.compressors.count.should == 1
+    end
+
+
     it 'should add a compressor to the array of compressors to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
         compress_with('TestGzip')
@@ -179,6 +188,14 @@ describe Backup::Model do
     it 'should add a encryptor to the array of encryptors to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
         encrypt_with('TestOpenSSL')
+      end
+
+      model.encryptors.count.should == 1
+    end
+
+    it 'should accept encryptor classes in addition to names' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        encrypt_with(Backup::Encryptor::TestOpenSSL)
       end
 
       model.encryptors.count.should == 1
@@ -203,6 +220,14 @@ describe Backup::Model do
       model.syncers.count.should == 1
     end
 
+    it 'should accept sync classes in addition to names' do
+      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
+        sync_with(Backup::Syncer::RSync::TestLocal)
+      end
+
+      model.syncers.count.should == 1
+    end
+
     it 'should add a Syncer to the array of syncers to use' do
       model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
         sync_with('TestS3')
@@ -212,7 +237,6 @@ describe Backup::Model do
       model.syncers.count.should == 2
     end
   end
-
 
   describe '#notify_by' do
     it 'should add a notifier to the array of notifiers to use' do

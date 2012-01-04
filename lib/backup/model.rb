@@ -138,15 +138,15 @@ module Backup
     ##
     # Adds an encryptor to the array of encryptors
     # to use during the backup process
-    def encrypt_with(encryptor_name, &block)
-      @encryptors << get_class_from_scope(Backup::Encryptor, encryptor_name).new(&block)
+    def encrypt_with(encryptor, &block)
+      @encryptors << get_class_from_scope(Backup::Encryptor, encryptor).new(&block)
     end
 
     ##
     # Adds a compressor to the array of compressors
     # to use during the backup process
-    def compress_with(compressor_name, &block)
-      @compressors << get_class_from_scope(Backup::Compressor, compressor_name).new(&block)
+    def compress_with(compressor, &block)
+      @compressors << get_class_from_scope(Backup::Compressor, compressor).new(&block)
     end
 
     ##
@@ -159,15 +159,15 @@ module Backup
     ##
     # Adds a storage method to the array of storage
     # methods to use during the backup process
-    def store_with(storage_name, storage_id = nil, &block)
-      @storages << get_class_from_scope(Backup::Storage, storage_name).new(storage_id, &block)
+    def store_with(storage, storage_id = nil, &block)
+      @storages << get_class_from_scope(Backup::Storage, storage).new(storage_id, &block)
     end
 
     ##
     # Adds a syncer method to the array of syncer
     # methods to use during the backup process
-    def sync_with(syncer_name, &block)
-      @syncers << get_class_from_scope(Backup::Syncer, syncer_name).new(&block)
+    def sync_with(syncer, &block)
+      @syncers << get_class_from_scope(Backup::Syncer, syncer).new(&block)
     end
 
     ##
@@ -314,10 +314,11 @@ module Backup
     # Returns the class/model specified by a string inside a scope.
     # For example, given the scope Backup::Model and the name "MySQL",
     # it returns the class Backup::Model::MySQL. It accepts deeply nested class/modules
-    def get_class_from_scope(scope, name)
+    def get_class_from_scope(scope, constant)
+      return constant if constant.is_a? Class
       klass = scope
-      name.split('::').each do |name_chunk|
-        klass = klass.const_get(name_chunk)
+      constant.split('::').each do |chunk|
+        klass = klass.const_get(chunk)
       end
       klass
     end
