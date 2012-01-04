@@ -16,7 +16,7 @@ module Backup
           @directories.each do |directory|
             Logger.message("#{ self.class } started syncing '#{ directory }'.")
             Logger.silent(
-              run("#{ utility(:rsync) } #{ options } '#{ path }' '#{ username }@#{ ip }:#{ directory }'")
+              run("#{ utility(:rsync) } #{ options } '#{ username }@#{ ip }:#{ directory }' '#{ path }'")
             )
           end
           remove_password_file!
