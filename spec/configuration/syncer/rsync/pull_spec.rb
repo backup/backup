@@ -1,10 +1,10 @@
 # encoding: utf-8
 
-require File.expand_path('../../../spec_helper.rb', __FILE__)
+require File.expand_path('../../../../spec_helper.rb', __FILE__)
 
-describe Backup::Configuration::Syncer::RSync do
+describe Backup::Configuration::Syncer::RSync::Pull do
   before do
-    Backup::Configuration::Syncer::RSync.defaults do |rsync|
+    Backup::Configuration::Syncer::RSync::Pull.defaults do |rsync|
       rsync.username  = 'my_username'
       rsync.password  = 'my_password'
       rsync.ip        = '123.45.678.90'
@@ -17,7 +17,7 @@ describe Backup::Configuration::Syncer::RSync do
   end
 
   it 'should set the default rsync configuration' do
-    rsync = Backup::Configuration::Syncer::RSync
+    rsync = Backup::Configuration::Syncer::RSync::Pull
     rsync.username.should  == 'my_username'
     rsync.password.should  == 'my_password'
     rsync.ip.should        == '123.45.678.90'
@@ -30,9 +30,9 @@ describe Backup::Configuration::Syncer::RSync do
 
   describe '#clear_defaults!' do
     it 'should clear all the defaults, resetting them to nil' do
-      Backup::Configuration::Syncer::RSync.clear_defaults!
+      Backup::Configuration::Syncer::RSync::Pull.clear_defaults!
 
-      rsync = Backup::Configuration::Syncer::RSync
+      rsync = Backup::Configuration::Syncer::RSync::Pull
       rsync.username.should  == nil
       rsync.password.should  == nil
       rsync.ip.should        == nil

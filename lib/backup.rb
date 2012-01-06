@@ -36,7 +36,7 @@ module Backup
   STORAGES    = ['S3', 'CloudFiles', 'Ninefold', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync', 'Local']
   COMPRESSORS = ['Gzip', 'Bzip2', 'Pbzip2', 'Lzma']
   ENCRYPTORS  = ['OpenSSL', 'GPG']
-  SYNCERS     = ['RSync', 'S3']
+  SYNCERS     = ['S3', 'Rsync' => ['Push', 'Pull', 'Local']]
   NOTIFIERS   = ['Mail', 'Twitter', 'Campfire', 'Presently', 'Prowl', 'Hipchat']
 
   ##
@@ -105,8 +105,12 @@ module Backup
   # Autoload Backup syncer files
   module Syncer
     autoload :Base,  File.join(SYNCER_PATH, 'base')
-    autoload :RSync, File.join(SYNCER_PATH, 'rsync')
     autoload :S3,    File.join(SYNCER_PATH, 's3')
+    module RSync
+      autoload :Push,  File.join(SYNCER_PATH, 'rsync', 'push')
+      autoload :Pull,  File.join(SYNCER_PATH, 'rsync', 'pull')
+      autoload :Local, File.join(SYNCER_PATH, 'rsync', 'local')
+    end
   end
 
   ##
@@ -195,8 +199,12 @@ module Backup
     end
 
     module Syncer
-      autoload :RSync, File.join(CONFIGURATION_PATH, 'syncer', 'rsync')
       autoload :S3,    File.join(CONFIGURATION_PATH, 'syncer', 's3')
+      module RSync
+        autoload :Push,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'push')
+        autoload :Pull,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'pull')
+        autoload :Local, File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'local')
+      end
     end
 
     module Database
@@ -209,12 +217,31 @@ module Backup
     end
   end
 
+private
+
+  def self.create_empty_class(class_name, scope = Backup::Finder)
+    scope.const_set(class_name, Class.new) unless scope.const_defined?(class_name)
+  end
+
+  def self.get_or_create_empty_module(module_name)
+    if Backup::Finder.const_defined?(module_name)
+      return Backup::Finder.const_get(module_name)
+    else
+      return Backup::Finder.const_set(module_name, Module.new)
+    end
+  end
+
   ##
   # Dynamically defines all the available database, storage, compressor, encryptor and notifier
   # classes inside Backup::Finder to improve the DSL for the configuration file
   (DATABASES + STORAGES + COMPRESSORS + ENCRYPTORS + NOTIFIERS + SYNCERS).each do |constant|
-    unless Backup::Finder.const_defined?(constant)
-      Backup::Finder.const_set(constant, Class.new)
+    if constant.is_a?(Hash)
+      constant.each do |module_name, class_names|
+        mod = get_or_create_empty_module(module_name)
+        class_names.each{ |class_name| create_empty_class(class_name, mod) }
+      end
+    else
+      create_empty_class(constant)
     end
   end
 end

@@ -1,7 +1,7 @@
   ##
-  # RSync [Syncer]
+  # RSync::Pull [Syncer]
   #
-  sync_with RSync do |rsync|
+  sync_with RSync::Pull do |rsync|
     rsync.ip       = "123.45.678.90"
     rsync.port     = 22
     rsync.username = "my_username"
