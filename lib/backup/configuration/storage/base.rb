@@ -3,7 +3,7 @@
 module Backup
   module Configuration
     module Storage
-      class Base < Backup::Configuration::Base
+      class Base < Configuration::Base
         class << self
 
           ##

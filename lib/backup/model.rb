@@ -4,184 +4,174 @@ module Backup
   class Model
     include Backup::CLI::Helpers
 
-    ##
-    # The trigger is used as an identifier for
-    # initializing the backup process
-    attr_accessor :trigger
-
-    ##
-    # The label is used for a more friendly user output
-    attr_accessor :label
-
-    ##
-    # The databases attribute holds an array of database objects
-    attr_accessor :databases
-
-    ##
-    # The archives attr_accessor holds an array of archive objects
-    attr_accessor :archives
-
-    ##
-    # The encryptors attr_accessor holds an array of encryptor objects
-    attr_accessor :encryptors
-
-    ##
-    # The compressors attr_accessor holds an array of compressor objects
-    attr_accessor :compressors
-
-    ##
-    # The notifiers attr_accessor holds an array of notifier objects
-    attr_accessor :notifiers
-
-    ##
-    # The storages attribute holds an array of storage objects
-    attr_accessor :storages
-
-    ##
-    # The syncers attribute holds an array of syncer objects
-    attr_accessor :syncers
-
-    ##
-    # The chunk_size attribute holds the size of the chunks in megabytes
-    attr_accessor :chunk_size
-
-    ##
-    # The time when the backup initiated (in format: 2011.02.20.03.29.59)
-    attr_accessor :time
-
     class << self
       ##
       # The Backup::Model.all class method keeps track of all the models
       # that have been instantiated. It returns the @all class variable,
       # which contains an array of all the models
-      attr_accessor :all
-
-      ##
-      # Contains the current file extension (this changes from time to time after a file
-      # gets compressed or encrypted so we can keep track of the correct file when new
-      # extensions get appended to the current file name)
-      attr_accessor :extension
-
-      ##
-      # Contains the currently-in-use model. This attribute should get set by Backup::Finder.
-      # Use Backup::Model.current to retrieve the actual data of the model
-      attr_accessor :current
-
-      ##
-      # Contains an array of chunk suffixes for a given file
-      attr_accessor :chunk_suffixes
-
-      ##
-      # Returns the full path to the current file (including the current extension).
-      # To just return the filename and extension without the path, use File.basename(Backup::Model.file)
-      def file
-        File.join(TMP_PATH, "#{ TIME }.#{ TRIGGER }.#{ Backup::Model.extension }")
+      def all
+        @all ||= []
       end
 
       ##
-      # Returns the @chunk_suffixes variable, sets it to an emtpy array if nil
-      def chunk_suffixes
-        @chunk_suffixes ||= Array.new
+      # Return the first model matching +trigger+.
+      # Raises Errors::MissingTriggerError if no matches are found.
+      def find(trigger)
+        trigger = trigger.to_s
+        all.each do |model|
+          return model if model.trigger == trigger
+        end
+        raise Errors::Model::MissingTriggerError,
+            "Could not find trigger '#{trigger}'."
       end
 
       ##
-      # Returns the temporary trigger path of the current model
-      # e.g. /Users/Michael/tmp/backup/my_trigger
-      def tmp_path
-        File.join(TMP_PATH, TRIGGER)
+      # Find and return an Array of all models matching +trigger+
+      # Used to match triggers using a wildcard (*)
+      def find_matching(trigger)
+        regex = /^#{ trigger.to_s.gsub('*', '(.*)') }$/
+        all.select {|model| regex =~ model.trigger }
       end
     end
 
     ##
-    # Accessible through "Backup::Model.all", it stores an array of Backup::Model instances.
-    # Everytime a new Backup::Model gets instantiated it gets pushed into this array
-    @all = Array.new
+    # The trigger (stored as a String) is used as an identifier
+    # for initializing the backup process
+    attr_reader :trigger
 
     ##
-    # Contains the current file extension (should change after each compression or encryption)
-    @extension = 'tar'
+    # The label (stored as a String) is used for a more friendly user output
+    attr_reader :label
 
     ##
-    # Takes a trigger, label and the configuration block and instantiates the model.
-    # The TIME (time of execution) gets stored in the @time attribute.
-    # After the instance has evaluated the configuration block and properly set the
-    # configuration for the model, it will append the newly created "model" instance
-    # to the @all class variable (Array) so it can be accessed by Backup::Finder
-    # and any other location
+    # The databases attribute holds an array of database objects
+    attr_reader :databases
+
+    ##
+    # The archives attr_accessor holds an array of archive objects
+    attr_reader :archives
+
+    ##
+    # The notifiers attr_accessor holds an array of notifier objects
+    attr_reader :notifiers
+
+    ##
+    # The storages attribute holds an array of storage objects
+    attr_reader :storages
+
+    ##
+    # The syncers attribute holds an array of syncer objects
+    attr_reader :syncers
+
+    ##
+    # Holds the configured Compressor
+    attr_reader :compressor
+
+    ##
+    # Holds the configured Encryptor
+    attr_reader :encryptor
+
+    ##
+    # Holds the configured Splitter
+    attr_reader :splitter
+
+    ##
+    # The final backup Package this model will create.
+    attr_reader :package
+
+    ##
+    # The time when the backup initiated (in format: 2011.02.20.03.29.59)
+    attr_reader :time
+
+    ##
+    # Takes a trigger, label and the configuration block.
+    # After the instance has evaluated the configuration block
+    # to configure the model, it will be appended to Model.all
     def initialize(trigger, label, &block)
-      @trigger     = trigger
-      @label       = label
-      @time        = TIME
+      @trigger = trigger.to_s
+      @label   = label.to_s
 
       procedure_instance_variables.each do |variable|
         instance_variable_set(variable, Array.new)
       end
 
-      instance_eval(&block)
-      Backup::Model.all << self
-    end
-
-    ##
-    # Adds a database to the array of databases
-    # to dump during the backup process
-    def database(database, &block)
-      @databases << get_class_from_scope(Backup::Database, database).new(&block)
+      instance_eval(&block) if block_given?
+      Model.all << self
     end
 
     ##
     # Adds an archive to the array of archives
     # to store during the backup process
-    def archive(archive_name, &block)
-      @archives << Backup::Archive.new(archive_name, &block)
+    def archive(name, &block)
+      @archives << Archive.new(self, name, &block)
     end
 
     ##
-    # Adds an encryptor to the array of encryptors
-    # to use during the backup process
-    def encrypt_with(encryptor, &block)
-      @encryptors << get_class_from_scope(Backup::Encryptor, encryptor).new(&block)
-    end
-
-    ##
-    # Adds a compressor to the array of compressors
-    # to use during the backup process
-    def compress_with(compressor, &block)
-      @compressors << get_class_from_scope(Backup::Compressor, compressor).new(&block)
-    end
-
-    ##
-    # Adds a notifier to the array of notifiers
-    # to use during the backup process
-    def notify_by(notifier_name, &block)
-      @notifiers << get_class_from_scope(Backup::Notifier, notifier_name).new(&block)
+    # Adds a database to the array of databases
+    # to dump during the backup process
+    def database(name, &block)
+      @databases << get_class_from_scope(Database, name).new(self, &block)
     end
 
     ##
     # Adds a storage method to the array of storage
     # methods to use during the backup process
-    def store_with(storage, storage_id = nil, &block)
-      @storages << get_class_from_scope(Backup::Storage, storage).new(storage_id, &block)
+    def store_with(name, storage_id = nil, &block)
+      @storages << get_class_from_scope(Storage, name).new(self, storage_id, &block)
     end
 
     ##
     # Adds a syncer method to the array of syncer
     # methods to use during the backup process
-    def sync_with(syncer, &block)
-      @syncers << get_class_from_scope(Backup::Syncer, syncer).new(&block)
+    def sync_with(name, &block)
+      @syncers << get_class_from_scope(Syncer, name).new(&block)
     end
 
     ##
-    # Adds a method that allows the user to set the @chunk_size.
-    # The chunk_size (in megabytes) will later determine in how many chunks the
-    # backup needs to be split
-    def split_into_chunks_of(chunk_size = nil)
-      @chunk_size = chunk_size
+    # Adds a notifier to the array of notifiers
+    # to use during the backup process
+    def notify_by(name, &block)
+      @notifiers << get_class_from_scope(Notifier, name).new(self, &block)
     end
 
     ##
-    # Returns the path to the current file (including proper extension)
-    def file
-      Backup::Model.file
+    # Adds an encryptor to use during the backup process
+    def encrypt_with(name, &block)
+      @encryptor = get_class_from_scope(Encryptor, name).new(&block)
+    end
+
+    ##
+    # Adds a compressor to use during the backup process
+    def compress_with(name, &block)
+      @compressor = get_class_from_scope(Compressor, name).new(&block)
+    end
+
+    ##
+    # Adds a method that allows the user to configure this backup model
+    # to use a Splitter, with the given +chunk_size+
+    # The +chunk_size+ (in megabytes) will later determine
+    # in how many chunks the backup needs to be split into
+    def split_into_chunks_of(chunk_size)
+      if chunk_size.is_a?(Integer)
+        @splitter = Splitter.new(self, chunk_size)
+      else
+        raise Errors::Model::ConfigurationError, <<-EOS
+          Invalid Chunk Size for Splitter
+          Argument to #split_into_chunks_of() must be an Integer
+        EOS
+      end
+    end
+
+    ##
+    # Ensure DATA_PATH and DATA_PATH/TRIGGER are created
+    # if they do not yet exist
+    #
+    # Clean any temporary files and/or package files left over
+    # from the last time this model/trigger was performed.
+    # Logs warnings if files exist and are cleaned.
+    def prepare!
+      FileUtils.mkdir_p(File.join(Config.data_path, trigger))
+      Cleaner.prepare(self)
     end
 
     ##
@@ -199,10 +189,10 @@ module Backup
     # the folder, it'll make a single .tar package (archive) out of it
     ##
     # [Encryption]
-    # Optionally encrypts the packaged file with one or more encryptors
+    # Optionally encrypts the packaged file with the configured encryptor
     ##
     # [Compression]
-    # Optionally compresses the packaged file with one or more compressors
+    # Optionally compresses the each Archive and Database dump with the configured compressor
     ##
     # [Splitting]
     # Optionally splits the backup file in to multiple smaller chunks before transferring them
@@ -222,11 +212,20 @@ module Backup
     # any errors.
     ##
     # [Cleaning]
-    # After the whole backup process finishes, it'll go ahead and remove any temporary
-    # file that it produced. If an exception(error) is raised during this process which
-    # breaks the process, it'll always ensure it removes the temporary files regardless
-    # to avoid mass consumption of storage space on the machine
+    # Once the final Packaging is complete, the temporary folder used will be removed.
+    # Then, once all Storages have run, the final packaged files will be removed.
+    # If any errors occur during the backup process, all temporary files will be left in place.
+    # If the error occurs before Packaging, then the temporary folder (tmp_path/trigger)
+    # will remain and may contain all or some of the configured Archives and/or Database dumps.
+    # If the error occurs after Packaging, but before the Storages complete, then the final
+    # packaged files (located in the root of tmp_path) will remain.
+    # *** Important *** If an error occurs and any of the above mentioned temporary files remain,
+    # those files *** will be removed *** before the next scheduled backup for the same trigger.
+    #
     def perform!
+      @time = Time.now.strftime("%Y.%m.%d.%H.%M.%S")
+      Logger.message "Performing backup for '#{label} (#{trigger})'!"
+
       if databases.any? or archives.any?
         procedures.each do |procedure|
           (procedure.call; next) if procedure.is_a?(Proc)
@@ -235,27 +234,28 @@ module Backup
       end
 
       syncers.each(&:perform!)
-      notifiers.each { |n| n.perform!(self) }
+      notifiers.each(&:perform!)
 
     rescue Exception => err
       fatal = !err.is_a?(StandardError)
 
-      Logger.error Backup::Errors::ModelError.wrap(err, <<-EOS)
+      err = Errors::ModelError.wrap(err, <<-EOS)
         Backup for #{label} (#{trigger}) Failed!
         An Error occured which has caused this Backup to abort before completion.
-        Please review the Log for this Backup to determine if steps need to be taken
-        to clean up, based on the point at which the failure occured.
       EOS
-      Logger.error "\nBacktrace:\n" + err.backtrace.join("\n\s\s") + "\n\n"
+      Logger.error err
+      Logger.error "\nBacktrace:\n\s\s" + err.backtrace.join("\n\s\s") + "\n\n"
+
+      Cleaner.warnings(self)
 
       if fatal
-        Logger.error Backup::Errors::ModelError.new(<<-EOS)
+        Logger.error Errors::ModelError.new(<<-EOS)
           This Error was Fatal and Backup will now exit.
           If you have other Backup jobs (triggers) configured to run,
           they will not be processed.
         EOS
       else
-        Logger.message Backup::Errors::ModelError.new(<<-EOS)
+        Logger.message Errors::ModelError.new(<<-EOS)
           If you have other Backup jobs (triggers) configured to run,
           Backup will now attempt to continue...
         EOS
@@ -263,64 +263,70 @@ module Backup
 
       notifiers.each do |n|
         begin
-          n.perform!(self, err)
+          n.perform!(true)
         rescue Exception; end
       end
 
       exit(1) if fatal
-    ensure
-      clean!
     end
 
-  private
+    private
 
     ##
     # After all the databases and archives have been dumped and sorted,
-    # these files will be bundled in to a .tar archive (uncompressed) so it
-    # becomes a single (transferrable) packaged file.
+    # these files will be bundled in to a .tar archive (uncompressed),
+    # which may be optionally Encrypted and/or Split into multiple "chunks".
+    # All information about this final archive is stored in the @package.
+    # Once complete, the temporary folder used during packaging is removed.
     def package!
-      Backup::Packager.new(self).package!
+      @package = Package.new(self)
+      Packager.package!(self)
+      Cleaner.remove_packaging(self)
     end
 
     ##
-    # Create a new instance of Backup::Splitter,
-    # passing it the current model instance and runs it.
-    def split!
-      Backup::Splitter.new(self).split!
-    end
-
-    ##
-    # Cleans up the temporary files that were created after the backup process finishes
+    # Removes the final package file(s) once all configured Storages have run.
     def clean!
-      Backup::Cleaner.new(self).clean!
+      Cleaner.remove_package(@package)
     end
 
     ##
     # Returns an array of procedures
     def procedures
-      Array.new([
-        databases, archives, lambda { package! }, compressors,
-        encryptors, lambda { split! }, storages
-      ])
+      [databases, archives, lambda { package! }, storages, lambda { clean! }]
     end
 
     ##
     # Returns an Array of the names (String) of the procedure instance variables
     def procedure_instance_variables
-      [:@databases, :@archives, :@encryptors, :@compressors, :@storages, :@notifiers, :@syncers]
+      [:@databases, :@archives, :@storages, :@notifiers, :@syncers]
     end
 
     ##
-    # Returns the class/model specified by a string inside a scope.
-    # For example, given the scope Backup::Model and the name "MySQL",
-    # it returns the class Backup::Model::MySQL. It accepts deeply nested class/modules
-    def get_class_from_scope(scope, constant)
-      return constant if constant.is_a? Class
+    # Returns the class/model specified by +name+ inside of +scope+.
+    # +scope+ should be a Class/Module.
+    # +name+ may be Class/Module or String representation
+    # of any namespace which exists under +scope+.
+    #
+    # The 'Backup::Config::' namespace is stripped from +name+,
+    # since this is the namespace where we define module namespaces
+    # for use with Model's DSL methods.
+    #
+    # Examples:
+    #   get_class_from_scope(Backup::Database, 'MySQL')
+    #     returns the class Backup::Database::MySQL
+    #
+    #   get_class_from_scope(Backup::Syncer, Backup::Config::RSync::Local)
+    #     returns the class Backup::Syncer::RSync::Local
+    #
+    def get_class_from_scope(scope, name)
       klass = scope
-      constant.split('::').each do |chunk|
+      name = name.to_s.sub(/^Backup::Config::/, '')
+      name.split('::').each do |chunk|
         klass = klass.const_get(chunk)
       end
       klass
     end
+
   end
 end

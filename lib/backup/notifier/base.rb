@@ -6,14 +6,6 @@ module Backup
       include Backup::Configuration::Helpers
 
       ##
-      # Container for the Model object
-      attr_accessor :model
-
-      ##
-      # Contains the Backup::Template object
-      attr_accessor :template
-
-      ##
       # When set to true, the user will be notified by email
       # when a backup process ends without raising any exceptions
       attr_accessor :on_success
@@ -32,33 +24,35 @@ module Backup
       alias :notify_on_failure? :on_failure
 
       ##
-      # Super method #initialize for all child classes
-      def initialize(&block)
+      # Called with super(model) from subclasses
+      def initialize(model)
+        @model = model
         load_defaults!
 
-        instance_eval(&block) if block_given?
-
-        set_defaults!
+        @on_success = true if on_success.nil?
+        @on_warning = true if on_warning.nil?
+        @on_failure = true if on_failure.nil?
       end
 
       ##
       # Performs the notification
-      # Takes an exception object that might've been created if an exception occurred.
-      # If this is the case it'll invoke notify_failure!(exception), otherwise, if no
-      # error was raised, it'll go ahead and notify_success!
-      #
-      # If'll only perform these if on_success is true or on_failure is true
-      def perform!(model, exception = false)
-        @model     = model
-        @template  = Backup::Template.new({:model => model, :exception => exception})
+      # Takes a flag to indicate that a failure has occured.
+      # (this is only set from Model#perform! in the event of an error)
+      # If this is the case it will set the 'action' to :failure.
+      # Otherwise, it will set the 'action' to either :success or :warning,
+      # depending on whether or not any warnings were sent to the Logger.
+      # It will then invoke the notify! method with the 'action',
+      # but only if the proper on_success, on_warning or on_failure flag is true.
+      def perform!(failure = false)
+        @template  = Backup::Template.new({:model => @model})
 
         action = false
-        if exception.eql?(false)
+        if failure
+          action = :failure if notify_on_failure?
+        else
           if notify_on_success? || (notify_on_warning? && Logger.has_warnings?)
             action = Logger.has_warnings? ? :warning : :success
           end
-        else
-          action = :failure if notify_on_failure?
         end
 
         if action
@@ -67,11 +61,19 @@ module Backup
         end
       end
 
+      private
+
+      ##
+      # Return the notifier name, with Backup namespace removed
+      def notifier_name
+        self.class.to_s.sub('Backup::', '')
+      end
+
       ##
       # Logs a message to the console and log file to inform
       # the client that Backup is notifying about the process
       def log!
-        Logger.message "#{ self.class } started notifying about the process."
+        Logger.message "#{ notifier_name } started notifying about the process."
       end
 
     end

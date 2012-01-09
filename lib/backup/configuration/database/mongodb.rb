@@ -31,6 +31,14 @@ module Backup
           attr_accessor :additional_options
 
           ##
+          # Path to the mongodump utility (optional)
+          attr_accessor :mongodump_utility
+
+          ##
+          # Path to the mongo utility (optional)
+          attr_accessor :mongo_utility
+
+          ##
           # 'lock' dump meaning wrapping mongodump with fsync & lock
           attr_accessor :lock
 

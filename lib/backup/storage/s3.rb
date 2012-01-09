@@ -21,10 +21,16 @@ module Backup
       attr_accessor :region
 
       ##
-      # This is the remote path to where the backup files will be stored
-      def remote_path
-        File.join(path, TRIGGER, @time).sub(/^\//, '')
+      # Creates a new instance of the storage object
+      def initialize(model, storage_id = nil, &block)
+        super(model, storage_id)
+
+        @path ||= 'backups'
+
+        instance_eval(&block) if block_given?
       end
+
+      private
 
       ##
       # This is the provider that Fog uses for the S3 Storage
@@ -33,36 +39,7 @@ module Backup
       end
 
       ##
-      # Performs the backup transfer
-      def perform!
-        super
-        transfer!
-        cycle!
-      end
-
-    private
-
-      ##
-      # Set configuration defaults before evaluating configuration block,
-      # after setting defaults from Storage::Base
-      def pre_configure
-        super
-        @path ||= 'backups'
-      end
-
-      ##
-      # Adjust configuration after evaluating configuration block,
-      # after adjustments from Storage::Base
-      def post_configure
-        super
-      end
-
-      ##
-      # Establishes a connection to Amazon S3 and returns the Fog object.
-      # Not doing any instance variable caching because this object gets persisted in YAML
-      # format to a file and will issues. This, however has no impact on performance since it only
-      # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
-      # background anyway so even if it were a bit slower it shouldn't matter.
+      # Establishes a connection to Amazon S3
       def connection
         @connection ||= Fog::Storage.new(
           :provider               => provider,
@@ -72,29 +49,41 @@ module Backup
         )
       end
 
+      def remote_path_for(package)
+        super(package).sub(/^\//, '')
+      end
+
       ##
       # Transfers the archived file to the specified Amazon S3 bucket
       def transfer!
-        connection.sync_clock
-        files_to_transfer do |local_file, remote_file|
-          Logger.message "#{storage_name} started transferring " +
-              "'#{ local_file }' to bucket '#{ bucket }'"
+        remote_path = remote_path_for(@package)
 
-          connection.put_object(
-            bucket,
-            File.join(remote_path, remote_file),
-            File.open(File.join(local_path, local_file))
-          )
+        connection.sync_clock
+
+        files_to_transfer_for(@package) do |local_file, remote_file|
+          Logger.message "#{storage_name} started transferring " +
+              "'#{ local_file }' to bucket '#{ bucket }'."
+
+          File.open(File.join(local_path, local_file), 'r') do |file|
+            connection.put_object(
+              bucket, File.join(remote_path, remote_file), file
+            )
+          end
         end
       end
 
       ##
-      # Removes the transferred archive file from the Amazon S3 bucket
-      def remove!
+      # Removes the transferred archive file(s) from the storage location.
+      # Any error raised will be rescued during Cycling
+      # and a warning will be logged, containing the error message.
+      def remove!(package)
+        remote_path = remote_path_for(package)
+
         connection.sync_clock
-        transferred_files do |local_file, remote_file|
+
+        transferred_files_for(package) do |local_file, remote_file|
           Logger.message "#{storage_name} started removing " +
-              "'#{ local_file }' from bucket '#{ bucket }'"
+              "'#{ local_file }' from bucket '#{ bucket }'."
 
           connection.delete_object(bucket, File.join(remote_path, remote_file))
         end

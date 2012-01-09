@@ -26,38 +26,37 @@ module Backup
       attr_accessor :rooms_notified
 
       ##
-      # The background color of a success message. One of :yellow, :red, :green, :purple, or :random. (default: yellow)
-      attr_accessor :success_color
-
-      ##
-      # The background color of a warning message. One of :yellow, :red, :green, :purple, or :random. (default: yellow)
-      attr_accessor :warning_color
-
-      ##
-      # The background color of an error message. One of :yellow, :red, :green, :purple, or :random. (default: yellow)
-      attr_accessor :failure_color
-
-      ##
       # Notify users in the room
       attr_accessor :notify_users
 
       ##
-      # Performs the notification
-      # Extends from super class. Must call super(model, exception).
-      # If any pre-configuration needs to be done, put it above the super(model, exception)
-      def perform!(model, exception = false)
-        @rooms_notified = [rooms_notified].flatten
-        super(model, exception)
+      # The background color of a success message.
+      # One of :yellow, :red, :green, :purple, or :random. (default: yellow)
+      attr_accessor :success_color
+
+      ##
+      # The background color of a warning message.
+      # One of :yellow, :red, :green, :purple, or :random. (default: yellow)
+      attr_accessor :warning_color
+
+      ##
+      # The background color of an error message.
+      # One of :yellow, :red, :green, :purple, or :random. (default: yellow)
+      attr_accessor :failure_color
+
+      def initialize(model, &block)
+        super(model)
+
+        @notify_users   ||= false
+        @rooms_notified ||= []
+        @success_color  ||= 'yellow'
+        @warning_color  ||= 'yellow'
+        @failure_color  ||= 'yellow'
+
+        instance_eval(&block) if block_given?
       end
 
-    private
-
-      def send_message(msg, color, notify)
-        client = HipChat::Client.new(token)
-        rooms_notified.each do |room|
-          client[room].send(from, msg, :color => color, :notify => notify)
-        end
-      end
+      private
 
       ##
       # Notify the user of the backup operation results.
@@ -84,16 +83,17 @@ module Backup
                       when :warning then ['Warning', warning_color]
                       when :failure then ['Failure', failure_color]
                       end
-        message = "[Backup::%s] #{model.label} (#{model.trigger})" % name
-        send_message(message, color, notify_users)
+        message = "[Backup::%s] #{@model.label} (#{@model.trigger})" % name
+        send_message(message, color)
       end
 
-      def set_defaults!
-        @success_color ||= 'yellow'
-        @warning_color ||= 'yellow'
-        @failure_color ||= 'yellow'
-        @notify_users  ||= false
+      def send_message(msg, color)
+        client = HipChat::Client.new(token)
+        [rooms_notified].flatten.each do |room|
+          client[room].send(from, msg, :color => color, :notify => notify_users)
+        end
       end
+
     end
   end
 end

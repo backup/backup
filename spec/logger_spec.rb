@@ -1,11 +1,10 @@
 # encoding: utf-8
 
 require File.expand_path('../spec_helper.rb', __FILE__)
-require 'timecop'
 
 describe Backup::Logger do
   let(:logger_time)  { Time.now.strftime("%Y/%m/%d %H:%M:%S") }
-  let(:logfile_path) { File.join(Backup::LOG_PATH, 'backup.log') }
+  let(:logfile_path) { File.join(Backup::Config.log_path, 'backup.log') }
   let(:logfile_mock) { mock }
   let(:s) { sequence '' }
 
@@ -17,7 +16,7 @@ describe Backup::Logger do
       subject.unstub(message_type)
     end
 
-    subject.send(:remove_const, :QUIET) rescue nil
+    subject.quiet = nil
     subject.send(:remove_instance_variable, :@messages) rescue nil
     subject.send(:remove_instance_variable, :@has_warnings) rescue nil
   end
@@ -145,6 +144,66 @@ describe Backup::Logger do
     end
   end # describe '#clear!'
 
+  describe '#truncate!' do
+    context 'when log file is <= max_bytes' do
+      it 'should do nothing' do
+        stat = mock
+        [1, 2].each do |size|
+          File.expects(:stat).with(
+            File.join(Backup::Config.log_path, 'backup.log')
+          ).returns(stat)
+          stat.expects(:size).returns(size)
+
+          FileUtils.expects(:mv).never
+          File.expects(:open).never
+          FileUtils.expects(:rm_f).never
+
+          subject.truncate!(2)
+        end
+      end
+    end
+
+    context 'when log file is > max_bytes' do
+      before do
+        FileUtils.unstub(:mkdir_p)
+        FileUtils.unstub(:mv)
+        FileUtils.unstub(:rm)
+        FileUtils.unstub(:rm_f)
+      end
+
+      it 'should truncate the file, removing older lines' do
+        max_bytes = 5_000
+        line_len  = 120
+        Dir.mktmpdir do |dir|
+          Backup::Config.update(:root_path => dir)
+          FileUtils.mkdir_p(Backup::Config.log_path)
+          log_file = File.join(Backup::Config.log_path, 'backup.log')
+
+          lineno = 0
+          over_max = (max_bytes * 1.25).to_i
+          File.open(log_file, 'w') do |f|
+            until f.pos > over_max
+              f.puts "#{ lineno += 1 }: ".ljust(line_len, 'x')
+            end
+          end
+          File.stat(log_file).size.
+              should be_within(line_len + 2).of(over_max)
+
+          subject.truncate!(max_bytes)
+
+          File.stat(log_file).size.
+              should be_within(line_len + 2).of(max_bytes)
+
+          File.readlines(log_file).last.chomp.
+              should == "#{ lineno }: ".ljust(line_len, 'x')
+
+          File.exist?(log_file + '~').should be_false
+        end
+      end
+    end
+
+  end # describe '#truncate!'
+
   describe '#loggify' do
 
     it 'returns an array of strings split on newline separators' do
@@ -224,7 +283,7 @@ describe Backup::Logger do
     end
 
     it 'returns nil if quiet? is true' do
-      subject.send(:const_set, :QUIET, true)
+      subject.quiet = true
       subject.expects(:puts).never
       subject.send(:to_console, 'a string')
     end
@@ -277,10 +336,17 @@ describe Backup::Logger do
 
   end # color methods
 
-  describe '#quiet?' do
-    it 'reports if the QUIET constant has been set' do
-      expect { subject.send(:const_set, :QUIET, true) }.to
-          change{ subject.send(:quiet?) }.from(false).to(true)
+  describe '#quiet' do
+    it 'should be nil by default' do
+      # of course, 'before' is setting it to nil ;)
+      subject.quiet.should be_nil
+    end
+
+    it 'can be set true/false' do
+      subject.quiet = true
+      subject.quiet.should be_true
+      subject.quiet = false
+      subject.quiet.should be_false
     end
   end
 

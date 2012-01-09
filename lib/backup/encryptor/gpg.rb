@@ -1,9 +1,5 @@
 # encoding: utf-8
 
-##
-# Require the tempfile Ruby library when Backup::Encryptor::GPG is loaded
-require 'tempfile'
-
 module Backup
   module Encryptor
     class GPG < Base
@@ -13,66 +9,70 @@ module Backup
       attr_accessor :key
 
       ##
-      # Contains the GPG encryption key id which'll be extracted from the public key file
-      attr_accessor :encryption_key_id
-
-      ##
-      # Contains the temporary file with the public key
-      attr_accessor :tmp_file
-
-      ##
       # Creates a new instance of Backup::Encryptor::GPG and
       # sets the key to the provided GPG key. To enhance the DSL
       # the user may use tabs and spaces to indent the multi-line key string
       # since we gsub() every preceding 'space' and 'tab' on each line
       def initialize(&block)
-        load_defaults!
+        super
 
         instance_eval(&block) if block_given?
-
-        @key = key.gsub(/^[[:blank:]]+/, '')
       end
 
       ##
-      # Performs the encrypting of the backup file and will
-      # remove the unencrypted backup file, as well as the temp file
-      def perform!
+      # This is called as part of the procedure run by the Packager.
+      # It sets up the needed encryption_key_email to pass to the gpg command,
+      # then yields the command to use as part of the packaging procedure.
+      # Once the packaging procedure is complete, it will return
+      # so that any clean-up may be performed after the yield.
+      def encrypt_with
         log!
-        write_tmp_file!
-        extract_encryption_key_id!
+        extract_encryption_key_email!
 
-        run("#{ utility(:gpg) } #{ options } -o '#{ Backup::Model.file }.gpg' '#{ Backup::Model.file }'")
-
-        rm(Backup::Model.file)
-        tmp_file.unlink
-
-        Backup::Model.extension += '.gpg'
+        yield "#{ utility(:gpg) } #{ options }", '.gpg'
       end
 
-    private
+      private
+
+      ##
+      # Imports the given encryption key to ensure it's available for use,
+      # and extracts the email address used to create the key.
+      # This is stored in '@encryption_key_email', to be used to specify
+      # the --recipient when performing encryption so this key is used.
+      def extract_encryption_key_email!
+        if @encryption_key_email.to_s.empty?
+          with_tmp_key_file do |tmp_file|
+            @encryption_key_email = run(
+              "#{ utility(:gpg) } --import '#{tmp_file}' 2>&1"
+            ).match(/<(.+)>/)[1]
+          end
+        end
+      end
 
       ##
       # GPG options
-      # Sets the gpg mode to 'encrypt' and passes in the encryption_key_id
+      # Sets the gpg mode to 'encrypt' and passes in the encryption_key_email
       def options
-        "-e --trust-model always -r '#{ encryption_key_id }'"
+        "-e --trust-model always -r '#{ @encryption_key_email }'"
       end
 
       ##
-      # Creates a new temp file and writes the provided public gpg key to it
-      def write_tmp_file!
-        @tmp_file = Tempfile.new('backup.pub')
-        FileUtils.chown(USER, nil, @tmp_file.path)
-        FileUtils.chmod(0600, @tmp_file.path)
-        @tmp_file.write(key)
-        @tmp_file.close
+      # Writes the provided public gpg key to a temp file,
+      # yields the path, then deletes the file when the block returns.
+      def with_tmp_key_file
+        tmp_file = Tempfile.new('backup.pub')
+        FileUtils.chown(Config.user, nil, tmp_file.path)
+        FileUtils.chmod(0600, tmp_file.path)
+        tmp_file.write(encryption_key)
+        tmp_file.close
+        yield tmp_file.path
+        tmp_file.delete
       end
 
       ##
-      # Extracts the 'encryption key id' from the '@tmp_file'
-      # and stores it in '@encryption_key_id'
-      def extract_encryption_key_id!
-        @encryption_key_id = run("#{ utility(:gpg) } --import '#{tmp_file.path}' 2>&1").match(/<(.+)>/)[1]
+      # Returns the encryption key with preceding spaces and tabs removed
+      def encryption_key
+        key.gsub(/^[[:blank:]]+/, '')
       end
 
     end

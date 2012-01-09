@@ -16,10 +16,10 @@ module Backup
           # faster (-1) (but not significantly faster)
           attr_accessor :fast
 
-          ##                                                                                                                                                                         
-          # Tells Backup::Compressor::Pbzip2 how many processors                                                                                                                     
-          # use, by default autodetect is used                                                                                                                                       
-          attr_writer :processors
+          ##
+          # Tells Backup::Compressor::Pbzip2 how many processors
+          # use, by default autodetect is used
+          attr_accessor :processors
 
         end
       end

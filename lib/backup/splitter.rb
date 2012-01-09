@@ -4,58 +4,71 @@ module Backup
   class Splitter
     include Backup::CLI::Helpers
 
-    ##
-    # Separates the end of the file from the chunk extension name
-    SUFFIX_SEPARATOR = "-"
-
-    ##
-    # Holds an instance of the current Backup model
-    attr_accessor :model
-
-    ##
-    # Instantiates a new instance of Backup::Splitter and takes
-    # a Backup model as an argument.
-    # Also, (re)set the Backup::Model.chunk_suffixes to an empty array.
-    def initialize(model)
+    def initialize(model, chunk_size)
       @model = model
-      Backup::Model.chunk_suffixes = Array.new
+      @chunk_size = chunk_size
     end
 
     ##
-    # Splits the file in multiple chunks if necessary, and it's necessary
-    # when the requested chunk size is smaller than the actual backup file
-    def split!
-      return unless model.chunk_size.is_a?(Integer)
+    # This is called as part of the procedure used to build the final
+    # backup package file(s). It yields it's portion of the command line
+    # for this procedure, which will split the data being piped into it
+    # into multiple files, based on the @chunk_size.
+    # Once the packaging procedure is complete, it will return and
+    # @package.chunk_suffixes will be set based on the resulting files.
+    def split_with
+      before_packaging
+      yield @split_command
+      after_packaging
+    end
 
-      if File.size(model.file) > bytes_representation_of(model.chunk_size)
-        Logger.message "#{ self.class } started splitting the packaged archive in to chunks of #{ model.chunk_size } megabytes."
-        run("#{ utility(:split) } -b #{ model.chunk_size }m '#{ model.file }' '#{ model.file + SUFFIX_SEPARATOR }'")
-        Backup::Model.chunk_suffixes = chunk_suffixes
+    private
+
+    ##
+    # The `split` command reads from $stdin and will store it's output in
+    # multiple files, based on the @chunk_size. The files will be
+    # written using the given `prefix`, which is the full path to the
+    # final @package.basename, plus a '-' separator. This `prefix` will then
+    # be suffixed using 'aa', 'ab', and so on... for each file.
+    def before_packaging
+      @package = @model.package
+      Logger.message "Splitter configured with a chunk size of " +
+          "#{ @chunk_size }MB."
+
+      @split_command = "#{ utility(:split) } -b #{ @chunk_size }m - " +
+          "'#{ File.join(Config.tmp_path, @package.basename + '-') }'"
+    end
+
+    ##
+    # Finds the resulting files from the packaging procedure
+    # and stores an Array of suffixes used in @package.chunk_suffixes.
+    # If the @chunk_size was never reached and only one file
+    # was written, that file will be suffixed with '-aa'.
+    # In which case, it will simply remove the suffix from the filename.
+    def after_packaging
+      suffixes = chunk_suffixes
+      if suffixes == ['aa']
+        FileUtils.mv(
+          File.join(Config.tmp_path, @package.basename + '-aa'),
+          File.join(Config.tmp_path, @package.basename)
+        )
+      else
+        @package.chunk_suffixes = suffixes
       end
     end
 
-  private
-
     ##
-    # Returns an array of suffixes for each chunk.
-    # For example: [aa, ab, ac, ad, ae] - Chunk suffixes are sorted on alphabetical order
+    # Returns an array of suffixes for each chunk, in alphabetical order.
+    # For example: [aa, ab, ac, ad, ae]
     def chunk_suffixes
-      chunks.map do |chunk|
-        File.extname(chunk).split("-").last
-      end.sort
+      chunks.map {|chunk| File.extname(chunk).split('-').last }.sort
     end
 
     ##
     # Returns an array of full paths to the backup chunks.
-    # Chunks aresorted on alphabetical order
+    # Chunks are sorted in alphabetical order.
     def chunks
-      Dir["#{model.file}-*"].sort
-    end
-
-    ##
-    # Converts the provided megabytes to a bytes representation
-    def bytes_representation_of(megabytes)
-      megabytes * 1024 * 1024
+      Dir[File.join(Config.tmp_path, @package.basename + '-*')].sort
     end
 
   end

@@ -13,6 +13,7 @@ describe Backup::Configuration::Database::Redis do
       db.port                = 123
       db.socket              = '/redis.sock'
       db.additional_options  = %w[my options]
+      db.redis_cli_utility   = '/path/to/redis-cli'
     end
   end
 
@@ -26,6 +27,7 @@ describe Backup::Configuration::Database::Redis do
     db.port.should                == 123
     db.socket.should              == '/redis.sock'
     db.additional_options.should  == %w[my options]
+    db.redis_cli_utility.should   == '/path/to/redis-cli'
   end
 
   describe '#clear_defaults!' do
@@ -41,6 +43,7 @@ describe Backup::Configuration::Database::Redis do
       db.port.should                == nil
       db.socket.should              == nil
       db.additional_options.should  == nil
+      db.redis_cli_utility.should   == nil
     end
   end
 end

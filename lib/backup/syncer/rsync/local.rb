@@ -1,9 +1,5 @@
 # encoding: utf-8
 
-##
-# Require the tempfile Ruby library when Backup::Syncer::RSync is loaded
-require 'tempfile'
-
 module Backup
   module Syncer
     module RSync

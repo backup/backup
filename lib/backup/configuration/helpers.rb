@@ -30,6 +30,8 @@ module Backup
         end
       end
 
+      private
+
       ##
       # Returns an Array of the setter methods (as String)
       def setter_methods

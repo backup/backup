@@ -3,201 +3,207 @@
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Storage::SCP do
-
-  let(:scp) do
-    Backup::Storage::SCP.new do |scp|
-      scp.username  = 'my_username'
-      scp.password  = 'my_password'
-      scp.ip        = '123.45.678.90'
-      scp.port      = 22
-      scp.path      = '~/backups/'
-      scp.keep      = 20
+  let(:model)   { Backup::Model.new(:test_trigger, 'test label') }
+  let(:storage) do
+    Backup::Storage::SCP.new(model) do |scp|
+      scp.username     = 'my_username'
+      scp.password     = 'my_password'
+      scp.ip           = '123.45.678.90'
+      scp.keep         = 5
     end
   end
 
-  before do
-    Backup::Configuration::Storage::SCP.clear_defaults!
-  end
+  describe '#initialize' do
+    it 'should set the correct values' do
+      storage.username.should     == 'my_username'
+      storage.password.should     == 'my_password'
+      storage.ip.should           == '123.45.678.90'
+      storage.port.should         == 22
+      storage.path.should         == 'backups'
 
-  it 'should have defined the configuration properly' do
-    scp.username.should == 'my_username'
-    scp.password.should == 'my_password'
-    scp.ip.should       == '123.45.678.90'
-    scp.port.should     == 22
-    scp.path.should     == 'backups/'
-    scp.keep.should     == 20
-  end
-
-  it 'should use the defaults if a particular attribute has not been defined' do
-    Backup::Configuration::Storage::SCP.defaults do |scp|
-      scp.username = 'my_default_username'
-      scp.password = 'my_default_password'
-      scp.path     = '~/backups'
+      storage.storage_id.should be_nil
+      storage.keep.should       == 5
     end
 
-    scp = Backup::Storage::SCP.new do |scp|
-      scp.password = 'my_password'
-      scp.ip       = '123.45.678.90'
+    it 'should set a storage_id if given' do
+      scp = Backup::Storage::SCP.new(model, 'my storage_id')
+      scp.storage_id.should == 'my storage_id'
     end
 
-    scp.username.should == 'my_default_username'
-    scp.password.should == 'my_password'
-    scp.ip.should       == '123.45.678.90'
-    scp.port.should     == 22
-  end
-
-  it 'should have its own defaults' do
-    scp = Backup::Storage::SCP.new
-    scp.port.should == 22
-    scp.path.should == 'backups'
-  end
-
-  describe '#perform' do
-    it 'should invoke transfer! and cycle!' do
-      scp.expects(:transfer!)
-      scp.expects(:cycle!)
-      scp.perform!
+    it 'should remove any preceeding tilde and slash from the path' do
+      storage = Backup::Storage::SCP.new(model) do |scp|
+        scp.path = '~/my_backups/path'
+      end
+      storage.path.should == 'my_backups/path'
     end
-  end
+
+    context 'when setting configuration defaults' do
+      after { Backup::Configuration::Storage::SCP.clear_defaults! }
+
+      it 'should use the configured defaults' do
+        Backup::Configuration::Storage::SCP.defaults do |scp|
+          scp.username     = 'some_username'
+          scp.password     = 'some_password'
+          scp.ip           = 'some_ip'
+          scp.port         = 'some_port'
+          scp.path         = 'some_path'
+          scp.keep         = 'some_keep'
+        end
+        storage = Backup::Storage::SCP.new(model)
+        storage.username.should     == 'some_username'
+        storage.password.should     == 'some_password'
+        storage.ip.should           == 'some_ip'
+        storage.port.should         == 'some_port'
+        storage.path.should         == 'some_path'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       == 'some_keep'
+      end
+
+      it 'should override the configured defaults' do
+        Backup::Configuration::Storage::SCP.defaults do |scp|
+          scp.username     = 'old_username'
+          scp.password     = 'old_password'
+          scp.ip           = 'old_ip'
+          scp.port         = 'old_port'
+          scp.path         = 'old_path'
+          scp.keep         = 'old_keep'
+        end
+        storage = Backup::Storage::SCP.new(model) do |scp|
+          scp.username     = 'new_username'
+          scp.password     = 'new_password'
+          scp.ip           = 'new_ip'
+          scp.port         = 'new_port'
+          scp.path         = 'new_path'
+          scp.keep         = 'new_keep'
+        end
+
+        storage.username.should     == 'new_username'
+        storage.password.should     == 'new_password'
+        storage.ip.should           == 'new_ip'
+        storage.port.should         == 'new_port'
+        storage.path.should         == 'new_path'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       == 'new_keep'
+      end
+    end # context 'when setting configuration defaults'
+
+  end # describe '#initialize'
 
   describe '#connection' do
-    it 'should establish a connection to the remote server' do
-      connection = mock
+    let(:connection) { mock }
+    it 'should yield a Net::SSH connection' do
       Net::SSH.expects(:start).with(
-        '123.45.678.90',
-        'my_username',
-        :password => 'my_password',
-        :port => 22
+        '123.45.678.90', 'my_username', :password => 'my_password', :port => 22
       ).yields(connection)
 
-      scp.send(:connection) do |ssh|
-        ssh.should be connection
+      storage.send(:connection) do |ssh|
+        ssh.should be(connection)
       end
     end
   end
 
   describe '#transfer!' do
+    let(:connection) { mock }
+    let(:package) { mock }
+    let(:ssh_scp) { mock }
+    let(:s) { sequence '' }
 
     before do
-      scp.stubs(:storage_name).returns('Storage::SCP')
+      storage.instance_variable_set(:@package, package)
+      storage.stubs(:storage_name).returns('Storage::SCP')
+      storage.stubs(:local_path).returns('/local/path')
+      storage.stubs(:connection).yields(connection)
+      connection.stubs(:scp).returns(ssh_scp)
     end
 
-    context 'when file chunking is not used' do
-      it 'should create remote paths and transfer using a single connection' do
-        ssh, ssh_scp = mock, mock
-        local_file  = "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"
-        remote_file = "#{ Backup::TRIGGER }.tar"
+    it 'should transfer the package files' do
+      storage.expects(:remote_path_for).in_sequence(s).with(package).
+          returns('remote/path')
+      connection.expects(:exec!).in_sequence(s).with("mkdir -p 'remote/path'")
 
-        scp.expects(:connection).yields(ssh)
-        scp.expects(:create_remote_directories).with(ssh)
+      storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
+        multiple_yields(
+        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
+        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
+      )
+      # first yield
+      Backup::Logger.expects(:message).in_sequence(s).with(
+        "Storage::SCP started transferring " +
+        "'2011.12.31.11.00.02.backup.tar.enc-aa' to '123.45.678.90'."
+      )
+      ssh_scp.expects(:upload!).in_sequence(s).with(
+        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'),
+        File.join('remote/path', 'backup.tar.enc-aa')
+      )
+      # second yield
+      Backup::Logger.expects(:message).in_sequence(s).with(
+        "Storage::SCP started transferring " +
+        "'2011.12.31.11.00.02.backup.tar.enc-ab' to '123.45.678.90'."
+      )
+      ssh_scp.expects(:upload!).in_sequence(s).with(
+        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'),
+        File.join('remote/path', 'backup.tar.enc-ab')
+      )
 
-        Backup::Logger.expects(:message).with(
-          "Storage::SCP started transferring '#{local_file}' to '#{scp.ip}'."
-        )
-
-        ssh.expects(:scp).returns(ssh_scp)
-        ssh_scp.expects(:upload!).with(
-          File.join(Backup::TMP_PATH, local_file),
-          File.join('backups/myapp', Backup::TIME, remote_file)
-        )
-
-        scp.send(:transfer!)
-      end
+      storage.send(:transfer!)
     end
-
-    context 'when file chunking is used' do
-      it 'should transfer all the provided files using a single connection' do
-        s = sequence ''
-        ssh, ssh_scp = mock, mock
-
-        scp.expects(:connection).in_sequence(s).yields(ssh)
-        scp.expects(:create_remote_directories).in_sequence(s).with(ssh)
-
-        scp.expects(:files_to_transfer).in_sequence(s).multiple_yields(
-          ['local_file1', 'remote_file1'], ['local_file2', 'remote_file2']
-        )
-
-        Backup::Logger.expects(:message).in_sequence(s).with(
-          "Storage::SCP started transferring 'local_file1' to '#{scp.ip}'."
-        )
-        ssh.expects(:scp).in_sequence(s).returns(ssh_scp)
-        ssh_scp.expects(:upload!).in_sequence(s).with(
-          File.join(Backup::TMP_PATH, 'local_file1'),
-          File.join('backups/myapp', Backup::TIME, 'remote_file1')
-        )
-
-        Backup::Logger.expects(:message).in_sequence(s).with(
-          "Storage::SCP started transferring 'local_file2' to '#{scp.ip}'."
-        )
-        ssh.expects(:scp).in_sequence(s).returns(ssh_scp)
-        ssh_scp.expects(:upload!).in_sequence(s).with(
-          File.join(Backup::TMP_PATH, 'local_file2'),
-          File.join('backups/myapp', Backup::TIME, 'remote_file2')
-        )
-
-        scp.send(:transfer!)
-      end
-    end
-
   end # describe '#transfer!'
 
   describe '#remove!' do
+    let(:package) { mock }
+    let(:connection) { mock }
+    let(:s) { sequence '' }
 
     before do
-      scp.stubs(:storage_name).returns('Storage::SCP')
+      storage.stubs(:storage_name).returns('Storage::SCP')
+      storage.stubs(:connection).yields(connection)
     end
 
-    it 'should remove all remote files with a single logger call' do
-      ssh = mock
+    it 'should remove the package files' do
+      storage.expects(:remote_path_for).in_sequence(s).with(package).
+          returns('remote/path')
 
-      scp.expects(:transferred_files).multiple_yields(
-        ['local_file1', 'remote_file1'], ['local_file2', 'remote_file2']
+      storage.expects(:transferred_files_for).in_sequence(s).with(package).
+        multiple_yields(
+        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
+        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
-
-      Backup::Logger.expects(:message).with(
-        "Storage::SCP started removing 'local_file1' from '#{scp.ip}'.\n" +
-        "Storage::SCP started removing 'local_file2' from '#{scp.ip}'."
+      # after both yields
+      Backup::Logger.expects(:message).in_sequence(s).with(
+        "Storage::SCP started removing " +
+        "'2011.12.31.11.00.02.backup.tar.enc-aa' from '123.45.678.90'.\n" +
+        "Storage::SCP started removing " +
+        "'2011.12.31.11.00.02.backup.tar.enc-ab' from '123.45.678.90'."
       )
+      connection.expects(:exec!).with("rm -r 'remote/path'").in_sequence(s)
 
-      scp.expects(:connection).yields(ssh)
-      ssh.expects(:exec!).with("rm -r 'backups/myapp/#{ Backup::TIME }'")
-
-      scp.send(:remove!)
+      storage.send(:remove!, package)
     end
 
-    it 'should raise an error if Net::SSH reports errors' do
-      ssh = mock
+    context 'when the ssh connection reports errors' do
+      it 'should raise an error reporting the errors' do
+        storage.expects(:remote_path_for).in_sequence(s).with(package).
+            returns('remote/path')
 
-      scp.expects(:transferred_files)
-      Backup::Logger.expects(:message)
+        storage.expects(:transferred_files_for).in_sequence(s).with(package)
 
-      scp.expects(:connection).yields(ssh)
-      ssh.expects(:exec!).yields('', :stderr, 'error message')
+        Backup::Logger.expects(:message).in_sequence(s)
 
-      expect do
-        scp.send(:remove!)
-      end.to raise_error(
-        Backup::Errors::Storage::SCP::SSHError,
-        "Storage::SCP::SSHError: Net::SSH reported the following errors:\n" +
-        "  error message"
-      )
+        connection.expects(:exec!).with("rm -r 'remote/path'").in_sequence(s).
+          yields(:ch, :stderr, 'path not found')
+
+        expect do
+          storage.send(:remove!, package)
+        end.to raise_error {|err|
+          err.should be_an_instance_of Backup::Errors::Storage::SCP::SSHError
+          err.message.should == "Storage::SCP::SSHError: " +
+            "Net::SSH reported the following errors:\n" +
+            "  path not found"
+        }
+      end
     end
-
   end # describe '#remove!'
-
-  describe '#create_remote_directories' do
-    it 'should properly create remote directories one by one' do
-      ssh = mock
-      scp.path = 'backups/some_other_folder/another_folder'
-
-      ssh.expects(:exec!).with("mkdir 'backups'")
-      ssh.expects(:exec!).with("mkdir 'backups/some_other_folder'")
-      ssh.expects(:exec!).with("mkdir 'backups/some_other_folder/another_folder'")
-      ssh.expects(:exec!).with("mkdir 'backups/some_other_folder/another_folder/myapp'")
-      ssh.expects(:exec!).with("mkdir 'backups/some_other_folder/another_folder/myapp/#{ Backup::TIME }'")
-
-      scp.send(:create_remote_directories, ssh)
-    end
-  end
 
 end

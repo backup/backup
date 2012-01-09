@@ -1,70 +1,54 @@
 # encoding: utf-8
 
-##
-# Load the Ruby FileUtils library
-require 'fileutils'
-
 module Backup
   module Storage
     class Local < Base
 
       ##
-      # Path to store backups to
+      # Path where the backup will be stored.
       attr_accessor :path
 
       ##
-      # This is the remote path to where the backup files will be stored.
-      # Eventhough it says "remote", it's actually the "local" path, but
-      # the naming is necessary for compatibility reasons
-      def remote_path
-        File.join(path, TRIGGER, @time)
+      # Creates a new instance of the storage object
+      def initialize(model, storage_id = nil, &block)
+        super(model, storage_id)
+
+        @path ||= File.join(
+          File.expand_path(ENV['HOME'] || ''),
+          'backups'
+        )
+
+        instance_eval(&block) if block_given?
+
+        @path = File.expand_path(@path)
       end
 
-      ##
-      # Performs the backup transfer
-      def perform!
-        super
-        transfer!
-        cycle!
-      end
-
-    private
+      private
 
       ##
-      # Set configuration defaults before evaluating configuration block,
-      # after setting defaults from Storage::Base
-      def pre_configure
-        super
-        @path ||= "#{ENV['HOME']}/backups"
-      end
-
-      ##
-      # Adjust configuration after evaluating configuration block,
-      # after adjustments from Storage::Base
-      def post_configure
-        super
-        @path = File.expand_path(path)
-      end
-
-      ##
-      # Transfers the archived file to the specified local path
+      # Transfers the archived file to the specified path
       def transfer!
-        create_local_directories!
+        remote_path = remote_path_for(@package)
+        FileUtils.mkdir_p(remote_path)
 
-        files_to_transfer do |local_file, remote_file|
+        files_to_transfer_for(@package) do |local_file, remote_file|
           Logger.message "#{storage_name} started transferring '#{ local_file }'."
-          FileUtils.cp(
-            File.join(local_path, local_file),
-            File.join(remote_path, remote_file)
-          )
+
+          src_path = File.join(local_path, local_file)
+          dst_path = File.join(remote_path, remote_file)
+          FileUtils.send(transfer_method, src_path, dst_path)
         end
       end
 
       ##
-      # Removes the transferred archive file from the local path
-      def remove!
+      # Removes the transferred archive file(s) from the storage location.
+      # Any error raised will be rescued during Cycling
+      # and a warning will be logged, containing the error message.
+      def remove!(package)
+        remote_path = remote_path_for(package)
+
         messages = []
-        transferred_files do |local_file, remote_file|
+        transferred_files_for(package) do |local_file, remote_file|
           messages << "#{storage_name} started removing '#{ local_file }'."
         end
         Logger.message messages.join("\n")
@@ -73,9 +57,24 @@ module Backup
       end
 
       ##
-      # Creates the path to where the backups are stored if it doesn't exist yet
-      def create_local_directories!
-        FileUtils.mkdir_p(remote_path)
+      # Set and return the transfer method.
+      # If this Local Storage is not the last Storage for the Model,
+      # force the transfer to use a *copy* operation and issue a warning.
+      def transfer_method
+        return @transfer_method if @transfer_method
+
+        if self == @model.storages.last
+          @transfer_method = :mv
+        else
+          Logger.warn Errors::Storage::Local::TransferError.new(<<-EOS)
+            Local File Copy Warning!
+            The final backup file(s) for '#{@model.label}' (#{@model.trigger})
+            will be *copied* to '#{remote_path_for(@package)}'
+            To avoid this, when using more than one Storage, the 'Local' Storage
+            should be added *last* so the files may be *moved* to their destination.
+          EOS
+          @transfer_method = :cp
+        end
       end
 
     end

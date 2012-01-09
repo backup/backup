@@ -11,15 +11,25 @@ module Backup
           attr_accessor :api_key, :api_secret
 
           ##
+          # Dropbox Access Type
+          # Valid values are:
+          #   :app_folder (default)
+          #   :dropbox (full access)
+          attr_accessor :access_type
+
+          ##
           # Path to where the backups will be stored
           attr_accessor :path
 
-          ##
-          # Dropbox connection timeout
-          attr_accessor :timeout
-
 
           # DEPRECATED METHODS #############################################
+
+          # Deprecated as of v3.0.21 - for move to official 'dropbox-sdk' gem (v1.1)
+          attr_reader :timeout
+          def timeout=(value)
+            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.timeout=\n" +
+                "  is deprecated and will be removed at some point."
+          end
 
           def email
             Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.email\n" +

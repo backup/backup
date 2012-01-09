@@ -3,183 +3,238 @@
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Database::PostgreSQL do
-
-  before do
-    Backup::Database::PostgreSQL.any_instance.stubs(:load_defaults!)
-  end
-
+  let(:model) { Backup::Model.new('foo', 'foo') }
   let(:db) do
-    Backup::Database::PostgreSQL.new do |db|
+    Backup::Database::PostgreSQL.new(model) do |db|
       db.name      = 'mydatabase'
       db.username  = 'someuser'
       db.password  = 'secret'
       db.host      = 'localhost'
       db.port      = '123'
-      db.socket    = '/pg.sock'
+      db.socket    = '/pgsql.sock'
 
       db.skip_tables = ['logs', 'profiles']
       db.only_tables = ['users', 'pirates']
       db.additional_options = ['--single-transaction', '--quick']
+      db.pg_dump_utility    = '/path/to/pg_dump'
     end
   end
 
-  describe '#new' do
+  describe '#initialize' do
     it 'should read the adapter details correctly' do
       db.name.should      == 'mydatabase'
       db.username.should  == 'someuser'
       db.password.should  == 'secret'
       db.host.should      == 'localhost'
       db.port.should      == '123'
-      db.socket.should    == '/pg.sock'
+      db.socket.should    == '/pgsql.sock'
 
       db.skip_tables.should == ['logs', 'profiles']
       db.only_tables.should == ['users', 'pirates']
       db.additional_options.should == ['--single-transaction', '--quick']
+      db.pg_dump_utility.should    == '/path/to/pg_dump'
     end
 
-    it 'arrays should default to empty arrays when not specified' do
-      db = Backup::Database::PostgreSQL.new do |db|
-        db.name     = 'mydatabase'
-        db.username = 'someuser'
-        db.password = 'secret'
+    context 'when options are not set' do
+      before do
+        Backup::Database::PostgreSQL.any_instance.expects(:utility).
+            with(:pg_dump).returns('/real/pg_dump')
       end
 
-      db.skip_tables.should == []
-      db.only_tables.should == []
-      db.additional_options.should == []
+      it 'should use default values' do
+        db = Backup::Database::PostgreSQL.new(model)
+
+        db.name.should      be_nil
+        db.username.should  be_nil
+        db.password.should  be_nil
+        db.host.should      be_nil
+        db.port.should      be_nil
+        db.socket.should    be_nil
+
+        db.skip_tables.should         == []
+        db.only_tables.should         == []
+        db.additional_options.should  == []
+        db.pg_dump_utility.should     == '/real/pg_dump'
+      end
     end
 
-    it 'handles an empty username' do
-      db = Backup::Database::PostgreSQL.new {}
-      db.username = ''
+    context 'when configuration defaults have been set' do
+      after { Backup::Configuration::Database::PostgreSQL.clear_defaults! }
 
-      db.username_options.should == ''
-      db.password_options.should == ''
+      it 'should use configuration defaults' do
+        Backup::Configuration::Database::PostgreSQL.defaults do |db|
+          db.name       = 'db_name'
+          db.username   = 'db_username'
+          db.password   = 'db_password'
+          db.host       = 'db_host'
+          db.port       = 789
+          db.socket     = '/foo.sock'
+
+          db.skip_tables = ['skip', 'tables']
+          db.only_tables = ['only', 'tables']
+          db.additional_options = ['--add', '--opts']
+          db.pg_dump_utility    = '/default/path/to/pg_dump'
+        end
+
+        db = Backup::Database::PostgreSQL.new(model)
+        db.name.should      == 'db_name'
+        db.username.should  == 'db_username'
+        db.password.should  == 'db_password'
+        db.host.should      == 'db_host'
+        db.port.should      == 789
+        db.socket.should    == '/foo.sock'
+
+        db.skip_tables.should         == ['skip', 'tables']
+        db.only_tables.should         == ['only', 'tables']
+        db.additional_options.should  == ['--add', '--opts']
+        db.pg_dump_utility.should     == '/default/path/to/pg_dump'
+      end
+    end
+  end # describe '#initialize'
+
+  describe '#perform!' do
+    let(:s) { sequence '' }
+    before do
+      # superclass actions
+      db.expects(:prepare!).in_sequence(s)
+      db.expects(:log!).in_sequence(s)
+      db.instance_variable_set(:@dump_path, '/dump/path')
+
+      db.stubs(:pgdump).returns('pgdump_command')
     end
 
-    it 'handles a nil username' do
-      db = Backup::Database::PostgreSQL.new {}
-      db.username = nil
-
-      db.username_options.should == ''
-      db.password_options.should == ''
-    end
-  end
-
-  describe '#skip_tables' do
-    it 'should return a string for the pg_dump --ignore-tables option' do
-      db.tables_to_skip.should == "--exclude-table='logs' --exclude-table='profiles'"
-    end
-
-    it 'should return an empty string' do
-      db = Backup::Database::PostgreSQL.new {}
-      db.tables_to_skip.should == ""
-    end
-  end
-
-  describe '#only_tables' do
-    it 'should return a string for the pg_dump selected table to dump option' do
-      db.tables_to_dump.should == "--table='users' --table='pirates'"
-    end
-
-    it 'should return an empty string' do
-      db = Backup::Database::PostgreSQL.new {}
-      db.tables_to_dump.should == ""
-    end
-  end
-
-  describe '#username_options' do
-    it 'should return the postgresql syntax for the username options' do
-      db.username_options.should == "--username='someuser'"
-    end
-
-    it 'should only return the postgresql syntax for the user' do
-      db = Backup::Database::PostgreSQL.new do |db|
-        db.username = 'someuser'
+    context 'when no compressor is configured' do
+      before do
+        model.expects(:compressor).in_sequence(s).returns(nil)
       end
 
-      db.username_options.should == "--username='someuser'"
+      it 'should run pgdump without compression' do
+        db.expects(:run).in_sequence(s).with(
+          "pgdump_command > '/dump/path/mydatabase.sql'"
+        )
+        db.perform!
+      end
+    end
+
+    context 'when a compressor is configured' do
+      before do
+        compressor = mock
+        model.expects(:compressor).twice.in_sequence(s).returns(compressor)
+        compressor.expects(:compress_with).in_sequence(s).yields('gzip', '.gz')
+      end
+
+      it 'should run pgdump with compression' do
+        db.expects(:run).in_sequence(s).with(
+          "pgdump_command | gzip > '/dump/path/mydatabase.sql.gz'"
+        )
+        db.perform!
+      end
+    end
+
+  end # describe '#perform!'
+
+  describe '#pgdump' do
+    it 'should return the pgdump command string' do
+      db.send(:pgdump).should ==
+        "PGPASSWORD='secret' /path/to/pg_dump --username='someuser' " +
+        "--host='localhost' --port='123' --host='/pgsql.sock' " +
+        "--single-transaction --quick --table='users' --table='pirates' " +
+        "--exclude-table='logs' --exclude-table='profiles' mydatabase"
+    end
+
+    context 'without a password' do
+      before { db.password = nil }
+      it 'should not leave a preceeding space' do
+        db.send(:pgdump).should ==
+          "/path/to/pg_dump --username='someuser' " +
+          "--host='localhost' --port='123' --host='/pgsql.sock' " +
+          "--single-transaction --quick --table='users' --table='pirates' " +
+          "--exclude-table='logs' --exclude-table='profiles' mydatabase"
+      end
     end
   end
 
   describe '#password_options' do
     it 'returns the environment variable set for the password' do
-      db.password_options.should == "PGPASSWORD='secret'"
+      db.send(:password_options).should == "PGPASSWORD='secret' "
+    end
+
+    context 'when password is not set' do
+      before { db.password = nil }
+      it 'should return an empty string' do
+        db.send(:password_options).should == ''
+      end
+    end
+  end
+
+  describe '#username_options' do
+    it 'should return the postgresql syntax for the username options' do
+      db.send(:username_options).should == "--username='someuser'"
+    end
+
+    context 'when username is not set' do
+      before { db.username = nil }
+      it 'should return an empty string' do
+        db.send(:username_options).should == ''
+      end
     end
   end
 
   describe '#connectivity_options' do
     it 'should return the postgresql syntax for the connectivity options' do
-      db.connectivity_options.should == "--host='localhost' --port='123' --host='/pg.sock'"
+      db.send(:connectivity_options).should ==
+        "--host='localhost' --port='123' --host='/pgsql.sock'"
     end
 
-    it 'should return only the socket' do
-      db = Backup::Database::PostgreSQL.new do |db|
+    context 'when only the socket is set' do
+      before do
         db.host   = ''
         db.port   = nil
-        db.socket = '/pg.sock'
       end
 
-      db.connectivity_options.should == "--host='/pg.sock'"
+      it 'should return only the socket' do
+        db.send(:connectivity_options).should == "--host='/pgsql.sock'"
+      end
     end
   end
 
-  describe '#additional_options' do
+  describe '#user_options' do
     it 'should return a string of additional options specified by the user' do
-      db.options.should == '--single-transaction --quick'
+      db.send(:user_options).should == '--single-transaction --quick'
     end
 
-    it 'should return an empty string' do
-      db = Backup::Database::PostgreSQL.new {}
-      db.options.should == ""
-    end
-  end
-
-  describe '#pg_dump_string' do
-    before do
-      db.expects(:utility).with(:pg_dump).returns('pg_dump')
-    end
-
-    it 'should return the full pg_dump string' do
-      db.pgdump.should ==
-      "PGPASSWORD='secret' pg_dump --username='someuser' " +
-      "--host='localhost' --port='123' --host='/pg.sock' " +
-      "--single-transaction --quick --table='users' --table='pirates' " +
-      "--exclude-table='logs' --exclude-table='profiles' mydatabase"
-    end
-
-    it 'returns the full pg_dump string when a password is not specified' do
-      db.password = nil
-      db.pgdump.should ==
-          "pg_dump --username='someuser' " +
-          "--host='localhost' --port='123' --host='/pg.sock' " +
-          "--single-transaction --quick --table='users' --table='pirates' " +
-          "--exclude-table='logs' --exclude-table='profiles' mydatabase"
-
+    context 'when #additional_options is not set' do
+      before { db.additional_options = [] }
+      it 'should return an empty string' do
+        db.send(:user_options).should == ''
+      end
     end
   end
 
-  describe '#perform!' do
-    before do
-      db.stubs(:utility).returns('pg_dump')
-      db.stubs(:mkdir)
-      db.stubs(:run)
+  describe '#tables_to_dump' do
+    it 'should return a string for the pg_dump selected table to dump option' do
+      db.send(:tables_to_dump).should == "--table='users' --table='pirates'"
     end
 
-    it 'should ensure the directory is available' do
-      db.expects(:mkdir).with(File.join(Backup::TMP_PATH, "myapp", "PostgreSQL"))
-      db.perform!
-    end
-
-    it 'should run the pg_dump command and dump it to the specified path' do
-      db.expects(:run).with("#{db.pgdump} > '#{Backup::TMP_PATH}/myapp/PostgreSQL/mydatabase.sql'")
-      db.perform!
-    end
-
-    it do
-      Backup::Logger.expects(:message).
-          with("Backup::Database::PostgreSQL started dumping and archiving 'mydatabase'.")
-      db.perform!
+    context 'when #only_tables is not set' do
+      before { db.only_tables = [] }
+      it 'should return an empty string' do
+        db.send(:tables_to_dump).should == ''
+      end
     end
   end
+
+  describe '#tables_to_skip' do
+    it 'should return a string for the pg_dump --ignore-tables option' do
+      db.send(:tables_to_skip).should == "--exclude-table='logs' --exclude-table='profiles'"
+    end
+
+    context 'when #skip_tables is not set' do
+      before { db.skip_tables = [] }
+      it 'should return an empty string' do
+        db.send(:tables_to_skip).should == ''
+      end
+    end
+  end
+
 end

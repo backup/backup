@@ -9,10 +9,6 @@ module Backup
     class Prowl < Base
 
       ##
-      # Container for the Twitter Client object
-      attr_accessor :prowl_client
-
-      ##
       # Application name
       # Tell something like your server name. Example: "Server1 Backup"
       attr_accessor :application
@@ -22,15 +18,13 @@ module Backup
       # Create a Prowl account and request an API key on prowlapp.com.
       attr_accessor :api_key
 
-      ##
-      # Performs the notification
-      # Extends from super class. Must call super(model, exception).
-      # If any pre-configuration needs to be done, put it above the super(model, exception)
-      def perform!(model, exception = false)
-        super(model, exception)
+      def initialize(model, &block)
+        super(model)
+
+        instance_eval(&block) if block_given?
       end
 
-    private
+      private
 
       ##
       # Notify the user of the backup operation results.
@@ -58,14 +52,12 @@ module Backup
                when :failure then 'Failure'
                end
         message = '[Backup::%s]' % name
-        prowl_client.notify(message, "#{model.label} (#{model.trigger})")
+        send_message(message)
       end
 
-      ##
-      # Configures the Prowler object by passing in the @api_key and the
-      # @application. Instantiates and sets the @prowl_client object
-      def set_defaults!
-        @prowl_client = Prowler.new(:application => application, :api_key => api_key)
+      def send_message(message)
+        client = Prowler.new(:application => application, :api_key => api_key)
+        client.notify(message, "#{@model.label} (#{@model.trigger})")
       end
 
     end

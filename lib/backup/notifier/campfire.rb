@@ -30,15 +30,13 @@ module Backup
       # Campfire account's room id
       attr_accessor :room_id
 
-      ##
-      # Performs the notification
-      # Extends from super class. Must call super(model, exception).
-      # If any pre-configuration needs to be done, put it above the super(model, exception)
-      def perform!(model, exception = false)
-        super(model, exception)
+      def initialize(model, &block)
+        super(model)
+
+        instance_eval(&block) if block_given?
       end
 
-    private
+      private
 
       ##
       # Notify the user of the backup operation results.
@@ -65,13 +63,9 @@ module Backup
                when :warning then 'Warning'
                when :failure then 'Failure'
                end
-        message = "[Backup::%s] #{model.label} (#{model.trigger})" % name
+        message = "[Backup::%s] #{@model.label} (#{@model.trigger})" % name
         send_message(message)
       end
-
-      ##
-      # nothing to do
-      def set_defaults!; end
 
       ##
       # Creates a new Campfire::Interface object and passes in the
@@ -138,7 +132,7 @@ module Backup
           send_message(message)
         end
 
-      private
+        private
 
         ##
         # Takes a "message" as argument, the "type" defaults to "Textmessage".

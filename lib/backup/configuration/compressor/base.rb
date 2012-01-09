@@ -3,8 +3,7 @@
 module Backup
   module Configuration
     module Compressor
-      class Base < Backup::Configuration::Base
-      end
+      class Base < Configuration::Base; end
     end
   end
 end

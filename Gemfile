@@ -6,12 +6,8 @@ source 'http://rubygems.org'
 # Include gem dependencies from the gemspec for development purposes
 gemspec
 
-# Load Backup::Dependency
-["cli/helpers", "dependency"].each do |library|
-  require File.expand_path("../lib/backup/#{library}", __FILE__)
-end
-
 # Dynamically define the dependencies specified in Backup::Dependency.all
+require File.expand_path("../lib/backup/dependency", __FILE__)
 Backup::Dependency.all.each do |name, gemspec|
   gem(name, gemspec[:version])
 end

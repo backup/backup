@@ -6,11 +6,23 @@ module Backup
       include Backup::CLI::Helpers
       include Backup::Configuration::Helpers
 
+      def initialize
+        load_defaults!
+      end
+
+      private
+
+      ##
+      # Return the encryptor name, with Backup namespace removed
+      def compressor_name
+        self.class.to_s.sub('Backup::', '')
+      end
+
       ##
       # Logs a message to the console and log file to inform
-      # the client that Backup is compressing the archive
+      # the client that Backup is using the compressor
       def log!
-        Logger.message "#{ self.class } started compressing the archive."
+        Logger.message "Using #{ compressor_name } for compression."
       end
     end
   end

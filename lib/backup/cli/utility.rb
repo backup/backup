@@ -13,7 +13,7 @@ module Backup
       # If the other options (--config-file, --data-path, --cache--path, --tmp-path) aren't specified
       # they will fallback to the (good) defaults
       #
-      # If --root-path is given, it will be used as the base (Backup::PATH) for our defaults,
+      # If --root-path is given, it will be used as the base path for our defaults,
       # as well as the base path for any option specified as a relative path.
       # Any option given as an absolute path will be used "as-is".
       method_option :trigger,         :type => :string,  :required => true, :aliases => ['-t', '--triggers']
@@ -30,71 +30,56 @@ module Backup
                       "This will invoke 4 backups, and they will run in the order specified (not asynchronous)."
       def perform
         ##
-        # Setup required paths based on the given options
-        setup_paths(options)
+        # Silence Backup::Logger from printing to STDOUT, if --quiet was specified
+        Logger.quiet = options[:quiet]
 
         ##
-        # Silence Backup::Logger from printing to STDOUT, if --quiet was specified
-        Logger.send(:const_set, :QUIET, options[:quiet])
+        # Update Config variables based on the given options
+        Config.update(options)
+
+        ##
+        # Load the configuration file
+        Config.load_config!
+
+        ##
+        # Ensure the :log_path, :cache_path and :tmp_path are created
+        # if they do not yet exist
+        [Config.log_path, Config.cache_path, Config.tmp_path].each do |path|
+          FileUtils.mkdir_p(path)
+        end
+
+        ##
+        # Truncate log file if needed
+        Logger.truncate!
 
         ##
         # Prepare all trigger names by splitting them by ','
         # and finding trigger names matching wildcard
         triggers = options[:trigger].split(",")
-        triggers.map!(&:strip).map!{ |t|
-          t.include?(Backup::Finder::WILDCARD) ?
-            Backup::Finder.new(t).matching : t
+        triggers.map!(&:strip).map! {|t|
+          t.include?('*') ? Model.find_matching(t) : t
         }.flatten!
 
         ##
         # Process each trigger
         triggers.each do |trigger|
+          ##
+          # Find the model for this trigger
+          # Will raise an error if not found
+          model = Model.find(trigger)
 
           ##
-          # Defines the TRIGGER constant
-          Backup.send(:const_set, :TRIGGER, trigger)
-
-          ##
-          # Define the TIME constants
-          Backup.send(:const_set, :TIME, Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
-
-          ##
-          # Ensure DATA_PATH and DATA_PATH/TRIGGER are created if they do not yet exist
-          FileUtils.mkdir_p(File.join(Backup::DATA_PATH, Backup::TRIGGER))
-
-          ##
-          # Parses the backup configuration file and returns the model instance by trigger
-          model = Backup::Finder.new(trigger).find
-
-          ##
-          # Runs the returned model
-          Logger.message "Performing backup for #{model.label}!"
+          # Prepare and Perform the backup
+          model.prepare!
           model.perform!
-
-          ##
-          # Removes the TRIGGER constant
-          Backup.send(:remove_const, :TRIGGER) if defined? Backup::TRIGGER
-
-          ##
-          # Removes the TIME constant
-          Backup.send(:remove_const, :TIME) if defined? Backup::TIME
-
-          ##
-          # Reset the Backup::Model.current to nil for the next potential run
-          Backup::Model.current = nil
 
           ##
           # Clear the Log Messages for the next potential run
           Logger.clear!
-
-          ##
-          # Reset the Backup::Model.extension to 'tar' so it's at its
-          # initial state when the next Backup::Model initializes
-          Backup::Model.extension = 'tar'
         end
 
       rescue => err
-        Logger.error Backup::Errors::CLIError.wrap(err)
+        Logger.error Errors::CLIError.wrap(err)
         exit(1)
       end
 
@@ -104,14 +89,15 @@ module Backup
       # For example:
       #   $ backup generate:model --trigger my_backup --databases='mongodb'
       # will generate a pre-populated model with a base MongoDB setup
-      method_option :trigger,     :type => :string, :required => true
-      method_option :config_path, :type => :string,
-                    :desc => 'Path to your Backup configuration directory'
       desc 'generate:model', "Generates a Backup model file\n\n" +
           "Note:\n" +
           "\s\s'--config-path' is the path to the directory where 'config.rb' is located.\n" +
           "\s\sThe model file will be created as '<config_path>/models/<trigger>.rb'\n" +
-          "\s\sDefault: #{Backup::PATH}\n"
+          "\s\sDefault: #{Config.root_path}\n"
+
+      method_option :trigger,     :type => :string, :required => true
+      method_option :config_path, :type => :string,
+                    :desc => 'Path to your Backup configuration directory'
 
       # options with their available values
       %w{ databases storages syncers
@@ -127,10 +113,11 @@ module Backup
 
       define_method "generate:model" do
         opts = options.merge(
-          :trigger      => options[:trigger].gsub(/[\W\s]/, '_'),
-          :config_path  => options[:config_path] ? File.expand_path(options[:config_path]) : nil
+          :trigger      =>  options[:trigger].gsub(/[\W\s]/, '_'),
+          :config_path  =>  options[:config_path] ?
+                            File.expand_path(options[:config_path]) : nil
         )
-        config_path    = opts[:config_path] || Backup::PATH
+        config_path    = opts[:config_path] || Config.root_path
         models_path    = File.join(config_path, "models")
         config         = File.join(config_path, "config.rb")
         model          = File.join(models_path, "#{opts[:trigger]}.rb")
@@ -141,14 +128,14 @@ module Backup
             file.write(Backup::Template.new({:options => opts}).
                        result("cli/utility/model.erb"))
           end
-          puts "Generated model file in '#{ model }'."
+          puts "Generated model file: '#{ model }'."
         end
 
         if not File.exist?(config)
           File.open(config, "w") do |file|
             file.write(Backup::Template.new.result("cli/utility/config"))
           end
-          puts "Generated configuration file in '#{ config }'."
+          puts "Generated configuration file: '#{ config }'."
         end
       end
 
@@ -156,18 +143,19 @@ module Backup
       # [Generate:Config]
       # Generates the main configuration file
       desc 'generate:config', 'Generates the main Backup bootstrap/configuration file'
-      method_option :path, :type => :string
+      method_option :config_path, :type => :string,
+                    :desc => 'Path to your Backup configuration directory'
       define_method 'generate:config' do
-        path = options[:path] ? File.expand_path(options[:path]) : nil
-        config_path = path || Backup::PATH
-        config      = File.join(config_path, "config.rb")
+        config_path = options[:config_path] ?
+            File.expand_path(options[:config_path]) : Config.root_path
+        config = File.join(config_path, "config.rb")
 
         FileUtils.mkdir_p(config_path)
         if overwrite?(config)
           File.open(config, "w") do |file|
             file.write(Backup::Template.new.result("cli/utility/config"))
           end
-          puts "Generated configuration file in '#{ config }'"
+          puts "Generated configuration file: '#{ config }'."
         end
       end
 
@@ -192,7 +180,7 @@ module Backup
           %x[gpg -o '#{options[:out]}' -d '#{options[:in]}']
         else
           puts "Unknown encryptor: #{options[:encryptor]}"
-          puts "Use either 'openssl' or 'gpg'"
+          puts "Use either 'openssl' or 'gpg'."
         end
       end
 
@@ -244,55 +232,6 @@ module Backup
       end
 
       private
-
-      ##
-      # Setup required paths based on the given options
-      #
-      def setup_paths(options)
-        ##
-        # Set PATH if --root-path is given and the directory exists
-        root_path = false
-        root_given = options[:root_path].strip
-        if !root_given.empty? && File.directory?(root_given)
-          root_path = File.expand_path(root_given)
-          Backup.send(:remove_const, :PATH)
-          Backup.send(:const_set, :PATH, root_path)
-        end
-
-        ##
-        # Update all defaults and given paths to use root_path (if given).
-        # Paths given as an absolute path will be used 'as-is'
-        { :config_file  => 'config.rb',
-          :data_path    => 'data',
-          :log_path     => 'log',
-          :cache_path   => '.cache',
-          :tmp_path     => '.tmp' }.each do |key, name|
-          # strip any trailing '/' in case the user supplied this as part of
-          # an absolute path, so we can match it against File.expand_path()
-          given = options[key].sub(/\/\s*$/, '').lstrip
-          path = false
-          if given.empty?
-            path = File.join(root_path, name) if root_path
-          else
-            path = File.expand_path(given)
-            unless given == path
-              path = File.join(root_path, given) if root_path
-            end
-          end
-
-          const = key.to_s.upcase
-          if path
-            Backup.send(:remove_const, const)
-            Backup.send(:const_set, const, path)
-          else
-            path = Backup.const_get(const)
-          end
-
-          ##
-          # Ensure the LOG_PATH, CACHE_PATH and TMP_PATH are created if they do not yet exist
-          FileUtils.mkdir_p(path) if [:log_path, :cache_path, :tmp_path].include?(key)
-        end
-      end
 
       ##
       # Helper method for asking the user if he/she wants to overwrite the file

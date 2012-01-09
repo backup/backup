@@ -14,6 +14,7 @@ describe Backup::Configuration::Database::MySQL do
       db.skip_tables        = %w[my tables]
       db.only_tables        = %w[my other tables]
       db.additional_options = %w[my options]
+      db.mysqldump_utility  = '/path/to/mysqldump'
     end
   end
 
@@ -28,6 +29,7 @@ describe Backup::Configuration::Database::MySQL do
     db.skip_tables.should        == %w[my tables]
     db.only_tables.should        == %w[my other tables]
     db.additional_options.should == %w[my options]
+    db.mysqldump_utility.should  == '/path/to/mysqldump'
   end
 
   describe '#clear_defaults!' do
@@ -44,6 +46,7 @@ describe Backup::Configuration::Database::MySQL do
       db.skip_tables.should        == nil
       db.only_tables.should        == nil
       db.additional_options.should == nil
+      db.mysqldump_utility.should  == nil
     end
   end
 end

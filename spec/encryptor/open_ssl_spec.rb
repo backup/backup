@@ -3,156 +3,127 @@
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Encryptor::OpenSSL do
-
-  context "when no block is provided" do
-    let(:encryptor) { Backup::Encryptor::OpenSSL.new }
-
-    it do
-      encryptor.password.should == nil
-    end
-
-    it do
-      encryptor.send(:base64).should == []
-    end
-
-    it do
-      encryptor.send(:salt).should == []
-    end
-
-    it do
-      encryptor.send(:pass).should == ["-k ''"]
-    end
-
-    it do
-      encryptor.send(:options).should == "aes-256-cbc -k ''"
+  let(:encryptor) do
+    Backup::Encryptor::OpenSSL.new do |e|
+      e.password      = 'mypassword'
+      e.password_file = '/my/password/file'
+      e.base64        = true
+      e.salt          = true
     end
   end
 
-  context "when a block is provided" do
+  describe '#initialize' do
+    it 'should read the adapter details correctly' do
+      encryptor.password.should       == 'mypassword'
+      encryptor.password_file.should  == '/my/password/file'
+      encryptor.base64.should         == true
+      encryptor.salt.should           == true
+    end
 
-    context "with a password" do
-      let(:encryptor) do
-        Backup::Encryptor::OpenSSL.new do |e|
-          e.password = "my_secret_password"
-          e.salt     = true
-          e.base64   = true
-        end
-      end
-
-      it do
-        encryptor.password.should == "my_secret_password"
-      end
-
-      it do
-        encryptor.send(:salt).should == ['-salt']
-      end
-
-      it do
-        encryptor.send(:base64).should == ['-base64']
-      end
-
-      it do
-        encryptor.send(:pass).should == ["-k 'my_secret_password'"]
-      end
-
-      it do
-        encryptor.send(:options).should == "aes-256-cbc -base64 -salt -k 'my_secret_password'"
+    context 'when options are not set' do
+      it 'should use default values' do
+        encryptor = Backup::Encryptor::OpenSSL.new
+        encryptor.password.should       be_nil
+        encryptor.password_file.should  be_nil
+        encryptor.base64.should         be_false
+        encryptor.salt.should           be_true
       end
     end
 
-    context "with a password file" do
-      let(:encryptor) do
-        Backup::Encryptor::OpenSSL.new do |e|
-          e.password_file = "/path/to/password/file"
-          e.salt     = true
-          e.base64   = true
+    context 'when configuration defaults have been set' do
+      after { Backup::Configuration::Encryptor::OpenSSL.clear_defaults! }
+
+      it 'should use configuration defaults' do
+        Backup::Configuration::Encryptor::OpenSSL.defaults do |encryptor|
+          encryptor.password      = 'my_password'
+          encryptor.password_file = '/my_password/file'
+          encryptor.base64        = true
+          encryptor.salt          = true
         end
-      end
 
-      it do
-        encryptor.password.should == nil
-      end
-
-      it do
-        encryptor.password_file.should == "/path/to/password/file"
-      end
-
-      it do
-        encryptor.send(:salt).should == ['-salt']
-      end
-
-      it do
-        encryptor.send(:base64).should == ['-base64']
-      end
-
-      it do
-        encryptor.send(:pass).should == ['-pass file:/path/to/password/file']
-      end
-
-      it do
-        encryptor.send(:options).should == "aes-256-cbc -base64 -salt -pass file:/path/to/password/file"
+        encryptor = Backup::Encryptor::OpenSSL.new
+        encryptor.password.should       == 'my_password'
+        encryptor.password_file.should  == '/my_password/file'
+        encryptor.base64.should         == true
+        encryptor.salt.should           == true
       end
     end
+  end # describe '#initialize'
 
+  describe '#encrypt_with' do
+    it 'should yield the encryption command and extension' do
+      encryptor.expects(:log!)
+      encryptor.expects(:utility).with(:openssl).returns('openssl_cmd')
+      encryptor.expects(:options).returns('cmd_options')
+
+      encryptor.encrypt_with do |command, ext|
+        command.should == 'openssl_cmd cmd_options'
+        ext.should == '.enc'
+      end
+    end
   end
 
-  describe '#perform!' do
+  describe '#options' do
     let(:encryptor) { Backup::Encryptor::OpenSSL.new }
+
     before do
-      Backup::Model.extension = 'tar'
-      [:utility, :run, :rm].each { |method| encryptor.stubs(method) }
+      # salt is true by default
+      encryptor.salt = false
     end
 
-    it do
-      encryptor = Backup::Encryptor::OpenSSL.new
-      encryptor.expects(:utility).returns(:openssl)
-      encryptor.expects(:run).with("openssl aes-256-cbc -k '' -in '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar") }' -out '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar.enc") }'")
-      encryptor.perform!
-    end
-
-    it do
-      encryptor = Backup::Encryptor::OpenSSL.new do |e|
-        e.password = "my_secret_password"
-        e.salt     = true
-        e.base64   = true
+    context 'with no options given' do
+      it 'should always include cipher command' do
+        encryptor.send(:options).should match(/^aes-256-cbc\s.*$/)
       end
-      encryptor.stubs(:utility).returns(:openssl)
-      encryptor.expects(:run).with("openssl aes-256-cbc -base64 -salt -k 'my_secret_password' -in '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar") }' -out '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar.enc") }'")
-      encryptor.perform!
-    end
 
-    it do
-      encryptor = Backup::Encryptor::OpenSSL.new do |e|
-        e.password_file = "/path/to/password/file"
-        e.salt     = true
-        e.base64   = true
-      end
-      encryptor.stubs(:utility).returns(:openssl)
-      encryptor.expects(:run).with("openssl aes-256-cbc -base64 -salt -pass file:/path/to/password/file -in '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar") }' -out '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar.enc") }'")
-      encryptor.perform!
-    end
-
-    it 'should append the .enc extension after the encryption' do
-      Backup::Model.extension.should == 'tar'
-      encryptor.perform!
-      Backup::Model.extension.should == 'tar.enc'
-    end
-
-    it do
-      encryptor.expects(:utility).with(:openssl)
-      encryptor.perform!
-    end
-
-    it do
-      Backup::Logger.expects(:message).with("Backup::Encryptor::OpenSSL started encrypting the archive.")
-      encryptor.perform!
-    end
-
-    context "after encrypting the file (which creates a new file)" do
-      it 'should remove the non-encrypted file' do
-        encryptor.expects(:rm).with(Backup::Model.file)
-        encryptor.perform!
+      it 'should add #password option whenever #password_file not given' do
+        encryptor.send(:options).should ==
+            "aes-256-cbc -k ''"
       end
     end
-  end
+
+    context 'when #password_file is given' do
+      before { encryptor.password_file = 'password_file' }
+
+      it 'should add #password_file option' do
+        encryptor.send(:options).should ==
+            'aes-256-cbc -pass file:password_file'
+      end
+
+      it 'should add #password_file option even when #password given' do
+        encryptor.password = 'password'
+        encryptor.send(:options).should ==
+            'aes-256-cbc -pass file:password_file'
+      end
+    end
+
+    context 'when #password is given (without #password_file given)' do
+      before { encryptor.password = 'password' }
+
+      it 'should include the given password in the #password option' do
+        encryptor.send(:options).should ==
+            "aes-256-cbc -k 'password'"
+      end
+    end
+
+    context 'when #base64 is true' do
+      before { encryptor.base64 = true }
+
+      it 'should add the option' do
+        encryptor.send(:options).should ==
+            "aes-256-cbc -base64 -k ''"
+      end
+    end
+
+    context 'when #salt is true' do
+      before { encryptor.salt = true }
+
+      it 'should add the option' do
+        encryptor.send(:options).should ==
+            "aes-256-cbc -salt -k ''"
+      end
+    end
+
+  end # describe '#options'
+
 end
