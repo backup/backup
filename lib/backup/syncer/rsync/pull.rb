@@ -6,17 +6,32 @@ module Backup
       class Pull < Push
 
         ##
-        # Performs the RSync operation
+        # Performs the RSync::Pull operation
         # debug options: -vhP
         def perform!
+          write_password_file!
+
           @directories.each do |directory|
-            Logger.message("#{ self.class } started syncing '#{ directory }'.")
+            Logger.message("#{ syncer_name } started syncing '#{ directory }'.")
             Logger.silent(
-              run("#{ utility(:rsync) } #{ options } '#{ username }@#{ ip }:#{ directory }' '#{ path }'")
+              run("#{ utility(:rsync) } #{ options } " +
+                  "'#{ username }@#{ ip }:#{ directory.sub(/^\~\//, '') }' " +
+                  "'#{ dest_path }'")
             )
           end
+
+        ensure
           remove_password_file!
         end
+
+        private
+
+        ##
+        # Return expanded @path
+        def dest_path
+          @dest_path ||= File.expand_path(@path)
+        end
+
       end
     end
   end

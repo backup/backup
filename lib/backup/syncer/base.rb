@@ -5,6 +5,13 @@ module Backup
     class Base
       include Backup::CLI::Helpers
       include Backup::Configuration::Helpers
+
+      private
+
+      def syncer_name
+        self.class.to_s.sub('Backup::', '')
+      end
+
     end
   end
 end

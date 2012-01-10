@@ -4,7 +4,7 @@ module Backup
   module Configuration
     module Syncer
       module RSync
-        class Push < Local
+        class Push < Base
           class << self
 
             ##

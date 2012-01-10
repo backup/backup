@@ -81,9 +81,10 @@ module Backup
     autoload :Base,  File.join(SYNCER_PATH, 'base')
     autoload :S3,    File.join(SYNCER_PATH, 's3')
     module RSync
+      autoload :Base,  File.join(SYNCER_PATH, 'rsync', 'base')
+      autoload :Local, File.join(SYNCER_PATH, 'rsync', 'local')
       autoload :Push,  File.join(SYNCER_PATH, 'rsync', 'push')
       autoload :Pull,  File.join(SYNCER_PATH, 'rsync', 'pull')
-      autoload :Local, File.join(SYNCER_PATH, 'rsync', 'local')
     end
   end
 
@@ -173,11 +174,13 @@ module Backup
     end
 
     module Syncer
+      autoload :Base,  File.join(CONFIGURATION_PATH, 'syncer', 'base')
       autoload :S3,    File.join(CONFIGURATION_PATH, 'syncer', 's3')
       module RSync
+        autoload :Base,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'base')
+        autoload :Local, File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'local')
         autoload :Push,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'push')
         autoload :Pull,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'pull')
-        autoload :Local, File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'local')
       end
     end
 

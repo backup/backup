@@ -3,192 +3,324 @@
 require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe Backup::Syncer::RSync::Push do
-
-  let(:rsync) do
+  let(:syncer) do
     Backup::Syncer::RSync::Push.new do |rsync|
       rsync.username  = 'my_username'
       rsync.password  = 'my_password'
       rsync.ip        = '123.45.678.90'
       rsync.port      = 22
-      rsync.path      = '~/backups/'
-      rsync.mirror    = true
       rsync.compress  = true
-      rsync.additional_options = []
+      rsync.path      = "~/my_backups"
 
       rsync.directories do |directory|
-        directory.add "/some/random/directory"
-        directory.add "/another/random/directory"
+        directory.add "/some/directory"
+        directory.add "~/home/directory"
       end
+
+      rsync.mirror             = true
+      rsync.additional_options = ['--opt-a', '--opt-b']
     end
   end
 
-  before do
-    Backup::Configuration::Syncer::RSync::Push.clear_defaults!
+  it 'should be a subclass of RSync::Base' do
+    Backup::Syncer::RSync::Push.superclass.should == Backup::Syncer::RSync::Base
   end
 
-  it 'should have defined the configuration properly' do
-    rsync.username.should == 'my_username'
-    rsync.password.should =~ /backup-rsync-password/
-    rsync.ip.should       == '123.45.678.90'
-    rsync.port.should     == "-e 'ssh -p 22'"
-    rsync.path.should     == 'backups/'
-    rsync.mirror.should   == "--delete"
-    rsync.compress.should == "--compress"
-
-    File.read(rsync.instance_variable_get('@password_file').path).should == 'my_password'
-  end
-
-  it 'should use the defaults if a particular attribute has not been defined' do
-    Backup::Configuration::Syncer::RSync::Push.defaults do |rsync|
-      rsync.username = 'my_default_username'
-      rsync.password = 'my_default_password'
-      rsync.path     = '~/backups'
-      rsync.mirror   = false
+  describe '#initialize' do
+    it 'should have defined the configuration properly' do
+      syncer.username.should           == 'my_username'
+      syncer.password.should           == 'my_password'
+      syncer.ip.should                 == '123.45.678.90'
+      syncer.port.should               == 22
+      syncer.compress.should           == true
+      syncer.path.should               == '~/my_backups'
+      syncer.directories.should        == ["/some/directory", "~/home/directory"]
+      syncer.mirror.should             == true
+      syncer.additional_options.should == ['--opt-a', '--opt-b']
     end
 
-    rsync = Backup::Syncer::RSync::Push.new do |rsync|
-      rsync.password = 'my_password'
-      rsync.ip       = '123.45.678.90'
-      rsync.compress = false
-    end
-
-    rsync.username.should == 'my_default_username'
-    rsync.password.should =~ /backup-rsync-password/
-    rsync.ip.should       == '123.45.678.90'
-    rsync.port.should     == "-e 'ssh -p 22'"
-    rsync.mirror.should   == nil
-    rsync.compress.should == nil
-
-    File.read(rsync.instance_variable_get('@password_file').path).should == 'my_password'
-  end
-
-  it 'should have its own defaults' do
-    rsync = Backup::Syncer::RSync::Push.new
-    rsync.port.should     == "-e 'ssh -p 22'"
-    rsync.path.should     == 'backups'
-    rsync.compress.should == nil
-    rsync.mirror.should   == nil
-    rsync.directories.should  == ''
-    rsync.additional_options.should == []
-  end
-
-  describe '#mirror' do
-    context 'when true' do
-      it do
-        rsync.mirror = true
-        rsync.mirror.should == '--delete'
+    context 'when options are not set' do
+      it 'should use default values' do
+        syncer = Backup::Syncer::RSync::Push.new
+        syncer.username.should           == nil
+        syncer.password.should           == nil
+        syncer.ip.should                 == nil
+        syncer.port.should               == 22
+        syncer.compress.should           == false
+        syncer.path.should               == 'backups'
+        syncer.directories.should        == []
+        syncer.mirror.should             == false
+        syncer.additional_options.should == []
       end
     end
 
-    context 'when nil/false' do
-      it do
-        rsync.mirror = nil
-        rsync.mirror.should == nil
+    context 'when setting configuration defaults' do
+      after { Backup::Configuration::Syncer::RSync::Push.clear_defaults! }
+
+      it 'should use the configured defaults' do
+        Backup::Configuration::Syncer::RSync::Push.defaults do |rsync|
+          rsync.username           = 'some_username'
+          rsync.password           = 'some_password'
+          rsync.ip                 = 'some_ip'
+          rsync.port               = 'some_port'
+          rsync.compress           = 'some_compress'
+          rsync.path               = 'some_path'
+          #rsync.directories        = 'cannot_have_a_default_value'
+          rsync.mirror             = 'some_mirror'
+          rsync.additional_options = 'some_additional_options'
+        end
+        syncer = Backup::Syncer::RSync::Push.new
+        syncer.username.should           == 'some_username'
+        syncer.password.should           == 'some_password'
+        syncer.ip.should                 == 'some_ip'
+        syncer.port.should               == 'some_port'
+        syncer.compress.should           == 'some_compress'
+        syncer.path.should               == 'some_path'
+        syncer.directories.should        == []
+        syncer.mirror.should             == 'some_mirror'
+        syncer.additional_options.should == 'some_additional_options'
       end
 
-      it do
-        rsync.mirror = false
-        rsync.mirror.should == nil
+      it 'should override the configured defaults' do
+        Backup::Configuration::Syncer::RSync::Push.defaults do |rsync|
+          rsync.username           = 'old_username'
+          rsync.password           = 'old_password'
+          rsync.ip                 = 'old_ip'
+          rsync.port               = 'old_port'
+          rsync.compress           = 'old_compress'
+          rsync.path               = 'old_path'
+          #rsync.directories        = 'cannot_have_a_default_value'
+          rsync.mirror             = 'old_mirror'
+          rsync.additional_options = 'old_additional_options'
+        end
+        syncer = Backup::Syncer::RSync::Push.new do |rsync|
+          rsync.username           = 'new_username'
+          rsync.password           = 'new_password'
+          rsync.ip                 = 'new_ip'
+          rsync.port               = 'new_port'
+          rsync.compress           = 'new_compress'
+          rsync.path               = 'new_path'
+          rsync.directories        = 'new_directories'
+          rsync.mirror             = 'new_mirror'
+          rsync.additional_options = 'new_additional_options'
+        end
+
+        syncer.username.should           == 'new_username'
+        syncer.password.should           == 'new_password'
+        syncer.ip.should                 == 'new_ip'
+        syncer.port.should               == 'new_port'
+        syncer.compress.should           == 'new_compress'
+        syncer.path.should               == 'new_path'
+        syncer.directories.should        == 'new_directories'
+        syncer.mirror.should             == 'new_mirror'
+        syncer.additional_options.should == 'new_additional_options'
       end
+    end # context 'when setting configuration defaults'
+  end # describe '#initialize'
+
+  describe '#perform!' do
+    let(:s) { sequence '' }
+
+    before do
+      syncer.expects(:utility).with(:rsync).returns('rsync')
+      syncer.expects(:options).returns('options_output')
     end
-  end
 
-  describe '#compress' do
-    context 'when true' do
-      it do
-        rsync.compress = true
-        rsync.compress.should == '--compress'
-      end
+    it 'should sync two directories' do
+      syncer.expects(:write_password_file!).in_sequence(s)
+
+      Backup::Logger.expects(:message).in_sequence(s).with(
+        "Syncer::RSync::Push started syncing the following directories:\n" +
+        "  /some/directory\n" +
+        "  ~/home/directory"
+      )
+      syncer.expects(:run).in_sequence(s).with(
+        "rsync options_output '/some/directory' " +
+        "'#{ File.expand_path('~/home/directory') }' " +
+        "'my_username@123.45.678.90:my_backups'"
+      ).returns('messages from stdout')
+      Backup::Logger.expects(:silent).in_sequence(s).with('messages from stdout')
+
+      syncer.expects(:remove_password_file!).in_sequence(s)
+
+      syncer.perform!
     end
 
-    context 'when nil/false' do
-      it do
-        rsync.compress = nil
-        rsync.compress.should == nil
-      end
+    it 'should ensure passoword file removal' do
+      syncer.expects(:write_password_file!).in_sequence(s)
 
-      it do
-        rsync.compress = false
-        rsync.compress.should == nil
-      end
+      Backup::Logger.expects(:message).in_sequence(s)
+      syncer.expects(:run).in_sequence(s).raises('error message')
+
+      syncer.expects(:remove_password_file!).in_sequence(s)
+
+      expect do
+        syncer.perform!
+      end.to raise_error(RuntimeError, 'error message')
     end
-  end
+  end # describe '#perform!'
 
-  describe '#archive' do
-    it do
-      rsync.archive.should == '--archive'
-    end
-  end
-
-  describe '#port' do
-    it do
-      rsync.port.should == "-e 'ssh -p 22'"
-    end
-  end
-
-  describe '#directories' do
-    context 'when its empty' do
-      it do
-        rsync.directories = []
-        rsync.directories.should == ''
-      end
+  describe '#dest_path' do
+    it 'should remove any preceeding "~/" from @path' do
+      syncer.send(:dest_path).should == 'my_backups'
     end
 
-    context 'when it has items' do
-      it do
-        rsync.directories = ['directory1', 'directory1/directory2', 'directory1/directory2/directory3']
-        rsync.directories.should == "'directory1' 'directory1/directory2' 'directory1/directory2/directory3'"
-      end
+    it 'should set @dest_path' do
+      syncer.send(:dest_path)
+      syncer.instance_variable_get(:@dest_path).should == 'my_backups'
+    end
+
+    it 'should return @dest_path if already set' do
+      syncer.instance_variable_set(:@dest_path, 'foo')
+      syncer.send(:dest_path).should == 'foo'
     end
   end
 
   describe '#options' do
-    it do
-      rsync.options.should == "--archive --delete --compress -e 'ssh -p 22' " +
-                              "--password-file='#{rsync.instance_variable_get('@password_file').path}'"
+    let(:pwdfile) { mock }
+
+    context 'when @compress is true' do
+      it 'should return the options string with compression enabled' do
+        syncer.send(:options).should ==
+          "--archive --delete --compress -e 'ssh -p 22' --opt-a --opt-b"
+      end
+    end
+
+    context 'when @compress is false' do
+      before { syncer.compress = false }
+      it 'should return the options string without compression enabled' do
+        syncer.send(:options).should ==
+          "--archive --delete -e 'ssh -p 22' --opt-a --opt-b"
+      end
+    end
+
+    context 'when a @password_file is set' do
+      before do
+        syncer.instance_variable_set(:@password_file, pwdfile)
+        pwdfile.expects(:path).returns('/path/to/pwdfile')
+      end
+
+      it 'should return the options string with the password_option' do
+        syncer.send(:options).should ==
+          "--archive --delete --compress -e 'ssh -p 22' " +
+          "--password-file='/path/to/pwdfile' --opt-a --opt-b"
+      end
+    end
+
+    context 'when no @additional_options are set' do
+      before { syncer.additional_options = [] }
+
+      it 'should return the options string without additional options' do
+        syncer.send(:options).should ==
+          "--archive --delete --compress -e 'ssh -p 22'"
+      end
+    end
+
+  end # describe '#options'
+
+  describe '#compress_option' do
+    context 'when @compress is true' do
+      it 'should return the compression flag' do
+        syncer.send(:compress_option).should == '--compress'
+      end
+    end
+
+    context 'when @compress is false' do
+      before { syncer.compress = false }
+      it 'should return nil' do
+        syncer.send(:compress_option).should be_nil
+      end
     end
   end
 
-  describe '#password' do
-    before do
-      rsync.stubs(:utility).with(:rsync).returns(:rsync)
-      rsync.stubs(:run)
-    end
-
-    it do
-      rsync.password = 'my_password'
-      rsync.expects(:remove_password_file!)
-
-      rsync.perform!
-    end
-
-    it do
-      rsync.password = nil
-      rsync.expects(:remove_password_file!)
-
-      rsync.perform!
+  describe '#port_option' do
+    before { syncer.port = 40 }
+    it 'should return the option string with the defined port' do
+      syncer.send(:port_option).should == "-e 'ssh -p 40'"
     end
   end
 
-  describe '#perform' do
+  describe '#password_option' do
+    let(:pwdfile) { mock }
 
-    it 'should invoke the rsync command to transfer the files and directories' do
-      Backup::Logger.expects(:message).with("Backup::Syncer::RSync::Push started syncing '/some/random/directory' '/another/random/directory'.")
-      rsync.expects(:utility).with(:rsync).returns(:rsync)
-      rsync.expects(:remove_password_file!)
-      rsync.expects(:run).with("rsync --archive --delete --compress -e 'ssh -p 22' --password-file='#{rsync.instance_variable_get('@password_file').path}' " +
-                               "'/some/random/directory' '/another/random/directory' 'my_username@123.45.678.90:backups/'")
-      rsync.perform!
+    context 'when @password_file is set' do
+      before do
+        syncer.instance_variable_set(:@password_file, pwdfile)
+        pwdfile.expects(:path).returns('/path/to/pwdfile')
+      end
+
+      it 'should return the option string' do
+        syncer.send(:password_option).should ==
+            "--password-file='/path/to/pwdfile'"
+      end
     end
 
-    it 'should not pass in the --password-file option' do
-      Backup::Logger.expects(:message).with("Backup::Syncer::RSync::Push started syncing '/some/random/directory' '/another/random/directory'.")
-      rsync.password = nil
-      rsync.expects(:utility).with(:rsync).returns(:rsync)
-      rsync.expects(:remove_password_file!)
-      rsync.expects(:run).with("rsync --archive --delete --compress -e 'ssh -p 22' " +
-                               "'/some/random/directory' '/another/random/directory' 'my_username@123.45.678.90:backups/'")
-      rsync.perform!
+    context 'when @password_file is not set' do
+      it 'should return nil' do
+        syncer.send(:password_option).should be_nil
+      end
+    end
+  end
+
+  describe '#write_password_file!' do
+    let(:pwdfile) { mock }
+    let(:s) { sequence '' }
+
+    context 'when a @password is set' do
+      it 'should create, write and close a temporary password file' do
+        Tempfile.expects(:new).in_sequence(s).
+            with('backup-rsync-password').
+            returns(pwdfile)
+        pwdfile.expects(:write).in_sequence(s).with('my_password')
+        pwdfile.expects(:close).in_sequence(s)
+
+        syncer.send(:write_password_file!)
+      end
+
+      it 'should set @password_file to a file containing the password' do
+        syncer.send(:write_password_file!)
+        file = syncer.instance_variable_get(:@password_file)
+        File.exist?(file.path).should be_true
+        File.read(file.path).should == 'my_password'
+
+        # cleanup
+        file.delete
+        file.path.should be_nil
+      end
+    end
+
+    context 'when a @password is not set' do
+      before { syncer.password = nil }
+      it 'should return nil' do
+        Tempfile.expects(:new).never
+        pwdfile.expects(:write).never
+        pwdfile.expects(:close).never
+        syncer.send(:write_password_file!).should be_nil
+      end
+    end
+  end
+
+  describe '#remove_password_file!' do
+    let(:pwdfile) { mock }
+
+    context 'when @password_file is set' do
+      before do
+        syncer.instance_variable_set(:@password_file, pwdfile)
+      end
+
+      it 'should delete the file and reset @password_file' do
+        pwdfile.expects(:delete)
+        syncer.send(:remove_password_file!)
+        syncer.instance_variable_get(:@password_file).should be_nil
+      end
+    end
+
+    context 'when @password_file is not set' do
+      it 'should return nil' do
+        pwdfile.expects(:delete).never
+        syncer.send(:remove_password_file!).should be_nil
+        syncer.instance_variable_get(:@password_file).should be_nil
+      end
     end
   end
 

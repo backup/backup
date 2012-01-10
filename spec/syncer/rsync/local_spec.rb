@@ -3,118 +3,118 @@
 require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe Backup::Syncer::RSync::Local do
-
-  let(:rsync) do
+  let(:syncer) do
     Backup::Syncer::RSync::Local.new do |rsync|
-      rsync.path      = '~/backups/'
-      rsync.mirror    = true
-      rsync.additional_options = []
+      rsync.path = "~/my_backups"
 
       rsync.directories do |directory|
-        directory.add "/some/random/directory"
-        directory.add "/another/random/directory"
+        directory.add "/some/directory"
+        directory.add "~/home/directory"
       end
+
+      rsync.mirror             = true
+      rsync.additional_options = ['--opt-a', '--opt-b']
     end
   end
 
-  before do
-    Backup::Configuration::Syncer::RSync::Local.clear_defaults!
+  it 'should be a subclass of RSync::Base' do
+    Backup::Syncer::RSync::Local.superclass.should == Backup::Syncer::RSync::Base
   end
 
-  it 'should have defined the configuration properly' do
-    rsync.path.should     == 'backups/'
-    rsync.mirror.should   == "--delete"
-  end
-
-  it 'should use the defaults if a particular attribute has not been defined' do
-    Backup::Configuration::Syncer::RSync::Local.defaults do |rsync|
-      rsync.mirror   = false
+  describe '#initialize' do
+    it 'should have defined the configuration properly' do
+      syncer.path.should               == '~/my_backups'
+      syncer.directories.should        == ["/some/directory", "~/home/directory"]
+      syncer.mirror.should             == true
+      syncer.additional_options.should == ['--opt-a', '--opt-b']
     end
 
-    rsync = Backup::Syncer::RSync::Local.new do |rsync|
-      rsync.directories do |directory|
-        directory.add "/some/random/directory"
-        directory.add "/another/random/directory"
+    context 'when setting configuration defaults' do
+      after { Backup::Configuration::Syncer::RSync::Local.clear_defaults! }
+
+      it 'should override the configured defaults' do
+        Backup::Configuration::Syncer::RSync::Local.defaults do |rsync|
+          rsync.path               = 'old_path'
+          #rsync.directories        = 'cannot_have_a_default_value'
+          rsync.mirror             = 'old_mirror'
+          rsync.additional_options = 'old_additional_options'
+        end
+        syncer = Backup::Syncer::RSync::Local.new do |rsync|
+          rsync.path               = 'new_path'
+          rsync.directories        = 'new_directories'
+          rsync.mirror             = 'new_mirror'
+          rsync.additional_options = 'new_additional_options'
+        end
+
+        syncer.path.should               == 'new_path'
+        syncer.directories.should        == 'new_directories'
+        syncer.mirror.should             == 'new_mirror'
+        syncer.additional_options.should == 'new_additional_options'
       end
+    end # context 'when setting configuration defaults'
+  end # describe '#initialize'
+
+  describe '#perform!' do
+    let(:s) { sequence '' }
+
+    before do
+      syncer.expects(:utility).with(:rsync).returns('rsync')
+      syncer.expects(:options).returns('options_output')
     end
 
-    rsync.mirror.should      == nil
-    rsync.directories.should == "'/some/random/directory' '/another/random/directory'"
-  end
+    it 'should sync two directories' do
+      Backup::Logger.expects(:message).in_sequence(s).with(
+        "Syncer::RSync::Local started syncing the following directories:\n" +
+        "  /some/directory\n" +
+        "  ~/home/directory"
+      )
+      syncer.expects(:run).in_sequence(s).with(
+        "rsync options_output '/some/directory' " +
+        "'#{ File.expand_path('~/home/directory') }' " +
+        "'#{ File.expand_path('~/my_backups') }'"
+      ).returns('messages from stdout')
+      Backup::Logger.expects(:silent).in_sequence(s).with('messages from stdout')
 
-  it 'should have its own defaults' do
-    rsync = Backup::Syncer::RSync::Local.new
-    rsync.path.should     == 'backups'
-    rsync.mirror.should   == nil
-    rsync.directories.should  == ''
-    rsync.additional_options.should == []
-  end
+      syncer.perform!
+    end
+  end # describe '#perform!'
 
-  describe '#mirror' do
-    context 'when true' do
-      it do
-        rsync.mirror = true
-        rsync.mirror.should == '--delete'
-      end
+  describe '#dest_path' do
+    it 'should return @path expanded' do
+      syncer.send(:dest_path).should == File.expand_path('~/my_backups')
     end
 
-    context 'when nil/false' do
-      it do
-        rsync.mirror = nil
-        rsync.mirror.should == nil
-      end
-
-      it do
-        rsync.mirror = false
-        rsync.mirror.should == nil
-      end
-    end
-  end
-
-  describe '#archive' do
-    it do
-      rsync.archive.should == '--archive'
-    end
-  end
-
-  describe '#directories' do
-    context 'when its empty' do
-      it do
-        rsync.directories = []
-        rsync.directories.should == ''
-      end
+    it 'should set @dest_path' do
+      syncer.send(:dest_path)
+      syncer.instance_variable_get(:@dest_path).should ==
+          File.expand_path('~/my_backups')
     end
 
-    context 'when it has items' do
-      it do
-        rsync.directories = ['directory1', 'directory1/directory2', 'directory1/directory2/directory3']
-        rsync.directories.should == "'directory1' 'directory1/directory2' 'directory1/directory2/directory3'"
-      end
+    it 'should return @dest_path if already set' do
+      syncer.instance_variable_set(:@dest_path, 'foo')
+      syncer.send(:dest_path).should == 'foo'
     end
   end
 
   describe '#options' do
-    it do
-      rsync.options.should == "--archive --delete"
-    end
-  end
-
-  describe '#perform' do
-
-    it 'should invoke the rsync command to transfer the files and directories' do
-      Backup::Logger.expects(:message).with("Backup::Syncer::RSync::Local started syncing '/some/random/directory' '/another/random/directory'.")
-      rsync.expects(:utility).with(:rsync).returns(:rsync)
-      rsync.expects(:run).with("rsync --archive --delete " +
-                               "'/some/random/directory' '/another/random/directory' 'backups/'")
-      rsync.perform!
+    context 'when @mirror is true' do
+      it 'should return the options with mirroring enabled' do
+        syncer.send(:options).should == '--archive --delete --opt-a --opt-b'
+      end
     end
 
-    it 'should not pass in the --password-file option' do
-      Backup::Logger.expects(:message).with("Backup::Syncer::RSync::Local started syncing '/some/random/directory' '/another/random/directory'.")
-      rsync.expects(:utility).with(:rsync).returns(:rsync)
-      rsync.expects(:run).with("rsync --archive --delete " +
-                               "'/some/random/directory' '/another/random/directory' 'backups/'")
-      rsync.perform!
+    context 'when @mirror is false' do
+      before { syncer.mirror = false }
+      it 'should return the options without mirroring enabled' do
+        syncer.send(:options).should == '--archive --opt-a --opt-b'
+      end
+    end
+
+    context 'when no additional options are given' do
+      before { syncer.additional_options = [] }
+      it 'should return the options without additional options' do
+        syncer.send(:options).should == '--archive --delete'
+      end
     end
   end
 

@@ -3,136 +3,225 @@
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Syncer::S3 do
-
-  let(:s3) do
+  let(:syncer) do
     Backup::Syncer::S3.new do |s3|
       s3.access_key_id      = 'my_access_key_id'
       s3.secret_access_key  = 'my_secret_access_key'
       s3.bucket             = 'my-bucket'
-      s3.path               = "/backups"
-      s3.mirror             = true
+      s3.path               = "/my_backups"
 
       s3.directories do |directory|
-        directory.add "/some/random/directory"
-        directory.add "/another/random/directory"
+        directory.add "/some/directory"
+        directory.add "~/home/directory"
       end
-    end
-  end
 
-  before do
-    Backup::Configuration::Syncer::S3.clear_defaults!
-  end
-
-  it 'should have defined the configuration properly' do
-    s3.access_key_id.should      == 'my_access_key_id'
-    s3.secret_access_key.should  == 'my_secret_access_key'
-    s3.bucket.should             == 'my-bucket'
-    s3.path.should               == 'backups'
-    s3.mirror.should             == '--delete'
-    s3.directories.should        == ["/some/random/directory", "/another/random/directory"]
-  end
-
-  it 'should use the defaults if a particular attribute has not been defined' do
-    Backup::Configuration::Syncer::S3.defaults do |s3|
-      s3.access_key_id      = 'my_access_key_id'
-      s3.bucket             = 'my-bucket'
-      s3.path               = "/backups"
       s3.mirror             = true
+      s3.additional_options = ['--opt-a', '--opt-b']
     end
-
-    s3 = Backup::Syncer::S3.new do |s3|
-      s3.secret_access_key = 'some_secret_access_key'
-      s3.mirror            = false
-    end
-
-    s3.access_key_id      = 'my_access_key_id'
-    s3.secret_access_key  = 'some_secret_access_key'
-    s3.bucket             = 'my-bucket'
-    s3.path               = "/backups"
-    s3.mirror             = false
   end
 
-  it 'should have its own defaults' do
-    s3 = Backup::Syncer::S3.new
-    s3.path.should        == 'backups'
-    s3.directories.should == Array.new
-    s3.mirror.should      == nil
-    s3.additional_options.should == []
-  end
+  describe '#initialize' do
 
-  describe '#mirror' do
-    context 'when true' do
-      it do
-        s3.mirror = true
-        s3.mirror.should == '--delete'
+    it 'should have defined the configuration properly' do
+      syncer.access_key_id.should      == 'my_access_key_id'
+      syncer.secret_access_key.should  == 'my_secret_access_key'
+      syncer.bucket.should             == 'my-bucket'
+      syncer.path.should               == '/my_backups'
+      syncer.directories.should        == ["/some/directory", "~/home/directory"]
+      syncer.mirror.should             == true
+      syncer.additional_options.should == ['--opt-a', '--opt-b']
+    end
+
+    context 'when options are not set' do
+      it 'should use default values' do
+        syncer = Backup::Syncer::S3.new
+        syncer.access_key_id.should      == nil
+        syncer.secret_access_key.should  == nil
+        syncer.bucket.should             == nil
+        syncer.path.should               == 'backups'
+        syncer.directories.should        == []
+        syncer.mirror.should             == false
+        syncer.additional_options.should == []
       end
     end
 
-    context 'when nil/false' do
-      it do
-        s3.mirror = nil
-        s3.mirror.should == nil
+    context 'when setting configuration defaults' do
+      after { Backup::Configuration::Syncer::S3.clear_defaults! }
+
+      it 'should use the configured defaults' do
+        Backup::Configuration::Syncer::S3.defaults do |s3|
+          s3.access_key_id      = 'some_access_key_id'
+          s3.secret_access_key  = 'some_secret_access_key'
+          s3.bucket             = 'some_bucket'
+          s3.path               = 'some_path'
+          #s3.directories        = 'cannot_have_a_default_value'
+          s3.mirror             = 'some_mirror'
+          s3.additional_options = 'some_additional_options'
+        end
+        syncer = Backup::Syncer::S3.new
+        syncer.access_key_id.should      == 'some_access_key_id'
+        syncer.secret_access_key.should  == 'some_secret_access_key'
+        syncer.bucket.should             == 'some_bucket'
+        syncer.path.should               == 'some_path'
+        syncer.directories.should        == []
+        syncer.mirror.should             == 'some_mirror'
+        syncer.additional_options.should == 'some_additional_options'
       end
 
-      it do
-        s3.mirror = false
-        s3.mirror.should == nil
+      it 'should override the configured defaults' do
+        Backup::Configuration::Syncer::S3.defaults do |s3|
+          s3.access_key_id      = 'old_access_key_id'
+          s3.secret_access_key  = 'old_secret_access_key'
+          s3.bucket             = 'old_bucket'
+          s3.path               = 'old_path'
+          #s3.directories        = 'cannot_have_a_default_value'
+          s3.mirror             = 'old_mirror'
+          s3.additional_options = 'old_additional_options'
+        end
+        syncer = Backup::Syncer::S3.new do |s3|
+          s3.access_key_id      = 'new_access_key_id'
+          s3.secret_access_key  = 'new_secret_access_key'
+          s3.bucket             = 'new_bucket'
+          s3.path               = 'new_path'
+          s3.directories        = 'new_directories'
+          s3.mirror             = 'new_mirror'
+          s3.additional_options = 'new_additional_options'
+        end
+
+        syncer.access_key_id.should      == 'new_access_key_id'
+        syncer.secret_access_key.should  == 'new_secret_access_key'
+        syncer.bucket.should             == 'new_bucket'
+        syncer.path.should               == 'new_path'
+        syncer.directories.should        == 'new_directories'
+        syncer.mirror.should             == 'new_mirror'
+        syncer.additional_options.should == 'new_additional_options'
       end
-    end
-  end
+    end # context 'when setting configuration defaults'
+  end # describe '#initialize'
 
-  describe '#recursive' do
-    it do
-      s3.recursive.should == '--recursive'
-    end
-  end
+  describe '#perform!' do
+    let(:s) { sequence '' }
 
-  describe '#additional_options' do
-    it do
-      s3.additional_options = ['--exclude="*.rb"']
-      s3.options.should == '--verbose --recursive --delete --exclude="*.rb"'
+    before do
+      syncer.expects(:utility).twice.with(:s3sync).returns('s3sync')
+      syncer.expects(:options).twice.returns('options_output')
     end
-  end
 
-  describe '#verbose' do
-    it do
-      s3.verbose.should == '--verbose'
+    it 'should sync two directories' do
+      syncer.expects(:set_environment_variables!).in_sequence(s)
+
+      # first directory
+      Backup::Logger.expects(:message).in_sequence(s).with(
+        "Syncer::S3 started syncing '/some/directory'."
+      )
+      syncer.expects(:run).in_sequence(s).with(
+        "s3sync options_output '/some/directory' 'my-bucket:my_backups'"
+      ).returns('messages from stdout')
+      Backup::Logger.expects(:silent).in_sequence(s).with('messages from stdout')
+
+      # second directory
+      Backup::Logger.expects(:message).in_sequence(s).with(
+        "Syncer::S3 started syncing '~/home/directory'."
+      )
+      syncer.expects(:run).in_sequence(s).with(
+        "s3sync options_output '#{ File.expand_path('~/home/directory') }' " +
+        "'my-bucket:my_backups'"
+      ).returns('messages from stdout')
+      Backup::Logger.expects(:silent).in_sequence(s).with('messages from stdout')
+
+      syncer.expects(:unset_environment_variables!).in_sequence(s)
+
+      syncer.perform!
     end
-  end
+  end # describe '#perform!'
 
   describe '#directories' do
-    context 'when its empty' do
-      it do
-        s3.directories         = []
-        s3.directories.should == []
+    context 'when no block is given' do
+      it 'should return @directories' do
+        syncer.directories.should ==
+            ['/some/directory', '~/home/directory']
       end
     end
 
-    context 'when it has items' do
-      it do
-        s3.directories         = ['directory1', 'directory1/directory2', 'directory1/directory2/directory3']
-        s3.directories.should == ['directory1', 'directory1/directory2', 'directory1/directory2/directory3']
+    context 'when a block is given' do
+      it 'should evalute the block, allowing #add to add directories' do
+        syncer.directories do
+          add '/new/path'
+          add '~/new/home/path'
+        end
+        syncer.directories.should == [
+          '/some/directory',
+          '~/home/directory',
+          '/new/path',
+          '~/new/home/path'
+        ]
       end
+    end
+  end # describe '#directories'
+
+  describe '#add' do
+    it 'should add the given path to @directories' do
+      syncer.add '/my/path'
+      syncer.directories.should ==
+          ['/some/directory', '~/home/directory', '/my/path']
+    end
+  end
+
+  describe '#dest_path' do
+    it 'should remove any preceeding "/" from @path' do
+      syncer.send(:dest_path).should == 'my_backups'
+    end
+
+    it 'should set @dest_path' do
+      syncer.send(:dest_path)
+      syncer.instance_variable_get(:@dest_path).should == 'my_backups'
+    end
+
+    it 'should return @dest_path if already set' do
+      syncer.instance_variable_set(:@dest_path, 'foo')
+      syncer.send(:dest_path).should == 'foo'
     end
   end
 
   describe '#options' do
-    it do
-      s3.options.should == "--verbose --recursive --delete"
+    context 'when @mirror is true' do
+      it 'should return the options with mirroring enabled' do
+        syncer.send(:options).should ==
+          '--verbose --recursive --delete --opt-a --opt-b'
+      end
     end
-  end
 
-  describe '#perform' do
-    it 'should sync two directories' do
-      s3.expects(:utility).with(:s3sync).returns(:s3sync).twice
+    context 'when @mirror is false' do
+      before { syncer.mirror = false }
+      it 'should return the options without mirroring enabled' do
+        syncer.send(:options).should ==
+          '--verbose --recursive --opt-a --opt-b'
+      end
+    end
 
-      Backup::Logger.expects(:message).with("Backup::Syncer::S3 started syncing '/some/random/directory'.")
-      s3.expects(:run).with("s3sync --verbose --recursive --delete '/some/random/directory' 'my-bucket:backups'")
+    context 'with no additional options' do
+      before { syncer.additional_options = [] }
+      it 'should return the options without additional options' do
+        syncer.send(:options).should ==
+          '--verbose --recursive --delete'
+      end
+    end
+  end # describe '#options'
 
-      Backup::Logger.expects(:message).with("Backup::Syncer::S3 started syncing '/another/random/directory'.")
-      s3.expects(:run).with("s3sync --verbose --recursive --delete '/another/random/directory' 'my-bucket:backups'")
+  describe 'changing environment variables' do
+    before  { @env = ENV }
+    after   { ENV.replace(@env) }
 
-      s3.perform!
+    it 'should set and unset environment variables' do
+      syncer.send(:set_environment_variables!)
+      ENV['AWS_ACCESS_KEY_ID'].should     == 'my_access_key_id'
+      ENV['AWS_SECRET_ACCESS_KEY'].should == 'my_secret_access_key'
+      ENV['AWS_CALLING_FORMAT'].should    == 'SUBDOMAIN'
+
+      syncer.send(:unset_environment_variables!)
+      ENV['AWS_ACCESS_KEY_ID'].should     == nil
+      ENV['AWS_SECRET_ACCESS_KEY'].should == nil
+      ENV['AWS_CALLING_FORMAT'].should    == nil
     end
   end
 

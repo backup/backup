@@ -3,9 +3,8 @@
 module Backup
   module Configuration
     module Syncer
-      module RSync
-        class Local < Base; end
-      end
+      class Base < Configuration::Base; end
     end
   end
 end
+
