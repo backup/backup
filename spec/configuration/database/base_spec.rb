@@ -8,6 +8,7 @@ describe Backup::Configuration::Database::Base do
       db.utility_path = '/usr/bin/my_util' # deprecated
     end
   end
+  after { Backup::Configuration::Database::Base.clear_defaults! }
 
   it 'should set the default Base configuration' do
     db = Backup::Configuration::Database::Base

@@ -11,6 +11,7 @@ describe Backup::Configuration::Database::Riak do
       db.riak_admin_utility = '/path/to/riak-admin'
     end
   end
+  after { Backup::Configuration::Database::Riak.clear_defaults! }
 
   it 'should set the default Riak configuration' do
     db = Backup::Configuration::Database::Riak

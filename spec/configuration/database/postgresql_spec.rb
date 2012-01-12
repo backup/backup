@@ -17,6 +17,7 @@ describe Backup::Configuration::Database::PostgreSQL do
       db.pg_dump_utility    = '/path/to/pg_dump'
     end
   end
+  after { Backup::Configuration::Database::PostgreSQL.clear_defaults! }
 
   it 'should set the default PostgreSQL configuration' do
     db = Backup::Configuration::Database::PostgreSQL

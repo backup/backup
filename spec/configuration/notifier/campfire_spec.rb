@@ -10,6 +10,7 @@ describe Backup::Configuration::Notifier::Campfire do
       campfire.room_id   = 'my_room_id'
     end
   end
+  after { Backup::Configuration::Notifier::Campfire.clear_defaults! }
 
   it 'should set the default campfire configuration' do
     campfire = Backup::Configuration::Notifier::Campfire

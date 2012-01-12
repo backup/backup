@@ -21,6 +21,7 @@ describe Backup::Configuration::Notifier::Mail do
       mail.mail_folder          = '/path/to/backup/mails'
     end
   end
+  after { Backup::Configuration::Notifier::Mail.clear_defaults! }
 
   it 'should set the default Mail configuration' do
     mail = Backup::Configuration::Notifier::Mail

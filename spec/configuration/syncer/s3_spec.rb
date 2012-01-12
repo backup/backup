@@ -14,6 +14,7 @@ describe Backup::Configuration::Syncer::S3 do
       s3.additional_options  = ['--exclude="*.rb"']
     end
   end
+  after { Backup::Configuration::Syncer::S3.clear_defaults! }
 
   it 'should set the default s3 configuration' do
     s3 = Backup::Configuration::Syncer::S3

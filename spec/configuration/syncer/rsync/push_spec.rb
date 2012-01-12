@@ -12,6 +12,7 @@ describe Backup::Configuration::Syncer::RSync::Push do
       rsync.compress  = true
     end
   end
+  after { Backup::Configuration::Syncer::RSync::Push.clear_defaults! }
 
   it 'should be a subclass of RSync::Base' do
     rsync = Backup::Configuration::Syncer::RSync::Push

@@ -18,6 +18,7 @@ describe Backup::Configuration::Database::MongoDB do
       db.lock               = true
     end
   end
+  after { Backup::Configuration::Database::MongoDB.clear_defaults! }
 
   it 'should set the default MongoDB configuration' do
     db = Backup::Configuration::Database::MongoDB

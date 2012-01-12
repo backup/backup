@@ -10,6 +10,7 @@ describe Backup::Configuration::Storage::Ninefold do
       nf.path           = 'my_backups'
     end
   end
+  after { Backup::Configuration::Storage::Ninefold.clear_defaults! }
 
   it 'should set the default Ninefold configuration' do
     ninefold = Backup::Configuration::Storage::Ninefold

@@ -9,6 +9,7 @@ describe Backup::Configuration::Compressor::Gzip do
       compressor.fast = true
     end
   end
+  after { Backup::Configuration::Compressor::Gzip.clear_defaults! }
 
   it 'should set the default compressor configuration' do
     compressor = Backup::Configuration::Compressor::Gzip

@@ -11,6 +11,7 @@ describe Backup::Configuration::Syncer::RSync::Base do
       rsync.additional_options  = []
     end
   end
+  after { Backup::Configuration::Syncer::RSync::Base.clear_defaults! }
 
   it 'should set the default rsync configuration' do
     rsync = Backup::Configuration::Syncer::RSync::Base

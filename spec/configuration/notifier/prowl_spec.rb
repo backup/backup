@@ -9,6 +9,7 @@ describe Backup::Configuration::Notifier::Prowl do
       prowl.api_key     = 'my_api_key'
     end
   end
+  after { Backup::Configuration::Notifier::Prowl.clear_defaults! }
 
   it 'should set the default tweet configuration' do
     prowl = Backup::Configuration::Notifier::Prowl

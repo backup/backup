@@ -16,6 +16,7 @@ describe Backup::Configuration::Database::Redis do
       db.redis_cli_utility   = '/path/to/redis-cli'
     end
   end
+  after { Backup::Configuration::Database::Redis.clear_defaults! }
 
   it 'should set the default Redis configuration' do
     db = Backup::Configuration::Database::Redis

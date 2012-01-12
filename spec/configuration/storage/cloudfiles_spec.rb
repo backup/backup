@@ -13,6 +13,7 @@ describe Backup::Configuration::Storage::CloudFiles do
       cf.servicenet = true
     end
   end
+  after { Backup::Configuration::Storage::CloudFiles.clear_defaults! }
 
   it 'should set the default Cloud Files configuration' do
     cf = Backup::Configuration::Storage::CloudFiles

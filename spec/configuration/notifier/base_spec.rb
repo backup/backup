@@ -10,6 +10,7 @@ describe Backup::Configuration::Notifier::Base do
       base.on_failure = 'on_failure'
     end
   end
+  after { Backup::Configuration::Notifier::Base.clear_defaults! }
 
   it 'should set the default campfire configuration' do
     base = Backup::Configuration::Notifier::Base

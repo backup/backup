@@ -9,6 +9,7 @@ describe Backup::Configuration::Compressor::Lzma do
       compressor.fast = true
     end
   end
+  after { Backup::Configuration::Compressor::Lzma.clear_defaults! }
 
   it 'should set the default compressor configuration' do
     compressor = Backup::Configuration::Compressor::Lzma

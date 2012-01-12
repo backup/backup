@@ -14,6 +14,7 @@ describe Backup::Configuration::Storage::FTP do
       ftp.passive_mode = false
     end
   end
+  after { Backup::Configuration::Storage::FTP.clear_defaults! }
 
   it 'should set the default ftp configuration' do
     ftp = Backup::Configuration::Storage::FTP

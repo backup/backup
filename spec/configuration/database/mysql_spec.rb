@@ -17,6 +17,7 @@ describe Backup::Configuration::Database::MySQL do
       db.mysqldump_utility  = '/path/to/mysqldump'
     end
   end
+  after { Backup::Configuration::Database::MySQL.clear_defaults! }
 
   it 'should set the default MySQL configuration' do
     db = Backup::Configuration::Database::MySQL

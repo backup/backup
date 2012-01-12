@@ -10,6 +10,7 @@ describe Backup::Configuration::Compressor::Pbzip2 do
       compressor.processors = 2
     end
   end
+  after { Backup::Configuration::Compressor::Pbzip2.clear_defaults! }
 
   it 'should set the default compressor configuration' do
     compressor = Backup::Configuration::Compressor::Pbzip2

@@ -13,6 +13,7 @@ describe Backup::Configuration::Storage::RSync do
       rsync.local     = true
     end
   end
+  after { Backup::Configuration::Storage::RSync.clear_defaults! }
 
   it 'should set the default rsync configuration' do
     rsync = Backup::Configuration::Storage::RSync

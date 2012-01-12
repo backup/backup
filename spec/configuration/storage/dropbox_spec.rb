@@ -12,6 +12,7 @@ describe Backup::Configuration::Storage::Dropbox do
       db.keep        = 20
     end
   end
+  after { Backup::Configuration::Storage::Dropbox.clear_defaults! }
 
   it 'should set the default Dropbox configuration' do
     db = Backup::Configuration::Storage::Dropbox
