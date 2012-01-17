@@ -235,8 +235,9 @@ module Backup
     # those files *** will be removed *** before the next scheduled backup for the same trigger.
     #
     def perform!
-      @time = Time.now.strftime("%Y.%m.%d.%H.%M.%S")
-      Logger.message "Performing backup for '#{label} (#{trigger})'!"
+      @started_at = Time.now
+      @time = @started_at.strftime("%Y.%m.%d.%H.%M.%S")
+      log!(:started)
 
       if databases.any? or archives.any?
         procedures.each do |procedure|
@@ -247,6 +248,7 @@ module Backup
 
       syncers.each(&:perform!)
       notifiers.each(&:perform!)
+      log!(:finished)
 
     rescue Exception => err
       fatal = !err.is_a?(StandardError)
@@ -338,6 +340,36 @@ module Backup
         klass = klass.const_get(chunk)
       end
       klass
+    end
+
+    ##
+    # Logs messages when the backup starts and finishes
+    def log!(action)
+      case action
+      when :started
+        Logger.message "Performing Backup for '#{label} (#{trigger})'!\n" +
+            "[ backup #{ Version.current } : #{ RUBY_DESCRIPTION } ]"
+
+      when :finished
+        msg = "Backup for '#{ label } (#{ trigger })' " +
+              "Completed %s in #{ elapsed_time }"
+        if Logger.has_warnings?
+          Logger.warn msg % 'Successfully (with Warnings)'
+        else
+          Logger.message msg % 'Successfully'
+        end
+      end
+    end
+
+    ##
+    # Returns a string representing the elapsed time since the backup started.
+    def elapsed_time
+      duration  = Time.now.to_i - @started_at.to_i
+      hours     = duration / 3600
+      remainder = duration - (hours * 3600)
+      minutes   = remainder / 60
+      seconds   = remainder - (minutes * 60)
+      '%02d:%02d:%02d' % [hours, minutes, seconds]
     end
 
   end

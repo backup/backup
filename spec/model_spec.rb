@@ -323,20 +323,18 @@ describe 'Backup::Model' do
     let(:notifier_b)    { mock }
     let(:notifiers)     { [notifier_a, notifier_b] }
 
-    it 'should log a message and set the @time' do
+    it 'should set the @time and @started_at variables' do
       Timecop.freeze(Time.now)
-      time = Time.now.strftime("%Y.%m.%d.%H.%M.%S")
-      Backup::Logger.expects(:message).with(
-        "Performing backup for 'test label (test_trigger)'!"
-      )
+      started_at = Time.now
+      time = started_at.strftime("%Y.%m.%d.%H.%M.%S")
 
       model.perform!
       model.time.should == time
+      model.instance_variable_get(:@started_at).should == started_at
     end
 
     context 'when no errors occur' do
       before do
-        Backup::Logger.expects(:message)
         model.expects(:procedures).returns(procedures)
         model.expects(:syncers).returns(syncers)
         model.expects(:notifiers).returns(notifiers)
@@ -348,6 +346,8 @@ describe 'Backup::Model' do
         end
 
         it 'should perform all procedures' do
+          model.expects(:log!).in_sequence(s).with(:started)
+
           procedure_a.expects(:call).in_sequence(s)
           procedure_b.expects(:perform!).in_sequence(s)
           procedure_c.expects(:perform!).in_sequence(s)
@@ -360,6 +360,8 @@ describe 'Backup::Model' do
 
           notifier_a.expects(:perform!).in_sequence(s)
           notifier_b.expects(:perform!).in_sequence(s)
+
+          model.expects(:log!).in_sequence(s).with(:finished)
 
           model.perform!
         end
@@ -371,6 +373,8 @@ describe 'Backup::Model' do
         end
 
         it 'should perform all procedures' do
+          model.expects(:log!).in_sequence(s).with(:started)
+
           procedure_a.expects(:call).in_sequence(s)
           procedure_b.expects(:perform!).in_sequence(s)
           procedure_c.expects(:perform!).in_sequence(s)
@@ -383,6 +387,8 @@ describe 'Backup::Model' do
 
           notifier_a.expects(:perform!).in_sequence(s)
           notifier_b.expects(:perform!).in_sequence(s)
+
+          model.expects(:log!).in_sequence(s).with(:finished)
 
           model.perform!
         end
@@ -584,5 +590,60 @@ describe 'Backup::Model' do
     end
 
   end # describe '#get_class_from_scope'
+
+  describe '#log!' do
+    context 'when action is :started' do
+      it 'should log that the backup has started with the version' do
+        Backup::Logger.expects(:message).with(
+          "Performing Backup for 'test label (test_trigger)'!\n" +
+          "[ backup #{ Backup::Version.current } : #{ RUBY_DESCRIPTION } ]"
+        )
+        model.send(:log!, :started)
+      end
+    end
+
+    context 'when action is :finished' do
+      before { model.expects(:elapsed_time).returns('01:02:03') }
+      context 'when warnings were issued' do
+        before { Backup::Logger.expects(:has_warnings?).returns(true) }
+        it 'should log a warning that the backup has finished with warnings' do
+          Backup::Logger.expects(:warn).with(
+            "Backup for 'test label (test_trigger)' " +
+            "Completed Successfully (with Warnings) in 01:02:03"
+          )
+          model.send(:log!, :finished)
+        end
+      end
+
+      context 'when no warnings were issued' do
+        it 'should log that the backup has finished with the elapsed time' do
+          Backup::Logger.expects(:message).with(
+            "Backup for 'test label (test_trigger)' " +
+            "Completed Successfully in 01:02:03"
+          )
+          model.send(:log!, :finished)
+        end
+      end
+    end
+  end # describe '#log!'
+
+  describe '#elapsed_time' do
+    it 'should return a string representing the elapsed time' do
+      Timecop.freeze(Time.now)
+      { 0       => '00:00:00', 1       => '00:00:01', 59      => '00:00:59',
+        60      => '00:01:00', 61      => '00:01:01', 119     => '00:01:59',
+        3540    => '00:59:00', 3541    => '00:59:01', 3599    => '00:59:59',
+        3600    => '01:00:00', 3601    => '01:00:01', 3659    => '01:00:59',
+        3660    => '01:01:00', 3661    => '01:01:01', 3719    => '01:01:59',
+        7140    => '01:59:00', 7141    => '01:59:01', 7199    => '01:59:59',
+        212400  => '59:00:00', 212401  => '59:00:01', 212459  => '59:00:59',
+        212460  => '59:01:00', 212461  => '59:01:01', 212519  => '59:01:59',
+        215940  => '59:59:00', 215941  => '59:59:01', 215999  => '59:59:59'
+      }.each do |duration, expected|
+        model.instance_variable_set(:@started_at, Time.now - duration)
+        model.send(:elapsed_time).should == expected
+      end
+    end
+  end
 
 end
