@@ -208,6 +208,12 @@ describe 'Backup::Model' do
           model.syncers.first.should be_an_instance_of Fake::NoArg::Base
         end
       end
+
+      it 'should warn user of change from RSync to RSync::Local' do
+        Backup::Logger.expects(:warn)
+        model.sync_with('Backup::Config::RSync')
+        model.syncers.first.should be_an_instance_of Backup::Syncer::RSync::Local
+      end
     end
 
     describe '#notify_by' do
