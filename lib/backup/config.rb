@@ -144,4 +144,28 @@ module Backup
     add_dsl_constants!
     reset!
   end
+
+  ##
+  # Warn user of deprecated Backup::CONFIG_FILE constant reference
+  # in older config.rb files and return the proper Config.config_file value.
+  class << self
+    def const_missing(const)
+      if const.to_s == 'CONFIG_FILE'
+        Logger.warn Errors::ConfigError.new(<<-EOS)
+          Configuration File Upgrade Needed
+          Your configuration file, located at #{ Config.config_file }
+          needs to be upgraded for this version of Backup.
+          The reference to 'Backup::CONFIG_FILE' in your current config.rb file
+          has been deprecated and needs to be replaced with 'Config.config_file'.
+          You may update this reference in your config.rb manually,
+          or generate a new config.rb using 'backup generate:config'.
+          * Note: if you have global configuration defaults set in config.rb,
+          be sure to transfer them to your new config.rb, should you choose
+          to generate a new config.rb file.
+        EOS
+        return Config.config_file
+      end
+      super
+    end
+  end
 end
