@@ -39,6 +39,8 @@ module Backup
 
         instance_eval(&block) if block_given?
 
+        @name ||= 'dump'
+
         if @utility_path
           Logger.warn "[DEPRECATED] " +
             "Database::Redis#utility_path has been deprecated.\n" +

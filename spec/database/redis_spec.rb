@@ -42,7 +42,7 @@ describe Backup::Database::Redis do
       it 'should use default values' do
         db = Backup::Database::Redis.new(model)
 
-        db.name.should        be_nil
+        db.name.should        == 'dump'
         db.path.should        be_nil
         db.password.should    be_nil
         db.host.should        be_nil
