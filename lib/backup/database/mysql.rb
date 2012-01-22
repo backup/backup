@@ -29,65 +29,27 @@ module Backup
       attr_accessor :additional_options
 
       ##
+      # Path to mysqldump utility (optional)
+      attr_accessor :mysqldump_utility
+
+      ##
       # Creates a new instance of the MySQL adapter object
-      def initialize(&block)
-        load_defaults!
+      def initialize(model, &block)
+        super(model)
 
         @skip_tables        ||= Array.new
         @only_tables        ||= Array.new
         @additional_options ||= Array.new
 
-        instance_eval(&block)
-      end
+        instance_eval(&block) if block_given?
 
-      ##
-      # Builds the MySQL syntax for specifying which tables to skip
-      # during the dumping of the database
-      def tables_to_skip
-        skip_tables.map do |table|
-          "--ignore-table='#{name}.#{table}'"
-        end.join("\s")
-      end
-
-      ##
-      # Builds the MySQL syntax for specifying which tables to dump
-      # during the dumping of the database
-      def tables_to_dump
-        only_tables.join("\s")
-      end
-
-      ##
-      # Builds the credentials MySQL syntax to authenticate the user
-      # to perform the database dumping process
-      def credential_options
-        %w[username password].map do |option|
-          next if send(option).nil? or send(option).empty?
-          "--#{option}='#{send(option)}'".gsub('--username', '--user')
-        end.compact.join("\s")
-      end
-
-      ##
-      # Builds the MySQL connectivity options syntax to connect the user
-      # to perform the database dumping process
-      def connectivity_options
-        %w[host port socket].map do |option|
-          next if send(option).nil? or (send(option).respond_to?(:empty?) and send(option).empty?)
-          "--#{option}='#{send(option)}'"
-        end.compact.join("\s")
-      end
-
-      ##
-      # Builds a MySQL compatible string for the additional options
-      # specified by the user
-      def options
-        additional_options.join("\s")
-      end
-
-      ##
-      # Builds the full mysqldump string based on all attributes
-      def mysqldump
-        "#{ utility(:mysqldump) } #{ credential_options } #{ connectivity_options } " +
-        "#{ options } #{ name } #{ tables_to_dump } #{ tables_to_skip }"
+        if @utility_path
+          Logger.warn "[DEPRECATED] " +
+            "Database::MySQL#utility_path has been deprecated.\n" +
+            "  Use Database::MySQL#mysqldump_utility instead."
+          @mysqldump_utility ||= @utility_path
+        end
+        @mysqldump_utility ||= utility(:mysqldump)
       end
 
       ##
@@ -96,7 +58,70 @@ module Backup
       def perform!
         super
 
-        run("#{mysqldump} > '#{File.join(dump_path, name)}.sql'")
+        dump_ext = 'sql'
+        dump_cmd = "#{ mysqldump }"
+
+        if @model.compressor
+          @model.compressor.compress_with do |command, ext|
+            dump_cmd << " | #{command}"
+            dump_ext << ext
+          end
+        end
+
+        dump_cmd << " > '#{ File.join(@dump_path, name) }.#{ dump_ext }'"
+        run(dump_cmd)
+      end
+
+      private
+
+      ##
+      # Builds the full mysqldump string based on all attributes
+      def mysqldump
+        "#{ mysqldump_utility } #{ credential_options } #{ connectivity_options } " +
+        "#{ user_options } #{ name } #{ tables_to_dump } #{ tables_to_skip }"
+      end
+
+      ##
+      # Builds the credentials MySQL syntax to authenticate the user
+      # to perform the database dumping process
+      def credential_options
+        %w[username password].map do |option|
+          next if send(option).to_s.empty?
+          "--#{option}='#{send(option)}'".gsub('--username', '--user')
+        end.compact.join(' ')
+      end
+
+      ##
+      # Builds the MySQL connectivity options syntax to connect the user
+      # to perform the database dumping process
+      def connectivity_options
+        %w[host port socket].map do |option|
+          next if send(option).to_s.empty?
+          "--#{option}='#{send(option)}'"
+        end.compact.join(' ')
+      end
+
+      ##
+      # Builds a MySQL compatible string for the additional options
+      # specified by the user
+      def user_options
+        additional_options.join(' ')
+      end
+
+      ##
+      # Builds the MySQL syntax for specifying which tables to dump
+      # during the dumping of the database
+      def tables_to_dump
+        only_tables.join(' ')
+      end
+
+      ##
+      # Builds the MySQL syntax for specifying which tables to skip
+      # during the dumping of the database
+      def tables_to_skip
+        skip_tables.map do |table|
+          "--ignore-table='#{name}.#{table}'"
+        end.join(' ')
       end
 
     end

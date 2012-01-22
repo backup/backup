@@ -3,311 +3,253 @@
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Notifier::Mail do
+  let(:model) { Backup::Model.new(:test_trigger, 'test label') }
+  let(:notifier) do
+    Backup::Notifier::Mail.new(model) do |mail|
+      mail.delivery_method      = :smtp
+      mail.from                 = 'my.sender.email@gmail.com'
+      mail.to                   = 'my.receiver.email@gmail.com'
+      mail.address              = 'smtp.gmail.com'
+      mail.port                 = 587
+      mail.domain               = 'your.host.name'
+      mail.user_name            = 'user'
+      mail.password             = 'secret'
+      mail.authentication       = 'plain'
+      mail.enable_starttls_auto = true
+
+      mail.sendmail             = '/path/to/sendmail'
+      mail.sendmail_args        = '-i -t -X/tmp/traffic.log'
+
+      mail.mail_folder          = '/path/to/backup/mails'
+    end
+  end
 
   describe '#initialize' do
 
-    context 'specifying the delivery_method' do
+    it 'should set the correct values' do
+      notifier.delivery_method.should      == :smtp
+      notifier.from.should                 == 'my.sender.email@gmail.com'
+      notifier.to.should                   == 'my.receiver.email@gmail.com'
+      notifier.address.should              == 'smtp.gmail.com'
+      notifier.port.should                 == 587
+      notifier.domain.should               == 'your.host.name'
+      notifier.user_name.should            == 'user'
+      notifier.password.should             == 'secret'
+      notifier.authentication.should       == 'plain'
+      notifier.enable_starttls_auto.should == true
 
-      it 'creates a new notifier using Mail::SMTP' do
-        notifier = Backup::Notifier::Mail.new do |mail|
-          mail.delivery_method      = :smtp
-          mail.from                 = 'my.sender.email@gmail.com'
-          mail.to                   = 'my.receiver.email@gmail.com'
-          mail.address              = 'smtp.gmail.com'
-          mail.port                 = 587
-          mail.domain               = 'your.host.name'
-          mail.user_name            = 'user'
-          mail.password             = 'secret'
-          mail.authentication       = 'plain'
-          mail.enable_starttls_auto = true
-        end
+      notifier.sendmail.should             == '/path/to/sendmail'
+      notifier.sendmail_args.should        == '-i -t -X/tmp/traffic.log'
 
-        notifier.mail.delivery_method.should
-            be_an_instance_of ::Mail::SMTP
+      notifier.mail_folder.should          == '/path/to/backup/mails'
 
-        notifier.delivery_method.should      == 'smtp'
-        notifier.from.should                 == 'my.sender.email@gmail.com'
-        notifier.to.should                   == 'my.receiver.email@gmail.com'
-        notifier.address.should              == 'smtp.gmail.com'
-        notifier.port.should                 == 587
-        notifier.domain.should               == 'your.host.name'
-        notifier.user_name.should            == 'user'
-        notifier.password.should             == 'secret'
-        notifier.authentication.should       == 'plain'
-        notifier.enable_starttls_auto.should == true
-        notifier.openssl_verify_mode.should  be_nil
-        notifier.sendmail.should             be_nil
-        notifier.sendmail_args.should        be_nil
-        notifier.mail_folder.should          be_nil
+      notifier.on_success.should == true
+      notifier.on_warning.should == true
+      notifier.on_failure.should == true
+    end
 
-        notifier.on_success.should == true
-        notifier.on_warning.should == true
-        notifier.on_failure.should == true
-      end
+    context 'when using configuration defaults' do
+      after { Backup::Configuration::Notifier::Mail.clear_defaults! }
 
-      it 'creates a new notifier using Mail::Sendmail' do
-        notifier = Backup::Notifier::Mail.new do |mail|
-          mail.delivery_method      = :sendmail
-          mail.from                 = 'my.sender.email@gmail.com'
-          mail.to                   = 'my.receiver.email@gmail.com'
-          mail.sendmail             = '/path/to/sendmail'
-          mail.sendmail_args        = '-i -t -X/tmp/traffic.log'
-        end
-
-        notifier.mail.delivery_method.should
-            be_an_instance_of ::Mail::Sendmail
-
-        notifier.delivery_method.should      == 'sendmail'
-        notifier.from.should                 == 'my.sender.email@gmail.com'
-        notifier.to.should                   == 'my.receiver.email@gmail.com'
-        notifier.address.should              be_nil
-        notifier.port.should                 be_nil
-        notifier.domain.should               be_nil
-        notifier.user_name.should            be_nil
-        notifier.password.should             be_nil
-        notifier.authentication.should       be_nil
-        notifier.enable_starttls_auto.should be_nil
-        notifier.openssl_verify_mode.should  be_nil
-        notifier.sendmail.should             == '/path/to/sendmail'
-        notifier.sendmail_args.should        == '-i -t -X/tmp/traffic.log'
-        notifier.mail_folder.should          be_nil
-
-        notifier.on_success.should == true
-        notifier.on_warning.should == true
-        notifier.on_failure.should == true
-      end
-
-      it 'creates a new notifier using Mail::FileDelivery' do
-        notifier = Backup::Notifier::Mail.new do |mail|
-          mail.delivery_method      = :file
-          mail.from                 = 'my.sender.email@gmail.com'
-          mail.to                   = 'my.receiver.email@gmail.com'
-          mail.mail_folder          = '/path/to/backup/mails'
-        end
-
-        notifier.mail.delivery_method.should
-            be_an_instance_of ::Mail::FileDelivery
-
-        notifier.delivery_method.should      == 'file'
-        notifier.from.should                 == 'my.sender.email@gmail.com'
-        notifier.to.should                   == 'my.receiver.email@gmail.com'
-        notifier.address.should              be_nil
-        notifier.port.should                 be_nil
-        notifier.domain.should               be_nil
-        notifier.user_name.should            be_nil
-        notifier.password.should             be_nil
-        notifier.authentication.should       be_nil
-        notifier.enable_starttls_auto.should be_nil
-        notifier.openssl_verify_mode.should  be_nil
-        notifier.sendmail.should             be_nil
-        notifier.sendmail_args.should        be_nil
-        notifier.mail_folder.should          == '/path/to/backup/mails'
-
-        notifier.on_success.should == true
-        notifier.on_warning.should == true
-        notifier.on_failure.should == true
-      end
-
-    end # context 'specifying the delivery_method'
-
-    context 'without specifying the delivery_method' do
-
-      it 'uses Mail::SMTP by default' do
-        [nil, :foo, 'foo'].each do |val|
-          notifier = Backup::Notifier::Mail.new do |mail|
-            mail.delivery_method = val
-            mail.from            = 'my.sender.email@gmail.com'
-            mail.to              = 'my.receiver.email@gmail.com'
-          end
-
-          notifier.delivery_method.should      == 'smtp'
-          notifier.from.should                 == 'my.sender.email@gmail.com'
-          notifier.to.should                   == 'my.receiver.email@gmail.com'
-        end
-      end
-
-    end # context 'without specifying the delivery_method'
-
-    describe 'setting configuration defaults' do
-      let(:config) { Backup::Configuration::Notifier::Mail }
-      after { config.clear_defaults! }
-
-      it 'uses and overrides configuration defaults' do
-        config.defaults do |mail|
+      it 'should use configuration defaults' do
+        Backup::Configuration::Notifier::Mail.defaults do |mail|
           mail.delivery_method = :file
-          mail.to         = 'some.receiver.email@gmail.com'
-          mail.from       = 'default.sender.email@gmail.com'
+          mail.from       = 'default.sender@domain.com'
+          mail.to         = 'some.receiver@domain.com'
           mail.on_success = false
         end
+        notifier = Backup::Notifier::Mail.new(model)
 
-        config.delivery_method.should == :file
-        config.to.should              == 'some.receiver.email@gmail.com'
-        config.from.should            == 'default.sender.email@gmail.com'
-        config.on_success.should      == false
+        notifier.delivery_method.should       == :file
+        notifier.from.should                  == 'default.sender@domain.com'
+        notifier.to.should                    == 'some.receiver@domain.com'
+        notifier.address.should               be_nil
+        notifier.port.should                  be_nil
+        notifier.domain.should                be_nil
+        notifier.user_name.should             be_nil
+        notifier.password.should              be_nil
+        notifier.authentication.should        be_nil
+        notifier.enable_starttls_auto.should  be_nil
 
-        notifier = Backup::Notifier::Mail.new do |mail|
-          mail.mail_folder = '/my/backup/mails'
-          mail.from = 'my.sender.email@gmail.com'
+        notifier.sendmail.should              be_nil
+        notifier.sendmail_args.should         be_nil
+
+        notifier.mail_folder.should           be_nil
+
+        notifier.on_success.should == false
+        notifier.on_warning.should == true
+        notifier.on_failure.should == true
+      end
+
+      it 'should override configuration defaults' do
+        Backup::Configuration::Notifier::Mail.defaults do |mail|
+          mail.from       = 'old.sender@domain.com'
+          mail.to         = 'old.receiver@domain.com'
+          mail.port       = 123
+          mail.on_success = false
+        end
+        notifier = Backup::Notifier::Mail.new(model) do |mail|
+          mail.from       = 'new.sender@domain.com'
+          mail.to         = 'new.receiver@domain.com'
           mail.on_warning = false
         end
 
-        notifier.delivery_method.should == 'file'
-        notifier.mail_folder = '/my/backup/mails'
-        notifier.to.should   == 'some.receiver.email@gmail.com'
-        notifier.from.should == 'my.sender.email@gmail.com'
+        notifier.delivery_method.should be_nil
+        notifier.from.should == 'new.sender@domain.com'
+        notifier.to.should   == 'new.receiver@domain.com'
+        notifier.port.should == 123
 
         notifier.on_success.should == false
         notifier.on_warning.should == false
         notifier.on_failure.should == true
       end
 
-    end # describe 'setting configuration defaults'
+    end # context 'when using configuration defaults'
 
   end # describe '#initialize'
 
-  describe '#perform!' do
-    let(:model) { Backup::Model.new('trigger', 'label') {} }
-    let(:message) { '[Backup::%s] label (trigger)' }
-    let(:notifier) do
-      Backup::Notifier::Mail.new do |mail|
-        mail.delivery_method = :test
-      end
-    end
+  describe '#notify!' do
+    let(:template) { mock }
+    let(:message) { '[Backup::%s] test label (test_trigger)' }
 
     before do
-      notifier.on_success = false
-      notifier.on_warning = false
-      notifier.on_failure = false
+      notifier.instance_variable_set(:@template, template)
+      notifier.delivery_method = :test
       ::Mail::TestMailer.deliveries.clear
     end
 
-    context 'success' do
+    context 'when status is :success' do
+      it 'should send a Success email with no attachments' do
+        template.expects(:result).
+            with('notifier/mail/success.erb').
+            returns('message body')
 
-      context 'when Notifier#on_success is true' do
-        before { notifier.on_success = true }
+        notifier.send(:notify!, :success)
 
-        it 'sends the notification without an attached backup log' do
-          notifier.expects(:log!)
-          Backup::Template.any_instance.expects(:result).
-              with('notifier/mail/success.erb').
-              returns('message body')
-
-          notifier.perform!(model)
-          sent_message = ::Mail::TestMailer.deliveries.first
-          sent_message.subject.should == message % 'Success'
-          sent_message.multipart?.should be_false
-          sent_message.body.should == 'message body'
-          sent_message.has_attachments?.should be_false
-        end
+        sent_message = ::Mail::TestMailer.deliveries.first
+        sent_message.subject.should == message % 'Success'
+        sent_message.multipart?.should be_false
+        sent_message.body.should == 'message body'
+        sent_message.has_attachments?.should be_false
       end
+    end
 
-      context 'when Notifier#on_success is false' do
-        it 'does not send the notification' do
-          notifier.expects(:log!).never
-          notifier.expects(:notify!).never
-
-          notifier.perform!(model)
-          ::Mail::TestMailer.deliveries.should be_empty
-        end
-      end
-
-    end # context 'success'
-
-    context 'warning' do
-      let(:log_messages){ ['line 1', 'line 2', 'line 3'] }
-
+    context 'when status is :warning' do
       before do
         Backup::Logger.stubs(:has_warnings?).returns(true)
-        Backup::Logger.stubs(:messages).returns(log_messages)
+        Backup::Logger.stubs(:messages).returns(['line 1', 'line 2', 'line 3'])
       end
 
-      context 'when Notifier#on_warning is true' do
-        before { notifier.on_warning = true }
+      it 'should send a Warning email with an attached log' do
+        template.expects(:result).
+            with('notifier/mail/warning.erb').
+            returns('message body')
 
-        it 'sends the notification with an attached backup log' do
-          notifier.expects(:log!)
-          Backup::Template.any_instance.expects(:result).
-              with('notifier/mail/warning.erb').
-              returns('message body')
+        notifier.send(:notify!, :warning)
 
-          notifier.perform!(model)
-          sent_message = ::Mail::TestMailer.deliveries.first
-          sent_message.subject.should == message % 'Warning'
-          sent_message.body.multipart?.should be_true
-          sent_message.text_part.decoded.should == 'message body'
-          sent_message.attachments["#{model.time}.#{model.trigger}.log"].
-              read.should == "line 1\nline 2\nline 3"
-        end
+        sent_message = ::Mail::TestMailer.deliveries.first
+        sent_message.subject.should == message % 'Warning'
+        sent_message.body.multipart?.should be_true
+        sent_message.text_part.decoded.should == 'message body'
+        sent_message.attachments["#{model.time}.#{model.trigger}.log"].
+            read.should == "line 1\nline 2\nline 3"
       end
+    end
 
-      context 'when Notifier#on_success is true' do
-        before { notifier.on_success = true }
-
-        it 'sends the notification with an attched backup log' do
-          notifier.expects(:log!)
-          Backup::Template.any_instance.expects(:result).
-              with('notifier/mail/warning.erb').
-              returns('message body')
-
-          notifier.perform!(model)
-          sent_message = ::Mail::TestMailer.deliveries.first
-          sent_message.subject.should == message % 'Warning'
-          sent_message.body.multipart?.should be_true
-          sent_message.text_part.decoded.should == 'message body'
-          sent_message.attachments["#{model.time}.#{model.trigger}.log"].
-              read.should == "line 1\nline 2\nline 3"
-        end
-      end
-
-      context 'when Notifier#on_warning and Notifier#on_success are false' do
-        it 'does not send the notification' do
-          notifier.expects(:log!).never
-          notifier.expects(:notify!).never
-
-          notifier.perform!(model)
-          ::Mail::TestMailer.deliveries.should be_empty
-        end
-      end
-
-    end # context 'warning'
-
-    context 'failure' do
-      let(:log_messages){ ['line 1', 'line 2', 'line 3'] }
-
+    context 'when status is :failure' do
       before do
-        Backup::Logger.stubs(:messages).returns(log_messages)
+        Backup::Logger.stubs(:messages).returns(['line 1', 'line 2', 'line 3'])
       end
 
-      context 'when Notifier#on_failure is true' do
-        before { notifier.on_failure = true }
+      it 'should send a Failure email with an attached log' do
+        template.expects(:result).
+            with('notifier/mail/failure.erb').
+            returns('message body')
 
-        it 'sends the notification with an attached backup log' do
-          notifier.expects(:log!)
-          Backup::Template.any_instance.expects(:result).
-              with('notifier/mail/failure.erb').
-              returns('message body')
+        notifier.send(:notify!, :failure)
 
-          notifier.perform!(model, Exception.new)
-          sent_message = ::Mail::TestMailer.deliveries.first
-          sent_message.subject.should == message % 'Failure'
-          sent_message.body.multipart?.should be_true
-          sent_message.text_part.decoded.should == 'message body'
-          sent_message.attachments["#{model.time}.#{model.trigger}.log"].
-              read.should == "line 1\nline 2\nline 3"
-        end
+        sent_message = ::Mail::TestMailer.deliveries.first
+        sent_message.subject.should == message % 'Failure'
+        sent_message.body.multipart?.should be_true
+        sent_message.text_part.decoded.should == 'message body'
+        sent_message.attachments["#{model.time}.#{model.trigger}.log"].
+            read.should == "line 1\nline 2\nline 3"
+      end
+    end
+  end # describe '#notify!'
+
+  describe '#new_email' do
+    context 'when no delivery_method is set' do
+      before { notifier.delivery_method = nil }
+      it 'should default to :smtp' do
+        email = notifier.send(:new_email)
+        email.should be_an_instance_of ::Mail::Message
+        email.delivery_method.should be_an_instance_of ::Mail::SMTP
+      end
+    end
+
+    context 'when delivery_method is :smtp' do
+      before { notifier.delivery_method = :smtp }
+
+      it 'should return an email using SMTP' do
+        email = notifier.send(:new_email)
+        email.delivery_method.should be_an_instance_of ::Mail::SMTP
       end
 
-      context 'when Notifier#on_failure is false' do
-        it 'does not send the notification' do
-          notifier.expects(:log!).never
-          notifier.expects(:notify!).never
+      it 'should set the proper options' do
+        email = notifier.send(:new_email)
 
-          notifier.perform!(model, Exception.new)
-          ::Mail::TestMailer.deliveries.should be_empty
-        end
+        email.to.should   == ['my.receiver.email@gmail.com']
+        email.from.should == ['my.sender.email@gmail.com']
+
+        settings = email.delivery_method.settings
+        settings[:address].should               == 'smtp.gmail.com'
+        settings[:port].should                  == 587
+        settings[:domain].should                == 'your.host.name'
+        settings[:user_name].should             == 'user'
+        settings[:password].should              == 'secret'
+        settings[:authentication].should        == 'plain'
+        settings[:enable_starttls_auto].should  == true
+        settings[:openssl_verify_mode].should   be_nil
+      end
+    end
+
+    context 'when delivery_method is :sendmail' do
+      before { notifier.delivery_method = :sendmail }
+      it 'should return an email using Sendmail' do
+        email = notifier.send(:new_email)
+        email.delivery_method.should be_an_instance_of ::Mail::Sendmail
       end
 
-    end # context 'failure'
+      it 'should set the proper options' do
+        email = notifier.send(:new_email)
 
-  end # describe '#perform!'
+        email.to.should   == ['my.receiver.email@gmail.com']
+        email.from.should == ['my.sender.email@gmail.com']
+
+        settings = email.delivery_method.settings
+        settings[:location].should  == '/path/to/sendmail'
+        settings[:arguments].should == '-i -t -X/tmp/traffic.log'
+      end
+    end
+
+    context 'when delivery_method is :file' do
+      before { notifier.delivery_method = :file }
+      it 'should return an email using FileDelievery' do
+        email = notifier.send(:new_email)
+        email.delivery_method.should be_an_instance_of ::Mail::FileDelivery
+      end
+
+      it 'should set the proper options' do
+        email = notifier.send(:new_email)
+
+        email.to.should   == ['my.receiver.email@gmail.com']
+        email.from.should == ['my.sender.email@gmail.com']
+
+        settings = email.delivery_method.settings
+        settings[:location].should  == '/path/to/backup/mails'
+      end
+    end
+  end # describe '#new_email'
+
 end

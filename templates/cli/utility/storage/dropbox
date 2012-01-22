@@ -6,7 +6,10 @@
   store_with Dropbox do |db|
     db.api_key    = 'my_api_key'
     db.api_secret = 'my_api_secret'
-    db.timeout    = 300
+    # Dropbox Access Type
+    # The default value is :app_folder
+    # Change this to :dropbox if needed
+    # db.access_type = :dropbox
     db.path       = '/path/to/my/backups'
     db.keep       = 25
   end

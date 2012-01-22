@@ -18,6 +18,10 @@ module Backup
           # Cookie is the Erlang cookie/shared secret used to connect to the node.
           attr_accessor :cookie
 
+          ##
+          # Path to riak-admin utility (optional)
+          attr_accessor :riak_admin_utility
+
         end
       end
     end

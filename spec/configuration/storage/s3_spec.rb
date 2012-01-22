@@ -12,6 +12,7 @@ describe Backup::Configuration::Storage::S3 do
       s3.path               = 'my_backups'
     end
   end
+  after { Backup::Configuration::Storage::S3.clear_defaults! }
 
   it 'should set the default S3 configuration' do
     s3 = Backup::Configuration::Storage::S3

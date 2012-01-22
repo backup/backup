@@ -30,6 +30,10 @@ module Backup
           # Additional "mysqldump" options
           attr_accessor :additional_options
 
+          ##
+          # Path to mysqldump utility (optional)
+          attr_accessor :mysqldump_utility
+
         end
       end
     end

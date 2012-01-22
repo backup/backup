@@ -7,17 +7,17 @@ module Backup
       ##
       # Tells Backup::Compressor::Pbzip2 to compress
       # better (-9) rather than faster when set to true
-      attr_writer :best
+      attr_accessor :best
 
       ##
       # Tells Backup::Compressor::Pbzip2 to compress
       # faster (-1) rather than better when set to true
-      attr_writer :fast
+      attr_accessor :fast
 
       ##
       # Tells Backup::Compressor::Pbzip2 how many processors
       # use, by default autodetect is used
-      attr_writer :processors
+      attr_accessor :processors
 
       ##
       # Creates a new instance of Backup::Compressor::Pbzip2 and
@@ -26,51 +26,31 @@ module Backup
       # and lower block sizes don't make things significantly faster
       # (according to official bzip2 docs)
       def initialize(&block)
-        load_defaults!
+        super
 
         @best       ||= false
         @fast       ||= false
-        @processors ||= nil
+        @processors ||= false
 
         instance_eval(&block) if block_given?
       end
 
       ##
-      # Performs the compression of the packages backup file
-      def perform!
+      # Yields to the block the compressor command with options
+      # and it's filename extension.
+      def compress_with
         log!
-        run("#{ utility(:pbzip2) } #{ options } '#{ Backup::Model.file }'")
-        Backup::Model.extension += '.bz2'
+        yield "#{ utility(:pbzip2) }#{ options }", '.bz2'
       end
 
-    private
+      private
 
       ##
-      # Combines the provided options and returns a pbzip2 options string
+      # Returns the gzip option syntax for compressing
       def options
-        (best + fast + processors).join("\s")
+        " #{ '--best ' if @best }#{ '--fast ' if @fast }#{ "-p#{@processors}" if @processors }".rstrip
       end
 
-      ##
-      # Returns the pbzip2 option syntax for compressing
-      # setting @best to true is redundant, as pbzip2 compresses best by default
-      def best
-        return ['--best'] if @best; []
-      end
-
-      ##
-      # Returns the pbzip2 option syntax for compressing
-      # (not significantly) faster when @fast is set to true
-      def fast
-        return ['--fast'] if @fast; []
-      end
-
-      ##
-      # Returns the pbzip2 option syntax for compressing
-      # using given count of cpus
-      def processors
-        return ['-p' + @processors.to_s] if @processors; []
-      end
     end
   end
 end

@@ -20,16 +20,16 @@ describe Backup::Configuration::Helpers do
   end
 
   it 'should return the setters' do
-    Backup::Configuration::Base.setter_methods.count.should == 3
+    Backup::Configuration::Base.send(:setter_methods).count.should == 3
     %w[rspec_method= rspec_test= rspec_mocha=].each do |method|
-      Backup::Configuration::Base.setter_methods.should include(method)
+      Backup::Configuration::Base.send(:setter_methods).should include(method)
     end
   end
 
   it 'should return the getters' do
-    Backup::Configuration::Base.getter_methods.count.should == 3
+    Backup::Configuration::Base.send(:getter_methods).count.should == 3
     %w[rspec_method rspec_test rspec_mocha].each do |method|
-      Backup::Configuration::Base.getter_methods.should include(method)
+      Backup::Configuration::Base.send(:getter_methods).should include(method)
     end
   end
 end

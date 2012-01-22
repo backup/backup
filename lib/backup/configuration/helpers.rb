@@ -9,8 +9,11 @@ module Backup
       # configuration for these methods, if they respond then they will
       # assign the object's attribute(s) to that particular global configuration's attribute
       def load_defaults!
-        c                  = self.class.name.split('::')
-        configuration      = Backup::Configuration.const_get(c[1]).const_get(c[2])
+        module_names  = self.class.name.split('::')[1..-1]
+        configuration = Backup::Configuration
+        module_names.each do |module_name|
+          configuration = configuration.const_get(module_name)
+        end
 
         getter_methods.each do |attribute|
           if configuration.respond_to?(attribute)
@@ -26,6 +29,8 @@ module Backup
           self.send(method, nil)
         end
       end
+
+      private
 
       ##
       # Returns an Array of the setter methods (as String)

@@ -8,14 +8,17 @@ describe Backup::Configuration::Database::Riak do
       db.name   = 'mydb'
       db.node   = '/var/lib/redis/db'
       db.cookie = 'mypassword'
+      db.riak_admin_utility = '/path/to/riak-admin'
     end
   end
+  after { Backup::Configuration::Database::Riak.clear_defaults! }
 
   it 'should set the default Riak configuration' do
     db = Backup::Configuration::Database::Riak
     db.name.should   == 'mydb'
     db.node.should   == '/var/lib/redis/db'
     db.cookie.should == 'mypassword'
+    db.riak_admin_utility.should == '/path/to/riak-admin'
   end
 
   describe '#clear_defaults!' do
@@ -26,6 +29,7 @@ describe Backup::Configuration::Database::Riak do
       db.name.should   == nil
       db.node.should   == nil
       db.cookie.should == nil
+      db.riak_admin_utility.should == nil
     end
   end
 end

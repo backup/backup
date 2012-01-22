@@ -17,17 +17,23 @@ module Backup
       attr_accessor :cookie
 
       ##
-      # Creates a new instance of the Riak adapter object
-      def initialize(&block)
-        load_defaults!
-
-        instance_eval(&block)
-      end
+      # Path to riak-admin utility (optional)
+      attr_accessor :riak_admin_utility
 
       ##
-      # Builds the full riak-admin string based on all attributes
-      def riakadmin
-        "riak-admin backup #{node} #{cookie}"
+      # Creates a new instance of the Riak adapter object
+      def initialize(model, &block)
+        super(model)
+
+        instance_eval(&block) if block_given?
+
+        if @utility_path
+          Logger.warn "[DEPRECATED] " +
+            "Database::Riak#utility_path has been deprecated.\n" +
+            "  Use Database::Riak#riak_admin_utility instead."
+          @riak_admin_utility ||= @utility_path
+        end
+        @riak_admin_utility ||= utility('riak-admin')
       end
 
       ##
@@ -35,9 +41,27 @@ module Backup
       # data to the specified path based on the 'trigger'
       def perform!
         super
-        # have to make riak the owner since the riak-admin tool runs as the riak user in a default setup.
-        run("chown -R riak.riak #{dump_path}")
-        run("#{riakadmin} #{File.join(dump_path, name)} node")
+        # have to make riak the owner since the riak-admin tool runs
+        # as the riak user in a default setup.
+        FileUtils.chown_R('riak', 'riak', @dump_path)
+
+        backup_file = File.join(@dump_path, name)
+        run("#{ riakadmin } #{ backup_file } node")
+
+        if @model.compressor
+          @model.compressor.compress_with do |command, ext|
+            run("#{ command } -c #{ backup_file } > #{ backup_file + ext }")
+            FileUtils.rm_f(backup_file)
+          end
+        end
+      end
+
+      private
+
+      ##
+      # Builds the full riak-admin string based on all attributes
+      def riakadmin
+        "#{ riak_admin_utility } backup #{ node } #{ cookie }"
       end
 
     end

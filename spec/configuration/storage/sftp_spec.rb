@@ -13,6 +13,7 @@ describe Backup::Configuration::Storage::SFTP do
       sftp.keep      = 20
     end
   end
+  after { Backup::Configuration::Storage::SFTP.clear_defaults! }
 
   it 'should set the default sftp configuration' do
     sftp = Backup::Configuration::Storage::SFTP

@@ -3,147 +3,115 @@
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Notifier::Prowl do
+  let(:model) { Backup::Model.new(:test_trigger, 'test label') }
   let(:notifier) do
-    Backup::Notifier::Prowl.new do |prowl|
+    Backup::Notifier::Prowl.new(model) do |prowl|
       prowl.application = 'application'
       prowl.api_key     = 'api_key'
     end
   end
 
   describe '#initialize' do
-    it 'sets the correct defaults' do
-      notifier.application = 'application'
-      notifier.api_key     = 'api_key'
+    it 'should sets the correct values' do
+      notifier.application.should == 'application'
+      notifier.api_key.should     == 'api_key'
 
       notifier.on_success.should == true
       notifier.on_warning.should == true
       notifier.on_failure.should == true
     end
 
-    it 'uses and overrides configuration defaults' do
-      Backup::Configuration::Notifier::Prowl.defaults do |notifier|
-        notifier.application  = 'my_default_application'
-        notifier.on_success   = false
-      end
-      prowl = Backup::Notifier::Prowl.new do |notifier|
-        notifier.api_key = 'my_own_api_key'
+    context 'when using configuration defaults' do
+      after { Backup::Configuration::Notifier::Prowl.clear_defaults! }
+
+      it 'should use the configuration defaults' do
+        Backup::Configuration::Notifier::Prowl.defaults do |prowl|
+          prowl.application = 'default_app'
+          prowl.api_key     = 'default_api_key'
+
+          prowl.on_success = false
+          prowl.on_warning = false
+          prowl.on_failure = false
+        end
+        notifier = Backup::Notifier::Prowl.new(model)
+        notifier.application.should == 'default_app'
+        notifier.api_key.should     == 'default_api_key'
+
+        notifier.on_success.should == false
+        notifier.on_warning.should == false
+        notifier.on_failure.should == false
       end
 
-      prowl.application.should == 'my_default_application'
-      prowl.api_key.should     == 'my_own_api_key'
-      prowl.on_success.should  == false
-      prowl.on_warning.should  == true
-      prowl.on_failure.should  == true
+      it 'should override the configuration defaults' do
+        Backup::Configuration::Notifier::Prowl.defaults do |prowl|
+          prowl.application = 'old_app'
+          prowl.api_key     = 'old_api_key'
+
+          prowl.on_success = true
+          prowl.on_warning = false
+          prowl.on_failure = false
+        end
+        notifier = Backup::Notifier::Prowl.new(model) do |prowl|
+          prowl.application = 'new_app'
+          prowl.api_key     = 'new_api_key'
+
+          prowl.on_success = false
+          prowl.on_warning = true
+          prowl.on_failure = true
+        end
+
+        notifier.application.should == 'new_app'
+        notifier.api_key.should     == 'new_api_key'
+
+        notifier.on_success.should == false
+        notifier.on_warning.should == true
+        notifier.on_failure.should == true
+      end
+    end # context 'when using configuration defaults'
+  end
+
+  describe '#notify!' do
+    context 'when status is :success' do
+      it 'should send Success message' do
+        notifier.expects(:send_message).with(
+          '[Backup::Success]'
+        )
+        notifier.send(:notify!, :success)
+      end
     end
 
-    it 'creates a new Prowler::Application' do
-      notifier.prowl_client.should be_an_instance_of Prowler::Application
-      notifier.prowl_client.application.should == notifier.application
-      notifier.prowl_client.api_key.should == notifier.api_key
+    context 'when status is :warning' do
+      it 'should send Warning message' do
+        notifier.expects(:send_message).with(
+          '[Backup::Warning]'
+        )
+        notifier.send(:notify!, :warning)
+      end
+    end
+
+    context 'when status is :failure' do
+      it 'should send Failure message' do
+        notifier.expects(:send_message).with(
+          '[Backup::Failure]'
+        )
+        notifier.send(:notify!, :failure)
+      end
+    end
+  end # describe '#notify!'
+
+  describe '#send_message' do
+    it 'should send the given message' do
+      client = mock
+      Prowler.expects(:new).with(
+        :application => 'application', :api_key => 'api_key'
+      ).returns(client)
+      client.expects(:notify).with(
+        'a message',
+        'test label (test_trigger)'
+      )
+
+      notifier.send(:send_message, 'a message')
     end
   end
 
-  describe '#perform!' do
-    let(:model)     { Backup::Model.new('trigger', 'label') {} }
-    let(:message_a) { '[Backup::%s]' }
-    let(:message_b) { 'label (trigger)' }
-
-    before do
-      notifier.on_success = false
-      notifier.on_warning = false
-      notifier.on_failure = false
-    end
-
-    context 'success' do
-
-      context 'when on_success is true' do
-        before { notifier.on_success = true }
-
-        it 'sends success message' do
-          notifier.expects(:log!)
-          notifier.prowl_client.expects(:notify).
-              with(message_a % 'Success', message_b)
-
-          notifier.perform!(model)
-        end
-      end
-
-      context 'when on_success is false' do
-        it 'sends no message' do
-          notifier.expects(:log!).never
-          notifier.expects(:notify!).never
-          notifier.prowl_client.expects(:notify).never
-
-          notifier.perform!(model)
-        end
-      end
-
-    end # context 'success'
-
-    context 'warning' do
-      before { Backup::Logger.stubs(:has_warnings?).returns(true) }
-
-      context 'when on_success is true' do
-        before { notifier.on_success = true }
-
-        it 'sends warning message' do
-          notifier.expects(:log!)
-          notifier.prowl_client.expects(:notify).
-              with(message_a % 'Warning', message_b)
-
-          notifier.perform!(model)
-        end
-      end
-
-      context 'when on_warning is true' do
-        before { notifier.on_warning = true }
-
-        it 'sends warning message' do
-          notifier.expects(:log!)
-          notifier.prowl_client.expects(:notify).
-              with(message_a % 'Warning', message_b)
-
-          notifier.perform!(model)
-        end
-      end
-
-      context 'when on_success and on_warning are false' do
-        it 'sends no message' do
-          notifier.expects(:log!).never
-          notifier.expects(:notify!).never
-          notifier.prowl_client.expects(:notify).never
-
-          notifier.perform!(model)
-        end
-      end
-
-    end # context 'warning'
-
-    context 'failure' do
-
-      context 'when on_failure is true' do
-        before { notifier.on_failure = true }
-
-        it 'sends failure message' do
-          notifier.expects(:log!)
-          notifier.prowl_client.expects(:notify).
-              with(message_a % 'Failure', message_b)
-
-          notifier.perform!(model, Exception.new)
-        end
-      end
-
-      context 'when on_failure is false' do
-        it 'sends no message' do
-          notifier.expects(:log!).never
-          notifier.expects(:notify!).never
-          notifier.prowl_client.expects(:notify).never
-
-          notifier.perform!(model, Exception.new)
-        end
-      end
-
-    end # context 'failure'
-
-  end # describe '#perform!'
 end

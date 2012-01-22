@@ -24,22 +24,6 @@ end
 module Backup
 
   ##
-  # List the available database, storage, compressor, encryptor and notifier constants.
-  # These are used to dynamically define these constants as classes inside Backup::Finder
-  # to provide a nicer configuration file DSL syntax to the users. Adding existing constants
-  # to the arrays below will enable the user to use a constant instead of a string.
-  # Example, instead of:
-  #  database "MySQL" do |mysql|
-  # You can do:
-  #  database MySQL do |mysql|
-  DATABASES   = ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Riak']
-  STORAGES    = ['S3', 'CloudFiles', 'Ninefold', 'Dropbox', 'FTP', 'SFTP', 'SCP', 'RSync', 'Local']
-  COMPRESSORS = ['Gzip', 'Bzip2', 'Pbzip2', 'Lzma']
-  ENCRYPTORS  = ['OpenSSL', 'GPG']
-  SYNCERS     = ['RSync', 'S3']
-  NOTIFIERS   = ['Mail', 'Twitter', 'Campfire', 'Presently', 'Prowl', 'Hipchat']
-
-  ##
   # Backup's internal paths
   LIBRARY_PATH       = File.join(File.dirname(__FILE__), 'backup')
   CLI_PATH           = File.join(LIBRARY_PATH, 'cli')
@@ -53,24 +37,14 @@ module Backup
   TEMPLATE_PATH      = File.expand_path('../../templates', __FILE__)
 
   ##
-  # Backup's Environment paths
-  USER        = ENV['USER'] || Etc.getpwuid.name
-  HOME        = File.expand_path(ENV['HOME'] || '')
-  PATH        = File.join(HOME, 'Backup')
-  CONFIG_FILE = File.join(PATH, 'config.rb')
-  DATA_PATH   = File.join(PATH, 'data')
-  LOG_PATH    = File.join(PATH, 'log')
-  CACHE_PATH  = File.join(PATH, '.cache')
-  TMP_PATH    = File.join(PATH, '.tmp')
-
-  ##
   # Autoload Backup base files
   autoload :Model,      File.join(LIBRARY_PATH, 'model')
   autoload :Archive,    File.join(LIBRARY_PATH, 'archive')
   autoload :Packager,   File.join(LIBRARY_PATH, 'packager')
+  autoload :Package,    File.join(LIBRARY_PATH, 'package')
   autoload :Cleaner,    File.join(LIBRARY_PATH, 'cleaner')
   autoload :Splitter,   File.join(LIBRARY_PATH, 'splitter')
-  autoload :Finder,     File.join(LIBRARY_PATH, 'finder')
+  autoload :Config,     File.join(LIBRARY_PATH, 'config')
   autoload :Binder,     File.join(LIBRARY_PATH, 'binder')
   autoload :Template,   File.join(LIBRARY_PATH, 'template')
   autoload :Dependency, File.join(LIBRARY_PATH, 'dependency')
@@ -89,7 +63,7 @@ module Backup
   # Autoload Backup storage files
   module Storage
     autoload :Base,       File.join(STORAGE_PATH, 'base')
-    autoload :Object,     File.join(STORAGE_PATH, 'object')
+    autoload :Cycler,     File.join(STORAGE_PATH, 'cycler')
     autoload :S3,         File.join(STORAGE_PATH, 's3')
     autoload :CloudFiles, File.join(STORAGE_PATH, 'cloudfiles')
     autoload :Ninefold,   File.join(STORAGE_PATH, 'ninefold')
@@ -105,8 +79,13 @@ module Backup
   # Autoload Backup syncer files
   module Syncer
     autoload :Base,  File.join(SYNCER_PATH, 'base')
-    autoload :RSync, File.join(SYNCER_PATH, 'rsync')
     autoload :S3,    File.join(SYNCER_PATH, 's3')
+    module RSync
+      autoload :Base,  File.join(SYNCER_PATH, 'rsync', 'base')
+      autoload :Local, File.join(SYNCER_PATH, 'rsync', 'local')
+      autoload :Push,  File.join(SYNCER_PATH, 'rsync', 'push')
+      autoload :Pull,  File.join(SYNCER_PATH, 'rsync', 'pull')
+    end
   end
 
   ##
@@ -195,8 +174,14 @@ module Backup
     end
 
     module Syncer
-      autoload :RSync, File.join(CONFIGURATION_PATH, 'syncer', 'rsync')
+      autoload :Base,  File.join(CONFIGURATION_PATH, 'syncer', 'base')
       autoload :S3,    File.join(CONFIGURATION_PATH, 'syncer', 's3')
+      module RSync
+        autoload :Base,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'base')
+        autoload :Local, File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'local')
+        autoload :Push,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'push')
+        autoload :Pull,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'pull')
+      end
     end
 
     module Database
@@ -209,12 +194,4 @@ module Backup
     end
   end
 
-  ##
-  # Dynamically defines all the available database, storage, compressor, encryptor and notifier
-  # classes inside Backup::Finder to improve the DSL for the configuration file
-  (DATABASES + STORAGES + COMPRESSORS + ENCRYPTORS + NOTIFIERS + SYNCERS).each do |constant|
-    unless Backup::Finder.const_defined?(constant)
-      Backup::Finder.const_set(constant, Class.new)
-    end
-  end
 end

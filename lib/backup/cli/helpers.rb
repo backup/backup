@@ -3,6 +3,7 @@
 module Backup
   module CLI
     module Helpers
+      UTILITY = {}
 
       ##
       # Runs a given command in an isolated (sub) process using POpen4.
@@ -33,44 +34,28 @@ module Backup
       end
 
       ##
-      # Wrapper method for FileUtils.mkdir_p to create directories
-      # through a ruby method. This helps with test coverage and
-      # improves readability
-      def mkdir(path)
-        FileUtils.mkdir_p(path)
-      end
-
-      ##
-      # Wrapper for the FileUtils.rm_rf to remove files and folders
-      # through a ruby method. This helps with test coverage and
-      # improves readability
-      def rm(path)
-        FileUtils.rm_rf(path)
-      end
-
-      ##
-      # Tries to find the full path of the specified utility. If the full
-      # path is found, it'll return that. Otherwise it'll just return the
-      # name of the utility. If the 'utility_path' is defined, it'll check
-      # to see if it isn't an empty string, and if it isn't, it'll go ahead and
-      # always use that path rather than auto-detecting it
+      # Returns the full path to the specified utility.
+      # Raises an error if utility can not be found in the system's $PATH
       def utility(name)
-        if respond_to?(:utility_path)
-          if utility_path.is_a?(String) and not utility_path.empty?
-            return utility_path
-          end
+        path = UTILITY[name] || %x[which #{name} 2>/dev/null].chomp
+        if path.empty?
+          raise Errors::CLI::UtilityNotFoundError, <<-EOS
+            Path to '#{ name }' could not be found.
+            Make sure the specified utility is installed
+            and available in your system's $PATH.
+            If this is a database utility, you may need to specify the full path
+            using the Database's '<utility_name>_utility' configuration setting.
+          EOS
         end
-
-        if path = %x[which #{name} 2>/dev/null].chomp and not path.empty?
-          return path
-        end
-        name
+        UTILITY[name] = path
       end
 
       ##
-      # Returns the name of the command
+      # Returns the name of the command name from the given command line
       def command_name(command)
-        command.slice(0, command.index(/\s/)).split('/')[-1]
+        i = command =~ /\s/
+        command = command.slice(0, i) if i
+        command.split('/')[-1]
       end
 
       ##

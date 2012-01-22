@@ -14,6 +14,7 @@ describe Backup::Configuration::Notifier::Hipchat do
       hipchat.notify_users   = true
     end
   end
+  after { Backup::Configuration::Notifier::Hipchat.clear_defaults! }
 
   it 'should set the default tweet configuration' do
     hipchat = Backup::Configuration::Notifier::Hipchat

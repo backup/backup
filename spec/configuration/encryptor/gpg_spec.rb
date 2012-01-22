@@ -8,6 +8,7 @@ describe Backup::Configuration::Encryptor::GPG do
       encryptor.key = 'my_key'
     end
   end
+  after { Backup::Configuration::Encryptor::GPG.clear_defaults! }
 
   it 'should set the default encryptor configuration' do
     encryptor = Backup::Configuration::Encryptor::GPG

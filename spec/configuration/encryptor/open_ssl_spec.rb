@@ -11,6 +11,7 @@ describe Backup::Configuration::Encryptor::OpenSSL do
       encryptor.salt     = true
     end
   end
+  after { Backup::Configuration::Encryptor::OpenSSL.clear_defaults! }
 
   it 'should set the default encryptor configuration' do
     encryptor = Backup::Configuration::Encryptor::OpenSSL

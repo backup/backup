@@ -4,6 +4,8 @@ module Backup
   module Logger
     class << self
 
+      attr_accessor :quiet
+
       ##
       # Outputs a messages to the console and writes it to the backup.log
       def message(string)
@@ -58,6 +60,22 @@ module Backup
         @has_warnings = false
       end
 
+      def truncate!(max_bytes = 500_000)
+        log_file = File.join(Config.log_path, 'backup.log')
+        if File.stat(log_file).size > max_bytes
+          FileUtils.mv(log_file, log_file + '~')
+          File.open(log_file + '~', 'r') do |io_in|
+            File.open(log_file, 'w') do |io_out|
+              io_in.seek(-max_bytes, IO::SEEK_END) && io_in.gets
+              while line = io_in.gets
+                io_out.puts line
+              end
+            end
+          end
+          FileUtils.rm_f(log_file + '~')
+        end
+      end
+
       private
 
       ##
@@ -86,14 +104,14 @@ module Backup
       ##
       # Receives an Array of Strings to be written to the console.
       def to_console(lines, stderr = false)
-        return if quiet?
+        return if quiet
         lines.each {|line| stderr ? Kernel.warn(line) : puts(line) }
       end
 
       ##
       # Receives an Array of Strings to be written to the log file.
       def to_file(lines)
-        File.open(File.join(LOG_PATH, 'backup.log'), 'a') do |file|
+        File.open(File.join(Config.log_path, 'backup.log'), 'a') do |file|
           lines.each {|line| file.puts line }
         end
         messages.push(*lines)
@@ -125,15 +143,6 @@ module Backup
       # easier to view output to the client
       def colorize(string, code)
         "\e[#{code}m#{string}\e[0m"
-      end
-
-      ##
-      # Returns 'true' (boolean) if the QUIET constant is defined
-      # By default it isn't defined, only when initializing Backup using
-      # the '--quiet' (or '-q') option in the CLI
-      # (e.g. backup perform -t my_backup --quiet)
-      def quiet?
-        const_defined?(:QUIET) && QUIET
       end
 
     end

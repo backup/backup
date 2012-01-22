@@ -9,7 +9,6 @@ module Backup
   # has not been installed, or when the gem's version is incorrect, and provide the
   # command to install the gem. These dependencies are dynamically loaded in the Gemfile
   class Dependency
-    extend Backup::CLI
 
     ##
     # Returns a hash of dependencies that Backup requires
@@ -22,9 +21,9 @@ module Backup
           :for     => 'Amazon S3, Rackspace Cloud Files (S3, CloudFiles Storages)'
         },
 
-        'dropbox' => {
-          :require => 'dropbox',
-          :version => '~> 1.3.0',
+        'dropbox-sdk' => {
+          :require => 'dropbox_sdk',
+          :version => '~> 1.1.0',
           :for     => 'Dropbox Web Service (Dropbox Storage)'
         },
 
@@ -101,7 +100,7 @@ module Backup
           > gem install #{name} -v '#{all[name][:version]}'
           Please try again after installing the missing dependency.
         EOS
-        exit
+        exit 1
       end
     end
 

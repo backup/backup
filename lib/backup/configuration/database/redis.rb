@@ -28,6 +28,10 @@ module Backup
           # Additional "redis-cli" options
           attr_accessor :additional_options
 
+          ##
+          # Path to the redis-cli utility (optional)
+          attr_accessor :redis_cli_utility
+
         end
       end
     end

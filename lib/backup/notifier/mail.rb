@@ -9,10 +9,6 @@ module Backup
     class Mail < Base
 
       ##
-      # Container for the Mail object
-      attr_reader :mail
-
-      ##
       # Mail delivery method to be used by the Mail gem.
       # Supported methods:
       #
@@ -94,15 +90,13 @@ module Backup
       # Example: '/tmp/test-mails'
       attr_accessor :mail_folder
 
-      ##
-      # Performs the notification
-      # Extends from super class. Must call super(model, exception).
-      # If any pre-configuration needs to be done, put it above the super(model, exception)
-      def perform!(model, exception = false)
-        super(model, exception)
+      def initialize(model, &block)
+        super(model)
+
+        instance_eval(&block) if block_given?
       end
 
-    private
+      private
 
       ##
       # Notify the user of the backup operation results.
@@ -130,27 +124,31 @@ module Backup
             when :warning then [ 'Warning', true  ]
             when :failure then [ 'Failure', true  ]
             end
-        mail.subject = "[Backup::%s] #{model.label} (#{model.trigger})" % name
-        mail.body    = template.result('notifier/mail/%s.erb' % status.to_s)
+
+        email = new_email
+        email.subject = "[Backup::%s] #{@model.label} (#{@model.trigger})" % name
+        email.body    = @template.result('notifier/mail/%s.erb' % status.to_s)
+
         if send_log
-          mail.convert_to_multipart
-          mail.attachments["#{model.time}.#{model.trigger}.log"] = {
+          email.convert_to_multipart
+          email.attachments["#{@model.time}.#{@model.trigger}.log"] = {
             :mime_type => 'text/plain;',
             :content   => Logger.messages.join("\n")
           }
         end
-        mail.deliver!
+
+        email.deliver!
       end
 
       ##
       # Configures the Mail gem by setting the defaults.
-      # Instantiates the @mail object with the @to and @from attributes
-      def set_defaults!
-        @delivery_method = %w{ smtp sendmail file test }.
+      # Creates and returns a new email, based on the @delivery_method used.
+      def new_email
+        method = %w{ smtp sendmail file test }.
             index(@delivery_method.to_s) ? @delivery_method.to_s : 'smtp'
 
         options =
-            case @delivery_method
+            case method
             when 'smtp'
               { :address              => @address,
                 :port                 => @port,
@@ -166,19 +164,19 @@ module Backup
               opts.merge!(:arguments => @sendmail_args) if @sendmail_args
               opts
             when 'file'
-              @mail_folder ||= "#{ENV['HOME']}/Backup/emails"
+              @mail_folder ||= File.join(Config.root_path, 'emails')
               { :location => File.expand_path(@mail_folder) }
             when 'test' then {}
             end
 
-        method = @delivery_method.to_sym
         ::Mail.defaults do
-          delivery_method method, options
+          delivery_method method.to_sym, options
         end
 
-        @mail      = ::Mail.new
-        @mail.from = @from
-        @mail.to   = @to
+        email = ::Mail.new
+        email.to   = @to
+        email.from = @from
+        email
       end
 
     end

@@ -3,261 +3,342 @@
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Storage::RSync do
-
-  let(:rsync) do
-    Backup::Storage::RSync.new do |rsync|
+  let(:model)   { Backup::Model.new(:test_trigger, 'test label') }
+  let(:storage) do
+    Backup::Storage::RSync.new(model) do |rsync|
       rsync.username  = 'my_username'
       rsync.password  = 'my_password'
       rsync.ip        = '123.45.678.90'
-      rsync.port      = 22
-      rsync.path      = '~/backups/'
+      rsync.keep      = 5
     end
   end
 
-  before do
-    Backup::Configuration::Storage::RSync.clear_defaults!
-  end
+  describe '#initialize' do
+    it 'should set the correct values' do
+      storage.username.should == 'my_username'
+      storage.password.should == 'my_password'
+      storage.ip.should       == '123.45.678.90'
+      storage.port.should     == 22
+      storage.path.should     == 'backups'
+      storage.local.should    == false
 
-  it 'should have defined the configuration properly' do
-    rsync.username.should == 'my_username'
-    rsync.password.should == 'my_password'
-    rsync.ip.should       == '123.45.678.90'
-    rsync.port.should     == 22
-    rsync.path.should     == 'backups/'
-    rsync.send(:rsync_port).should == "-e 'ssh -p 22'"
-  end
-
-  it 'should use the defaults if a particular attribute has not been defined' do
-    Backup::Configuration::Storage::RSync.defaults do |rsync|
-      rsync.username = 'my_default_username'
-      rsync.password = 'my_default_password'
-      rsync.path     = '~/backups'
+      storage.storage_id.should be_nil
+      storage.keep.should       == 5
     end
 
-    rsync = Backup::Storage::RSync.new do |rsync|
-      rsync.password = 'my_password'
-      rsync.ip       = '123.45.678.90'
+    it 'should set a storage_id if given' do
+      rsync = Backup::Storage::RSync.new(model, 'my storage_id')
+      rsync.storage_id.should == 'my storage_id'
     end
 
-    rsync.username.should == 'my_default_username'
-    rsync.password.should == 'my_password'
-    rsync.ip.should       == '123.45.678.90'
-    rsync.port.should     == 22
-    rsync.send(:rsync_port).should == "-e 'ssh -p 22'"
-  end
-
-  it 'should have its own defaults' do
-    rsync = Backup::Storage::RSync.new
-    rsync.port.should  == 22
-    rsync.path.should  == 'backups'
-    rsync.local.should == false
-    rsync.send(:rsync_port).should == "-e 'ssh -p 22'"
-  end
-
-  describe '#perform' do
-    it 'should invoke transfer!' do
-      s = sequence ''
-      rsync.expects(:write_password_file!).in_sequence(s)
-      rsync.expects(:transfer!).in_sequence(s)
-      rsync.expects(:remove_password_file!).in_sequence(s)
-
-      rsync.perform!
+    it 'should remove any preceeding tilde and slash from the path' do
+      storage = Backup::Storage::RSync.new(model) do |rsync|
+        rsync.path = '~/my_backups/path'
+      end
+      storage.path.should == 'my_backups/path'
     end
 
-    it 'should ensure any password file is removed' do
-      s = sequence ''
-      rsync.expects(:write_password_file!).in_sequence(s)
-      rsync.expects(:transfer!).in_sequence(s).raises(Exception)
-      rsync.expects(:remove_password_file!).in_sequence(s)
+    context 'when setting configuration defaults' do
+      after { Backup::Configuration::Storage::RSync.clear_defaults! }
 
-      expect do
-        rsync.perform!
-      end.to raise_error
+      it 'should use the configured defaults' do
+        Backup::Configuration::Storage::RSync.defaults do |rsync|
+          rsync.username  = 'some_username'
+          rsync.password  = 'some_password'
+          rsync.ip        = 'some_ip'
+          rsync.port      = 'some_port'
+          rsync.path      = 'some_path'
+          rsync.local     = 'some_local'
+          rsync.keep      = 'some_keep'
+        end
+        storage = Backup::Storage::RSync.new(model)
+        storage.username.should == 'some_username'
+        storage.password.should == 'some_password'
+        storage.ip.should       == 'some_ip'
+        storage.port.should     == 'some_port'
+        storage.path.should     == 'some_path'
+        storage.local.should    == 'some_local'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       == 'some_keep'
+      end
+
+      it 'should override the configured defaults' do
+        Backup::Configuration::Storage::RSync.defaults do |rsync|
+          rsync.username  = 'old_username'
+          rsync.password  = 'old_password'
+          rsync.ip        = 'old_ip'
+          rsync.port      = 'old_port'
+          rsync.path      = 'old_path'
+          rsync.local     = 'old_local'
+          rsync.keep      = 'old_keep'
+        end
+        storage = Backup::Storage::RSync.new(model) do |rsync|
+          rsync.username  = 'new_username'
+          rsync.password  = 'new_password'
+          rsync.ip        = 'new_ip'
+          rsync.port      = 'new_port'
+          rsync.path      = 'new_path'
+          rsync.local     = 'new_local'
+          rsync.keep      = 'new_keep'
+        end
+
+        storage.username.should == 'new_username'
+        storage.password.should == 'new_password'
+        storage.ip.should       == 'new_ip'
+        storage.port.should     == 'new_port'
+        storage.path.should     == 'new_path'
+        storage.local.should    == 'new_local'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       == 'new_keep'
+      end
+    end # context 'when setting configuration defaults'
+
+  end # describe '#initialize'
+
+  describe '#remote_path_for' do
+    let(:package) { mock }
+    before do
+      storage.instance_variable_set(:@package, package)
+      package.expects(:trigger).returns(model.trigger)
+    end
+
+    it 'should override superclass so the time folder is not used' do
+      storage.send(:remote_path_for, package).should ==
+          File.join('backups', 'test_trigger')
     end
   end
 
   describe '#connection' do
-    it 'should establish a connection to the remote server' do
-      connection = mock
+    let(:connection) { mock }
+    it 'should yield a Net::SSH connection' do
       Net::SSH.expects(:start).with(
-        '123.45.678.90',
-        'my_username',
-        :password => 'my_password',
-        :port => 22
+        '123.45.678.90', 'my_username', :password => 'my_password', :port => 22
       ).yields(connection)
 
-      rsync.send(:connection) do |ssh|
-        ssh.should be connection
+      storage.send(:connection) do |ssh|
+        ssh.should be(connection)
       end
     end
   end
 
   describe '#transfer!' do
-    let(:local_file)  { File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }
-    let(:remote_file) { "#{ Backup::TRIGGER }/#{ Backup::TRIGGER }.tar" }
-    let(:pwdfile)     { stub(:path => 'path/to/password/file') }
+    let(:package) { mock }
+    let(:s) { sequence '' }
 
     before do
-      rsync.expects(:create_remote_directories!)
-      rsync.expects(:utility).returns('rsync')
-      Backup::Logger.expects(:message).with(
-        "Storage::RSync started transferring '#{rsync.filename}' to '#{rsync.ip}'."
-      )
+      storage.instance_variable_set(:@package, package)
+      storage.stubs(:storage_name).returns('Storage::RSync')
+      storage.stubs(:local_path).returns('/local/path')
+      storage.stubs(:rsync_options).returns(:rsync_options)
+      storage.stubs(:rsync_port).returns(:rsync_port)
+      storage.stubs(:rsync_password_file).returns(:rsync_password_file)
+      storage.expects(:utility).with(:rsync).times(0..2).returns('rsync')
     end
 
-    context 'when performing a remote transfer' do
-      context 'when a password is set' do
-        before do
-          rsync.stubs(:write_password_file!)
-          rsync.instance_variable_set(:@password_file, pwdfile)
-        end
+    context 'when @local is set to false' do
+      it 'should transfer the package files to the remote' do
+        storage.expects(:write_password_file!).in_sequence(s)
 
-        it 'should transfer the provided file to the path' do
-          rsync.expects(:run).with(
-            "rsync -z -e 'ssh -p 22' --password-file='path/to/password/file' " +
-            "'#{local_file}' " +
-            "'my_username@123.45.678.90:backups/#{remote_file}'"
-          )
+        storage.expects(:remote_path_for).in_sequence(s).with(package).
+            returns('remote/path')
 
-          rsync.send(:transfer!)
-        end
-      end
+        storage.expects(:create_remote_path!).in_sequence(s).with('remote/path')
 
-      context 'when no password is set' do
-        before { rsync.password = nil }
-
-        it 'should not provide the --password-file option' do
-          rsync.expects(:run).with(
-            "rsync -z -e 'ssh -p 22'  " +
-            "'#{local_file}' " +
-            "'my_username@123.45.678.90:backups/#{remote_file}'"
-          )
-
-          rsync.send(:transfer!)
-        end
-      end
-
-    end # context 'when performing a remote transfer'
-
-    context 'when performing a local transfer' do
-      before { rsync.local = true }
-
-      it 'should save a local copy of backups' do
-        rsync.expects(:run).with(
-          "rsync '#{local_file}' 'backups/#{remote_file}'"
+        storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
+          multiple_yields(
+          ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
+          ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
         )
-        rsync.send(:transfer!)
-      end
-    end # context 'when performing a local transfer'
-  end
+        # first yield
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          "Storage::RSync started transferring " +
+          "'2011.12.31.11.00.02.backup.tar.enc-aa' to '123.45.678.90'."
+        )
+        storage.expects(:run).in_sequence(s).with(
+          "rsync rsync_options rsync_port rsync_password_file " +
+          "'#{ File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa') }' " +
+          "'my_username@123.45.678.90:#{ File.join('remote/path', 'backup.tar.enc-aa') }'"
+        )
+        # second yield
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          "Storage::RSync started transferring " +
+          "'2011.12.31.11.00.02.backup.tar.enc-ab' to '123.45.678.90'."
+        )
+        storage.expects(:run).in_sequence(s).with(
+          "rsync rsync_options rsync_port rsync_password_file " +
+          "'#{ File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab') }' " +
+          "'my_username@123.45.678.90:#{ File.join('remote/path', 'backup.tar.enc-ab') }'"
+        )
 
+        storage.expects(:remove_password_file!).in_sequence(s)
+
+        storage.send(:transfer!)
+      end
+
+      it 'should ensure password file removal' do
+        storage.expects(:write_password_file!).raises('error message')
+        storage.expects(:remove_password_file!)
+
+        expect do
+          storage.send(:transfer!)
+        end.to raise_error(RuntimeError, 'error message')
+      end
+    end # context 'when @local is set to false'
+
+    context 'when @local is set to true' do
+      before { storage.local = true }
+
+      it 'should transfer the package files locally' do
+        storage.expects(:write_password_file!).never
+
+        storage.expects(:remote_path_for).in_sequence(s).with(package).
+            returns('remote/path')
+
+        storage.expects(:create_remote_path!).in_sequence(s).with('remote/path')
+
+        storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
+          multiple_yields(
+          ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
+          ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
+        )
+        # first yield
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          "Storage::RSync started transferring " +
+          "'2011.12.31.11.00.02.backup.tar.enc-aa' to 'remote/path'."
+        )
+        storage.expects(:run).in_sequence(s).with(
+          "rsync " +
+          "'#{ File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa') }' " +
+          "'#{ File.join('remote/path', 'backup.tar.enc-aa') }'"
+        )
+        # second yield
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          "Storage::RSync started transferring " +
+          "'2011.12.31.11.00.02.backup.tar.enc-ab' to 'remote/path'."
+        )
+        storage.expects(:run).in_sequence(s).with(
+          "rsync " +
+          "'#{ File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab') }' " +
+          "'#{ File.join('remote/path', 'backup.tar.enc-ab') }'"
+        )
+
+        storage.expects(:remove_password_file!).never
+
+        storage.send(:transfer!)
+      end
+
+    end # context 'when @local is set to true'
+
+  end # describe '#transfer!'
+
+  ##
+  # Note: Storage::RSync doesn't cycle
   describe '#remove!' do
-    it 'should return nil' do
-      rsync.send(:remove!).should == nil
+    it 'should never even be called' do
+      storage.send(:remove!).should be_nil
     end
   end
 
-  describe '#create_remote_directories!' do
+  describe '#create_remote_path!' do
+    let(:connection) { mock }
 
-    context 'when rsync.local is false' do
-      it 'should create directories on the remote server' do
-        ssh = mock
-        rsync.expects(:mkdir).never
-        rsync.expects(:connection).yields(ssh)
-        ssh.expects(:exec!).with("mkdir -p '#{rsync.remote_path}'")
+    context 'when @local is set to false' do
+      it 'should create the remote_path on the remote' do
+        FileUtils.expects(:mkdir_p).never
 
-        rsync.send(:create_remote_directories!)
+        storage.expects(:connection).yields(connection)
+        connection.expects(:exec!).with("mkdir -p 'remote/path'")
+
+        storage.send(:create_remote_path!, 'remote/path')
       end
     end
 
-    context 'when rsync.local is true' do
-      before { rsync.local = true }
-      it 'should create directories locally' do
-        rsync.expects(:mkdir).with(rsync.remote_path)
-        rsync.expects(:connection).never
+    context 'when @local is set to true' do
+      before { storage.local = true }
+      it 'should create the remote_path locally' do
+        storage.expects(:connection).never
 
-        rsync.send(:create_remote_directories!)
+        FileUtils.expects(:mkdir_p).with('remote/path')
+
+        storage.send(:create_remote_path!, 'remote/path')
       end
     end
-
   end
 
   describe '#write_password_file!' do
+    let(:file) { mock }
 
-    before do
-      rsync.instance_variable_defined?(:@password_file).should be_false
-    end
+    context 'when a @password is set' do
+      it 'should write the password to file and set @password_file' do
+        Tempfile.expects(:new).with('backup-rsync-password').returns(file)
+        file.expects(:write).with('my_password')
+        file.expects(:close)
 
-    context 'when a password is set' do
-      it 'should write the password file' do
-        rsync.send(:write_password_file!)
-        password_file = rsync.instance_variable_get(:@password_file)
-        password_file.should respond_to(:path)
-        File.read(password_file.path).should == 'my_password'
+        storage.send(:write_password_file!)
+        storage.instance_variable_get(:@password_file).should be(file)
       end
     end
 
-    context 'when a password is not set' do
-      before { rsync.password = nil }
-      it 'should return nil' do
-        rsync.send(:write_password_file!).should be_nil
+    context 'when a @password is not set' do
+      before { storage.password = nil }
+      it 'should do nothing' do
+        Tempfile.expects(:new).never
+
+        storage.send(:write_password_file!)
+        storage.instance_variable_get(:@password_file).should be_nil
       end
     end
-
-  end # describe '#write_password_file!'
+  end
 
   describe '#remove_password_file!' do
-    let(:pwdfile) { mock }
+    let(:file) { mock }
 
     context 'when @password_file is set' do
-      before do
-        rsync.instance_variable_set(:@password_file, pwdfile)
+      before { storage.instance_variable_set(:@password_file, file) }
+      it 'should delete the file and clear @password_file' do
+        file.expects(:delete)
+        storage.send(:remove_password_file!)
+        storage.instance_variable_get(:@password_file).should be_nil
       end
+    end
 
-      it 'should remove the password file' do
-        pwdfile.expects(:delete)
-        rsync.send(:remove_password_file!)
+    context 'when @password_file is not set' do
+      it 'should do nothing' do
+        file.expects(:delete).never
+        storage.send(:remove_password_file!)
+      end
+    end
+  end
+
+  describe '#rsync_password_file' do
+    let(:file) { mock }
+
+    context 'when @password_file is set' do
+      before { storage.instance_variable_set(:@password_file, file) }
+      it 'should return the syntax for rsync to use the password file' do
+        file.expects(:path).returns('/path/to/file')
+        storage.send(:rsync_password_file).should == "--password-file='/path/to/file'"
       end
     end
 
     context 'when @password_file is not set' do
       it 'should return nil' do
-        rsync.send(:remove_password_file!).should be_nil
+        storage.send(:rsync_password_file).should be_nil
       end
     end
-
-  end # describe '#remove_password_file!'
-
-  describe '#rsync_password_file' do
-    let(:pwdfile) { stub(:path => 'path/to/password/file') }
-
-    context 'when @password_file is set' do
-      before do
-        rsync.instance_variable_set(:@password_file, pwdfile)
-      end
-
-      it 'should return the password file string for the rsync command' do
-        rsync.send(:rsync_password_file).should == "--password-file='path/to/password/file'"
-      end
-    end
-
-    context 'when a password is not set' do
-      it 'should return nil' do
-        rsync.send(:rsync_password_file).should be_nil
-      end
-    end
-
-  end # describe '#password_file'
+  end
 
   describe '#rsync_port' do
-    it 'should return the port string for the rsync command' do
-      rsync.send(:rsync_port).should == "-e 'ssh -p 22'"
+    it 'should return the syntax for rsync to set the port' do
+      storage.send(:rsync_port).should == "-e 'ssh -p 22'"
     end
   end
 
   describe '#rsync_options' do
-    it 'should return the options string for the rsync command' do
-      rsync.send(:rsync_options).should == "-z"
+    it 'should return the syntax for rsync to set other options' do
+      storage.send(:rsync_options).should == '-z'
     end
   end
 

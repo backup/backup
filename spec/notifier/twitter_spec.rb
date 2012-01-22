@@ -3,8 +3,9 @@
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Notifier::Twitter do
+  let(:model) { Backup::Model.new(:test_trigger, 'test label') }
   let(:notifier) do
-    Backup::Notifier::Twitter.new do |twitter|
+    Backup::Notifier::Twitter.new(model) do |twitter|
       twitter.consumer_key       = 'consumer_key'
       twitter.consumer_secret    = 'consumer_secret'
       twitter.oauth_token        = 'oauth_token'
@@ -13,7 +14,7 @@ describe Backup::Notifier::Twitter do
   end
 
   describe '#initialize' do
-    it 'sets the correct defaults' do
+    it 'should sets the correct values' do
       notifier.consumer_key.should       == 'consumer_key'
       notifier.consumer_secret.should    == 'consumer_secret'
       notifier.oauth_token.should        == 'oauth_token'
@@ -24,128 +25,108 @@ describe Backup::Notifier::Twitter do
       notifier.on_failure.should == true
     end
 
-    it 'uses and overrides configuration defaults' do
-      Backup::Configuration::Notifier::Twitter.defaults do |twitter|
-        twitter.consumer_key = 'new_consumer_key'
-        twitter.on_success   = false
-      end
-      notifier = Backup::Notifier::Twitter.new do |twitter|
-        twitter.consumer_key = 'my_own_consumer_key'
+    context 'when using configuration defaults' do
+      after { Backup::Configuration::Notifier::Twitter.clear_defaults! }
+
+      it 'should use the configuration defaults' do
+        Backup::Configuration::Notifier::Twitter.defaults do |twitter|
+          twitter.consumer_key       = 'some_consumer_key'
+          twitter.consumer_secret    = 'some_consumer_secret'
+          twitter.oauth_token        = 'some_oauth_token'
+          twitter.oauth_token_secret = 'some_oauth_token_secret'
+
+          twitter.on_success = false
+          twitter.on_warning = false
+          twitter.on_failure = false
+        end
+        notifier = Backup::Notifier::Twitter.new(model)
+        notifier.consumer_key.should       == 'some_consumer_key'
+        notifier.consumer_secret.should    == 'some_consumer_secret'
+        notifier.oauth_token.should        == 'some_oauth_token'
+        notifier.oauth_token_secret.should == 'some_oauth_token_secret'
+
+        notifier.on_success.should == false
+        notifier.on_warning.should == false
+        notifier.on_failure.should == false
       end
 
-      notifier.consumer_key.should   == 'my_own_consumer_key'
-      notifier.on_success.should == false
-      notifier.on_warning.should == true
-      notifier.on_failure.should == true
-    end
+      it 'should override the configuration defaults' do
+        Backup::Configuration::Notifier::Twitter.defaults do |twitter|
+          twitter.consumer_key       = 'old_consumer_key'
+          twitter.consumer_secret    = 'old_consumer_secret'
+          twitter.oauth_token        = 'old_oauth_token'
+          twitter.oauth_token_secret = 'old_oauth_token_secret'
 
-    it 'create a new Twitter::Client' do
-      notifier.twitter_client.should be_an_instance_of ::Twitter::Client
-      #notifier.twitter_client.credentials?.should be_true
-      options = ::Twitter.options # v1.7.1 API
-      options[:consumer_key].should       == notifier.consumer_key
-      options[:consumer_secret].should    == notifier.consumer_secret
-      options[:oauth_token].should        == notifier.oauth_token
-      options[:oauth_token_secret].should == notifier.oauth_token_secret
-    end
+          twitter.on_success = true
+          twitter.on_warning = false
+          twitter.on_failure = false
+        end
+        notifier = Backup::Notifier::Twitter.new(model) do |twitter|
+          twitter.consumer_key       = 'new_consumer_key'
+          twitter.consumer_secret    = 'new_consumer_secret'
+          twitter.oauth_token        = 'new_oauth_token'
+          twitter.oauth_token_secret = 'new_oauth_token_secret'
+
+          twitter.on_success = false
+          twitter.on_warning = true
+          twitter.on_failure = true
+        end
+
+        notifier.consumer_key.should       == 'new_consumer_key'
+        notifier.consumer_secret.should    == 'new_consumer_secret'
+        notifier.oauth_token.should        == 'new_oauth_token'
+        notifier.oauth_token_secret.should == 'new_oauth_token_secret'
+
+        notifier.on_success.should == false
+        notifier.on_warning.should == true
+        notifier.on_failure.should == true
+      end
+    end # context 'when using configuration defaults'
   end
 
-  describe '#perform!' do
-    let(:model)   { Backup::Model.new('trigger', 'label') {} }
-    let(:message) { '[Backup::%s] label (trigger)' }
-
-    before do
-      notifier.on_success = false
-      notifier.on_warning = false
-      notifier.on_failure = false
+  describe '#notify!' do
+    context 'when status is :success' do
+      it 'should send Success message' do
+        notifier.expects(:send_message).with(
+          '[Backup::Success] test label (test_trigger)'
+        )
+        notifier.send(:notify!, :success)
+      end
     end
 
-    context 'success' do
-
-      context 'when on_success is true' do
-        before { notifier.on_success = true }
-
-        it 'sends success message' do
-          notifier.expects(:log!)
-          notifier.twitter_client.expects(:update).with(message % 'Success')
-
-          notifier.perform!(model)
-        end
+    context 'when status is :warning' do
+      it 'should send Warning message' do
+        notifier.expects(:send_message).with(
+          '[Backup::Warning] test label (test_trigger)'
+        )
+        notifier.send(:notify!, :warning)
       end
+    end
 
-      context 'when on_success is false' do
-        it 'sends no message' do
-          notifier.expects(:log!).never
-          notifier.expects(:notify!).never
-          notifier.twitter_client.expects(:update).never
-
-          notifier.perform!(model)
-        end
+    context 'when status is :failure' do
+      it 'should send Failure message' do
+        notifier.expects(:send_message).with(
+          '[Backup::Failure] test label (test_trigger)'
+        )
+        notifier.send(:notify!, :failure)
       end
+    end
+  end # describe '#notify!'
 
-    end # context 'success'
+  describe '#send_message' do
+    it 'should send a message' do
+      client, config = mock, mock
 
-    context 'warning' do
-      before { Backup::Logger.stubs(:has_warnings?).returns(true) }
+      ::Twitter.expects(:configure).yields(config)
+      config.expects(:consumer_key=).with('consumer_key')
+      config.expects(:consumer_secret=).with('consumer_secret')
+      config.expects(:oauth_token=).with('oauth_token')
+      config.expects(:oauth_token_secret=).with('oauth_token_secret')
 
-      context 'when on_success is true' do
-        before { notifier.on_success = true }
+      ::Twitter::Client.expects(:new).returns(client)
+      client.expects(:update).with('a message')
 
-        it 'sends warning message' do
-          notifier.expects(:log!)
-          notifier.twitter_client.expects(:update).with(message % 'Warning')
-
-          notifier.perform!(model)
-        end
-      end
-
-      context 'when on_warning is true' do
-        before { notifier.on_warning = true }
-
-        it 'sends warning message' do
-          notifier.expects(:log!)
-          notifier.twitter_client.expects(:update).with(message % 'Warning')
-
-          notifier.perform!(model)
-        end
-      end
-
-      context 'when on_success and on_warning are false' do
-        it 'sends no message' do
-          notifier.expects(:log!).never
-          notifier.expects(:notify!).never
-          notifier.twitter_client.expects(:update).never
-
-          notifier.perform!(model)
-        end
-      end
-
-    end # context 'warning'
-
-    context 'failure' do
-
-      context 'when on_failure is true' do
-        before { notifier.on_failure = true }
-
-        it 'sends failure message' do
-          notifier.expects(:log!)
-          notifier.twitter_client.expects(:update).with(message % 'Failure')
-
-          notifier.perform!(model, Exception.new)
-        end
-      end
-
-      context 'when on_failure is false' do
-        it 'sends no message' do
-          notifier.expects(:log!).never
-          notifier.expects(:notify!).never
-          notifier.twitter_client.expects(:update).never
-
-          notifier.perform!(model, Exception.new)
-        end
-      end
-
-    end # context 'failure'
-
-  end # describe '#perform!'
+      notifier.send(:send_message, 'a message')
+    end
+  end
 end

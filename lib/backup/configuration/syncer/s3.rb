@@ -15,10 +15,6 @@ module Backup
           attr_accessor :bucket, :path
 
           ##
-          # Directories to sync
-          attr_accessor :directories
-
-          ##
           # Flag to enable mirroring
           attr_accessor :mirror
 

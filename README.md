@@ -15,12 +15,6 @@ Author
 Drop me a message for any questions, suggestions, requests, bugs or submit them to the [issue log](https://github.com/meskyanichi/backup/issues).
 
 
-Core Contributor
-----------------
-
-**[Brian Burns](https://github.com/burns)**
-
-
 Installation
 ------------
 
@@ -92,14 +86,14 @@ Storage Features
 - **Incremental Backups, applies to:**
   - Remote Servers *(Only Protocols: RSync)*
 
-[Storage Wiki Page](https://github.com/meskyanichi/backup/wiki/Storages)
+[Cycling Wiki Page](https://github.com/meskyanichi/backup/wiki/Cycling)
 
 [Splitter Wiki Page](https://github.com/meskyanichi/backup/wiki/Splitter)
 
 Syncers
 -------
 
-- RSync
+- RSync (Push, Pull and Local)
 - Amazon Simple Storage Service (S3)
 
 [Syncer Wiki Page](https://github.com/meskyanichi/backup/wiki/Syncers)
@@ -240,21 +234,50 @@ end
 
 ### Brief explanation for the above example configuration
 
-It will dump two databases (MySQL and MongoDB), it'll create two (.t)archives (user_avatars and logs). It'll package the two database and two archives together in a single (.t)archive. It'll run the Gzip compressor to compress that archive, and then it'll run the OpenSSL encryptor to encrypt the compressed archive. Then that encrypted archive will be stored to your Amazon S3 account. If all goes well, and no exceptions are raised, you'll be notified via the Twitter notifier that the backup succeeded. If there was an exception raised during the backup process, then you'd receive an email in your inbox containing detailed exception information, as well as receive a simple Twitter message that something went wrong.
+First, it will dump the two Databases (MySQL and MongoDB). The MySQL dump will be piped through the Gzip Compressor into
+`sample_backup/databases/MySQL/my_sample_mysql_db.sql.gz`. The MongoDB dump will be dumped into
+`sample_backup/databases/MongoDB/`, which will then be packaged into `sample_backup/databases/MongoDB-#####.tar.gz`
+(`#####` will be a simple unique identifier, in case multiple dumps are performed.)
+Next, it will create two _tar_ Archives (user_avatars and logs). Each will be piped through the Gzip Compressor into
+`sample_backup/archives/` as `user_archives.tar.gz` and `logs.tar.gz`.
+Finally, the `sample_backup` directory will be packaged into an uncompressed _tar_ archive, which will be piped through
+the OpenSSL Encryptor to encrypt this final package into `YYYY-MM-DD-hh-mm-ss.sample_backup.tar.enc`. This final
+encrypted archive will then be transfered to your Amazon S3 account. If all goes well, and no exceptions are raised,
+you'll be notified via the Twitter notifier that the backup succeeded. If any warnings were issued or there was an
+exception raised during the backup process, then you'd receive an email in your inbox containing detailed exception
+information, as well as receive a simple Twitter message that something went wrong.
 
-Aside of S3, we have also defined two `SFTP` storage methods, and given them two unique identifiers `Server A` and `Server B` to distinguish between the two. With these in place, a copy of the backup will now also be stored on two separate servers: `a.my-backup-server.com` and `b.my-backup-server.com`.
+Aside of S3, we have also defined two `SFTP` storage methods, and given them two unique identifiers `Server A` and
+`Server B` to distinguish between the two. With these in place, a copy of the backup will now also be stored on two
+separate servers: `a.my-backup-server.com` and `b.my-backup-server.com`.
 
-As you can see, you can freely mix and match **archives**, **databases**, **compressors**, **encryptors**, **storages** and **notifiers** for your backups. You could even specify 4 storage locations if you wanted: Amazon S3, Rackspace Cloud Files, Ninefold and Dropbox, it'd then store your packaged backup to 4 separate locations for high redundancy. This also applies to compressors (like Gzip, Bzip2, Lzma) and encryptors, you could double encrypt your backup with OpenSSL followed by GPG if you wanted.
+As you can see, you can freely mix and match **archives**, **databases**, **compressors**, **encryptors**, **storages**
+and **notifiers** for your backups. You could even specify 4 storage locations if you wanted: Amazon S3, Rackspace Cloud
+Files, Ninefold and Dropbox, it'd then store your packaged backup to 4 separate locations for high redundancy.
 
-Also, notice the `split_into_chunks_of 4000` at the top of the configuration. This tells Backup to split any backups that exceed in 4000 MEGABYTES of size in to multiple smaller chunks. Assuming your backup file is 12000 MEGABYTES (12GB) in size, then Backup will go ahead and split it in to 3 chunks of 4000 MEGABYTES and transfer them individually. This is useful for when you are using Amazon S3, Rackspace Cloud Files, or other 3rd party storage services which limit you to "5GB per file" uploads. So with this, the backup file size is no longer a constraint.
+Also, notice the `split_into_chunks_of 4000` at the top of the configuration. This tells Backup to split any backups
+that exceed in 4000 MEGABYTES of size in to multiple smaller chunks. Assuming your backup file is 12000 MEGABYTES (12GB)
+in size, then Backup will take the output which was piped from _tar_ into the OpenSSL Compressor and additionally pipe
+that output through the _split_ utility, which will result in 3 chunks of 4000 MEGABYTES with additional file extensions
+of `-aa`, `-ab` and `-ac`. These files will then be individually transfered. This is useful for when you are using
+Amazon S3, Rackspace Cloud Files, or other 3rd party storage services which limit you to "5GB per file" uploads. So with
+this, the backup file size is no longer a constraint.
 
-Additionally we have also defined a **S3 Syncer** ( `sync_with S3` ), which does not follow the above process of archiving/compression/encryption, but instead will directly sync the whole `videos` and `music` folder structures from your machine to your Amazon S3 account. (very efficient and cost-effective since it will only transfer files that were added/changed. Additionally, since we flagged it to 'mirror', it'll also remove files from S3 that no longer exist). If you simply wanted to sync to a separate backup server that you own, you could also use the RSync syncer for even more efficient backups that only transfer the **bytes** of each file that changed.
+Additionally we have also defined a **S3 Syncer** ( `sync_with S3` ), which does not follow the above process of
+archiving/compression/encryption, but instead will directly sync the whole `videos` and `music` folder structures from
+your machine to your Amazon S3 account. (very efficient and cost-effective since it will only transfer files that were
+added/changed. Additionally, since we flagged it to 'mirror', it'll also remove files from S3 that no longer exist). If
+you simply wanted to sync to a separate backup server that you own, you could also use the RSync syncer for even more
+efficient backups that only transfer the **bytes** of each file that changed.
 
-There are more **archives**, **databases**, **compressors**, **encryptors**, **storages** and **notifiers** than displayed in the example, all available components are listed at the top of this README, as well as in the [Wiki](https://github.com/meskyanichi/backup/wiki) with more detailed information.
+There are more **archives**, **databases**, **compressors**, **encryptors**, **storages** and **notifiers** than
+displayed in the example, all available components are listed at the top of this README, as well as in the
+[Wiki](https://github.com/meskyanichi/backup/wiki) with more detailed information.
 
 ### Running the example
 
-Notice the `Backup::Model.new(:sample_backup, 'A sample backup configuration') do` at the top of the above example. The `:sample_backup` is called the **trigger**. This is used to identify the backup procedure/file and initialize it.
+Notice the `Backup::Model.new(:sample_backup, 'A sample backup configuration') do` at the top of the above example. The
+`:sample_backup` is called the **trigger**. This is used to identify the backup procedure/file and initialize it.
 
 ``` sh
 backup perform -t [--trigger] sample_backup
@@ -264,7 +287,9 @@ Now it'll run the backup, it's as simple as that.
 
 ### Automatic backups
 
-Since Backup is an easy-to-use command line utility, you should write a crontask to invoke it periodically. I recommend using [Whenever](https://github.com/javan/whenever) to manage your crontab. It'll allow you to write to the crontab using pure Ruby, and it provides an elegant DSL to do so. Here's an example:
+Since Backup is an easy-to-use command line utility, you should write a crontask to invoke it periodically. I recommend
+using [Whenever](https://github.com/javan/whenever) to manage your crontab. It'll allow you to write to the crontab
+using pure Ruby, and it provides an elegant DSL to do so. Here's an example:
 
 ``` rb
 every 6.hours do
@@ -272,12 +297,14 @@ every 6.hours do
 end
 ```
 
-With this in place, run `whenever --update-crontab backup` to write the equivalent of the above Ruby syntax to the crontab in cron-syntax. Cron will now invoke `backup perform --trigger sample_backup` every 6 hours. Check out the Whenever project page for more information.
+With this in place, run `whenever --update-crontab backup` to write the equivalent of the above Ruby syntax to the
+crontab in cron-syntax. Cron will now invoke `backup perform --trigger sample_backup` every 6 hours. Check out the
+Whenever project page for more information.
 
 Documentation
 -------------
 
-See the [Wiki Pages](https://github.com/meskyanichi/backup/wiki). The subjects labeled **without** the "Backup 2)"-prefix are meant for Backup 3 users.
+See the [Wiki Pages](https://github.com/meskyanichi/backup/wiki).
 
 
 Suggestions, Bugs, Requests, Questions
@@ -292,6 +319,10 @@ Contributors
   <tr>
     <th>Contributor</th>
     <th>Contribution</th>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/burns" target="_blank"><b>Brian D. Burns ( burns )</b></a></td>
+    <td><b>Core Contributor</b></td>
   </tr>
   <tr>
     <td><a href="https://github.com/asanghi" target="_blank">Aditya Sanghi ( asanghi )</a></td>
@@ -408,10 +439,6 @@ Contributors
   <tr>
     <td><a href="https://github.com/szymonpk" target="_blank">Szymon ( szymonpk )</a></td>
     <td>Pbzip2 compressor</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/burns" target="_blank">burns ( burns )</a></td>
-    <td>Improved Backup cycling implementation by refreshing all user configuration during the cycle procedure</td>
   </tr>
 </table>
 

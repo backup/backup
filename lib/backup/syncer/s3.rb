@@ -14,7 +14,7 @@ module Backup
 
       ##
       # Directories to sync
-      attr_accessor :directories
+      attr_writer :directories
 
       ##
       # Flag to enable mirroring
@@ -26,60 +26,36 @@ module Backup
 
       ##
       # Instantiates a new S3 Syncer object and sets the default configuration
-      # specified in the Backup::Configuration::Syncer::S3. Then it sets the object
-      # defaults if particular properties weren't set. Finally it'll evaluate the users
-      # configuration file and overwrite anything that's been defined
+      # specified in the Backup::Configuration::Syncer::S3.
+      # Then it sets the object defaults if particular properties weren't set.
+      # Finally it'll evaluate the users configuration file and overwrite
+      # anything that's been defined
       def initialize(&block)
         load_defaults!
 
         @path               ||= 'backups'
-        @directories        ||= Array.new
+        @directories          = Array.new
         @mirror             ||= false
         @additional_options ||= []
 
         instance_eval(&block) if block_given?
-
-        @path = path.sub(/^\//, '')
       end
 
       ##
-      # Performs the S3Sync operation
-      # First it'll set the Amazon S3 credentials for S3Sync before invoking it,
-      # and once it's finished syncing the files and directories to Amazon S3, it'll
-      # unset these credentials (back to nil values)
+      # Sets the Amazon S3 credentials for S3Sync, performs the S3Sync
+      # operation, then unsets the credentials (back to nil values)
       def perform!
         set_environment_variables!
 
-        directories.each do |directory|
-          Logger.message("#{ self.class } started syncing '#{ directory }'.")
-          Logger.silent( run("#{ utility(:s3sync) } #{ options } '#{ directory }' '#{ bucket }:#{ path }'") )
+        @directories.each do |directory|
+          Logger.message("#{ syncer_name } started syncing '#{ directory }'.")
+          Logger.silent(
+            run("#{ utility(:s3sync) } #{ options } " +
+                "'#{ File.expand_path(directory) }' '#{ bucket }:#{ dest_path }'")
+          )
         end
 
         unset_environment_variables!
-      end
-
-      ##
-      # Returns all the specified S3Sync options, concatenated, ready for the CLI
-      def options
-        ([verbose, recursive, mirror] + additional_options).compact.join("\s")
-      end
-
-      ##
-      # Returns S3Sync syntax for enabling mirroring
-      def mirror
-        '--delete' if @mirror
-      end
-
-      ##
-      # Returns S3Sync syntax for syncing recursively
-      def recursive
-        '--recursive'
-      end
-
-      ##
-      # Returns S3Sync syntax for making output verbose
-      def verbose
-        '--verbose'
       end
 
       ##
@@ -93,6 +69,40 @@ module Backup
       # Adds a path to the @directories array
       def add(path)
         @directories << path
+      end
+
+      private
+
+      ##
+      # Return @path with preceeding '/' slash removed
+      def dest_path
+        @dest_path ||= @path.sub(/^\//, '')
+      end
+
+      ##
+      # Returns all the specified S3Sync options,
+      # concatenated, ready for the CLI
+      def options
+        ([verbose_option, recursive_option, mirror_option] +
+          additional_options).compact.join("\s")
+      end
+
+      ##
+      # Returns S3Sync syntax for enabling mirroring
+      def mirror_option
+        '--delete' if @mirror
+      end
+
+      ##
+      # Returns S3Sync syntax for syncing recursively
+      def recursive_option
+        '--recursive'
+      end
+
+      ##
+      # Returns S3Sync syntax for making output verbose
+      def verbose_option
+        '--verbose'
       end
 
       ##

@@ -13,6 +13,7 @@ describe Backup::Configuration::Storage::SCP do
       scp.keep      = 20
     end
   end
+  after { Backup::Configuration::Storage::SCP.clear_defaults! }
 
   it 'should set the default scp configuration' do
     scp = Backup::Configuration::Storage::SCP

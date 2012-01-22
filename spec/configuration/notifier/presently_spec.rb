@@ -11,6 +11,7 @@ describe Backup::Configuration::Notifier::Presently do
       presently.group_id  = 'my_group_id'
     end
   end
+  after { Backup::Configuration::Notifier::Presently.clear_defaults! }
 
   it 'should set the default tweet configuration' do
     presently = Backup::Configuration::Notifier::Presently

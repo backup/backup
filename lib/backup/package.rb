@@ -1,0 +1,47 @@
+# encoding: utf-8
+
+module Backup
+  class Package
+
+    ##
+    # The time when the backup initiated (in format: 2011.02.20.03.29.59)
+    attr_reader :time
+
+    ##
+    # The trigger which initiated the backup process
+    attr_reader :trigger
+
+    ##
+    # Extension for the final archive file(s)
+    attr_accessor :extension
+
+    ##
+    # Set by the Splitter if the final archive was "chunked"
+    attr_accessor :chunk_suffixes
+
+    ##
+    # The version of Backup used to create the package
+    attr_reader :version
+
+    def initialize(model)
+      @time = model.time
+      @trigger = model.trigger
+      @extension = 'tar'
+      @chunk_suffixes = Array.new
+      @version = Backup::Version.current
+    end
+
+    def filenames
+      if chunk_suffixes.empty?
+        [basename]
+      else
+        chunk_suffixes.map {|suffix| "#{ basename }-#{ suffix }" }
+      end
+    end
+
+    def basename
+      "#{ time }.#{ trigger }.#{ extension }"
+    end
+
+  end
+end

@@ -11,6 +11,7 @@ describe Backup::Configuration::Notifier::Twitter do
       tweet.oauth_token_secret = 'my_oauth_token_secret'
     end
   end
+  after { Backup::Configuration::Notifier::Twitter.clear_defaults! }
 
   it 'should set the default tweet configuration' do
     tweet = Backup::Configuration::Notifier::Twitter

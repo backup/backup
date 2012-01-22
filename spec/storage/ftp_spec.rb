@@ -3,229 +3,242 @@
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Storage::FTP do
-
-  let(:ftp) do
-    Backup::Storage::FTP.new do |ftp|
+  let(:model)   { Backup::Model.new(:test_trigger, 'test label') }
+  let(:storage) do
+    Backup::Storage::FTP.new(model) do |ftp|
       ftp.username     = 'my_username'
       ftp.password     = 'my_password'
       ftp.ip           = '123.45.678.90'
-      ftp.port         = 21
-      ftp.path         = '~/backups/'
-      ftp.keep         = 20
-      ftp.passive_mode = false
+      ftp.keep         = 5
     end
   end
 
-  before do
-    Backup::Configuration::Storage::FTP.clear_defaults!
-  end
+  describe '#initialize' do
+    it 'should set the correct values' do
+      storage.username.should     == 'my_username'
+      storage.password.should     == 'my_password'
+      storage.ip.should           == '123.45.678.90'
+      storage.port.should         == 21
+      storage.path.should         == 'backups'
+      storage.passive_mode.should == false
 
-  it 'should have defined the configuration properly' do
-    ftp.username.should     == 'my_username'
-    ftp.password.should     == 'my_password'
-    ftp.ip.should           == '123.45.678.90'
-    ftp.port.should         == 21
-    ftp.path.should         == 'backups/'
-    ftp.keep.should         == 20
-    ftp.passive_mode.should == false
-  end
-
-  it 'should use the defaults if a particular attribute has not been defined' do
-    Backup::Configuration::Storage::FTP.defaults do |ftp|
-      ftp.username = 'my_default_username'
-      ftp.password = 'my_default_password'
-      ftp.path     = '~/backups'
+      storage.storage_id.should be_nil
+      storage.keep.should       == 5
     end
 
-    ftp = Backup::Storage::FTP.new do |ftp|
-      ftp.password = 'my_password'
-      ftp.ip       = '123.45.678.90'
+    it 'should set a storage_id if given' do
+      ftp = Backup::Storage::FTP.new(model, 'my storage_id')
+      ftp.storage_id.should == 'my storage_id'
     end
 
-    ftp.username.should == 'my_default_username'
-    ftp.password.should == 'my_password'
-    ftp.ip.should       == '123.45.678.90'
-    ftp.port.should     == 21
-  end
-
-  it 'should have its own defaults' do
-    ftp = Backup::Storage::FTP.new
-    ftp.port.should         == 21
-    ftp.path.should         == 'backups'
-    ftp.passive_mode.should == false
-  end
-
-  describe '#perform' do
-    it 'should invoke transfer! and cycle!' do
-      ftp.expects(:transfer!)
-      ftp.expects(:cycle!)
-      ftp.perform!
+    it 'should remove any preceeding tilde and slash from the path' do
+      storage = Backup::Storage::FTP.new(model) do |ftp|
+        ftp.path = '~/my_backups/path'
+      end
+      storage.path.should == 'my_backups/path'
     end
-  end
+
+    context 'when setting configuration defaults' do
+      after { Backup::Configuration::Storage::FTP.clear_defaults! }
+
+      it 'should use the configured defaults' do
+        Backup::Configuration::Storage::FTP.defaults do |ftp|
+          ftp.username     = 'some_username'
+          ftp.password     = 'some_password'
+          ftp.ip           = 'some_ip'
+          ftp.port         = 'some_port'
+          ftp.path         = 'some_path'
+          ftp.passive_mode = 'some_passive_mode'
+          ftp.keep         = 'some_keep'
+        end
+        storage = Backup::Storage::FTP.new(model)
+        storage.username.should     == 'some_username'
+        storage.password.should     == 'some_password'
+        storage.ip.should           == 'some_ip'
+        storage.port.should         == 'some_port'
+        storage.path.should         == 'some_path'
+        storage.passive_mode.should == 'some_passive_mode'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       == 'some_keep'
+      end
+
+      it 'should override the configured defaults' do
+        Backup::Configuration::Storage::FTP.defaults do |ftp|
+          ftp.username     = 'old_username'
+          ftp.password     = 'old_password'
+          ftp.ip           = 'old_ip'
+          ftp.port         = 'old_port'
+          ftp.path         = 'old_path'
+          ftp.passive_mode = 'old_passive_mode'
+          ftp.keep         = 'old_keep'
+        end
+        storage = Backup::Storage::FTP.new(model) do |ftp|
+          ftp.username     = 'new_username'
+          ftp.password     = 'new_password'
+          ftp.ip           = 'new_ip'
+          ftp.port         = 'new_port'
+          ftp.path         = 'new_path'
+          ftp.passive_mode = 'new_passive_mode'
+          ftp.keep         = 'new_keep'
+        end
+
+        storage.username.should     == 'new_username'
+        storage.password.should     == 'new_password'
+        storage.ip.should           == 'new_ip'
+        storage.port.should         == 'new_port'
+        storage.path.should         == 'new_path'
+        storage.passive_mode.should == 'new_passive_mode'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       == 'new_keep'
+      end
+    end # context 'when setting configuration defaults'
+
+  end # describe '#initialize'
 
   describe '#connection' do
     let(:connection) { mock }
 
-    it 'should establish a connection to the remote server' do
+    it 'should yield a connection to the remote server' do
       Net::FTP.expects(:open).with(
         '123.45.678.90', 'my_username', 'my_password'
       ).yields(connection)
 
-      ftp.send(:connection) do |conn|
-        conn.should be connection
+      storage.send(:connection) do |ftp|
+        ftp.should be(connection)
       end
     end
 
-    it 'configures net/ftp to use passive mode if passive_mode set to true' do
-      ftp.passive_mode = true
+    it 'should set passive mode if @passive_mode is true' do
+      storage.passive_mode = true
       Net::FTP.expects(:open).with(
         '123.45.678.90', 'my_username', 'my_password'
       ).yields(connection)
       connection.expects(:passive=).with(true)
 
-      ftp.send(:connection) do |conn|
-        conn.should be connection
+      storage.send(:connection) do |ftp|
+        ftp.should be(connection)
       end
     end
 
-    context 'when re-defining the Net::FTP port' do
+    it 'should set the Net::FTP_PORT constant' do
+      storage.port = 40
+      Net::FTP.expects(:const_defined?).with(:FTP_PORT).returns(true)
+      Net::FTP.expects(:send).with(:remove_const, :FTP_PORT)
+      Net::FTP.expects(:send).with(:const_set, :FTP_PORT, 40)
 
-      def reset_ftp_port
-        if defined? Net::FTP::FTP_PORT
-          Net::FTP.send(:remove_const, :FTP_PORT)
-        end; Net::FTP.send(:const_set, :FTP_PORT, 21)
-      end
-
-      before { reset_ftp_port }
-      after  { reset_ftp_port }
-
-      it 'should re-define Net::FTP::FTP_PORT' do
-        Net::FTP.stubs(:open)
-        ftp.port = 40
-        ftp.send(:connection)
-        Net::FTP::FTP_PORT.should == 40
-      end
-
+      Net::FTP.expects(:open)
+      storage.send(:connection)
     end
 
   end # describe '#connection'
 
   describe '#transfer!' do
     let(:connection) { mock }
+    let(:package) { mock }
+    let(:s) { sequence '' }
 
     before do
-      ftp.stubs(:storage_name).returns('Storage::FTP')
+      storage.instance_variable_set(:@package, package)
+      storage.stubs(:storage_name).returns('Storage::FTP')
+      storage.stubs(:local_path).returns('/local/path')
+      storage.stubs(:connection).yields(connection)
     end
 
-    context 'when file chunking is not used' do
-      it 'should create remote paths and transfer using a single connection' do
-        local_file  = "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"
-        remote_file = "#{ Backup::TRIGGER }.tar"
+    it 'should transfer the package files' do
+      storage.expects(:remote_path_for).in_sequence(s).with(package).
+          returns('remote/path')
+      storage.expects(:create_remote_path).in_sequence(s).with(
+        'remote/path', connection
+      )
 
-        ftp.expects(:connection).yields(connection)
-        ftp.expects(:create_remote_directories).with(connection)
+      storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
+        multiple_yields(
+        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
+        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
+      )
+      # first yield
+      Backup::Logger.expects(:message).in_sequence(s).with(
+        "Storage::FTP started transferring " +
+        "'2011.12.31.11.00.02.backup.tar.enc-aa' to '123.45.678.90'."
+      )
+      connection.expects(:put).in_sequence(s).with(
+        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'),
+        File.join('remote/path', 'backup.tar.enc-aa')
+      )
+      # second yield
+      Backup::Logger.expects(:message).in_sequence(s).with(
+        "Storage::FTP started transferring " +
+        "'2011.12.31.11.00.02.backup.tar.enc-ab' to '123.45.678.90'."
+      )
+      connection.expects(:put).in_sequence(s).with(
+        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'),
+        File.join('remote/path', 'backup.tar.enc-ab')
+      )
 
-        Backup::Logger.expects(:message).with(
-          "Storage::FTP started transferring '#{local_file}' to '#{ftp.ip}'."
-        )
-
-        connection.expects(:put).with(
-          File.join(Backup::TMP_PATH, local_file),
-          File.join('backups/myapp', Backup::TIME, remote_file)
-        )
-
-        ftp.send(:transfer!)
-      end
+      storage.send(:transfer!)
     end
-
-    context 'when file chunking is used' do
-      it 'should transfer all the provided files using a single connection' do
-        s = sequence ''
-
-        ftp.expects(:connection).in_sequence(s).yields(connection)
-        ftp.expects(:create_remote_directories).in_sequence(s).with(connection)
-
-        ftp.expects(:files_to_transfer).in_sequence(s).multiple_yields(
-          ['local_file1', 'remote_file1'], ['local_file2', 'remote_file2']
-        )
-
-        Backup::Logger.expects(:message).in_sequence(s).with(
-          "Storage::FTP started transferring 'local_file1' to '#{ftp.ip}'."
-        )
-        connection.expects(:put).in_sequence(s).with(
-          File.join(Backup::TMP_PATH, 'local_file1'),
-          File.join('backups/myapp', Backup::TIME, 'remote_file1')
-        )
-
-        Backup::Logger.expects(:message).in_sequence(s).with(
-          "Storage::FTP started transferring 'local_file2' to '#{ftp.ip}'."
-        )
-        connection.expects(:put).in_sequence(s).with(
-          File.join(Backup::TMP_PATH, 'local_file2'),
-          File.join('backups/myapp', Backup::TIME, 'remote_file2')
-        )
-
-        ftp.send(:transfer!)
-      end
-    end
-  end # describe '#transfer'
+  end # describe '#transfer!'
 
   describe '#remove!' do
-    it 'should remove all remote files with a single FTP connection' do
-      s = sequence ''
-      connection = mock
-      remote_path = "backups/myapp/#{ Backup::TIME }"
-      ftp.stubs(:storage_name).returns('Storage::FTP')
+    let(:package) { mock }
+    let(:connection) { mock }
+    let(:s) { sequence '' }
 
-      ftp.expects(:connection).in_sequence(s).yields(connection)
+    before do
+      storage.stubs(:storage_name).returns('Storage::FTP')
+      storage.stubs(:connection).yields(connection)
+    end
 
-      ftp.expects(:transferred_files).in_sequence(s).multiple_yields(
-        ['local_file1', 'remote_file1'], ['local_file2', 'remote_file2']
+    it 'should remove the package files' do
+      storage.expects(:remote_path_for).in_sequence(s).with(package).
+          returns('remote/path')
+
+      storage.expects(:transferred_files_for).in_sequence(s).with(package).
+        multiple_yields(
+        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
+        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
-
+      # first yield
       Backup::Logger.expects(:message).in_sequence(s).with(
-        "Storage::FTP started removing 'local_file1' from '#{ftp.ip}'."
+        "Storage::FTP started removing " +
+        "'2011.12.31.11.00.02.backup.tar.enc-aa' from '123.45.678.90'."
       )
       connection.expects(:delete).in_sequence(s).with(
-        File.join(remote_path, 'remote_file1')
+        File.join('remote/path', 'backup.tar.enc-aa')
       )
-
+      # second yield
       Backup::Logger.expects(:message).in_sequence(s).with(
-        "Storage::FTP started removing 'local_file2' from '#{ftp.ip}'."
+        "Storage::FTP started removing " +
+        "'2011.12.31.11.00.02.backup.tar.enc-ab' from '123.45.678.90'."
       )
       connection.expects(:delete).in_sequence(s).with(
-        File.join(remote_path, 'remote_file2')
+        File.join('remote/path', 'backup.tar.enc-ab')
       )
 
-      connection.expects(:rmdir).in_sequence(s).with(remote_path)
+      connection.expects(:rmdir).with('remote/path').in_sequence(s)
 
-      ftp.send(:remove!)
+      storage.send(:remove!, package)
     end
   end # describe '#remove!'
 
-  describe '#create_remote_directories!' do
-    let(:connection) { mock }
+  describe '#create_remote_path' do
+    let(:connection)  { mock }
+    let(:remote_path) { 'backups/folder/another_folder' }
+    let(:s) { sequence '' }
 
     context 'while properly creating remote directories one by one' do
-      it 'should rescue any FTPPermErrors' do
-        s = sequence ''
-        ftp.path = '~/backups/some_other_folder/another_folder'
-
+      it 'should rescue any FTPPermErrors and continue' do
         connection.expects(:mkdir).in_sequence(s).
-            with("~").raises(Net::FTPPermError)
+            with("backups").raises(Net::FTPPermError)
         connection.expects(:mkdir).in_sequence(s).
-            with("~/backups").raises(Net::FTPPermError)
+            with("backups/folder")
         connection.expects(:mkdir).in_sequence(s).
-            with("~/backups/some_other_folder")
-        connection.expects(:mkdir).in_sequence(s).
-            with("~/backups/some_other_folder/another_folder")
-        connection.expects(:mkdir).in_sequence(s).
-            with("~/backups/some_other_folder/another_folder/myapp")
-        connection.expects(:mkdir).in_sequence(s).
-            with("~/backups/some_other_folder/another_folder/myapp/#{ Backup::TIME }")
+            with("backups/folder/another_folder")
 
         expect do
-          ftp.send(:create_remote_directories, connection)
+          storage.send(:create_remote_path, remote_path, connection)
         end.not_to raise_error
       end
     end

@@ -7,10 +7,6 @@ module Backup
     class Presently < Base
 
       ##
-      # Container for the Presently Client object
-      attr_accessor :presently_client
-
-      ##
       # Presently subdomain
       attr_accessor :subdomain
 
@@ -22,16 +18,13 @@ module Backup
       # Group id
       attr_accessor :group_id
 
-      ##
-      # Performs the notification
-      # Extends from super class. Must call super(model, exception).
-      # If any pre-configuration needs to be done,
-      # put it above the super(model, exception)
-      def perform!(model, exception = false)
-        super(model, exception)
+      def initialize(model, &block)
+        super(model)
+
+        instance_eval(&block) if block_given?
       end
 
-    private
+      private
 
       ##
       # Notify the user of the backup operation results.
@@ -58,14 +51,13 @@ module Backup
                when :warning then 'Warning'
                when :failure then 'Failure'
                end
-        message = "[Backup::%s] #{model.label} (#{model.trigger})" % name
-        presently_client.update(message)
+        message = "[Backup::%s] #{@model.label} (#{@model.trigger})" % name
+        send_message(message)
       end
 
-      ##
-      # Create a default Presently::Client object
-      def set_defaults!
-        @presently_client = Client.new(subdomain, user_name, password, group_id)
+      def send_message(message)
+        client = Client.new(subdomain, user_name, password, group_id)
+        client.update(message)
       end
 
       class Client
