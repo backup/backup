@@ -12,6 +12,7 @@ describe Backup::Database::MySQL do
       db.host      = 'localhost'
       db.port      = '123'
       db.socket    = '/mysql.sock'
+      db.all       = false
 
       db.skip_tables = ['logs', 'profiles']
       db.only_tables = ['users', 'pirates']
@@ -50,6 +51,7 @@ describe Backup::Database::MySQL do
         db.host.should      be_nil
         db.port.should      be_nil
         db.socket.should    be_nil
+        db.all.should       == false
 
         db.skip_tables.should         == []
         db.only_tables.should         == []
@@ -69,6 +71,7 @@ describe Backup::Database::MySQL do
           db.host       = 'db_host'
           db.port       = 789
           db.socket     = '/foo.sock'
+          db.all        = false
 
           db.skip_tables = ['skip', 'tables']
           db.only_tables = ['only', 'tables']
@@ -83,6 +86,7 @@ describe Backup::Database::MySQL do
         db.host.should      == 'db_host'
         db.port.should      == 789
         db.socket.should    == '/foo.sock'
+        db.all.should       == false
 
         db.skip_tables.should         == ['skip', 'tables']
         db.only_tables.should         == ['only', 'tables']
@@ -192,6 +196,24 @@ describe Backup::Database::MySQL do
       before { db.additional_options = [] }
       it 'should return an empty string' do
         db.send(:user_options).should == ''
+      end
+    end
+  end
+
+  describe '#all' do
+    it 'should return the value for the all option' do
+      db.send(:all).should == false
+      db.send(:name).should == 'mydatabase'
+    end
+
+    context 'when all is set' do
+      it 'should return all for database name' do
+        db.all = true
+        db.send(:name).should == "all"
+        db.send(:mysqldump).should ==
+            "/path/to/mysqldump --user='someuser' --password='secret' " +
+            "--host='localhost' --port='123' --socket='/mysql.sock' " +
+            "--single-transaction --quick --all-databases"
       end
     end
   end

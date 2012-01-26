@@ -33,6 +33,10 @@ module Backup
           ##
           # Path to mysqldump utility (optional)
           attr_accessor :mysqldump_utility
+          
+          ##
+          # Whether to dump all databases
+          attr_accessor :all
 
         end
       end
