@@ -14,4 +14,6 @@
     # Optional: Use to set the location of this utility
     #   if it cannot be found by name in your $PATH
     # db.mysqldump_utility = '/opt/local/bin/mysqldump'
+		# Optional: Use to dump all databases instead of having to specify the tables
+		# db.all = true
   end

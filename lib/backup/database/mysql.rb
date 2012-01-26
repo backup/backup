@@ -33,6 +33,10 @@ module Backup
       attr_accessor :mysqldump_utility
 
       ##
+      # Whether to dump all databases
+      attr_accessor :all
+      
+      ##
       # Creates a new instance of the MySQL adapter object
       def initialize(model, &block)
         super(model)
@@ -40,6 +44,7 @@ module Backup
         @skip_tables        ||= Array.new
         @only_tables        ||= Array.new
         @additional_options ||= Array.new
+        @all                ||= false
 
         instance_eval(&block) if block_given?
 
@@ -72,13 +77,22 @@ module Backup
         run(dump_cmd)
       end
 
+      def name
+        all ? 'all' : @name
+      end
+      
       private
 
       ##
       # Builds the full mysqldump string based on all attributes
       def mysqldump
-        "#{ mysqldump_utility } #{ credential_options } #{ connectivity_options } " +
-        "#{ user_options } #{ name } #{ tables_to_dump } #{ tables_to_skip }"
+        if all # Dump all databases
+          "#{ mysqldump_utility } #{ credential_options } #{ connectivity_options } " +
+          "#{ user_options } --all-databases"
+        else
+          "#{ mysqldump_utility } #{ credential_options } #{ connectivity_options } " +
+          "#{ user_options } #{ name } #{ tables_to_dump } #{ tables_to_skip }"
+        end
       end
 
       ##
@@ -110,14 +124,14 @@ module Backup
 
       ##
       # Builds the MySQL syntax for specifying which tables to dump
-      # during the dumping of the database
+      # during the dumping of the database. If the all option is set, ignore.
       def tables_to_dump
         only_tables.join(' ')
       end
 
       ##
       # Builds the MySQL syntax for specifying which tables to skip
-      # during the dumping of the database
+      # during the dumping of the database. If the all option is set, ignore.
       def tables_to_skip
         skip_tables.map do |table|
           "--ignore-table='#{name}.#{table}'"
