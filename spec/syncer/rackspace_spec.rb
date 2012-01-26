@@ -1,9 +1,9 @@
 # encoding: utf-8
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Syncer::S3 do
+describe Backup::Syncer::Rackspace do
   describe '#perform!' do
-    let(:syncer)     { Backup::Syncer::S3.new }
+    let(:syncer)     { Backup::Syncer::Rackspace.new }
     let(:connection) { stub('connection',
       :directories => stub('directories', :get => bucket)) }
     let(:bucket)     { stub('bucket', :files => files) }
@@ -70,15 +70,15 @@ describe Backup::Syncer::S3 do
       end
 
       it "creates the connection with the provided credentials" do
-        syncer.access_key_id     = 'my-access'
-        syncer.secret_access_key = 'my-secret'
-        syncer.region            = 'somewhere'
+        syncer.api_key  = 'my-key'
+        syncer.username = 'my-name'
+        syncer.auth_url = 'my-auth'
 
         Fog::Storage.expects(:new).with(
-          :provider              => 'AWS',
-          :aws_access_key_id     => 'my-access',
-          :aws_secret_access_key => 'my-secret',
-          :region                => 'somewhere'
+          :provider           => 'Rackspace',
+          :rackspace_api_key  => 'my-key',
+          :rackspace_username => 'my-name',
+          :rackspace_auth_url => 'my-auth'
         ).returns connection
 
         syncer.perform!
@@ -94,11 +94,10 @@ describe Backup::Syncer::S3 do
 
       it "creates the bucket if one does not exist" do
         syncer.bucket = 'leaky'
-        syncer.region = 'elsewhere'
         connection.directories.stubs(:get).returns nil
 
         connection.directories.expects(:create).
-          with(:key => 'leaky', :location => 'elsewhere').returns(bucket)
+          with(:key => 'leaky').returns(bucket)
 
         syncer.perform!
       end
