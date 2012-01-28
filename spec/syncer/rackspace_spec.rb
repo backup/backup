@@ -115,5 +115,41 @@ describe Backup::Syncer::Rackspace do
         syncer.perform!
       end
     end
+
+    context 'file does not exist locally' do
+      let(:file) { stub('file', :key => 'storage/tmp/foo',
+        :etag => '123abcdef') }
+
+      before :each do
+        syncer.stubs(:`).returns ''
+        files << file
+        File.stubs(:exist?).returns false
+      end
+
+      it "removes the remote file when mirroring is turned on" do
+        syncer.mirror = true
+
+        file.expects(:destroy).once
+
+        syncer.perform!
+      end
+
+      it "leaves the remote file when mirroring is turned off" do
+        syncer.mirror = false
+
+        file.expects(:destroy).never
+
+        syncer.perform!
+      end
+
+      it "does not remove files not under one of the specified directories" do
+        file.stubs(:key).returns 'unsynced/tmp/foo'
+        syncer.mirror = true
+
+        file.expects(:destroy).never
+
+        syncer.perform!
+      end
+    end
   end
 end

@@ -40,22 +40,32 @@ module Backup
       ##
       # Performs the Sync operation
       def perform!
-        directories.each do |directory|
-          Logger.message("#{ self.class } started syncing '#{ directory }'.")
+        Logger.message("#{ self.class } started syncing.")
 
-          hashes_for_directory(directory).each do |full_path, md5|
-            next unless File.exist?(full_path)
+        hashes_for_directories.each do |file|
+          next unless ::File.exist?(file.path)
 
-            relative_path = full_path.gsub %r{^#{directory}},
-              directory.split('/').last
-            remote_path   = "#{path}/#{relative_path}".gsub(/^\//, '')
+          relative_path = file.path.gsub %r{^#{file.directory}},
+            file.directory.split('/').last
+          remote_path   = "#{path}/#{relative_path}".gsub(/^\//, '')
+          remote_file   = remote_hashes[remote_path]
 
-            bucket_object.files.create(
-              :key  => remote_path,
-              :body => File.open(full_path)
-            ) unless remote_hashes[remote_path] == md5
-          end
+          bucket_object.files.create(
+            :key  => remote_path,
+            :body => ::File.open(file.path)
+          ) unless remote_file && remote_file.etag == file.md5
         end
+
+        remote_hashes.each do |remote_path, file|
+          directory = directories.detect { |directory|
+            remote_path[/^#{path}\/#{directory.split('/').last}\//]
+          }
+          return if directory.nil?
+          local_path = remote_path.gsub(/^#{path}\/#{directory.split('/').last}/, directory)
+          return if ::File.exist?(local_path)
+
+          file.destroy
+        end if mirror
       end
 
       ##
@@ -82,20 +92,31 @@ module Backup
           connection.directories.create(:key => bucket)
       end
 
+      def hashes_for_directories
+        @hashes_for_directories ||= directories.collect { |directory|
+          hashes_for_directory directory
+        }.flatten
+      end
+
       def hashes_for_directory(directory)
         hashes = `find #{directory} -print0 | xargs -0 openssl md5 2> /dev/null`
-        hashes.split("\n").inject({}) do |hash, line|
-          path, md5 = *line.chomp.match(/^MD5\(([^\)]+)\)= (\w+)$/).captures
-          hash[path] = md5
-          hash
-        end
+        hashes.split("\n").collect { |line| File.new directory, line }
       end
 
       def remote_hashes
         @remote_hashes ||= bucket_object.files.inject({}) { |hash, file|
-          hash[file.key] = file.etag
+          hash[file.key] = file
           hash
         }
+      end
+
+      class File
+        attr_reader :directory, :path, :md5
+
+        def initialize(directory, line)
+          @directory  = directory
+          @path, @md5 = *line.chomp.match(/^MD5\(([^\)]+)\)= (\w+)$/).captures
+        end
       end
     end
   end
