@@ -8,16 +8,18 @@ module Backup
   module Syncer
     class Cloud < Base
       ##
-      # Bucket/container name and path to sync to
-      attr_accessor :bucket, :path
+      # Bucket/container name
+      attr_accessor :bucket
 
       ##
-      # Directories to sync
-      attr_accessor :directories
+      # Parallelize setting - defaults to false, but can be set to :threads or
+      # :processors
+      attr_accessor :parallelize
 
       ##
-      # Flag to enable mirroring - currently ignored.
-      attr_accessor :mirror
+      # Parallel count - the number of threads or processors to use. Defaults to
+      # 2.
+      attr_accessor :parallel_count
 
       ##
       # Instantiates a new Cloud Syncer object and sets the default
@@ -31,6 +33,8 @@ module Backup
         @path               ||= 'backups'
         @directories        ||= Array.new
         @mirror             ||= false
+        @parallelize          = false
+        @parallel_count       = 2
 
         instance_eval(&block) if block_given?
 
@@ -45,19 +49,6 @@ module Backup
         directories.each do |directory|
           SyncContext.new(directory, bucket_object, path).sync! mirror
         end
-      end
-
-      ##
-      # Syntactical suger for the DSL for adding directories
-      def directories(&block)
-        return @directories unless block_given?
-        instance_eval(&block)
-      end
-
-      ##
-      # Adds a path to the @directories array
-      def add(path)
-        @directories << path
       end
 
       private

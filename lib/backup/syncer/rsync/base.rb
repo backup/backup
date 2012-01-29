@@ -4,19 +4,6 @@ module Backup
   module Syncer
     module RSync
       class Base < Syncer::Base
-
-        ##
-        # Path to store the synced files/directories to
-        attr_accessor :path
-
-        ##
-        # Directories to sync
-        attr_writer :directories
-
-        ##
-        # Flag for mirroring the files/directories
-        attr_accessor :mirror
-
         ##
         # Additional options for the rsync cli
         attr_accessor :additional_options
@@ -31,19 +18,6 @@ module Backup
           @directories          = Array.new
           @mirror             ||= false
           @additional_options ||= Array.new
-        end
-
-        ##
-        # Syntactical suger for the DSL for adding directories
-        def directories(&block)
-          return @directories unless block_given?
-          instance_eval(&block)
-        end
-
-        ##
-        # Adds a path to the @directories array
-        def add(path)
-          @directories << path
         end
 
         private
