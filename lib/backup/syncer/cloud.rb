@@ -47,7 +47,8 @@ module Backup
         Logger.message("#{ self.class } started syncing.")
 
         directories.each do |directory|
-          SyncContext.new(directory, bucket_object, path).sync! mirror
+          SyncContext.new(directory, bucket_object, path).
+            sync! mirror, parallelize, parallel_count
         end
       end
 
@@ -69,19 +70,19 @@ module Backup
           @directory, @bucket, @path = directory, bucket, path
         end
 
-        def sync!(mirror = false)
-          all_file_names.each do |relative_path|
-            local_file  = local_files[relative_path]
-            remote_file = remote_files[relative_path]
+        def sync!(mirror = false, parallelize = false, parallel_count = 2)
+          block = Proc.new { |relative_path| sync_file relative_path, mirror }
 
-            if local_file && File.exist?(local_file.path)
-              bucket.files.create(
-                :key  => "#{path}/#{relative_path}".gsub(/^\//, ''),
-                :body => File.open(local_file.path)
-              ) unless remote_file && remote_file.etag == local_file.md5
-            elsif mirror
-              remote_file.destroy
-            end
+          case parallelize
+          when FalseClass
+            all_file_names.each &block
+          when :threads
+            Parallel.each all_file_names, :in_threads => parallel_count, &block
+          when :processes
+            Parallel.each all_file_names, :in_processes => parallel_count,
+              &block
+          else
+            raise "Unknown parallelize setting: #{parallelize.inspect}"
           end
         end
 
@@ -102,6 +103,10 @@ module Backup
           end
         end
 
+        def local_hashes
+          `find #{directory} -print0 | xargs -0 openssl md5 2> /dev/null`
+        end
+
         def remote_files
           @remote_files ||= bucket.files.select { |file|
             file.key[/^#{path}\/#{directory.split('/').first}\//]
@@ -111,8 +116,18 @@ module Backup
           }
         end
 
-        def local_hashes
-          `find #{directory} -print0 | xargs -0 openssl md5 2> /dev/null`
+        def sync_file(relative_path, mirror)
+          local_file  = local_files[relative_path]
+          remote_file = remote_files[relative_path]
+
+          if local_file && File.exist?(local_file.path)
+            bucket.files.create(
+              :key  => "#{path}/#{relative_path}".gsub(/^\//, ''),
+              :body => File.open(local_file.path)
+            ) unless remote_file && remote_file.etag == local_file.md5
+          elsif mirror
+            remote_file.destroy
+          end
         end
       end
 

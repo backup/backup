@@ -1,6 +1,8 @@
 # encoding: utf-8
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
+class Parallel; end
+
 describe Backup::Syncer::Rackspace do
   describe '#perform!' do
     let(:syncer)     { Backup::Syncer::Rackspace.new }
@@ -18,14 +20,45 @@ describe Backup::Syncer::Rackspace do
 
       syncer.directories << 'tmp'
       syncer.path = 'storage'
+      Backup::Syncer::S3::SyncContext.any_instance.
+        stubs(:`).returns 'MD5(tmp/foo)= 123abcdef'
+    end
+
+    it "respects the parallelize setting with threads" do
+      syncer.parallelize = :threads
+
+      Parallel.expects(:each).with(anything, {:in_threads => 2}, anything)
+
+      syncer.perform!
+    end
+
+    it "respects the parallel thread count" do
+      syncer.parallelize    = :threads
+      syncer.parallel_count = 10
+
+      Parallel.expects(:each).with(anything, {:in_threads => 10}, anything)
+
+      syncer.perform!
+    end
+
+    it "respects the parallelize setting with processors" do
+      syncer.parallelize = :processes
+
+      Parallel.expects(:each).with(anything, {:in_processes => 2}, anything)
+
+      syncer.perform!
+    end
+
+    it "respects the parallel thread count" do
+      syncer.parallelize    = :processes
+      syncer.parallel_count = 10
+
+      Parallel.expects(:each).with(anything, {:in_processes => 10}, anything)
+
+      syncer.perform!
     end
 
     context 'file exists locally' do
-      before :each do
-        Backup::Syncer::Rackspace::SyncContext.any_instance.
-          stubs(:`).returns 'MD5(tmp/foo)= 123abcdef'
-      end
-
       it "uploads a file if it does not exist remotely" do
         files.expects(:create).with(:key => 'storage/tmp/foo', :body => content)
 
