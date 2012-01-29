@@ -22,7 +22,8 @@ describe Backup::Syncer::S3 do
 
     context 'file exists locally' do
       before :each do
-        syncer.stubs(:`).returns 'MD5(tmp/foo)= 123abcdef'
+        Backup::Syncer::S3::SyncContext.any_instance.
+          stubs(:`).returns 'MD5(tmp/foo)= 123abcdef'
       end
 
       it "uploads a file if it does not exist remotely" do
@@ -106,10 +107,10 @@ describe Backup::Syncer::S3 do
       it "iterates over each directory" do
         syncer.directories << 'files'
 
-        syncer.expects(:`).
+        Backup::Syncer::S3::SyncContext.any_instance.expects(:`).
           with('find tmp -print0 | xargs -0 openssl md5 2> /dev/null').
           returns 'MD5(tmp/foo)= 123abcdef'
-        syncer.expects(:`).
+        Backup::Syncer::S3::SyncContext.any_instance.expects(:`).
           with('find files -print0 | xargs -0 openssl md5 2> /dev/null').
           returns 'MD5(tmp/foo)= 123abcdef'
 
@@ -122,7 +123,8 @@ describe Backup::Syncer::S3 do
         :etag => '123abcdef') }
 
       before :each do
-        syncer.stubs(:`).returns ''
+        Backup::Syncer::S3::SyncContext.any_instance.
+          stubs(:`).returns ''
         files << file
         File.stubs(:exist?).returns false
       end

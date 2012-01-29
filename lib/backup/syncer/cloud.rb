@@ -42,30 +42,9 @@ module Backup
       def perform!
         Logger.message("#{ self.class } started syncing.")
 
-        hashes_for_directories.each do |file|
-          next unless ::File.exist?(file.path)
-
-          relative_path = file.path.gsub %r{^#{file.directory}},
-            file.directory.split('/').last
-          remote_path   = "#{path}/#{relative_path}".gsub(/^\//, '')
-          remote_file   = remote_hashes[remote_path]
-
-          bucket_object.files.create(
-            :key  => remote_path,
-            :body => ::File.open(file.path)
-          ) unless remote_file && remote_file.etag == file.md5
+        directories.each do |directory|
+          SyncContext.new(directory, bucket_object, path).sync! mirror
         end
-
-        remote_hashes.each do |remote_path, file|
-          directory = directories.detect { |directory|
-            remote_path[/^#{path}\/#{directory.split('/').last}\//]
-          }
-          return if directory.nil?
-          local_path = remote_path.gsub(/^#{path}\/#{directory.split('/').last}/, directory)
-          return if ::File.exist?(local_path)
-
-          file.destroy
-        end if mirror
       end
 
       ##
@@ -92,30 +71,71 @@ module Backup
           connection.directories.create(:key => bucket)
       end
 
-      def hashes_for_directories
-        @hashes_for_directories ||= directories.collect { |directory|
-          hashes_for_directory directory
-        }.flatten
+      class SyncContext
+        attr_reader :directory, :bucket, :path
+
+        def initialize(directory, bucket, path)
+          @directory, @bucket, @path = directory, bucket, path
+        end
+
+        def sync!(mirror = false)
+          all_file_names.each do |relative_path|
+            local_file  = local_files[relative_path]
+            remote_file = remote_files[relative_path]
+
+            if local_file && File.exist?(local_file.path)
+              bucket.files.create(
+                :key  => "#{path}/#{relative_path}".gsub(/^\//, ''),
+                :body => File.open(local_file.path)
+              ) unless remote_file && remote_file.etag == local_file.md5
+            elsif mirror
+              remote_file.destroy
+            end
+          end
+        end
+
+        private
+
+        def all_file_names
+          @all_file_names ||= (local_files.keys | remote_files.keys).sort
+        end
+
+        def local_files
+          @local_files ||= begin
+            local_hashes.split("\n").collect { |line|
+              LocalFile.new directory, line
+            }.inject({}) { |hash, file|
+              hash[file.relative_path] = file
+              hash
+            }
+          end
+        end
+
+        def remote_files
+          @remote_files ||= bucket.files.select { |file|
+            file.key[/^#{path}\/#{directory.split('/').first}\//]
+          }.inject({}) { |hash, file|
+            hash[file.key.gsub(/^#{path}\//, '')] = file
+            hash
+          }
+        end
+
+        def local_hashes
+          `find #{directory} -print0 | xargs -0 openssl md5 2> /dev/null`
+        end
       end
 
-      def hashes_for_directory(directory)
-        hashes = `find #{directory} -print0 | xargs -0 openssl md5 2> /dev/null`
-        hashes.split("\n").collect { |line| File.new directory, line }
-      end
-
-      def remote_hashes
-        @remote_hashes ||= bucket_object.files.inject({}) { |hash, file|
-          hash[file.key] = file
-          hash
-        }
-      end
-
-      class File
+      class LocalFile
         attr_reader :directory, :path, :md5
 
         def initialize(directory, line)
           @directory  = directory
           @path, @md5 = *line.chomp.match(/^MD5\(([^\)]+)\)= (\w+)$/).captures
+        end
+
+        def relative_path
+          @relative_path ||= path.gsub %r{^#{directory}},
+            directory.split('/').last
         end
       end
     end
