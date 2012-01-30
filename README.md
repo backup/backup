@@ -238,7 +238,7 @@ First, it will dump the two Databases (MySQL and MongoDB). The MySQL dump will b
 `sample_backup/databases/MySQL/my_sample_mysql_db.sql.gz`. The MongoDB dump will be dumped into
 `sample_backup/databases/MongoDB/`, which will then be packaged into `sample_backup/databases/MongoDB-#####.tar.gz`
 (`#####` will be a simple unique identifier, in case multiple dumps are performed.)
-Next, it will create two _tar_ Archives (user_avatars and logs). Each will be piped through the Gzip Compressor into
+Next, it will create two _tar_ Archives (user\_avatars and logs). Each will be piped through the Gzip Compressor into
 `sample_backup/archives/` as `user_archives.tar.gz` and `logs.tar.gz`.
 Finally, the `sample_backup` directory will be packaged into an uncompressed _tar_ archive, which will be piped through
 the OpenSSL Encryptor to encrypt this final package into `YYYY-MM-DD-hh-mm-ss.sample_backup.tar.enc`. This final
