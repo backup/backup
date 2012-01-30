@@ -1,25 +1,23 @@
 # encoding: utf-8
 
 ##
-# Only load the Fog gem when the Backup::Syncer::Cloud class is loaded
+# Only load the Fog gem, along with the Parallel gem, when the Backup::Syncer::Cloud class is loaded
 Backup::Dependency.load('fog')
+Backup::Dependency.load('parallel')
 
 module Backup
   module Syncer
     class Cloud < Base
-      ##
-      # Bucket/container name
-      attr_accessor :bucket
 
       ##
-      # Parallelize setting - defaults to false, but can be set to :threads or
-      # :processors
-      attr_accessor :parallelize
+      # Concurrency setting - defaults to false, but can be set to:
+      # - :threads
+      # - :processes
+      attr_accessor :concurrency_using
 
       ##
-      # Parallel count - the number of threads or processors to use. Defaults to
-      # 2.
-      attr_accessor :parallel_count
+      # Concurrency level - the number of threads or processors to use. Defaults to 2.
+      attr_accessor :concurrency_level
 
       ##
       # Instantiates a new Cloud Syncer object and sets the default
@@ -33,8 +31,8 @@ module Backup
         @path               ||= 'backups'
         @directories        ||= Array.new
         @mirror             ||= false
-        @parallelize          = false
-        @parallel_count       = 2
+        @concurrency_using    = false
+        @concurrency_level    = 2
 
         instance_eval(&block) if block_given?
 
@@ -47,51 +45,53 @@ module Backup
         Logger.message("#{ self.class } started syncing.")
 
         directories.each do |directory|
-          SyncContext.new(directory, bucket_object, path).
-            sync! mirror, parallelize, parallel_count
+          SyncContext.new(directory, repository_object, path).
+            sync! mirror, concurrency_using, concurrency_level
         end
       end
 
       private
 
-      def connection
-        raise "Should be implemented by the subclass"
-      end
-
-      def bucket_object
-        @bucket_object ||= connection.directories.get(bucket) ||
-          connection.directories.create(:key => bucket)
-      end
-
       class SyncContext
         attr_reader :directory, :bucket, :path
 
+        ##
+        # Creates a new SyncContext object which handles a single directory
+        # from the Syncer::Base @directories array.
         def initialize(directory, bucket, path)
           @directory, @bucket, @path = directory, bucket, path
         end
 
-        def sync!(mirror = false, parallelize = false, parallel_count = 2)
+        ##
+        # Performs the sync operation using the provided techniques (mirroring/concurrency).
+        def sync!(mirror = false, concurrency_using = false, concurrency_level = 2)
           block = Proc.new { |relative_path| sync_file relative_path, mirror }
 
-          case parallelize
+          case concurrency_using
           when FalseClass
             all_file_names.each &block
           when :threads
-            Parallel.each all_file_names, :in_threads => parallel_count, &block
+            Parallel.each all_file_names, :in_threads => concurrency_level, &block
           when :processes
-            Parallel.each all_file_names, :in_processes => parallel_count,
+            Parallel.each all_file_names, :in_processes => concurrency_level,
               &block
           else
-            raise "Unknown parallelize setting: #{parallelize.inspect}"
+            raise "Unknown concurrency_using setting: #{concurrency_using.inspect}"
           end
         end
 
         private
 
+        ##
+        # Gathers all the remote and local file name and merges them together, removing
+        # duplicate keys if any, and sorts the in alphabetical order.
         def all_file_names
           @all_file_names ||= (local_files.keys | remote_files.keys).sort
         end
 
+        ##
+        # Returns a Hash of local files (the keys are the filesystem paths,
+        # the values are the LocalFile objects for that given file)
         def local_files
           @local_files ||= begin
             local_hashes.split("\n").collect { |line|
@@ -103,10 +103,15 @@ module Backup
           end
         end
 
+        ##
+        # Returns a String of file paths and their md5 hashes.
         def local_hashes
           `find #{directory} -print0 | xargs -0 openssl md5 2> /dev/null`
         end
 
+        ##
+        # Returns a Hash of remote files (the keys are the remote paths,
+        # the values are the Fog file objects for that given file)
         def remote_files
           @remote_files ||= bucket.files.to_a.select { |file|
             file.key[%r{^#{remote_base}/}]
@@ -118,12 +123,20 @@ module Backup
           }
         end
 
+        ##
+        # Creates and returns a String that represents the base remote storage path
         def remote_base
           @remote_base ||= [path, directory.split('/').last].select { |part|
             part && part.strip.length > 0
           }.join('/')
         end
 
+        ##
+        # Performs a sync operation on a file. When mirroring is enabled
+        # and a local file has been removed since the last sync, it will also
+        # remove it from the remote location. It will no upload files that
+        # have not changed since the last sync. Checks are done using an md5 hash.
+        # If a file has changed, or has been newly added, the file will be transferred/overwritten.
         def sync_file(relative_path, mirror)
           local_file  = local_files[relative_path]
           remote_file = remote_files[relative_path]
@@ -142,11 +155,17 @@ module Backup
       class LocalFile
         attr_reader :directory, :path, :md5
 
+        ##
+        # Creates a new LocalFile object using the given directory and line
+        # from the md5 hash checkup. This object figures out the path, relative_path and md5 hash
+        # for the file.
         def initialize(directory, line)
           @directory  = directory
           @path, @md5 = *line.chomp.match(/^MD5\(([^\)]+)\)= (\w+)$/).captures
         end
 
+        ##
+        # Returns the relative path to the file.
         def relative_path
           @relative_path ||= path.gsub %r{^#{directory}},
             directory.split('/').last

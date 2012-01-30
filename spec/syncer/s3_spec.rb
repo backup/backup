@@ -25,8 +25,8 @@ describe Backup::Syncer::S3 do
         stubs(:`).returns 'MD5(tmp/foo)= 123abcdef'
     end
 
-    it "respects the parallelize setting with threads" do
-      syncer.parallelize = :threads
+    it "respects the concurrency_using setting with threads" do
+      syncer.concurrency_using = :threads
 
       Parallel.expects(:each).with(anything, {:in_threads => 2}, anything)
 
@@ -34,16 +34,16 @@ describe Backup::Syncer::S3 do
     end
 
     it "respects the parallel thread count" do
-      syncer.parallelize    = :threads
-      syncer.parallel_count = 10
+      syncer.concurrency_using = :threads
+      syncer.concurrency_level = 10
 
       Parallel.expects(:each).with(anything, {:in_threads => 10}, anything)
 
       syncer.perform!
     end
 
-    it "respects the parallelize setting with processors" do
-      syncer.parallelize = :processes
+    it "respects the concurrency_using setting with processors" do
+      syncer.concurrency_using = :processes
 
       Parallel.expects(:each).with(anything, {:in_processes => 2}, anything)
 
@@ -51,8 +51,8 @@ describe Backup::Syncer::S3 do
     end
 
     it "respects the parallel thread count" do
-      syncer.parallelize    = :processes
-      syncer.parallel_count = 10
+      syncer.concurrency_using = :processes
+      syncer.concurrency_level = 10
 
       Parallel.expects(:each).with(anything, {:in_processes => 10}, anything)
 

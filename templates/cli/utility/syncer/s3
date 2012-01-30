@@ -1,12 +1,42 @@
   ##
-  # Amazon Simple Storage Service [Syncer]
+  # Amazon S3 [Syncer]
+  #
+  # Available Regions:
+  #
+  #  - ap-northeast-1
+  #  - ap-southeast-1
+  #  - eu-west-1
+  #  - us-east-1
+  #  - us-west-1
+  #
+  # Mirroring:
+  #
+  #  When enabled it will keep an exact mirror of your filesystem on S3. This means
+  #  that when you remove a file from the filesystem, it will also remote it from S3.
+  #
+  # Concurrency (concurrency_using):
+  #
+  #  - :threads (recommended)
+  #  - :processes
+  #  - false
+  #
+  #  Threads are a good choice for such sync operations and doesn't consume any additional memory.
+  #  Using :processes is discouraged as it's likely to consumes a lot of memory.
+  #
+  # Concurrency (concurrency_level):
+  #
+  #  Defaults to 2, the higher the level, the faster it will sync.
+  #  If you want a high concurrency level (>2), use :threads and not :processes.
   #
   sync_with S3 do |s3|
     s3.access_key_id     = "my_access_key_id"
     s3.secret_access_key = "my_secret_access_key"
     s3.bucket            = "my-bucket"
+    s3.region            = "us-east-1"
     s3.path              = "/backups"
     s3.mirror            = true
+    s3.concurrency_using = :threads
+    s3.concurrency_level = 50
 
     s3.directories do |directory|
       directory.add "/path/to/directory/to/sync"
