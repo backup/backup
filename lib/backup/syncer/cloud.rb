@@ -108,12 +108,20 @@ module Backup
         end
 
         def remote_files
-          @remote_files ||= bucket.files.select { |file|
-            file.key[/^#{path}\/#{directory.split('/').first}\//]
+          @remote_files ||= bucket.files.to_a.select { |file|
+            file.key[%r{^#{remote_base}/}]
           }.inject({}) { |hash, file|
-            hash[file.key.gsub(/^#{path}\//, '')] = file
+            key = file.key.gsub(/^#{remote_base}\//,
+              "#{directory.split('/').last}/")
+            hash[key] = file
             hash
           }
+        end
+
+        def remote_base
+          @remote_base ||= [path, directory.split('/').last].select { |part|
+            part && part.strip.length > 0
+          }.join('/')
         end
 
         def sync_file(relative_path, mirror)
@@ -125,7 +133,7 @@ module Backup
               :key  => "#{path}/#{relative_path}".gsub(/^\//, ''),
               :body => File.open(local_file.path)
             ) unless remote_file && remote_file.etag == local_file.md5
-          elsif mirror
+          elsif remote_file && mirror
             remote_file.destroy
           end
         end
