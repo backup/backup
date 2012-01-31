@@ -10,6 +10,11 @@ module Backup
     class Cloud < Base
 
       ##
+      # Create a Mutex to synchronize certain parts of the code
+      # in order to prevent race conditions or broken STDOUT.
+      MUTEX = Mutex.new
+
+      ##
       # Concurrency setting - defaults to false, but can be set to:
       # - :threads
       # - :processes
@@ -42,7 +47,7 @@ module Backup
       ##
       # Performs the Sync operation
       def perform!
-        Logger.message("#{ self.class } started syncing.")
+        Logger.message("#{ self.class } started the syncing process:")
 
         directories.each do |directory|
           SyncContext.new(directory, repository_object, path).
@@ -73,8 +78,7 @@ module Backup
           when :threads
             Parallel.each all_file_names, :in_threads => concurrency_level, &block
           when :processes
-            Parallel.each all_file_names, :in_processes => concurrency_level,
-              &block
+            Parallel.each all_file_names, :in_processes => concurrency_level, &block
           else
             raise "Unknown concurrency_type setting: #{concurrency_type.inspect}"
           end
@@ -106,6 +110,7 @@ module Backup
         ##
         # Returns a String of file paths and their md5 hashes.
         def local_hashes
+          MUTEX.synchronize { Logger.message("\s\sGenerating checksums for #{ directory }") }
           `find #{directory} -print0 | xargs -0 openssl md5 2> /dev/null`
         end
 
@@ -142,11 +147,17 @@ module Backup
           remote_file = remote_files[relative_path]
 
           if local_file && File.exist?(local_file.path)
-            bucket.files.create(
-              :key  => "#{path}/#{relative_path}".gsub(/^\//, ''),
-              :body => File.open(local_file.path)
-            ) unless remote_file && remote_file.etag == local_file.md5
+            unless remote_file && remote_file.etag == local_file.md5
+              MUTEX.synchronize { Logger.message("\s\s[transferring] #{relative_path}") }
+              bucket.files.create(
+                :key  => "#{path}/#{relative_path}".gsub(/^\//, ''),
+                :body => File.open(local_file.path)
+              )
+            else
+              MUTEX.synchronize { Logger.message("\s\s[skipping] #{relative_path}") }
+            end
           elsif remote_file && mirror
+            MUTEX.synchronize { Logger.message("\s\s[removing] #{relative_path}") }
             remote_file.destroy
           end
         end
