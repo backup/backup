@@ -1,15 +1,20 @@
   ##
   # Dropbox File Hosting Service [Storage]
-  # Note: Initial backup must be performed manually to authorize
-  #       this machine with your Dropbox account.
+  #
+  # Access Type:
+  #
+  #  - :app_folder (Default)
+  #  - :dropbox
+  #
+  # Note:
+  #
+  #  Initial backup must be performed manually to authorize
+  #  this machine with your Dropbox account.
   #
   store_with Dropbox do |db|
-    db.api_key    = 'my_api_key'
-    db.api_secret = 'my_api_secret'
-    # Dropbox Access Type
-    # The default value is :app_folder
-    # Change this to :dropbox if needed
-    # db.access_type = :dropbox
-    db.path       = '/path/to/my/backups'
-    db.keep       = 25
+    db.api_key     = "my_api_key"
+    db.api_secret  = "my_api_secret"
+    db.access_type = :app_folder
+    db.path        = "/path/to/my/backups"
+    db.keep        = 25
   end

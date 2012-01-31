@@ -79,6 +79,12 @@ module Backup
           :require => 'hipchat',
           :version => '~> 0.4.1',
           :for => 'Sending notifications to Hipchat'
+        },
+
+        'parallel' => {
+          :require => 'parallel',
+          :version => '~> 0.5.12',
+          :for => 'Adding concurrency to Cloud-based syncers.'
         }
       }
     end

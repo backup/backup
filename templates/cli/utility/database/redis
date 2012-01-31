@@ -12,5 +12,5 @@
     db.invoke_save        = true
     # Optional: Use to set the location of this utility
     #   if it cannot be found by name in your $PATH
-    # db.redis_cli_utility = '/opt/local/bin/redis-cli'
+    # db.redis_cli_utility = "/opt/local/bin/redis-cli"
   end

@@ -3,12 +3,12 @@ require File.expand_path('../../spec_helper.rb', __FILE__)
 
 class Parallel; end
 
-describe Backup::Syncer::S3 do
+describe Backup::Syncer::CloudFiles do
   describe '#perform!' do
-    let(:syncer)     { Backup::Syncer::S3.new }
+    let(:syncer)     { Backup::Syncer::CloudFiles.new }
     let(:connection) { stub('connection',
-      :directories => stub('directories', :get => bucket)) }
-    let(:bucket)     { stub('bucket', :files => files) }
+      :directories => stub('directories', :get => container)) }
+    let(:container)     { stub('container', :files => files) }
     let(:files)      { [] }
     let(:content)    { stub('content') }
 
@@ -20,7 +20,6 @@ describe Backup::Syncer::S3 do
 
       syncer.directories << 'tmp'
       syncer.path = 'storage'
-
       Backup::Syncer::S3::SyncContext.any_instance.
         stubs(:`).returns 'MD5(tmp/foo)= 123abcdef'
     end
@@ -105,35 +104,36 @@ describe Backup::Syncer::S3 do
       end
 
       it "creates the connection with the provided credentials" do
-        syncer.access_key_id     = 'my-access'
-        syncer.secret_access_key = 'my-secret'
-        syncer.region            = 'somewhere'
+        syncer.api_key    = 'my-key'
+        syncer.username   = 'my-name'
+        syncer.auth_url   = 'my-auth'
+        syncer.servicenet = 'my-servicenet'
 
         Fog::Storage.expects(:new).with(
-          :provider              => 'AWS',
-          :aws_access_key_id     => 'my-access',
-          :aws_secret_access_key => 'my-secret',
-          :region                => 'somewhere'
+          :provider             => 'Rackspace',
+          :rackspace_api_key    => 'my-key',
+          :rackspace_username   => 'my-name',
+          :rackspace_auth_url   => 'my-auth',
+          :rackspace_servicenet => 'my-servicenet'
         ).returns connection
 
         syncer.perform!
       end
 
-      it "uses the bucket with the given name" do
-        syncer.bucket = 'leaky'
+      it "uses the container with the given name" do
+        syncer.container = 'leaky'
 
-        connection.directories.expects(:get).with('leaky').returns(bucket)
+        connection.directories.expects(:get).with('leaky').returns(container)
 
         syncer.perform!
       end
 
-      it "creates the bucket if one does not exist" do
-        syncer.bucket = 'leaky'
-        syncer.region = 'elsewhere'
+      it "creates the container if one does not exist" do
+        syncer.container = 'leaky'
         connection.directories.stubs(:get).returns nil
 
         connection.directories.expects(:create).
-          with(:key => 'leaky', :location => 'elsewhere').returns(bucket)
+          with(:key => 'leaky').returns(container)
 
         syncer.perform!
       end
@@ -141,10 +141,10 @@ describe Backup::Syncer::S3 do
       it "iterates over each directory" do
         syncer.directories << 'files'
 
-        Backup::Syncer::S3::SyncContext.any_instance.expects(:`).
+        Backup::Syncer::CloudFiles::SyncContext.any_instance.expects(:`).
           with('find tmp -print0 | xargs -0 openssl md5 2> /dev/null').
           returns 'MD5(tmp/foo)= 123abcdef'
-        Backup::Syncer::S3::SyncContext.any_instance.expects(:`).
+        Backup::Syncer::CloudFiles::SyncContext.any_instance.expects(:`).
           with('find files -print0 | xargs -0 openssl md5 2> /dev/null').
           returns 'MD5(tmp/foo)= 123abcdef'
 
@@ -157,7 +157,7 @@ describe Backup::Syncer::S3 do
         :etag => '123abcdef') }
 
       before :each do
-        Backup::Syncer::S3::SyncContext.any_instance.
+        Backup::Syncer::CloudFiles::SyncContext.any_instance.
           stubs(:`).returns ''
         files << file
         File.stubs(:exist?).returns false
