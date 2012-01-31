@@ -6,10 +6,10 @@
     hipchat.on_warning = true
     hipchat.on_failure = true
 
-    hipchat.token          = 'token'
-    hipchat.from           = 'DB Backup'
-    hipchat.rooms_notified = ['activity']
-    hipchat.success_color  = 'green'
-    hipchat.warning_color  = 'yellow'
-    hipchat.failure_color  = 'red'
+    hipchat.token          = "token"
+    hipchat.from           = "DB Backup"
+    hipchat.rooms_notified = ["activity"]
+    hipchat.success_color  = "green"
+    hipchat.warning_color  = "yellow"
+    hipchat.failure_color  = "red"
   end
