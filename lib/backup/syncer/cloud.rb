@@ -13,7 +13,7 @@ module Backup
       # Concurrency setting - defaults to false, but can be set to:
       # - :threads
       # - :processes
-      attr_accessor :concurrency_using
+      attr_accessor :concurrency_type
 
       ##
       # Concurrency level - the number of threads or processors to use. Defaults to 2.
@@ -31,7 +31,7 @@ module Backup
         @path               ||= 'backups'
         @directories        ||= Array.new
         @mirror             ||= false
-        @concurrency_using    = false
+        @concurrency_type     = false
         @concurrency_level    = 2
 
         instance_eval(&block) if block_given?
@@ -46,7 +46,7 @@ module Backup
 
         directories.each do |directory|
           SyncContext.new(directory, repository_object, path).
-            sync! mirror, concurrency_using, concurrency_level
+            sync! mirror, concurrency_type, concurrency_level
         end
       end
 
@@ -64,10 +64,10 @@ module Backup
 
         ##
         # Performs the sync operation using the provided techniques (mirroring/concurrency).
-        def sync!(mirror = false, concurrency_using = false, concurrency_level = 2)
+        def sync!(mirror = false, concurrency_type = false, concurrency_level = 2)
           block = Proc.new { |relative_path| sync_file relative_path, mirror }
 
-          case concurrency_using
+          case concurrency_type
           when FalseClass
             all_file_names.each &block
           when :threads
@@ -76,7 +76,7 @@ module Backup
             Parallel.each all_file_names, :in_processes => concurrency_level,
               &block
           else
-            raise "Unknown concurrency_using setting: #{concurrency_using.inspect}"
+            raise "Unknown concurrency_type setting: #{concurrency_type.inspect}"
           end
         end
 

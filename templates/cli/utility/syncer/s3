@@ -14,7 +14,7 @@
   #  When enabled it will keep an exact mirror of your filesystem on S3. This means
   #  that when you remove a file from the filesystem, it will also remote it from S3.
   #
-  # Concurrency (concurrency_using):
+  # Concurrency (concurrency_type):
   #
   #  - :threads (recommended)
   #  - :processes
@@ -35,7 +35,7 @@
     s3.region            = "us-east-1"
     s3.path              = "/backups"
     s3.mirror            = true
-    s3.concurrency_using = :threads
+    s3.concurrency_type  = :threads
     s3.concurrency_level = 50
 
     s3.directories do |directory|

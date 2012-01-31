@@ -24,8 +24,8 @@ describe Backup::Syncer::CloudFiles do
         stubs(:`).returns 'MD5(tmp/foo)= 123abcdef'
     end
 
-    it "respects the concurrency_using setting with threads" do
-      syncer.concurrency_using = :threads
+    it "respects the concurrency_type setting with threads" do
+      syncer.concurrency_type = :threads
 
       Parallel.expects(:each).with(anything, {:in_threads => 2}, anything)
 
@@ -33,7 +33,7 @@ describe Backup::Syncer::CloudFiles do
     end
 
     it "respects the parallel thread count" do
-      syncer.concurrency_using    = :threads
+      syncer.concurrency_type  = :threads
       syncer.concurrency_level = 10
 
       Parallel.expects(:each).with(anything, {:in_threads => 10}, anything)
@@ -41,8 +41,8 @@ describe Backup::Syncer::CloudFiles do
       syncer.perform!
     end
 
-    it "respects the concurrency_using setting with processors" do
-      syncer.concurrency_using = :processes
+    it "respects the concurrency_type setting with processors" do
+      syncer.concurrency_type = :processes
 
       Parallel.expects(:each).with(anything, {:in_processes => 2}, anything)
 
@@ -50,7 +50,7 @@ describe Backup::Syncer::CloudFiles do
     end
 
     it "respects the parallel thread count" do
-      syncer.concurrency_using    = :processes
+      syncer.concurrency_type  = :processes
       syncer.concurrency_level = 10
 
       Parallel.expects(:each).with(anything, {:in_processes => 10}, anything)

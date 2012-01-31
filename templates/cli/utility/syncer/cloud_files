@@ -16,7 +16,7 @@
   #  When enabled it will keep an exact mirror of your filesystem on Cloud Files. This means
   #  that when you remove a file from the filesystem, it will also remote it from Cloud Files.
   #
-  # Concurrency (concurrency_using):
+  # Concurrency (concurrency_type):
   #
   #  - :threads (recommended)
   #  - :processes
@@ -38,7 +38,7 @@
     cf.servicenet        = false
     cf.path              = "/backups"
     cf.mirror            = true
-    cf.concurrency_using = :threads
+    cf.concurrency_type  = :threads
     cf.concurrency_level = 50
 
     cf.directories do |directory|
