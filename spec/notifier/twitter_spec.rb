@@ -88,7 +88,7 @@ describe Backup::Notifier::Twitter do
     context 'when status is :success' do
       it 'should send Success message' do
         notifier.expects(:send_message).with(
-          '[Backup::Success] test label (test_trigger)'
+          "[Backup::Success] test label (test_trigger) (@ #{notifier.instance_variable_get("@model").time})"
         )
         notifier.send(:notify!, :success)
       end
@@ -97,7 +97,7 @@ describe Backup::Notifier::Twitter do
     context 'when status is :warning' do
       it 'should send Warning message' do
         notifier.expects(:send_message).with(
-          '[Backup::Warning] test label (test_trigger)'
+          "[Backup::Warning] test label (test_trigger) (@ #{notifier.instance_variable_get("@model").time})"
         )
         notifier.send(:notify!, :warning)
       end
@@ -106,7 +106,7 @@ describe Backup::Notifier::Twitter do
     context 'when status is :failure' do
       it 'should send Failure message' do
         notifier.expects(:send_message).with(
-          '[Backup::Failure] test label (test_trigger)'
+          "[Backup::Failure] test label (test_trigger) (@ #{notifier.instance_variable_get("@model").time})"
         )
         notifier.send(:notify!, :failure)
       end

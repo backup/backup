@@ -49,7 +49,7 @@ module Backup
                when :warning then 'Warning'
                when :failure then 'Failure'
                end
-        message = "[Backup::%s] #{@model.label} (#{@model.trigger})" % name
+        message = "[Backup::%s] #{@model.label} (#{@model.trigger}) (@ #{@model.time})" % name
         send_message(message)
       end
 
