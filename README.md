@@ -18,7 +18,7 @@ Drop me a message for any questions, suggestions, requests, bugs or submit them 
 Installation
 ------------
 
-To get the latest stable version (3.0.20)
+To get the latest stable version
 
     gem install backup
 
@@ -94,7 +94,8 @@ Syncers
 -------
 
 - RSync (Push, Pull and Local)
-- Amazon Simple Storage Service (S3)
+- Amazon S3
+- Rackspce Cloud Files
 
 [Syncer Wiki Page](https://github.com/meskyanichi/backup/wiki/Syncers)
 
