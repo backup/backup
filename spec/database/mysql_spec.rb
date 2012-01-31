@@ -44,7 +44,7 @@ describe Backup::Database::MySQL do
       it 'should use default values' do
         db = Backup::Database::MySQL.new(model)
 
-        db.name.should      be_nil
+        db.name.should      == :all
         db.username.should  be_nil
         db.password.should  be_nil
         db.host.should      be_nil
@@ -101,6 +101,7 @@ describe Backup::Database::MySQL do
       db.instance_variable_set(:@dump_path, '/dump/path')
 
       db.stubs(:mysqldump).returns('mysqldump_command')
+      db.stubs(:dump_filename).returns('dump_filename')
     end
 
     context 'when no compressor is configured' do
@@ -110,7 +111,7 @@ describe Backup::Database::MySQL do
 
       it 'should run mysqldump without compression' do
         db.expects(:run).in_sequence(s).with(
-          "mysqldump_command > '/dump/path/mydatabase.sql'"
+          "mysqldump_command > '/dump/path/dump_filename.sql'"
         )
         db.perform!
       end
@@ -125,7 +126,7 @@ describe Backup::Database::MySQL do
 
       it 'should run mysqldump with compression' do
         db.expects(:run).in_sequence(s).with(
-          "mysqldump_command | gzip > '/dump/path/mydatabase.sql.gz'"
+          "mysqldump_command | gzip > '/dump/path/dump_filename.sql.gz'"
         )
         db.perform!
       end
@@ -134,12 +135,35 @@ describe Backup::Database::MySQL do
   end # describe '#perform!'
 
   describe '#mysqldump' do
+    before do
+      db.stubs(:mysqldump_utility).returns(:mysqldump_utility)
+      db.stubs(:credential_options).returns(:credential_options)
+      db.stubs(:connectivity_options).returns(:connectivity_options)
+      db.stubs(:user_options).returns(:user_options)
+      db.stubs(:db_name).returns(:db_name)
+      db.stubs(:tables_to_dump).returns(:tables_to_dump)
+      db.stubs(:tables_to_skip).returns(:tables_to_skip)
+    end
+
     it 'should return the mysqldump command string' do
       db.send(:mysqldump).should ==
-        "/path/to/mysqldump --user='someuser' --password='secret' " +
-        "--host='localhost' --port='123' --socket='/mysql.sock' " +
-        "--single-transaction --quick mydatabase users pirates " +
-        "--ignore-table='mydatabase.logs' --ignore-table='mydatabase.profiles'"
+        "mysqldump_utility credential_options connectivity_options " +
+        "user_options db_name tables_to_dump tables_to_skip"
+    end
+  end
+
+  describe '#dump_filename' do
+    context 'when @name is set to :all' do
+      before { db.name = :all }
+      it 'should set the filename to "all-databases"' do
+        db.send(:dump_filename).should == 'all-databases'
+      end
+    end
+
+    context 'when @name is not set to :all' do
+      it 'should return @name' do
+        db.send(:dump_filename).should == 'mydatabase'
+      end
     end
   end
 
@@ -196,6 +220,21 @@ describe Backup::Database::MySQL do
     end
   end
 
+  describe '#db_name' do
+    context 'when @name is set to :all' do
+      before { db.name = :all }
+      it 'should return the mysqldump flag to dump all databases' do
+        db.send(:db_name).should == '--all-databases'
+      end
+    end
+
+    context 'when @name is not set to :all' do
+      it 'should return @name' do
+        db.send(:db_name).should == 'mydatabase'
+      end
+    end
+  end
+
   describe '#tables_to_dump' do
     it 'should return a string for the mysqldump selected table to dump option' do
       db.send(:tables_to_dump).should == 'users pirates'
@@ -205,6 +244,13 @@ describe Backup::Database::MySQL do
       before { db.only_tables = [] }
       it 'should return an empty string' do
         db.send(:tables_to_dump).should == ''
+      end
+    end
+
+    context 'when dump_all? is true' do
+      before { db.stubs(:dump_all?).returns(true) }
+      it 'should return nil' do
+        db.send(:tables_to_dump).should be_nil
       end
     end
   end
@@ -219,6 +265,28 @@ describe Backup::Database::MySQL do
       before { db.skip_tables = [] }
       it 'should return an empty string' do
         db.send(:tables_to_skip).should == ''
+      end
+    end
+
+    context 'when dump_all? is true' do
+      before { db.stubs(:dump_all?).returns(true) }
+      it 'should return nil' do
+        db.send(:tables_to_skip).should be_nil
+      end
+    end
+  end
+
+  describe '#dump_all?' do
+    context 'when @name is set to :all' do
+      before { db.name = :all }
+      it 'should return true' do
+        db.send(:dump_all?).should be_true
+      end
+    end
+
+    context 'when @name is not set to :all' do
+      it 'should return false' do
+        db.send(:dump_all?).should be_false
       end
     end
   end

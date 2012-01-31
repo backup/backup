@@ -7,7 +7,8 @@ module Backup
         class << self
 
           ##
-          # Name of the database that needs to get dumped
+          # Name of the database that needs to get dumped.
+          # To dump all databases, set this to `:all` or leave blank.
           attr_accessor :name
 
           ##

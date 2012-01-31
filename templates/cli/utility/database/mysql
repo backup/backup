@@ -2,6 +2,7 @@
   # MySQL [Database]
   #
   database MySQL do |db|
+    # To dump all databases, set db.name = :all (or leave blank)
     db.name               = "my_database_name"
     db.username           = "my_username"
     db.password           = "my_password"
