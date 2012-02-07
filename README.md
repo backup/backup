@@ -464,7 +464,7 @@ from Backup's root and that's it. It'll now test against all Ruby versions each 
 
 ### Or contribute by writing blogs/tutorials/use cases
 
-- http://freelancing-gods.com/posts/backing\_up\_with\_backup
+- http://freelancing-gods.com/posts/backing_up_with_backup
 - http://erik.debill.org/2011/03/26/csing-backup-with-rails
 - http://blog.noizeramp.com/2011/03/31/backing-up-backup-ruby-gem/
 - http://www.sebaugereau.com/using-ruby-to-backup-with-beauty
