@@ -47,7 +47,7 @@ module Backup
 
         'mail' => {
           :require => 'mail',
-          :version => '>= 2.2.15',
+          :version => '>= 2.4.0',
           :for     => 'Sending Emails (Mail Notifier)'
         },
 

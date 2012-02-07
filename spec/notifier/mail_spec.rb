@@ -19,6 +19,8 @@ describe Backup::Notifier::Mail do
 
       mail.sendmail             = '/path/to/sendmail'
       mail.sendmail_args        = '-i -t -X/tmp/traffic.log'
+      mail.exim                 = '/path/to/exim'
+      mail.exim_args            = '-i -t -X/tmp/traffic.log'
 
       mail.mail_folder          = '/path/to/backup/mails'
     end
@@ -40,6 +42,8 @@ describe Backup::Notifier::Mail do
 
       notifier.sendmail.should             == '/path/to/sendmail'
       notifier.sendmail_args.should        == '-i -t -X/tmp/traffic.log'
+      notifier.exim.should                 == '/path/to/exim'
+      notifier.exim_args.should            == '-i -t -X/tmp/traffic.log'
 
       notifier.mail_folder.should          == '/path/to/backup/mails'
 
@@ -73,6 +77,8 @@ describe Backup::Notifier::Mail do
 
         notifier.sendmail.should              be_nil
         notifier.sendmail_args.should         be_nil
+        notifier.exim.should                  be_nil
+        notifier.exim_args.should             be_nil
 
         notifier.mail_folder.should           be_nil
 
@@ -229,6 +235,25 @@ describe Backup::Notifier::Mail do
 
         settings = email.delivery_method.settings
         settings[:location].should  == '/path/to/sendmail'
+        settings[:arguments].should == '-i -t -X/tmp/traffic.log'
+      end
+    end
+
+    context 'when delivery_method is :exim' do
+      before { notifier.delivery_method = :exim }
+      it 'should return an email using Exim' do
+        email = notifier.send(:new_email)
+        email.delivery_method.should be_an_instance_of ::Mail::Exim
+      end
+
+      it 'should set the proper options' do
+        email = notifier.send(:new_email)
+
+        email.to.should   == ['my.receiver.email@gmail.com']
+        email.from.should == ['my.sender.email@gmail.com']
+
+        settings = email.delivery_method.settings
+        settings[:location].should  == '/path/to/exim'
         settings[:arguments].should == '-i -t -X/tmp/traffic.log'
       end
     end

@@ -18,6 +18,8 @@ describe Backup::Configuration::Notifier::Mail do
       mail.openssl_verify_mode  = 'none'
       mail.sendmail             = '/path/to/sendmail'
       mail.sendmail_args        = '-i -t -X/tmp/traffic.log'
+      mail.exim                 = '/path/to/exim'
+      mail.exim_args            = '-i -t -X/tmp/traffic.log'
       mail.mail_folder          = '/path/to/backup/mails'
     end
   end
@@ -38,6 +40,8 @@ describe Backup::Configuration::Notifier::Mail do
     mail.openssl_verify_mode.should   == 'none'
     mail.sendmail.should              == '/path/to/sendmail'
     mail.sendmail_args.should         == '-i -t -X/tmp/traffic.log'
+    mail.exim.should                  == '/path/to/exim'
+    mail.exim_args.should             == '-i -t -X/tmp/traffic.log'
     mail.mail_folder.should           == '/path/to/backup/mails'
   end
 
@@ -59,6 +63,8 @@ describe Backup::Configuration::Notifier::Mail do
       mail.openssl_verify_mode.should   == nil
       mail.sendmail.should              == nil
       mail.sendmail_args.should         == nil
+      mail.exim.should                  == nil
+      mail.exim_args.should             == nil
       mail.mail_folder.should           == nil
     end
   end
