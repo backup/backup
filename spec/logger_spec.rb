@@ -145,13 +145,23 @@ describe Backup::Logger do
   end # describe '#clear!'
 
   describe '#truncate!' do
+    context 'when log file does not exist' do
+      before { File.stubs(:exist?).returns(false) }
+      it 'should do nothing' do
+        File.expects(:stat).never
+        subject.truncate!
+      end
+    end
+
     context 'when log file is <= max_bytes' do
+      before { File.stubs(:exist?).returns(true) }
       it 'should do nothing' do
         stat = mock
+        File.expects(:stat).twice.with(
+          File.join(Backup::Config.log_path, 'backup.log')
+        ).returns(stat)
+
         [1, 2].each do |size|
-          File.expects(:stat).with(
-            File.join(Backup::Config.log_path, 'backup.log')
-          ).returns(stat)
           stat.expects(:size).returns(size)
 
           FileUtils.expects(:mv).never

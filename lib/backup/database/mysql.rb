@@ -6,6 +6,7 @@ module Backup
 
       ##
       # Name of the database that needs to get dumped
+      # To dump all databases, set this to `:all` or leave blank.
       attr_accessor :name
 
       ##
@@ -43,6 +44,8 @@ module Backup
 
         instance_eval(&block) if block_given?
 
+        @name ||= :all
+
         if @utility_path
           Logger.warn "[DEPRECATED] " +
             "Database::MySQL#utility_path has been deprecated.\n" +
@@ -68,7 +71,7 @@ module Backup
           end
         end
 
-        dump_cmd << " > '#{ File.join(@dump_path, name) }.#{ dump_ext }'"
+        dump_cmd << " > '#{ File.join(@dump_path, dump_filename) }.#{ dump_ext }'"
         run(dump_cmd)
       end
 
@@ -78,7 +81,13 @@ module Backup
       # Builds the full mysqldump string based on all attributes
       def mysqldump
         "#{ mysqldump_utility } #{ credential_options } #{ connectivity_options } " +
-        "#{ user_options } #{ name } #{ tables_to_dump } #{ tables_to_skip }"
+        "#{ user_options } #{ db_name } #{ tables_to_dump } #{ tables_to_skip }"
+      end
+
+      ##
+      # Returns the filename to use for dumping the database(s)
+      def dump_filename
+        dump_all? ? 'all-databases' : name
       end
 
       ##
@@ -109,10 +118,18 @@ module Backup
       end
 
       ##
+      # Returns the database name to use in the mysqldump command.
+      # When dumping all databases, the database name is replaced
+      # with the command option to dump all databases.
+      def db_name
+        dump_all? ? '--all-databases' : name
+      end
+
+      ##
       # Builds the MySQL syntax for specifying which tables to dump
       # during the dumping of the database
       def tables_to_dump
-        only_tables.join(' ')
+        only_tables.join(' ') unless dump_all?
       end
 
       ##
@@ -121,7 +138,15 @@ module Backup
       def tables_to_skip
         skip_tables.map do |table|
           "--ignore-table='#{name}.#{table}'"
-        end.join(' ')
+        end.join(' ') unless dump_all?
+      end
+
+      ##
+      # Return true if we're dumping all databases.
+      # `name` will be set to :all if it is not set,
+      # so this will be true by default
+      def dump_all?
+        name == :all
       end
 
     end

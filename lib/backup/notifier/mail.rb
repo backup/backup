@@ -21,6 +21,10 @@ module Backup
       # : Settings used only by this method:
       # : `sendmail`, `sendmail_args`
       #
+      # `:exim` [::Mail::Exim]
+      # : Settings used only by this method:
+      # : `exim`, `exim_args`
+      #
       # `:file` [::Mail::FileDelivery]
       # : Settings used only by this method:
       # : `mail_folder`
@@ -85,6 +89,19 @@ module Backup
       attr_accessor :sendmail_args
 
       ##
+      # When using the `:exim` `delivery_method` option,
+      # this may be used to specify the absolute path to `exim` (if needed)
+      # Example: '/usr/sbin/exim'
+      attr_accessor :exim
+
+      ##
+      # Optional arguments to pass to `exim`
+      # Note that this will override the defaults set by the Mail gem (currently: '-i -t')
+      # So, if set here, be sure to set all the arguments you require.
+      # Example: '-i -t -X/tmp/traffic.log'
+      attr_accessor :exim_args
+
+      ##
       # Folder where mail will be kept when using the `:file` `delivery_method` option.
       # Default location is '$HOME/Backup/emails'
       # Example: '/tmp/test-mails'
@@ -144,7 +161,7 @@ module Backup
       # Configures the Mail gem by setting the defaults.
       # Creates and returns a new email, based on the @delivery_method used.
       def new_email
-        method = %w{ smtp sendmail file test }.
+        method = %w{ smtp sendmail exim file test }.
             index(@delivery_method.to_s) ? @delivery_method.to_s : 'smtp'
 
         options =
@@ -162,6 +179,11 @@ module Backup
               opts = {}
               opts.merge!(:location  => File.expand_path(@sendmail)) if @sendmail
               opts.merge!(:arguments => @sendmail_args) if @sendmail_args
+              opts
+            when 'exim'
+              opts = {}
+              opts.merge!(:location  => File.expand_path(@exim)) if @exim
+              opts.merge!(:arguments => @exim_args) if @exim_args
               opts
             when 'file'
               @mail_folder ||= File.join(Config.root_path, 'emails')

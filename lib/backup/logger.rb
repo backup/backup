@@ -62,6 +62,8 @@ module Backup
 
       def truncate!(max_bytes = 500_000)
         log_file = File.join(Config.log_path, 'backup.log')
+        return unless File.exist?(log_file)
+
         if File.stat(log_file).size > max_bytes
           FileUtils.mv(log_file, log_file + '~')
           File.open(log_file + '~', 'r') do |io_in|

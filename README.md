@@ -1,5 +1,5 @@
-Backup 3
-========
+Backup
+======
 
 Backup is a RubyGem, written for Linux and Mac OSX, that allows you to easily perform backup operations on both your remote and local environments. It provides you with an elegant DSL in Ruby for modeling your backups. Backup has built-in support for various databases, storage protocols/services, syncers, compressors, encryptors and notifiers which you can mix and match. It was built with modularity, extensibility and simplicity in mind.
 
@@ -7,16 +7,14 @@ Backup is a RubyGem, written for Linux and Mac OSX, that allows you to easily pe
 [![Still Maintained](http://stillmaintained.com/meskyanichi/backup.png)](http://stillmaintained.com/meskyanichi/backup)
 
 
-Author
-------
+### Author
 
 **[Michael van Rooijen](http://michaelvanrooijen.com/) ( [@meskyanichi](http://twitter.com/#!/meskyanichi) )**
 
 Drop me a message for any questions, suggestions, requests, bugs or submit them to the [issue log](https://github.com/meskyanichi/backup/issues).
 
 
-Installation
-------------
+### Installation
 
 To get the latest stable version
 
@@ -25,18 +23,16 @@ To get the latest stable version
 You can view the list of released versions over at [RubyGems.org (Backup)](https://rubygems.org/gems/backup/versions)
 
 
-Getting Started
----------------
+### Getting Started
 
 I recommend you read this README first, and refer to the [wiki pages](https://github.com/meskyanichi/backup/wiki) afterwards. There's also a [Getting Started wiki page](https://github.com/meskyanichi/backup/wiki/Getting-Started).
 
 What Backup 3 currently supports
-================================
+--------------------------------
 
 Below you find a list of components that Backup currently supports. If you'd like support for components other than the ones listed here, feel free to request them or to fork Backup and add them yourself. Backup is modular and easy to extend.
 
-Database Support
-----------------
+### Database Support
 
 - MySQL
 - PostgreSQL
@@ -46,16 +42,14 @@ Database Support
 
 [Database Wiki Page](https://github.com/meskyanichi/backup/wiki/Databases)
 
-Filesystem Support
-------------------
+### Filesystem Support
 
 - Files
 - Directories
 
 [Archive Wiki Page](https://github.com/meskyanichi/backup/wiki/Archives)
 
-Storage Locations and Services
-------------------------------
+### Storage Locations and Services
 
 - Amazon Simple Storage Service (S3)
 - Rackspace Cloud Files (Mosso)
@@ -66,8 +60,7 @@ Storage Locations and Services
 
 [Storage Wiki Page](https://github.com/meskyanichi/backup/wiki/Storages)
 
-Storage Features
-----------------
+### Storage Features
 
 - **Backup Cycling, applies to:**
   - Amazon Simple Storage Service (S3)
@@ -90,8 +83,7 @@ Storage Features
 
 [Splitter Wiki Page](https://github.com/meskyanichi/backup/wiki/Splitter)
 
-Syncers
--------
+### Syncers
 
 - RSync (Push, Pull and Local)
 - Amazon S3
@@ -99,8 +91,7 @@ Syncers
 
 [Syncer Wiki Page](https://github.com/meskyanichi/backup/wiki/Syncers)
 
-Compressors
------------
+### Compressors
 
 - Gzip
 - Bzip2
@@ -109,16 +100,14 @@ Compressors
 
 [Compressors Wiki Page](https://github.com/meskyanichi/backup/wiki/Compressors)
 
-Encryptors
-----------
+### Encryptors
 
 - OpenSSL
 - GPG
 
 [Encryptors Wiki Page](https://github.com/meskyanichi/backup/wiki/Encryptors)
 
-Notifiers
----------
+### Notifiers
 
 - Mail
 - Twitter
@@ -129,8 +118,7 @@ Notifiers
 
 [Notifiers Wiki Page](https://github.com/meskyanichi/backup/wiki/Notifiers)
 
-Supported Ruby versions (Tested with RSpec)
--------------------------------------------
+### Supported Ruby versions (Tested with RSpec)
 
 - Ruby 1.9.3
 - Ruby 1.9.2
@@ -138,7 +126,7 @@ Supported Ruby versions (Tested with RSpec)
 
 
 A sample Backup configuration file
-==================================
+----------------------------------
 
 This is a Backup configuration file. Check it out and read the explanation below. Backup has a [great wiki](https://github.com/meskyanichi/backup/wiki) which explains each component of Backup in detail.
 
@@ -302,19 +290,16 @@ With this in place, run `whenever --update-crontab backup` to write the equivale
 crontab in cron-syntax. Cron will now invoke `backup perform --trigger sample_backup` every 6 hours. Check out the
 Whenever project page for more information.
 
-Documentation
--------------
+### Documentation
 
 See the [Wiki Pages](https://github.com/meskyanichi/backup/wiki).
 
 
-Suggestions, Bugs, Requests, Questions
---------------------------------------
+### Suggestions, Bugs, Requests, Questions
 
 View the [issue log](https://github.com/meskyanichi/backup/issues) and post them there.
 
-Contributors
-------------
+### Contributors
 
 <table>
   <tr>
@@ -444,8 +429,7 @@ Contributors
 </table>
 
 
-Want to contribute?
--------------------
+### Want to contribute?
 
 - Fork/Clone the **develop** branch
 - Write RSpec tests, and test against:
@@ -456,8 +440,8 @@ Want to contribute?
 
 I can't guarantee I'll pull every pull request. Also, I may accept your pull request and drastically change parts to improve readability/maintainability. Feel free to discuss about improvements, new functionality/features in the [issue log](https://github.com/meskyanichi/backup/issues) before contributing if you need/want more information.
 
-Easily run tests against all three Ruby versions
-------------------------------------------------
+
+### Easily run tests against all three Ruby versions
 
 Install [RVM](https://rvm.beginrescueend.com/) and use it to install Ruby 1.9.3, 1.9.2 and 1.8.7.
 
@@ -478,9 +462,9 @@ The Backup gem uses [Guard](https://github.com/guard/guard) along with [Guard::R
 from Backup's root and that's it. It'll now test against all Ruby versions each time you adjust a file in the `lib` or `spec` directories.
 
 
-Or contribute by writing blogs/tutorials/use cases
---------------------------------------------------
+### Or contribute by writing blogs/tutorials/use cases
 
+- http://freelancing-gods.com/posts/backing_up_with_backup
 - http://erik.debill.org/2011/03/26/csing-backup-with-rails
 - http://blog.noizeramp.com/2011/03/31/backing-up-backup-ruby-gem/
 - http://www.sebaugereau.com/using-ruby-to-backup-with-beauty
