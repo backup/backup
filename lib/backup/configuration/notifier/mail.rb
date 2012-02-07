@@ -19,6 +19,10 @@ module Backup
           # : Settings used only by this method:
           # : `sendmail`, `sendmail_args`
           #
+          # `:exim` [::Mail::Exim]
+          # : Settings used only by this method:
+          # : `exim`, `exim_args`
+          #
           # `:file` [::Mail::FileDelivery]
           # : Settings used only by this method:
           # : `mail_folder`
@@ -81,6 +85,19 @@ module Backup
           # So, if set here, be sure to set all the arguments you require.
           # Example: '-i -t -X/tmp/traffic.log'
           attr_accessor :sendmail_args
+
+          ##
+          # When using the `:exim` `delivery_method` option,
+          # this may be used to specify the absolute path to `exim` (if needed)
+          # Example: '/usr/sbin/exim'
+          attr_accessor :exim
+
+          ##
+          # Optional arguments to pass to `exim`
+          # Note that this will override the defaults set by the Mail gem (currently: '-i -t')
+          # So, if set here, be sure to set all the arguments you require.
+          # Example: '-i -t -X/tmp/traffic.log'
+          attr_accessor :exim_args
 
           ##
           # Folder where mail will be kept when using the `:file` `delivery_method` option.
