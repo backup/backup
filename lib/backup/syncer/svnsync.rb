@@ -23,7 +23,7 @@ module Backup
       def local_repository_exists?
         run "svnadmin verify #{path}"
         return true
-      rescue Exception::CommandFailed
+      rescue Errors::CLI::SystemCallError
         Logger.message("#{path} is not a repository")
         return false
       end
@@ -39,7 +39,7 @@ module Backup
 
       def perform!
         Logger.message("#{ self.class } started syncing '#{ url }'.")
-        mkdir(path)
+        FileUtils.mkdir_p(path)
         initialize_repository unless local_repository_exists?
         Logger.message("Syncing with remote repository")
         run "svnsync sync file://#{path} --non-interactive #{options}"

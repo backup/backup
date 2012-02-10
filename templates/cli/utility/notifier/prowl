@@ -1,0 +1,11 @@
+  ##
+  # Prowl [Notifier]
+  #
+  notify_by Prowl do |prowl|
+    prowl.on_success = true
+    prowl.on_warning = true
+    prowl.on_failure = true
+
+    prowl.application	= "my_application"
+    prowl.api_key    	= "my_api_key"
+  end

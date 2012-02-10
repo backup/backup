@@ -11,6 +11,10 @@ module Backup
           attr_accessor :api_key, :username, :auth_url
 
           ##
+          # Rackspace Service Net (Allows for LAN-based transfers to avoid charges and improve performance)
+          attr_accessor :servicenet
+
+          ##
           # Rackspace Cloud Files container name and path
           attr_accessor :container, :path
 

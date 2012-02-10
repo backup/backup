@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../../spec_helper'
+require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe Backup::Configuration::Notifier::Campfire do
   before do
@@ -10,6 +10,7 @@ describe Backup::Configuration::Notifier::Campfire do
       campfire.room_id   = 'my_room_id'
     end
   end
+  after { Backup::Configuration::Notifier::Campfire.clear_defaults! }
 
   it 'should set the default campfire configuration' do
     campfire = Backup::Configuration::Notifier::Campfire

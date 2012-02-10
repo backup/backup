@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../../spec_helper'
+require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe Backup::Configuration::Storage::SCP do
   before do
@@ -13,6 +13,7 @@ describe Backup::Configuration::Storage::SCP do
       scp.keep      = 20
     end
   end
+  after { Backup::Configuration::Storage::SCP.clear_defaults! }
 
   it 'should set the default scp configuration' do
     scp = Backup::Configuration::Storage::SCP

@@ -30,6 +30,10 @@ module Backup
           # Additional "pg_dump" options
           attr_accessor :additional_options
 
+          ##
+          # Path to pg_dump utility (optional)
+          attr_accessor :pg_dump_utility
+
         end
       end
     end

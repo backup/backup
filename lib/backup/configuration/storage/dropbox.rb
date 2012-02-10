@@ -11,30 +11,44 @@ module Backup
           attr_accessor :api_key, :api_secret
 
           ##
-          # Path to where the backups will be stored
-          attr_accessor :path
+          # Dropbox Access Type
+          # Valid values are:
+          #   :app_folder (default)
+          #   :dropbox (full access)
+          attr_accessor :access_type
 
           ##
-          # Dropbox connection timeout
-          attr_accessor :timeout
+          # Path to where the backups will be stored
+          attr_accessor :path
 
 
           # DEPRECATED METHODS #############################################
 
+          # Deprecated as of v3.0.21 - for move to official 'dropbox-sdk' gem (v1.1)
+          attr_reader :timeout
+          def timeout=(value)
+            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.timeout=\n" +
+                "  is deprecated and will be removed at some point."
+          end
+
           def email
-            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.email is deprecated and will be removed at some point."
+            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.email\n" +
+                "  is deprecated and will be removed at some point."
           end
 
           def email=(value)
-            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.email= is deprecated and will be removed at some point."
+            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.email=\n" +
+                "  is deprecated and will be removed at some point."
           end
 
           def password
-            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.password is deprecated and will be removed at some point."
+            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.password\n" +
+                "  is deprecated and will be removed at some point."
           end
 
           def password=(value)
-            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.password= is deprecated and will be removed at some point."
+            Logger.warn "[DEPRECATED] Backup::Configuration::Storage::Dropbox.password=\n" +
+                "  is deprecated and will be removed at some point."
           end
 
         end

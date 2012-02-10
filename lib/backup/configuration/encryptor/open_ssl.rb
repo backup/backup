@@ -12,6 +12,12 @@ module Backup
           attr_accessor :password
 
           ##
+          # The password file used for encrypting the backup.  This
+          # password file will be required to decrypt the backup later
+          # on.
+          attr_accessor :password_file
+
+          ##
           # Determines whether the 'base64' should be used or not
           attr_accessor :base64
 

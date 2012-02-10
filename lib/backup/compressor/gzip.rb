@@ -7,18 +7,18 @@ module Backup
       ##
       # Tells Backup::Compressor::Gzip to compress
       # better rather than faster when set to true
-      attr_writer :best
+      attr_accessor :best
 
       ##
       # Tells Backup::Compressor::Gzip to compress
       # faster rather than better when set to true
-      attr_writer :fast
+      attr_accessor :fast
 
       ##
       # Creates a new instance of Backup::Compressor::Gzip and
       # configures it to either compress faster or better
       def initialize(&block)
-        load_defaults!
+        super
 
         @best ||= false
         @fast ||= false
@@ -27,33 +27,19 @@ module Backup
       end
 
       ##
-      # Performs the compression of the packages backup file
-      def perform!
+      # Yields to the block the compressor command with options
+      # and it's filename extension.
+      def compress_with
         log!
-        run("#{ utility(:gzip) } #{ options } '#{ Backup::Model.file }'")
-        Backup::Model.extension += '.gz'
+        yield "#{ utility(:gzip) }#{ options }", '.gz'
       end
 
-    private
+      private
 
       ##
-      # Combines the provided options and returns a gzip options string
+      # Returns the gzip option syntax for compressing
       def options
-        (best + fast).join("\s")
-      end
-
-      ##
-      # Returns the gzip option syntax for compressing
-      # better when @best is set to true
-      def best
-        return ['--best'] if @best; []
-      end
-
-      ##
-      # Returns the gzip option syntax for compressing
-      # faster when @fast is set to true
-      def fast
-        return ['--fast'] if @fast; []
+        " #{ '--best ' if @best }#{ '--fast' if @fast }".rstrip
       end
 
     end

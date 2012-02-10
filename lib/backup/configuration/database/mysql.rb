@@ -7,7 +7,8 @@ module Backup
         class << self
 
           ##
-          # Name of the database that needs to get dumped
+          # Name of the database that needs to get dumped.
+          # To dump all databases, set this to `:all` or leave blank.
           attr_accessor :name
 
           ##
@@ -29,6 +30,10 @@ module Backup
           ##
           # Additional "mysqldump" options
           attr_accessor :additional_options
+
+          ##
+          # Path to mysqldump utility (optional)
+          attr_accessor :mysqldump_utility
 
         end
       end

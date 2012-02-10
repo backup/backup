@@ -9,7 +9,6 @@ module Backup
   # has not been installed, or when the gem's version is incorrect, and provide the
   # command to install the gem. These dependencies are dynamically loaded in the Gemfile
   class Dependency
-    extend Backup::CLI
 
     ##
     # Returns a hash of dependencies that Backup requires
@@ -22,9 +21,9 @@ module Backup
           :for     => 'Amazon S3, Rackspace Cloud Files (S3, CloudFiles Storages)'
         },
 
-        'dropbox' => {
-          :require => 'dropbox',
-          :version => '~> 1.3.0',
+        'dropbox-sdk' => {
+          :require => 'dropbox_sdk',
+          :version => '~> 1.1.0',
           :for     => 'Dropbox Web Service (Dropbox Storage)'
         },
 
@@ -48,7 +47,7 @@ module Backup
 
         'mail' => {
           :require => 'mail',
-          :version => '~> 2.3.0',
+          :version => '>= 2.4.0',
           :for     => 'Sending Emails (Mail Notifier)'
         },
 
@@ -69,6 +68,24 @@ module Backup
           :version => '~> 1.5.1',
           :for     => 'Parsing JSON for HTTParty'
         },
+
+        'prowler' => {
+          :require => 'prowler',
+          :version => '>= 1.3.1',
+          :for     => 'Sending iOS push notifications (Prowl Notifier)'
+        },
+
+        'hipchat' => {
+          :require => 'hipchat',
+          :version => '~> 0.4.1',
+          :for => 'Sending notifications to Hipchat'
+        },
+
+        'parallel' => {
+          :require => 'parallel',
+          :version => '~> 0.5.12',
+          :for => 'Adding concurrency to Cloud-based syncers.'
+        }
       }
     end
 
@@ -81,13 +98,15 @@ module Backup
         gem(name, all[name][:version])
         require(all[name][:require])
       rescue LoadError
-        Backup::Logger.error("Dependency missing.")
-        puts "\nDependency required for:"
-        puts "\n\s\s#{all[name][:for]}"
-        puts "\nTo install the gem, issue the following command:"
-        puts "\n\s\sgem install #{name} -v '#{all[name][:version]}'"
-        puts "\nPlease try again after installing the missing dependency."
-        exit
+        Logger.error Errors::Dependency::LoadError.new(<<-EOS)
+          Dependency missing
+          Dependency required for:
+          #{all[name][:for]}
+          To install the gem, issue the following command:
+          > gem install #{name} -v '#{all[name][:version]}'
+          Please try again after installing the missing dependency.
+        EOS
+        exit 1
       end
     end
 

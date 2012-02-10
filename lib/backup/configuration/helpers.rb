@@ -8,21 +8,16 @@ module Backup
       # Finds all the object's getter methods and checks the global
       # configuration for these methods, if they respond then they will
       # assign the object's attribute(s) to that particular global configuration's attribute
-      def load_defaults!(options = {})
-        c                  = self.class.name.split('::')
-        configuration      = Backup::Configuration.const_get(c[1]).const_get(c[2])
-        options[:except] ||= []
-        options[:only]   ||= []
+      def load_defaults!
+        module_names  = self.class.name.split('::')[1..-1]
+        configuration = Backup::Configuration
+        module_names.each do |module_name|
+          configuration = configuration.const_get(module_name)
+        end
 
         getter_methods.each do |attribute|
           if configuration.respond_to?(attribute)
-            if options[:only].any? and options[:only].include?(attribute)
-              self.send("#{attribute}=", configuration.send(attribute))
-            elsif options[:except].any? and !options[:except].include?(attribute)
-              self.send("#{attribute}=", configuration.send(attribute))
-            elsif options[:only].empty? and options[:except].empty?
-              self.send("#{attribute}=", configuration.send(attribute))
-            end
+            self.send("#{attribute}=", configuration.send(attribute))
           end
         end
       end
@@ -35,8 +30,10 @@ module Backup
         end
       end
 
+      private
+
       ##
-      # Returns an array of the setter methods (as String)
+      # Returns an Array of the setter methods (as String)
       def setter_methods
         methods.map do |method|
           method = method.to_s
@@ -45,14 +42,9 @@ module Backup
       end
 
       ##
-      # Returns an array of getter methods (as Array)
+      # Returns an Array of getter methods (as String)
       def getter_methods
-        methods.map do |method|
-          method = method.to_s
-          if method =~ /^\w(\w|\d|\_)+\=$/ and method != 'taguri='
-            method.sub('=','')
-          end
-        end.compact
+        setter_methods.map {|method| method.sub('=','') }
       end
 
     end

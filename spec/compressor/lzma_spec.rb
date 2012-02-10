@@ -1,58 +1,83 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Compressor::Lzma do
   let(:compressor) { Backup::Compressor::Lzma.new }
 
-  before do
-    Backup::Model.extension = 'tar'
-  end
+  describe 'setting configuration defaults' do
+    after { Backup::Configuration::Compressor::Lzma.clear_defaults! }
 
-  describe 'the options' do
-    it do
-      compressor.send(:best).should == []
-    end
+    it 'uses and overrides configuration defaults' do
+      Backup::Configuration::Compressor::Lzma.best.should be_false
+      Backup::Configuration::Compressor::Lzma.fast.should be_false
 
-    it do
-      compressor.send(:fast).should == []
-    end
-  end
+      compressor = Backup::Compressor::Lzma.new
+      compressor.best.should be_false
+      compressor.fast.should be_false
 
-  describe '#perform!' do
-    before do
-      [:run, :utility].each { |method| compressor.stubs(method) }
-    end
-
-    it 'should perform the compression' do
-      compressor.expects(:utility).with(:lzma).returns(:lzma)
-      compressor.expects(:run).with("lzma  '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'")
-      compressor.perform!
-    end
-
-    it 'should perform the compression with the --best and --fast options' do
-      compressor = Backup::Compressor::Lzma.new do |c|
+      Backup::Configuration::Compressor::Lzma.defaults do |c|
         c.best = true
         c.fast = true
       end
+      Backup::Configuration::Compressor::Lzma.best.should be_true
+      Backup::Configuration::Compressor::Lzma.fast.should be_true
 
-      compressor.stubs(:utility).returns(:lzma)
-      compressor.expects(:run).with("lzma --best --fast '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'")
-      compressor.perform!
+      compressor = Backup::Compressor::Lzma.new
+      compressor.best.should be_true
+      compressor.fast.should be_true
+
+      compressor = Backup::Compressor::Lzma.new do |c|
+        c.best = false
+      end
+      compressor.best.should be_false
+      compressor.fast.should be_true
+
+      compressor = Backup::Compressor::Lzma.new do |c|
+        c.fast = false
+      end
+      compressor.best.should be_true
+      compressor.fast.should be_false
+    end
+  end # describe 'setting configuration defaults'
+
+  describe '#compress_with' do
+    before do
+      compressor.expects(:log!)
+      compressor.expects(:utility).with(:lzma).returns('lzma')
     end
 
-    it 'should set the class variable @extension (Backup::Model.extension) to .lzma' do
-      compressor.stubs(:utility).returns(:lzma)
-      compressor.expects(:run)
-
-      Backup::Model.extension.should == 'tar'
-      compressor.perform!
-      Backup::Model.extension.should == 'tar.lzma'
+    it 'should yield with the --best option' do
+      compressor.best = true
+      compressor.compress_with do |cmd, ext|
+        cmd.should == 'lzma --best'
+        ext.should == '.lzma'
+      end
     end
 
-    it 'should log' do
-      Backup::Logger.expects(:message).with("Backup::Compressor::Lzma started compressing the archive.")
-      compressor.perform!
+    it 'should yield with the --fast option' do
+      compressor.fast = true
+      compressor.compress_with do |cmd, ext|
+        cmd.should == 'lzma --fast'
+        ext.should == '.lzma'
+      end
     end
-  end
+
+    it 'should yield with the --best and --fast options' do
+      compressor.best = true
+      compressor.fast = true
+      compressor.compress_with do |cmd, ext|
+        cmd.should == 'lzma --best --fast'
+        ext.should == '.lzma'
+      end
+    end
+
+    it 'should yield with no options' do
+      compressor.compress_with do |cmd, ext|
+        cmd.should == 'lzma'
+        ext.should == '.lzma'
+      end
+    end
+  end # describe '#compress_with'
+
 end

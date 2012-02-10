@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../../spec_helper'
+require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe Backup::Configuration::Database::PostgreSQL do
   before do
@@ -14,8 +14,10 @@ describe Backup::Configuration::Database::PostgreSQL do
       db.skip_tables        = %w[my tables]
       db.only_tables        = %w[my other tables]
       db.additional_options = %w[my options]
+      db.pg_dump_utility    = '/path/to/pg_dump'
     end
   end
+  after { Backup::Configuration::Database::PostgreSQL.clear_defaults! }
 
   it 'should set the default PostgreSQL configuration' do
     db = Backup::Configuration::Database::PostgreSQL
@@ -28,6 +30,7 @@ describe Backup::Configuration::Database::PostgreSQL do
     db.skip_tables.should        == %w[my tables]
     db.only_tables.should        == %w[my other tables]
     db.additional_options.should == %w[my options]
+    db.pg_dump_utility.should    == '/path/to/pg_dump'
   end
 
   describe '#clear_defaults!' do
@@ -44,6 +47,7 @@ describe Backup::Configuration::Database::PostgreSQL do
       db.skip_tables.should        == nil
       db.only_tables.should        == nil
       db.additional_options.should == nil
+      db.pg_dump_utility.should    == nil
     end
   end
 end

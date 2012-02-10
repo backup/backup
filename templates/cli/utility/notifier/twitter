@@ -1,0 +1,13 @@
+  ##
+  # Twitter [Notifier]
+  #
+  notify_by Twitter do |tweet|
+    tweet.on_success = true
+    tweet.on_warning = true
+    tweet.on_failure = true
+
+    tweet.consumer_key       = "my_consumer_key"
+    tweet.consumer_secret    = "my_consumer_secret"
+    tweet.oauth_token        = "my_oauth_token"
+    tweet.oauth_token_secret = "my_oauth_token_secret"
+  end

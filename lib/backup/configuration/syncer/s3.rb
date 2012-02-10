@@ -3,29 +3,19 @@
 module Backup
   module Configuration
     module Syncer
-      class S3 < Base
+      class S3 < Cloud
         class << self
-
           ##
           # Amazon Simple Storage Service (S3) Credentials
           attr_accessor :access_key_id, :secret_access_key
 
           ##
-          # Amazon S3 bucket name and path to sync to
-          attr_accessor :bucket, :path
+          # The S3 bucket to store files to
+          attr_accessor :bucket
 
           ##
-          # Directories to sync
-          attr_accessor :directories
-
-          ##
-          # Flag to enable mirroring
-          attr_accessor :mirror
-
-          ##
-          # Additional options for the s3sync cli
-          attr_accessor :additional_options
-
+          # The AWS region of the specified S3 bucket
+          attr_accessor :region
         end
       end
     end

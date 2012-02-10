@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../../spec_helper'
+require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe Backup::Configuration::Storage::Ninefold do
   before do
@@ -10,6 +10,7 @@ describe Backup::Configuration::Storage::Ninefold do
       nf.path           = 'my_backups'
     end
   end
+  after { Backup::Configuration::Storage::Ninefold.clear_defaults! }
 
   it 'should set the default Ninefold configuration' do
     ninefold = Backup::Configuration::Storage::Ninefold

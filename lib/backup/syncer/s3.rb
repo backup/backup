@@ -2,117 +2,46 @@
 
 module Backup
   module Syncer
-    class S3 < Base
+    class S3 < Cloud
 
       ##
       # Amazon Simple Storage Service (S3) Credentials
       attr_accessor :access_key_id, :secret_access_key
 
       ##
-      # Amazon S3 bucket name and path to sync to
-      attr_accessor :bucket, :path
+      # The S3 bucket to store files to
+      attr_accessor :bucket
 
       ##
-      # Directories to sync
-      attr_accessor :directories
+      # The AWS region of the specified S3 bucket
+      attr_accessor :region
+
+      private
 
       ##
-      # Flag to enable mirroring
-      attr_accessor :mirror
-
-      ##
-      # Additional options for the s3sync cli
-      attr_accessor :additional_options
-
-      ##
-      # Instantiates a new S3 Syncer object and sets the default configuration
-      # specified in the Backup::Configuration::Syncer::S3. Then it sets the object
-      # defaults if particular properties weren't set. Finally it'll evaluate the users
-      # configuration file and overwrite anything that's been defined
-      def initialize(&block)
-        load_defaults!
-
-        @path               ||= 'backups'
-        @directories        ||= Array.new
-        @mirror             ||= false
-        @additional_options ||= []
-
-        instance_eval(&block) if block_given?
-
-        @path = path.sub(/^\//, '')
+      # Established and creates a new Fog storage object for S3.
+      def connection
+        @connection ||= Fog::Storage.new(
+          :provider              => provider,
+          :aws_access_key_id     => access_key_id,
+          :aws_secret_access_key => secret_access_key,
+          :region                => region
+        )
       end
 
       ##
-      # Performs the S3Sync operation
-      # First it'll set the Amazon S3 credentials for S3Sync before invoking it,
-      # and once it's finished syncing the files and directories to Amazon S3, it'll
-      # unset these credentials (back to nil values)
-      def perform!
-        set_environment_variables!
-
-        directories.each do |directory|
-          Logger.message("#{ self.class } started syncing '#{ directory }'.")
-          Logger.silent( run("#{ utility(:s3sync) } #{ options } '#{ directory }' '#{ bucket }:#{ path }'") )
-        end
-
-        unset_environment_variables!
+      # Creates a new @repository_object (bucket). Fetches it from S3
+      # if it already exists, otherwise it will create it first and fetch use that instead.
+      def repository_object
+        @repository_object ||= connection.directories.get(bucket) ||
+          connection.directories.create(:key => bucket, :location => region)
       end
 
       ##
-      # Returns all the specified S3Sync options, concatenated, ready for the CLI
-      def options
-        ([verbose, recursive, mirror] + additional_options).compact.join("\s")
+      # This is the provider that Fog uses for the Cloud Files
+      def provider
+        "AWS"
       end
-
-      ##
-      # Returns S3Sync syntax for enabling mirroring
-      def mirror
-        '--delete' if @mirror
-      end
-
-      ##
-      # Returns S3Sync syntax for syncing recursively
-      def recursive
-        '--recursive'
-      end
-
-      ##
-      # Returns S3Sync syntax for making output verbose
-      def verbose
-        '--verbose'
-      end
-
-      ##
-      # Syntactical suger for the DSL for adding directories
-      def directories(&block)
-        return @directories unless block_given?
-        instance_eval(&block)
-      end
-
-      ##
-      # Adds a path to the @directories array
-      def add(path)
-        @directories << path
-      end
-
-      ##
-      # In order for S3Sync to know what credentials to use, we have to set the
-      # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables, these
-      # evironment variables will be used by S3Sync
-      def set_environment_variables!
-        ENV['AWS_ACCESS_KEY_ID']     = access_key_id
-        ENV['AWS_SECRET_ACCESS_KEY'] = secret_access_key
-        ENV['AWS_CALLING_FORMAT']    = 'SUBDOMAIN'
-      end
-
-      ##
-      # Sets the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY back to nil
-      def unset_environment_variables!
-        ENV['AWS_ACCESS_KEY_ID']     = nil
-        ENV['AWS_SECRET_ACCESS_KEY'] = nil
-        ENV['AWS_CALLING_FORMAT']    = nil
-      end
-
     end
   end
 end

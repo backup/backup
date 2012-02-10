@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../../spec_helper'
+require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe Backup::Configuration::Syncer::S3 do
   before do
@@ -9,11 +9,10 @@ describe Backup::Configuration::Syncer::S3 do
       s3.secret_access_key   = 'my_secret_access_key'
       s3.bucket              = 'my-bucket'
       s3.path                = '/backups/'
-      s3.directories         = '/directories/to/backup/'
       s3.mirror              = true
-      s3.additional_options  = ['--exclude="*.rb"']
     end
   end
+  after { Backup::Configuration::Syncer::S3.clear_defaults! }
 
   it 'should set the default s3 configuration' do
     s3 = Backup::Configuration::Syncer::S3
@@ -21,9 +20,7 @@ describe Backup::Configuration::Syncer::S3 do
     s3.secret_access_key.should   == 'my_secret_access_key'
     s3.bucket.should              == 'my-bucket'
     s3.path.should                == '/backups/'
-    s3.directories.should         == '/directories/to/backup/'
     s3.mirror.should              == true
-    s3.additional_options.should  == ['--exclude="*.rb"']
   end
 
   describe '#clear_defaults!' do
@@ -35,9 +32,7 @@ describe Backup::Configuration::Syncer::S3 do
       s3.secret_access_key.should   == nil
       s3.bucket.should              == nil
       s3.path.should                == nil
-      s3.directories.should         == nil
       s3.mirror.should              == nil
-      s3.additional_options.should  == nil
     end
   end
 end

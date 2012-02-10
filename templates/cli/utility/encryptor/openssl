@@ -1,0 +1,9 @@
+  ##
+  # OpenSSL [Encryptor]
+  #
+  encrypt_with OpenSSL do |encryption|
+    encryption.password      = "my_password"            # From String
+    encryption.password_file = "/path/to/password/file" # Or from File
+    encryption.base64        = true
+    encryption.salt          = true
+  end

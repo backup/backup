@@ -1,139 +1,192 @@
 # encoding: utf-8
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
-require File.dirname(__FILE__) + '/../spec_helper'
+class Parallel; end
 
 describe Backup::Syncer::S3 do
+  describe '#perform!' do
+    let(:syncer)     { Backup::Syncer::S3.new }
+    let(:connection) { stub('connection',
+      :directories => stub('directories', :get => bucket)) }
+    let(:bucket)     { stub('bucket', :files => files) }
+    let(:files)      { [] }
+    let(:content)    { stub('content') }
 
-  let(:s3) do
-    Backup::Syncer::S3.new do |s3|
-      s3.access_key_id      = 'my_access_key_id'
-      s3.secret_access_key  = 'my_secret_access_key'
-      s3.bucket             = 'my-bucket'
-      s3.path               = "/backups"
-      s3.mirror             = true
+    before :each do
+      Fog::Storage.stubs(:new).returns connection
+      File.stubs(:open).returns content
+      File.stubs(:exist?).returns true
+      files.stubs(:create).returns true
 
-      s3.directories do |directory|
-        directory.add "/some/random/directory"
-        directory.add "/another/random/directory"
+      syncer.directories << 'tmp'
+      syncer.path = 'storage'
+
+      Backup::Syncer::S3::SyncContext.any_instance.
+        stubs(:`).returns 'MD5(tmp/foo)= 123abcdef'
+    end
+
+    it "respects the concurrency_type setting with threads" do
+      syncer.concurrency_type = :threads
+
+      Parallel.expects(:each).with(anything, {:in_threads => 2}, anything)
+
+      syncer.perform!
+    end
+
+    it "respects the parallel thread count" do
+      syncer.concurrency_type  = :threads
+      syncer.concurrency_level = 10
+
+      Parallel.expects(:each).with(anything, {:in_threads => 10}, anything)
+
+      syncer.perform!
+    end
+
+    it "respects the concurrency_type setting with processors" do
+      syncer.concurrency_type = :processes
+
+      Parallel.expects(:each).with(anything, {:in_processes => 2}, anything)
+
+      syncer.perform!
+    end
+
+    it "respects the parallel thread count" do
+      syncer.concurrency_type  = :processes
+      syncer.concurrency_level = 10
+
+      Parallel.expects(:each).with(anything, {:in_processes => 10}, anything)
+
+      syncer.perform!
+    end
+
+    context 'file exists locally' do
+      it "uploads a file if it does not exist remotely" do
+        files.expects(:create).with(:key => 'storage/tmp/foo', :body => content)
+
+        syncer.perform!
+      end
+
+      it "uploads a file if it exists remotely with a different MD5" do
+        files << stub('file', :key => 'storage/tmp/foo', :etag => 'abcdef123')
+
+        files.expects(:create).with(:key => 'storage/tmp/foo', :body => content)
+
+        syncer.perform!
+      end
+
+      it "does nothing if the file exists remotely with the same MD5" do
+        files << stub('file', :key => 'storage/tmp/foo', :etag => '123abcdef')
+
+        files.expects(:create).never
+
+        syncer.perform!
+      end
+
+      it "skips the file if it no longer exists locally" do
+        File.stubs(:exist?).returns false
+
+        files.expects(:create).never
+
+        syncer.perform!
+      end
+
+      it "respects the given path" do
+        syncer.path = 'box'
+
+        files.expects(:create).with(:key => 'box/tmp/foo', :body => content)
+
+        syncer.perform!
+      end
+
+      it "uploads the content of the local file" do
+        File.expects(:open).with('tmp/foo').returns content
+
+        syncer.perform!
+      end
+
+      it "creates the connection with the provided credentials" do
+        syncer.access_key_id     = 'my-access'
+        syncer.secret_access_key = 'my-secret'
+        syncer.region            = 'somewhere'
+
+        Fog::Storage.expects(:new).with(
+          :provider              => 'AWS',
+          :aws_access_key_id     => 'my-access',
+          :aws_secret_access_key => 'my-secret',
+          :region                => 'somewhere'
+        ).returns connection
+
+        syncer.perform!
+      end
+
+      it "uses the bucket with the given name" do
+        syncer.bucket = 'leaky'
+
+        connection.directories.expects(:get).with('leaky').returns(bucket)
+
+        syncer.perform!
+      end
+
+      it "creates the bucket if one does not exist" do
+        syncer.bucket = 'leaky'
+        syncer.region = 'elsewhere'
+        connection.directories.stubs(:get).returns nil
+
+        connection.directories.expects(:create).
+          with(:key => 'leaky', :location => 'elsewhere').returns(bucket)
+
+        syncer.perform!
+      end
+
+      it "iterates over each directory" do
+        syncer.directories << 'files'
+
+        Backup::Syncer::S3::SyncContext.any_instance.expects(:`).
+          with('find tmp -print0 | xargs -0 openssl md5 2> /dev/null').
+          returns 'MD5(tmp/foo)= 123abcdef'
+        Backup::Syncer::S3::SyncContext.any_instance.expects(:`).
+          with('find files -print0 | xargs -0 openssl md5 2> /dev/null').
+          returns 'MD5(tmp/foo)= 123abcdef'
+
+        syncer.perform!
+      end
+    end
+
+    context 'file does not exist locally' do
+      let(:file) { stub('file', :key => 'storage/tmp/foo',
+        :etag => '123abcdef') }
+
+      before :each do
+        Backup::Syncer::S3::SyncContext.any_instance.
+          stubs(:`).returns ''
+        files << file
+        File.stubs(:exist?).returns false
+      end
+
+      it "removes the remote file when mirroring is turned on" do
+        syncer.mirror = true
+
+        file.expects(:destroy).once
+
+        syncer.perform!
+      end
+
+      it "leaves the remote file when mirroring is turned off" do
+        syncer.mirror = false
+
+        file.expects(:destroy).never
+
+        syncer.perform!
+      end
+
+      it "does not remove files not under one of the specified directories" do
+        file.stubs(:key).returns 'unsynced/tmp/foo'
+        syncer.mirror = true
+
+        file.expects(:destroy).never
+
+        syncer.perform!
       end
     end
   end
-
-  before do
-    Backup::Configuration::Syncer::S3.clear_defaults!
-  end
-
-  it 'should have defined the configuration properly' do
-    s3.access_key_id.should      == 'my_access_key_id'
-    s3.secret_access_key.should  == 'my_secret_access_key'
-    s3.bucket.should             == 'my-bucket'
-    s3.path.should               == 'backups'
-    s3.mirror.should             == '--delete'
-    s3.directories.should        == ["/some/random/directory", "/another/random/directory"]
-  end
-
-  it 'should use the defaults if a particular attribute has not been defined' do
-    Backup::Configuration::Syncer::S3.defaults do |s3|
-      s3.access_key_id      = 'my_access_key_id'
-      s3.bucket             = 'my-bucket'
-      s3.path               = "/backups"
-      s3.mirror             = true
-    end
-
-    s3 = Backup::Syncer::S3.new do |s3|
-      s3.secret_access_key = 'some_secret_access_key'
-      s3.mirror            = false
-    end
-
-    s3.access_key_id      = 'my_access_key_id'
-    s3.secret_access_key  = 'some_secret_access_key'
-    s3.bucket             = 'my-bucket'
-    s3.path               = "/backups"
-    s3.mirror             = false
-  end
-
-  it 'should have its own defaults' do
-    s3 = Backup::Syncer::S3.new
-    s3.path.should        == 'backups'
-    s3.directories.should == Array.new
-    s3.mirror.should      == nil
-    s3.additional_options.should == []
-  end
-
-  describe '#mirror' do
-    context 'when true' do
-      it do
-        s3.mirror = true
-        s3.mirror.should == '--delete'
-      end
-    end
-
-    context 'when nil/false' do
-      it do
-        s3.mirror = nil
-        s3.mirror.should == nil
-      end
-
-      it do
-        s3.mirror = false
-        s3.mirror.should == nil
-      end
-    end
-  end
-
-  describe '#recursive' do
-    it do
-      s3.recursive.should == '--recursive'
-    end
-  end
-
-  describe '#additional_options' do
-    it do
-      s3.additional_options = ['--exclude="*.rb"']
-      s3.options.should == '--verbose --recursive --delete --exclude="*.rb"'
-    end
-  end
-
-  describe '#verbose' do
-    it do
-      s3.verbose.should == '--verbose'
-    end
-  end
-
-  describe '#directories' do
-    context 'when its empty' do
-      it do
-        s3.directories         = []
-        s3.directories.should == []
-      end
-    end
-
-    context 'when it has items' do
-      it do
-        s3.directories         = ['directory1', 'directory1/directory2', 'directory1/directory2/directory3']
-        s3.directories.should == ['directory1', 'directory1/directory2', 'directory1/directory2/directory3']
-      end
-    end
-  end
-
-  describe '#options' do
-    it do
-      s3.options.should == "--verbose --recursive --delete"
-    end
-  end
-
-  describe '#perform' do
-    it 'should sync two directories' do
-      s3.expects(:utility).with(:s3sync).returns(:s3sync).twice
-
-      Backup::Logger.expects(:message).with("Backup::Syncer::S3 started syncing '/some/random/directory'.")
-      s3.expects(:run).with("s3sync --verbose --recursive --delete '/some/random/directory' 'my-bucket:backups'")
-
-      Backup::Logger.expects(:message).with("Backup::Syncer::S3 started syncing '/another/random/directory'.")
-      s3.expects(:run).with("s3sync --verbose --recursive --delete '/another/random/directory' 'my-bucket:backups'")
-
-      s3.perform!
-    end
-  end
-
 end

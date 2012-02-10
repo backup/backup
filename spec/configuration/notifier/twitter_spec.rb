@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../../spec_helper'
+require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe Backup::Configuration::Notifier::Twitter do
   before do
@@ -11,6 +11,7 @@ describe Backup::Configuration::Notifier::Twitter do
       tweet.oauth_token_secret = 'my_oauth_token_secret'
     end
   end
+  after { Backup::Configuration::Notifier::Twitter.clear_defaults! }
 
   it 'should set the default tweet configuration' do
     tweet = Backup::Configuration::Notifier::Twitter

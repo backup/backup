@@ -2,7 +2,7 @@
 
 module Backup
   class Archive
-    include Backup::CLI
+    include Backup::CLI::Helpers
 
     ##
     # Stores the name of the archive
@@ -17,57 +17,93 @@ module Backup
     attr_accessor :excludes
 
     ##
-    # Stores the path to the archive directory
-    attr_accessor :archive_path
+    # String of additional arguments for the `tar` command
+    attr_accessor :tar_args
 
     ##
     # Takes the name of the archive and the configuration block
-    def initialize(name, &block)
-      @name         = name.to_sym
-      @paths        = Array.new
-      @excludes     = Array.new
-      @archive_path = File.join(TMP_PATH, TRIGGER, 'archive')
+    def initialize(model, name, &block)
+      @model    = model
+      @name     = name.to_s
+      @paths    = Array.new
+      @excludes = Array.new
+      @tar_args = ''
 
-      instance_eval(&block)
+      instance_eval(&block) if block_given?
     end
 
     ##
     # Adds new paths to the @paths instance variable array
     def add(path)
-      @paths << path
+      path = File.expand_path(path)
+      if File.exist?(path)
+        @paths << path
+      else
+        Logger.warn Errors::Archive::NotFoundError.new(<<-EOS)
+          The following path was not found:
+          #{ path }
+          This path will be omitted from the '#{ name }' Archive.
+        EOS
+      end
     end
 
     ##
     # Adds new paths to the @excludes instance variable array
     def exclude(path)
-      @excludes << path
+      @excludes << File.expand_path(path)
+    end
+
+    ##
+    # Adds the given String of +options+ to the `tar` command.
+    # e.g. '-h --xattrs'
+    def tar_options(options)
+      @tar_args = options
     end
 
     ##
     # Archives all the provided paths in to a single .tar file
     # and places that .tar file in the folder which later will be packaged
+    # If the model is configured with a Compressor, the tar command output
+    # will be piped through the Compressor command and the file extension
+    # will be adjusted to indicate the type of compression used.
     def perform!
-      mkdir(archive_path)
-      Logger.message("#{ self.class } started packaging and archiving #{ paths.map { |path| "\"#{path}\""}.join(", ") }.")
-      run("#{ utility(:tar) } -c -f '#{ File.join(archive_path, "#{name}.tar") }' #{ paths_to_exclude } #{ paths_to_package } 2> /dev/null")
+      Logger.message "#{ self.class } started packaging and archiving:\n" +
+          paths.map {|path| "  #{path}" }.join("\n")
+
+      archive_path = File.join(Config.tmp_path, @model.trigger, 'archives')
+      FileUtils.mkdir_p(archive_path)
+
+      archive_ext = 'tar'
+      archive_cmd = "#{ utility(:tar) } #{ tar_args } -cf - " +
+          "#{ paths_to_exclude } #{ paths_to_package }"
+
+      if @model.compressor
+        @model.compressor.compress_with do |command, ext|
+          archive_cmd << " | #{command}"
+          archive_ext << ext
+        end
+      end
+
+      archive_cmd << " > '#{ File.join(archive_path, "#{name}.#{archive_ext}") }'"
+
+      run(archive_cmd)
     end
 
-  private
+    private
 
     ##
     # Returns a "tar-ready" string of all the specified paths combined
     def paths_to_package
-      paths.map do |path|
-        "'#{path}'"
-      end.join("\s")
+      paths.map {|path| "'#{path}'" }.join(' ')
     end
 
     ##
     # Returns a "tar-ready" string of all the specified excludes combined
     def paths_to_exclude
       if excludes.any?
-        excludes.map{ |e| "--exclude='#{e}'" }.join(" ")
+        excludes.map {|path| "--exclude='#{path}'" }.join(' ')
       end
     end
+
   end
 end

@@ -1,123 +1,219 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Storage::SFTP do
-
-  let(:sftp) do
-    Backup::Storage::SFTP.new do |sftp|
+  let(:model)   { Backup::Model.new(:test_trigger, 'test label') }
+  let(:storage) do
+    Backup::Storage::SFTP.new(model) do |sftp|
       sftp.username  = 'my_username'
       sftp.password  = 'my_password'
       sftp.ip        = '123.45.678.90'
-      sftp.port      = 22
-      sftp.path      = '~/backups/'
-      sftp.keep      = 20
+      sftp.keep      = 5
     end
   end
 
-  before do
-    Backup::Configuration::Storage::SFTP.clear_defaults!
-  end
+  describe '#initialize' do
+    it 'should set the correct values' do
+      storage.username.should == 'my_username'
+      storage.password.should == 'my_password'
+      storage.ip.should       == '123.45.678.90'
+      storage.port.should     == 22
+      storage.path.should     == 'backups'
 
-  it 'should have defined the configuration properly' do
-    sftp.username.should == 'my_username'
-    sftp.password.should == 'my_password'
-    sftp.ip.should       == '123.45.678.90'
-    sftp.port.should     == 22
-    sftp.path.should     == 'backups/'
-    sftp.keep.should     == 20
-  end
-
-  it 'should use the defaults if a particular attribute has not been defined' do
-    Backup::Configuration::Storage::SFTP.defaults do |sftp|
-      sftp.username = 'my_default_username'
-      sftp.password = 'my_default_password'
-      sftp.path     = '~/backups'
+      storage.storage_id.should be_nil
+      storage.keep.should       == 5
     end
 
-    sftp = Backup::Storage::SFTP.new do |sftp|
-      sftp.password = 'my_password'
-      sftp.ip       = '123.45.678.90'
+    it 'should set a storage_id if given' do
+      sftp = Backup::Storage::SFTP.new(model, 'my storage_id')
+      sftp.storage_id.should == 'my storage_id'
     end
 
-    sftp.username.should == 'my_default_username'
-    sftp.password.should == 'my_password'
-    sftp.ip.should       == '123.45.678.90'
-    sftp.port.should     == 22
-  end
+    it 'should remove any preceeding tilde and slash from the path' do
+      storage = Backup::Storage::SFTP.new(model) do |sftp|
+        sftp.path = '~/my_backups/path'
+      end
+      storage.path.should == 'my_backups/path'
+    end
 
-  it 'should have its own defaults' do
-    sftp = Backup::Storage::SFTP.new
-    sftp.port.should == 22
-    sftp.path.should == 'backups'
-  end
+    context 'when setting configuration defaults' do
+      after { Backup::Configuration::Storage::SFTP.clear_defaults! }
+
+      it 'should use the configured defaults' do
+        Backup::Configuration::Storage::SFTP.defaults do |sftp|
+          sftp.username  = 'some_username'
+          sftp.password  = 'some_password'
+          sftp.ip        = 'some_ip'
+          sftp.port      = 'some_port'
+          sftp.path      = 'some_path'
+          sftp.keep      = 'some_keep'
+        end
+        storage = Backup::Storage::SFTP.new(model)
+        storage.username.should == 'some_username'
+        storage.password.should == 'some_password'
+        storage.ip.should       == 'some_ip'
+        storage.port.should     == 'some_port'
+        storage.path.should     == 'some_path'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       == 'some_keep'
+      end
+
+      it 'should override the configured defaults' do
+        Backup::Configuration::Storage::SFTP.defaults do |sftp|
+          sftp.username  = 'old_username'
+          sftp.password  = 'old_password'
+          sftp.ip        = 'old_ip'
+          sftp.port      = 'old_port'
+          sftp.path      = 'old_path'
+          sftp.keep      = 'old_keep'
+        end
+        storage = Backup::Storage::SFTP.new(model) do |sftp|
+          sftp.username  = 'new_username'
+          sftp.password  = 'new_password'
+          sftp.ip        = 'new_ip'
+          sftp.port      = 'new_port'
+          sftp.path      = 'new_path'
+          sftp.keep      = 'new_keep'
+        end
+
+        storage.username.should == 'new_username'
+        storage.password.should == 'new_password'
+        storage.ip.should       == 'new_ip'
+        storage.port.should     == 'new_port'
+        storage.path.should     == 'new_path'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       == 'new_keep'
+      end
+    end # context 'when setting configuration defaults'
+
+  end # describe '#initialize'
 
   describe '#connection' do
-    it 'should establish a connection to the remote server using the provided ip address and credentials' do
-      Net::SFTP.expects(:start).with('123.45.678.90', 'my_username', :password => 'my_password', :port => 22)
-      sftp.send(:connection)
+    let(:connection) { mock }
+
+    it 'should yield a connection to the remote server' do
+      Net::SFTP.expects(:start).with(
+        '123.45.678.90', 'my_username', :password => 'my_password', :port => 22
+      ).yields(connection)
+
+      storage.send(:connection) do |sftp|
+        sftp.should be(connection)
+      end
     end
   end
 
   describe '#transfer!' do
-    let(:connection) { mock('Fog::Storage') }
+    let(:connection) { mock }
+    let(:package) { mock }
+    let(:s) { sequence '' }
 
     before do
-      Net::SFTP.stubs(:start).returns(connection)
-      sftp.stubs(:create_remote_directories!)
+      storage.instance_variable_set(:@package, package)
+      storage.stubs(:storage_name).returns('Storage::SFTP')
+      storage.stubs(:local_path).returns('/local/path')
+      storage.stubs(:connection).yields(connection)
     end
 
-    it 'should transfer the provided file to the path' do
-      Backup::Model.new('blah', 'blah') {}
-      file = mock("Backup::Storage::SFTP::File")
-
-      sftp.expects(:create_remote_directories!)
-      connection.expects(:upload!).with(
-        File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"),
-        File.join('backups/myapp', "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
+    it 'should transfer the package files' do
+      storage.expects(:remote_path_for).in_sequence(s).with(package).
+          returns('remote/path')
+      storage.expects(:create_remote_path).in_sequence(s).with(
+        'remote/path', connection
       )
 
-      sftp.send(:transfer!)
+      storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
+        multiple_yields(
+        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
+        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
+      )
+      # first yield
+      Backup::Logger.expects(:message).in_sequence(s).with(
+        "Storage::SFTP started transferring " +
+        "'2011.12.31.11.00.02.backup.tar.enc-aa' to '123.45.678.90'."
+      )
+      connection.expects(:upload!).in_sequence(s).with(
+        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'),
+        File.join('remote/path', 'backup.tar.enc-aa')
+      )
+      # second yield
+      Backup::Logger.expects(:message).in_sequence(s).with(
+        "Storage::SFTP started transferring " +
+        "'2011.12.31.11.00.02.backup.tar.enc-ab' to '123.45.678.90'."
+      )
+      connection.expects(:upload!).in_sequence(s).with(
+        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'),
+        File.join('remote/path', 'backup.tar.enc-ab')
+      )
+
+      storage.send(:transfer!)
     end
-  end
+  end # describe '#transfer!'
 
   describe '#remove!' do
-    let(:connection) { mock('Net::SFTP') }
+    let(:package) { mock }
+    let(:connection) { mock }
+    let(:s) { sequence '' }
 
     before do
-      Net::SFTP.stubs(:start).returns(connection)
+      storage.stubs(:storage_name).returns('Storage::SFTP')
+      storage.stubs(:connection).yields(connection)
     end
 
-    it 'should remove the file from the remote server path' do
-      connection.expects(:remove!).with("backups/myapp/#{ Backup::TIME }.#{ Backup::TRIGGER }.tar")
-      sftp.send(:remove!)
+    it 'should remove the package files' do
+      storage.expects(:remote_path_for).in_sequence(s).with(package).
+          returns('remote/path')
+
+      storage.expects(:transferred_files_for).in_sequence(s).with(package).
+        multiple_yields(
+        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
+        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
+      )
+      # first yield
+      Backup::Logger.expects(:message).in_sequence(s).with(
+        "Storage::SFTP started removing " +
+        "'2011.12.31.11.00.02.backup.tar.enc-aa' from '123.45.678.90'."
+      )
+      connection.expects(:remove!).in_sequence(s).with(
+        File.join('remote/path', 'backup.tar.enc-aa')
+      )
+      # second yield
+      Backup::Logger.expects(:message).in_sequence(s).with(
+        "Storage::SFTP started removing " +
+        "'2011.12.31.11.00.02.backup.tar.enc-ab' from '123.45.678.90'."
+      )
+      connection.expects(:remove!).in_sequence(s).with(
+        File.join('remote/path', 'backup.tar.enc-ab')
+      )
+
+      connection.expects(:rmdir!).with('remote/path').in_sequence(s)
+
+      storage.send(:remove!, package)
     end
-  end
+  end # describe '#remove!'
 
-  describe '#create_remote_directories!' do
-    let(:connection) { mock('Net::SFTP') }
+  describe '#create_remote_path' do
+    let(:connection)  { mock }
+    let(:remote_path) { 'backups/folder/another_folder' }
+    let(:s) { sequence '' }
+    let(:sftp_response) { stub(:code => 11, :message => nil) }
+    let(:sftp_status_exception) { Net::SFTP::StatusException.new(sftp_response) }
 
-    before do
-      Net::SFTP.stubs(:start).returns(connection)
-    end
+    context 'while properly creating remote directories one by one' do
+      it 'should rescue any SFTP::StatusException and continue' do
+        connection.expects(:mkdir!).in_sequence(s).
+            with("backups").raises(sftp_status_exception)
+        connection.expects(:mkdir!).in_sequence(s).
+            with("backups/folder")
+        connection.expects(:mkdir!).in_sequence(s).
+            with("backups/folder/another_folder")
 
-    it 'should properly create remote directories one by one' do
-      sftp.path = 'backups/some_other_folder/another_folder'
-
-      connection.expects(:mkdir!).with('backups')
-      connection.expects(:mkdir!).with('backups/some_other_folder')
-      connection.expects(:mkdir!).with('backups/some_other_folder/another_folder')
-      connection.expects(:mkdir!).with('backups/some_other_folder/another_folder/myapp')
-
-      sftp.send(:create_remote_directories!)
-    end
-  end
-
-  describe '#perform' do
-    it 'should invoke transfer! and cycle!' do
-      sftp.expects(:transfer!)
-      sftp.expects(:cycle!)
-      sftp.perform!
+        expect do
+          storage.send(:create_remote_path, remote_path, connection)
+        end.not_to raise_error
+      end
     end
   end
 

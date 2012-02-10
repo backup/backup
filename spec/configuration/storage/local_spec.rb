@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../../spec_helper'
+require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe Backup::Configuration::Storage::Local do
   before do
@@ -9,6 +9,7 @@ describe Backup::Configuration::Storage::Local do
       local.keep = 20
     end
   end
+  after { Backup::Configuration::Storage::Local.clear_defaults! }
 
   it 'should set the default local configuration' do
     local = Backup::Configuration::Storage::Local

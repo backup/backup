@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../../spec_helper'
+require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe Backup::Configuration::Storage::S3 do
   before do
@@ -12,6 +12,7 @@ describe Backup::Configuration::Storage::S3 do
       s3.path               = 'my_backups'
     end
   end
+  after { Backup::Configuration::Storage::S3.clear_defaults! }
 
   it 'should set the default S3 configuration' do
     s3 = Backup::Configuration::Storage::S3

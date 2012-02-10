@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../../spec_helper'
+require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe Backup::Configuration::Encryptor::GPG do
   before do
@@ -8,6 +8,7 @@ describe Backup::Configuration::Encryptor::GPG do
       encryptor.key = 'my_key'
     end
   end
+  after { Backup::Configuration::Encryptor::GPG.clear_defaults! }
 
   it 'should set the default encryptor configuration' do
     encryptor = Backup::Configuration::Encryptor::GPG

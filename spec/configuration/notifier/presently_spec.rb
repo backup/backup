@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../../spec_helper'
+require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe Backup::Configuration::Notifier::Presently do
   before do
@@ -11,6 +11,7 @@ describe Backup::Configuration::Notifier::Presently do
       presently.group_id  = 'my_group_id'
     end
   end
+  after { Backup::Configuration::Notifier::Presently.clear_defaults! }
 
   it 'should set the default tweet configuration' do
     presently = Backup::Configuration::Notifier::Presently

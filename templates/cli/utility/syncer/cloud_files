@@ -1,0 +1,48 @@
+  ##
+  # Rackspace Cloud Files [Syncer]
+  #
+  # Available Auth URLs:
+  #
+  #  - https://auth.api.rackspacecloud.com     (US - Default)
+  #  - https://lon.auth.api.rackspacecloud.com (UK)
+  #
+  # Servicenet:
+  #
+  #  Set this to 'true' if Backup runs on a Rackspace server. It will avoid
+  #  transfer charges and it's more performant.
+  #
+  # Mirroring:
+  #
+  #  When enabled it will keep an exact mirror of your filesystem on Cloud Files. This means
+  #  that when you remove a file from the filesystem, it will also remote it from Cloud Files.
+  #
+  # Concurrency (concurrency_type):
+  #
+  #  - :threads (recommended)
+  #  - :processes
+  #  - false
+  #
+  #  Threads are a good choice for such sync operations and doesn't consume any additional memory.
+  #  Using :processes is discouraged as it's likely to consumes a lot of memory.
+  #
+  # Concurrency (concurrency_level):
+  #
+  #  Defaults to 2, the higher the level, the faster it will sync.
+  #  If you want a high concurrency level (>2), use :threads and not :processes.
+  #
+  sync_with CloudFiles do |cf|
+    cf.username          = "my_username"
+    cf.api_key           = "my_api_key"
+    cf.container         = "my_container"
+    cf.auth_url          = "https://auth.api.rackspacecloud.com"
+    cf.servicenet        = false
+    cf.path              = "/backups"
+    cf.mirror            = true
+    cf.concurrency_type  = :threads
+    cf.concurrency_level = 50
+
+    cf.directories do |directory|
+      directory.add "/path/to/directory/to/sync"
+      directory.add "/path/to/other/directory/to/sync"
+    end
+  end

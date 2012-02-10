@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../../spec_helper'
+require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe Backup::Configuration::Compressor::Lzma do
   before do
@@ -9,6 +9,7 @@ describe Backup::Configuration::Compressor::Lzma do
       compressor.fast = true
     end
   end
+  after { Backup::Configuration::Compressor::Lzma.clear_defaults! }
 
   it 'should set the default compressor configuration' do
     compressor = Backup::Configuration::Compressor::Lzma

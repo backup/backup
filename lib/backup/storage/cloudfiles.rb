@@ -13,28 +13,26 @@ module Backup
       attr_accessor :username, :api_key, :auth_url
 
       ##
+      # Rackspace Service Net
+      # (LAN-based transfers to avoid charges and improve performance)
+      attr_accessor :servicenet
+
+      ##
       # Rackspace Cloud Files container name and path
       attr_accessor :container, :path
 
       ##
-      # Creates a new instance of the Rackspace Cloud Files storage object
-      # First it sets the defaults (if any exist) and then evaluates
-      # the configuration block which may overwrite these defaults
-      def initialize(&block)
-        load_defaults!
+      # Creates a new instance of the storage object
+      def initialize(model, storage_id = nil, &block)
+        super(model, storage_id)
 
-        @path ||= 'backups'
+        @servicenet ||= false
+        @path       ||= 'backups'
 
         instance_eval(&block) if block_given?
-
-        @time = TIME
       end
 
-      ##
-      # This is the remote path to where the backup files will be stored
-      def remote_path
-        File.join(path, TRIGGER)
-      end
+      private
 
       ##
       # This is the provider that Fog uses for the Cloud Files Storage
@@ -43,52 +41,45 @@ module Backup
       end
 
       ##
-      # Performs the backup transfer
-      def perform!
-        transfer!
-        cycle!
-      end
-
-    private
-
-      ##
-      # Establishes a connection to Rackspace Cloud Files and returns the Fog object.
-      # Not doing any instance variable caching because this object gets persisted in YAML
-      # format to a file and will issues. This, however has no impact on performance since it only
-      # gets invoked once per object for a #transfer! and once for a remove! Backups run in the
-      # background anyway so even if it were a bit slower it shouldn't matter.
+      # Establishes a connection to Rackspace Cloud Files
       def connection
-        Fog::Storage.new(
-          :provider           => provider,
-          :rackspace_username => username,
-          :rackspace_api_key  => api_key,
-          :rackspace_auth_url => auth_url
+        @connection ||= Fog::Storage.new(
+          :provider             => provider,
+          :rackspace_username   => username,
+          :rackspace_api_key    => api_key,
+          :rackspace_auth_url   => auth_url,
+          :rackspace_servicenet => servicenet
         )
       end
 
       ##
       # Transfers the archived file to the specified Cloud Files container
       def transfer!
-        begin
-          Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
-          connection.put_object(
-            container,
-            File.join(remote_path, remote_file),
-            File.open(File.join(local_path, local_file))
-          )
-        rescue Excon::Errors::SocketError => e
-          puts "\nAn error occurred while trying to transfer the backup."
-          puts "Make sure the container exists and try again.\n\n"
-          exit
+        remote_path = remote_path_for(@package)
+
+        files_to_transfer_for(@package) do |local_file, remote_file|
+          Logger.message "#{storage_name} started transferring '#{ local_file }'."
+
+          File.open(File.join(local_path, local_file), 'r') do |file|
+            connection.put_object(
+              container, File.join(remote_path, remote_file), file
+            )
+          end
         end
       end
 
       ##
-      # Removes the transferred archive file from the Cloud Files container
-      def remove!
-        begin
+      # Removes the transferred archive file(s) from the storage location.
+      # Any error raised will be rescued during Cycling
+      # and a warning will be logged, containing the error message.
+      def remove!(package)
+        remote_path = remote_path_for(package)
+
+        transferred_files_for(package) do |local_file, remote_file|
+          Logger.message "#{storage_name} started removing '#{ local_file }' " +
+              "from container '#{ container }'."
           connection.delete_object(container, File.join(remote_path, remote_file))
-        rescue Excon::Errors::SocketError; end
+        end
       end
 
     end

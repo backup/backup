@@ -58,7 +58,7 @@ describe Backup::Syncer::SVNSync do
 
   describe '#local_repository_exists?' do
     it "returns false when not in a working copy" do
-      svnsync.stubs(:run).raises(Backup::Exception::CommandFailed)
+      svnsync.stubs(:run).raises(Backup::Errors::CLI::SystemCallError)
       svnsync.local_repository_exists?.should be_false
     end
 
@@ -98,6 +98,7 @@ describe Backup::Syncer::SVNSync do
 
     it 'initializes the repo if not initialized' do
       svnsync.stubs(:local_repository_exists?).returns false
+      FileUtils.expects(:mkdir_p).with(svnsync.path)
       svnsync.expects(:initialize_repository)
       svnsync.perform!
     end
