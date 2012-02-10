@@ -1,0 +1,30 @@
+  ##
+  # SVNSync [Syncer]
+  #
+  #  This mirrors a remote svn repository using svnsync ( http://svn.apache.org/repos/asf/subversion/trunk/notes/svnsync.txt  )
+  #
+  #  The backup repositories are created using svnadmin.
+  #
+  # Notes about usage:
+  #
+  #  As a result of how svsync works, the backup must be performed on the server in which the final backup is stored.
+  #  In other words, this is not a PUSH-type backup, but a PULL one.
+  #
+  # Requirements:
+  #
+  #  svnsync must be accessible from the command line.
+  #  svnadmin must be accesible from the command line.
+  #  The account performing the backup must be able to access the remote svn repository.
+  #  The account performing the backup must be able to perform svnadmin locally.
+  #
+
+  sync_with SVNSync do |svnsync|
+    svnsync.protocol     = "http" # defaults to "http". Could also be "https" or "svn"
+    svnsync.port         = 80     # defaults to 80. Could also be 443, 3690, or a custom one
+    svnsync.username     = "peter"
+    svnsync.password     = "secret"
+    svnsync.host         = "svn.example.com"
+    svnsync.repo_path    = "/project-1" # the path in the host ( svn.example.com/project-1 )
+    svnsync.path         = "/home/backup/svn/project-1"  # the path where the repo is stored locally
+    svnsync.options      = ""     # other options to pass in to the svnsync command (string, defaults to empty)
+  end
