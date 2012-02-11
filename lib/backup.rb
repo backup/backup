@@ -37,22 +37,6 @@ module Backup
   TEMPLATE_PATH      = File.expand_path('../../templates', __FILE__)
 
   ##
-  # Autoload Backup base files
-  autoload :Model,      File.join(LIBRARY_PATH, 'model')
-  autoload :Archive,    File.join(LIBRARY_PATH, 'archive')
-  autoload :Packager,   File.join(LIBRARY_PATH, 'packager')
-  autoload :Package,    File.join(LIBRARY_PATH, 'package')
-  autoload :Cleaner,    File.join(LIBRARY_PATH, 'cleaner')
-  autoload :Splitter,   File.join(LIBRARY_PATH, 'splitter')
-  autoload :Config,     File.join(LIBRARY_PATH, 'config')
-  autoload :Binder,     File.join(LIBRARY_PATH, 'binder')
-  autoload :Template,   File.join(LIBRARY_PATH, 'template')
-  autoload :Dependency, File.join(LIBRARY_PATH, 'dependency')
-  autoload :Logger,     File.join(LIBRARY_PATH, 'logger')
-  autoload :Version,    File.join(LIBRARY_PATH, 'version')
-  autoload :Errors,     File.join(LIBRARY_PATH, 'errors')
-
-  ##
   # Autoload Backup CLI files
   module CLI
     autoload :Helpers, File.join(CLI_PATH, 'helpers')
@@ -197,5 +181,23 @@ module Backup
       autoload :Riak,       File.join(CONFIGURATION_PATH, 'database', 'riak')
     end
   end
+
+  ##
+  # Require Backup base files
+  %w{
+    model
+    archive
+    packager
+    package
+    cleaner
+    splitter
+    config
+    binder
+    template
+    dependency
+    logger
+    version
+    errors
+  }.each {|lib| require File.join(LIBRARY_PATH, lib) }
 
 end
