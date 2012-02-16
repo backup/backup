@@ -47,7 +47,7 @@ module Backup
       ##
       # Performs the Sync operation
       def perform!
-        Logger.message("#{ self.class } started the syncing process:")
+        Logger.message("#{ syncer_name } started the syncing process:")
 
         directories.each do |directory|
           SyncContext.new(directory, repository_object, path).
@@ -80,7 +80,8 @@ module Backup
           when :processes
             Parallel.each all_file_names, :in_processes => concurrency_level, &block
           else
-            raise "Unknown concurrency_type setting: #{concurrency_type.inspect}"
+            raise Errors::Syncer::Cloud::ConfigurationError,
+                "Unknown concurrency_type setting: #{concurrency_type.inspect}"
           end
         end
 

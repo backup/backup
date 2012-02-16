@@ -37,22 +37,6 @@ module Backup
   TEMPLATE_PATH      = File.expand_path('../../templates', __FILE__)
 
   ##
-  # Autoload Backup base files
-  autoload :Model,      File.join(LIBRARY_PATH, 'model')
-  autoload :Archive,    File.join(LIBRARY_PATH, 'archive')
-  autoload :Packager,   File.join(LIBRARY_PATH, 'packager')
-  autoload :Package,    File.join(LIBRARY_PATH, 'package')
-  autoload :Cleaner,    File.join(LIBRARY_PATH, 'cleaner')
-  autoload :Splitter,   File.join(LIBRARY_PATH, 'splitter')
-  autoload :Config,     File.join(LIBRARY_PATH, 'config')
-  autoload :Binder,     File.join(LIBRARY_PATH, 'binder')
-  autoload :Template,   File.join(LIBRARY_PATH, 'template')
-  autoload :Dependency, File.join(LIBRARY_PATH, 'dependency')
-  autoload :Logger,     File.join(LIBRARY_PATH, 'logger')
-  autoload :Version,    File.join(LIBRARY_PATH, 'version')
-  autoload :Errors,     File.join(LIBRARY_PATH, 'errors')
-
-  ##
   # Autoload Backup CLI files
   module CLI
     autoload :Helpers, File.join(CLI_PATH, 'helpers')
@@ -87,6 +71,11 @@ module Backup
       autoload :Local, File.join(SYNCER_PATH, 'rsync', 'local')
       autoload :Push,  File.join(SYNCER_PATH, 'rsync', 'push')
       autoload :Pull,  File.join(SYNCER_PATH, 'rsync', 'pull')
+    end
+    module SCM
+      autoload :Base, File.join(SYNCER_PATH, 'scm', 'base')
+      autoload :Git,  File.join(SYNCER_PATH, 'scm', 'git')
+      autoload :SVN,  File.join(SYNCER_PATH, 'scm', 'svn')
     end
   end
 
@@ -180,11 +169,16 @@ module Backup
       autoload :Cloud,      File.join(CONFIGURATION_PATH, 'syncer', 'cloud')
       autoload :CloudFiles, File.join(CONFIGURATION_PATH, 'syncer', 'cloud_files')
       autoload :S3,         File.join(CONFIGURATION_PATH, 'syncer', 's3')
+      module SCM
+        autoload :Base,     File.join(CONFIGURATION_PATH, 'syncer', 'scm', 'base')
+        autoload :Git,      File.join(CONFIGURATION_PATH, 'syncer', 'scm', 'git')
+        autoload :SVN,      File.join(CONFIGURATION_PATH, 'syncer', 'scm', 'svn')
+      end
       module RSync
-        autoload :Base,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'base')
-        autoload :Local, File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'local')
-        autoload :Push,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'push')
-        autoload :Pull,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'pull')
+        autoload :Base,     File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'base')
+        autoload :Local,    File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'local')
+        autoload :Push,     File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'push')
+        autoload :Pull,     File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'pull')
       end
     end
 
@@ -197,5 +191,23 @@ module Backup
       autoload :Riak,       File.join(CONFIGURATION_PATH, 'database', 'riak')
     end
   end
+
+  ##
+  # Require Backup base files
+  %w{
+    model
+    archive
+    packager
+    package
+    cleaner
+    splitter
+    config
+    binder
+    template
+    dependency
+    logger
+    version
+    errors
+  }.each {|lib| require File.join(LIBRARY_PATH, lib) }
 
 end

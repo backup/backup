@@ -1,0 +1,27 @@
+  ##
+  # Git [Syncer]
+  #
+  #  This mirrors a remote git repository
+  #
+  # Notes about usage:
+  #
+  #  The backup must be performed on the server in which the final data is stored.
+  #  In other words, this is not a PUSH-type backup, but a PULL one.
+  #
+  # Requirements:
+  #
+  #  git must be accessible from the command line.
+  #  The account performing the backup must be able to access the remote repository.
+
+  sync_with SCM::Git do |git|
+    git.protocol     = "git" # Defaults to 'git'. Could also be "http" or "https"
+    git.port         = 9418  # Optional. Could also be 80, 443, or a custom one
+    git.username     = "peter"  # optional
+    git.password     = "secret" # optional
+    git.ip           = "git.example.com"
+    git.path         = "/home/backup/git" # Defaults to 'backups'. The path where the repos will be stored locally.
+    git.repositories do # absolute paths to repositories (git.example.com/project-1.git ...)
+      add '/project-1.git'
+      add '/another/project/repo.git'
+    end
+  end
