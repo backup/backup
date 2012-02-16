@@ -50,7 +50,11 @@ module Backup
         end
 
         def repository_absolute_local_path(repository)
-          File.absolute_path(repository_local_path(repository))
+          if File.respond_to? :absolute_path # ruby 1.9.x
+            File.absolute_path(repository_local_path(repository))
+          else #ruby 1.8.7
+            File.expand_path(repository_local_path(repository))
+          end
         end
 
         def repository_local_container_path(repository)

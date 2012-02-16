@@ -127,9 +127,17 @@ describe Backup::Syncer::SCM::Base do
   end
 
   describe "#repository_absolute_local_path" do
-    it "returns the absolute path of a given repository" do
-      result = "/home/jimmy/backups/my/repo"
+    let(:result) { "/home/jimmy/backups/my/repo" }
+
+    it "returns the absolute path of a given repository (ruby 1.9.x)" do
+      File.expects(:respond_to?).with(:absolute_path).returns(true)
       File.expects(:absolute_path).with("backups/my/repo").returns(result)
+      syncer.repository_absolute_local_path("/my/repo").should == result
+    end
+
+    it "returns the absolute path of a given repository (ruby 1.8.7)" do
+      File.expects(:respond_to?).with(:absolute_path).returns(false)
+      File.expects(:expand_path).with("backups/my/repo").returns(result)
       syncer.repository_absolute_local_path("/my/repo").should == result
     end
   end
