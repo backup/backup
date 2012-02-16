@@ -88,6 +88,7 @@ Below you find a list of components that Backup currently supports. If you'd lik
 - RSync (Push, Pull and Local)
 - Amazon S3
 - Rackspce Cloud Files
+- SCM support (SVN and Git)
 
 [Syncer Wiki Page](https://github.com/meskyanichi/backup/wiki/Syncers)
 

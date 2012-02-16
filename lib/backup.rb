@@ -72,6 +72,11 @@ module Backup
       autoload :Push,  File.join(SYNCER_PATH, 'rsync', 'push')
       autoload :Pull,  File.join(SYNCER_PATH, 'rsync', 'pull')
     end
+    module SCM
+      autoload :Base, File.join(SYNCER_PATH, 'scm', 'base')
+      autoload :Git,  File.join(SYNCER_PATH, 'scm', 'git')
+      autoload :SVN,  File.join(SYNCER_PATH, 'scm', 'svn')
+    end
   end
 
   ##
@@ -164,11 +169,16 @@ module Backup
       autoload :Cloud,      File.join(CONFIGURATION_PATH, 'syncer', 'cloud')
       autoload :CloudFiles, File.join(CONFIGURATION_PATH, 'syncer', 'cloud_files')
       autoload :S3,         File.join(CONFIGURATION_PATH, 'syncer', 's3')
+      module SCM
+        autoload :Base,     File.join(CONFIGURATION_PATH, 'syncer', 'scm', 'base')
+        autoload :Git,      File.join(CONFIGURATION_PATH, 'syncer', 'scm', 'git')
+        autoload :SVN,      File.join(CONFIGURATION_PATH, 'syncer', 'scm', 'svn')
+      end
       module RSync
-        autoload :Base,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'base')
-        autoload :Local, File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'local')
-        autoload :Push,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'push')
-        autoload :Pull,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'pull')
+        autoload :Base,     File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'base')
+        autoload :Local,    File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'local')
+        autoload :Push,     File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'push')
+        autoload :Pull,     File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'pull')
       end
     end
 

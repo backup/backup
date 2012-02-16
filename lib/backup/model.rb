@@ -128,7 +128,7 @@ module Backup
       # Warn user of DSL change from 'RSync' to 'RSync::Local'
       if name.to_s == 'Backup::Config::RSync'
         Logger.warn Errors::ConfigError.new(<<-EOS)
-          Configuration Update Needed for Syncer::RSync
+          Config Update Needed for Syncer::RSync
           The RSync Syncer has been split into three separate modules:
           RSync::Local, RSync::Push and RSync::Pull
           Please update your configuration for your local RSync Syncer

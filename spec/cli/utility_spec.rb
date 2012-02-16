@@ -188,7 +188,7 @@ describe 'Backup::CLI::Utility' do
           [--config-path=CONFIG_PATH]  # Path to your Backup configuration directory
           [--databases=DATABASES]      # (mongodb, mysql, postgresql, redis, riak)
           [--storages=STORAGES]        # (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
-          [--syncers=SYNCERS]          # (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
+          [--syncers=SYNCERS]          # (cloud_files, rsync_local, rsync_pull, rsync_push, s3, scm_git, scm_svn)
           [--encryptors=ENCRYPTORS]    # (gpg, openssl)
           [--compressors=COMPRESSORS]  # (bzip2, gzip, lzma, pbzip2)
           [--notifiers=NOTIFIERS]      # (campfire, hipchat, mail, presently, prowl, twitter)
