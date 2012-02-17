@@ -99,6 +99,7 @@ module Backup
     autoload :MongoDB,    File.join(DATABASE_PATH, 'mongodb')
     autoload :Redis,      File.join(DATABASE_PATH, 'redis')
     autoload :Riak,       File.join(DATABASE_PATH, 'riak')
+    autoload :OpenLDAP,   File.join(DATABASE_PATH, 'openldap')
   end
 
   ##
@@ -195,6 +196,7 @@ module Backup
       autoload :MongoDB,    File.join(CONFIGURATION_PATH, 'database', 'mongodb')
       autoload :Redis,      File.join(CONFIGURATION_PATH, 'database', 'redis')
       autoload :Riak,       File.join(CONFIGURATION_PATH, 'database', 'riak')
+      autoload :OpenLDAP,   File.join(CONFIGURATION_PATH, 'database', 'openldap')
     end
   end
 
