@@ -1,0 +1,10 @@
+  ##
+  # OpenLDAP [Database]
+  #
+  database OpenLDAP do |db|
+    db.name               = "my_database_name"
+    db.additional_options = []
+    # Optional: Use to set the location of this utility
+    #   if it cannot be found by name in your $PATH
+    # db.slapcat_utility = "/opt/local/bin/slapcat"
+  end
