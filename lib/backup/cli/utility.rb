@@ -187,7 +187,7 @@ module Backup
       ##
       # [Dependencies]
       # Returns a list of Backup's dependencies
-      desc 'dependencies', 'Display the list of dependencies for Backup, or install them through Backup.'
+      desc 'dependencies', 'Display the list of dependencies for Backup, check the installation status, or install them through Backup.'
       method_option :install, :type => :string
       method_option :list,    :type => :boolean
       method_option :installed, :type => :string
