@@ -150,10 +150,12 @@ module Backup
           if local_file && File.exist?(local_file.path)
             unless remote_file && remote_file.etag == local_file.md5
               MUTEX.synchronize { Logger.message("\s\s[transferring] #{relative_path}") }
-              bucket.files.create(
-                :key  => "#{path}/#{relative_path}".gsub(/^\//, ''),
-                :body => File.open(local_file.path)
-              )
+              File.open(local_file.path, 'r') do |file|
+                bucket.files.create(
+                  :key  => "#{path}/#{relative_path}".gsub(/^\//, ''),
+                  :body => file
+                )
+              end
             else
               MUTEX.synchronize { Logger.message("\s\s[skipping] #{relative_path}") }
             end

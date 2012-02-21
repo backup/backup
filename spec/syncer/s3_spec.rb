@@ -14,7 +14,7 @@ describe Backup::Syncer::S3 do
 
     before :each do
       Fog::Storage.stubs(:new).returns connection
-      File.stubs(:open).returns content
+      File.stubs(:open).yields content
       File.stubs(:exist?).returns true
       files.stubs(:create).returns true
 
@@ -99,7 +99,7 @@ describe Backup::Syncer::S3 do
       end
 
       it "uploads the content of the local file" do
-        File.expects(:open).with('tmp/foo').returns content
+        files.expects(:create).with(:key => 'storage/tmp/foo', :body => content)
 
         syncer.perform!
       end
