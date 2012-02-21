@@ -190,6 +190,7 @@ module Backup
       desc 'dependencies', 'Display the list of dependencies for Backup, or install them through Backup.'
       method_option :install, :type => :string
       method_option :list,    :type => :boolean
+      method_option :installed, :type => :string
       def dependencies
         unless options.any?
           puts
@@ -198,6 +199,9 @@ module Backup
           puts
           puts "To install one of these dependencies (with the correct version), run:\n\n"
           puts "  backup dependencies --install <name>"
+          puts
+          puts "To check if a dependency is already installed, run:\n\n"
+          puts "  backup dependencies --installed <name>"
           exit
         end
 
@@ -219,6 +223,10 @@ module Backup
           puts "  gem install #{options[:install]} -v '#{Backup::Dependency.all[options[:install]][:version]}'\n\n"
           puts "Please wait..\n\n"
           puts %x[gem install #{options[:install]} -v '#{Backup::Dependency.all[options[:install]][:version]}']
+        end
+        
+        if options[:installed]
+          puts %x[gem list -i -v '#{Backup::Dependency.all[options[:installed]][:version]}' #{options[:installed]}]
         end
       end
 
