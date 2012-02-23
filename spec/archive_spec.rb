@@ -134,10 +134,13 @@ describe Backup::Archive do
     end
     let(:paths) { ['/path/to/add', '/another/path/to/add'] }
     let(:excludes) { ['/path/to/exclude', '/another/path/to/exclude'] }
+    let(:pipeline) { mock }
+    let(:s) { sequence '' }
 
     before do
       archive.expects(:utility).with(:tar).returns('tar')
       FileUtils.expects(:mkdir_p).with(archive_path)
+      Backup::Pipeline.expects(:new).returns(pipeline)
     end
 
     context 'when both #paths and #excludes were added' do
@@ -147,17 +150,25 @@ describe Backup::Archive do
       end
 
       it 'should render the syntax for both' do
-        Backup::Logger.expects(:message).with(
-          "Backup::Archive started packaging and archiving:\n" +
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          "Backup::Archive has started archiving:\n" +
           "  /path/to/add\n" +
           "  /another/path/to/add"
         )
 
-        archive.expects(:run).with(
+        pipeline.expects(:<<).in_sequence(s).with(
           "tar  -cf - " +
           "--exclude='/path/to/exclude' --exclude='/another/path/to/exclude' " +
-          "'/path/to/add' '/another/path/to/add' " +
-          "> '#{ File.join(archive_path, 'test_archive.tar') }'"
+          "'/path/to/add' '/another/path/to/add'"
+        )
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '#{ File.join(archive_path, 'test_archive.tar') }'"
+        )
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          "Backup::Archive Complete!"
         )
 
         archive.perform!
@@ -170,21 +181,29 @@ describe Backup::Archive do
       end
 
       it 'should render only the syntax for adds' do
-        Backup::Logger.expects(:message).with(
-          "Backup::Archive started packaging and archiving:\n" +
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          "Backup::Archive has started archiving:\n" +
           "  /path/to/add\n" +
           "  /another/path/to/add"
         )
 
-        archive.expects(:run).with(
-          "tar  -cf -  " +
-          "'/path/to/add' '/another/path/to/add' " +
-          "> '#{ File.join(archive_path, 'test_archive.tar') }'"
+        pipeline.expects(:<<).in_sequence(s).with(
+          "tar  -cf -  '/path/to/add' '/another/path/to/add'"
+        )
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '#{ File.join(archive_path, 'test_archive.tar') }'"
+        )
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          "Backup::Archive Complete!"
         )
 
         archive.perform!
       end
     end # context 'when no excludes were added'
+
     context 'with #paths, #excludes and #tar_args' do
       before do
         archive.instance_variable_set(:@paths, paths)
@@ -193,17 +212,25 @@ describe Backup::Archive do
       end
 
       it 'should render the syntax for all three' do
-        Backup::Logger.expects(:message).with(
-          "Backup::Archive started packaging and archiving:\n" +
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          "Backup::Archive has started archiving:\n" +
           "  /path/to/add\n" +
           "  /another/path/to/add"
         )
 
-        archive.expects(:run).with(
+        pipeline.expects(:<<).in_sequence(s).with(
           "tar -h --xattrs -cf - " +
           "--exclude='/path/to/exclude' --exclude='/another/path/to/exclude' " +
-          "'/path/to/add' '/another/path/to/add' " +
-          "> '#{ File.join(archive_path, 'test_archive.tar') }'"
+          "'/path/to/add' '/another/path/to/add'"
+        )
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '#{ File.join(archive_path, 'test_archive.tar') }'"
+        )
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          "Backup::Archive Complete!"
         )
 
         archive.perform!
@@ -221,22 +248,50 @@ describe Backup::Archive do
       end
 
       it 'should render the syntax with compressor modifications' do
-        Backup::Logger.expects(:message).with(
-          "Backup::Archive started packaging and archiving:\n" +
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          "Backup::Archive has started archiving:\n" +
           "  /path/to/add\n" +
           "  /another/path/to/add"
         )
 
-        archive.expects(:run).with(
+        pipeline.expects(:<<).in_sequence(s).with(
           "tar -h --xattrs -cf - " +
           "--exclude='/path/to/exclude' --exclude='/another/path/to/exclude' " +
-          "'/path/to/add' '/another/path/to/add' " +
-          "| gzip > '#{ File.join(archive_path, 'test_archive.tar.gz') }'"
+          "'/path/to/add' '/another/path/to/add'"
+        )
+        pipeline.expects(:<<).in_sequence(s).with('gzip')
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '#{ File.join(archive_path, 'test_archive.tar.gz') }'"
+        )
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          "Backup::Archive Complete!"
         )
 
         archive.perform!
       end
     end # context 'with #paths, #excludes, #tar_args and a Gzip Compressor'
+
+    context 'when pipeline command fails' do
+      before do
+        pipeline.stubs(:<<)
+        pipeline.expects(:run)
+        pipeline.expects(:success?).returns(false)
+        pipeline.expects(:error_messages).returns('pipeline_errors')
+      end
+
+      it 'should raise an error' do
+        expect do
+          archive.perform!
+        end.to raise_error(
+          Backup::Errors::Archive::PipelineError,
+          "Archive::PipelineError: Failed to Create Backup Archive\n" +
+          "  pipeline_errors"
+        )
+      end
+    end # context 'when pipeline command fails'
 
   end # describe '#perform!'
 
