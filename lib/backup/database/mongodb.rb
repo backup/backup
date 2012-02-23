@@ -117,18 +117,37 @@ module Backup
       def package!
         return unless @model.compressor
 
+        pipeline  = Pipeline.new
         base_dir  = File.dirname(@dump_path)
         dump_dir  = File.basename(@dump_path)
         timestamp = Time.now.to_i.to_s[-5, 5]
         outfile   = @dump_path + '-' + timestamp + '.tar'
 
-        @model.compressor.compress_with do |command, ext|
-          run("#{ utility(:tar) } -cf - " +
-              "-C '#{ base_dir }' '#{ dump_dir }'" +
-              " | #{ command } > #{ outfile + ext }")
-        end
+        Logger.message(
+          "#{ database_name } started compressing and packaging:\n" +
+          "  '#{ @dump_path }'"
+        )
 
-        FileUtils.rm_rf(@dump_path)
+        pipeline << "#{ utility(:tar) } -cf - -C '#{ base_dir }' '#{ dump_dir }'"
+        @model.compressor.compress_with do |command, ext|
+          pipeline << command
+          outfile << ext
+        end
+        pipeline << "cat > #{ outfile }"
+
+        pipeline.run
+        if pipeline.success?
+          Logger.message(
+            "#{ database_name } completed compressing and packaging:\n" +
+            "  '#{ outfile }'"
+          )
+          FileUtils.rm_rf(@dump_path)
+        else
+          raise Errors::Database::PipelineError,
+            "#{ database_name } Failed to create compressed dump package:\n" +
+            "'#{ outfile }'\n" +
+            pipeline.error_messages
+        end
       end
 
       ##
