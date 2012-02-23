@@ -76,7 +76,7 @@ module Backup
       archive_ext = 'tar'
       pipeline = Pipeline.new
 
-      pipeline << "#{ utility(:tar) } #{ tar_args } -cf - " +
+      pipeline << "#{ utility(:tar) } #{ tar_args } -cPf - " +
           "#{ paths_to_exclude } #{ paths_to_package }"
 
       if @model.compressor

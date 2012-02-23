@@ -157,7 +157,7 @@ describe Backup::Archive do
         )
 
         pipeline.expects(:<<).in_sequence(s).with(
-          "tar  -cf - " +
+          "tar  -cPf - " +
           "--exclude='/path/to/exclude' --exclude='/another/path/to/exclude' " +
           "'/path/to/add' '/another/path/to/add'"
         )
@@ -188,7 +188,7 @@ describe Backup::Archive do
         )
 
         pipeline.expects(:<<).in_sequence(s).with(
-          "tar  -cf -  '/path/to/add' '/another/path/to/add'"
+          "tar  -cPf -  '/path/to/add' '/another/path/to/add'"
         )
         pipeline.expects(:<<).in_sequence(s).with(
           "cat > '#{ File.join(archive_path, 'test_archive.tar') }'"
@@ -219,7 +219,7 @@ describe Backup::Archive do
         )
 
         pipeline.expects(:<<).in_sequence(s).with(
-          "tar -h --xattrs -cf - " +
+          "tar -h --xattrs -cPf - " +
           "--exclude='/path/to/exclude' --exclude='/another/path/to/exclude' " +
           "'/path/to/add' '/another/path/to/add'"
         )
@@ -255,7 +255,7 @@ describe Backup::Archive do
         )
 
         pipeline.expects(:<<).in_sequence(s).with(
-          "tar -h --xattrs -cf - " +
+          "tar -h --xattrs -cPf - " +
           "--exclude='/path/to/exclude' --exclude='/another/path/to/exclude' " +
           "'/path/to/add' '/another/path/to/add'"
         )
