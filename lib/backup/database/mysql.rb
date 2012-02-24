@@ -145,8 +145,9 @@ module Backup
       # during the dumping of the database
       def tables_to_skip
         skip_tables.map do |table|
-          "--ignore-table='#{name}.#{table}'"
-        end.join(' ') unless dump_all?
+          table = (dump_all? || table['.']) ? table : "#{ name }.#{ table }"
+          "--ignore-table='#{ table }'"
+        end.join(' ')
       end
 
       ##

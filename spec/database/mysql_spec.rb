@@ -299,18 +299,22 @@ describe Backup::Database::MySQL do
         "--ignore-table='mydatabase.logs' --ignore-table='mydatabase.profiles'"
     end
 
-    context 'when #skip_tables is not set' do
-      before { db.skip_tables = [] }
-      it 'should return an empty string' do
-        db.send(:tables_to_skip).should == ''
-      end
+    it 'should return an empty string if #skip_tables is empty' do
+      db.skip_tables = []
+      db.send(:tables_to_skip).should == ''
     end
 
-    context 'when dump_all? is true' do
-      before { db.stubs(:dump_all?).returns(true) }
-      it 'should return nil' do
-        db.send(:tables_to_skip).should be_nil
-      end
+    it 'should accept table names prefixed with the database name' do
+      db.skip_tables = ['table_name', 'db_name.table_name']
+      db.send(:tables_to_skip).should ==
+        "--ignore-table='mydatabase.table_name' --ignore-table='db_name.table_name'"
+    end
+
+    it 'should not prefix table name if dump_all? is true' do
+      db.name = :all
+      db.skip_tables = ['table_name', 'db_name.table_name']
+      db.send(:tables_to_skip).should ==
+        "--ignore-table='table_name' --ignore-table='db_name.table_name'"
     end
   end
 
