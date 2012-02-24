@@ -46,7 +46,7 @@ RSpec.configure do |config|
     FileUtils.collect_method(:noop).each do |method|
       FileUtils.stubs(method).raises("Unexpected call to FileUtils.#{method}")
     end
-    Open4.stubs(:popen4).raises('Unexpected call to CLI::Helpers.run()')
+    Open4.stubs(:popen4).raises('Unexpected call to Open4::popen4()')
 
     [:message, :error, :warn, :normal, :silent].each do |message_type|
       Backup::Logger.stubs(message_type)
