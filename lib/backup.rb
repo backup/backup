@@ -188,6 +188,7 @@ module Backup
     model
     archive
     packager
+    pipeline
     package
     cleaner
     splitter
