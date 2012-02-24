@@ -94,6 +94,8 @@ describe Backup::Database::MySQL do
 
   describe '#perform!' do
     let(:s) { sequence '' }
+    let(:pipeline) { mock }
+
     before do
       # superclass actions
       db.expects(:prepare!).in_sequence(s)
@@ -102,17 +104,25 @@ describe Backup::Database::MySQL do
 
       db.stubs(:mysqldump).returns('mysqldump_command')
       db.stubs(:dump_filename).returns('dump_filename')
+      Backup::Pipeline.expects(:new).returns(pipeline)
     end
 
     context 'when no compressor is configured' do
       before do
-        model.expects(:compressor).in_sequence(s).returns(nil)
+        model.expects(:compressor).returns(nil)
       end
 
       it 'should run mysqldump without compression' do
-        db.expects(:run).in_sequence(s).with(
-          "mysqldump_command > '/dump/path/dump_filename.sql'"
+        pipeline.expects(:<<).in_sequence(s).with('mysqldump_command')
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '/dump/path/dump_filename.sql'"
         )
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          'Database::MySQL Complete!'
+        )
+
         db.perform!
       end
     end
@@ -120,17 +130,45 @@ describe Backup::Database::MySQL do
     context 'when a compressor is configured' do
       before do
         compressor = mock
-        model.expects(:compressor).twice.in_sequence(s).returns(compressor)
-        compressor.expects(:compress_with).in_sequence(s).yields('gzip', '.gz')
+        model.expects(:compressor).twice.returns(compressor)
+        compressor.expects(:compress_with).yields('gzip', '.gz')
       end
 
       it 'should run mysqldump with compression' do
-        db.expects(:run).in_sequence(s).with(
-          "mysqldump_command | gzip > '/dump/path/dump_filename.sql.gz'"
+        pipeline.expects(:<<).in_sequence(s).with('mysqldump_command')
+        pipeline.expects(:<<).in_sequence(s).with('gzip')
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '/dump/path/dump_filename.sql.gz'"
         )
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          'Database::MySQL Complete!'
+        )
+
         db.perform!
       end
     end
+
+    context 'when pipeline command fails' do
+      before do
+        model.expects(:compressor).returns(nil)
+        pipeline.stubs(:<<)
+        pipeline.expects(:run)
+        pipeline.expects(:success?).returns(false)
+        pipeline.expects(:error_messages).returns('pipeline_errors')
+      end
+
+      it 'should raise an error' do
+        expect do
+          db.perform!
+        end.to raise_error(
+          Backup::Errors::Database::PipelineError,
+          "Database::PipelineError: Database::MySQL Dump Failed!\n" +
+          "  pipeline_errors"
+        )
+      end
+    end # context 'when pipeline command fails'
 
   end # describe '#perform!'
 

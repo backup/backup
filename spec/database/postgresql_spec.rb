@@ -94,6 +94,8 @@ describe Backup::Database::PostgreSQL do
 
   describe '#perform!' do
     let(:s) { sequence '' }
+    let(:pipeline) { mock }
+
     before do
       # superclass actions
       db.expects(:prepare!).in_sequence(s)
@@ -101,17 +103,25 @@ describe Backup::Database::PostgreSQL do
       db.instance_variable_set(:@dump_path, '/dump/path')
 
       db.stubs(:pgdump).returns('pgdump_command')
+      Backup::Pipeline.expects(:new).returns(pipeline)
     end
 
     context 'when no compressor is configured' do
       before do
-        model.expects(:compressor).in_sequence(s).returns(nil)
+        model.expects(:compressor).returns(nil)
       end
 
       it 'should run pgdump without compression' do
-        db.expects(:run).in_sequence(s).with(
-          "pgdump_command > '/dump/path/mydatabase.sql'"
+        pipeline.expects(:<<).in_sequence(s).with('pgdump_command')
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '/dump/path/mydatabase.sql'"
         )
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          'Database::PostgreSQL Complete!'
+        )
+
         db.perform!
       end
     end
@@ -119,17 +129,45 @@ describe Backup::Database::PostgreSQL do
     context 'when a compressor is configured' do
       before do
         compressor = mock
-        model.expects(:compressor).twice.in_sequence(s).returns(compressor)
-        compressor.expects(:compress_with).in_sequence(s).yields('gzip', '.gz')
+        model.expects(:compressor).twice.returns(compressor)
+        compressor.expects(:compress_with).yields('gzip', '.gz')
       end
 
       it 'should run pgdump with compression' do
-        db.expects(:run).in_sequence(s).with(
-          "pgdump_command | gzip > '/dump/path/mydatabase.sql.gz'"
+        pipeline.expects(:<<).in_sequence(s).with('pgdump_command')
+        pipeline.expects(:<<).in_sequence(s).with('gzip')
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '/dump/path/mydatabase.sql.gz'"
         )
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          'Database::PostgreSQL Complete!'
+        )
+
         db.perform!
       end
     end
+
+    context 'when pipeline command fails' do
+      before do
+        model.expects(:compressor).returns(nil)
+        pipeline.stubs(:<<)
+        pipeline.expects(:run)
+        pipeline.expects(:success?).returns(false)
+        pipeline.expects(:error_messages).returns('pipeline_errors')
+      end
+
+      it 'should raise an error' do
+        expect do
+          db.perform!
+        end.to raise_error(
+          Backup::Errors::Database::PipelineError,
+          "Database::PipelineError: Database::PostgreSQL Dump Failed!\n" +
+          "  pipeline_errors"
+        )
+      end
+    end # context 'when pipeline command fails'
 
   end # describe '#perform!'
 

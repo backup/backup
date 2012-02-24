@@ -239,6 +239,9 @@ describe Backup::Database::MongoDB do
 
   describe '#package!' do
     let(:compressor) { mock }
+    let(:pipeline) { mock }
+    let(:timestamp) { Time.now.to_i.to_s[-5, 5] }
+    let(:s) { sequence '' }
 
     context 'when a compressor is configured' do
       before do
@@ -247,18 +250,57 @@ describe Backup::Database::MongoDB do
         db.expects(:utility).with(:tar).returns('tar')
         model.expects(:compressor).twice.returns(compressor)
         compressor.expects(:compress_with).yields('compressor_command', '.gz')
+        Backup::Pipeline.expects(:new).returns(pipeline)
       end
 
-      it 'should package the dump directory, then remove it' do
-        timestamp = Time.now.to_i.to_s[-5, 5]
-        db.expects(:run).with(
-          "tar -cf - -C '/path/to/dump' 'folder' | compressor_command" +
-          " > /path/to/dump/folder-#{ timestamp }.tar.gz"
-        )
-        FileUtils.expects(:rm_rf).with('/path/to/dump/folder')
+      context 'when pipeline command succeeds' do
+        it 'should package the dump directory, then remove it' do
 
-        db.send(:package!)
-      end
+          Backup::Logger.expects(:message).in_sequence(s).with(
+            "Database::MongoDB started compressing and packaging:\n" +
+            "  '/path/to/dump/folder'"
+          )
+
+          pipeline.expects(:<<).in_sequence(s).with(
+            "tar -cf - -C '/path/to/dump' 'folder'"
+          )
+          pipeline.expects(:<<).in_sequence(s).with('compressor_command')
+          pipeline.expects(:<<).in_sequence(s).with(
+            "cat > /path/to/dump/folder-#{ timestamp }.tar.gz"
+          )
+
+          pipeline.expects(:run).in_sequence(s)
+          pipeline.expects(:success?).in_sequence(s).returns(true)
+          Backup::Logger.expects(:message).in_sequence(s).with(
+            "Database::MongoDB completed compressing and packaging:\n" +
+            "  '/path/to/dump/folder-#{ timestamp }.tar.gz'"
+          )
+          FileUtils.expects(:rm_rf).in_sequence(s).with('/path/to/dump/folder')
+
+          db.send(:package!)
+        end
+      end #context 'when pipeline command succeeds'
+
+      context 'when pipeline command fails' do
+        before do
+          pipeline.stubs(:<<)
+          pipeline.expects(:run)
+          pipeline.expects(:success?).returns(false)
+          pipeline.expects(:error_messages).returns('pipeline_errors')
+        end
+
+        it 'should raise an error' do
+          expect do
+            db.send(:package!)
+          end.to raise_error(
+            Backup::Errors::Database::PipelineError,
+            "Database::PipelineError: Database::MongoDB " +
+            "Failed to create compressed dump package:\n" +
+            "  '/path/to/dump/folder-#{ timestamp }.tar.gz'\n" +
+            "  pipeline_errors"
+          )
+        end
+      end # context 'when pipeline command fails'
     end
 
     context 'when a compressor is not configured' do
@@ -267,11 +309,11 @@ describe Backup::Database::MongoDB do
       end
 
       it 'should return nil' do
-        db.expects(:run).never
+        Backup::Pipeline.expects(:new).never
         db.send(:package!).should be_nil
       end
     end
-  end
+  end # describe '#package!'
 
   describe '#database' do
     context 'when a database name is given' do
