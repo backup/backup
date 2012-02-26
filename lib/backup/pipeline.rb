@@ -73,12 +73,7 @@ module Backup
     # command to pass along the command's index in @commands and it's exit status.
     # The command's STDERR is redirected to FD#4, and the `echo` command to
     # report the "index|exit status" it redirected to FD#3.
-    #
-    # Each command's STDOUT will be connected to the STDIN of the next subshell
-    # in the pipeline, with the exception of the last command in the pipeline.
-    # The last command's STDOUT is redirected to `/dev/null` so it won't interfere
-    # with collecting the "index|exit status" data.
-    #
+    # Each command's STDOUT will be connected to the STDIN of the next subshell.
     # The entire pipeline is run within a container group, which redirects
     # FD#3 to STDOUT and FD#4 to STDERR so these can be collected.
     #
@@ -89,14 +84,8 @@ module Backup
     # should not be an issue, given the small byte size of the data being written.
     def pipeline
       parts = []
-      last = @commands.count - 1
       @commands.each_with_index do |command, index|
-        parts <<
-          if index == last
-            %Q[( #{ command } >/dev/null 2>&4; echo "#{ index }|$?:" >&3 )]
-          else
-            %Q[( #{ command } 2>&4; echo "#{ index }|$?:" >&3 )]
-          end
+        parts << %Q[( #{ command } 2>&4; echo "#{ index }|$?:" >&3 )]
       end
       "( #{ parts.join(' | ') } ) 3>&1 4>&2"
     end
