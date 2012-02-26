@@ -26,8 +26,9 @@ module Backup
     # For each command with a non-zero exit status, a SystemCallError is
     # created and added to @errors. All STDERR output is set in @stderr.
     #
-    # Note that there is no accumulated STDOUT from the commands.
-    # STDOUT for the last command in the pipeline will be sent to `/dev/null`.
+    # Note that there is no accumulated STDOUT from the commands,
+    # and the last command added to the pipeline should *not* attempt to
+    # write to STDOUT, as this will raise an Exception.
     #
     # Use `#success?` to determine if all commands in the pipeline succeeded.
     # If `#success?` returns `false`, use `#error_messages` to get an error report.
@@ -76,6 +77,9 @@ module Backup
     # Each command's STDOUT will be connected to the STDIN of the next subshell.
     # The entire pipeline is run within a container group, which redirects
     # FD#3 to STDOUT and FD#4 to STDERR so these can be collected.
+    # FD#1 is closed so any attempt by the last command in the pipeline to
+    # write to STDOUT will raise an error, as we don't want this to interfere
+    # with collecting the exit statuses.
     #
     # There is no guarantee as to the order of this output, which is why the
     # command's index in @commands is passed along with it's exit status.
@@ -87,7 +91,7 @@ module Backup
       @commands.each_with_index do |command, index|
         parts << %Q[( #{ command } 2>&4; echo "#{ index }|$?:" >&3 )]
       end
-      "( #{ parts.join(' | ') } ) 3>&1 4>&2"
+      "( #{ parts.join(' | ') } ) 3>&1- 4>&2"
     end
 
     def stderr_messages
