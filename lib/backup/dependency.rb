@@ -23,7 +23,7 @@ module Backup
 
         'dropbox-sdk' => {
           :require => 'dropbox_sdk',
-          :version => '~> 1.1.0',
+          :version => '~> 1.2.0',
           :for     => 'Dropbox Web Service (Dropbox Storage)'
         },
 
