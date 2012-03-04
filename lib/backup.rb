@@ -62,10 +62,12 @@ module Backup
   ##
   # Autoload Backup syncer files
   module Syncer
-    autoload :Base,       File.join(SYNCER_PATH, 'base')
-    autoload :Cloud,      File.join(SYNCER_PATH, 'cloud')
-    autoload :CloudFiles, File.join(SYNCER_PATH, 'cloud_files')
-    autoload :S3,         File.join(SYNCER_PATH, 's3')
+    autoload :Base, File.join(SYNCER_PATH, 'base')
+    module Cloud
+      autoload :Base,       File.join(SYNCER_PATH, 'cloud', 'base')
+      autoload :CloudFiles, File.join(SYNCER_PATH, 'cloud', 'cloud_files')
+      autoload :S3,         File.join(SYNCER_PATH, 'cloud', 's3')
+    end
     module RSync
       autoload :Base,  File.join(SYNCER_PATH, 'rsync', 'base')
       autoload :Local, File.join(SYNCER_PATH, 'rsync', 'local')
@@ -160,10 +162,12 @@ module Backup
     end
 
     module Syncer
-      autoload :Base,       File.join(CONFIGURATION_PATH, 'syncer', 'base')
-      autoload :Cloud,      File.join(CONFIGURATION_PATH, 'syncer', 'cloud')
-      autoload :CloudFiles, File.join(CONFIGURATION_PATH, 'syncer', 'cloud_files')
-      autoload :S3,         File.join(CONFIGURATION_PATH, 'syncer', 's3')
+      autoload :Base, File.join(CONFIGURATION_PATH, 'syncer', 'base')
+      module Cloud
+        autoload :Base,       File.join(CONFIGURATION_PATH, 'syncer', 'cloud', 'base')
+        autoload :CloudFiles, File.join(CONFIGURATION_PATH, 'syncer', 'cloud', 'cloud_files')
+        autoload :S3,         File.join(CONFIGURATION_PATH, 'syncer', 'cloud', 's3')
+      end
       module RSync
         autoload :Base,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'base')
         autoload :Local, File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'local')

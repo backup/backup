@@ -2,15 +2,22 @@
 
 require File.expand_path('../../../spec_helper.rb', __FILE__)
 
-describe Backup::Syncer::RSync::Base do
-  let(:syncer) { Backup::Syncer::RSync::Base.new }
+describe 'Backup::Syncer::RSync::Base' do
+  let(:base)    { Backup::Syncer::RSync::Base }
+  let(:syncer)  { base.new }
+
+  it 'should be a subclass of Syncer::Base' do
+    base.superclass.should == Backup::Syncer::Base
+  end
 
   describe '#initialize' do
 
-    it 'should use default values' do
-      syncer.path.should               == 'backups'
-      syncer.directories.should        == []
-      syncer.mirror.should             == false
+    it 'should inherit default values from the superclass' do
+      syncer.path.should    == 'backups'
+      syncer.mirror.should  == false
+    end
+
+    it 'should set default values' do
       syncer.additional_options.should == []
     end
 
@@ -19,64 +26,20 @@ describe Backup::Syncer::RSync::Base do
 
       it 'should use the configured defaults' do
         Backup::Configuration::Syncer::RSync::Base.defaults do |rsync|
-          rsync.path               = 'some_path'
-          #rsync.directories        = 'cannot_have_a_default_value'
-          rsync.mirror             = 'some_mirror'
           rsync.additional_options = 'some_additional_options'
         end
         syncer = Backup::Syncer::RSync::Base.new
-        syncer.path.should               == 'some_path'
-        syncer.directories.should        == []
-        syncer.mirror.should             == 'some_mirror'
         syncer.additional_options.should == 'some_additional_options'
       end
     end
 
   end # describe '#initialize'
 
-  describe '#directories' do
-    before do
-      syncer.directories = ['/some/directory', '/another/directory']
-    end
-
-    context 'when no block is given' do
-      it 'should return @directories' do
-        syncer.directories.should ==
-            ['/some/directory', '/another/directory']
-      end
-    end
-
-    context 'when a block is given' do
-      it 'should evalute the block, allowing #add to add directories' do
-        syncer.directories do
-          add '/new/path'
-          add '/another/new/path'
-        end
-        syncer.directories.should == [
-          '/some/directory',
-          '/another/directory',
-          '/new/path',
-          '/another/new/path'
-        ]
-      end
-    end
-  end # describe '#directories'
-
-  describe '#add' do
-    before do
-      syncer.directories = ['/some/directory', '/another/directory']
-    end
-
-    it 'should add the given path to @directories' do
-      syncer.add '/my/path'
-      syncer.directories.should ==
-          ['/some/directory', '/another/directory', '/my/path']
-    end
-  end
-
   describe '#directory_options' do
     before do
-      syncer.directories = ['/some/directory', '/another/directory']
+      syncer.instance_variable_set(
+        :@directories,  ['/some/directory', '/another/directory']
+      )
     end
 
     it 'should return the directories for use in the command line' do
@@ -84,12 +47,19 @@ describe Backup::Syncer::RSync::Base do
           "'/some/directory' '/another/directory'"
     end
 
-    it 'should expand relative paths' do
-      syncer.directories += ['relative/path', '~/home/path']
-      syncer.send(:directories_option).should ==
-          "'/some/directory' '/another/directory' " +
-          "'#{ File.expand_path('relative/path') }' " +
-          "'#{ File.expand_path('~/home/path') }'"
+    context 'when @directories have relative paths' do
+    before do
+      syncer.instance_variable_set(
+        :@directories,  ['/some/directory', '/another/directory',
+                        'relative/path', '~/home/path']
+      )
+    end
+      it 'should expand relative paths' do
+        syncer.send(:directories_option).should ==
+            "'/some/directory' '/another/directory' " +
+            "'#{ File.expand_path('relative/path') }' " +
+            "'#{ File.expand_path('~/home/path') }'"
+      end
     end
   end
 

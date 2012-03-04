@@ -29,29 +29,11 @@ describe Backup::Syncer::RSync::Local do
       syncer.additional_options.should == ['--opt-a', '--opt-b']
     end
 
-    context 'when setting configuration defaults' do
-      after { Backup::Configuration::Syncer::RSync::Local.clear_defaults! }
-
-      it 'should override the configured defaults' do
-        Backup::Configuration::Syncer::RSync::Local.defaults do |rsync|
-          rsync.path               = 'old_path'
-          #rsync.directories        = 'cannot_have_a_default_value'
-          rsync.mirror             = 'old_mirror'
-          rsync.additional_options = 'old_additional_options'
-        end
-        syncer = Backup::Syncer::RSync::Local.new do |rsync|
-          rsync.path               = 'new_path'
-          rsync.directories        = 'new_directories'
-          rsync.mirror             = 'new_mirror'
-          rsync.additional_options = 'new_additional_options'
-        end
-
-        syncer.path.should               == 'new_path'
-        syncer.directories.should        == 'new_directories'
-        syncer.mirror.should             == 'new_mirror'
-        syncer.additional_options.should == 'new_additional_options'
-      end
-    end # context 'when setting configuration defaults'
+    it 'should inherit default values from the superclass' do
+      syncer = Backup::Syncer::RSync::Local.new
+      syncer.path.should    == 'backups'
+      syncer.mirror.should  == false
+    end
   end # describe '#initialize'
 
   describe '#perform!' do

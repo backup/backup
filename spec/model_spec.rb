@@ -209,10 +209,25 @@ describe 'Backup::Model' do
         end
       end
 
-      it 'should warn user of change from RSync to RSync::Local' do
+      it 'should warn user of change from RSync to RSync::Push' do
         Backup::Logger.expects(:warn)
         model.sync_with('Backup::Config::RSync')
-        model.syncers.first.should be_an_instance_of Backup::Syncer::RSync::Local
+        model.syncers.first.should
+            be_an_instance_of Backup::Syncer::RSync::Push
+      end
+
+      it 'should warn user of change from S3 to Cloud::S3' do
+        Backup::Logger.expects(:warn)
+        model.sync_with('Backup::Config::S3')
+        model.syncers.first.should
+            be_an_instance_of Backup::Syncer::Cloud::S3
+      end
+
+      it 'should warn user of change from CloudFiles to Cloud::CloudFiles' do
+        Backup::Logger.expects(:warn)
+        model.sync_with('Backup::Config::CloudFiles')
+        model.syncers.first.should
+            be_an_instance_of Backup::Syncer::Cloud::CloudFiles
       end
     end
 

@@ -76,7 +76,6 @@ describe Backup::Syncer::RSync::Push do
         syncer.port.should               == 'some_port'
         syncer.compress.should           == 'some_compress'
         syncer.path.should               == 'some_path'
-        syncer.directories.should        == []
         syncer.mirror.should             == 'some_mirror'
         syncer.additional_options.should == 'some_additional_options'
       end
@@ -89,7 +88,6 @@ describe Backup::Syncer::RSync::Push do
           rsync.port               = 'old_port'
           rsync.compress           = 'old_compress'
           rsync.path               = 'old_path'
-          #rsync.directories        = 'cannot_have_a_default_value'
           rsync.mirror             = 'old_mirror'
           rsync.additional_options = 'old_additional_options'
         end
@@ -100,7 +98,6 @@ describe Backup::Syncer::RSync::Push do
           rsync.port               = 'new_port'
           rsync.compress           = 'new_compress'
           rsync.path               = 'new_path'
-          rsync.directories        = 'new_directories'
           rsync.mirror             = 'new_mirror'
           rsync.additional_options = 'new_additional_options'
         end
@@ -111,7 +108,6 @@ describe Backup::Syncer::RSync::Push do
         syncer.port.should               == 'new_port'
         syncer.compress.should           == 'new_compress'
         syncer.path.should               == 'new_path'
-        syncer.directories.should        == 'new_directories'
         syncer.mirror.should             == 'new_mirror'
         syncer.additional_options.should == 'new_additional_options'
       end

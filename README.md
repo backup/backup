@@ -69,6 +69,9 @@ Below you find a list of components that Backup currently supports. If you'd lik
   - Dropbox Web Service
   - Remote Servers *(Only Protocols: FTP, SFTP, SCP)*
   - Local Storage
+
+[Cycling Wiki Page](https://github.com/meskyanichi/backup/wiki/Cycling)
+
 - **Backup Splitting, applies to:**
   - Amazon Simple Storage Service (S3)
   - Rackspace Cloud Files (Mosso)
@@ -76,12 +79,11 @@ Below you find a list of components that Backup currently supports. If you'd lik
   - Dropbox Web Service
   - Remote Servers *(Only Protocols: FTP, SFTP, SCP)*
   - Local Storage
-- **Incremental Backups, applies to:**
-  - Remote Servers *(Only Protocols: RSync)*
-
-[Cycling Wiki Page](https://github.com/meskyanichi/backup/wiki/Cycling)
 
 [Splitter Wiki Page](https://github.com/meskyanichi/backup/wiki/Splitter)
+
+- **Incremental Backups, applies to:**
+  - Remote Servers *(Only Protocols: RSync)*
 
 ### Syncers
 
@@ -128,7 +130,8 @@ Below you find a list of components that Backup currently supports. If you'd lik
 A sample Backup configuration file
 ----------------------------------
 
-This is a Backup configuration file. Check it out and read the explanation below. Backup has a [great wiki](https://github.com/meskyanichi/backup/wiki) which explains each component of Backup in detail.
+This is a Backup configuration file. Check it out and read the explanation below.  
+Backup has a [great wiki](https://github.com/meskyanichi/backup/wiki) which explains each component of Backup in detail.
 
 ``` rb
 Backup::Model.new(:sample_backup, 'A sample backup configuration') do
@@ -193,7 +196,7 @@ Backup::Model.new(:sample_backup, 'A sample backup configuration') do
     s3.keep               = 20
   end
 
-  sync_with S3 do |s3|
+  sync_with Cloud::S3 do |s3|
     s3.access_key_id     = "my_access_key_id"
     s3.secret_access_key = "my_secret_access_key"
     s3.bucket            = "my-bucket"
@@ -252,7 +255,7 @@ of `-aa`, `-ab` and `-ac`. These files will then be individually transfered. Thi
 Amazon S3, Rackspace Cloud Files, or other 3rd party storage services which limit you to "5GB per file" uploads. So with
 this, the backup file size is no longer a constraint.
 
-Additionally we have also defined a **S3 Syncer** ( `sync_with S3` ), which does not follow the above process of
+Additionally we have also defined a **S3 Syncer** ( `sync_with Cloud::S3` ), which does not follow the above process of
 archiving/compression/encryption, but instead will directly sync the whole `videos` and `music` folder structures from
 your machine to your Amazon S3 account. (very efficient and cost-effective since it will only transfer files that were
 added/changed. Additionally, since we flagged it to 'mirror', it'll also remove files from S3 that no longer exist). If
