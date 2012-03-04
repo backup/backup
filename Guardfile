@@ -12,10 +12,13 @@
 guard "rspec",
   :version => 2,
   :rvm     => ["1.9.3", "1.9.2", "1.8.7"],
-  :bundler => true,
-  :cli     => "--color --format Fuubar" do
+  :cli     => "--color --format Fuubar",
+  :notification   => false,
+  :all_after_pass => false,
+  :all_on_start   => false do
 
+  watch("lib/backup.rb")            { "spec" }
+  watch("spec/spec_helper.rb")      { "spec" }
+  watch(%r{^lib/backup/(.+)\.rb}) {|m| "spec/#{ m[1] }_spec.rb" }
   watch(%r{^spec/.+_spec\.rb})
-  watch(%r{^lib/(.+)\.rb})     { "spec" }
-  watch("spec/spec_helper.rb") { "spec" }
 end
