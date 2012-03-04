@@ -107,7 +107,7 @@ PLATFORMS
 DEPENDENCIES
   backup!
   dropbox-sdk (~> 1.2.0)
-  fog (>= 0.11.0)
+  fog (~> 1.1.0)
   fuubar
   growl
   guard
