@@ -66,6 +66,7 @@ module Backup
     autoload :Cloud,      File.join(SYNCER_PATH, 'cloud')
     autoload :CloudFiles, File.join(SYNCER_PATH, 'cloud_files')
     autoload :S3,         File.join(SYNCER_PATH, 's3')
+    autoload :SVNSync,    File.join(SYNCER_PATH, 'svnsync')
     module RSync
       autoload :Base,  File.join(SYNCER_PATH, 'rsync', 'base')
       autoload :Local, File.join(SYNCER_PATH, 'rsync', 'local')
@@ -164,6 +165,7 @@ module Backup
       autoload :Cloud,      File.join(CONFIGURATION_PATH, 'syncer', 'cloud')
       autoload :CloudFiles, File.join(CONFIGURATION_PATH, 'syncer', 'cloud_files')
       autoload :S3,         File.join(CONFIGURATION_PATH, 'syncer', 's3')
+      autoload :SVNSync,    File.join(CONFIGURATION_PATH, 'syncer', 'svnsync')
       module RSync
         autoload :Base,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'base')
         autoload :Local, File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'local')
