@@ -26,9 +26,11 @@ module Backup
     # For each command with a non-zero exit status, a SystemCallError is
     # created and added to @errors. All STDERR output is set in @stderr.
     #
-    # Note that there is no accumulated STDOUT from the commands,
-    # and the last command added to the pipeline should *not* attempt to
-    # write to STDOUT, as this will raise an Exception.
+    # Note that there is no accumulated STDOUT from the commands themselves.
+    # Also, the last command should not attempt to write to STDOUT.
+    # Any output on STDOUT from the final command will be sent to STDERR.
+    # This in itself will not cause #run to fail, but will log warnings
+    # when all commands exit with non-zero status.
     #
     # Use `#success?` to determine if all commands in the pipeline succeeded.
     # If `#success?` returns `false`, use `#error_messages` to get an error report.
@@ -73,13 +75,14 @@ module Backup
     # Each command is added as part of the pipeline, grouped with an `echo`
     # command to pass along the command's index in @commands and it's exit status.
     # The command's STDERR is redirected to FD#4, and the `echo` command to
-    # report the "index|exit status" it redirected to FD#3.
+    # report the "index|exit status" is redirected to FD#3.
     # Each command's STDOUT will be connected to the STDIN of the next subshell.
     # The entire pipeline is run within a container group, which redirects
     # FD#3 to STDOUT and FD#4 to STDERR so these can be collected.
-    # FD#1 is closed so any attempt by the last command in the pipeline to
-    # write to STDOUT will raise an error, as we don't want this to interfere
-    # with collecting the exit statuses.
+    # FD#1 is redirected to STDERR so that any output from the final command
+    # on STDOUT will generate warnings, since the final command should not
+    # attempt to write to STDOUT, as this would interfere with collecting
+    # the exit statuses.
     #
     # There is no guarantee as to the order of this output, which is why the
     # command's index in @commands is passed along with it's exit status.
@@ -89,9 +92,9 @@ module Backup
     def pipeline
       parts = []
       @commands.each_with_index do |command, index|
-        parts << %Q[( #{ command } 2>&4; echo "#{ index }|$?:" >&3 )]
+        parts << %Q[{ #{ command } 2>&4 ; echo "#{ index }|$?:" >&3 ; }]
       end
-      "( #{ parts.join(' | ') } ) 3>&1- 4>&2"
+      %Q[{ #{ parts.join(' | ') } } 3>&1 1>&2 4>&2]
     end
 
     def stderr_messages

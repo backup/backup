@@ -213,9 +213,9 @@ describe 'Backup::Pipeline' do
 
       it 'should build a pipeline with redirected/collected exit codes' do
         pipeline.send(:pipeline).should ==
-          '( ( one 2>&4; echo "0|$?:" >&3 ) | ' +
-          '( two 2>&4; echo "1|$?:" >&3 ) | ' +
-          '( three 2>&4; echo "2|$?:" >&3 ) ) 3>&1- 4>&2'
+          '{ { one 2>&4 ; echo "0|$?:" >&3 ; } | ' +
+          '{ two 2>&4 ; echo "1|$?:" >&3 ; } | ' +
+          '{ three 2>&4 ; echo "2|$?:" >&3 ; } } 3>&1 1>&2 4>&2'
       end
     end
 
@@ -226,7 +226,7 @@ describe 'Backup::Pipeline' do
 
       it 'should build the command line in the same manner, but without pipes' do
         pipeline.send(:pipeline).should ==
-          '( ( foo 2>&4; echo "0|$?:" >&3 ) ) 3>&1- 4>&2'
+          '{ { foo 2>&4 ; echo "0|$?:" >&3 ; } } 3>&1 1>&2 4>&2'
       end
     end
   end # describe '#pipeline'
