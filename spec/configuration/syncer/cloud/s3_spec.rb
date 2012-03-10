@@ -3,11 +3,6 @@
 require File.expand_path('../../../../spec_helper.rb', __FILE__)
 
 describe 'Backup::Configuration::Syncer::S3' do
-  it 'should be a subclass of Syncer::Cloud::Base' do
-    s3 = Backup::Configuration::Syncer::Cloud::S3
-    s3.superclass.should == Backup::Configuration::Syncer::Cloud::Base
-  end
-
   before do
     Backup::Configuration::Syncer::Cloud::S3.defaults do |s3|
       s3.access_key_id       = 'my_access_key_id'

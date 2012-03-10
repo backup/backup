@@ -3,11 +3,6 @@
 require File.expand_path('../../../../spec_helper.rb', __FILE__)
 
 describe 'Backup::Configuration::Syncer::Cloud::CloudFiles' do
-  it 'should be a subclass of Syncer::Cloud::Base' do
-    cf = Backup::Configuration::Syncer::Cloud::CloudFiles
-    cf.superclass.should == Backup::Configuration::Syncer::Cloud::Base
-  end
-
   before do
     Backup::Configuration::Syncer::Cloud::CloudFiles.defaults do |cf|
       cf.username   = 'my-username'

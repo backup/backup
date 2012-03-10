@@ -3,11 +3,6 @@
 require File.expand_path('../../../../spec_helper.rb', __FILE__)
 
 describe Backup::Configuration::Syncer::RSync::Base do
-  it 'should be a subclass of Syncer::Base' do
-    rsync = Backup::Configuration::Syncer::RSync::Base
-    rsync.superclass.should == Backup::Configuration::Syncer::Base
-  end
-
   before do
     Backup::Configuration::Syncer::RSync::Base.defaults do |rsync|
       rsync.additional_options  = ['foo']

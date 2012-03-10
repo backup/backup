@@ -14,11 +14,6 @@ describe Backup::Configuration::Syncer::RSync::Push do
   end
   after { Backup::Configuration::Syncer::RSync::Push.clear_defaults! }
 
-  it 'should be a subclass of RSync::Base' do
-    rsync = Backup::Configuration::Syncer::RSync::Push
-    rsync.superclass.should == Backup::Configuration::Syncer::RSync::Base
-  end
-
   it 'should set the default rsync configuration' do
     rsync = Backup::Configuration::Syncer::RSync::Push
     rsync.username.should  == 'my_username'

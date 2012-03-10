@@ -3,11 +3,6 @@
 require File.expand_path('../../../../spec_helper.rb', __FILE__)
 
 describe 'Backup::Configuration::Syncer::Cloud::Base' do
-  it 'should be a subclass of Syncer::Base' do
-    cloud = Backup::Configuration::Syncer::Cloud::Base
-    cloud.superclass.should == Backup::Configuration::Syncer::Base
-  end
-
   before do
     Backup::Configuration::Syncer::Cloud::Base.defaults do |cloud|
       cloud.concurrency_type    = 'default_type'
