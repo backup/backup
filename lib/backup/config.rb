@@ -11,8 +11,8 @@ module Backup
     }
 
     class << self
-      attr_reader :user, :root_path, :config_file,
-                  :data_path, :log_path, :cache_path, :tmp_path
+      attr_reader :user, :root_path, :config_file
+      attr_accessor :data_path, :log_path, :cache_path, :tmp_path
 
       ##
       # Setup required paths based on the given options
