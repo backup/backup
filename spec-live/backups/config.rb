@@ -9,7 +9,7 @@ end
 ##
 # Configuration
 
-Backup::Configuration::Storage::Local.defaults do |storage|
+Backup::Storage::Local.defaults do |storage|
   storage.path = Backup::SpecLive::TMP_PATH
   storage.keep = 2
 end
@@ -22,7 +22,7 @@ end
 # to the same path as Backup::SpecLive::TMP_PATH
 # i.e. '/absolute/path/to/spec-live/tmp'
 # This way, cleaning the "remote path" can be skipped.
-Backup::Configuration::Storage::SCP.defaults do |storage|
+Backup::Storage::SCP.defaults do |storage|
   opts = SpecLive::CONFIG['storage']['scp']
 
   storage.username = opts['username']
@@ -33,7 +33,7 @@ Backup::Configuration::Storage::SCP.defaults do |storage|
   storage.keep     = 2
 end
 
-Backup::Configuration::Storage::Dropbox.defaults do |storage|
+Backup::Storage::Dropbox.defaults do |storage|
   opts = SpecLive::CONFIG['storage']['dropbox']
 
   storage.api_key     = opts['api_key']
@@ -43,7 +43,7 @@ Backup::Configuration::Storage::Dropbox.defaults do |storage|
   storage.keep        = 2
 end
 
-Backup::Configuration::Notifier::Mail.defaults do |notifier|
+Backup::Notifier::Mail.defaults do |notifier|
   opts = SpecLive::CONFIG['notifier']['mail']
 
   notifier.on_success           = true
@@ -65,7 +65,7 @@ Backup::Configuration::Notifier::Mail.defaults do |notifier|
   notifier.mail_folder          = Backup::SpecLive::TMP_PATH
 end
 
-Backup::Configuration::Syncer::Cloud::S3.defaults do |s3|
+Backup::Syncer::Cloud::S3.defaults do |s3|
   opts = SpecLive::CONFIG['syncer']['cloud']['s3']
 
   s3.access_key_id     = opts['access_key_id']
