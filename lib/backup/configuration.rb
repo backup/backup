@@ -22,29 +22,10 @@ module Backup
       klass.defaults(&block)
     end
 
-    def clear_defaults!
-      klass = eval(self.to_s.sub('Configuration::', ''))
-      klass.clear_defaults!
-    end
-
     private
 
     def const_missing(const)
-      mod = Module.new do
-        extend Configuration
-        class << self
-          undef_method :name
-        end
-      end
-      const_set(const, mod)
-    end
-
-    def method_missing(name, *args)
-      if !name.to_s.end_with?('=') && args.count == 0
-        defaults.send(name)
-      else
-        super(name, *args)
-      end
+      const_set(const, Module.new { extend Configuration })
     end
 
   end

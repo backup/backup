@@ -6,10 +6,25 @@ describe Backup::Database::Base do
   let(:model) { Backup::Model.new('foo', 'foo') }
   let(:db) { Backup::Database::Base.new(model) }
 
-  it 'should set #utility_path' do
-    db.utility_path.should be_nil
-    db.utility_path = 'utility path'
-    db.utility_path.should == 'utility path'
+  it 'should include CLI::Helpers' do
+    Backup::Database::Base.
+      include?(Backup::CLI::Helpers).should be_true
+  end
+
+  it 'should include Configuration::Helpers' do
+    Backup::Database::Base.
+      include?(Backup::Configuration::Helpers).should be_true
+  end
+
+  describe '#initialize' do
+    it 'should load pre-configured defaults' do
+      Backup::Database::Base.any_instance.expects(:load_defaults!)
+      db
+    end
+
+    it 'should set a reference to the model' do
+      db.instance_variable_get(:@model).should == model
+    end
   end
 
   describe '#perform!' do
@@ -19,12 +34,6 @@ describe Backup::Database::Base do
       db.expects(:log!).in_sequence(s)
 
       db.perform!
-    end
-  end
-
-  context 'since CLI::Helpers are included' do
-    it 'should respond to the #utility method' do
-      db.respond_to?(:utility).should be_true
     end
   end
 

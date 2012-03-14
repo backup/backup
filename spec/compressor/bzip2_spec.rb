@@ -5,41 +5,46 @@ require File.expand_path('../../spec_helper.rb', __FILE__)
 describe Backup::Compressor::Bzip2 do
   let(:compressor) { Backup::Compressor::Bzip2.new }
 
-  describe 'setting configuration defaults' do
-    after { Backup::Configuration::Compressor::Bzip2.clear_defaults! }
+  it 'should be a subclass of Compressor::Base' do
+    Backup::Compressor::Bzip2.
+      superclass.should == Backup::Compressor::Base
+  end
 
-    it 'uses and overrides configuration defaults' do
-      Backup::Configuration::Compressor::Bzip2.best.should be_false
-      Backup::Configuration::Compressor::Bzip2.fast.should be_false
+  describe '#initialize' do
+    after { Backup::Compressor::Bzip2.clear_defaults! }
 
-      compressor = Backup::Compressor::Bzip2.new
-      compressor.best.should be_false
-      compressor.fast.should be_false
+    it 'should load pre-configured defaults' do
+      Backup::Compressor::Bzip2.any_instance.expects(:load_defaults!)
+      compressor
+    end
 
-      Backup::Configuration::Compressor::Bzip2.defaults do |c|
+    it 'should use pre-configured defaults' do
+      Backup::Compressor::Bzip2.defaults do |c|
         c.best = true
         c.fast = true
       end
-      Backup::Configuration::Compressor::Bzip2.best.should be_true
-      Backup::Configuration::Compressor::Bzip2.fast.should be_true
-
-      compressor = Backup::Compressor::Bzip2.new
       compressor.best.should be_true
       compressor.fast.should be_true
+    end
 
-      compressor = Backup::Compressor::Bzip2.new do |c|
-        c.best = false
-      end
+    it 'should set defaults when no pre-configured defaults are set' do
       compressor.best.should be_false
-      compressor.fast.should be_true
-
-      compressor = Backup::Compressor::Bzip2.new do |c|
-        c.fast = false
-      end
-      compressor.best.should be_true
       compressor.fast.should be_false
     end
-  end # describe 'setting configuration defaults'
+
+    it 'should override pre-configured defaults' do
+      Backup::Compressor::Bzip2.defaults do |c|
+        c.best = true
+        c.fast = true
+      end
+      compressor = Backup::Compressor::Bzip2.new do |c|
+        c.best = false
+        c.fast = false
+      end
+      compressor.best.should be_false
+      compressor.fast.should be_false
+    end
+  end # describe '#initialize'
 
   describe '#compress_with' do
     before do

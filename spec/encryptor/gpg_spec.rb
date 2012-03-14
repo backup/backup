@@ -9,30 +9,46 @@ describe Backup::Encryptor::GPG do
     end
   end
 
+  it 'should be a subclass of Encryptor::Base' do
+    Backup::Encryptor::GPG.
+      superclass.should == Backup::Encryptor::Base
+  end
+
   describe '#initialize' do
-    it 'should read the adapter details correctly' do
-      encryptor.key.should == 'gpg_key'
+    after { Backup::Encryptor::GPG.clear_defaults! }
+
+    it 'should load pre-configured defaults' do
+      Backup::Encryptor::GPG.any_instance.expects(:load_defaults!)
+      encryptor
     end
 
-    context 'when options are not set' do
-      it 'should use default values' do
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        encryptor.key.should == 'gpg_key'
+      end
+
+      it 'should use default values if none are given' do
         encryptor = Backup::Encryptor::GPG.new
         encryptor.key.should be_nil
       end
-    end
+    end # context 'when no pre-configured defaults have been set'
 
-    context 'when configuration defaults have been set' do
-      after { Backup::Configuration::Encryptor::GPG.clear_defaults! }
-
-      it 'should use configuration defaults' do
-        Backup::Configuration::Encryptor::GPG.defaults do |encryptor|
-          encryptor.key = 'my_key'
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Encryptor::GPG.defaults do |e|
+          e.key = 'default_key'
         end
-
-        encryptor = Backup::Encryptor::GPG.new
-        encryptor.key.should == 'my_key'
       end
-    end
+
+      it 'should use pre-configured defaults' do
+        encryptor = Backup::Encryptor::GPG.new
+        encryptor.key.should == 'default_key'
+      end
+
+      it 'should override pre-configured defaults' do
+        encryptor.key.should == 'gpg_key'
+      end
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#encrypt_with' do

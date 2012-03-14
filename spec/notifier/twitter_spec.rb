@@ -13,32 +13,63 @@ describe Backup::Notifier::Twitter do
     end
   end
 
-  describe '#initialize' do
-    it 'should sets the correct values' do
-      notifier.consumer_key.should       == 'consumer_key'
-      notifier.consumer_secret.should    == 'consumer_secret'
-      notifier.oauth_token.should        == 'oauth_token'
-      notifier.oauth_token_secret.should == 'oauth_token_secret'
+  it 'should be a subclass of Notifier::Base' do
+    Backup::Notifier::Twitter.
+      superclass.should == Backup::Notifier::Base
+  end
 
-      notifier.on_success.should == true
-      notifier.on_warning.should == true
-      notifier.on_failure.should == true
+  describe '#initialize' do
+    after { Backup::Notifier::Twitter.clear_defaults! }
+
+    it 'should load pre-configured defaults through Base' do
+      Backup::Notifier::Twitter.any_instance.expects(:load_defaults!)
+      notifier
     end
 
-    context 'when using configuration defaults' do
-      after { Backup::Configuration::Notifier::Twitter.clear_defaults! }
+    it 'should pass the model reference to Base' do
+      notifier.instance_variable_get(:@model).should == model
+    end
 
-      it 'should use the configuration defaults' do
-        Backup::Configuration::Notifier::Twitter.defaults do |twitter|
-          twitter.consumer_key       = 'some_consumer_key'
-          twitter.consumer_secret    = 'some_consumer_secret'
-          twitter.oauth_token        = 'some_oauth_token'
-          twitter.oauth_token_secret = 'some_oauth_token_secret'
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        notifier.consumer_key.should       == 'consumer_key'
+        notifier.consumer_secret.should    == 'consumer_secret'
+        notifier.oauth_token.should        == 'oauth_token'
+        notifier.oauth_token_secret.should == 'oauth_token_secret'
 
-          twitter.on_success = false
-          twitter.on_warning = false
-          twitter.on_failure = false
+        notifier.on_success.should == true
+        notifier.on_warning.should == true
+        notifier.on_failure.should == true
+      end
+
+      it 'should use default values if none are given' do
+        notifier = Backup::Notifier::Twitter.new(model)
+        notifier.consumer_key.should       be_nil
+        notifier.consumer_secret.should    be_nil
+        notifier.oauth_token.should        be_nil
+        notifier.oauth_token_secret.should be_nil
+
+        notifier.on_success.should == true
+        notifier.on_warning.should == true
+        notifier.on_failure.should == true
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Notifier::Twitter.defaults do |n|
+          n.consumer_key       = 'some_consumer_key'
+          n.consumer_secret    = 'some_consumer_secret'
+          n.oauth_token        = 'some_oauth_token'
+          n.oauth_token_secret = 'some_oauth_token_secret'
+
+          n.on_success = false
+          n.on_warning = false
+          n.on_failure = false
         end
+      end
+
+      it 'should use pre-configured defaults' do
         notifier = Backup::Notifier::Twitter.new(model)
         notifier.consumer_key.should       == 'some_consumer_key'
         notifier.consumer_secret.should    == 'some_consumer_secret'
@@ -50,26 +81,16 @@ describe Backup::Notifier::Twitter do
         notifier.on_failure.should == false
       end
 
-      it 'should override the configuration defaults' do
-        Backup::Configuration::Notifier::Twitter.defaults do |twitter|
-          twitter.consumer_key       = 'old_consumer_key'
-          twitter.consumer_secret    = 'old_consumer_secret'
-          twitter.oauth_token        = 'old_oauth_token'
-          twitter.oauth_token_secret = 'old_oauth_token_secret'
+      it 'should override pre-configured defaults' do
+        notifier = Backup::Notifier::Twitter.new(model) do |n|
+          n.consumer_key       = 'new_consumer_key'
+          n.consumer_secret    = 'new_consumer_secret'
+          n.oauth_token        = 'new_oauth_token'
+          n.oauth_token_secret = 'new_oauth_token_secret'
 
-          twitter.on_success = true
-          twitter.on_warning = false
-          twitter.on_failure = false
-        end
-        notifier = Backup::Notifier::Twitter.new(model) do |twitter|
-          twitter.consumer_key       = 'new_consumer_key'
-          twitter.consumer_secret    = 'new_consumer_secret'
-          twitter.oauth_token        = 'new_oauth_token'
-          twitter.oauth_token_secret = 'new_oauth_token_secret'
-
-          twitter.on_success = false
-          twitter.on_warning = true
-          twitter.on_failure = true
+          n.on_success = false
+          n.on_warning = true
+          n.on_failure = true
         end
 
         notifier.consumer_key.should       == 'new_consumer_key'
@@ -81,8 +102,8 @@ describe Backup::Notifier::Twitter do
         notifier.on_warning.should == true
         notifier.on_failure.should == true
       end
-    end # context 'when using configuration defaults'
-  end
+    end # context 'when pre-configured defaults have been set'
+  end # describe '#initialize'
 
   describe '#notify!' do
     context 'when status is :success' do

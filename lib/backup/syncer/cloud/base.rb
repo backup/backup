@@ -28,20 +28,22 @@ module Backup
         attr_accessor :concurrency_level
 
         ##
-        # Instantiates a new Cloud Syncer object and sets the default
-        # configuration specified in the Backup::Configuration::Syncer::S3.
-        # Then it sets the object defaults if particular properties weren't set.
-        # Finally it'll evaluate the users configuration file and overwrite
-        # anything that's been defined.
-        def initialize(&block)
+        # Instantiates a new Cloud Syncer object for either
+        # the Cloud::S3 or Cloud::CloudFiles Syncer.
+        #
+        # Pre-configured defaults specified in either
+        # Configuration::Syncer::Cloud::S3 or
+        # Configuration::Syncer::Cloud::CloudFiles
+        # are set via a super() call to Syncer::Base.
+        #
+        # If not specified in the pre-configured defaults,
+        # the Cloud specific defaults are set here before evaluating
+        # any block provided in the user's configuration file.
+        def initialize
           super
 
           @concurrency_type  ||= false
           @concurrency_level ||= 2
-
-          instance_eval(&block) if block_given?
-
-          @path = path.sub(/^\//, '')
         end
 
         ##

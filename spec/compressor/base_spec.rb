@@ -5,8 +5,18 @@ require File.expand_path('../../spec_helper.rb', __FILE__)
 describe Backup::Compressor::Base do
   let(:base) { Backup::Compressor::Base.new }
 
+  it 'should include CLI::Helpers' do
+    Backup::Compressor::Base.
+      include?(Backup::CLI::Helpers).should be_true
+  end
+
+  it 'should include Configuration::Helpers' do
+    Backup::Compressor::Base.
+      include?(Backup::Configuration::Helpers).should be_true
+  end
+
   describe '#initialize' do
-    it 'should load defaults' do
+    it 'should load pre-configured defaults' do
       Backup::Compressor::Base.any_instance.expects(:load_defaults!)
       base
     end

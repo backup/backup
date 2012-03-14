@@ -13,48 +13,81 @@ describe Backup::Database::Riak do
     end
   end
 
+  it 'should be a subclass of Database::Base' do
+    Backup::Database::Riak.superclass.
+      should == Backup::Database::Base
+  end
+
   describe '#initialize' do
-    it 'should read the adapter details correctly' do
-      db.name.should      == 'mydatabase'
-      db.node.should      == 'riak@localhost'
-      db.cookie.should    == 'riak'
-      db.riak_admin_utility.should == '/path/to/riak-admin'
+
+    it 'should load pre-configured defaults through Base' do
+      Backup::Database::Riak.any_instance.expects(:load_defaults!)
+      db
     end
 
-    context 'when options are not set' do
+    it 'should pass the model reference to Base' do
+      db.instance_variable_get(:@model).should == model
+    end
+
+    context 'when no pre-configured defaults have been set' do
+      context 'when options are specified' do
+        it 'should use the given values' do
+          db.name.should      == 'mydatabase'
+          db.node.should      == 'riak@localhost'
+          db.cookie.should    == 'riak'
+          db.riak_admin_utility.should == '/path/to/riak-admin'
+        end
+      end
+
+      context 'when options are not specified' do
+        before do
+          Backup::Database::Riak.any_instance.expects(:utility).
+              with('riak-admin').returns('/real/riak-admin')
+        end
+
+        it 'should provide default values' do
+          db = Backup::Database::Riak.new(model)
+
+          db.name.should        be_nil
+          db.node.should        be_nil
+          db.cookie.should      be_nil
+          db.riak_admin_utility.should == '/real/riak-admin'
+        end
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
       before do
-        Backup::Database::Riak.any_instance.expects(:utility).
-            with('riak-admin').returns('/real/riak-admin')
-      end
-
-      it 'should use default values' do
-        db = Backup::Database::Riak.new(model)
-
-        db.name.should        be_nil
-        db.node.should        be_nil
-        db.cookie.should      be_nil
-        db.riak_admin_utility.should == '/real/riak-admin'
-      end
-    end
-
-    context 'when configuration defaults have been set' do
-      after { Backup::Configuration::Database::Riak.clear_defaults! }
-
-      it 'should use configuration defaults' do
-        Backup::Configuration::Database::Riak.defaults do |db|
+        Backup::Database::Riak.defaults do |db|
           db.name         = 'db_name'
           db.node         = 'db_node'
           db.cookie       = 'db_cookie'
           db.riak_admin_utility = '/default/path/to/riak-admin'
         end
-
-        db = Backup::Database::Riak.new(model)
-        db.name.should        == 'db_name'
-        db.node.should        == 'db_node'
-        db.cookie.should      == 'db_cookie'
-        db.riak_admin_utility.should == '/default/path/to/riak-admin'
       end
-    end
+
+      after { Backup::Database::Riak.clear_defaults! }
+
+      context 'when options are specified' do
+        it 'should override the pre-configured defaults' do
+          db.name.should      == 'mydatabase'
+          db.node.should      == 'riak@localhost'
+          db.cookie.should    == 'riak'
+          db.riak_admin_utility.should == '/path/to/riak-admin'
+        end
+      end
+
+      context 'when options are not specified' do
+        it 'should use the pre-configured defaults' do
+          db = Backup::Database::Riak.new(model)
+
+          db.name.should        == 'db_name'
+          db.node.should        == 'db_node'
+          db.cookie.should      == 'db_cookie'
+          db.riak_admin_utility.should == '/default/path/to/riak-admin'
+        end
+      end
+    end # context 'when no pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#perform!' do

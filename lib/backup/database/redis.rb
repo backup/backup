@@ -13,14 +13,14 @@ module Backup
       attr_accessor :password
 
       ##
+      # Connectivity options
+      attr_accessor :host, :port, :socket
+
+      ##
       # Determines whether Backup should invoke the SAVE command through
       # the 'redis-cli' utility to persist the most recent data before
       # copying over the dump file
       attr_accessor :invoke_save
-
-      ##
-      # Connectivity options
-      attr_accessor :host, :port, :socket
 
       ##
       # Additional "redis-cli" options

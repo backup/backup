@@ -13,32 +13,63 @@ describe Backup::Notifier::Presently do
     end
   end
 
-  describe '#initialize' do
-    it 'should sets the correct values' do
-      notifier.user_name.should == 'user_name'
-      notifier.subdomain.should == 'subdomain'
-      notifier.password.should  == 'password'
-      notifier.group_id.should  == 'group_id'
+  it 'should be a subclass of Notifier::Base' do
+    Backup::Notifier::Presently.
+      superclass.should == Backup::Notifier::Base
+  end
 
-      notifier.on_success.should == true
-      notifier.on_warning.should == true
-      notifier.on_failure.should == true
+  describe '#initialize' do
+    after { Backup::Notifier::Presently.clear_defaults! }
+
+    it 'should load pre-configured defaults through Base' do
+      Backup::Notifier::Presently.any_instance.expects(:load_defaults!)
+      notifier
     end
 
-    context 'when using configuration defaults' do
-      after { Backup::Configuration::Notifier::Presently.clear_defaults! }
+    it 'should pass the model reference to Base' do
+      notifier.instance_variable_get(:@model).should == model
+    end
 
-      it 'should use the configuration defaults' do
-        Backup::Configuration::Notifier::Presently.defaults do |presently|
-          presently.user_name = 'some_user_name'
-          presently.subdomain = 'some_subdomain'
-          presently.password  = 'some_password'
-          presently.group_id  = 'some_group_id'
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        notifier.user_name.should == 'user_name'
+        notifier.subdomain.should == 'subdomain'
+        notifier.password.should  == 'password'
+        notifier.group_id.should  == 'group_id'
 
-          presently.on_success = false
-          presently.on_warning = false
-          presently.on_failure = false
+        notifier.on_success.should == true
+        notifier.on_warning.should == true
+        notifier.on_failure.should == true
+      end
+
+      it 'should use default values if none are given' do
+        notifier = Backup::Notifier::Presently.new(model)
+        notifier.user_name.should be_nil
+        notifier.subdomain.should be_nil
+        notifier.password.should  be_nil
+        notifier.group_id.should  be_nil
+
+        notifier.on_success.should == true
+        notifier.on_warning.should == true
+        notifier.on_failure.should == true
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Notifier::Presently.defaults do |n|
+          n.user_name = 'some_user_name'
+          n.subdomain = 'some_subdomain'
+          n.password  = 'some_password'
+          n.group_id  = 'some_group_id'
+
+          n.on_success = false
+          n.on_warning = false
+          n.on_failure = false
         end
+      end
+
+      it 'should use pre-configured defaults' do
         notifier = Backup::Notifier::Presently.new(model)
         notifier.user_name.should == 'some_user_name'
         notifier.subdomain.should == 'some_subdomain'
@@ -50,26 +81,16 @@ describe Backup::Notifier::Presently do
         notifier.on_failure.should == false
       end
 
-      it 'should override the configuration defaults' do
-        Backup::Configuration::Notifier::Presently.defaults do |presently|
-          presently.user_name = 'old_user_name'
-          presently.subdomain = 'old_subdomain'
-          presently.password  = 'old_password'
-          presently.group_id  = 'old_group_id'
+      it 'should override pre-configured defaults' do
+        notifier = Backup::Notifier::Presently.new(model) do |n|
+          n.user_name = 'new_user_name'
+          n.subdomain = 'new_subdomain'
+          n.password  = 'new_password'
+          n.group_id  = 'new_group_id'
 
-          presently.on_success = true
-          presently.on_warning = false
-          presently.on_failure = false
-        end
-        notifier = Backup::Notifier::Presently.new(model) do |presently|
-          presently.user_name = 'new_user_name'
-          presently.subdomain = 'new_subdomain'
-          presently.password  = 'new_password'
-          presently.group_id  = 'new_group_id'
-
-          presently.on_success = false
-          presently.on_warning = true
-          presently.on_failure = true
+          n.on_success = false
+          n.on_warning = true
+          n.on_failure = true
         end
 
         notifier.user_name.should == 'new_user_name'
@@ -81,8 +102,8 @@ describe Backup::Notifier::Presently do
         notifier.on_warning.should == true
         notifier.on_failure.should == true
       end
-    end # context 'when using configuration defaults'
-  end
+    end # context 'when pre-configured defaults have been set'
+  end # describe '#initialize'
 
   describe '#notify!' do
     context 'when status is :success' do

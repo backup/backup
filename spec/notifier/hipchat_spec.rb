@@ -12,77 +12,100 @@ describe Backup::Notifier::Hipchat do
     end
   end
 
+  it 'should be a subclass of Notifier::Base' do
+    Backup::Notifier::Hipchat.
+      superclass.should == Backup::Notifier::Base
+  end
+
   describe '#initialize' do
+    after { Backup::Notifier::Hipchat.clear_defaults! }
 
-    it 'should set the correct values and defaults' do
-      notifier.token.should           == 'token'
-      notifier.from.should            == 'application'
-      notifier.rooms_notified.should  == ['room1', 'room2']
-      notifier.notify_users.should    == false
-      notifier.success_color.should   == 'yellow'
-      notifier.warning_color.should   == 'yellow'
-      notifier.failure_color.should   == 'yellow'
-
-      notifier.on_success.should == true
-      notifier.on_warning.should == true
-      notifier.on_failure.should == true
+    it 'should load pre-configured defaults through Base' do
+      Backup::Notifier::Hipchat.any_instance.expects(:load_defaults!)
+      notifier
     end
 
-    context 'when setting configuration defaults' do
-      after { Backup::Configuration::Notifier::Hipchat.clear_defaults! }
+    it 'should pass the model reference to Base' do
+      notifier.instance_variable_get(:@model).should == model
+    end
 
-      it 'should use the configuration defaults' do
-        Backup::Configuration::Notifier::Hipchat.defaults do |notifier|
-          notifier.token          = 'old'
-          notifier.from           = 'before'
-          notifier.success_color  = 'green'
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        notifier.token.should           == 'token'
+        notifier.from.should            == 'application'
+        notifier.rooms_notified.should  == ['room1', 'room2']
+        notifier.notify_users.should    == false
+        notifier.success_color.should   == 'yellow'
+        notifier.warning_color.should   == 'yellow'
+        notifier.failure_color.should   == 'yellow'
 
-          notifier.on_failure     = false
-        end
-        hipchat = Backup::Notifier::Hipchat.new(model)
-
-        hipchat.token.should           == 'old'
-        hipchat.from.should            == 'before'
-        hipchat.rooms_notified.should  == []
-        hipchat.notify_users.should    == false
-        hipchat.success_color.should   == 'green'
-        hipchat.warning_color.should   == 'yellow'
-        hipchat.failure_color.should   == 'yellow'
-
-        hipchat.on_success.should == true
-        hipchat.on_warning.should == true
-        hipchat.on_failure.should == false
+        notifier.on_success.should == true
+        notifier.on_warning.should == true
+        notifier.on_failure.should == true
       end
 
-      it 'should override the configuration defaults' do
-        Backup::Configuration::Notifier::Hipchat.defaults do |notifier|
-          notifier.token          = 'old'
-          notifier.from           = 'before'
-          notifier.success_color  = 'green'
+      it 'should use default values if none are given' do
+        notifier = Backup::Notifier::Hipchat.new(model)
+        notifier.token.should           be_nil
+        notifier.from.should            be_nil
+        notifier.rooms_notified.should  == []
+        notifier.notify_users.should    == false
+        notifier.success_color.should   == 'yellow'
+        notifier.warning_color.should   == 'yellow'
+        notifier.failure_color.should   == 'yellow'
 
-          notifier.on_failure     = false
-        end
-        hipchat = Backup::Notifier::Hipchat.new(model) do |notifier|
-          notifier.token          = 'new'
-          notifier.from           = 'after'
-          notifier.failure_color  = 'red'
-
-          notifier.on_success     = false
-          notifier.on_failure     = true
-        end
-
-        hipchat.token.should          == 'new'
-        hipchat.from.should           == 'after'
-        hipchat.success_color.should  == 'green'
-        hipchat.warning_color.should  == 'yellow'
-        hipchat.failure_color.should  == 'red'
-
-        hipchat.on_success.should     == false
-        hipchat.on_warning.should     == true
-        hipchat.on_failure.should     == true
+        notifier.on_success.should == true
+        notifier.on_warning.should == true
+        notifier.on_failure.should == true
       end
-    end # context 'when setting configuration defaults'
+    end # context 'when no pre-configured defaults have been set'
 
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Notifier::Hipchat.defaults do |n|
+          n.token          = 'old'
+          n.from           = 'before'
+          n.success_color  = 'green'
+          n.on_failure     = false
+        end
+      end
+
+      it 'should use pre-configured defaults' do
+        notifier = Backup::Notifier::Hipchat.new(model)
+
+        notifier.token.should           == 'old'
+        notifier.from.should            == 'before'
+        notifier.rooms_notified.should  == []
+        notifier.notify_users.should    == false
+        notifier.success_color.should   == 'green'
+        notifier.warning_color.should   == 'yellow'
+        notifier.failure_color.should   == 'yellow'
+
+        notifier.on_success.should == true
+        notifier.on_warning.should == true
+        notifier.on_failure.should == false
+      end
+
+      it 'should override pre-configured defaults' do
+        notifier = Backup::Notifier::Hipchat.new(model) do |n|
+          n.token          = 'new'
+          n.from           = 'after'
+          n.failure_color  = 'red'
+          n.on_success     = false
+          n.on_failure     = true
+        end
+
+        notifier.token.should          == 'new'
+        notifier.from.should           == 'after'
+        notifier.success_color.should  == 'green'
+        notifier.warning_color.should  == 'yellow'
+        notifier.failure_color.should  == 'red'
+
+        notifier.on_success.should     == false
+        notifier.on_warning.should     == true
+        notifier.on_failure.should     == true
+      end
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#notify!' do
