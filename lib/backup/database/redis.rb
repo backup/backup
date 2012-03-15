@@ -30,6 +30,9 @@ module Backup
       # Path to the redis-cli utility (optional)
       attr_accessor :redis_cli_utility
 
+      attr_deprecate :utility_path, :version => '3.0.21',
+          :replacement => :redis_cli_utility
+
       ##
       # Creates a new instance of the Redis database object
       def initialize(model, &block)
@@ -40,13 +43,6 @@ module Backup
         instance_eval(&block) if block_given?
 
         @name ||= 'dump'
-
-        if @utility_path
-          Logger.warn "[DEPRECATED] " +
-            "Database::Redis#utility_path has been deprecated.\n" +
-            "  Use Database::Redis#redis_cli_utility instead."
-          @redis_cli_utility ||= @utility_path
-        end
         @redis_cli_utility ||= utility('redis-cli')
       end
 

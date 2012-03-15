@@ -23,13 +23,10 @@ module Backup
       # Path to where the backups will be stored
       attr_accessor :path
 
-      # Deprecated as of v3.0.21 - for move to official 'dropbox-sdk' gem (v1.1)
-      def timeout=(value)
-        if value
-          Logger.warn "[DEPRECATED] Backup::Storage::Dropbox.timeout=\n" +
-              "  is deprecated and will be removed at some point."
-        end
-      end
+      attr_deprecate :email,    :version => '3.0.17'
+      attr_deprecate :password, :version => '3.0.17'
+
+      attr_deprecate :timeout, :version => '3.0.21'
 
       ##
       # Creates a new instance of the storage object

@@ -7,12 +7,6 @@ module Backup
       include Backup::Configuration::Helpers
 
       ##
-      # Allows the user to specify the path to a "dump" utility
-      # in case it cannot be auto-detected by Backup
-      # [DEPRECATED] - use each subclass' <utility_name>_utility method
-      attr_accessor :utility_path
-
-      ##
       # Creates a new instance of the MongoDB database object
       # * Called using super(model) from subclasses *
       def initialize(model)

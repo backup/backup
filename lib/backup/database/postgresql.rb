@@ -32,6 +32,9 @@ module Backup
       # Path to pg_dump utility (optional)
       attr_accessor :pg_dump_utility
 
+      attr_deprecate :utility_path, :version => '3.0.21',
+          :replacement => :pg_dump_utility
+
       ##
       # Creates a new instance of the PostgreSQL adapter object
       # Sets the PGPASSWORD environment variable to the password
@@ -45,12 +48,6 @@ module Backup
 
         instance_eval(&block) if block_given?
 
-        if @utility_path
-          Logger.warn "[DEPRECATED] " +
-            "Database::PostgreSQL#utility_path has been deprecated.\n" +
-            "  Use Database::PostgreSQL#pg_dump_utility instead."
-          @pg_dump_utility ||= @utility_path
-        end
         @pg_dump_utility ||= utility(:pg_dump)
       end
 

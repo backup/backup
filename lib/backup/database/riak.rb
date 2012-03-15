@@ -20,6 +20,9 @@ module Backup
       # Path to riak-admin utility (optional)
       attr_accessor :riak_admin_utility
 
+      attr_deprecate :utility_path, :version => '3.0.21',
+          :replacement => :riak_admin_utility
+
       ##
       # Creates a new instance of the Riak adapter object
       def initialize(model, &block)
@@ -27,12 +30,6 @@ module Backup
 
         instance_eval(&block) if block_given?
 
-        if @utility_path
-          Logger.warn "[DEPRECATED] " +
-            "Database::Riak#utility_path has been deprecated.\n" +
-            "  Use Database::Riak#riak_admin_utility instead."
-          @riak_admin_utility ||= @utility_path
-        end
         @riak_admin_utility ||= utility('riak-admin')
       end
 

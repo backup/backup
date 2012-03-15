@@ -32,6 +32,9 @@ module Backup
       # Path to the mongodump utility (optional)
       attr_accessor :mongodump_utility
 
+      attr_deprecate :utility_path, :version => '3.0.21',
+          :replacement => :mongodump_utility
+
       ##
       # Path to the mongo utility (optional)
       attr_accessor :mongo_utility
@@ -52,12 +55,6 @@ module Backup
 
         instance_eval(&block) if block_given?
 
-        if @utility_path
-          Logger.warn "[DEPRECATED] " +
-            "Database::MongoDB#utility_path has been deprecated.\n" +
-            "  Use Database::MongoDB#mongodump_utility instead."
-          @mongodump_utility ||= @utility_path
-        end
         @mongodump_utility  ||= utility(:mongodump)
         @mongo_utility      ||= utility(:mongo)
       end

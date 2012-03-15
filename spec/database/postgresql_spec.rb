@@ -315,4 +315,41 @@ describe Backup::Database::PostgreSQL do
     end
   end
 
+  describe 'deprecations' do
+    after do
+      Backup::Database::PostgreSQL.clear_defaults!
+    end
+
+    describe '#utility_path' do
+      before do
+        Backup::Database::PostgreSQL.any_instance.stubs(:utility)
+        Backup::Logger.expects(:warn).with do |err|
+          err.message.should == "ConfigurationError: [DEPRECATION WARNING]\n" +
+              "  Backup::Database::PostgreSQL.utility_path has been deprecated " +
+                "as of backup v.3.0.21\n" +
+              "  This setting has been replaced with:\n" +
+              "  Backup::Database::PostgreSQL.pg_dump_utility"
+        end
+      end
+
+      context 'when set directly' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          postgresql = Backup::Database::PostgreSQL.new(model) do |db|
+            db.utility_path = 'foo'
+          end
+          postgresql.pg_dump_utility.should == 'foo'
+        end
+      end
+
+      context 'when set as a default' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          postgresql = Backup::Database::PostgreSQL.defaults do |db|
+            db.utility_path = 'foo'
+          end
+          postgresql = Backup::Database::PostgreSQL.new(model)
+          postgresql.pg_dump_utility.should == 'foo'
+        end
+      end
+    end # describe '#utility_path'
+  end
 end

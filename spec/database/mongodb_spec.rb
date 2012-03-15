@@ -466,4 +466,42 @@ describe Backup::Database::MongoDB do
       end
     end
   end
+
+  describe 'deprecations' do
+    after do
+      Backup::Database::MongoDB.clear_defaults!
+    end
+
+    describe '#utility_path' do
+      before do
+        Backup::Database::MongoDB.any_instance.stubs(:utility).returns('blah')
+        Backup::Logger.expects(:warn).with do |err|
+          err.message.should == "ConfigurationError: [DEPRECATION WARNING]\n" +
+              "  Backup::Database::MongoDB.utility_path has been deprecated " +
+                "as of backup v.3.0.21\n" +
+              "  This setting has been replaced with:\n" +
+              "  Backup::Database::MongoDB.mongodump_utility"
+        end
+      end
+
+      context 'when set directly' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          mongodb = Backup::Database::MongoDB.new(model) do |db|
+            db.utility_path = 'foo'
+          end
+          mongodb.mongodump_utility.should == 'foo'
+        end
+      end
+
+      context 'when set as a default' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          mongodb = Backup::Database::MongoDB.defaults do |db|
+            db.utility_path = 'foo'
+          end
+          mongodb = Backup::Database::MongoDB.new(model)
+          mongodb.mongodump_utility.should == 'foo'
+        end
+      end
+    end # describe '#utility_path'
+  end
 end

@@ -33,6 +33,9 @@ module Backup
       # Path to mysqldump utility (optional)
       attr_accessor :mysqldump_utility
 
+      attr_deprecate :utility_path, :version => '3.0.21',
+          :replacement => :mysqldump_utility
+
       ##
       # Creates a new instance of the MySQL adapter object
       def initialize(model, &block)
@@ -45,13 +48,6 @@ module Backup
         instance_eval(&block) if block_given?
 
         @name ||= :all
-
-        if @utility_path
-          Logger.warn "[DEPRECATED] " +
-            "Database::MySQL#utility_path has been deprecated.\n" +
-            "  Use Database::MySQL#mysqldump_utility instead."
-          @mysqldump_utility ||= @utility_path
-        end
         @mysqldump_utility ||= utility(:mysqldump)
       end
 
