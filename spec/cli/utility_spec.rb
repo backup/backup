@@ -86,6 +86,10 @@ describe 'Backup::CLI::Utility' do
       FileUtils.unstub(:touch)
     end
 
+    after do
+      Backup::Config.send(:reset!)
+    end
+
     context 'when given a config_path' do
       context 'when no config file exists' do
         it 'should create both a config and a model under the given path' do
@@ -213,12 +217,16 @@ describe 'Backup::CLI::Utility' do
 
       output_lines.sort.should == expected_lines.sort
     end
-  end
+  end # describe '#generate:model'
 
   describe '#generate:config' do
     before do
       FileUtils.unstub(:mkdir_p)
       FileUtils.unstub(:touch)
+    end
+
+    after do
+      Backup::Config.send(:reset!)
     end
 
     context 'when given a config_path' do
