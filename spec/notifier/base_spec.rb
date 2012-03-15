@@ -6,31 +6,46 @@ describe 'Backup::Notifier::Base' do
   let(:model) { Backup::Model.new(:test_trigger, 'test label') }
   let(:notifier) { Backup::Notifier::Base.new(model) }
 
+  it 'should include Configuration::Helpers' do
+    Backup::Notifier::Base.
+      include?(Backup::Configuration::Helpers).should be_true
+  end
+
   describe '#initialize' do
+    after { Backup::Notifier::Base.clear_defaults! }
 
-    it "sets the correct defaults" do
-      notifier.on_success.should == true
-      notifier.on_warning.should == true
-      notifier.on_failure.should == true
+    it 'should load pre-configured defaults' do
+      Backup::Notifier::Base.any_instance.expects(:load_defaults!)
+      notifier
     end
 
-    context 'when using configuration defaults' do
-      after { Backup::Configuration::Notifier::Base.clear_defaults! }
+    it 'should set a reference to the model' do
+      notifier.instance_variable_get(:@model).should == model
+    end
 
-      it 'uses configuration defaults' do
-        Backup::Configuration::Notifier::Base.defaults do |notifier|
-          notifier.on_success = false
-          notifier.on_warning = false
-          notifier.on_failure = false
-        end
-
-        base = Backup::Notifier::Base.new(model)
-        base.on_success.should == false
-        base.on_warning.should == false
-        base.on_failure.should == false
+    context 'when no pre-configured defaults have been set' do
+      it 'should set default values' do
+        notifier.on_success.should == true
+        notifier.on_warning.should == true
+        notifier.on_failure.should == true
       end
-    end
+    end # context 'when no pre-configured defaults have been set'
 
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Notifier::Base.defaults do |n|
+          n.on_success = false
+          n.on_warning = false
+          n.on_failure = false
+        end
+      end
+
+      it 'should use pre-configured defaults' do
+        notifier.on_success.should be_false
+        notifier.on_warning.should be_false
+        notifier.on_failure.should be_false
+      end
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#perform!' do

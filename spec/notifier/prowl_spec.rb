@@ -11,28 +11,57 @@ describe Backup::Notifier::Prowl do
     end
   end
 
-  describe '#initialize' do
-    it 'should sets the correct values' do
-      notifier.application.should == 'application'
-      notifier.api_key.should     == 'api_key'
+  it 'should be a subclass of Notifier::Base' do
+    Backup::Notifier::Prowl.
+      superclass.should == Backup::Notifier::Base
+  end
 
-      notifier.on_success.should == true
-      notifier.on_warning.should == true
-      notifier.on_failure.should == true
+  describe '#initialize' do
+    after { Backup::Notifier::Prowl.clear_defaults! }
+
+    it 'should load pre-configured defaults through Base' do
+      Backup::Notifier::Prowl.any_instance.expects(:load_defaults!)
+      notifier
     end
 
-    context 'when using configuration defaults' do
-      after { Backup::Configuration::Notifier::Prowl.clear_defaults! }
+    it 'should pass the model reference to Base' do
+      notifier.instance_variable_get(:@model).should == model
+    end
 
-      it 'should use the configuration defaults' do
-        Backup::Configuration::Notifier::Prowl.defaults do |prowl|
-          prowl.application = 'default_app'
-          prowl.api_key     = 'default_api_key'
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        notifier.application.should == 'application'
+        notifier.api_key.should     == 'api_key'
 
-          prowl.on_success = false
-          prowl.on_warning = false
-          prowl.on_failure = false
+        notifier.on_success.should == true
+        notifier.on_warning.should == true
+        notifier.on_failure.should == true
+      end
+
+      it 'should use default values if none are given' do
+        notifier = Backup::Notifier::Prowl.new(model)
+        notifier.application.should be_nil
+        notifier.api_key.should     be_nil
+
+        notifier.on_success.should == true
+        notifier.on_warning.should == true
+        notifier.on_failure.should == true
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Notifier::Prowl.defaults do |n|
+          n.application = 'default_app'
+          n.api_key     = 'default_api_key'
+
+          n.on_success = false
+          n.on_warning = false
+          n.on_failure = false
         end
+      end
+
+      it 'should use pre-configured defaults' do
         notifier = Backup::Notifier::Prowl.new(model)
         notifier.application.should == 'default_app'
         notifier.api_key.should     == 'default_api_key'
@@ -42,22 +71,14 @@ describe Backup::Notifier::Prowl do
         notifier.on_failure.should == false
       end
 
-      it 'should override the configuration defaults' do
-        Backup::Configuration::Notifier::Prowl.defaults do |prowl|
-          prowl.application = 'old_app'
-          prowl.api_key     = 'old_api_key'
+      it 'should override pre-configured defaults' do
+        notifier = Backup::Notifier::Prowl.new(model) do |n|
+          n.application = 'new_app'
+          n.api_key     = 'new_api_key'
 
-          prowl.on_success = true
-          prowl.on_warning = false
-          prowl.on_failure = false
-        end
-        notifier = Backup::Notifier::Prowl.new(model) do |prowl|
-          prowl.application = 'new_app'
-          prowl.api_key     = 'new_api_key'
-
-          prowl.on_success = false
-          prowl.on_warning = true
-          prowl.on_failure = true
+          n.on_success = false
+          n.on_warning = true
+          n.on_failure = true
         end
 
         notifier.application.should == 'new_app'
@@ -67,8 +88,8 @@ describe Backup::Notifier::Prowl do
         notifier.on_warning.should == true
         notifier.on_failure.should == true
       end
-    end # context 'when using configuration defaults'
-  end
+    end # context 'when pre-configured defaults have been set'
+  end # describe '#initialize'
 
   describe '#notify!' do
     context 'when status is :success' do

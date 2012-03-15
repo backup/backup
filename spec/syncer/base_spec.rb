@@ -3,41 +3,50 @@
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Syncer::Base do
-  let(:base)    { Backup::Syncer::Base }
-  let(:syncer)  { base.new }
+  let(:syncer)    { Backup::Syncer::Base.new }
 
   it 'should include CLI::Helpers' do
-    base.included_modules.should include(Backup::CLI::Helpers)
+    Backup::Syncer::Base.
+      include?(Backup::CLI::Helpers).should be_true
   end
 
   it 'should include Configuration::Helpers' do
-    base.included_modules.should include(Backup::Configuration::Helpers)
+    Backup::Syncer::Base.
+      include?(Backup::Configuration::Helpers).should be_true
   end
 
   describe '#initialize' do
+    after { Backup::Syncer::Base.clear_defaults! }
 
-    it 'should use default values' do
-      syncer.path.should               == 'backups'
-      syncer.mirror.should             == false
-      syncer.directories.should        == []
+    it 'should load pre-configured defaults through Base' do
+      Backup::Syncer::Base.any_instance.expects(:load_defaults!)
+      syncer
     end
 
-    context 'when setting configuration defaults' do
-      after { Backup::Configuration::Syncer::Base.clear_defaults! }
+    it 'should establish a new array for @directories' do
+      syncer.directories.should == []
+    end
 
-      it 'should use the configured defaults' do
-        Backup::Configuration::Syncer::Base.defaults do |base|
-          base.path               = 'some_path'
-          base.mirror             = 'some_mirror'
-          #base.directories        = 'cannot_have_a_default_value'
-        end
-        syncer = Backup::Syncer::Base.new
-        syncer.path.should               == 'some_path'
-        syncer.mirror.should             == 'some_mirror'
-        syncer.directories.should        == []
+    context 'when no pre-configured defaults have been set' do
+      it 'should set default values' do
+        syncer.path.should    == 'backups'
+        syncer.mirror.should  == false
       end
-    end
+    end # context 'when no pre-configured defaults have been set'
 
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Syncer::Base.defaults do |s|
+          s.path   = 'some_path'
+          s.mirror = 'some_mirror'
+        end
+      end
+
+      it 'should use pre-configured defaults' do
+        syncer.path.should    == 'some_path'
+        syncer.mirror.should  == 'some_mirror'
+      end
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#directories' do

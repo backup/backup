@@ -12,32 +12,63 @@ describe Backup::Storage::Ninefold do
     end
   end
 
+  it 'should be a subclass of Storage::Base' do
+    Backup::Storage::Ninefold.
+      superclass.should == Backup::Storage::Base
+  end
+
   describe '#initialize' do
-    it 'should set the correct values' do
-      storage.storage_token.should  == 'my_token'
-      storage.storage_secret.should == 'my_secret'
-      storage.path.should       == 'backups'
+    after { Backup::Storage::Ninefold.clear_defaults! }
 
-      storage.storage_id.should be_nil
-      storage.keep.should       == 5
+    it 'should load pre-configured defaults through Base' do
+      Backup::Storage::Ninefold.any_instance.expects(:load_defaults!)
+      storage
     end
 
-    it 'should set a storage_id if given' do
-      nf = Backup::Storage::Ninefold.new(model, 'my storage_id')
-      nf.storage_id.should == 'my storage_id'
+    it 'should pass the model reference to Base' do
+      storage.instance_variable_get(:@model).should == model
     end
 
-    context 'when setting configuration defaults' do
-      after { Backup::Configuration::Storage::Ninefold.clear_defaults! }
+    it 'should pass the storage_id to Base' do
+      storage = Backup::Storage::Ninefold.new(model, 'my_storage_id')
+      storage.storage_id.should == 'my_storage_id'
+    end
 
-      it 'should use the configured defaults' do
-        Backup::Configuration::Storage::Ninefold.defaults do |nf|
-          nf.storage_token    = 'some_token'
-          nf.storage_secret   = 'some_secret'
-          nf.path             = 'some_path'
-          nf.keep             = 15
-        end
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        storage.storage_token.should  == 'my_token'
+        storage.storage_secret.should == 'my_secret'
+        storage.path.should       == 'backups'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       == 5
+      end
+
+      it 'should use default values if none are given' do
         storage = Backup::Storage::Ninefold.new(model)
+
+        storage.storage_token.should  be_nil
+        storage.storage_secret.should be_nil
+        storage.path.should       == 'backups'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       be_nil
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Storage::Ninefold.defaults do |s|
+          s.storage_token    = 'some_token'
+          s.storage_secret   = 'some_secret'
+          s.path             = 'some_path'
+          s.keep             = 15
+        end
+      end
+
+      it 'should use pre-configured defaults' do
+        storage = Backup::Storage::Ninefold.new(model)
+
         storage.storage_token.should  == 'some_token'
         storage.storage_secret.should == 'some_secret'
         storage.path.should           == 'some_path'
@@ -46,18 +77,12 @@ describe Backup::Storage::Ninefold do
         storage.keep.should       == 15
       end
 
-      it 'should override the configured defaults' do
-        Backup::Configuration::Storage::Ninefold.defaults do |nf|
-          nf.storage_token    = 'old_token'
-          nf.storage_secret   = 'old_secret'
-          nf.path             = 'old_path'
-          nf.keep             = 15
-        end
-        storage = Backup::Storage::Ninefold.new(model) do |nf|
-          nf.storage_token    = 'new_token'
-          nf.storage_secret   = 'new_secret'
-          nf.path             = 'new_path'
-          nf.keep             = 10
+      it 'should override pre-configured defaults' do
+        storage = Backup::Storage::Ninefold.new(model) do |s|
+          s.storage_token    = 'new_token'
+          s.storage_secret   = 'new_secret'
+          s.path             = 'new_path'
+          s.keep             = 10
         end
 
         storage.storage_token.should  == 'new_token'
@@ -67,8 +92,7 @@ describe Backup::Storage::Ninefold do
         storage.storage_id.should be_nil
         storage.keep.should       == 10
       end
-    end # context 'when setting configuration defaults'
-
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#provider' do

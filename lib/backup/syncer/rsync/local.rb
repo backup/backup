@@ -6,11 +6,15 @@ module Backup
       class Local < Base
 
         ##
-        # Instantiates a new RSync::Local Syncer object.
-        # Default configuration values and any specified in
-        # Backup::Configuration::Syncer::RSync::Local are set from Base.
-        # The user's configuration file is then evaluated to overwrite
-        # these values or provide additional configuration.
+        # Instantiates a new RSync::Local Syncer.
+        #
+        # Pre-configured defaults specified in
+        # Configuration::Syncer::RSync::Local
+        # are set via a super() call to RSync::Base,
+        # which in turn will invoke Syncer::Base.
+        #
+        # Once pre-configured defaults and RSync specific defaults are set,
+        # the block from the user's configuration file is evaluated.
         def initialize(&block)
           super
 

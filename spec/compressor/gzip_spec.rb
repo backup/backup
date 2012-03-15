@@ -5,41 +5,41 @@ require File.expand_path('../../spec_helper.rb', __FILE__)
 describe Backup::Compressor::Gzip do
   let(:compressor) { Backup::Compressor::Gzip.new }
 
-  describe 'setting configuration defaults' do
-    after { Backup::Configuration::Compressor::Gzip.clear_defaults! }
+  describe '#initialize' do
+    after { Backup::Compressor::Gzip.clear_defaults! }
 
-    it 'uses and overrides configuration defaults' do
-      Backup::Configuration::Compressor::Gzip.best.should be_false
-      Backup::Configuration::Compressor::Gzip.fast.should be_false
+    it 'should load pre-configured defaults' do
+      Backup::Compressor::Gzip.any_instance.expects(:load_defaults!)
+      compressor # instantiate object
+    end
 
-      compressor = Backup::Compressor::Gzip.new
-      compressor.best.should be_false
-      compressor.fast.should be_false
-
-      Backup::Configuration::Compressor::Gzip.defaults do |c|
+    it 'should use pre-configured defaults' do
+      Backup::Compressor::Gzip.defaults do |c|
         c.best = true
         c.fast = true
       end
-      Backup::Configuration::Compressor::Gzip.best.should be_true
-      Backup::Configuration::Compressor::Gzip.fast.should be_true
-
-      compressor = Backup::Compressor::Gzip.new
       compressor.best.should be_true
       compressor.fast.should be_true
+    end
 
-      compressor = Backup::Compressor::Gzip.new do |c|
-        c.best = false
-      end
+    it 'should set defaults when no pre-configured defaults are set' do
       compressor.best.should be_false
-      compressor.fast.should be_true
-
-      compressor = Backup::Compressor::Gzip.new do |c|
-        c.fast = false
-      end
-      compressor.best.should be_true
       compressor.fast.should be_false
     end
-  end # describe 'setting configuration defaults'
+
+    it 'should override pre-configured defaults' do
+      Backup::Compressor::Gzip.defaults do |c|
+        c.best = true
+        c.fast = true
+      end
+      compressor = Backup::Compressor::Gzip.new do |c|
+        c.best = false
+        c.fast = false
+      end
+      compressor.best.should be_false
+      compressor.fast.should be_false
+    end
+  end # describe 'configuration defaults'
 
   describe '#compress_with' do
     before do

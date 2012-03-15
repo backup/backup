@@ -13,22 +13,26 @@ describe Backup::Storage::FTP do
     end
   end
 
-  describe '#initialize' do
-    it 'should set the correct values' do
-      storage.username.should     == 'my_username'
-      storage.password.should     == 'my_password'
-      storage.ip.should           == '123.45.678.90'
-      storage.port.should         == 21
-      storage.path.should         == 'backups'
-      storage.passive_mode.should == false
+  it 'should be a subclass of Storage::Base' do
+    Backup::Storage::FTP.
+      superclass.should == Backup::Storage::Base
+  end
 
-      storage.storage_id.should be_nil
-      storage.keep.should       == 5
+  describe '#initialize' do
+    after { Backup::Storage::FTP.clear_defaults! }
+
+    it 'should load pre-configured defaults through Base' do
+      Backup::Storage::FTP.any_instance.expects(:load_defaults!)
+      storage
     end
 
-    it 'should set a storage_id if given' do
-      ftp = Backup::Storage::FTP.new(model, 'my storage_id')
-      ftp.storage_id.should == 'my storage_id'
+    it 'should pass the model reference to Base' do
+      storage.instance_variable_get(:@model).should == model
+    end
+
+    it 'should pass the storage_id to Base' do
+      storage = Backup::Storage::FTP.new(model, 'my_storage_id')
+      storage.storage_id.should == 'my_storage_id'
     end
 
     it 'should remove any preceeding tilde and slash from the path' do
@@ -38,20 +42,50 @@ describe Backup::Storage::FTP do
       storage.path.should == 'my_backups/path'
     end
 
-    context 'when setting configuration defaults' do
-      after { Backup::Configuration::Storage::FTP.clear_defaults! }
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        storage.username.should     == 'my_username'
+        storage.password.should     == 'my_password'
+        storage.ip.should           == '123.45.678.90'
+        storage.port.should         == 21
+        storage.path.should         == 'backups'
+        storage.passive_mode.should == false
 
-      it 'should use the configured defaults' do
-        Backup::Configuration::Storage::FTP.defaults do |ftp|
-          ftp.username     = 'some_username'
-          ftp.password     = 'some_password'
-          ftp.ip           = 'some_ip'
-          ftp.port         = 'some_port'
-          ftp.path         = 'some_path'
-          ftp.passive_mode = 'some_passive_mode'
-          ftp.keep         = 'some_keep'
-        end
+        storage.storage_id.should be_nil
+        storage.keep.should       == 5
+      end
+
+      it 'should use default values if none are given' do
         storage = Backup::Storage::FTP.new(model)
+
+        storage.username.should     be_nil
+        storage.password.should     be_nil
+        storage.ip.should           be_nil
+        storage.port.should         == 21
+        storage.path.should         == 'backups'
+        storage.passive_mode.should == false
+
+        storage.storage_id.should be_nil
+        storage.keep.should       be_nil
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Storage::FTP.defaults do |s|
+          s.username     = 'some_username'
+          s.password     = 'some_password'
+          s.ip           = 'some_ip'
+          s.port         = 'some_port'
+          s.path         = 'some_path'
+          s.passive_mode = 'some_passive_mode'
+          s.keep         = 'some_keep'
+        end
+      end
+
+      it 'should use pre-configured defaults' do
+        storage = Backup::Storage::FTP.new(model)
+
         storage.username.should     == 'some_username'
         storage.password.should     == 'some_password'
         storage.ip.should           == 'some_ip'
@@ -63,24 +97,15 @@ describe Backup::Storage::FTP do
         storage.keep.should       == 'some_keep'
       end
 
-      it 'should override the configured defaults' do
-        Backup::Configuration::Storage::FTP.defaults do |ftp|
-          ftp.username     = 'old_username'
-          ftp.password     = 'old_password'
-          ftp.ip           = 'old_ip'
-          ftp.port         = 'old_port'
-          ftp.path         = 'old_path'
-          ftp.passive_mode = 'old_passive_mode'
-          ftp.keep         = 'old_keep'
-        end
-        storage = Backup::Storage::FTP.new(model) do |ftp|
-          ftp.username     = 'new_username'
-          ftp.password     = 'new_password'
-          ftp.ip           = 'new_ip'
-          ftp.port         = 'new_port'
-          ftp.path         = 'new_path'
-          ftp.passive_mode = 'new_passive_mode'
-          ftp.keep         = 'new_keep'
+      it 'should override pre-configured defaults' do
+        storage = Backup::Storage::FTP.new(model) do |s|
+          s.username     = 'new_username'
+          s.password     = 'new_password'
+          s.ip           = 'new_ip'
+          s.port         = 'new_port'
+          s.path         = 'new_path'
+          s.passive_mode = 'new_passive_mode'
+          s.keep         = 'new_keep'
         end
 
         storage.username.should     == 'new_username'
@@ -93,8 +118,7 @@ describe Backup::Storage::FTP do
         storage.storage_id.should be_nil
         storage.keep.should       == 'new_keep'
       end
-    end # context 'when setting configuration defaults'
-
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#connection' do

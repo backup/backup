@@ -17,86 +17,127 @@ describe Backup::Database::MongoDB do
       db.additional_options = ['--query', '--foo']
       db.mongodump_utility  = '/path/to/mongodump'
       db.mongo_utility      = '/path/to/mongo'
+      db.lock               = true
     end
+  end
+
+  it 'should be a subclass of Database::Base' do
+    Backup::Database::MongoDB.superclass.
+      should == Backup::Database::Base
   end
 
   describe '#initialize' do
 
-    it 'should read the adapter details correctly' do
-      db.name.should      == 'mydatabase'
-      db.username.should  == 'someuser'
-      db.password.should  == 'secret'
-      db.host.should      == 'localhost'
-      db.port.should      == 123
-
-      db.ipv6.should                == true
-      db.only_collections.should    == ['users', 'pirates']
-      db.additional_options.should  == ['--query', '--foo']
-      db.mongodump_utility.should   == '/path/to/mongodump'
-      db.mongo_utility.should       == '/path/to/mongo'
-      db.lock.should                == false
+    it 'should load pre-configured defaults through Base' do
+      Backup::Database::MongoDB.any_instance.expects(:load_defaults!)
+      db
     end
 
-    context 'when options are not set' do
+    it 'should pass the model reference to Base' do
+      db.instance_variable_get(:@model).should == model
+    end
+
+    context 'when no pre-configured defaults have been set' do
+      context 'when options are specified' do
+        it 'should use the given values' do
+          db.name.should      == 'mydatabase'
+          db.username.should  == 'someuser'
+          db.password.should  == 'secret'
+          db.host.should      == 'localhost'
+          db.port.should      == 123
+
+          db.ipv6.should                == true
+          db.only_collections.should    == ['users', 'pirates']
+          db.additional_options.should  == ['--query', '--foo']
+          db.mongodump_utility.should   == '/path/to/mongodump'
+          db.mongo_utility.should       == '/path/to/mongo'
+          db.lock.should                == true
+        end
+      end
+
+      context 'when options are not specified' do
+        before do
+          Backup::Database::MongoDB.any_instance.expects(:utility).
+              with(:mongodump).returns('/real/mongodump')
+          Backup::Database::MongoDB.any_instance.expects(:utility).
+              with(:mongo).returns('/real/mongo')
+        end
+
+        it 'should provide default values' do
+          db = Backup::Database::MongoDB.new(model)
+
+          db.name.should      be_nil
+          db.username.should  be_nil
+          db.password.should  be_nil
+          db.host.should      be_nil
+          db.port.should      be_nil
+
+          db.ipv6.should                be_false
+          db.only_collections.should    == []
+          db.additional_options.should  == []
+          db.mongodump_utility.should   == '/real/mongodump'
+          db.mongo_utility.should       == '/real/mongo'
+          db.lock.should                be_false
+        end
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
       before do
-        Backup::Database::MongoDB.any_instance.expects(:utility).
-            with(:mongodump).returns('/real/mongodump')
-        Backup::Database::MongoDB.any_instance.expects(:utility).
-            with(:mongo).returns('/real/mongo')
-      end
-
-      it 'should use default values' do
-        db = Backup::Database::MongoDB.new(model)
-
-        db.name.should      be_nil
-        db.username.should  be_nil
-        db.password.should  be_nil
-        db.host.should      be_nil
-        db.port.should      be_nil
-
-        db.ipv6.should                be_false
-        db.only_collections.should    == []
-        db.additional_options.should  == []
-        db.mongodump_utility.should   == '/real/mongodump'
-        db.mongo_utility.should       == '/real/mongo'
-        db.lock.should                be_false
-      end
-    end
-
-    context 'when configuration defaults have been set' do
-      after { Backup::Configuration::Database::MongoDB.clear_defaults! }
-
-      it 'should use configuration defaults' do
-        Backup::Configuration::Database::MongoDB.defaults do |db|
+        Backup::Database::MongoDB.defaults do |db|
           db.name       = 'db_name'
           db.username   = 'db_username'
           db.password   = 'db_password'
           db.host       = 'db_host'
           db.port       = 789
 
-          db.ipv6               = true
+          db.ipv6               = 'default_ipv6'
           db.only_collections   = ['collection']
           db.additional_options = ['--opt']
           db.mongodump_utility  = '/default/path/to/mongodump'
           db.mongo_utility      = '/default/path/to/mongo'
-          db.lock               = true
+          db.lock               = 'default_lock'
         end
-
-        db = Backup::Database::MongoDB.new(model)
-        db.name.should      == 'db_name'
-        db.username.should  == 'db_username'
-        db.password.should  == 'db_password'
-        db.host.should      == 'db_host'
-        db.port.should      == 789
-
-        db.ipv6.should                be_true
-        db.only_collections.should    == ['collection']
-        db.additional_options.should  == ['--opt']
-        db.mongodump_utility.should   == '/default/path/to/mongodump'
-        db.mongo_utility.should       == '/default/path/to/mongo'
-        db.lock.should                be_true
       end
-    end
+
+      after { Backup::Database::MongoDB.clear_defaults! }
+
+      context 'when options are specified' do
+        it 'should override the pre-configured defaults' do
+          db.name.should      == 'mydatabase'
+          db.username.should  == 'someuser'
+          db.password.should  == 'secret'
+          db.host.should      == 'localhost'
+          db.port.should      == 123
+
+          db.ipv6.should                == true
+          db.only_collections.should    == ['users', 'pirates']
+          db.additional_options.should  == ['--query', '--foo']
+          db.mongodump_utility.should   == '/path/to/mongodump'
+          db.mongo_utility.should       == '/path/to/mongo'
+          db.lock.should                == true
+        end
+      end
+
+      context 'when options are not specified' do
+        it 'should use the pre-configured defaults' do
+          db = Backup::Database::MongoDB.new(model)
+
+          db.name.should      == 'db_name'
+          db.username.should  == 'db_username'
+          db.password.should  == 'db_password'
+          db.host.should      == 'db_host'
+          db.port.should      == 789
+
+          db.ipv6.should                == 'default_ipv6'
+          db.only_collections.should    == ['collection']
+          db.additional_options.should  == ['--opt']
+          db.mongodump_utility.should   == '/default/path/to/mongodump'
+          db.mongo_utility.should       == '/default/path/to/mongo'
+          db.lock.should                == 'default_lock'
+        end
+      end
+    end # context 'when no pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#perform!' do
@@ -109,6 +150,7 @@ describe Backup::Database::MongoDB do
     end
 
     context 'when #lock is set to false' do
+      before { db.lock = false }
 
       context 'when #only_collections has not been specified' do
         before { db.only_collections = [] }
@@ -138,7 +180,6 @@ describe Backup::Database::MongoDB do
     end # context 'when #lock is set to false'
 
     context 'when #lock is set to true' do
-      before { db.lock = true }
 
       context 'when #only_collections has not been specified' do
         before { db.only_collections = [] }
@@ -171,6 +212,8 @@ describe Backup::Database::MongoDB do
 
     context 'when errors occur' do
       it 'should re-raise error and skip package!' do
+        db.lock = false
+
         db.expects(:specific_collection_dump!).in_sequence(s).
             raises('Test Error Message')
         db.expects(:package!).never
@@ -186,8 +229,6 @@ describe Backup::Database::MongoDB do
       end
 
       it 'should ensure database is unlocked' do
-        db.lock = true
-
         db.expects(:lock_database).in_sequence(s)
         db.expects(:specific_collection_dump!).in_sequence(s).
             raises('Test Error Message')

@@ -5,55 +5,47 @@ require File.expand_path('../../spec_helper.rb', __FILE__)
 describe Backup::Compressor::Pbzip2 do
   let(:compressor) { Backup::Compressor::Pbzip2.new }
 
-  describe 'setting configuration defaults' do
-    after { Backup::Configuration::Compressor::Pbzip2.clear_defaults! }
+  describe '#initialize' do
+    after { Backup::Compressor::Pbzip2.clear_defaults! }
 
-    it 'uses and overrides configuration defaults' do
-      Backup::Configuration::Compressor::Pbzip2.best.should be_false
-      Backup::Configuration::Compressor::Pbzip2.fast.should be_false
-      Backup::Configuration::Compressor::Pbzip2.processors.should be_false
+    it 'should load pre-configured defaults' do
+      Backup::Compressor::Pbzip2.any_instance.expects(:load_defaults!)
+      compressor
+    end
 
-      compressor = Backup::Compressor::Pbzip2.new
-      compressor.best.should be_false
-      compressor.fast.should be_false
-      compressor.processors.should be_false
-
-      Backup::Configuration::Compressor::Pbzip2.defaults do |c|
+    it 'should use pre-configured defaults' do
+      Backup::Compressor::Pbzip2.defaults do |c|
         c.best = true
         c.fast = true
         c.processors = 2
       end
-      Backup::Configuration::Compressor::Pbzip2.best.should be_true
-      Backup::Configuration::Compressor::Pbzip2.fast.should be_true
-      Backup::Configuration::Compressor::Pbzip2.processors.should == 2
-
-      compressor = Backup::Compressor::Pbzip2.new
       compressor.best.should be_true
       compressor.fast.should be_true
       compressor.processors.should == 2
+    end
 
-      compressor = Backup::Compressor::Pbzip2.new do |c|
-        c.best = false
-      end
+    it 'should set defaults when no pre-configured defaults are set' do
       compressor.best.should be_false
-      compressor.fast.should be_true
-      compressor.processors.should == 2
-
-      compressor = Backup::Compressor::Pbzip2.new do |c|
-        c.fast = false
-      end
-      compressor.best.should be_true
       compressor.fast.should be_false
-      compressor.processors.should == 2
-
-      compressor = Backup::Compressor::Pbzip2.new do |c|
-        c.processors = false
-      end
-      compressor.best.should be_true
-      compressor.fast.should be_true
       compressor.processors.should be_false
     end
-  end # describe 'setting configuration defaults'
+
+    it 'should override pre-configured defaults' do
+      Backup::Compressor::Pbzip2.defaults do |c|
+        c.best = true
+        c.fast = true
+        c.processors = 2
+      end
+      compressor = Backup::Compressor::Pbzip2.new do |c|
+        c.best = false
+        c.fast = false
+        c.processors = 4
+      end
+      compressor.best.should be_false
+      compressor.fast.should be_false
+      compressor.processors.should == 4
+    end
+  end # describe 'configuration defaults'
 
   describe '#compress_with' do
     before do

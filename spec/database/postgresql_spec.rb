@@ -20,49 +20,66 @@ describe Backup::Database::PostgreSQL do
     end
   end
 
+  it 'should be a subclass of Database::Base' do
+    Backup::Database::PostgreSQL.superclass.
+      should == Backup::Database::Base
+  end
+
   describe '#initialize' do
-    it 'should read the adapter details correctly' do
-      db.name.should      == 'mydatabase'
-      db.username.should  == 'someuser'
-      db.password.should  == 'secret'
-      db.host.should      == 'localhost'
-      db.port.should      == '123'
-      db.socket.should    == '/pgsql.sock'
 
-      db.skip_tables.should == ['logs', 'profiles']
-      db.only_tables.should == ['users', 'pirates']
-      db.additional_options.should == ['--single-transaction', '--quick']
-      db.pg_dump_utility.should    == '/path/to/pg_dump'
+    it 'should load pre-configured defaults through Base' do
+      Backup::Database::PostgreSQL.any_instance.expects(:load_defaults!)
+      db
     end
 
-    context 'when options are not set' do
+    it 'should pass the model reference to Base' do
+      db.instance_variable_get(:@model).should == model
+    end
+
+    context 'when no pre-configured defaults have been set' do
+      context 'when options are specified' do
+        it 'should use the given values' do
+          db.name.should      == 'mydatabase'
+          db.username.should  == 'someuser'
+          db.password.should  == 'secret'
+          db.host.should      == 'localhost'
+          db.port.should      == '123'
+          db.socket.should    == '/pgsql.sock'
+
+          db.skip_tables.should == ['logs', 'profiles']
+          db.only_tables.should == ['users', 'pirates']
+          db.additional_options.should == ['--single-transaction', '--quick']
+          db.pg_dump_utility.should  == '/path/to/pg_dump'
+        end
+      end
+
+      context 'when options are not specified' do
+        before do
+          Backup::Database::PostgreSQL.any_instance.expects(:utility).
+              with(:pg_dump).returns('/real/pg_dump')
+        end
+
+        it 'should provide default values' do
+          db = Backup::Database::PostgreSQL.new(model)
+
+          db.name.should      be_nil
+          db.username.should  be_nil
+          db.password.should  be_nil
+          db.host.should      be_nil
+          db.port.should      be_nil
+          db.socket.should    be_nil
+
+          db.skip_tables.should         == []
+          db.only_tables.should         == []
+          db.additional_options.should  == []
+          db.pg_dump_utility.should  == '/real/pg_dump'
+        end
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
       before do
-        Backup::Database::PostgreSQL.any_instance.expects(:utility).
-            with(:pg_dump).returns('/real/pg_dump')
-      end
-
-      it 'should use default values' do
-        db = Backup::Database::PostgreSQL.new(model)
-
-        db.name.should      be_nil
-        db.username.should  be_nil
-        db.password.should  be_nil
-        db.host.should      be_nil
-        db.port.should      be_nil
-        db.socket.should    be_nil
-
-        db.skip_tables.should         == []
-        db.only_tables.should         == []
-        db.additional_options.should  == []
-        db.pg_dump_utility.should     == '/real/pg_dump'
-      end
-    end
-
-    context 'when configuration defaults have been set' do
-      after { Backup::Configuration::Database::PostgreSQL.clear_defaults! }
-
-      it 'should use configuration defaults' do
-        Backup::Configuration::Database::PostgreSQL.defaults do |db|
+        Backup::Database::PostgreSQL.defaults do |db|
           db.name       = 'db_name'
           db.username   = 'db_username'
           db.password   = 'db_password'
@@ -73,23 +90,46 @@ describe Backup::Database::PostgreSQL do
           db.skip_tables = ['skip', 'tables']
           db.only_tables = ['only', 'tables']
           db.additional_options = ['--add', '--opts']
-          db.pg_dump_utility    = '/default/path/to/pg_dump'
+          db.pg_dump_utility  = '/default/path/to/pg_dump'
         end
-
-        db = Backup::Database::PostgreSQL.new(model)
-        db.name.should      == 'db_name'
-        db.username.should  == 'db_username'
-        db.password.should  == 'db_password'
-        db.host.should      == 'db_host'
-        db.port.should      == 789
-        db.socket.should    == '/foo.sock'
-
-        db.skip_tables.should         == ['skip', 'tables']
-        db.only_tables.should         == ['only', 'tables']
-        db.additional_options.should  == ['--add', '--opts']
-        db.pg_dump_utility.should     == '/default/path/to/pg_dump'
       end
-    end
+
+      after { Backup::Database::PostgreSQL.clear_defaults! }
+
+      context 'when options are specified' do
+        it 'should override the pre-configured defaults' do
+          db.name.should      == 'mydatabase'
+          db.username.should  == 'someuser'
+          db.password.should  == 'secret'
+          db.host.should      == 'localhost'
+          db.port.should      == '123'
+          db.socket.should    == '/pgsql.sock'
+
+          db.skip_tables.should == ['logs', 'profiles']
+          db.only_tables.should == ['users', 'pirates']
+          db.additional_options.should == ['--single-transaction', '--quick']
+          db.pg_dump_utility.should  == '/path/to/pg_dump'
+        end
+      end
+
+      context 'when options are not specified' do
+        it 'should use the pre-configured defaults' do
+          db = Backup::Database::PostgreSQL.new(model)
+
+          db.name.should      == 'db_name'
+          db.username.should  == 'db_username'
+          db.password.should  == 'db_password'
+          db.host.should      == 'db_host'
+          db.port.should      == 789
+          db.socket.should    == '/foo.sock'
+
+          db.skip_tables.should         == ['skip', 'tables']
+          db.only_tables.should         == ['only', 'tables']
+          db.additional_options.should  == ['--add', '--opts']
+          db.pg_dump_utility.should   == '/default/path/to/pg_dump'
+        end
+      end
+    end # context 'when no pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#perform!' do

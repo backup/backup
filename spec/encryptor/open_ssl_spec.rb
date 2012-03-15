@@ -12,42 +12,61 @@ describe Backup::Encryptor::OpenSSL do
     end
   end
 
+  it 'should be a subclass of Encryptor::Base' do
+    Backup::Encryptor::OpenSSL.
+      superclass.should == Backup::Encryptor::Base
+  end
+
   describe '#initialize' do
-    it 'should read the adapter details correctly' do
-      encryptor.password.should       == 'mypassword'
-      encryptor.password_file.should  == '/my/password/file'
-      encryptor.base64.should         == true
-      encryptor.salt.should           == true
+    after { Backup::Encryptor::OpenSSL.clear_defaults! }
+
+    it 'should load pre-configured defaults' do
+      Backup::Encryptor::OpenSSL.any_instance.expects(:load_defaults!)
+      encryptor
     end
 
-    context 'when options are not set' do
-      it 'should use default values' do
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        encryptor.password.should       == 'mypassword'
+        encryptor.password_file.should  == '/my/password/file'
+        encryptor.base64.should         == true
+        encryptor.salt.should           == true
+      end
+
+      it 'should use default values if none are given' do
         encryptor = Backup::Encryptor::OpenSSL.new
         encryptor.password.should       be_nil
         encryptor.password_file.should  be_nil
         encryptor.base64.should         be_false
         encryptor.salt.should           be_true
       end
-    end
+    end # context 'when no pre-configured defaults have been set'
 
-    context 'when configuration defaults have been set' do
-      after { Backup::Configuration::Encryptor::OpenSSL.clear_defaults! }
-
-      it 'should use configuration defaults' do
-        Backup::Configuration::Encryptor::OpenSSL.defaults do |encryptor|
-          encryptor.password      = 'my_password'
-          encryptor.password_file = '/my_password/file'
-          encryptor.base64        = true
-          encryptor.salt          = true
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Encryptor::OpenSSL.defaults do |e|
+          e.password      = 'default_password'
+          e.password_file = '/default/password/file'
+          e.base64        = 'default_base64'
+          e.salt          = 'default_salt'
         end
+      end
 
+      it 'should use pre-configured defaults' do
         encryptor = Backup::Encryptor::OpenSSL.new
-        encryptor.password.should       == 'my_password'
-        encryptor.password_file.should  == '/my_password/file'
+        encryptor.password      = 'default_password'
+        encryptor.password_file = '/default/password/file'
+        encryptor.base64        = 'default_base64'
+        encryptor.salt          = 'default_salt'
+      end
+
+      it 'should override pre-configured defaults' do
+        encryptor.password.should       == 'mypassword'
+        encryptor.password_file.should  == '/my/password/file'
         encryptor.base64.should         == true
         encryptor.salt.should           == true
       end
-    end
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#encrypt_with' do

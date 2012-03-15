@@ -13,17 +13,26 @@ describe Backup::Storage::Local do
     end
   end
 
-  describe '#initialize' do
-    it 'should set the correct values' do
-      storage.path.should == storage_path
+  it 'should be a subclass of Storage::Base' do
+    Backup::Storage::Local.
+      superclass.should == Backup::Storage::Base
+  end
 
-      storage.storage_id.should be_nil
-      storage.keep.should       == 5
+  describe '#initialize' do
+    after { Backup::Storage::Local.clear_defaults! }
+
+    it 'should load pre-configured defaults through Base' do
+      Backup::Storage::Local.any_instance.expects(:load_defaults!)
+      storage
     end
 
-    it 'should set a storage_id if given' do
-      local = Backup::Storage::Local.new(model, 'my storage_id')
-      local.storage_id.should == 'my storage_id'
+    it 'should pass the model reference to Base' do
+      storage.instance_variable_get(:@model).should == model
+    end
+
+    it 'should pass the storage_id to Base' do
+      storage = Backup::Storage::Local.new(model, 'my_storage_id')
+      storage.storage_id.should == 'my_storage_id'
     end
 
     it 'should expand any path given' do
@@ -33,29 +42,45 @@ describe Backup::Storage::Local do
       storage.path.should == File.expand_path('my_backups/path')
     end
 
-    context 'when setting configuration defaults' do
-      after { Backup::Configuration::Storage::Local.clear_defaults! }
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        storage.path.should == storage_path
 
-      it 'should use the configured defaults' do
-        Backup::Configuration::Storage::Local.defaults do |local|
-          local.path = 'some_path'
-          local.keep = 'some_keep'
-        end
+        storage.storage_id.should be_nil
+        storage.keep.should       == 5
+      end
+
+      it 'should use default values if none are given' do
         storage = Backup::Storage::Local.new(model)
+
+        storage.path.should == storage_path
+
+        storage.storage_id.should be_nil
+        storage.keep.should       be_nil
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Storage::Local.defaults do |s|
+          s.path = 'some_path'
+          s.keep = 'some_keep'
+        end
+      end
+
+      it 'should use pre-configured defaults' do
+        storage = Backup::Storage::Local.new(model)
+
         storage.path.should == File.expand_path('some_path')
 
         storage.storage_id.should be_nil
         storage.keep.should       == 'some_keep'
       end
 
-      it 'should override the configured defaults' do
-        Backup::Configuration::Storage::Local.defaults do |local|
-          local.path = 'old_path'
-          local.keep = 'old_keep'
-        end
-        storage = Backup::Storage::Local.new(model) do |local|
-          local.path = 'new_path'
-          local.keep = 'new_keep'
+      it 'should override pre-configured defaults' do
+        storage = Backup::Storage::Local.new(model) do |s|
+          s.path = 'new_path'
+          s.keep = 'new_keep'
         end
 
         storage.path.should == File.expand_path('new_path')
@@ -63,8 +88,7 @@ describe Backup::Storage::Local do
         storage.storage_id.should be_nil
         storage.keep.should       == 'new_keep'
       end
-    end # context 'when setting configuration defaults'
-
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#transfer!' do

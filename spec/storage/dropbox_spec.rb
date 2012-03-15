@@ -12,34 +12,65 @@ describe Backup::Storage::Dropbox do
     end
   end
 
+  it 'should be a subclass of Storage::Base' do
+    Backup::Storage::Dropbox.
+      superclass.should == Backup::Storage::Base
+  end
+
   describe '#initialize' do
-    it 'should set the correct values' do
-      storage.api_key.should      == 'my_api_key'
-      storage.api_secret.should   == 'my_api_secret'
-      storage.access_type.should  == :app_folder
-      storage.path.should         == 'backups'
+    after { Backup::Storage::Dropbox.clear_defaults! }
 
-      storage.storage_id.should be_nil
-      storage.keep.should       == 5
+    it 'should load pre-configured defaults through Base' do
+      Backup::Storage::Dropbox.any_instance.expects(:load_defaults!)
+      storage
     end
 
-    it 'should set a storage_id if given' do
-      db = Backup::Storage::Dropbox.new(model, 'my storage_id')
-      db.storage_id.should == 'my storage_id'
+    it 'should pass the model reference to Base' do
+      storage.instance_variable_get(:@model).should == model
     end
 
-    context 'when setting configuration defaults' do
-      after { Backup::Configuration::Storage::Dropbox.clear_defaults! }
+    it 'should pass the storage_id to Base' do
+      storage = Backup::Storage::Dropbox.new(model, 'my_storage_id')
+      storage.storage_id.should == 'my_storage_id'
+    end
 
-      it 'should use the configured defaults' do
-        Backup::Configuration::Storage::Dropbox.defaults do |db|
-          db.api_key      = 'some_api_key'
-          db.api_secret   = 'some_api_secret'
-          db.access_type  = 'some_access_type'
-          db.path         = 'some_path'
-          db.keep         = 15
-        end
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        storage.api_key.should      == 'my_api_key'
+        storage.api_secret.should   == 'my_api_secret'
+        storage.access_type.should  == :app_folder
+        storage.path.should         == 'backups'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       == 5
+      end
+
+      it 'should use default values if none are given' do
         storage = Backup::Storage::Dropbox.new(model)
+        storage.api_key.should      be_nil
+        storage.api_secret.should   be_nil
+        storage.access_type.should  == :app_folder
+        storage.path.should         == 'backups'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       be_nil
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Storage::Dropbox.defaults do |s|
+          s.api_key      = 'some_api_key'
+          s.api_secret   = 'some_api_secret'
+          s.access_type  = 'some_access_type'
+          s.path         = 'some_path'
+          s.keep         = 15
+        end
+      end
+
+      it 'should use pre-configured defaults' do
+        storage = Backup::Storage::Dropbox.new(model)
+
         storage.api_key.should      == 'some_api_key'
         storage.api_secret.should   == 'some_api_secret'
         storage.access_type.should  == 'some_access_type'
@@ -49,20 +80,13 @@ describe Backup::Storage::Dropbox do
         storage.keep.should       == 15
       end
 
-      it 'should override the configured defaults' do
-        Backup::Configuration::Storage::Dropbox.defaults do |db|
-          db.api_key      = 'old_api_key'
-          db.api_secret   = 'old_api_secret'
-          db.access_type  = 'old_access_type'
-          db.path         = 'old_path'
-          db.keep         = 15
-        end
-        storage = Backup::Storage::Dropbox.new(model) do |db|
-          db.api_key      = 'new_api_key'
-          db.api_secret   = 'new_api_secret'
-          db.access_type  = 'new_access_type'
-          db.path         = 'new_path'
-          db.keep         = 10
+      it 'should override pre-configured defaults' do
+        storage = Backup::Storage::Dropbox.new(model) do |s|
+          s.api_key      = 'new_api_key'
+          s.api_secret   = 'new_api_secret'
+          s.access_type  = 'new_access_type'
+          s.path         = 'new_path'
+          s.keep         = 10
         end
 
         storage.api_key.should      == 'new_api_key'
@@ -73,8 +97,7 @@ describe Backup::Storage::Dropbox do
         storage.storage_id.should be_nil
         storage.keep.should       == 10
       end
-    end # context 'when setting configuration defaults'
-
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#connection' do

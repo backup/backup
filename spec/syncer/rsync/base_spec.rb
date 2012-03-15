@@ -3,36 +3,46 @@
 require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe 'Backup::Syncer::RSync::Base' do
-  let(:base)    { Backup::Syncer::RSync::Base }
-  let(:syncer)  { base.new }
+  let(:syncer) { Backup::Syncer::RSync::Base.new }
 
   it 'should be a subclass of Syncer::Base' do
-    base.superclass.should == Backup::Syncer::Base
+    Backup::Syncer::RSync::Base.
+      superclass.should == Backup::Syncer::Base
   end
 
   describe '#initialize' do
+    after { Backup::Syncer::RSync::Base.clear_defaults! }
 
-    it 'should inherit default values from the superclass' do
-      syncer.path.should    == 'backups'
-      syncer.mirror.should  == false
+    it 'should load pre-configured defaults through Syncer::Base' do
+      Backup::Syncer::RSync::Base.any_instance.expects(:load_defaults!)
+      syncer
     end
 
-    it 'should set default values' do
-      syncer.additional_options.should == []
-    end
+    context 'when no pre-configured defaults have been set' do
+      it 'should use default values' do
+        syncer.path.should    == 'backups'
+        syncer.mirror.should  == false
+        syncer.directories.should == []
+        syncer.additional_options.should == []
+      end
+    end # context 'when no pre-configured defaults have been set'
 
-    context 'when setting configuration defaults' do
-      after { Backup::Configuration::Syncer::RSync::Base.clear_defaults! }
-
-      it 'should use the configured defaults' do
-        Backup::Configuration::Syncer::RSync::Base.defaults do |rsync|
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Syncer::RSync::Base.defaults do |rsync|
+          rsync.path    = 'some_path'
+          rsync.mirror  = 'some_mirror'
           rsync.additional_options = 'some_additional_options'
         end
-        syncer = Backup::Syncer::RSync::Base.new
+      end
+
+      it 'should use pre-configured defaults' do
+        syncer.path.should    == 'some_path'
+        syncer.mirror.should  == 'some_mirror'
+        syncer.directories.should == []
         syncer.additional_options.should == 'some_additional_options'
       end
-    end
-
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#directory_options' do

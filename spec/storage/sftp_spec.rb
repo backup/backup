@@ -13,21 +13,26 @@ describe Backup::Storage::SFTP do
     end
   end
 
-  describe '#initialize' do
-    it 'should set the correct values' do
-      storage.username.should == 'my_username'
-      storage.password.should == 'my_password'
-      storage.ip.should       == '123.45.678.90'
-      storage.port.should     == 22
-      storage.path.should     == 'backups'
+  it 'should be a subclass of Storage::Base' do
+    Backup::Storage::SFTP.
+      superclass.should == Backup::Storage::Base
+  end
 
-      storage.storage_id.should be_nil
-      storage.keep.should       == 5
+  describe '#initialize' do
+    after { Backup::Storage::SFTP.clear_defaults! }
+
+    it 'should load pre-configured defaults through Base' do
+      Backup::Storage::SFTP.any_instance.expects(:load_defaults!)
+      storage
     end
 
-    it 'should set a storage_id if given' do
-      sftp = Backup::Storage::SFTP.new(model, 'my storage_id')
-      sftp.storage_id.should == 'my storage_id'
+    it 'should pass the model reference to Base' do
+      storage.instance_variable_get(:@model).should == model
+    end
+
+    it 'should pass the storage_id to Base' do
+      storage = Backup::Storage::SFTP.new(model, 'my_storage_id')
+      storage.storage_id.should == 'my_storage_id'
     end
 
     it 'should remove any preceeding tilde and slash from the path' do
@@ -37,19 +42,47 @@ describe Backup::Storage::SFTP do
       storage.path.should == 'my_backups/path'
     end
 
-    context 'when setting configuration defaults' do
-      after { Backup::Configuration::Storage::SFTP.clear_defaults! }
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        storage.username.should == 'my_username'
+        storage.password.should == 'my_password'
+        storage.ip.should       == '123.45.678.90'
+        storage.port.should     == 22
+        storage.path.should     == 'backups'
 
-      it 'should use the configured defaults' do
-        Backup::Configuration::Storage::SFTP.defaults do |sftp|
-          sftp.username  = 'some_username'
-          sftp.password  = 'some_password'
-          sftp.ip        = 'some_ip'
-          sftp.port      = 'some_port'
-          sftp.path      = 'some_path'
-          sftp.keep      = 'some_keep'
-        end
+        storage.storage_id.should be_nil
+        storage.keep.should       == 5
+      end
+
+      it 'should use default values if none are given' do
         storage = Backup::Storage::SFTP.new(model)
+
+        storage.username.should be_nil
+        storage.password.should be_nil
+        storage.ip.should       be_nil
+        storage.port.should     == 22
+        storage.path.should     == 'backups'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       be_nil
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Storage::SFTP.defaults do |s|
+          s.username  = 'some_username'
+          s.password  = 'some_password'
+          s.ip        = 'some_ip'
+          s.port      = 'some_port'
+          s.path      = 'some_path'
+          s.keep      = 'some_keep'
+        end
+      end
+
+      it 'should use pre-configured defaults' do
+        storage = Backup::Storage::SFTP.new(model)
+
         storage.username.should == 'some_username'
         storage.password.should == 'some_password'
         storage.ip.should       == 'some_ip'
@@ -60,22 +93,14 @@ describe Backup::Storage::SFTP do
         storage.keep.should       == 'some_keep'
       end
 
-      it 'should override the configured defaults' do
-        Backup::Configuration::Storage::SFTP.defaults do |sftp|
-          sftp.username  = 'old_username'
-          sftp.password  = 'old_password'
-          sftp.ip        = 'old_ip'
-          sftp.port      = 'old_port'
-          sftp.path      = 'old_path'
-          sftp.keep      = 'old_keep'
-        end
-        storage = Backup::Storage::SFTP.new(model) do |sftp|
-          sftp.username  = 'new_username'
-          sftp.password  = 'new_password'
-          sftp.ip        = 'new_ip'
-          sftp.port      = 'new_port'
-          sftp.path      = 'new_path'
-          sftp.keep      = 'new_keep'
+      it 'should override pre-configured defaults' do
+        storage = Backup::Storage::SFTP.new(model) do |s|
+          s.username  = 'new_username'
+          s.password  = 'new_password'
+          s.ip        = 'new_ip'
+          s.port      = 'new_port'
+          s.path      = 'new_path'
+          s.keep      = 'new_keep'
         end
 
         storage.username.should == 'new_username'
@@ -87,8 +112,7 @@ describe Backup::Storage::SFTP do
         storage.storage_id.should be_nil
         storage.keep.should       == 'new_keep'
       end
-    end # context 'when setting configuration defaults'
-
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#connection' do

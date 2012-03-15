@@ -22,11 +22,16 @@ module Backup
         attr_accessor :compress
 
         ##
-        # Instantiates a new RSync::Push or RSync::Pull Syncer object.
-        # Default configuration values and any specified in
-        # Backup::Configuration::Syncer::RSync::[Push/Pull] are set from Base.
-        # The user's configuration file is then evaluated to overwrite
-        # these values or provide additional configuration.
+        # Instantiates a new RSync::Push or RSync::Pull Syncer.
+        #
+        # Pre-configured defaults specified in
+        # Configuration::Syncer::RSync::Push or
+        # Configuration::Syncer::RSync::Pull
+        # are set via a super() call to RSync::Base,
+        # which in turn will invoke Syncer::Base.
+        #
+        # Once pre-configured defaults and RSync specific defaults are set,
+        # the block from the user's configuration file is evaluated.
         def initialize(&block)
           super
 

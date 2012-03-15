@@ -2,65 +2,50 @@
 require File.expand_path('../../../spec_helper.rb', __FILE__)
 
 describe 'Backup::Syncer::Cloud::Base' do
-  let(:base)    { Backup::Syncer::Cloud::Base }
-  let(:syncer)  { base.new }
-  let(:s)       { sequence '' }
+  let(:syncer) { Backup::Syncer::Cloud::Base.new }
+  let(:s)      { sequence '' }
 
   it 'should be a subclass of Syncer::Base' do
-    base.superclass.should == Backup::Syncer::Base
+    Backup::Syncer::Cloud::Base.
+      superclass.should == Backup::Syncer::Base
   end
 
   it 'should establish a class constant for a Mutex' do
-    base::MUTEX.should be_an_instance_of Mutex
+    Backup::Syncer::Cloud::Base::MUTEX.should be_an_instance_of Mutex
   end
 
   describe '#initialize' do
+    after { Backup::Syncer::Cloud::Base.clear_defaults! }
 
-    it 'should inherit default values from the superclass' do
-      syncer.path.should    == 'backups'
-      syncer.mirror.should  == false
+    it 'should load pre-configured defaults through Syncer::Base' do
+      Backup::Syncer::Cloud::Base.any_instance.expects(:load_defaults!)
+      syncer
     end
 
-    it 'should set default values' do
-      syncer.concurrency_type.should  == false
-      syncer.concurrency_level.should == 2
-    end
-
-    it 'should strip any leading slash in path' do
-      syncer = Backup::Syncer::Cloud::Base.new do |cloud|
-        cloud.path = '/cleaned/path'
+    context 'when no pre-configured defaults have been set' do
+      it 'should use default values if none are given' do
+        syncer.path.should    == 'backups'
+        syncer.mirror.should  == false
+        syncer.concurrency_type.should  == false
+        syncer.concurrency_level.should == 2
       end
-      syncer.path.should == 'cleaned/path'
-    end
+    end # context 'when no pre-configured defaults have been set'
 
-    context 'when setting configuration defaults' do
-      after { Backup::Configuration::Syncer::Cloud::Base.clear_defaults! }
-
-      it 'should use the configured defaults' do
-        Backup::Configuration::Syncer::Cloud::Base.defaults do |cloud|
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Syncer::Cloud::Base.defaults do |cloud|
           cloud.concurrency_type  = 'default_concurrency_type'
           cloud.concurrency_level = 'default_concurrency_level'
         end
-        syncer = Backup::Syncer::Cloud::Base.new
+      end
+
+      it 'should use pre-configured defaults' do
+        syncer.path.should    == 'backups'
+        syncer.mirror.should  == false
         syncer.concurrency_type.should  == 'default_concurrency_type'
         syncer.concurrency_level.should == 'default_concurrency_level'
       end
-
-      it 'should override the configured defaults' do
-        Backup::Configuration::Syncer::Cloud::Base.defaults do |cloud|
-          cloud.concurrency_type  = 'old_concurrency_type'
-          cloud.concurrency_level = 'old_concurrency_level'
-        end
-        syncer = Backup::Syncer::Cloud::Base.new do |cloud|
-          cloud.concurrency_type  = 'new_concurrency_type'
-          cloud.concurrency_level = 'new_concurrency_level'
-        end
-
-        syncer.concurrency_type.should  == 'new_concurrency_type'
-        syncer.concurrency_level.should == 'new_concurrency_level'
-      end
-    end
-
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#perform' do
@@ -79,13 +64,13 @@ describe 'Backup::Syncer::Cloud::Base' do
       Backup::Logger.expects(:message).in_sequence(s).with(
         'Syncer::Cloud::Base started the syncing process:'
       )
-      base::SyncContext.expects(:new).in_sequence(s).with(
+      Backup::Syncer::Cloud::Base::SyncContext.expects(:new).in_sequence(s).with(
         '/dir/one', :a_repository_object, 'backups'
       ).returns(sync_context)
       sync_context.expects(:sync!).in_sequence(s).with(
         false, false, 2
       )
-      base::SyncContext.expects(:new).in_sequence(s).with(
+      Backup::Syncer::Cloud::Base::SyncContext.expects(:new).in_sequence(s).with(
         '/dir/two', :a_repository_object, 'backups'
       ).returns(sync_context)
       sync_context.expects(:sync!).in_sequence(s).with(
@@ -104,11 +89,11 @@ describe 'Backup::Syncer::Cloud::Base' do
         add 'dir/two'
       end
 
-      base::SyncContext.expects(:new).with(
+      Backup::Syncer::Cloud::Base::SyncContext.expects(:new).with(
         '/dir/one', :a_repository_object, 'backups'
       ).returns(sync_context)
 
-      base::SyncContext.expects(:new).with(
+      Backup::Syncer::Cloud::Base::SyncContext.expects(:new).with(
         File.expand_path('dir/two'), :a_repository_object, 'backups'
       ).returns(sync_context)
 
@@ -263,7 +248,7 @@ describe 'Backup::Syncer::Cloud::Base' do
 
     describe '#local_hashes' do
       it 'should collect file paths and MD5 checksums for @directory' do
-        base::MUTEX.expects(:synchronize).yields
+        Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
         Backup::Logger.expects(:message).with(
           "\s\sGenerating checksums for '/dir/to/sync'"
         )
@@ -351,7 +336,7 @@ describe 'Backup::Syncer::Cloud::Base' do
 
           it 'should skip the file' do
             File.expects(:open).never
-            base::MUTEX.expects(:synchronize).yields
+            Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
             Backup::Logger.expects(:message).with(
               "\s\s[skipping] 'backups/sync/sync.file'"
             )
@@ -369,7 +354,7 @@ describe 'Backup::Syncer::Cloud::Base' do
           end
 
           it 'should upload the file' do
-            base::MUTEX.expects(:synchronize).yields
+            Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
             Backup::Logger.expects(:message).with(
               "\s\s[transferring] 'backups/sync/sync.file'"
             )
@@ -390,7 +375,7 @@ describe 'Backup::Syncer::Cloud::Base' do
           end
 
           it 'should upload the file' do
-            base::MUTEX.expects(:synchronize).yields
+            Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
             Backup::Logger.expects(:message).with(
               "\s\s[transferring] 'backups/sync/sync.file'"
             )
@@ -416,7 +401,7 @@ describe 'Backup::Syncer::Cloud::Base' do
 
         context 'when the `mirror` option is set to true' do
           it 'should remove the file from the remote' do
-            base::MUTEX.expects(:synchronize).yields
+            Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
             Backup::Logger.expects(:message).with(
               "\s\s[removing] 'backups/sync/sync.file'"
             )
@@ -429,7 +414,7 @@ describe 'Backup::Syncer::Cloud::Base' do
 
         context 'when the `mirror` option is set to false' do
           it 'should leave the file on the remote' do
-            base::MUTEX.expects(:synchronize).yields
+            Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
             Backup::Logger.expects(:message).with(
               "\s\s[leaving] 'backups/sync/sync.file'"
             )
@@ -454,7 +439,7 @@ describe 'Backup::Syncer::Cloud::Base' do
           end
 
           it 'should return the new object' do
-            base::MUTEX.expects(:synchronize).never
+            Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).never
             Backup::Logger.expects(:warn).never
 
             local_file.should be_an_instance_of local_file_class
@@ -468,7 +453,7 @@ describe 'Backup::Syncer::Cloud::Base' do
             )
           end
           it 'should return nil and log a warning' do
-            base::MUTEX.expects(:synchronize).yields
+            Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
             Backup::Logger.expects(:warn).with(
               "\s\s[skipping] /bad/pa\xEF\xBF\xBDth/to/file\n" +
               "\s\sPath Contains Invalid UTF-8 byte sequences"

@@ -17,6 +17,23 @@ module Backup
         # The AWS region of the specified S3 bucket
         attr_accessor :region
 
+        ##
+        # Instantiates a new Cloud::S3 Syncer.
+        #
+        # Pre-configured defaults specified in
+        # Configuration::Syncer::Cloud::S3
+        # are set via a super() call to Cloud::Base,
+        # which in turn will invoke Syncer::Base.
+        #
+        # Once pre-configured defaults and Cloud specific defaults are set,
+        # the block from the user's configuration file is evaluated.
+        def initialize(&block)
+          super
+
+          instance_eval(&block) if block_given?
+          @path = path.sub(/^\//, '')
+        end
+
         private
 
         ##

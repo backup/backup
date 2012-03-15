@@ -22,96 +22,107 @@ describe Backup::Syncer::RSync::Push do
     end
   end
 
-  it 'should be a subclass of RSync::Base' do
-    Backup::Syncer::RSync::Push.superclass.should == Backup::Syncer::RSync::Base
+  it 'should be a subclass of Syncer::RSync::Base' do
+    Backup::Syncer::RSync::Push.
+      superclass.should == Backup::Syncer::RSync::Base
   end
 
   describe '#initialize' do
-    it 'should have defined the configuration properly' do
-      syncer.username.should           == 'my_username'
-      syncer.password.should           == 'my_password'
-      syncer.ip.should                 == '123.45.678.90'
-      syncer.port.should               == 22
-      syncer.compress.should           == true
-      syncer.path.should               == '~/my_backups'
-      syncer.directories.should        == ["/some/directory", "~/home/directory"]
-      syncer.mirror.should             == true
-      syncer.additional_options.should == ['--opt-a', '--opt-b']
+    after { Backup::Syncer::RSync::Push.clear_defaults! }
+
+    it 'should load pre-configured defaults through Syncer::Base' do
+      Backup::Syncer::RSync::Push.any_instance.expects(:load_defaults!)
+      syncer
     end
 
-    context 'when options are not set' do
-      it 'should use default values' do
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        syncer.path.should               == '~/my_backups'
+        syncer.mirror.should             == true
+        syncer.directories.should        == ["/some/directory", "~/home/directory"]
+        syncer.additional_options.should == ['--opt-a', '--opt-b']
+
+        syncer.username.should           == 'my_username'
+        syncer.password.should           == 'my_password'
+        syncer.ip.should                 == '123.45.678.90'
+        syncer.port.should               == 22
+        syncer.compress.should           == true
+      end
+
+      it 'should use default values if none are given' do
         syncer = Backup::Syncer::RSync::Push.new
+
+        # from Syncer::Base
+        syncer.path.should    == 'backups'
+        syncer.mirror.should  == false
+        syncer.directories.should == []
+
+        # from Syncer::RSync::Base
+        syncer.additional_options.should == []
+
         syncer.username.should           == nil
         syncer.password.should           == nil
         syncer.ip.should                 == nil
         syncer.port.should               == 22
         syncer.compress.should           == false
-        syncer.path.should               == 'backups'
-        syncer.directories.should        == []
-        syncer.mirror.should             == false
-        syncer.additional_options.should == []
       end
-    end
+    end # context 'when no pre-configured defaults have been set'
 
-    context 'when setting configuration defaults' do
-      after { Backup::Configuration::Syncer::RSync::Push.clear_defaults! }
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Syncer::RSync::Push.defaults do |rsync|
+          rsync.path    = 'some_path'
+          rsync.mirror  = 'some_mirror'
+          rsync.additional_options = 'some_additional_options'
 
-      it 'should use the configured defaults' do
-        Backup::Configuration::Syncer::RSync::Push.defaults do |rsync|
           rsync.username           = 'some_username'
           rsync.password           = 'some_password'
           rsync.ip                 = 'some_ip'
           rsync.port               = 'some_port'
           rsync.compress           = 'some_compress'
-          rsync.path               = 'some_path'
-          #rsync.directories        = 'cannot_have_a_default_value'
-          rsync.mirror             = 'some_mirror'
-          rsync.additional_options = 'some_additional_options'
         end
+      end
+
+      it 'should use pre-configured defaults' do
         syncer = Backup::Syncer::RSync::Push.new
+
+        syncer.path.should    == 'some_path'
+        syncer.mirror.should  == 'some_mirror'
+        syncer.directories.should == []
+        syncer.additional_options.should == 'some_additional_options'
+
         syncer.username.should           == 'some_username'
         syncer.password.should           == 'some_password'
         syncer.ip.should                 == 'some_ip'
         syncer.port.should               == 'some_port'
         syncer.compress.should           == 'some_compress'
-        syncer.path.should               == 'some_path'
-        syncer.mirror.should             == 'some_mirror'
-        syncer.additional_options.should == 'some_additional_options'
       end
 
-      it 'should override the configured defaults' do
-        Backup::Configuration::Syncer::RSync::Push.defaults do |rsync|
-          rsync.username           = 'old_username'
-          rsync.password           = 'old_password'
-          rsync.ip                 = 'old_ip'
-          rsync.port               = 'old_port'
-          rsync.compress           = 'old_compress'
-          rsync.path               = 'old_path'
-          rsync.mirror             = 'old_mirror'
-          rsync.additional_options = 'old_additional_options'
-        end
+      it 'should override pre-configured defaults' do
         syncer = Backup::Syncer::RSync::Push.new do |rsync|
+          rsync.path    = 'new_path'
+          rsync.mirror  = 'new_mirror'
+          rsync.additional_options = 'new_additional_options'
+
           rsync.username           = 'new_username'
           rsync.password           = 'new_password'
           rsync.ip                 = 'new_ip'
           rsync.port               = 'new_port'
           rsync.compress           = 'new_compress'
-          rsync.path               = 'new_path'
-          rsync.mirror             = 'new_mirror'
-          rsync.additional_options = 'new_additional_options'
         end
+
+        syncer.path.should    == 'new_path'
+        syncer.mirror.should  == 'new_mirror'
+        syncer.directories.should == []
+        syncer.additional_options.should == 'new_additional_options'
 
         syncer.username.should           == 'new_username'
         syncer.password.should           == 'new_password'
         syncer.ip.should                 == 'new_ip'
         syncer.port.should               == 'new_port'
         syncer.compress.should           == 'new_compress'
-        syncer.path.should               == 'new_path'
-        syncer.mirror.should             == 'new_mirror'
-        syncer.additional_options.should == 'new_additional_options'
       end
-    end # context 'when setting configuration defaults'
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#perform!' do

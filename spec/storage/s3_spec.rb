@@ -17,36 +17,69 @@ describe Backup::Storage::S3 do
     end
   end
 
+  it 'should be a subclass of Storage::Base' do
+    Backup::Storage::S3.
+      superclass.should == Backup::Storage::Base
+  end
+
   describe '#initialize' do
-    it 'should set the correct values' do
-      storage.access_key_id.should      == 'my_access_key_id'
-      storage.secret_access_key.should  == 'my_secret_access_key'
-      storage.bucket.should             == 'my-bucket'
-      storage.path.should               == 'backups'
-      storage.region.should             == 'us-east-1'
+    after { Backup::Storage::S3.clear_defaults! }
 
-      storage.storage_id.should be_nil
-      storage.keep.should       == 5
+    it 'should load pre-configured defaults through Base' do
+      Backup::Storage::S3.any_instance.expects(:load_defaults!)
+      storage
     end
 
-    it 'should set a storage_id if given' do
-      s3 = Backup::Storage::S3.new(model, 'my storage_id')
-      s3.storage_id.should == 'my storage_id'
+    it 'should pass the model reference to Base' do
+      storage.instance_variable_get(:@model).should == model
     end
 
-    context 'when setting configuration defaults' do
-      after { Backup::Configuration::Storage::S3.clear_defaults! }
+    it 'should pass the storage_id to Base' do
+      storage = Backup::Storage::S3.new(model, 'my_storage_id')
+      storage.storage_id.should == 'my_storage_id'
+    end
 
-      it 'should use the configured defaults' do
-        Backup::Configuration::Storage::S3.defaults do |s3|
-          s3.access_key_id      = 'some_access_key_id'
-          s3.secret_access_key  = 'some_secret_access_key'
-          s3.bucket             = 'some-bucket'
-          s3.path               = 'some_path'
-          s3.region             = 'some_region'
-          s3.keep               = 15
-        end
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        storage.access_key_id.should      == 'my_access_key_id'
+        storage.secret_access_key.should  == 'my_secret_access_key'
+        storage.bucket.should             == 'my-bucket'
+        storage.path.should               == 'backups'
+        storage.region.should             == 'us-east-1'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       == 5
+      end
+
+      it 'should use default values if none are given' do
         storage = Backup::Storage::S3.new(model)
+
+        storage.access_key_id.should      be_nil
+        storage.secret_access_key.should  be_nil
+        storage.bucket.should             be_nil
+        storage.path.should               == 'backups'
+        storage.region.should             be_nil
+
+        storage.storage_id.should be_nil
+        storage.keep.should       be_nil
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Storage::S3.defaults do |s|
+          s.access_key_id      = 'some_access_key_id'
+          s.secret_access_key  = 'some_secret_access_key'
+          s.bucket             = 'some-bucket'
+          s.path               = 'some_path'
+          s.region             = 'some_region'
+          s.keep               = 15
+        end
+      end
+
+      it 'should use pre-configured defaults' do
+        storage = Backup::Storage::S3.new(model)
+
         storage.access_key_id.should      == 'some_access_key_id'
         storage.secret_access_key.should  == 'some_secret_access_key'
         storage.bucket.should             == 'some-bucket'
@@ -57,22 +90,14 @@ describe Backup::Storage::S3 do
         storage.keep.should       == 15
       end
 
-      it 'should override the configured defaults' do
-        Backup::Configuration::Storage::S3.defaults do |s3|
-          s3.access_key_id      = 'old_access_key_id'
-          s3.secret_access_key  = 'old_secret_access_key'
-          s3.bucket             = 'old-bucket'
-          s3.path               = 'old_path'
-          s3.region             = 'old_region'
-          s3.keep               = 15
-        end
-        storage = Backup::Storage::S3.new(model) do |s3|
-          s3.access_key_id      = 'new_access_key_id'
-          s3.secret_access_key  = 'new_secret_access_key'
-          s3.bucket             = 'new-bucket'
-          s3.path               = 'new_path'
-          s3.region             = 'new_region'
-          s3.keep               = 10
+      it 'should override pre-configured defaults' do
+        storage = Backup::Storage::S3.new(model) do |s|
+          s.access_key_id      = 'new_access_key_id'
+          s.secret_access_key  = 'new_secret_access_key'
+          s.bucket             = 'new-bucket'
+          s.path               = 'new_path'
+          s.region             = 'new_region'
+          s.keep               = 10
         end
 
         storage.access_key_id.should      == 'new_access_key_id'
@@ -84,8 +109,7 @@ describe Backup::Storage::S3 do
         storage.storage_id.should be_nil
         storage.keep.should       == 10
       end
-    end # context 'when setting configuration defaults'
-
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#provider' do

@@ -12,30 +12,60 @@ describe Backup::Notifier::Campfire do
     end
   end
 
-  describe '#initialize' do
-    it 'should sets the correct values' do
-      notifier.api_token.should == 'token'
-      notifier.subdomain.should == 'subdomain'
-      notifier.room_id.should   == 'room_id'
+  it 'should be a subclass of Notifier::Base' do
+    Backup::Notifier::Campfire.
+      superclass.should == Backup::Notifier::Base
+  end
 
-      notifier.on_success.should == true
-      notifier.on_warning.should == true
-      notifier.on_failure.should == true
+  describe '#initialize' do
+    after { Backup::Notifier::Campfire.clear_defaults! }
+
+    it 'should load pre-configured defaults through Base' do
+      Backup::Notifier::Campfire.any_instance.expects(:load_defaults!)
+      notifier
     end
 
-    context 'when using configuration defaults' do
-      after { Backup::Configuration::Notifier::Campfire.clear_defaults! }
+    it 'should pass the model reference to Base' do
+      notifier.instance_variable_get(:@model).should == model
+    end
 
-      it 'should use the configuration defaults' do
-        Backup::Configuration::Notifier::Campfire.defaults do |campfire|
-          campfire.api_token  = 'some_token'
-          campfire.subdomain  = 'some_subdomain'
-          campfire.room_id    = 'some_room_id'
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        notifier.api_token.should == 'token'
+        notifier.subdomain.should == 'subdomain'
+        notifier.room_id.should   == 'room_id'
 
-          campfire.on_success = false
-          campfire.on_warning = false
-          campfire.on_failure = false
+        notifier.on_success.should == true
+        notifier.on_warning.should == true
+        notifier.on_failure.should == true
+      end
+
+      it 'should use default values if none are given' do
+        notifier = Backup::Notifier::Campfire.new(model)
+        notifier.api_token.should be_nil
+        notifier.subdomain.should be_nil
+        notifier.room_id.should   be_nil
+
+        notifier.on_success.should == true
+        notifier.on_warning.should == true
+        notifier.on_failure.should == true
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Notifier::Campfire.defaults do |n|
+          n.api_token  = 'some_token'
+          n.subdomain  = 'some_subdomain'
+          n.room_id    = 'some_room_id'
+
+          n.on_success = false
+          n.on_warning = false
+          n.on_failure = false
         end
+      end
+
+      it 'should use pre-configured defaults' do
         notifier = Backup::Notifier::Campfire.new(model)
         notifier.api_token.should == 'some_token'
         notifier.subdomain.should == 'some_subdomain'
@@ -46,24 +76,15 @@ describe Backup::Notifier::Campfire do
         notifier.on_failure.should == false
       end
 
-      it 'should override the configuration defaults' do
-        Backup::Configuration::Notifier::Campfire.defaults do |campfire|
-          campfire.api_token  = 'old_token'
-          campfire.subdomain  = 'old_subdomain'
-          campfire.room_id    = 'old_room_id'
+      it 'should override pre-configured defaults' do
+        notifier = Backup::Notifier::Campfire.new(model) do |n|
+          n.api_token  = 'new_token'
+          n.subdomain  = 'new_subdomain'
+          n.room_id    = 'new_room_id'
 
-          campfire.on_success = true
-          campfire.on_warning = false
-          campfire.on_failure = false
-        end
-        notifier = Backup::Notifier::Campfire.new(model) do |campfire|
-          campfire.api_token  = 'new_token'
-          campfire.subdomain  = 'new_subdomain'
-          campfire.room_id    = 'new_room_id'
-
-          campfire.on_success = false
-          campfire.on_warning = true
-          campfire.on_failure = true
+          n.on_success = false
+          n.on_warning = true
+          n.on_failure = true
         end
 
         notifier.api_token.should == 'new_token'
@@ -74,8 +95,8 @@ describe Backup::Notifier::Campfire do
         notifier.on_warning.should == true
         notifier.on_failure.should == true
       end
-    end # context 'when using configuration defaults'
-  end
+    end # context 'when pre-configured defaults have been set'
+  end # describe '#initialize'
 
   describe '#notify!' do
     context 'when status is :success' do

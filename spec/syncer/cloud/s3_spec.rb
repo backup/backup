@@ -12,76 +12,105 @@ describe 'Backup::Syncer::Cloud::S3' do
   end
 
   it 'should be a subclass of Syncer::Cloud::Base' do
-    Backup::Syncer::Cloud::S3.superclass.
-        should == Backup::Syncer::Cloud::Base
+    Backup::Syncer::Cloud::S3.
+      superclass.should == Backup::Syncer::Cloud::Base
   end
 
   describe '#initialize' do
-    it 'should have defined the configuration properly' do
-      syncer.access_key_id.should     == 'my_access_key_id'
-      syncer.secret_access_key.should == 'my_secret_access_key'
-      syncer.bucket.should            == 'my_bucket'
-      syncer.region.should            == 'my_region'
+    after { Backup::Syncer::Cloud::S3.clear_defaults! }
+
+    it 'should load pre-configured defaults through Syncer::Cloud::Base' do
+      Backup::Syncer::Cloud::S3.any_instance.expects(:load_defaults!)
+      syncer
     end
 
-    it 'should inherit default values from superclasses' do
-      # Syncer::Cloud::Base
-      syncer.concurrency_type.should  == false
-      syncer.concurrency_level.should == 2
-
-      # Syncer::Base
-      syncer.path.should        == 'backups'
-      syncer.mirror.should      == false
-      syncer.directories.should == []
-    end
-
-    context 'when options are not set' do
-      it 'should use default values' do
-        syncer = Backup::Syncer::Cloud::S3.new
-        syncer.access_key_id.should     == nil
-        syncer.secret_access_key.should == nil
-        syncer.bucket.should            == nil
-        syncer.region.should            == nil
+    it 'should strip any leading slash in path' do
+      syncer = Backup::Syncer::Cloud::S3.new do |cloud|
+        cloud.path = '/cleaned/path'
       end
+      syncer.path.should == 'cleaned/path'
     end
 
-    context 'when setting configuration defaults' do
-      after { Backup::Configuration::Syncer::Cloud::S3.clear_defaults! }
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        syncer.access_key_id.should     == 'my_access_key_id'
+        syncer.secret_access_key.should == 'my_secret_access_key'
+        syncer.bucket.should            == 'my_bucket'
+        syncer.region.should            == 'my_region'
+      end
 
-      it 'should use the configured defaults' do
-        Backup::Configuration::Syncer::Cloud::S3.defaults do |s3|
-          s3.access_key_id      = 'default_access_key_id'
-          s3.secret_access_key  = 'default_secret_access_key'
-          s3.bucket             = 'default_bucket'
-          s3.region             = 'default_region'
-        end
+      it 'should use default values if none are given' do
         syncer = Backup::Syncer::Cloud::S3.new
+
+        # from Syncer::Base
+        syncer.path.should    == 'backups'
+        syncer.mirror.should  == false
+        syncer.directories.should == []
+
+        # from Syncer::Cloud::Base
+        syncer.concurrency_type.should  == false
+        syncer.concurrency_level.should == 2
+
+        syncer.access_key_id.should     be_nil
+        syncer.secret_access_key.should be_nil
+        syncer.bucket.should            be_nil
+        syncer.region.should            be_nil
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Syncer::Cloud::S3.defaults do |cloud|
+          cloud.access_key_id      = 'default_access_key_id'
+          cloud.secret_access_key  = 'default_secret_access_key'
+          cloud.bucket             = 'default_bucket'
+          cloud.region             = 'default_region'
+        end
+      end
+
+      it 'should use pre-configured defaults' do
+        syncer = Backup::Syncer::Cloud::S3.new
+
+        # from Syncer::Base
+        syncer.path.should    == 'backups'
+        syncer.mirror.should  == false
+        syncer.directories.should == []
+
+        # from Syncer::Cloud::Base
+        syncer.concurrency_type.should  == false
+        syncer.concurrency_level.should == 2
+
         syncer.access_key_id.should     == 'default_access_key_id'
         syncer.secret_access_key.should == 'default_secret_access_key'
         syncer.bucket.should            == 'default_bucket'
         syncer.region.should            == 'default_region'
       end
 
-      it 'should override the configured defaults' do
-        Backup::Configuration::Syncer::Cloud::S3.defaults do |s3|
-          s3.access_key_id      = 'old_access_key_id'
-          s3.secret_access_key  = 'old_secret_access_key'
-          s3.bucket             = 'old_bucket'
-          s3.region             = 'old_region'
+      it 'should override pre-configured defaults' do
+        syncer = Backup::Syncer::Cloud::S3.new do |cloud|
+          cloud.path    = 'new_path'
+          cloud.mirror  = 'new_mirror'
+          cloud.concurrency_type    = 'new_concurrency_type'
+          cloud.concurrency_level   = 'new_concurrency_level'
+
+          cloud.access_key_id       = 'new_access_key_id'
+          cloud.secret_access_key   = 'new_secret_access_key'
+          cloud.bucket              = 'new_bucket'
+          cloud.region              = 'new_region'
         end
-        syncer = Backup::Syncer::Cloud::S3.new do |s3|
-          s3.access_key_id      = 'new_access_key_id'
-          s3.secret_access_key  = 'new_secret_access_key'
-          s3.bucket             = 'new_bucket'
-          s3.region             = 'new_region'
-        end
+
+        syncer.path.should    == 'new_path'
+        syncer.mirror.should  == 'new_mirror'
+        syncer.directories.should == []
+        syncer.concurrency_type.should  == 'new_concurrency_type'
+        syncer.concurrency_level.should == 'new_concurrency_level'
 
         syncer.access_key_id.should     == 'new_access_key_id'
         syncer.secret_access_key.should == 'new_secret_access_key'
         syncer.bucket.should            == 'new_bucket'
         syncer.region.should            == 'new_region'
       end
-    end # context 'when setting configuration defaults'
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#connection' do

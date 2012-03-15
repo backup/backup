@@ -14,38 +14,72 @@ describe Backup::Storage::CloudFiles do
     end
   end
 
+  it 'should be a subclass of Storage::Base' do
+    Backup::Storage::CloudFiles.
+      superclass.should == Backup::Storage::Base
+  end
+
   describe '#initialize' do
-    it 'should set the correct values' do
-      storage.username.should   == 'my_username'
-      storage.api_key.should    == 'my_api_key'
-      storage.auth_url.should   == 'lon.auth.api.rackspacecloud.com'
-      storage.container.should  == 'my_container'
-      storage.servicenet.should == false
-      storage.path.should       == 'backups'
+    after { Backup::Storage::CloudFiles.clear_defaults! }
 
-      storage.storage_id.should be_nil
-      storage.keep.should       == 5
+    it 'should load pre-configured defaults through Base' do
+      Backup::Storage::CloudFiles.any_instance.expects(:load_defaults!)
+      storage
     end
 
-    it 'should set a storage_id if given' do
-      cf = Backup::Storage::CloudFiles.new(model, 'my storage_id')
-      cf.storage_id.should == 'my storage_id'
+    it 'should pass the model reference to Base' do
+      storage.instance_variable_get(:@model).should == model
     end
 
-    context 'when setting configuration defaults' do
-      after { Backup::Configuration::Storage::CloudFiles.clear_defaults! }
+    it 'should pass the storage_id to Base' do
+      storage = Backup::Storage::CloudFiles.new(model, 'my_storage_id')
+      storage.storage_id.should == 'my_storage_id'
+    end
 
-      it 'should use the configured defaults' do
-        Backup::Configuration::Storage::CloudFiles.defaults do |cf|
-          cf.username   = 'some_username'
-          cf.api_key    = 'some_api_key'
-          cf.auth_url   = 'some_auth_url'
-          cf.container  = 'some_container'
-          cf.servicenet = true
-          cf.path       = 'some_path'
-          cf.keep       = 15
-        end
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        storage.username.should   == 'my_username'
+        storage.api_key.should    == 'my_api_key'
+        storage.auth_url.should   == 'lon.auth.api.rackspacecloud.com'
+        storage.container.should  == 'my_container'
+        storage.servicenet.should == false
+        storage.path.should       == 'backups'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       == 5
+      end
+
+      it 'should use default values if none are given' do
         storage = Backup::Storage::CloudFiles.new(model)
+
+        storage.username.should   be_nil
+        storage.api_key.should    be_nil
+        storage.auth_url.should   be_nil
+        storage.container.should  be_nil
+        storage.servicenet.should == false
+        storage.path.should       == 'backups'
+
+        storage.storage_id.should be_nil
+        storage.keep.should       be_nil
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Storage::CloudFiles.defaults do |s|
+          s.username   = 'some_username'
+          s.api_key    = 'some_api_key'
+          s.auth_url   = 'some_auth_url'
+          s.container  = 'some_container'
+          s.servicenet = true
+          s.path       = 'some_path'
+          s.keep       = 15
+        end
+      end
+
+      it 'should use pre-configured defaults' do
+        storage = Backup::Storage::CloudFiles.new(model)
+
         storage.username.should   == 'some_username'
         storage.api_key.should    == 'some_api_key'
         storage.auth_url.should   == 'some_auth_url'
@@ -57,24 +91,15 @@ describe Backup::Storage::CloudFiles do
         storage.keep.should       == 15
       end
 
-      it 'should override the configured defaults' do
-        Backup::Configuration::Storage::CloudFiles.defaults do |cf|
-          cf.username   = 'old_username'
-          cf.api_key    = 'old_api_key'
-          cf.auth_url   = 'old_auth_url'
-          cf.container  = 'old_container'
-          cf.servicenet = true
-          cf.path       = 'old_path'
-          cf.keep       = 15
-        end
-        storage = Backup::Storage::CloudFiles.new(model) do |cf|
-          cf.username   = 'new_username'
-          cf.api_key    = 'new_api_key'
-          cf.auth_url   = 'new_auth_url'
-          cf.container  = 'new_container'
-          cf.servicenet = false
-          cf.path       = 'new_path'
-          cf.keep       = 10
+      it 'should override pre-configured defaults' do
+        storage = Backup::Storage::CloudFiles.new(model) do |s|
+          s.username   = 'new_username'
+          s.api_key    = 'new_api_key'
+          s.auth_url   = 'new_auth_url'
+          s.container  = 'new_container'
+          s.servicenet = false
+          s.path       = 'new_path'
+          s.keep       = 10
         end
 
         storage.username.should   == 'new_username'
@@ -87,8 +112,7 @@ describe Backup::Storage::CloudFiles do
         storage.storage_id.should be_nil
         storage.keep.should       == 10
       end
-    end # context 'when setting configuration defaults'
-
+    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#provider' do

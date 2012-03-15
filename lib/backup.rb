@@ -33,7 +33,6 @@ module Backup
   ENCRYPTOR_PATH     = File.join(LIBRARY_PATH, 'encryptor')
   NOTIFIER_PATH      = File.join(LIBRARY_PATH, 'notifier')
   SYNCER_PATH        = File.join(LIBRARY_PATH, 'syncer')
-  CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
   TEMPLATE_PATH      = File.expand_path('../../templates', __FILE__)
 
   ##
@@ -119,90 +118,23 @@ module Backup
   end
 
   ##
-  # Autoload Backup configuration files
-  module Configuration
-    autoload :Base,     File.join(CONFIGURATION_PATH, 'base')
-    autoload :Helpers,  File.join(CONFIGURATION_PATH, 'helpers')
-
-    module Notifier
-      autoload :Base,      File.join(CONFIGURATION_PATH, 'notifier', 'base')
-      autoload :Mail,      File.join(CONFIGURATION_PATH, 'notifier', 'mail')
-      autoload :Twitter,   File.join(CONFIGURATION_PATH, 'notifier', 'twitter')
-      autoload :Campfire,  File.join(CONFIGURATION_PATH, 'notifier', 'campfire')
-      autoload :Presently, File.join(CONFIGURATION_PATH, 'notifier', 'presently')
-      autoload :Prowl,     File.join(CONFIGURATION_PATH, 'notifier', 'prowl')
-      autoload :Hipchat,   File.join(CONFIGURATION_PATH, 'notifier', 'hipchat')
-    end
-
-    module Encryptor
-      autoload :Base,    File.join(CONFIGURATION_PATH, 'encryptor', 'base')
-      autoload :OpenSSL, File.join(CONFIGURATION_PATH, 'encryptor', 'open_ssl')
-      autoload :GPG,     File.join(CONFIGURATION_PATH, 'encryptor', 'gpg')
-    end
-
-    module Compressor
-      autoload :Base,   File.join(CONFIGURATION_PATH, 'compressor', 'base')
-      autoload :Gzip,   File.join(CONFIGURATION_PATH, 'compressor', 'gzip')
-      autoload :Bzip2,  File.join(CONFIGURATION_PATH, 'compressor', 'bzip2')
-      autoload :Pbzip2, File.join(CONFIGURATION_PATH, 'compressor', 'pbzip2')
-      autoload :Lzma,   File.join(CONFIGURATION_PATH, 'compressor', 'lzma')
-    end
-
-    module Storage
-      autoload :Base,       File.join(CONFIGURATION_PATH, 'storage', 'base')
-      autoload :S3,         File.join(CONFIGURATION_PATH, 'storage', 's3')
-      autoload :CloudFiles, File.join(CONFIGURATION_PATH, 'storage', 'cloudfiles')
-      autoload :Ninefold,   File.join(CONFIGURATION_PATH, 'storage', 'ninefold')
-      autoload :Dropbox,    File.join(CONFIGURATION_PATH, 'storage', 'dropbox')
-      autoload :FTP,        File.join(CONFIGURATION_PATH, 'storage', 'ftp')
-      autoload :SFTP,       File.join(CONFIGURATION_PATH, 'storage', 'sftp')
-      autoload :SCP,        File.join(CONFIGURATION_PATH, 'storage', 'scp')
-      autoload :RSync,      File.join(CONFIGURATION_PATH, 'storage', 'rsync')
-      autoload :Local,      File.join(CONFIGURATION_PATH, 'storage', 'local')
-    end
-
-    module Syncer
-      autoload :Base, File.join(CONFIGURATION_PATH, 'syncer', 'base')
-      module Cloud
-        autoload :Base,       File.join(CONFIGURATION_PATH, 'syncer', 'cloud', 'base')
-        autoload :CloudFiles, File.join(CONFIGURATION_PATH, 'syncer', 'cloud', 'cloud_files')
-        autoload :S3,         File.join(CONFIGURATION_PATH, 'syncer', 'cloud', 's3')
-      end
-      module RSync
-        autoload :Base,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'base')
-        autoload :Local, File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'local')
-        autoload :Push,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'push')
-        autoload :Pull,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'pull')
-      end
-    end
-
-    module Database
-      autoload :Base,       File.join(CONFIGURATION_PATH, 'database', 'base')
-      autoload :MySQL,      File.join(CONFIGURATION_PATH, 'database', 'mysql')
-      autoload :PostgreSQL, File.join(CONFIGURATION_PATH, 'database', 'postgresql')
-      autoload :MongoDB,    File.join(CONFIGURATION_PATH, 'database', 'mongodb')
-      autoload :Redis,      File.join(CONFIGURATION_PATH, 'database', 'redis')
-      autoload :Riak,       File.join(CONFIGURATION_PATH, 'database', 'riak')
-    end
-  end
-
-  ##
   # Require Backup base files
   %w{
-    model
     archive
+    binder
+    cleaner
+    config
+    configuration
+    dependency
+    errors
+    logger
+    model
+    package
     packager
     pipeline
-    package
-    cleaner
     splitter
-    config
-    binder
     template
-    dependency
-    logger
     version
-    errors
   }.each {|lib| require File.join(LIBRARY_PATH, lib) }
 
 end
