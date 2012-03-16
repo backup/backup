@@ -7,17 +7,8 @@ require 'tempfile'
 require 'yaml'
 require 'etc'
 
-# Attempt load to POpen4 and Thor Libraries
-begin
-  gem 'POpen4', '~> 0.1.4'
-  gem 'thor',   '~> 0.14.6'
-  require 'popen4'
-  require 'thor'
-rescue LoadError
-  puts "\nBackup requires Thor to load the CLI Utility (Command Line Interface Utility) and POpen4 to determine the status of the unix processes."
-  puts "Please install both the Thor and POpen4 libraries first:\n\ngem install thor -v '~> 0.14.6'\ngem install POpen4 -v '~> 0.1.4'"
-  exit 1
-end
+require 'open4'
+require 'thor'
 
 ##
 # The Backup Ruby Gem
