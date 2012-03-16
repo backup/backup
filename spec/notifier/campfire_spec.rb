@@ -184,14 +184,11 @@ describe 'Backup::Notifier::Campfire::Room' do
 
   describe '#send_message' do
     it 'should pass a JSON formatted HTTParty.post to #post' do
-      room.expects(:post).with('speak',
-        {
-          :body => {
-            :message => {
-              :body => 'a message',
-              :type => 'Textmessage'
-            }
-          }.to_json
+      room.expects(:post).with(
+        'speak', {
+          :body => MultiJson.encode(
+            { :message => { :body => 'a message', :type => 'Textmessage' } }
+          )
         }
       )
       room.send(:send_message, 'a message')

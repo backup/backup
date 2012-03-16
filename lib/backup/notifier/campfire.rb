@@ -1,16 +1,6 @@
 # encoding: utf-8
 
 ##
-# If the Ruby version of this process is 1.8.x or less
-# then use the JSON gem. Otherwise if the current process is running
-# Ruby 1.9.x or later then it is built in and we can load it from the Ruby core lib
-if RUBY_VERSION < '1.9.0'
-  Backup::Dependency.load('json')
-else
-  require 'json'
-end
-
-##
 # Load the HTTParty library from the gem
 Backup::Dependency.load('httparty')
 
@@ -139,12 +129,9 @@ module Backup
         # This method builds up a POST request with the necessary params (serialized to JSON format)
         # and sends it to the Campfire service in order to submit the message
         def send_message(message, type = 'Textmessage')
-          post 'speak', :body => {
-            :message => {
-              :body => message,
-              :type => type
-            }
-          }.to_json
+          post 'speak', :body => MultiJson.encode(
+            { :message => { :body => message, :type => type } }
+          )
         end
 
         ##

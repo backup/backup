@@ -1,12 +1,6 @@
 # encoding: utf-8
 
-if RUBY_VERSION < '1.9.0'
-  Backup::Dependency.load('json')
-else
-  require 'json'
-end
-
-# Load HTTParty
+# Load the HipChat library from the gem
 Backup::Dependency.load('hipchat')
 
 module Backup
