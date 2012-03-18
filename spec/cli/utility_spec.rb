@@ -194,7 +194,7 @@ describe 'Backup::CLI::Utility' do
           [--storages=STORAGES]        # (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
           [--syncers=SYNCERS]          # (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
           [--encryptors=ENCRYPTORS]    # (gpg, openssl)
-          [--compressors=COMPRESSORS]  # (bzip2, gzip, lzma, pbzip2)
+          [--compressors=COMPRESSORS]  # (bzip2, custom, gzip, lzma, pbzip2)
           [--notifiers=NOTIFIERS]      # (campfire, hipchat, mail, presently, prowl, twitter)
           [--archives]
           [--splitter]                 # use `--no-splitter` to disable

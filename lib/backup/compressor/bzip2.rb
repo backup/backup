@@ -5,44 +5,40 @@ module Backup
     class Bzip2 < Base
 
       ##
-      # Tells Backup::Compressor::Bzip2 to compress
-      # better (-9) rather than faster when set to true
-      attr_accessor :best
+      # Specify the level of compression to use.
+      #
+      # Values should be a single digit from 1 to 9.
+      # Note that setting the level to either extreme may or may not
+      # give the desired result. Be sure to check the documentation
+      # for the compressor being used.
+      #
+      # The default `level` is 9.
+      attr_accessor :level
+
+      attr_deprecate :fast, :version => '3.0.24',
+                     :replacement => :level,
+                     :value => lambda {|val| val ? 1 : nil }
+      attr_deprecate :best, :version => '3.0.24',
+                     :replacement => :level,
+                     :value => lambda {|val| val ? 9 : nil }
 
       ##
-      # Tells Backup::Compressor::Bzip2 to compress
-      # faster (-1) rather than better when set to true
-      attr_accessor :fast
-
-      ##
-      # Creates a new instance of Backup::Compressor::Bzip2 and
-      # configures it to either compress faster or better
-      # bzip2 compresses by default with -9 (best compression)
-      # and lower block sizes don't make things significantly faster
-      # (according to official bzip2 docs)
+      # Creates a new instance of Backup::Compressor::Bzip2
       def initialize(&block)
-        super
+        load_defaults!
 
-        @best ||= false
-        @fast ||= false
+        @level ||= false
 
         instance_eval(&block) if block_given?
-      end
 
-      ##
-      # Yields to the block the compressor command with options
-      # and it's filename extension.
-      def compress_with
-        log!
-        yield "#{ utility(:bzip2) }#{ options }", '.bz2'
+        @cmd = "#{ utility(:bzip2) }#{ options }"
+        @ext = '.bz2'
       end
 
       private
 
-      ##
-      # Returns the option syntax for compressing
       def options
-        " #{ '--best ' if @best }#{ '--fast' if @fast }".rstrip
+        " -#{ @level }" if @level
       end
 
     end

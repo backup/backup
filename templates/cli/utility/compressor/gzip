@@ -1,7 +1,4 @@
   ##
   # Gzip [Compressor]
   #
-  compress_with Gzip do |compression|
-    compression.best = true
-    compression.fast = false
-  end
+  compress_with Gzip

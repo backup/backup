@@ -70,11 +70,9 @@ module Backup
         path = UTILITY[name] || %x[which #{ name } 2>/dev/null].chomp
         if path.empty?
           raise Errors::CLI::UtilityNotFoundError, <<-EOS
-            Path to '#{ name }' could not be found.
+            Could not locate '#{ name }'.
             Make sure the specified utility is installed
             and available in your system's $PATH.
-            If this is a database utility, you may need to specify the full path
-            using the Database's '<utility_name>_utility' configuration setting.
           EOS
         end
         UTILITY[name] = path

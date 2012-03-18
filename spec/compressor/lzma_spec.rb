@@ -3,7 +3,9 @@
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Compressor::Lzma do
-  let(:compressor) { Backup::Compressor::Lzma.new }
+  before do
+    Backup::Compressor::Lzma.any_instance.stubs(:utility).returns('lzma')
+  end
 
   it 'should be a subclass of Compressor::Base' do
     Backup::Compressor::Lzma.
@@ -11,49 +13,73 @@ describe Backup::Compressor::Lzma do
   end
 
   describe '#initialize' do
+    let(:compressor) { Backup::Compressor::Lzma.new }
+
     after { Backup::Compressor::Lzma.clear_defaults! }
 
     it 'should load pre-configured defaults' do
       Backup::Compressor::Lzma.any_instance.expects(:load_defaults!)
-      compressor # instantiate object
+      compressor
     end
 
-    it 'should use pre-configured defaults' do
-      Backup::Compressor::Lzma.defaults do |c|
-        c.best = true
-        c.fast = true
+    context 'when no pre-configured defaults have been set' do
+      it 'should use default values' do
+        compressor.best.should be_false
+        compressor.fast.should be_false
       end
-      compressor.best.should be_true
-      compressor.fast.should be_true
-    end
 
-    it 'should set defaults when no pre-configured defaults are set' do
-      compressor.best.should be_false
-      compressor.fast.should be_false
-    end
+      it 'should use the values given' do
+        compressor = Backup::Compressor::Lzma.new do |c|
+          c.best = true
+          c.fast = true
+        end
 
-    it 'should override pre-configured defaults' do
-      Backup::Compressor::Lzma.defaults do |c|
-        c.best = true
-        c.fast = true
+        compressor.best.should be_true
+        compressor.fast.should be_true
       end
-      compressor = Backup::Compressor::Lzma.new do |c|
-        c.best = false
-        c.fast = false
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Compressor::Lzma.defaults do |c|
+          c.best = true
+          c.fast = true
+        end
       end
-      compressor.best.should be_false
-      compressor.fast.should be_false
-    end
-  end # describe 'configuration defaults'
+
+      it 'should use pre-configured defaults' do
+        compressor.best.should be_true
+        compressor.fast.should be_true
+      end
+
+      it 'should override pre-configured defaults' do
+        compressor = Backup::Compressor::Lzma.new do |c|
+          c.best = false
+          c.fast = false
+        end
+
+        compressor.best.should be_false
+        compressor.fast.should be_false
+      end
+    end # context 'when pre-configured defaults have been set'
+  end # describe '#initialize'
 
   describe '#compress_with' do
     before do
-      compressor.expects(:log!)
-      compressor.expects(:utility).with(:lzma).returns('lzma')
+      Backup::Compressor::Lzma.any_instance.expects(:log!)
+
+      Backup::Logger.expects(:warn).with do |msg|
+        msg.should match(
+          /\[DEPRECATION WARNING\]\n  Compressor::Lzma is being deprecated/
+        )
+      end
     end
 
     it 'should yield with the --best option' do
-      compressor.best = true
+      compressor = Backup::Compressor::Lzma.new do |c|
+        c.best = true
+      end
+
       compressor.compress_with do |cmd, ext|
         cmd.should == 'lzma --best'
         ext.should == '.lzma'
@@ -61,28 +87,37 @@ describe Backup::Compressor::Lzma do
     end
 
     it 'should yield with the --fast option' do
-      compressor.fast = true
+      compressor = Backup::Compressor::Lzma.new do |c|
+        c.fast = true
+      end
+
       compressor.compress_with do |cmd, ext|
         cmd.should == 'lzma --fast'
         ext.should == '.lzma'
       end
     end
 
-    it 'should yield with the --best and --fast options' do
-      compressor.best = true
-      compressor.fast = true
+    it 'should prefer the --best option over --fast' do
+      compressor = Backup::Compressor::Lzma.new do |c|
+        c.best = true
+        c.fast = true
+      end
+
       compressor.compress_with do |cmd, ext|
-        cmd.should == 'lzma --best --fast'
+        cmd.should == 'lzma --best'
         ext.should == '.lzma'
       end
     end
 
     it 'should yield with no options' do
+      compressor = Backup::Compressor::Lzma.new
+
       compressor.compress_with do |cmd, ext|
         cmd.should == 'lzma'
         ext.should == '.lzma'
       end
     end
+
   end # describe '#compress_with'
 
 end

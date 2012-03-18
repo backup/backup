@@ -221,7 +221,7 @@ describe Backup::CLI::Helpers do
         expect do
           helpers.utility(:unknown)
         end.to raise_error(Backup::Errors::CLI::UtilityNotFoundError) {|err|
-          err.message.should match(/Path to 'unknown' could not be found/)
+          err.message.should match(/Could not locate 'unknown'/)
         }
       end
 
@@ -231,13 +231,13 @@ describe Backup::CLI::Helpers do
         expect do
           helpers.utility(:not_cached)
         end.to raise_error(Backup::Errors::CLI::UtilityNotFoundError) {|err|
-          err.message.should match(/Path to 'not_cached' could not be found/)
+          err.message.should match(/Could not locate 'not_cached'/)
         }
 
         expect do
           helpers.utility(:not_cached)
         end.to raise_error(Backup::Errors::CLI::UtilityNotFoundError) {|err|
-          err.message.should match(/Path to 'not_cached' could not be found/)
+          err.message.should match(/Could not locate 'not_cached'/)
         }
       end
     end

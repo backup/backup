@@ -15,34 +15,36 @@ module Backup
       attr_accessor :fast
 
       ##
-      # Creates a new instance of Backup::Compressor::Lzma and
-      # configures it to either compress faster or better
-      # Lzma compresses by default with -9 (best compression)
-      # and lower block sizes don't make things significantly faster
-      # (according to official bzip2 docs)
+      # Creates a new instance of Backup::Compressor::Lzma
       def initialize(&block)
-        super
+        load_defaults!
 
         @best ||= false
         @fast ||= false
 
         instance_eval(&block) if block_given?
+
+        @cmd = "#{ utility(:lzma) }#{ options }"
+        @ext = '.lzma'
       end
 
+
       ##
-      # Yields to the block the compressor command with options
-      # and it's filename extension.
+      # Yields to the block the compressor command and filename extension.
       def compress_with
-        log!
-        yield "#{ utility(:lzma) }#{ options }", '.lzma'
+        Backup::Logger.warn(
+          "[DEPRECATION WARNING]\n" +
+          "  Compressor::Lzma is being deprecated as of backup v.3.0.24\n" +
+          "  and will soon be removed. Please see the Compressors wiki page at\n" +
+          "  https://github.com/meskyanichi/backup/wiki/Compressors"
+        )
+        super
       end
 
       private
 
-      ##
-      # Returns the option syntax for compressing
       def options
-        " #{ '--best ' if @best }#{ '--fast' if @fast }".rstrip
+        (' --best' if @best) || (' --fast' if @fast)
       end
 
     end
