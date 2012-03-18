@@ -53,6 +53,13 @@ describe 'Backup::Syncer::Cloud::Base' do
 
     before do
       syncer.stubs(:repository_object).returns(:a_repository_object)
+
+      Backup::Logger.expects(:message).with(
+        'Syncer::Cloud::Base started the syncing process:'
+      )
+      Backup::Logger.expects(:message).with(
+        'Syncer::Cloud::Base Syncing Complete!'
+      )
     end
 
     it 'should sync each directory' do
@@ -61,9 +68,6 @@ describe 'Backup::Syncer::Cloud::Base' do
         add '/dir/two'
       end
 
-      Backup::Logger.expects(:message).in_sequence(s).with(
-        'Syncer::Cloud::Base started the syncing process:'
-      )
       Backup::Syncer::Cloud::Base::SyncContext.expects(:new).in_sequence(s).with(
         '/dir/one', :a_repository_object, 'backups'
       ).returns(sync_context)
@@ -75,9 +79,6 @@ describe 'Backup::Syncer::Cloud::Base' do
       ).returns(sync_context)
       sync_context.expects(:sync!).in_sequence(s).with(
         false, false, 2
-      )
-      Backup::Logger.expects(:message).in_sequence(s).with(
-        'Syncer::Cloud::Base Syncing Complete!'
       )
 
       syncer.perform!
@@ -485,6 +486,8 @@ describe 'Backup::Syncer::Cloud::Base' do
 
       it 'should return nil if the object is invalid' do
         local_file_class.any_instance.expects(:invalid?).returns(true)
+        Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
+        Backup::Logger.expects(:warn)
         local_file.should be_nil
       end
     end # describe '#initialize'

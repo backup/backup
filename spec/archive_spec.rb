@@ -138,6 +138,7 @@ describe Backup::Archive do
     let(:s) { sequence '' }
 
     before do
+      archive.instance_variable_set(:@paths, paths)
       archive.expects(:utility).with(:tar).returns('tar')
       FileUtils.expects(:mkdir_p).with(archive_path)
       Backup::Pipeline.expects(:new).returns(pipeline)
@@ -145,7 +146,6 @@ describe Backup::Archive do
 
     context 'when both #paths and #excludes were added' do
       before do
-        archive.instance_variable_set(:@paths, paths)
         archive.instance_variable_set(:@excludes, excludes)
       end
 
@@ -176,10 +176,6 @@ describe Backup::Archive do
     end # context 'when both #paths and #excludes were added'
 
     context 'when no excludes were added' do
-      before do
-        archive.instance_variable_set(:@paths, paths)
-      end
-
       it 'should render only the syntax for adds' do
         Backup::Logger.expects(:message).in_sequence(s).with(
           "Backup::Archive has started archiving:\n" +
@@ -206,7 +202,6 @@ describe Backup::Archive do
 
     context 'with #paths, #excludes and #tar_args' do
       before do
-        archive.instance_variable_set(:@paths, paths)
         archive.instance_variable_set(:@excludes, excludes)
         archive.instance_variable_set(:@tar_args, '-h --xattrs')
       end
@@ -239,7 +234,6 @@ describe Backup::Archive do
 
     context 'with #paths, #excludes, #tar_args and a Gzip Compressor' do
       before do
-        archive.instance_variable_set(:@paths, paths)
         archive.instance_variable_set(:@excludes, excludes)
         archive.instance_variable_set(:@tar_args, '-h --xattrs')
         compressor = mock
@@ -283,6 +277,12 @@ describe Backup::Archive do
       end
 
       it 'should raise an error' do
+        Backup::Logger.expects(:message).with(
+          "Backup::Archive has started archiving:\n" +
+          "  /path/to/add\n" +
+          "  /another/path/to/add"
+        )
+
         expect do
           archive.perform!
         end.to raise_error(

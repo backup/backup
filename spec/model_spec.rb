@@ -342,6 +342,8 @@ describe 'Backup::Model' do
       Timecop.freeze(Time.now)
       started_at = Time.now
       time = started_at.strftime("%Y.%m.%d.%H.%M.%S")
+      model.expects(:log!).with(:started)
+      model.expects(:log!).with(:finished)
 
       model.perform!
       model.time.should == time

@@ -331,6 +331,11 @@ describe Backup::Database::MongoDB do
         end
 
         it 'should raise an error' do
+          Backup::Logger.expects(:message).with(
+            "Database::MongoDB started compressing and packaging:\n" +
+            "  '/path/to/dump/folder'"
+          )
+
           expect do
             db.send(:package!)
           end.to raise_error(

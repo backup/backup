@@ -26,7 +26,6 @@ describe 'Backup::Pipeline' do
 
     before do
       pipeline.expects(:pipeline).returns('foo')
-      pipeline.stubs(:stderr_messages).returns('stderr_messages_output')
       # stub CLI::Helpers#command_name so it simply returns what it's passed
       pipeline.class.send(:define_method, :command_name, lambda {|arg| arg } )
     end
@@ -44,6 +43,7 @@ describe 'Backup::Pipeline' do
         context 'when commands output no stderr messages' do
           before do
             stderr.expects(:read).returns('')
+            pipeline.stubs(:stderr_messages).returns(false)
           end
 
           it 'should process the returned stdout/stderr and report no errors' do
@@ -58,6 +58,7 @@ describe 'Backup::Pipeline' do
         context 'when successful commands output messages on stderr' do
           before do
             stderr.expects(:read).returns("stderr output\n")
+            pipeline.stubs(:stderr_messages).returns('stderr_messages_output')
           end
 
           it 'should log a warning with the stderr messages' do
@@ -74,6 +75,7 @@ describe 'Backup::Pipeline' do
         before do
           pipeline.instance_variable_set(:@commands, ['first', 'second', 'third'])
           stderr.expects(:read).returns("stderr output\n")
+          pipeline.stubs(:stderr_messages).returns('success? should be false')
         end
 
         context 'when the commands return in sequence' do

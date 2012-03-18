@@ -29,11 +29,13 @@ describe 'Backup::Configuration' do
     end
 
     it 'should pass calls to .defaults to the proper class' do
+      Backup::Logger.expects(:warn)
       Backup::Foo.expects(:defaults)
       Backup::Configuration::Foo.defaults
     end
 
     it 'should pass a given block to .defaults to the proper class' do
+      Backup::Logger.expects(:warn)
       configuration = mock
       Backup::Foo.expects(:defaults).yields(configuration)
       configuration.expects(:foo=).with('bar')

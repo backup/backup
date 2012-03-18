@@ -44,16 +44,17 @@ RSpec.configure do |config|
   # Actions to perform before each example
   config.before(:each) do
     FileUtils.collect_method(:noop).each do |method|
-      FileUtils.stubs(method).raises("Unexpected call to FileUtils.#{method}")
+      FileUtils.stubs(method).raises("Unexpected call to FileUtils.#{ method }")
     end
+
     Open4.stubs(:popen4).raises('Unexpected call to Open4::popen4()')
 
-    [:message, :error, :warn, :normal, :silent].each do |message_type|
-      Backup::Logger.stubs(message_type)
+    [:message, :error, :warn, :normal, :silent].each do |method|
+      Backup::Logger.stubs(method).raises("Unexpected call to Backup::Logger.#{ method }")
     end
   end
 end
 
 unless @_put_ruby_version
-  puts @_put_ruby_version = "\n\nRuby version: #{RUBY_DESCRIPTION}\n\n"
+  puts @_put_ruby_version = "\n\nRuby version: #{ RUBY_DESCRIPTION }\n\n"
 end

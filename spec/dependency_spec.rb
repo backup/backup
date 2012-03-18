@@ -40,6 +40,8 @@ describe Backup::Dependency do
       end
 
       it "should exit with status code 1" do
+        Backup::Logger.expects(:error)
+
         expect do
           Backup::Dependency.load("net-sftp")
         end.to raise_error { |exit| exit.status.should be(1) }
