@@ -479,14 +479,13 @@ describe Backup::Database::MongoDB do
 
     describe '#utility_path' do
       before do
-        Backup::Database::MongoDB.any_instance.stubs(:utility).returns('blah')
-        Backup::Logger.expects(:warn).with do |err|
-          err.message.should == "ConfigurationError: [DEPRECATION WARNING]\n" +
-              "  Backup::Database::MongoDB.utility_path has been deprecated " +
-                "as of backup v.3.0.21\n" +
-              "  This setting has been replaced with:\n" +
-              "  Backup::Database::MongoDB.mongodump_utility"
-        end
+        Backup::Database::MongoDB.any_instance.stubs(:utility)
+        Backup::Logger.expects(:warn).with(
+          instance_of(Backup::Errors::ConfigurationError)
+        )
+        Backup::Logger.expects(:warn).with(
+          "Backup::Database::MongoDB.mongodump_utility is being set to 'foo'"
+        )
       end
 
       context 'when set directly' do

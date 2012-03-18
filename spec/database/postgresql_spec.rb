@@ -323,13 +323,12 @@ describe Backup::Database::PostgreSQL do
     describe '#utility_path' do
       before do
         Backup::Database::PostgreSQL.any_instance.stubs(:utility)
-        Backup::Logger.expects(:warn).with do |err|
-          err.message.should == "ConfigurationError: [DEPRECATION WARNING]\n" +
-              "  Backup::Database::PostgreSQL.utility_path has been deprecated " +
-                "as of backup v.3.0.21\n" +
-              "  This setting has been replaced with:\n" +
-              "  Backup::Database::PostgreSQL.pg_dump_utility"
-        end
+        Backup::Logger.expects(:warn).with(
+          instance_of(Backup::Errors::ConfigurationError)
+        )
+        Backup::Logger.expects(:warn).with(
+          "Backup::Database::PostgreSQL.pg_dump_utility is being set to 'foo'"
+        )
       end
 
       context 'when set directly' do

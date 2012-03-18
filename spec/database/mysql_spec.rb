@@ -381,13 +381,12 @@ describe Backup::Database::MySQL do
     describe '#utility_path' do
       before do
         Backup::Database::MySQL.any_instance.stubs(:utility)
-        Backup::Logger.expects(:warn).with do |err|
-          err.message.should == "ConfigurationError: [DEPRECATION WARNING]\n" +
-              "  Backup::Database::MySQL.utility_path has been deprecated " +
-                "as of backup v.3.0.21\n" +
-              "  This setting has been replaced with:\n" +
-              "  Backup::Database::MySQL.mysqldump_utility"
-        end
+        Backup::Logger.expects(:warn).with(
+          instance_of(Backup::Errors::ConfigurationError)
+        )
+        Backup::Logger.expects(:warn).with(
+          "Backup::Database::MySQL.mysqldump_utility is being set to 'foo'"
+        )
       end
 
       context 'when set directly' do
