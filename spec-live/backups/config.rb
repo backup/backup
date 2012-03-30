@@ -101,6 +101,15 @@ Backup::Model.new(:compressor_gzip_archive_local, 'test_label') do
   store_with Local
 end
 
+Backup::Model.new(:compressor_custom_archive_local, 'test_label') do
+  archive :test_archive, &archive_job
+  compress_with Custom do |c|
+    c.command = 'gzip -1'
+    c.extension = '.foo'
+  end
+  store_with Local
+end
+
 Backup::Model.new(:notifier_mail, 'test_label') do
   notify_by Mail
 end
