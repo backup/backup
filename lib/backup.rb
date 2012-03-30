@@ -104,7 +104,6 @@ module Backup
     autoload :Mail,      File.join(NOTIFIER_PATH, 'mail')
     autoload :Twitter,   File.join(NOTIFIER_PATH, 'twitter')
     autoload :Campfire,  File.join(NOTIFIER_PATH, 'campfire')
-    autoload :Presently, File.join(NOTIFIER_PATH, 'presently')
     autoload :Prowl,     File.join(NOTIFIER_PATH, 'prowl')
     autoload :Hipchat,   File.join(NOTIFIER_PATH, 'hipchat')
   end
