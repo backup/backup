@@ -236,11 +236,11 @@ describe Backup::Database::Redis do
         File.expects(:exist?).returns(false)
         expect do
           db.send(:copy!)
-        end.to raise_error do |err|
+        end.to raise_error {|err|
           err.should be_an_instance_of Backup::Errors::Database::Redis::NotFoundError
           err.message.should match(/Redis database dump not found/)
           err.message.should match(/File path was #{src_path}/)
-        end
+        }
       end
     end
   end # describe '#copy!'
