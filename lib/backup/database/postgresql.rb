@@ -32,6 +32,9 @@ module Backup
       # Path to pg_dump utility (optional)
       attr_accessor :pg_dump_utility
 
+      attr_deprecate :utility_path, :version => '3.0.21',
+          :replacement => :pg_dump_utility
+
       ##
       # Creates a new instance of the PostgreSQL adapter object
       # Sets the PGPASSWORD environment variable to the password
@@ -45,12 +48,6 @@ module Backup
 
         instance_eval(&block) if block_given?
 
-        if @utility_path
-          Logger.warn "[DEPRECATED] " +
-            "Database::PostgreSQL#utility_path has been deprecated.\n" +
-            "  Use Database::PostgreSQL#pg_dump_utility instead."
-          @pg_dump_utility ||= @utility_path
-        end
         @pg_dump_utility ||= utility(:pg_dump)
       end
 
@@ -60,18 +57,26 @@ module Backup
       def perform!
         super
 
+        pipeline = Pipeline.new
         dump_ext = 'sql'
-        dump_cmd = "#{ pgdump }"
 
+        pipeline << pgdump
         if @model.compressor
           @model.compressor.compress_with do |command, ext|
-            dump_cmd << " | #{command}"
+            pipeline << command
             dump_ext << ext
           end
         end
+        pipeline << "cat > '#{ File.join(@dump_path, name) }.#{ dump_ext }'"
 
-        dump_cmd << " > '#{ File.join(@dump_path, name) }.#{ dump_ext }'"
-        run(dump_cmd)
+        pipeline.run
+        if pipeline.success?
+          Logger.message "#{ database_name } Complete!"
+        else
+          raise Errors::Database::PipelineError,
+              "#{ database_name } Dump Failed!\n" +
+              pipeline.error_messages
+        end
       end
 
       ##

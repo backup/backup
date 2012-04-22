@@ -5,6 +5,16 @@ require File.expand_path('../../spec_helper.rb', __FILE__)
 describe Backup::Encryptor::Base do
   let(:base) { Backup::Encryptor::Base.new }
 
+  it 'should include CLI::Helpers' do
+    Backup::Encryptor::Base.
+      include?(Backup::CLI::Helpers).should be_true
+  end
+
+  it 'should include Configuration::Helpers' do
+    Backup::Encryptor::Base.
+      include?(Backup::Configuration::Helpers).should be_true
+  end
+
   describe '#initialize' do
     it 'should load defaults' do
       Backup::Encryptor::Base.any_instance.expects(:load_defaults!)

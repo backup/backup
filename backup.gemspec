@@ -26,7 +26,7 @@ Gem::Specification.new do |gem|
 
   ##
   # Gem dependencies
-  gem.add_dependency 'thor',   ['~> 0.14.6']
-  gem.add_dependency 'POpen4', ['~> 0.1.4']
+  gem.add_dependency 'thor',  ['~> 0.14.6']
+  gem.add_dependency 'open4', ['~> 1.3.0']
 
 end

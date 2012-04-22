@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 ##
-# Only load the Mail gem and Erb library when using Mail notifications
+# Only load the Mail gem when using Mail notifications
 Backup::Dependency.load('mail')
 
 module Backup

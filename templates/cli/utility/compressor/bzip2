@@ -1,7 +1,4 @@
   ##
   # Bzip2 [Compressor]
   #
-  compress_with Bzip2 do |compression|
-    compression.best = true
-    compression.fast = false
-  end
+  compress_with Bzip2

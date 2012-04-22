@@ -7,16 +7,20 @@ module Backup
       include Backup::Configuration::Helpers
 
       ##
-      # Directories to sync
-      attr_accessor :directories
-
-      ##
       # Path to store the synced files/directories to
       attr_accessor :path
 
       ##
       # Flag for mirroring the files/directories
       attr_accessor :mirror
+
+      def initialize
+        load_defaults!
+
+        @path               ||= 'backups'
+        @mirror             ||= false
+        @directories          = Array.new
+      end
 
       ##
       # Syntactical suger for the DSL for adding directories

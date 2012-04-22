@@ -181,6 +181,10 @@ describe Backup::Logger do
         FileUtils.unstub(:rm_f)
       end
 
+      after do
+        Backup::Config.send(:reset!)
+      end
+
       it 'should truncate the file, removing older lines' do
         max_bytes = 5_000
         line_len  = 120

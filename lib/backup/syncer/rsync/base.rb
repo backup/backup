@@ -12,11 +12,8 @@ module Backup
         # Instantiates a new RSync Syncer object
         # and sets the default configuration
         def initialize
-          load_defaults!
+          super
 
-          @path               ||= 'backups'
-          @directories          = Array.new
-          @mirror             ||= false
           @additional_options ||= Array.new
         end
 

@@ -33,6 +33,9 @@ module Backup
       # Path to mysqldump utility (optional)
       attr_accessor :mysqldump_utility
 
+      attr_deprecate :utility_path, :version => '3.0.21',
+          :replacement => :mysqldump_utility
+
       ##
       # Creates a new instance of the MySQL adapter object
       def initialize(model, &block)
@@ -45,13 +48,6 @@ module Backup
         instance_eval(&block) if block_given?
 
         @name ||= :all
-
-        if @utility_path
-          Logger.warn "[DEPRECATED] " +
-            "Database::MySQL#utility_path has been deprecated.\n" +
-            "  Use Database::MySQL#mysqldump_utility instead."
-          @mysqldump_utility ||= @utility_path
-        end
         @mysqldump_utility ||= utility(:mysqldump)
       end
 
@@ -61,18 +57,26 @@ module Backup
       def perform!
         super
 
+        pipeline = Pipeline.new
         dump_ext = 'sql'
-        dump_cmd = "#{ mysqldump }"
 
+        pipeline << mysqldump
         if @model.compressor
           @model.compressor.compress_with do |command, ext|
-            dump_cmd << " | #{command}"
+            pipeline << command
             dump_ext << ext
           end
         end
+        pipeline << "cat > '#{ File.join(@dump_path, dump_filename) }.#{ dump_ext }'"
 
-        dump_cmd << " > '#{ File.join(@dump_path, dump_filename) }.#{ dump_ext }'"
-        run(dump_cmd)
+        pipeline.run
+        if pipeline.success?
+          Logger.message "#{ database_name } Complete!"
+        else
+          raise Errors::Database::PipelineError,
+              "#{ database_name } Dump Failed!\n" +
+              pipeline.error_messages
+        end
       end
 
       private
@@ -137,8 +141,9 @@ module Backup
       # during the dumping of the database
       def tables_to_skip
         skip_tables.map do |table|
-          "--ignore-table='#{name}.#{table}'"
-        end.join(' ') unless dump_all?
+          table = (dump_all? || table['.']) ? table : "#{ name }.#{ table }"
+          "--ignore-table='#{ table }'"
+        end.join(' ')
       end
 
       ##

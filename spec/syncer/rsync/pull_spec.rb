@@ -15,6 +15,7 @@ describe Backup::Syncer::RSync::Pull do
       rsync.directories do |directory|
         directory.add "/some/directory"
         directory.add "~/home/directory"
+        directory.add "another/directory"
       end
 
       rsync.mirror             = true
@@ -30,12 +31,12 @@ describe Backup::Syncer::RSync::Pull do
     let(:s) { sequence '' }
 
     it 'should perform the RSync::Pull operation on two directories' do
-      syncer.expects(:utility).twice.with(:rsync).returns('rsync')
-      syncer.expects(:options).twice.returns('options_output')
+      syncer.expects(:utility).times(3).with(:rsync).returns('rsync')
+      syncer.expects(:options).times(3).returns('options_output')
 
       syncer.expects(:write_password_file!).in_sequence(s)
 
-      # first directory
+      # first directory - uses the given full path
       Backup::Logger.expects(:message).in_sequence(s).with(
         "Syncer::RSync::Pull started syncing '/some/directory'."
       )
@@ -45,12 +46,22 @@ describe Backup::Syncer::RSync::Pull do
       ).returns('messages from stdout')
       Backup::Logger.expects(:silent).in_sequence(s).with('messages from stdout')
 
-      # second directory
+      # second directory - removes leading '~'
       Backup::Logger.expects(:message).in_sequence(s).with(
         "Syncer::RSync::Pull started syncing '~/home/directory'."
       )
       syncer.expects(:run).in_sequence(s).with(
         "rsync options_output 'my_username@123.45.678.90:home/directory' " +
+        "'#{ File.expand_path('~/my_backups') }'"
+      ).returns('messages from stdout')
+      Backup::Logger.expects(:silent).in_sequence(s).with('messages from stdout')
+
+      # third directory - does not expand path
+      Backup::Logger.expects(:message).in_sequence(s).with(
+        "Syncer::RSync::Pull started syncing 'another/directory'."
+      )
+      syncer.expects(:run).in_sequence(s).with(
+        "rsync options_output 'my_username@123.45.678.90:another/directory' " +
         "'#{ File.expand_path('~/my_backups') }'"
       ).returns('messages from stdout')
       Backup::Logger.expects(:silent).in_sequence(s).with('messages from stdout')

@@ -221,6 +221,10 @@ describe 'Backup::Cleaner' do
       FileUtils.unstub(:mkdir_p)
     end
 
+    after do
+      Backup::Config.send(:reset!)
+    end
+
     context 'when files exist in the packaging folder' do
       it 'should return true' do
         Dir.mktmpdir do |path|
@@ -251,6 +255,10 @@ describe 'Backup::Cleaner' do
       cleaner.instance_variable_set(:@model, model)
       FileUtils.unstub(:mkdir_p)
       FileUtils.unstub(:touch)
+    end
+
+    after do
+      Backup::Config.send(:reset!)
     end
 
     context 'when packaging files exist in the tmp_path' do

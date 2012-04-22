@@ -17,13 +17,13 @@ module Backup
       {
         'fog' => {
           :require => 'fog',
-          :version => '>= 0.11.0',
+          :version => '~> 1.1.0',
           :for     => 'Amazon S3, Rackspace Cloud Files (S3, CloudFiles Storages)'
         },
 
         'dropbox-sdk' => {
           :require => 'dropbox_sdk',
-          :version => '~> 1.1.0',
+          :version => '~> 1.2.0',
           :for     => 'Dropbox Web Service (Dropbox Storage)'
         },
 
@@ -41,13 +41,13 @@ module Backup
 
         'net-ssh' => {
           :require => 'net/ssh',
-          :version => '~> 2.1.4',
+          :version => '~> 2.3.0',
           :for     => 'SSH Protocol (SSH Storage)'
         },
 
         'mail' => {
           :require => 'mail',
-          :version => '>= 2.4.0',
+          :version => '~> 2.4.0',
           :for     => 'Sending Emails (Mail Notifier)'
         },
 
@@ -59,14 +59,8 @@ module Backup
 
         'httparty' => {
           :require => 'httparty',
-          :version => '~> 0.7.4',
+          :version => '~> 0.8.1',
           :for     => 'Sending Http Updates'
-        },
-
-        'json' => {
-          :require => 'json',
-          :version => '~> 1.5.1',
-          :for     => 'Parsing JSON for HTTParty'
         },
 
         'prowler' => {

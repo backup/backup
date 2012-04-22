@@ -107,13 +107,16 @@ module Backup
             ['S3', 'CloudFiles', 'Ninefold', 'Dropbox', 'FTP',
             'SFTP', 'SCP', 'RSync', 'Local'],
             # Compressors
-            ['Gzip', 'Bzip2', 'Pbzip2', 'Lzma'],
+            ['Gzip', 'Bzip2', 'Custom', 'Pbzip2', 'Lzma'],
             # Encryptors
             ['OpenSSL', 'GPG'],
             # Syncers
-            ['Rackspace', 'S3', { 'RSync' => ['Push', 'Pull', 'Local'] }],
+            [
+              { 'Cloud' => ['CloudFiles', 'S3'] },
+              { 'RSync' => ['Push', 'Pull', 'Local'] }
+            ],
             # Notifiers
-            ['Mail', 'Twitter', 'Campfire', 'Presently', 'Prowl', 'Hipchat']
+            ['Mail', 'Twitter', 'Campfire', 'Prowl', 'Hipchat']
           ]
         )
       end

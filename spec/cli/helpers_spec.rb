@@ -6,55 +6,190 @@ describe Backup::CLI::Helpers do
   let(:helpers) { Module.new.extend(Backup::CLI::Helpers) }
 
   describe '#run' do
-    let(:stdin)   { mock }
-    let(:stdout)  { mock }
-    let(:stderr)  { mock }
-    let(:process_status) { mock }
+    let(:stdout_io) { stub(:read => stdout_messages) }
+    let(:stderr_io) { stub(:read => stderr_messages) }
+    let(:stdin_io)  { stub(:close) }
+    let(:process_status) { stub(:success? => process_success) }
+    let(:command) { '/path/to/cmd_name arg1 arg2' }
 
-    it 'should run the given command using POpen4' do
-      Open4.expects(:popen4).with('/path/to/command args').
-        returns([123, stdin, stdout, stderr])
-      Process.expects(:waitpid2).with(123).returns([123, process_status])
-      stdout.expects(:read).returns('stdout message')
-      stderr.expects(:read).returns('stderr message')
+    context 'when the command is successful' do
+      let(:process_success) { true }
 
-      helpers.expects(:command_name).with('/path/to/command args').
-          returns('command')
-      helpers.expects(:raise_if_command_failed!).with(
-        'command',
-        {:status => process_status,
-         :stdout => 'stdout message',
-         :stderr => 'stderr message',
-         :ignore_exit_codes => [0]}
-      )
+      before do
+        Backup::Logger.expects(:message).with(
+          "Running system utility 'cmd_name'..."
+        )
 
-      helpers.run('/path/to/command args').should == 'stdout message'
-    end
+        Open4.expects(:popen4).with(command).yields(
+          nil, stdin_io, stdout_io, stderr_io
+        ).returns(process_status)
+      end
 
-    it 'should accept ignore_exit_codes and add 0 to the list' do
-      Open4.expects(:popen4).with('/path/to/command args').
-        returns([123, stdin, stdout, stderr])
-      Process.expects(:waitpid2).with(123).returns([123, process_status])
-      stdout.expects(:read).returns('stdout message')
-      stderr.expects(:read).returns('stderr message')
+      context 'and generates no messages' do
+        let(:stdout_messages) { '' }
+        let(:stderr_messages) { '' }
 
-      helpers.expects(:command_name).with('/path/to/command args').
-          returns('command')
-      helpers.expects(:raise_if_command_failed!).with(
-        'command',
-        {:status => process_status,
-         :stdout => 'stdout message',
-         :stderr => 'stderr message',
-         :ignore_exit_codes => [1, 2, 0]}
-      )
+        it 'should generate no additional log messages' do
+          helpers.run(command).should be_nil
+        end
+      end
 
-      helpers.run(
-        '/path/to/command args', :ignore_exit_codes => [1, 2]
-      ).should == 'stdout message'
-    end
-  end
+      context 'and generates only stdout messages' do
+        let(:stdout_messages) { "out line1\nout line2\n" }
+        let(:stderr_messages) { '' }
+
+        it 'should log the stdout messages' do
+          Backup::Logger.expects(:message).with(
+            "cmd_name:STDOUT: out line1\ncmd_name:STDOUT: out line2"
+          )
+          helpers.run(command).should be_nil
+        end
+      end
+
+      context 'and generates only stderr messages' do
+        let(:stdout_messages) { '' }
+        let(:stderr_messages) { "err line1\nerr line2\n" }
+
+        it 'should log the stderr messages' do
+          Backup::Logger.expects(:warn).with(
+            "cmd_name:STDERR: err line1\ncmd_name:STDERR: err line2"
+          )
+          helpers.run(command).should be_nil
+        end
+      end
+
+      context 'and generates messages on both stdout and stderr' do
+        let(:stdout_messages) { "out line1\nout line2\n" }
+        let(:stderr_messages) { "err line1\nerr line2\n" }
+
+        it 'should log both stdout and stderr messages' do
+          Backup::Logger.expects(:message).with(
+            "cmd_name:STDOUT: out line1\ncmd_name:STDOUT: out line2"
+          )
+          Backup::Logger.expects(:warn).with(
+            "cmd_name:STDERR: err line1\ncmd_name:STDERR: err line2"
+          )
+          helpers.run(command).should be_nil
+        end
+      end
+    end # context 'when the command is successful'
+
+    context 'when the command is not successful' do
+      let(:process_success) { false }
+      let(:message_head) do
+        "CLI::SystemCallError: 'cmd_name' Failed on #{ RUBY_PLATFORM }\n" +
+        "  The following information should help to determine the problem:\n" +
+        "  Command was: /path/to/cmd_name arg1 arg2\n" +
+        "  Exit Status: 1\n"
+      end
+
+      before do
+        Backup::Logger.expects(:message).with(
+          "Running system utility 'cmd_name'..."
+        )
+
+        Open4.expects(:popen4).with(command).yields(
+          nil, stdin_io, stdout_io, stderr_io
+        ).returns(process_status)
+
+        process_status.stubs(:exitstatus).returns(1)
+      end
+
+      context 'and generates no messages' do
+        let(:stdout_messages) { '' }
+        let(:stderr_messages) { '' }
+
+        it 'should raise an error reporting no messages' do
+          expect do
+            helpers.run(command)
+          end.to raise_error {|err|
+            err.message.should == message_head +
+              "  STDOUT Messages: None\n" +
+              "  STDERR Messages: None"
+          }
+        end
+      end
+
+      context 'and generates only stdout messages' do
+        let(:stdout_messages) { "out line1\nout line2\n" }
+        let(:stderr_messages) { '' }
+
+        it 'should raise an error and report the stdout messages' do
+          expect do
+            helpers.run(command)
+          end.to raise_error {|err|
+            err.message.should == message_head +
+              "  STDOUT Messages: \n" +
+              "  out line1\n" +
+              "  out line2\n" +
+              "  STDERR Messages: None"
+          }
+        end
+      end
+
+      context 'and generates only stderr messages' do
+        let(:stdout_messages) { '' }
+        let(:stderr_messages) { "err line1\nerr line2\n" }
+
+        it 'should raise an error and report the stderr messages' do
+          expect do
+            helpers.run(command)
+          end.to raise_error {|err|
+            err.message.should == message_head +
+              "  STDOUT Messages: None\n" +
+              "  STDERR Messages: \n" +
+              "  err line1\n" +
+              "  err line2"
+          }
+        end
+      end
+
+      context 'and generates messages on both stdout and stderr' do
+        let(:stdout_messages) { "out line1\nout line2\n" }
+        let(:stderr_messages) { "err line1\nerr line2\n" }
+
+        it 'should raise an error and report the stdout and stderr messages' do
+          expect do
+            helpers.run(command)
+          end.to raise_error {|err|
+            err.message.should == message_head +
+              "  STDOUT Messages: \n" +
+              "  out line1\n" +
+              "  out line2\n" +
+              "  STDERR Messages: \n" +
+              "  err line1\n" +
+              "  err line2"
+          }
+        end
+      end
+    end # context 'when the command is not successful'
+
+    context 'when the system fails to execute the command' do
+      before do
+        Backup::Logger.expects(:message).with(
+          "Running system utility 'cmd_name'..."
+        )
+
+        Open4.expects(:popen4).raises("exec call failed")
+      end
+
+      it 'should raise an error wrapping the system error raised' do
+        expect do
+          helpers.run(command)
+        end.to raise_error {|err|
+          err.message.should == "CLI::SystemCallError: " +
+            "Failed to execute system command on #{ RUBY_PLATFORM }\n" +
+            "  Command was: /path/to/cmd_name arg1 arg2\n" +
+            "  Reason: RuntimeError\n" +
+            "  exec call failed"
+        }
+      end
+    end # context 'when the system fails to execute the command'
+  end # describe '#run'
 
   describe '#utility' do
+    after { Backup::CLI::Helpers::UTILITY.clear }
+
     context 'when a system path for the utility is available' do
       it 'should return the system path with newline removed' do
         helpers.expects(:`).with('which foo 2>/dev/null').returns("system_path\n")
@@ -79,7 +214,6 @@ describe Backup::CLI::Helpers do
       end
     end
 
-
     context 'when a system path for the utility is not available' do
       it 'should raise an error' do
         helpers.expects(:`).with('which unknown 2>/dev/null').returns("\n")
@@ -87,7 +221,7 @@ describe Backup::CLI::Helpers do
         expect do
           helpers.utility(:unknown)
         end.to raise_error(Backup::Errors::CLI::UtilityNotFoundError) {|err|
-          err.message.should match(/Path to 'unknown' could not be found/)
+          err.message.should match(/Could not locate 'unknown'/)
         }
       end
 
@@ -97,15 +231,33 @@ describe Backup::CLI::Helpers do
         expect do
           helpers.utility(:not_cached)
         end.to raise_error(Backup::Errors::CLI::UtilityNotFoundError) {|err|
-          err.message.should match(/Path to 'not_cached' could not be found/)
+          err.message.should match(/Could not locate 'not_cached'/)
         }
 
         expect do
           helpers.utility(:not_cached)
         end.to raise_error(Backup::Errors::CLI::UtilityNotFoundError) {|err|
-          err.message.should match(/Path to 'not_cached' could not be found/)
+          err.message.should match(/Could not locate 'not_cached'/)
         }
       end
+    end
+
+    it 'should raise an error if name is nil' do
+      expect do
+        helpers.utility(nil)
+      end.to raise_error(
+        Backup::Errors::CLI::UtilityNotFoundError,
+          'CLI::UtilityNotFoundError: Utility Name Empty'
+      )
+    end
+
+    it 'should raise an error if name is empty' do
+      expect do
+        helpers.utility(' ')
+      end.to raise_error(
+        Backup::Errors::CLI::UtilityNotFoundError,
+          'CLI::UtilityNotFoundError: Utility Name Empty'
+      )
     end
   end # describe '#utility'
 
@@ -145,32 +297,5 @@ describe Backup::CLI::Helpers do
       end
     end
   end # describe '#command_name'
-
-  describe '#raise_if_command_failed!' do
-
-    it 'returns nil if status exit code is in ignore_exit_codes' do
-      process_data = { :status => '3', :ignore_exit_codes => [1,3,5] }
-      helpers.raise_if_command_failed!('foo', process_data).should be_nil
-    end
-
-    it 'raises an error with stdout/stderr data' do
-      process_data = { :status => '3', :ignore_exit_codes => [2,4,6],
-                       :stdout => 'stdout data', :stderr => 'stderr data' }
-
-      expect do
-        helpers.raise_if_command_failed!('utility_name', process_data)
-      end.to raise_error(
-        Backup::Errors::CLI::SystemCallError,
-        "CLI::SystemCallError: Failed to run utility_name on #{RUBY_PLATFORM}\n" +
-        "  The following information should help to determine the problem:\n" +
-        "  Exit Code: 3\n" +
-        "  STDERR:\n" +
-        "  stderr data\n" +
-        "  STDOUT:\n" +
-        "  stdout data"
-      )
-    end
-
-  end
 
 end

@@ -27,7 +27,7 @@ module Backup
         private
 
         ##
-        # Return expanded @path
+        # Return expanded @path, since this path is local
         def dest_path
           @dest_path ||= File.expand_path(@path)
         end

@@ -125,16 +125,25 @@ module Backup
     # methods to use during the backup process
     def sync_with(name, &block)
       ##
-      # Warn user of DSL change from 'RSync' to 'RSync::Local'
-      if name.to_s == 'Backup::Config::RSync'
+      # Warn user of DSL changes
+      case name.to_s
+      when 'Backup::Config::RSync'
         Logger.warn Errors::ConfigError.new(<<-EOS)
           Configuration Update Needed for Syncer::RSync
           The RSync Syncer has been split into three separate modules:
           RSync::Local, RSync::Push and RSync::Pull
-          Please update your configuration for your local RSync Syncer
-          from 'sync_with RSync do ...' to 'sync_with RSync::Local do ...'
+          Please update your configuration.
+          i.e. 'sync_with RSync' is now 'sync_with RSync::Push'
         EOS
-        name = Backup::Config::RSync::Local
+        name = 'RSync::Push'
+      when /(Backup::Config::S3|Backup::Config::CloudFiles)/
+        syncer = $1.split('::')[2]
+        Logger.warn Errors::ConfigError.new(<<-EOS)
+          Configuration Update Needed for '#{ syncer }' Syncer.
+          This Syncer is now referenced as Cloud::#{ syncer }
+          i.e. 'sync_with #{ syncer }' is now 'sync_with Cloud::#{ syncer }'
+        EOS
+        name = "Cloud::#{ syncer }"
       end
       @syncers << get_class_from_scope(Syncer, name).new(&block)
     end

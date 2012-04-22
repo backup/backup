@@ -86,6 +86,10 @@ describe 'Backup::CLI::Utility' do
       FileUtils.unstub(:touch)
     end
 
+    after do
+      Backup::Config.send(:reset!)
+    end
+
     context 'when given a config_path' do
       context 'when no config file exists' do
         it 'should create both a config and a model under the given path' do
@@ -190,8 +194,8 @@ describe 'Backup::CLI::Utility' do
           [--storages=STORAGES]        # (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
           [--syncers=SYNCERS]          # (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
           [--encryptors=ENCRYPTORS]    # (gpg, openssl)
-          [--compressors=COMPRESSORS]  # (bzip2, gzip, lzma, pbzip2)
-          [--notifiers=NOTIFIERS]      # (campfire, hipchat, mail, presently, prowl, twitter)
+          [--compressors=COMPRESSORS]  # (bzip2, custom, gzip, lzma, pbzip2)
+          [--notifiers=NOTIFIERS]      # (campfire, hipchat, mail, prowl, twitter)
           [--archives]
           [--splitter]                 # use `--no-splitter` to disable
                                       # Default: true
@@ -213,12 +217,16 @@ describe 'Backup::CLI::Utility' do
 
       output_lines.sort.should == expected_lines.sort
     end
-  end
+  end # describe '#generate:model'
 
   describe '#generate:config' do
     before do
       FileUtils.unstub(:mkdir_p)
       FileUtils.unstub(:touch)
+    end
+
+    after do
+      Backup::Config.send(:reset!)
     end
 
     context 'when given a config_path' do

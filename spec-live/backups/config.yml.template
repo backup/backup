@@ -1,0 +1,43 @@
+##
+# config.yml template
+# for usage, see:
+#   spec-live/spec_helper.rb
+#   spec-live/backups/config.rb
+##
+---
+storage:
+  scp:
+    specs_enabled: false
+    username: <current user name>
+    password: <password>
+    ip: localhost
+    port: 22
+    path: /absolute/path/to/spec-live/tmp
+  dropbox:
+    specs_enabled: false
+    api_key: <your key>
+    api_secret: <your secret>
+    path:
+    timeout:
+notifier:
+  mail:
+    specs_enabled: false
+    delivery_method: smtp
+    from: <from email>
+    to: <to email>
+    address: smtp.gmail.com
+    port: 587
+    user_name: <user name>
+    password: <password>
+    authentication: plain
+    enable_starttls_auto: true
+    sendmail:
+    sendmail_args:
+syncer:
+  cloud:
+    s3:
+      specs_enabled: false
+      access_key_id:
+      secret_access_key:
+      bucket:
+      region:

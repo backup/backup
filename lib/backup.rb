@@ -7,17 +7,8 @@ require 'tempfile'
 require 'yaml'
 require 'etc'
 
-# Attempt load to POpen4 and Thor Libraries
-begin
-  gem 'POpen4', '~> 0.1.4'
-  gem 'thor',   '~> 0.14.6'
-  require 'popen4'
-  require 'thor'
-rescue LoadError
-  puts "\nBackup requires Thor to load the CLI Utility (Command Line Interface Utility) and POpen4 to determine the status of the unix processes."
-  puts "Please install both the Thor and POpen4 libraries first:\n\ngem install thor -v '~> 0.14.6'\ngem install POpen4 -v '~> 0.1.4'"
-  exit 1
-end
+require 'open4'
+require 'thor'
 
 ##
 # The Backup Ruby Gem
@@ -33,24 +24,7 @@ module Backup
   ENCRYPTOR_PATH     = File.join(LIBRARY_PATH, 'encryptor')
   NOTIFIER_PATH      = File.join(LIBRARY_PATH, 'notifier')
   SYNCER_PATH        = File.join(LIBRARY_PATH, 'syncer')
-  CONFIGURATION_PATH = File.join(LIBRARY_PATH, 'configuration')
   TEMPLATE_PATH      = File.expand_path('../../templates', __FILE__)
-
-  ##
-  # Autoload Backup base files
-  autoload :Model,      File.join(LIBRARY_PATH, 'model')
-  autoload :Archive,    File.join(LIBRARY_PATH, 'archive')
-  autoload :Packager,   File.join(LIBRARY_PATH, 'packager')
-  autoload :Package,    File.join(LIBRARY_PATH, 'package')
-  autoload :Cleaner,    File.join(LIBRARY_PATH, 'cleaner')
-  autoload :Splitter,   File.join(LIBRARY_PATH, 'splitter')
-  autoload :Config,     File.join(LIBRARY_PATH, 'config')
-  autoload :Binder,     File.join(LIBRARY_PATH, 'binder')
-  autoload :Template,   File.join(LIBRARY_PATH, 'template')
-  autoload :Dependency, File.join(LIBRARY_PATH, 'dependency')
-  autoload :Logger,     File.join(LIBRARY_PATH, 'logger')
-  autoload :Version,    File.join(LIBRARY_PATH, 'version')
-  autoload :Errors,     File.join(LIBRARY_PATH, 'errors')
 
   ##
   # Autoload Backup CLI files
@@ -78,10 +52,12 @@ module Backup
   ##
   # Autoload Backup syncer files
   module Syncer
-    autoload :Base,       File.join(SYNCER_PATH, 'base')
-    autoload :Cloud,      File.join(SYNCER_PATH, 'cloud')
-    autoload :CloudFiles, File.join(SYNCER_PATH, 'cloud_files')
-    autoload :S3,         File.join(SYNCER_PATH, 's3')
+    autoload :Base, File.join(SYNCER_PATH, 'base')
+    module Cloud
+      autoload :Base,       File.join(SYNCER_PATH, 'cloud', 'base')
+      autoload :CloudFiles, File.join(SYNCER_PATH, 'cloud', 'cloud_files')
+      autoload :S3,         File.join(SYNCER_PATH, 'cloud', 's3')
+    end
     module RSync
       autoload :Base,  File.join(SYNCER_PATH, 'rsync', 'base')
       autoload :Local, File.join(SYNCER_PATH, 'rsync', 'local')
@@ -107,6 +83,7 @@ module Backup
     autoload :Base,   File.join(COMPRESSOR_PATH, 'base')
     autoload :Gzip,   File.join(COMPRESSOR_PATH, 'gzip')
     autoload :Bzip2,  File.join(COMPRESSOR_PATH, 'bzip2')
+    autoload :Custom, File.join(COMPRESSOR_PATH, 'custom')
     autoload :Pbzip2, File.join(COMPRESSOR_PATH, 'pbzip2')
     autoload :Lzma,   File.join(COMPRESSOR_PATH, 'lzma')
   end
@@ -127,75 +104,28 @@ module Backup
     autoload :Mail,      File.join(NOTIFIER_PATH, 'mail')
     autoload :Twitter,   File.join(NOTIFIER_PATH, 'twitter')
     autoload :Campfire,  File.join(NOTIFIER_PATH, 'campfire')
-    autoload :Presently, File.join(NOTIFIER_PATH, 'presently')
     autoload :Prowl,     File.join(NOTIFIER_PATH, 'prowl')
     autoload :Hipchat,   File.join(NOTIFIER_PATH, 'hipchat')
   end
 
   ##
-  # Autoload Backup configuration files
-  module Configuration
-    autoload :Base,     File.join(CONFIGURATION_PATH, 'base')
-    autoload :Helpers,  File.join(CONFIGURATION_PATH, 'helpers')
-
-    module Notifier
-      autoload :Base,      File.join(CONFIGURATION_PATH, 'notifier', 'base')
-      autoload :Mail,      File.join(CONFIGURATION_PATH, 'notifier', 'mail')
-      autoload :Twitter,   File.join(CONFIGURATION_PATH, 'notifier', 'twitter')
-      autoload :Campfire,  File.join(CONFIGURATION_PATH, 'notifier', 'campfire')
-      autoload :Presently, File.join(CONFIGURATION_PATH, 'notifier', 'presently')
-      autoload :Prowl,     File.join(CONFIGURATION_PATH, 'notifier', 'prowl')
-      autoload :Hipchat,   File.join(CONFIGURATION_PATH, 'notifier', 'hipchat')
-    end
-
-    module Encryptor
-      autoload :Base,    File.join(CONFIGURATION_PATH, 'encryptor', 'base')
-      autoload :OpenSSL, File.join(CONFIGURATION_PATH, 'encryptor', 'open_ssl')
-      autoload :GPG,     File.join(CONFIGURATION_PATH, 'encryptor', 'gpg')
-    end
-
-    module Compressor
-      autoload :Base,   File.join(CONFIGURATION_PATH, 'compressor', 'base')
-      autoload :Gzip,   File.join(CONFIGURATION_PATH, 'compressor', 'gzip')
-      autoload :Bzip2,  File.join(CONFIGURATION_PATH, 'compressor', 'bzip2')
-      autoload :Pbzip2, File.join(CONFIGURATION_PATH, 'compressor', 'pbzip2')
-      autoload :Lzma,   File.join(CONFIGURATION_PATH, 'compressor', 'lzma')
-    end
-
-    module Storage
-      autoload :Base,       File.join(CONFIGURATION_PATH, 'storage', 'base')
-      autoload :S3,         File.join(CONFIGURATION_PATH, 'storage', 's3')
-      autoload :CloudFiles, File.join(CONFIGURATION_PATH, 'storage', 'cloudfiles')
-      autoload :Ninefold,   File.join(CONFIGURATION_PATH, 'storage', 'ninefold')
-      autoload :Dropbox,    File.join(CONFIGURATION_PATH, 'storage', 'dropbox')
-      autoload :FTP,        File.join(CONFIGURATION_PATH, 'storage', 'ftp')
-      autoload :SFTP,       File.join(CONFIGURATION_PATH, 'storage', 'sftp')
-      autoload :SCP,        File.join(CONFIGURATION_PATH, 'storage', 'scp')
-      autoload :RSync,      File.join(CONFIGURATION_PATH, 'storage', 'rsync')
-      autoload :Local,      File.join(CONFIGURATION_PATH, 'storage', 'local')
-    end
-
-    module Syncer
-      autoload :Base,       File.join(CONFIGURATION_PATH, 'syncer', 'base')
-      autoload :Cloud,      File.join(CONFIGURATION_PATH, 'syncer', 'cloud')
-      autoload :CloudFiles, File.join(CONFIGURATION_PATH, 'syncer', 'cloud_files')
-      autoload :S3,         File.join(CONFIGURATION_PATH, 'syncer', 's3')
-      module RSync
-        autoload :Base,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'base')
-        autoload :Local, File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'local')
-        autoload :Push,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'push')
-        autoload :Pull,  File.join(CONFIGURATION_PATH, 'syncer', 'rsync', 'pull')
-      end
-    end
-
-    module Database
-      autoload :Base,       File.join(CONFIGURATION_PATH, 'database', 'base')
-      autoload :MySQL,      File.join(CONFIGURATION_PATH, 'database', 'mysql')
-      autoload :PostgreSQL, File.join(CONFIGURATION_PATH, 'database', 'postgresql')
-      autoload :MongoDB,    File.join(CONFIGURATION_PATH, 'database', 'mongodb')
-      autoload :Redis,      File.join(CONFIGURATION_PATH, 'database', 'redis')
-      autoload :Riak,       File.join(CONFIGURATION_PATH, 'database', 'riak')
-    end
-  end
+  # Require Backup base files
+  %w{
+    archive
+    binder
+    cleaner
+    config
+    configuration
+    dependency
+    errors
+    logger
+    model
+    package
+    packager
+    pipeline
+    splitter
+    template
+    version
+  }.each {|lib| require File.join(LIBRARY_PATH, lib) }
 
 end

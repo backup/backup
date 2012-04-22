@@ -67,26 +67,34 @@ module Backup
     # will be piped through the Compressor command and the file extension
     # will be adjusted to indicate the type of compression used.
     def perform!
-      Logger.message "#{ self.class } started packaging and archiving:\n" +
+      Logger.message "#{ self.class } has started archiving:\n" +
           paths.map {|path| "  #{path}" }.join("\n")
 
       archive_path = File.join(Config.tmp_path, @model.trigger, 'archives')
       FileUtils.mkdir_p(archive_path)
 
       archive_ext = 'tar'
-      archive_cmd = "#{ utility(:tar) } #{ tar_args } -cf - " +
+      pipeline = Pipeline.new
+
+      pipeline << "#{ utility(:tar) } #{ tar_args } -cPf - " +
           "#{ paths_to_exclude } #{ paths_to_package }"
 
       if @model.compressor
         @model.compressor.compress_with do |command, ext|
-          archive_cmd << " | #{command}"
+          pipeline << command
           archive_ext << ext
         end
       end
 
-      archive_cmd << " > '#{ File.join(archive_path, "#{name}.#{archive_ext}") }'"
-
-      run(archive_cmd)
+      pipeline << "cat > '#{ File.join(archive_path, "#{name}.#{archive_ext}") }'"
+      pipeline.run
+      if pipeline.success?
+        Logger.message "#{ self.class } Complete!"
+      else
+        raise Errors::Archive::PipelineError,
+            "Failed to Create Backup Archive\n" +
+            pipeline.error_messages
+      end
     end
 
     private

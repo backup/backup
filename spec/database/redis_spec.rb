@@ -19,47 +19,64 @@ describe Backup::Database::Redis do
     end
   end
 
+  it 'should be a subclass of Database::Base' do
+    Backup::Database::Redis.superclass.
+      should == Backup::Database::Base
+  end
+
   describe '#initialize' do
-    it 'should read the adapter details correctly' do
-      db.name.should        == 'mydatabase'
-      db.path.should        == '/var/lib/redis/db/'
-      db.password.should    == 'secret'
-      db.host.should        == 'localhost'
-      db.port.should        == '123'
-      db.socket.should      == '/redis.sock'
-      db.invoke_save.should == true
 
-      db.additional_options.should == ['--query', '--foo']
-      db.redis_cli_utility.should  == '/path/to/redis-cli'
+    it 'should load pre-configured defaults through Base' do
+      Backup::Database::Redis.any_instance.expects(:load_defaults!)
+      db
     end
 
-    context 'when options are not set' do
+    it 'should pass the model reference to Base' do
+      db.instance_variable_get(:@model).should == model
+    end
+
+    context 'when no pre-configured defaults have been set' do
+      context 'when options are specified' do
+        it 'should use the given values' do
+          db.name.should        == 'mydatabase'
+          db.path.should        == '/var/lib/redis/db/'
+          db.password.should    == 'secret'
+          db.host.should        == 'localhost'
+          db.port.should        == '123'
+          db.socket.should      == '/redis.sock'
+          db.invoke_save.should == true
+
+          db.additional_options.should == ['--query', '--foo']
+          db.redis_cli_utility.should  == '/path/to/redis-cli'
+        end
+      end
+
+      context 'when options are not specified' do
+        before do
+          Backup::Database::Redis.any_instance.expects(:utility).
+              with('redis-cli').returns('/real/redis-cli')
+        end
+
+        it 'should provide default values' do
+          db = Backup::Database::Redis.new(model)
+
+          db.name.should        == 'dump'
+          db.path.should        be_nil
+          db.password.should    be_nil
+          db.host.should        be_nil
+          db.port.should        be_nil
+          db.socket.should      be_nil
+          db.invoke_save.should be_nil
+
+          db.additional_options.should  == []
+          db.redis_cli_utility.should   == '/real/redis-cli'
+        end
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
       before do
-        Backup::Database::Redis.any_instance.expects(:utility).
-            with('redis-cli').returns('/real/redis-cli')
-      end
-
-      it 'should use default values' do
-        db = Backup::Database::Redis.new(model)
-
-        db.name.should        == 'dump'
-        db.path.should        be_nil
-        db.password.should    be_nil
-        db.host.should        be_nil
-        db.port.should        be_nil
-        db.socket.should      be_nil
-        db.invoke_save.should be_nil
-
-        db.additional_options.should  == []
-        db.redis_cli_utility.should   == '/real/redis-cli'
-      end
-    end
-
-    context 'when configuration defaults have been set' do
-      after { Backup::Configuration::Database::Redis.clear_defaults! }
-
-      it 'should use configuration defaults' do
-        Backup::Configuration::Database::Redis.defaults do |db|
+        Backup::Database::Redis.defaults do |db|
           db.name         = 'db_name'
           db.path         = 'db_path'
           db.password     = 'db_password'
@@ -71,20 +88,42 @@ describe Backup::Database::Redis do
           db.additional_options = ['--add', '--opts']
           db.redis_cli_utility  = '/default/path/to/redis-cli'
         end
-
-        db = Backup::Database::Redis.new(model)
-        db.name.should        == 'db_name'
-        db.path.should        == 'db_path'
-        db.password.should    == 'db_password'
-        db.host.should        == 'db_host'
-        db.port.should        == 789
-        db.socket.should      == '/foo.sock'
-        db.invoke_save.should == true
-
-        db.additional_options.should  == ['--add', '--opts']
-        db.redis_cli_utility.should   == '/default/path/to/redis-cli'
       end
-    end
+
+      after { Backup::Database::Redis.clear_defaults! }
+
+      context 'when options are specified' do
+        it 'should override the pre-configured defaults' do
+          db.name.should        == 'mydatabase'
+          db.path.should        == '/var/lib/redis/db/'
+          db.password.should    == 'secret'
+          db.host.should        == 'localhost'
+          db.port.should        == '123'
+          db.socket.should      == '/redis.sock'
+          db.invoke_save.should == true
+
+          db.additional_options.should == ['--query', '--foo']
+          db.redis_cli_utility.should  == '/path/to/redis-cli'
+        end
+      end
+
+      context 'when options are not specified' do
+        it 'should use the pre-configured defaults' do
+          db = Backup::Database::Redis.new(model)
+
+          db.name.should        == 'db_name'
+          db.path.should        == 'db_path'
+          db.password.should    == 'db_password'
+          db.host.should        == 'db_host'
+          db.port.should        == 789
+          db.socket.should      == '/foo.sock'
+          db.invoke_save.should == true
+
+          db.additional_options.should  == ['--add', '--opts']
+          db.redis_cli_utility.should   == '/default/path/to/redis-cli'
+        end
+      end
+    end # context 'when no pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#perform!' do
@@ -197,11 +236,11 @@ describe Backup::Database::Redis do
         File.expects(:exist?).returns(false)
         expect do
           db.send(:copy!)
-        end.to raise_error do |err|
+        end.to raise_error {|err|
           err.should be_an_instance_of Backup::Errors::Database::Redis::NotFoundError
           err.message.should match(/Redis database dump not found/)
           err.message.should match(/File path was #{src_path}/)
-        end
+        }
       end
     end
   end # describe '#copy!'
@@ -257,4 +296,40 @@ describe Backup::Database::Redis do
     end
   end
 
+  describe 'deprecations' do
+    after do
+      Backup::Database::Redis.clear_defaults!
+    end
+
+    describe '#utility_path' do
+      before do
+        Backup::Database::Redis.any_instance.stubs(:utility)
+        Backup::Logger.expects(:warn).with(
+          instance_of(Backup::Errors::ConfigurationError)
+        )
+        Backup::Logger.expects(:warn).with(
+          "Backup::Database::Redis.redis_cli_utility is being set to 'foo'"
+        )
+      end
+
+      context 'when set directly' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          redis = Backup::Database::Redis.new(model) do |db|
+            db.utility_path = 'foo'
+          end
+          redis.redis_cli_utility.should == 'foo'
+        end
+      end
+
+      context 'when set as a default' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          redis = Backup::Database::Redis.defaults do |db|
+            db.utility_path = 'foo'
+          end
+          redis = Backup::Database::Redis.new(model)
+          redis.redis_cli_utility.should == 'foo'
+        end
+      end
+    end # describe '#utility_path'
+  end
 end

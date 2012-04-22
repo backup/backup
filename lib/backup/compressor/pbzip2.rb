@@ -5,50 +5,53 @@ module Backup
     class Pbzip2 < Base
 
       ##
-      # Tells Backup::Compressor::Pbzip2 to compress
+      # Tells Backup::Compressor::Lzma to compress
       # better (-9) rather than faster when set to true
       attr_accessor :best
 
       ##
-      # Tells Backup::Compressor::Pbzip2 to compress
+      # Tells Backup::Compressor::Lzma to compress
       # faster (-1) rather than better when set to true
       attr_accessor :fast
 
       ##
-      # Tells Backup::Compressor::Pbzip2 how many processors
-      # use, by default autodetect is used
+      # Tells Backup::Compressor::Pbzip2 how many processors to use.
+      # Autodetects the number of active CPUs by default.
       attr_accessor :processors
 
       ##
-      # Creates a new instance of Backup::Compressor::Pbzip2 and
-      # configures it to either compress faster or better
-      # bzip2 compresses by default with -9 (best compression)
-      # and lower block sizes don't make things significantly faster
-      # (according to official bzip2 docs)
+      # Creates a new instance of Backup::Compressor::Pbzip2
       def initialize(&block)
-        super
+        load_defaults!
 
         @best       ||= false
         @fast       ||= false
         @processors ||= false
 
         instance_eval(&block) if block_given?
+
+        @cmd = "#{ utility(:pbzip2) }#{ options }"
+        @ext = '.bz2'
       end
 
       ##
-      # Yields to the block the compressor command with options
-      # and it's filename extension.
+      # Yields to the block the compressor command and filename extension.
       def compress_with
-        log!
-        yield "#{ utility(:pbzip2) }#{ options }", '.bz2'
+        Backup::Logger.warn(
+          "[DEPRECATION WARNING]\n" +
+          "  Compressor::Pbzip2 is being deprecated as of backup v.3.0.24\n" +
+          "  and will soon be removed. Please see the Compressors wiki page at\n" +
+          "  https://github.com/meskyanichi/backup/wiki/Compressors"
+        )
+        super
       end
 
       private
 
-      ##
-      # Returns the gzip option syntax for compressing
       def options
-        " #{ '--best ' if @best }#{ '--fast ' if @fast }#{ "-p#{@processors}" if @processors }".rstrip
+        level = (' --best' if @best) || (' --fast' if @fast)
+        cpus  = " -p#{ @processors }" if @processors
+        "#{ level }#{ cpus }"
       end
 
     end
