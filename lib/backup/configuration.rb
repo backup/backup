@@ -1,7 +1,8 @@
 # encoding: utf-8
 
-require 'backup/configuration/helpers'
-require 'backup/configuration/store'
+%w[helpers store].each do |file|
+  require File.expand_path("../configuration/#{file}", __FILE__)
+end
 
 # Temporary measure for deprecating the use of Configuration
 # namespaced classes for setting pre-configured defaults.
