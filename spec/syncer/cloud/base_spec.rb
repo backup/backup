@@ -255,9 +255,10 @@ describe 'Backup::Syncer::Cloud::Base' do
         )
         sync_context.expects(:`).with(
           "find /dir/to/sync -print0 | xargs -0 openssl md5 2> /dev/null"
-        ).returns('MD5(tmp/foo)= 123abcdef')
+        ).returns('MD5(tmp/foo)= 0123456789abcdefghijklmnopqrstuv')
 
-        sync_context.send(:local_hashes).should == 'MD5(tmp/foo)= 123abcdef'
+        sync_context.send(:local_hashes).should ==
+          'MD5(tmp/foo)= 0123456789abcdefghijklmnopqrstuv'
       end
     end
 
@@ -305,7 +306,9 @@ describe 'Backup::Syncer::Cloud::Base' do
 
     describe '#sync_file' do
       let(:local_file) do
-        stub(:path => '/dir/to/sync/sync.file', :md5 => 'abc123')
+        stub(
+          :path => '/dir/to/sync/sync.file',
+          :md5 => '0123456789abcdefghijklmnopqrstuv')
       end
       let(:remote_file) do
         stub(:path => 'backups/sync/sync.file')
@@ -329,7 +332,7 @@ describe 'Backup::Syncer::Cloud::Base' do
 
         context 'when the MD5 checksum matches the remote file' do
           before do
-            remote_file.stubs(:etag).returns('abc123')
+            remote_file.stubs(:etag).returns('0123456789abcdefghijklmnopqrstuv')
             sync_context.stubs(:remote_files).returns(
               { 'sync.file' => remote_file }
             )
@@ -348,7 +351,7 @@ describe 'Backup::Syncer::Cloud::Base' do
 
         context 'when the MD5 checksum does not match the remote file' do
           before do
-            remote_file.stubs(:etag).returns('dfg456')
+            remote_file.stubs(:etag).returns('vutsrqponmlkjihgfedcba9876543210')
             sync_context.stubs(:remote_files).returns(
               { 'sync.file' => remote_file }
             )
@@ -436,7 +439,10 @@ describe 'Backup::Syncer::Cloud::Base' do
       describe 'wrapping #initialize and using #sanitize to validate objects' do
         context 'when the path is valid UTF-8' do
           let(:local_file) do
-            local_file_class.new('foo', 'MD5(foo)= foo')
+            local_file_class.new(
+              'foo',
+              'MD5(foo)= 0123456789abcdefghijklmnopqrstuv'
+            )
           end
 
           it 'should return the new object' do
@@ -450,7 +456,8 @@ describe 'Backup::Syncer::Cloud::Base' do
         context 'when the path contains invalid UTF-8' do
           let(:local_file) do
             local_file_class.new(
-              "/bad/pa\xFFth", "MD5(/bad/pa\xFFth/to/file)= foo"
+              "/bad/pa\xFFth",
+              "MD5(/bad/pa\xFFth/to/file)= 0123456789abcdefghijklmnopqrstuv"
             )
           end
           it 'should return nil and log a warning' do
@@ -473,15 +480,15 @@ describe 'Backup::Syncer::Cloud::Base' do
 
       before do
         local_file_class.any_instance.expects(:sanitize).with(:directory).
-            returns('/dir/to/sync')
+          returns('/dir/to/sync')
         local_file_class.any_instance.expects(:sanitize).with(:line).
-            returns("MD5(/dir/to/sync/subdir/sync.file)= 123abcdef\n")
+          returns("MD5(/dir/to/sync/subdir/sync.file)= 0123456789abcdefghijklmnopqrstuv\n")
       end
 
       it 'should determine @path, @relative_path and @md5' do
         local_file.path.should == '/dir/to/sync/subdir/sync.file'
         local_file.relative_path.should == 'subdir/sync.file'
-        local_file.md5.should == '123abcdef'
+        local_file.md5.should == '0123456789abcdefghijklmnopqrstuv'
       end
 
       it 'should return nil if the object is invalid' do
@@ -494,7 +501,7 @@ describe 'Backup::Syncer::Cloud::Base' do
 
     describe '#sanitize' do
       let(:local_file) do
-        local_file_class.new('foo', 'MD5(foo)= foo')
+        local_file_class.new('foo', 'MD5(foo)= 0123456789abcdefghijklmnopqrstuv')
       end
 
       it 'should replace any invalid UTF-8 characters' do
