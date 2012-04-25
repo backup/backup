@@ -214,8 +214,9 @@ module Backup
           def initialize(directory, line)
             @invalid = false
             @directory = sanitize(directory)
-            @path, @md5 = sanitize(line).chomp.
-                match(/^MD5\(([^\)]+)\)= (\w+)$/).captures
+            line = sanitize(line).chomp
+            @path = line.slice(4..-36)
+            @md5 = line.slice(-32..-1)
             @relative_path = @path.sub(@directory + '/', '')
           end
 
