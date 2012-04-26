@@ -249,7 +249,6 @@ describe 'Backup::Syncer::Cloud::Base' do
 
     describe '#local_hashes' do
       it 'should collect file paths and MD5 checksums for @directory' do
-        Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
         Backup::Logger.expects(:message).with(
           "\s\sGenerating checksums for '/dir/to/sync'"
         )
@@ -446,7 +445,6 @@ describe 'Backup::Syncer::Cloud::Base' do
           end
 
           it 'should return the new object' do
-            Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).never
             Backup::Logger.expects(:warn).never
 
             local_file.should be_an_instance_of local_file_class
@@ -461,7 +459,6 @@ describe 'Backup::Syncer::Cloud::Base' do
             )
           end
           it 'should return nil and log a warning' do
-            Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
             Backup::Logger.expects(:warn).with(
               "\s\s[skipping] /bad/pa\xEF\xBF\xBDth/to/file\n" +
               "\s\sPath Contains Invalid UTF-8 byte sequences"
@@ -493,7 +490,6 @@ describe 'Backup::Syncer::Cloud::Base' do
 
       it 'should return nil if the object is invalid' do
         local_file_class.any_instance.expects(:invalid?).returns(true)
-        Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
         Backup::Logger.expects(:warn)
         local_file.should be_nil
       end

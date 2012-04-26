@@ -124,9 +124,7 @@ module Backup
           ##
           # Returns a String of file paths and their md5 hashes.
           def local_hashes
-            MUTEX.synchronize {
-              Logger.message("\s\sGenerating checksums for '#{ @directory }'")
-            }
+            Logger.message("\s\sGenerating checksums for '#{ @directory }'")
             `find #{ @directory } -print0 | xargs -0 openssl md5 2> /dev/null`
           end
 
@@ -196,12 +194,10 @@ module Backup
           def self.new(*args)
             local_file = super(*args)
             if local_file.invalid?
-              MUTEX.synchronize {
-                Logger.warn(
-                  "\s\s[skipping] #{ local_file.path }\n" +
-                  "\s\sPath Contains Invalid UTF-8 byte sequences"
-                )
-              }
+              Logger.warn(
+                "\s\s[skipping] #{ local_file.path }\n" +
+                "\s\sPath Contains Invalid UTF-8 byte sequences"
+              )
               return nil
             end
             local_file
