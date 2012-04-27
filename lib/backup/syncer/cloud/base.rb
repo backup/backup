@@ -49,7 +49,10 @@ module Backup
         ##
         # Performs the Sync operation
         def perform!
-          Logger.message("#{ syncer_name } started the syncing process:")
+          Logger.message(
+            "#{ syncer_name } started the syncing process:\n" +
+            "\s\sConcurrency: #{ @concurrency_type } Level: #{ @concurrency_level }"
+          )
 
           @directories.each do |directory|
             SyncContext.new(

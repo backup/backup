@@ -55,7 +55,8 @@ describe 'Backup::Syncer::Cloud::Base' do
       syncer.stubs(:repository_object).returns(:a_repository_object)
 
       Backup::Logger.expects(:message).with(
-        'Syncer::Cloud::Base started the syncing process:'
+        "Syncer::Cloud::Base started the syncing process:\n" +
+        "\s\sConcurrency: false Level: 2"
       )
       Backup::Logger.expects(:message).with(
         'Syncer::Cloud::Base Syncing Complete!'
