@@ -65,8 +65,8 @@ module Backup
       # Tells Redis to persist the current state of the
       # in-memory database to the persisted dump file
       def invoke_save!
-        response = run("#{ redis_cli_utility } #{ credential_options } " +
-                       "#{ connectivity_options } #{ user_options } SAVE")
+        response = %x[#{ redis_cli_utility } #{ credential_options } \
+                      #{ connectivity_options } #{ user_options } SAVE]
         unless response =~ /OK/
           raise Errors::Database::Redis::CommandError, <<-EOS
             Could not invoke the Redis SAVE command.
