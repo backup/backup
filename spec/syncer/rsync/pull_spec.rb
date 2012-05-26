@@ -43,8 +43,7 @@ describe Backup::Syncer::RSync::Pull do
       syncer.expects(:run).in_sequence(s).with(
         "rsync options_output 'my_username@123.45.678.90:/some/directory' " +
         "'#{ File.expand_path('~/my_backups') }'"
-      ).returns('messages from stdout')
-      Backup::Logger.expects(:silent).in_sequence(s).with('messages from stdout')
+      )
 
       # second directory - removes leading '~'
       Backup::Logger.expects(:message).in_sequence(s).with(
@@ -53,8 +52,7 @@ describe Backup::Syncer::RSync::Pull do
       syncer.expects(:run).in_sequence(s).with(
         "rsync options_output 'my_username@123.45.678.90:home/directory' " +
         "'#{ File.expand_path('~/my_backups') }'"
-      ).returns('messages from stdout')
-      Backup::Logger.expects(:silent).in_sequence(s).with('messages from stdout')
+      )
 
       # third directory - does not expand path
       Backup::Logger.expects(:message).in_sequence(s).with(
@@ -63,8 +61,7 @@ describe Backup::Syncer::RSync::Pull do
       syncer.expects(:run).in_sequence(s).with(
         "rsync options_output 'my_username@123.45.678.90:another/directory' " +
         "'#{ File.expand_path('~/my_backups') }'"
-      ).returns('messages from stdout')
-      Backup::Logger.expects(:silent).in_sequence(s).with('messages from stdout')
+      )
 
       syncer.expects(:remove_password_file!).in_sequence(s)
 

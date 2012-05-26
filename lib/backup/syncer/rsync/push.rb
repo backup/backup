@@ -51,10 +51,8 @@ module Backup
             "#{ syncer_name } started syncing the following directories:\n\s\s" +
             @directories.join("\n\s\s")
           )
-          Logger.silent(
-            run("#{ utility(:rsync) } #{ options } #{ directories_option } " +
-                "'#{ username }@#{ ip }:#{ dest_path }'")
-          )
+          run("#{ utility(:rsync) } #{ options } #{ directories_option } " +
+              "'#{ username }@#{ ip }:#{ dest_path }'")
 
         ensure
           remove_password_file!
