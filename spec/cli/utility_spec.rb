@@ -62,6 +62,31 @@ describe 'Backup::CLI::Utility' do
       end.not_to raise_error
     end
 
+    it 'should perform backups for the multiple triggers when using wildcard' do
+      Backup::Logger.expects(:quiet=).in_sequence(s)
+      Backup::Config.expects(:update).in_sequence(s)
+      Backup::Config.expects(:load_config!).in_sequence(s)
+
+      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.log_path)
+      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
+      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
+
+      Backup::Logger.expects(:truncate!)
+
+      model_a.expects(:prepare!).in_sequence(s)
+      model_a.expects(:perform!).in_sequence(s)
+      Backup::Logger.expects(:clear!).in_sequence(s)
+
+      model_b.expects(:prepare!).in_sequence(s)
+      model_b.expects(:perform!).in_sequence(s)
+      Backup::Logger.expects(:clear!).in_sequence(s)
+
+      expect do
+        ARGV.replace(['perform', '-t', 'test_trigger_*'])
+        cli.start
+      end.not_to raise_error
+    end
+
     context 'when errors occur' do
       it 'should log the error and exit' do
         Backup::Logger.stubs(:quiet=).raises(SystemCallError, 'yikes!')
