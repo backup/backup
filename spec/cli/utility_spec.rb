@@ -14,7 +14,6 @@ describe 'Backup::CLI::Utility' do
     let(:model_a) { Backup::Model.new(:test_trigger_a, 'test label a') }
     let(:model_b) { Backup::Model.new(:test_trigger_b, 'test label b') }
 
-    before  { Backup::Model.all.push(model_a, model_b) }
     after   { Backup::Model.all.clear }
 
     it 'should perform the backup for the given trigger' do
