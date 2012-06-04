@@ -57,7 +57,7 @@ module Backup
         # and finding trigger names matching wildcard
         triggers = options[:trigger].split(",")
         triggers.map!(&:strip).map! {|t|
-          t.include?('*') ? Model.find_matching(t) : t
+          t.include?('*') ? Model.find_matching(t).map(&:trigger) : t
         }.flatten!
 
         ##
