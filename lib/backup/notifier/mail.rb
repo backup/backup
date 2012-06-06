@@ -143,7 +143,7 @@ module Backup
             end
 
         email = new_email
-        email.subject = "[Backup::%s] #{@model.label} (#{@model.trigger})" % name
+        email.subject = "[Backup::%s] #{@model.label} (#{@model.trigger}) on #{Socket.gethostname}" % name
         email.body    = @template.result('notifier/mail/%s.erb' % status.to_s)
 
         if send_log
