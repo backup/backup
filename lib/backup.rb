@@ -6,6 +6,7 @@ require 'fileutils'
 require 'tempfile'
 require 'yaml'
 require 'etc'
+require 'socket'
 
 require 'open4'
 require 'thor'
