@@ -173,7 +173,7 @@ module Backup
         case options[:encryptor].downcase
         when 'openssl'
           base64   = options[:base64] ? '-base64' : ''
-          password = options[:password_file] ? "-pass file:#{options[:password_file]}" : ''
+          password = options[:password_file].empty? ? '' : "-pass file:#{options[:password_file]}"
           salt     = options[:salt] ? '-salt' : ''
           %x[openssl aes-256-cbc -d #{base64} #{password} #{salt} -in '#{options[:in]}' -out '#{options[:out]}']
         when 'gpg'
@@ -224,7 +224,7 @@ module Backup
           puts "Please wait..\n\n"
           puts %x[gem install #{options[:install]} -v '#{Backup::Dependency.all[options[:install]][:version]}']
         end
-        
+
         if options[:installed]
           puts %x[gem list -i -v '#{Backup::Dependency.all[options[:installed]][:version]}' #{options[:installed]}]
         end
