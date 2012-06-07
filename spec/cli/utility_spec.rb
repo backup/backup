@@ -305,6 +305,19 @@ describe 'Backup::CLI::Utility' do
 #      cli.start
 #    end
 #
+#    it 'should omit -pass option if no --password-file given' do
+#      ARGV.replace(['decrypt', '--encryptor', 'openssl',
+#                    '--in', 'in_file',
+#                    '--out', 'out_file',
+#                    '--base64', '--salt'])
+#
+#      cli.any_instance.expects(:`).with(
+#        "openssl aes-256-cbc -d -base64  -salt " +
+#        "-in 'in_file' -out 'out_file'"
+#      )
+#      cli.start
+#    end
+#
 #    it 'should perform GnuPG decryption' do
 #      ARGV.replace(['decrypt', '--encryptor', 'gpg',
 #                    '--in', 'in_file',
