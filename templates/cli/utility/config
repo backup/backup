@@ -14,12 +14,12 @@
 # Global Configuration
 # Add more (or remove) global configuration below
 #
-# Backup::Configuration::Storage::S3.defaults do |s3|
+# Backup::Storage::S3.defaults do |s3|
 #   s3.access_key_id     = "my_access_key_id"
 #   s3.secret_access_key = "my_secret_access_key"
 # end
-#  
-# Backup::Configuration::Encryptor::OpenSSL.defaults do |encryption|
+#
+# Backup::Encryptor::OpenSSL.defaults do |encryption|
 #   encryption.password = "my_password"
 #   encryption.base64   = true
 #   encryption.salt     = true
