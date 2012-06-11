@@ -26,13 +26,21 @@ describe 'Backup::Storage::Cycler' do
 
   describe 'update_storage_file!' do
     before do
-      storage.stubs(:keep).returns(2)
       cycler.instance_variable_set(:@storage, storage)
       cycler.instance_variable_set(:@package, package)
       cycler.instance_variable_set(:@storage_file, storage_file)
     end
 
     it 'should remove entries and set @packages_to_remove' do
+      storage.stubs(:keep).returns(2)
+      cycler.expects(:yaml_load).in_sequence(s).returns([pkg_a, pkg_b, pkg_c])
+      cycler.expects(:yaml_save).in_sequence(s).with([package, pkg_a])
+      cycler.send(:update_storage_file!)
+      cycler.instance_variable_get(:@packages_to_remove).should == [pkg_b, pkg_c]
+    end
+
+    it 'should typecast the value of keep' do
+      storage.stubs(:keep).returns('2')
       cycler.expects(:yaml_load).in_sequence(s).returns([pkg_a, pkg_b, pkg_c])
       cycler.expects(:yaml_save).in_sequence(s).with([package, pkg_a])
       cycler.send(:update_storage_file!)
