@@ -5,3 +5,4 @@
 vendor/bundle
 *.swp
 *.swo
+Gemfile.lock # Ignore lock file for developing a gem: http://yehudakatz.com/2010/12/16/clarifying-the-roles-of-the-gemspec-and-gemfile/
