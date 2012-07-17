@@ -307,15 +307,21 @@ describe 'Backup::Model' do
       end
     end
 
-    describe "hooks" do
-      it "should add hooks" do
-        model.hooks do
-          before { a+=1 }
-          after { b+=1 }
-        end
+    describe "#before" do
+      it "should set before hook" do
+        b = lambda { }
+        model.before &b
         model.hooks.should be_an_instance_of Backup::Hooks
-        model.hooks.after_proc.should be_an_instance_of Proc
-        model.hooks.before_proc.should be_an_instance_of Proc
+        model.hooks.before_proc.should == b
+      end
+    end
+
+    describe "#after" do
+      it "should set after hook" do
+        a = lambda { }
+        model.after &a
+        model.hooks.should be_an_instance_of Backup::Hooks
+        model.hooks.after_proc.should == a
       end
     end
 

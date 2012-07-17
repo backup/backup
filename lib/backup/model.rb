@@ -174,8 +174,16 @@ module Backup
       @compressor = get_class_from_scope(Compressor, name).new(&block)
     end
 
-    def hooks(&block)
-      @hooks = Backup::Hooks.new(self, &block)
+    ##
+    # Run a block of ruby code before the backup process
+    def before(&block)
+      @hooks.before &block
+    end
+
+    ##
+    # Run a block of ruby code after the backup process
+    def after(&block)
+      @hooks.after &block
     end
 
     ##
