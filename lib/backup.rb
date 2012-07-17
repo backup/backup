@@ -118,6 +118,7 @@ module Backup
     configuration
     dependency
     errors
+    hooks
     logger
     model
     package
