@@ -101,8 +101,7 @@ describe Backup::Syncer::RSync::Local do
         "rsync options_output '/some/directory' " +
         "'#{ File.expand_path('~/home/directory') }' " +
         "'#{ File.expand_path('~/my_backups') }'"
-      ).returns('messages from stdout')
-      Backup::Logger.expects(:silent).in_sequence(s).with('messages from stdout')
+      )
 
       syncer.perform!
     end

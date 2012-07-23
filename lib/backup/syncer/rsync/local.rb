@@ -29,10 +29,8 @@ module Backup
             "#{ syncer_name } started syncing the following directories:\n\s\s" +
             @directories.join("\n\s\s")
           )
-          Logger.silent(
-            run("#{ utility(:rsync) } #{ options } " +
-                "#{ directories_option } '#{ dest_path }'")
-          )
+          run("#{ utility(:rsync) } #{ options } " +
+              "#{ directories_option } '#{ dest_path }'")
         end
 
         private
