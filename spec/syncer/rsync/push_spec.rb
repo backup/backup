@@ -145,8 +145,7 @@ describe Backup::Syncer::RSync::Push do
         "rsync options_output '/some/directory' " +
         "'#{ File.expand_path('~/home/directory') }' " +
         "'my_username@123.45.678.90:my_backups'"
-      ).returns('messages from stdout')
-      Backup::Logger.expects(:silent).in_sequence(s).with('messages from stdout')
+      )
 
       syncer.expects(:remove_password_file!).in_sequence(s)
 
