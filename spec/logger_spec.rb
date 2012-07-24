@@ -74,8 +74,8 @@ describe Backup::Logger do
     it 'sets has_warnings? to true' do
       subject.stubs(:to_console)
       subject.stubs(:to_file)
-      expect { subject.warn('warning') }.to
-          change{ subject.has_warnings? }.from(false).to(true)
+      expect { subject.warn('warning') }.
+        to change{ subject.has_warnings? }.from(false).to(true)
     end
   end
 
