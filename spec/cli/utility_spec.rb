@@ -14,7 +14,6 @@ describe 'Backup::CLI::Utility' do
     let(:model_a) { Backup::Model.new(:test_trigger_a, 'test label a') }
     let(:model_b) { Backup::Model.new(:test_trigger_b, 'test label b') }
 
-    before  { Backup::Model.all.push(model_a, model_b) }
     after   { Backup::Model.all.clear }
 
     it 'should perform the backup for the given trigger' do
@@ -59,6 +58,31 @@ describe 'Backup::CLI::Utility' do
 
       expect do
         ARGV.replace(['perform', '-t', 'test_trigger_a,test_trigger_b'])
+        cli.start
+      end.not_to raise_error
+    end
+
+    it 'should perform backups for the multiple triggers when using wildcard' do
+      Backup::Logger.expects(:quiet=).in_sequence(s)
+      Backup::Config.expects(:update).in_sequence(s)
+      Backup::Config.expects(:load_config!).in_sequence(s)
+
+      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.log_path)
+      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
+      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
+
+      Backup::Logger.expects(:truncate!)
+
+      model_a.expects(:prepare!).in_sequence(s)
+      model_a.expects(:perform!).in_sequence(s)
+      Backup::Logger.expects(:clear!).in_sequence(s)
+
+      model_b.expects(:prepare!).in_sequence(s)
+      model_b.expects(:perform!).in_sequence(s)
+      Backup::Logger.expects(:clear!).in_sequence(s)
+
+      expect do
+        ARGV.replace(['perform', '-t', 'test_trigger_*'])
         cli.start
       end.not_to raise_error
     end
@@ -300,6 +324,19 @@ describe 'Backup::CLI::Utility' do
 #
 #      cli.any_instance.expects(:`).with(
 #        "openssl aes-256-cbc -d -base64 -pass file:pwd_file -salt " +
+#        "-in 'in_file' -out 'out_file'"
+#      )
+#      cli.start
+#    end
+#
+#    it 'should omit -pass option if no --password-file given' do
+#      ARGV.replace(['decrypt', '--encryptor', 'openssl',
+#                    '--in', 'in_file',
+#                    '--out', 'out_file',
+#                    '--base64', '--salt'])
+#
+#      cli.any_instance.expects(:`).with(
+#        "openssl aes-256-cbc -d -base64  -salt " +
 #        "-in 'in_file' -out 'out_file'"
 #      )
 #      cli.start

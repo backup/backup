@@ -12,7 +12,7 @@ Gem::Specification.new do |gem|
   gem.authors     = 'Michael van Rooijen'
   gem.email       = 'meskyanichi@gmail.com'
   gem.homepage    = 'http://rubygems.org/gems/backup'
-  gem.summary     = 'Backup is a RubyGem, written for Linux and Mac OSX, that allows you to easily perform backup operations on both your remote and local environments. It provides you with an elegant DSL in Ruby for modeling your backups. Backup has built-in support for various databases, storage protocols/services, syncers, compressors, encryptors and notifiers which you can mix and match. It was built with modularity, extensibility and simplicity in mind.'
+  gem.summary     = 'Backup is a RubyGem, written for UNIX-like operating systems, that allows you to easily perform backup operations on both your remote and local environments. It provides you with an elegant DSL in Ruby for modeling your backups. Backup has built-in support for various databases, storage protocols/services, syncers, compressors, encryptors and notifiers which you can mix and match. It was built with modularity, extensibility and simplicity in mind.'
 
   ##
   # Files and folder that need to be compiled in to the Ruby Gem
@@ -26,7 +26,7 @@ Gem::Specification.new do |gem|
 
   ##
   # Gem dependencies
-  gem.add_dependency 'thor',  ['~> 0.14.6']
+  gem.add_dependency 'thor',  ['~> 0.15.4']
   gem.add_dependency 'open4', ['~> 1.3.0']
 
 end

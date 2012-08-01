@@ -49,7 +49,10 @@ module Backup
         ##
         # Performs the Sync operation
         def perform!
-          Logger.message("#{ syncer_name } started the syncing process:")
+          Logger.message(
+            "#{ syncer_name } started the syncing process:\n" +
+            "\s\sConcurrency: #{ @concurrency_type } Level: #{ @concurrency_level }"
+          )
 
           @directories.each do |directory|
             SyncContext.new(
@@ -124,9 +127,7 @@ module Backup
           ##
           # Returns a String of file paths and their md5 hashes.
           def local_hashes
-            MUTEX.synchronize {
-              Logger.message("\s\sGenerating checksums for '#{ @directory }'")
-            }
+            Logger.message("\s\sGenerating checksums for '#{ @directory }'")
             `find #{ @directory } -print0 | xargs -0 openssl md5 2> /dev/null`
           end
 
@@ -196,12 +197,10 @@ module Backup
           def self.new(*args)
             local_file = super(*args)
             if local_file.invalid?
-              MUTEX.synchronize {
-                Logger.warn(
-                  "\s\s[skipping] #{ local_file.path }\n" +
-                  "\s\sPath Contains Invalid UTF-8 byte sequences"
-                )
-              }
+              Logger.warn(
+                "\s\s[skipping] #{ local_file.path }\n" +
+                "\s\sPath Contains Invalid UTF-8 byte sequences"
+              )
               return nil
             end
             local_file
@@ -214,8 +213,9 @@ module Backup
           def initialize(directory, line)
             @invalid = false
             @directory = sanitize(directory)
-            @path, @md5 = sanitize(line).chomp.
-                match(/^MD5\(([^\)]+)\)= (\w+)$/).captures
+            line = sanitize(line).chomp
+            @path = line.slice(4..-36)
+            @md5 = line.slice(-32..-1)
             @relative_path = @path.sub(@directory + '/', '')
           end
 

@@ -29,8 +29,8 @@ describe Backup::CLI::Helpers do
         let(:stdout_messages) { '' }
         let(:stderr_messages) { '' }
 
-        it 'should generate no additional log messages' do
-          helpers.run(command).should be_nil
+        it 'should return stdout and generate no additional log messages' do
+          helpers.run(command).should == ''
         end
       end
 
@@ -38,11 +38,11 @@ describe Backup::CLI::Helpers do
         let(:stdout_messages) { "out line1\nout line2\n" }
         let(:stderr_messages) { '' }
 
-        it 'should log the stdout messages' do
+        it 'should return stdout and log the stdout messages' do
           Backup::Logger.expects(:message).with(
             "cmd_name:STDOUT: out line1\ncmd_name:STDOUT: out line2"
           )
-          helpers.run(command).should be_nil
+          helpers.run(command).should == stdout_messages.strip
         end
       end
 
@@ -50,11 +50,11 @@ describe Backup::CLI::Helpers do
         let(:stdout_messages) { '' }
         let(:stderr_messages) { "err line1\nerr line2\n" }
 
-        it 'should log the stderr messages' do
+        it 'should return stdout and log the stderr messages' do
           Backup::Logger.expects(:warn).with(
             "cmd_name:STDERR: err line1\ncmd_name:STDERR: err line2"
           )
-          helpers.run(command).should be_nil
+          helpers.run(command).should == ''
         end
       end
 
@@ -62,14 +62,14 @@ describe Backup::CLI::Helpers do
         let(:stdout_messages) { "out line1\nout line2\n" }
         let(:stderr_messages) { "err line1\nerr line2\n" }
 
-        it 'should log both stdout and stderr messages' do
+        it 'should return stdout and log both stdout and stderr messages' do
           Backup::Logger.expects(:message).with(
             "cmd_name:STDOUT: out line1\ncmd_name:STDOUT: out line2"
           )
           Backup::Logger.expects(:warn).with(
             "cmd_name:STDERR: err line1\ncmd_name:STDERR: err line2"
           )
-          helpers.run(command).should be_nil
+          helpers.run(command).should == stdout_messages.strip
         end
       end
     end # context 'when the command is successful'
