@@ -71,20 +71,20 @@ describe Backup::Compressor::Bzip2 do
     describe 'fast and best options' do
       context 'when only the fast option is used' do
         before do
-          Backup::Logger.expects(:warn).with(
-            instance_of(Backup::Errors::ConfigurationError)
-          )
+          Backup::Logger.expects(:warn).with {|err|
+            err.should be_an_instance_of Backup::Errors::ConfigurationError
+            err.message.should match(
+              /Use Bzip2#level instead/
+            )
+          }
         end
 
         context 'when set to true' do
           it 'should log a warning and set `level` to 1' do
-            Backup::Logger.expects(:warn).with(
-              "Backup::Compressor::Bzip2.level is being set to '1'"
-            )
             compressor = Backup::Compressor::Bzip2.new do |c|
               c.fast = true
             end
-            compressor.level.should be(1)
+            compressor.level.should == 1
           end
         end
 
@@ -100,20 +100,20 @@ describe Backup::Compressor::Bzip2 do
 
       context 'when only the best option is used' do
         before do
-          Backup::Logger.expects(:warn).with(
-            instance_of(Backup::Errors::ConfigurationError)
-          )
+          Backup::Logger.expects(:warn).with {|err|
+            err.should be_an_instance_of Backup::Errors::ConfigurationError
+            err.message.should match(
+              /Use Bzip2#level instead/
+            )
+          }
         end
 
         context 'when set to true' do
           it 'should log a warning and set `level` to 1' do
-            Backup::Logger.expects(:warn).with(
-              "Backup::Compressor::Bzip2.level is being set to '9'"
-            )
             compressor = Backup::Compressor::Bzip2.new do |c|
               c.best = true
             end
-            compressor.level.should be(9)
+            compressor.level.should == 9
           end
         end
 
@@ -130,20 +130,17 @@ describe Backup::Compressor::Bzip2 do
 
       context 'when both fast and best options are used' do
         before do
-          Backup::Logger.expects(:warn).twice.with(
-            instance_of(Backup::Errors::ConfigurationError)
-          )
+          Backup::Logger.expects(:warn).twice.with {|err|
+            err.should be_an_instance_of Backup::Errors::ConfigurationError
+            err.message.should match(
+              /Use Bzip2#level instead/
+            )
+          }
         end
 
         context 'when both are set true' do
           context 'when fast is set first' do
             it 'should cause the best option to be set' do
-              Backup::Logger.expects(:warn).with(
-                "Backup::Compressor::Bzip2.level is being set to '1'"
-              )
-              Backup::Logger.expects(:warn).with(
-                "Backup::Compressor::Bzip2.level is being set to '9'"
-              )
               compressor = Backup::Compressor::Bzip2.new do |c|
                 c.fast = true
                 c.best = true
@@ -154,12 +151,6 @@ describe Backup::Compressor::Bzip2 do
 
           context 'when best is set first' do
             it 'should cause the fast option to be set' do
-              Backup::Logger.expects(:warn).with(
-                "Backup::Compressor::Bzip2.level is being set to '1'"
-              )
-              Backup::Logger.expects(:warn).with(
-                "Backup::Compressor::Bzip2.level is being set to '9'"
-              )
               compressor = Backup::Compressor::Bzip2.new do |c|
                 c.best = true
                 c.fast = true
@@ -172,9 +163,6 @@ describe Backup::Compressor::Bzip2 do
         context 'when only one is set true' do
           context 'when fast is set true before best' do
             it 'should cause the fast option to be set' do
-              Backup::Logger.expects(:warn).with(
-                "Backup::Compressor::Bzip2.level is being set to '1'"
-              )
               compressor = Backup::Compressor::Bzip2.new do |c|
                 c.fast = true
                 c.best = false
@@ -185,9 +173,6 @@ describe Backup::Compressor::Bzip2 do
 
           context 'when fast is set true after best' do
             it 'should cause the fast option to be set' do
-              Backup::Logger.expects(:warn).with(
-                "Backup::Compressor::Bzip2.level is being set to '1'"
-              )
               compressor = Backup::Compressor::Bzip2.new do |c|
                 c.best = false
                 c.fast = true
@@ -198,9 +183,6 @@ describe Backup::Compressor::Bzip2 do
 
           context 'when best is set true before fast' do
             it 'should cause the best option to be set' do
-              Backup::Logger.expects(:warn).with(
-                "Backup::Compressor::Bzip2.level is being set to '9'"
-              )
               compressor = Backup::Compressor::Bzip2.new do |c|
                 c.best = true
                 c.fast = false
@@ -211,9 +193,6 @@ describe Backup::Compressor::Bzip2 do
 
           context 'when best is set true after fast' do
             it 'should cause the best option to be set' do
-              Backup::Logger.expects(:warn).with(
-                "Backup::Compressor::Bzip2.level is being set to '9'"
-              )
               compressor = Backup::Compressor::Bzip2.new do |c|
                 c.fast = false
                 c.best = true

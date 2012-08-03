@@ -473,19 +473,18 @@ describe Backup::Database::MongoDB do
   end
 
   describe 'deprecations' do
-    after do
-      Backup::Database::MongoDB.clear_defaults!
-    end
-
     describe '#utility_path' do
       before do
         Backup::Database::MongoDB.any_instance.stubs(:utility)
-        Backup::Logger.expects(:warn).with(
-          instance_of(Backup::Errors::ConfigurationError)
-        )
-        Backup::Logger.expects(:warn).with(
-          "Backup::Database::MongoDB.mongodump_utility is being set to 'foo'"
-        )
+        Backup::Logger.expects(:warn).with {|err|
+          err.should be_an_instance_of Backup::Errors::ConfigurationError
+          err.message.should match(
+            /Use MongoDB#mongodump_utility instead/
+          )
+        }
+      end
+      after do
+        Backup::Database::MongoDB.clear_defaults!
       end
 
       context 'when set directly' do
