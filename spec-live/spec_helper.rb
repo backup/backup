@@ -8,6 +8,11 @@ require 'bundler/setup'
 # Load Backup
 require 'backup'
 
+# Backup::SpecLive::GPGKeys
+# Loaded here so these are available in backups/models.rb
+# as well as within encryptor/gpg_spec.rb
+require File.expand_path('../encryptor/gpg_keys.rb', __FILE__)
+
 module Backup
   module SpecLive
     PATH = File.expand_path('..', __FILE__)
