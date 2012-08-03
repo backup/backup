@@ -21,7 +21,8 @@ module Backup
       attr_accessor :riak_admin_utility
 
       attr_deprecate :utility_path, :version => '3.0.21',
-          :replacement => :riak_admin_utility
+          :message => 'Use Riak#riak_admin_utility instead.',
+          :action => lambda {|klass, val| klass.riak_admin_utility = val }
 
       ##
       # Creates a new instance of the Riak adapter object

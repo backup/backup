@@ -316,19 +316,18 @@ describe Backup::Database::PostgreSQL do
   end
 
   describe 'deprecations' do
-    after do
-      Backup::Database::PostgreSQL.clear_defaults!
-    end
-
     describe '#utility_path' do
       before do
         Backup::Database::PostgreSQL.any_instance.stubs(:utility)
-        Backup::Logger.expects(:warn).with(
-          instance_of(Backup::Errors::ConfigurationError)
-        )
-        Backup::Logger.expects(:warn).with(
-          "Backup::Database::PostgreSQL.pg_dump_utility is being set to 'foo'"
-        )
+        Backup::Logger.expects(:warn).with {|err|
+          err.should be_an_instance_of Backup::Errors::ConfigurationError
+          err.message.should match(
+            /Use PostgreSQL#pg_dump_utility instead/
+          )
+        }
+      end
+      after do
+        Backup::Database::PostgreSQL.clear_defaults!
       end
 
       context 'when set directly' do

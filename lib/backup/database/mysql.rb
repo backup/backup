@@ -34,7 +34,8 @@ module Backup
       attr_accessor :mysqldump_utility
 
       attr_deprecate :utility_path, :version => '3.0.21',
-          :replacement => :mysqldump_utility
+          :message => 'Use MySQL#mysqldump_utility instead.',
+          :action => lambda {|klass, val| klass.mysqldump_utility = val }
 
       ##
       # Creates a new instance of the MySQL adapter object

@@ -5,6 +5,8 @@ module Backup
     module Helpers
       UTILITY = {}
 
+      private
+
       ##
       # Runs a system command
       #

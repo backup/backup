@@ -396,14 +396,16 @@ describe Backup::Storage::Dropbox do
     end
 
     describe '#email' do
+      before do
+        Backup::Logger.expects(:warn).with do |err|
+          err.message.should match(
+            "Dropbox#email has been deprecated as of backup v.3.0.17"
+          )
+        end
+      end
+
       context 'when set directly' do
         it 'should issue a deprecation warning' do
-          Backup::Logger.expects(:warn).with do |err|
-            err.message.should == "ConfigurationError: [DEPRECATION WARNING]\n" +
-                "  Backup::Storage::Dropbox.email has been deprecated " +
-                  "as of backup v.3.0.17"
-          end
-
           Backup::Storage::Dropbox.new(model) do |storage|
             storage.email = 'foo'
           end
@@ -412,12 +414,6 @@ describe Backup::Storage::Dropbox do
 
       context 'when set as a default' do
         it 'should issue a deprecation warning' do
-          Backup::Logger.expects(:warn).with do |err|
-            err.message.should == "ConfigurationError: [DEPRECATION WARNING]\n" +
-                "  Backup::Storage::Dropbox.email has been deprecated " +
-                  "as of backup v.3.0.17"
-          end
-
           Backup::Storage::Dropbox.defaults do |storage|
             storage.email = 'foo'
           end
@@ -427,14 +423,16 @@ describe Backup::Storage::Dropbox do
     end
 
     describe '#password' do
+      before do
+        Backup::Logger.expects(:warn).with do |err|
+          err.message.should match(
+            "Dropbox#password has been deprecated as of backup v.3.0.17"
+          )
+        end
+      end
+
       context 'when set directly' do
         it 'should issue a deprecation warning' do
-          Backup::Logger.expects(:warn).with do |err|
-            err.message.should == "ConfigurationError: [DEPRECATION WARNING]\n" +
-                "  Backup::Storage::Dropbox.password has been deprecated " +
-                  "as of backup v.3.0.17"
-          end
-
           Backup::Storage::Dropbox.new(model) do |storage|
             storage.password = 'foo'
           end
@@ -443,12 +441,6 @@ describe Backup::Storage::Dropbox do
 
       context 'when set as a default' do
         it 'should issue a deprecation warning' do
-          Backup::Logger.expects(:warn).with do |err|
-            err.message.should == "ConfigurationError: [DEPRECATION WARNING]\n" +
-                "  Backup::Storage::Dropbox.password has been deprecated " +
-                  "as of backup v.3.0.17"
-          end
-
           Backup::Storage::Dropbox.defaults do |storage|
             storage.password = 'foo'
           end
@@ -458,14 +450,16 @@ describe Backup::Storage::Dropbox do
     end
 
     describe '#timeout' do
+      before do
+        Backup::Logger.expects(:warn).with do |err|
+          err.message.should match(
+            "Dropbox#timeout has been deprecated as of backup v.3.0.21"
+          )
+        end
+      end
+
       context 'when set directly' do
         it 'should issue a deprecation warning' do
-          Backup::Logger.expects(:warn).with do |err|
-            err.message.should == "ConfigurationError: [DEPRECATION WARNING]\n" +
-                "  Backup::Storage::Dropbox.timeout has been deprecated " +
-                  "as of backup v.3.0.21"
-          end
-
           Backup::Storage::Dropbox.new(model) do |storage|
             storage.timeout = 'foo'
           end
@@ -474,12 +468,6 @@ describe Backup::Storage::Dropbox do
 
       context 'when set as a default' do
         it 'should issue a deprecation warning' do
-          Backup::Logger.expects(:warn).with do |err|
-            err.message.should == "ConfigurationError: [DEPRECATION WARNING]\n" +
-                "  Backup::Storage::Dropbox.timeout has been deprecated " +
-                  "as of backup v.3.0.21"
-          end
-
           Backup::Storage::Dropbox.defaults do |storage|
             storage.timeout = 'foo'
           end

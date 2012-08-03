@@ -139,19 +139,18 @@ describe Backup::Database::Riak do
   end
 
   describe 'deprecations' do
-    after do
-      Backup::Database::Riak.clear_defaults!
-    end
-
     describe '#utility_path' do
       before do
         Backup::Database::Riak.any_instance.stubs(:utility)
-        Backup::Logger.expects(:warn).with(
-          instance_of(Backup::Errors::ConfigurationError)
-        )
-        Backup::Logger.expects(:warn).with(
-          "Backup::Database::Riak.riak_admin_utility is being set to 'foo'"
-        )
+        Backup::Logger.expects(:warn).with {|err|
+          err.should be_an_instance_of Backup::Errors::ConfigurationError
+          err.message.should match(
+            /Use Riak#riak_admin_utility instead/
+          )
+        }
+      end
+      after do
+        Backup::Database::Riak.clear_defaults!
       end
 
       context 'when set directly' do

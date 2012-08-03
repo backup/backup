@@ -34,12 +34,9 @@ module Backup
         end
 
         def log_deprecation_warning(name, deprecation)
-          msg = "#{ self }.#{ name } has been deprecated as of " +
+          msg = "#{ self }##{ name } has been deprecated as of " +
               "backup v.#{ deprecation[:version] }"
-          if replacement = deprecation[:replacement]
-            msg << "\nThis setting has been replaced with:\n" +
-                "#{ self }.#{ replacement }"
-          end
+          msg << "\n#{ deprecation[:message] }" if deprecation[:message]
           Logger.warn Backup::Errors::ConfigurationError.new <<-EOS
             [DEPRECATION WARNING]
             #{ msg }
@@ -51,25 +48,29 @@ module Backup
         ##
         # Method to deprecate an attribute.
         #
-        # :version should be set to the backup version which will first
+        # :version
+        #   Must be set to the backup version which will first
         #   introduce the deprecation.
-        # :replacement may be set to another attr_accessor name to set
-        #   the value for instead of the deprecated accessor
-        # :value may be used to specify the value set on :replacement.
-        #   If :value is nil, the value set on the deprecated accessor
-        #   will be used to set the value for the :replacement.
-        #   If :value is a lambda, it will be passed the value the user
-        #   set on the deprecated accessor, and should return the value
-        #   to be set on the :replacement.
-        #   Therefore, to cause the replacement accessor not to be set,
-        #   use the lambda form to return nil. This is only way to specify
-        #   a :replacement without transferring a value.
-        #   e.g. :replacement => :new_attr, :value => Proc.new {}
+        #
+        # :action
+        #   If set, this Proc will be called with a reference to the
+        #   class instance and the value set on the deprecated accessor.
+        #   e.g. deprecation[:action].call(klass, value)
+        #   This should perform whatever action is neccessary, such as
+        #   transferring the value to a new accessor.
+        #
+        # :message
+        #   If set, this will be appended to #log_deprecation_warning
+        #
+        # Note that this replaces the `attr_accessor` method, or other
+        # method previously used to set the accessor being deprecated.
+        # #method_missing will handle any calls to `name=`.
+        #
         def attr_deprecate(name, args = {})
           deprecations[name] = {
             :version => nil,
-            :replacement => nil,
-            :value => nil
+            :message => nil,
+            :action => nil
           }.merge(args)
         end
 
@@ -89,7 +90,13 @@ module Backup
       end
 
       ##
-      # Check missing methods for deprecations
+      # Check missing methods for deprecated attribute accessors.
+      #
+      # If a value is set on an accessor that has been deprecated
+      # using #attr_deprecate, a warning will be issued and any
+      # :action (Proc) specified will be called with a reference to
+      # the class instance and the value set on the deprecated accessor.
+      # See #attr_deprecate and #log_deprecation_warning
       #
       # Note that OpenStruct (used for setting defaults) does not allow
       # multiple arguments when assigning values for members.
@@ -99,6 +106,7 @@ module Backup
       # directly on the class' accessor, should not be supported.
       # i.e. if an option will accept being set as an Array, then it
       # should be explicitly set as such. e.g. option = [val1, val2]
+      #
       def method_missing(name, *args)
         deprecation = nil
         if method = name.to_s.chomp!('=')
@@ -111,23 +119,7 @@ module Backup
 
         if deprecation
           self.class.log_deprecation_warning(method, deprecation)
-          if replacement = deprecation[:replacement]
-            value =
-              case deprecation[:value]
-              when nil
-                args[0]
-              when Proc
-                deprecation[:value].call(args[0])
-              else
-                deprecation[:value]
-              end
-            unless value.nil?
-              Logger.warn(
-                "#{ self.class }.#{ replacement } is being set to '#{ value }'"
-              )
-              send(:"#{ replacement }=", value)
-            end
-          end
+          deprecation[:action].call(self, args[0]) if deprecation[:action]
         else
           super
         end
