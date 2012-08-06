@@ -16,11 +16,15 @@ module Backup
       attr_accessor :level
 
       attr_deprecate :fast, :version => '3.0.24',
-                     :replacement => :level,
-                     :value => lambda {|val| val ? 1 : nil }
+                     :message => 'Use Bzip2#level instead.',
+                     :action => lambda {|klass, val|
+                       klass.level = 1 if val
+                     }
       attr_deprecate :best, :version => '3.0.24',
-                     :replacement => :level,
-                     :value => lambda {|val| val ? 9 : nil }
+                     :message => 'Use Bzip2#level instead.',
+                     :action => lambda {|klass, val|
+                       klass.level = 9 if val
+                     }
 
       ##
       # Creates a new instance of Backup::Compressor::Bzip2

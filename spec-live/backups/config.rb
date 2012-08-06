@@ -1,16 +1,13 @@
-
 ##
-# Archive Job
-archive_job = lambda do |archive|
-  archive.add     File.expand_path('../../../lib/backup', __FILE__)
-  archive.exclude File.expand_path('../../../lib/backup/storage', __FILE__)
-end
-
-##
-# Configuration
+# Configuration Defaults
+#
+# Note that once config.rb has been loaded once and class defaults are set,
+# there's nothing clearing these between each test. Keep this in mind, as this
+# file will be loaded for every call to h_set_trigger() or h_set_single_model().
+# While not a problem, this wouldn't happen for a normal `backup perform ...`.
 
 Backup::Storage::Local.defaults do |storage|
-  storage.path = Backup::SpecLive::TMP_PATH
+  storage.path = SpecLive::TMP_PATH
   storage.keep = 2
 end
 
@@ -62,7 +59,7 @@ Backup::Notifier::Mail.defaults do |notifier|
   notifier.enable_starttls_auto = opts['enable_starttls_auto'] || true
   notifier.sendmail             = opts['sendmail']
   notifier.sendmail_args        = opts['sendmail_args']
-  notifier.mail_folder          = Backup::SpecLive::TMP_PATH
+  notifier.mail_folder          = SpecLive::TMP_PATH
 end
 
 Backup::Syncer::Cloud::S3.defaults do |s3|
@@ -75,79 +72,12 @@ Backup::Syncer::Cloud::S3.defaults do |s3|
   s3.mirror            = true
 end
 
+Backup::Encryptor::GPG.defaults do |enc|
+  enc.gpg_homedir = File.join(SpecLive::TMP_PATH, 'gpg_home_tmp')
+end
+
 ##
-# Models
-
-Backup::Model.new(:archive_local, 'test_label') do
-  archive :test_archive, &archive_job
-  store_with Local
-end
-
-Backup::Model.new(:archive_scp, 'test_label') do
-  archive :test_archive, &archive_job
-  store_with SCP
-end
-
-# To initialize the Dropbox session cache, run manually first using:
-# VERBOSE=1 rspec spec-live/storage/dropbox_spec.rb --tag init
-Backup::Model.new(:archive_dropbox, 'test_label') do
-  archive :test_archive, &archive_job
-  store_with Dropbox
-end
-
-Backup::Model.new(:compressor_gzip_archive_local, 'test_label') do
-  archive :test_archive, &archive_job
-  compress_with Gzip
-  store_with Local
-end
-
-Backup::Model.new(:compressor_custom_archive_local, 'test_label') do
-  archive :test_archive, &archive_job
-  compress_with Custom do |c|
-    c.command = 'gzip -1'
-    c.extension = '.foo'
-  end
-  store_with Local
-end
-
-Backup::Model.new(:notifier_mail, 'test_label') do
-  notify_by Mail
-end
-
-Backup::Model.new(:notifier_mail_file, 'test_label') do
-  notify_by Mail do |mail|
-    mail.to = 'test@backup'
-    mail.delivery_method = :file
-  end
-end
-
-Backup::Model.new(:syncer_cloud_s3, 'test_label') do
-  sync_with Cloud::S3 do |s3|
-    s3.directories do
-      add File.join(Backup::SpecLive::SYNC_PATH, 'dir_a')
-      add File.join(Backup::SpecLive::SYNC_PATH, 'dir_b')
-    end
-  end
-end
-
-Backup::Model.new(:syncer_cloud_processes_s3, 'test_label') do
-  sync_with Cloud::S3 do |s3|
-    s3.concurrency_type  = :processes
-    s3.concurrency_level = 2
-    s3.directories do
-      add File.join(Backup::SpecLive::SYNC_PATH, 'dir_a')
-      add File.join(Backup::SpecLive::SYNC_PATH, 'dir_b')
-    end
-  end
-end
-
-Backup::Model.new(:syncer_cloud_threads_s3, 'test_label') do
-  sync_with Cloud::S3 do |s3|
-    s3.concurrency_type  = :threads
-    s3.concurrency_level = 2
-    s3.directories do
-      add File.join(Backup::SpecLive::SYNC_PATH, 'dir_a')
-      add File.join(Backup::SpecLive::SYNC_PATH, 'dir_b')
-    end
-  end
+# Load the Models, unless h_set_single_model() is being used.
+if SpecLive.load_models
+  instance_eval File.read(File.join(File.dirname(__FILE__), 'models.rb'))
 end

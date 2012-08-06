@@ -30,7 +30,7 @@ describe Backup::CLI::Helpers do
         let(:stderr_messages) { '' }
 
         it 'should return stdout and generate no additional log messages' do
-          helpers.run(command).should == ''
+          helpers.send(:run, command).should == ''
         end
       end
 
@@ -42,7 +42,7 @@ describe Backup::CLI::Helpers do
           Backup::Logger.expects(:message).with(
             "cmd_name:STDOUT: out line1\ncmd_name:STDOUT: out line2"
           )
-          helpers.run(command).should == stdout_messages.strip
+          helpers.send(:run, command).should == stdout_messages.strip
         end
       end
 
@@ -54,7 +54,7 @@ describe Backup::CLI::Helpers do
           Backup::Logger.expects(:warn).with(
             "cmd_name:STDERR: err line1\ncmd_name:STDERR: err line2"
           )
-          helpers.run(command).should == ''
+          helpers.send(:run, command).should == ''
         end
       end
 
@@ -69,7 +69,7 @@ describe Backup::CLI::Helpers do
           Backup::Logger.expects(:warn).with(
             "cmd_name:STDERR: err line1\ncmd_name:STDERR: err line2"
           )
-          helpers.run(command).should == stdout_messages.strip
+          helpers.send(:run, command).should == stdout_messages.strip
         end
       end
     end # context 'when the command is successful'
@@ -101,7 +101,7 @@ describe Backup::CLI::Helpers do
 
         it 'should raise an error reporting no messages' do
           expect do
-            helpers.run(command)
+            helpers.send(:run, command)
           end.to raise_error {|err|
             err.message.should == message_head +
               "  STDOUT Messages: None\n" +
@@ -116,7 +116,7 @@ describe Backup::CLI::Helpers do
 
         it 'should raise an error and report the stdout messages' do
           expect do
-            helpers.run(command)
+            helpers.send(:run, command)
           end.to raise_error {|err|
             err.message.should == message_head +
               "  STDOUT Messages: \n" +
@@ -133,7 +133,7 @@ describe Backup::CLI::Helpers do
 
         it 'should raise an error and report the stderr messages' do
           expect do
-            helpers.run(command)
+            helpers.send(:run, command)
           end.to raise_error {|err|
             err.message.should == message_head +
               "  STDOUT Messages: None\n" +
@@ -150,7 +150,7 @@ describe Backup::CLI::Helpers do
 
         it 'should raise an error and report the stdout and stderr messages' do
           expect do
-            helpers.run(command)
+            helpers.send(:run, command)
           end.to raise_error {|err|
             err.message.should == message_head +
               "  STDOUT Messages: \n" +
@@ -175,7 +175,7 @@ describe Backup::CLI::Helpers do
 
       it 'should raise an error wrapping the system error raised' do
         expect do
-          helpers.run(command)
+          helpers.send(:run, command)
         end.to raise_error {|err|
           err.message.should == "CLI::SystemCallError: " +
             "Failed to execute system command on #{ RUBY_PLATFORM }\n" +
@@ -193,24 +193,24 @@ describe Backup::CLI::Helpers do
     context 'when a system path for the utility is available' do
       it 'should return the system path with newline removed' do
         helpers.expects(:`).with('which foo 2>/dev/null').returns("system_path\n")
-        helpers.utility(:foo).should == 'system_path'
+        helpers.send(:utility, :foo).should == 'system_path'
       end
 
       it 'should cache the returned path' do
         helpers.expects(:`).once.with('which cache_me 2>/dev/null').
             returns("cached_path\n")
 
-        helpers.utility(:cache_me).should == 'cached_path'
-        helpers.utility(:cache_me).should == 'cached_path'
+        helpers.send(:utility, :cache_me).should == 'cached_path'
+        helpers.send(:utility, :cache_me).should == 'cached_path'
       end
 
       it 'should cache the value for all extended objects' do
         helpers.expects(:`).once.with('which once_only 2>/dev/null').
             returns("cached_path\n")
 
-        helpers.utility(:once_only).should == 'cached_path'
-        Class.new.extend(Backup::CLI::Helpers).utility(:once_only).
-            should == 'cached_path'
+        helpers.send(:utility, :once_only).should == 'cached_path'
+        Class.new.extend(Backup::CLI::Helpers).send(
+            :utility, :once_only).should == 'cached_path'
       end
     end
 
@@ -219,7 +219,7 @@ describe Backup::CLI::Helpers do
         helpers.expects(:`).with('which unknown 2>/dev/null').returns("\n")
 
         expect do
-          helpers.utility(:unknown)
+          helpers.send(:utility, :unknown)
         end.to raise_error(Backup::Errors::CLI::UtilityNotFoundError) {|err|
           err.message.should match(/Could not locate 'unknown'/)
         }
@@ -229,13 +229,13 @@ describe Backup::CLI::Helpers do
         helpers.expects(:`).with('which not_cached 2>/dev/null').twice.returns("\n")
 
         expect do
-          helpers.utility(:not_cached)
+          helpers.send(:utility, :not_cached)
         end.to raise_error(Backup::Errors::CLI::UtilityNotFoundError) {|err|
           err.message.should match(/Could not locate 'not_cached'/)
         }
 
         expect do
-          helpers.utility(:not_cached)
+          helpers.send(:utility, :not_cached)
         end.to raise_error(Backup::Errors::CLI::UtilityNotFoundError) {|err|
           err.message.should match(/Could not locate 'not_cached'/)
         }
@@ -244,7 +244,7 @@ describe Backup::CLI::Helpers do
 
     it 'should raise an error if name is nil' do
       expect do
-        helpers.utility(nil)
+        helpers.send(:utility, nil)
       end.to raise_error(
         Backup::Errors::CLI::UtilityNotFoundError,
           'CLI::UtilityNotFoundError: Utility Name Empty'
@@ -253,7 +253,7 @@ describe Backup::CLI::Helpers do
 
     it 'should raise an error if name is empty' do
       expect do
-        helpers.utility(' ')
+        helpers.send(:utility, ' ')
       end.to raise_error(
         Backup::Errors::CLI::UtilityNotFoundError,
           'CLI::UtilityNotFoundError: Utility Name Empty'
@@ -265,35 +265,35 @@ describe Backup::CLI::Helpers do
     context 'given a command line path with no arguments' do
       it 'should return the base command name' do
         cmd = '/path/to/a/command'
-        helpers.command_name(cmd).should == 'command'
+        helpers.send(:command_name, cmd).should == 'command'
       end
     end
 
     context 'given a command line path with a single argument' do
       it 'should return the base command name' do
         cmd = '/path/to/a/command with_args'
-        helpers.command_name(cmd).should == 'command'
+        helpers.send(:command_name, cmd).should == 'command'
       end
     end
 
     context 'given a command line path with multiple arguments' do
       it 'should return the base command name' do
         cmd = '/path/to/a/command with multiple args'
-        helpers.command_name(cmd).should == 'command'
+        helpers.send(:command_name, cmd).should == 'command'
       end
     end
 
     context 'given a command with no path and arguments' do
       it 'should return the base command name' do
         cmd = 'command args'
-        helpers.command_name(cmd).should == 'command'
+        helpers.send(:command_name, cmd).should == 'command'
       end
     end
 
     context 'given a command with no path and no arguments' do
       it 'should return the base command name' do
         cmd = 'command'
-        helpers.command_name(cmd).should == 'command'
+        helpers.send(:command_name, cmd).should == 'command'
       end
     end
   end # describe '#command_name'
