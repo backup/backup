@@ -22,6 +22,10 @@ module Backup
         attr_accessor :compress
 
         ##
+        # Flag for accessing rsync daemon (instead of SSH access)
+        attr_accessor :daemon
+
+        ##
         # Instantiates a new RSync::Push or RSync::Pull Syncer.
         #
         # Pre-configured defaults specified in
@@ -37,6 +41,7 @@ module Backup
 
           @port               ||= 22
           @compress           ||= false
+          @daemon             ||= false
 
           instance_eval(&block) if block_given?
         end
@@ -52,7 +57,7 @@ module Backup
             @directories.join("\n\s\s")
           )
           run("#{ utility(:rsync) } #{ options } #{ directories_option } " +
-              "'#{ username }@#{ ip }:#{ dest_path }'")
+              "'#{ username }@#{ ip }#{rsync_path_separator}#{ dest_path }'")
 
         ensure
           remove_password_file!
@@ -81,9 +86,9 @@ module Backup
         end
 
         ##
-        # Returns Rsync syntax for defining a port to connect to
+        # Returns Rsync syntax for defining a port to connect to (or nothing, if connect to daemon)
         def port_option
-          "-e 'ssh -p #{@port}'"
+          "-e 'ssh -p #{@port}'" unless @daemon
         end
 
         ##
@@ -109,6 +114,10 @@ module Backup
         def remove_password_file!
           @password_file.delete if @password_file
           @password_file = nil
+        end
+
+        def rsync_path_separator
+          @daemon ? "::" : ":"
         end
       end
     end
