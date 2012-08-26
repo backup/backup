@@ -84,7 +84,7 @@ module Backup
 
             case concurrency_type
             when FalseClass
-              all_file_names.each &block
+              all_file_names.each(&block)
             when :threads
               Parallel.each all_file_names,
                   :in_threads => concurrency_level, &block
