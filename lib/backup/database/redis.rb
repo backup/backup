@@ -17,7 +17,7 @@ module Backup
       attr_accessor :host, :port, :socket
 
       ##
-      # Determines whether Backup should invoke the SAVE command through
+      # Determines whether Backup should invoke the BGSAVE command through
       # the 'redis-cli' utility to persist the most recent data before
       # copying over the dump file
       attr_accessor :invoke_save
@@ -66,10 +66,10 @@ module Backup
       # in-memory database to the persisted dump file
       def invoke_save!
         response = run("#{ redis_cli_utility } #{ credential_options } " +
-                       "#{ connectivity_options } #{ user_options } SAVE")
+                       "#{ connectivity_options } #{ user_options } BGSAVE")
         unless response =~ /OK/
           raise Errors::Database::Redis::CommandError, <<-EOS
-            Could not invoke the Redis SAVE command.
+            Could not invoke the Redis BGSAVE command.
             The #{ database } file might not contain the most recent data.
             Please check if the server is running, the credentials (if any) are correct,
             and the host/port/socket are correct.

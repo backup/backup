@@ -167,7 +167,7 @@ describe Backup::Database::Redis do
       it 'should run the redis-cli command string' do
         db.expects(:run).with(
           '/path/to/redis-cli credential_options_output ' +
-          'connectivity_options_output user_options_output SAVE'
+          'connectivity_options_output user_options_output BGSAVE'
         ).returns('result OK for command')
 
         expect do
@@ -185,7 +185,7 @@ describe Backup::Database::Redis do
           db.send(:invoke_save!)
         end.to raise_error {|err|
           err.should be_an_instance_of Backup::Errors::Database::Redis::CommandError
-          err.message.should match(/Could not invoke the Redis SAVE command/)
+          err.message.should match(/Could not invoke the Redis BGSAVE command/)
           err.message.should match(/The database_filename file/)
           err.message.should match(/Redis CLI response: result not ok/)
         }
