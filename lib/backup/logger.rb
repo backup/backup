@@ -20,7 +20,7 @@ module Backup
       def error(string)
         to_console  loggify(string, :error,   :red), true
         to_file     loggify(string, :error)
-        to_syslog   loggify(string), :err
+        to_syslog   loggify(string, :error), :err
       end
 
       ##
@@ -30,7 +30,7 @@ module Backup
         @has_warnings = true
         to_console  loggify(string, :warning, :yellow), true
         to_file     loggify(string, :warning)
-        to_syslog   loggify(string), :warn
+        to_syslog   loggify(string, :warning), :warn
       end
 
       # Outputs the data as if it were a regular 'puts' command,

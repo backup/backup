@@ -37,6 +37,11 @@ describe Backup::Logger do
           returns(:uncolored_regular_message)
       subject.expects(:to_file).in_sequence(s).
           with(:uncolored_regular_message)
+      subject.expects(:loggify).in_sequence(s).
+          with('regular message', :message).
+          returns(:uncolored_regular_message)
+      subject.expects(:to_syslog).in_sequence(s).
+          with(:uncolored_regular_message)
 
       subject.message('regular message')
     end
@@ -54,6 +59,11 @@ describe Backup::Logger do
           returns(:uncolored_error_message)
       subject.expects(:to_file).in_sequence(s).
           with(:uncolored_error_message)
+      subject.expects(:loggify).in_sequence(s).
+          with('error message', :error).
+          returns(:uncolored_error_message)
+      subject.expects(:to_syslog).in_sequence(s).
+          with(:uncolored_error_message, :err)
 
       subject.error('error message')
     end
@@ -71,6 +81,11 @@ describe Backup::Logger do
           returns(:uncolored_warning_message)
       subject.expects(:to_file).in_sequence(s).
           with(:uncolored_warning_message)
+      subject.expects(:loggify).in_sequence(s).
+          with('warning message', :warning).
+          returns(:uncolored_warning_message)
+      subject.expects(:to_syslog).in_sequence(s).
+          with(:uncolored_warning_message, :warn)
 
       subject.warn('warning message')
     end
@@ -78,6 +93,7 @@ describe Backup::Logger do
     it 'sets has_warnings? to true' do
       subject.stubs(:to_console)
       subject.stubs(:to_file)
+      subject.stubs(:to_syslog)
       expect { subject.warn('warning') }.
         to change{ subject.has_warnings? }.from(false).to(true)
     end
@@ -95,6 +111,11 @@ describe Backup::Logger do
           returns(:unformatted_message)
       subject.expects(:to_file).in_sequence(s).
           with(:unformatted_message)
+      subject.expects(:loggify).in_sequence(s).
+          with('normal message').
+          returns(:unformatted_message)
+      subject.expects(:to_syslog).in_sequence(s).
+          with(:unformatted_message)
 
       subject.normal('normal message')
     end
@@ -107,6 +128,11 @@ describe Backup::Logger do
           with('silent message', :silent).
           returns(:silent_message)
       subject.expects(:to_file).in_sequence(s).
+          with(:silent_message)
+      subject.expects(:loggify).in_sequence(s).
+          with('silent message', :silent).
+          returns(:silent_message)
+      subject.expects(:to_syslog).in_sequence(s).
           with(:silent_message)
 
       subject.silent('silent message')
