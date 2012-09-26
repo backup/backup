@@ -11,6 +11,7 @@ module Backup
       def message(string)
         to_console  loggify(string, :message, :green)
         to_file     loggify(string, :message)
+        to_syslog   loggify(string, :message)
       end
 
       ##
@@ -19,6 +20,7 @@ module Backup
       def error(string)
         to_console  loggify(string, :error,   :red), true
         to_file     loggify(string, :error)
+        to_syslog   loggify(string), :err
       end
 
       ##
@@ -28,6 +30,7 @@ module Backup
         @has_warnings = true
         to_console  loggify(string, :warning, :yellow), true
         to_file     loggify(string, :warning)
+        to_syslog   loggify(string), :warn
       end
 
       # Outputs the data as if it were a regular 'puts' command,
@@ -35,12 +38,14 @@ module Backup
       def normal(string)
         to_console  loggify(string)
         to_file     loggify(string)
+        to_syslog   loggify(string)
       end
 
       ##
       # Silently logs data to the log file
       def silent(string)
         to_file     loggify(string, :silent)
+        to_syslog   loggify(string, :silent)
       end
 
       ##
@@ -115,6 +120,15 @@ module Backup
       def to_file(lines)
         File.open(File.join(Config.log_path, 'backup.log'), 'a') do |file|
           lines.each {|line| file.puts line }
+        end
+        messages.push(*lines)
+      end
+
+      ##
+      # Receives an Array of Strings to be written to syslog.
+      def to_syslog(lines, level = :info)
+        Syslog.open('backup', Syslog::LOG_PID, Syslog::LOG_LOCAL0) do |s|
+          lines.each {|line| s.send(level,line) }
         end
         messages.push(*lines)
       end
