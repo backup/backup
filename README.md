@@ -117,6 +117,7 @@ Below you find a list of components that Backup currently supports. If you'd lik
 - Presently
 - Prowl
 - Hipchat
+- Dead Man's Snitch
 
 [Notifiers Wiki Page](https://github.com/meskyanichi/backup/wiki/Notifiers)
 
@@ -130,7 +131,7 @@ Below you find a list of components that Backup currently supports. If you'd lik
 A sample Backup configuration file
 ----------------------------------
 
-This is a Backup configuration file. Check it out and read the explanation below.  
+This is a Backup configuration file. Check it out and read the explanation below.
 Backup has a [great wiki](https://github.com/meskyanichi/backup/wiki) which explains each component of Backup in detail.
 
 ``` rb
