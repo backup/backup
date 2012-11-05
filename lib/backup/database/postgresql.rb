@@ -48,7 +48,9 @@ module Backup
 
         instance_eval(&block) if block_given?
 
+        @name ||= :all
         @pg_dump_utility ||= utility(:pg_dump)
+        @pg_dump_all_utility ||= utility(:pg_dumpall)
       end
 
       ##
@@ -60,7 +62,7 @@ module Backup
         pipeline = Pipeline.new
         dump_ext = 'sql'
 
-        pipeline << pgdump
+        pipeline << dump_all? ? pgdumpall : pgdump
         if @model.compressor
           @model.compressor.compress_with do |command, ext|
             pipeline << command
@@ -85,6 +87,12 @@ module Backup
         "#{password_options}" +
         "#{ pg_dump_utility } #{ username_options } #{ connectivity_options } " +
         "#{ user_options } #{ tables_to_dump } #{ tables_to_skip } #{ name }"
+      end
+
+      def pgdumpall
+        "#{password_options}" +
+        "#{ pg_dump_all_utility } #{ username_options } #{ connectivity_options } " +
+        "#{ user_options }"
       end
 
       ##
@@ -136,6 +144,10 @@ module Backup
         skip_tables.map do |table|
           "--exclude-table='#{table}'"
         end.join(' ')
+      end
+
+      def dump_all?
+        name == :all
       end
 
     end
