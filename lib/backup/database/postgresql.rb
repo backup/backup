@@ -5,7 +5,9 @@ module Backup
     class PostgreSQL < Base
 
       ##
-      # Name of the database that needs to get dumped
+      # Name of the database that needs to get dumped.
+      # To dump all databases, set this to `:all` or leave blank.
+      # +username+ must be a PostgreSQL superuser to run `pg_dumpall`.
       attr_accessor :name
 
       ##
@@ -17,20 +19,24 @@ module Backup
       attr_accessor :host, :port, :socket
 
       ##
-      # Tables to skip while dumping the database
+      # Tables to skip while dumping the database.
+      # If `name` is set to :all (or not specified), these are ignored.
       attr_accessor :skip_tables
 
       ##
-      # Tables to dump, tables that aren't specified won't get dumped
+      # Tables to dump. This in only valid if `name` is specified.
+      # If none are given, the entire database will be dumped.
       attr_accessor :only_tables
 
       ##
-      # Additional "pg_dump" options
+      # Additional "pg_dump" or "pg_dumpall" options
       attr_accessor :additional_options
 
       def initialize(model, database_id = nil, &block)
         super
         instance_eval(&block) if block_given?
+
+        @name ||= :all
       end
 
       ##
@@ -44,7 +50,7 @@ module Backup
         pipeline = Pipeline.new
         dump_ext = 'sql'
 
-        pipeline << pgdump
+        pipeline << (dump_all? ? pgdumpall : pgdump)
 
         model.compressor.compress_with do |command, ext|
           pipeline << command
@@ -67,6 +73,12 @@ module Backup
         "#{ password_option }" +
         "#{ utility(:pg_dump) } #{ username_option } #{ connectivity_options } " +
         "#{ user_options } #{ tables_to_dump } #{ tables_to_skip } #{ name }"
+      end
+
+      def pgdumpall
+        "#{ password_option }" +
+        "#{ utility(:pg_dumpall) } #{ username_option } " +
+        "#{ connectivity_options } #{ user_options }"
       end
 
       def password_option
@@ -100,6 +112,10 @@ module Backup
         Array(skip_tables).map do |table|
           "--exclude-table='#{ table }'"
         end.join(' ')
+      end
+
+      def dump_all?
+        name == :all
       end
 
       attr_deprecate :utility_path, :version => '3.0.21',
