@@ -32,6 +32,10 @@ module Backup
       # Path to pg_dump utility (optional)
       attr_accessor :pg_dump_utility
 
+      ##
+      # Path to pg_dumpall utility (optional)
+      attr_accessor :pg_dumpall_utility
+
       attr_deprecate :utility_path, :version => '3.0.21',
           :replacement => :pg_dump_utility
 
@@ -50,7 +54,7 @@ module Backup
 
         @name ||= :all
         @pg_dump_utility ||= utility(:pg_dump)
-        @pg_dump_all_utility ||= utility(:pg_dumpall)
+        @pg_dumpall_utility ||= utility(:pg_dumpall)
       end
 
       ##
@@ -62,14 +66,14 @@ module Backup
         pipeline = Pipeline.new
         dump_ext = 'sql'
 
-        pipeline << dump_all? ? pgdumpall : pgdump
+        pipeline << command
         if @model.compressor
           @model.compressor.compress_with do |command, ext|
             pipeline << command
             dump_ext << ext
           end
         end
-        pipeline << "cat > '#{ File.join(@dump_path, name) }.#{ dump_ext }'"
+        pipeline << "cat > '#{ File.join(@dump_path, dump_filename) }.#{ dump_ext }'"
 
         pipeline.run
         if pipeline.success?
@@ -82,6 +86,12 @@ module Backup
       end
 
       ##
+      # return the command to use
+      def command
+        dump_all? ? pgdumpall : pgdump
+      end
+
+      ##
       # Builds the full pgdump string based on all attributes
       def pgdump
         "#{password_options}" +
@@ -91,8 +101,14 @@ module Backup
 
       def pgdumpall
         "#{password_options}" +
-        "#{ pg_dump_all_utility } #{ username_options } #{ connectivity_options } " +
+        "#{ pg_dumpall_utility } #{ username_options } #{ connectivity_options } " +
         "#{ user_options }"
+      end
+
+      ##
+      # Returns the filename to use for dumping the database(s)
+      def dump_filename
+        dump_all? ? 'all-databases' : name
       end
 
       ##
@@ -146,6 +162,10 @@ module Backup
         end.join(' ')
       end
 
+      ##
+      # Return true if we're dumping all databases.
+      # `name` will be set to :all if it is not set,
+      # so this will be true by default
       def dump_all?
         name == :all
       end
