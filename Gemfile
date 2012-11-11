@@ -15,7 +15,7 @@ end
 # Define gems to be used in the 'test' environment
 group :test do
   gem 'rspec'
-  gem 'mocha'
+  gem 'mocha', '0.12.7'
   gem 'timecop'
   gem 'fuubar'
 
