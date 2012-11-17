@@ -10,7 +10,6 @@
 # Be sure to run `bundle install` against every Ruby version, as well as `gem install thor POpen4`
 
 guard "rspec",
-  :version => 2,
   :rvm     => ["1.9.3", "1.9.2", "1.8.7"],
   :cli     => "--color --format Fuubar",
   :notification   => false,
