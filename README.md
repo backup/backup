@@ -117,6 +117,7 @@ Below you find a list of components that Backup currently supports. If you'd lik
 - Presently
 - Prowl
 - Hipchat
+- Pushover
 
 [Notifiers Wiki Page](https://github.com/meskyanichi/backup/wiki/Notifiers)
 
@@ -130,7 +131,7 @@ Below you find a list of components that Backup currently supports. If you'd lik
 A sample Backup configuration file
 ----------------------------------
 
-This is a Backup configuration file. Check it out and read the explanation below.  
+This is a Backup configuration file. Check it out and read the explanation below.
 Backup has a [great wiki](https://github.com/meskyanichi/backup/wiki) which explains each component of Backup in detail.
 
 ``` rb
@@ -429,12 +430,16 @@ View the [issue log](https://github.com/meskyanichi/backup/issues) and post them
     <td><a href="https://github.com/szymonpk" target="_blank">Szymon ( szymonpk )</a></td>
     <td>Pbzip2 compressor</td>
   </tr>
+  <tr>
+    <td><a href="https://github.com/SteveNewson" target="_blank">Steve Newson ( SteveNewson )</a></td>
+    <td>Pushover Notifier</td>
+  </tr>
 </table>
 
 
 ### Want to contribute?
 
-- Fork/Clone the **develop** branch
+- Fork the project
 - Write RSpec tests, and test against:
   - Ruby 1.9.3
   - Ruby 1.9.2
