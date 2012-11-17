@@ -38,15 +38,15 @@ module Backup
         Config.update(options)
 
         ##
-        # Load the configuration file
-        Config.load_config!
-
-        ##
         # Ensure the :log_path, :cache_path and :tmp_path are created
         # if they do not yet exist
         [Config.log_path, Config.cache_path, Config.tmp_path].each do |path|
           FileUtils.mkdir_p(path)
         end
+
+        ##
+        # Load the configuration file
+        Config.load_config!
 
         ##
         # Truncate log file if needed

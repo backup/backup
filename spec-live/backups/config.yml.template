@@ -41,3 +41,6 @@ syncer:
       secret_access_key:
       bucket:
       region:
+encryptor:
+  gpg:
+    specs_enabled: false

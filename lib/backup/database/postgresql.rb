@@ -33,7 +33,8 @@ module Backup
       attr_accessor :pg_dump_utility
 
       attr_deprecate :utility_path, :version => '3.0.21',
-          :replacement => :pg_dump_utility
+          :message => 'Use PostgreSQL#pg_dump_utility instead.',
+          :action => lambda {|klass, val| klass.pg_dump_utility = val }
 
       ##
       # Creates a new instance of the PostgreSQL adapter object

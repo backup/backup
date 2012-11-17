@@ -167,9 +167,7 @@ Backup::Model.new(:sample_backup, 'A sample backup configuration') do
     encryption.password = 'my_secret_password'
   end
 
-  compress_with Gzip do |compression|
-    compression.best = true
-  end
+  compress_with Gzip
 
   store_with SFTP, "Server A" do |server|
     server.username = 'my_username'

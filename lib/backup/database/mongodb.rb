@@ -33,7 +33,8 @@ module Backup
       attr_accessor :mongodump_utility
 
       attr_deprecate :utility_path, :version => '3.0.21',
-          :replacement => :mongodump_utility
+          :message => 'Use MongoDB#mongodump_utility instead.',
+          :action => lambda {|klass, val| klass.mongodump_utility = val }
 
       ##
       # Path to the mongo utility (optional)

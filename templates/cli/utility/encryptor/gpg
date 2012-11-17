@@ -1,12 +1,27 @@
   ##
   # GPG [Encryptor]
   #
+  # Setting up #keys, as well as #gpg_homedir and #gpg_config,
+  # would be best set in config.rb using Encryptor::GPG.defaults
+  #
   encrypt_with GPG do |encryption|
-    encryption.key = <<-KEY
+    # Setup public keys for #recipients
+    encryption.keys = {}
+    encryption.keys['user@domain.com'] = <<-KEY
       -----BEGIN PGP PUBLIC KEY BLOCK-----
       Version: GnuPG v1.4.11 (Darwin)
 
           <Your GPG Public Key Here>
       -----END PGP PUBLIC KEY BLOCK-----
     KEY
+
+    # Specify mode (:asymmetric, :symmetric or :both)
+    encryption.mode = :both # defaults to :asymmetric
+
+    # Specify recipients from #keys (for :asymmetric encryption)
+    encryption.recipients = ['user@domain.com']
+
+    # Specify passphrase or passphrase_file (for :symmetric encryption)
+    encryption.passphrase = 'a secret'
+    # encryption.passphrase_file = '~/backup_passphrase'
   end

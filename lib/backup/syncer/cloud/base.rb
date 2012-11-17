@@ -84,7 +84,7 @@ module Backup
 
             case concurrency_type
             when FalseClass
-              all_file_names.each &block
+              all_file_names.each(&block)
             when :threads
               Parallel.each all_file_names,
                   :in_threads => concurrency_level, &block
@@ -128,7 +128,7 @@ module Backup
           # Returns a String of file paths and their md5 hashes.
           def local_hashes
             Logger.message("\s\sGenerating checksums for '#{ @directory }'")
-            `find #{ @directory } -print0 | xargs -0 openssl md5 2> /dev/null`
+            `find '#{ @directory }' -print0 | xargs -0 openssl md5 2> /dev/null`
           end
 
           ##

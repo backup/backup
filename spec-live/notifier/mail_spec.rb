@@ -9,33 +9,49 @@ describe 'Notifier::Mail',
 
     it 'should send a success email' do
       model = h_set_trigger(trigger)
-      expect do
-        model.perform!
-      end.not_to raise_error
+      model.perform!
+
+      Backup::Logger.has_warnings?.should be_false
+      Backup::Logger.messages.any? {|msg| msg =~ /\[error\]/ }.should be_false
     end
 
     it 'should send a warning email' do
       model = h_set_trigger(trigger)
       Backup::Logger.warn 'You have been warned!'
-      expect do
-        model.perform!
-      end.not_to raise_error
+      model.perform!
+
+      Backup::Logger.has_warnings?.should be_true
+      Backup::Logger.messages.any? {|msg| msg =~ /\[error\]/ }.should be_false
     end
 
     it 'should send a failure email for non-fatal errors' do
       model = h_set_trigger(trigger)
       model.stubs(:databases).raises('A successful failure?')
-      expect do
-        model.perform!
-      end.not_to raise_error
+      model.perform!
+
+      Backup::Logger.has_warnings?.should be_false
+      Backup::Logger.messages.any? {|msg|
+        msg =~ /\[error\]\s+A successful failure/
+      }.should be_true
+      Backup::Logger.messages.any? {|msg|
+        msg =~ /Backup will now attempt to continue/
+      }.should be_true
     end
 
-    it 'should send a failure email fatal errors' do
+    it 'should send a failure email for fatal errors' do
       model = h_set_trigger(trigger)
       model.stubs(:databases).raises(NoMemoryError, 'with increasing frequency...')
       expect do
         model.perform!
-      end.to raise_error
+      end.to raise_error(SystemExit)
+
+      Backup::Logger.has_warnings?.should be_false
+      Backup::Logger.messages.any? {|msg|
+        msg =~ /with increasing frequency/
+      }.should be_true
+      Backup::Logger.messages.any? {|msg|
+        msg =~ /Backup will now exit/
+      }.should be_true
     end
   end # describe 'Notifier::Mail :smtp'
 
@@ -45,9 +61,11 @@ describe 'Notifier::Mail',
 
     it 'should send a success email' do
       model = h_set_trigger(trigger)
-      expect do
-        model.perform!
-      end.not_to raise_error
+      model.perform!
+
+      Backup::Logger.has_warnings?.should be_false
+      Backup::Logger.messages.any? {|msg| msg =~ /\[error\]/ }.should be_false
+
       File.exist?(test_email).should be_true
       File.read(test_email).should match(/without any errors/)
     end
@@ -55,9 +73,11 @@ describe 'Notifier::Mail',
     it 'should send a warning email' do
       model = h_set_trigger(trigger)
       Backup::Logger.warn 'You have been warned!'
-      expect do
-        model.perform!
-      end.not_to raise_error
+      model.perform!
+
+      Backup::Logger.has_warnings?.should be_true
+      Backup::Logger.messages.any? {|msg| msg =~ /\[error\]/ }.should be_false
+
       File.exist?(test_email).should be_true
       File.read(test_email).should match(/You have been warned/)
     end
@@ -65,19 +85,35 @@ describe 'Notifier::Mail',
     it 'should send a failure email for non-fatal errors' do
       model = h_set_trigger(trigger)
       model.stubs(:databases).raises('A successful failure?')
-      expect do
-        model.perform!
-      end.not_to raise_error
+      model.perform!
+
+      Backup::Logger.has_warnings?.should be_false
+      Backup::Logger.messages.any? {|msg|
+        msg =~ /\[error\]\s+A successful failure/
+      }.should be_true
+      Backup::Logger.messages.any? {|msg|
+        msg =~ /Backup will now attempt to continue/
+      }.should be_true
+
       File.exist?(test_email).should be_true
       File.read(test_email).should match(/successful failure/)
     end
 
-    it 'should send a failure email fatal errors' do
+    it 'should send a failure email for fatal errors' do
       model = h_set_trigger(trigger)
       model.stubs(:databases).raises(NoMemoryError, 'with increasing frequency...')
       expect do
         model.perform!
-      end.to raise_error
+      end.to raise_error(SystemExit)
+
+      Backup::Logger.has_warnings?.should be_false
+      Backup::Logger.messages.any? {|msg|
+        msg =~ /with increasing frequency/
+      }.should be_true
+      Backup::Logger.messages.any? {|msg|
+        msg =~ /Backup will now exit/
+      }.should be_true
+
       File.exist?(test_email).should be_true
       File.read(test_email).should match(/with increasing frequency/)
     end

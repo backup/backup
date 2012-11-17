@@ -254,7 +254,7 @@ describe 'Backup::Syncer::Cloud::Base' do
           "\s\sGenerating checksums for '/dir/to/sync'"
         )
         sync_context.expects(:`).with(
-          "find /dir/to/sync -print0 | xargs -0 openssl md5 2> /dev/null"
+          "find '/dir/to/sync' -print0 | xargs -0 openssl md5 2> /dev/null"
         ).returns('MD5(tmp/foo)= 0123456789abcdefghijklmnopqrstuv')
 
         sync_context.send(:local_hashes).should ==
