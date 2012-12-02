@@ -17,7 +17,7 @@ module Backup
       {
         'fog' => {
           :require => 'fog',
-          :version => '~> 1.4.0',
+          :version => '~> 1.9.0',
           :for     => 'Amazon S3, Rackspace Cloud Files (S3, CloudFiles Storages)'
         },
 
