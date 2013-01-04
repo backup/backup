@@ -48,8 +48,8 @@ module Backup
 
         if @model.compressor
           @model.compressor.compress_with do |command, ext|
-            run("#{ command } -c #{ backup_file } > #{ backup_file + ext }")
-            FileUtils.rm_f(backup_file)
+            run("#{ command } -c #{ backup_file }-#{ node } > #{ backup_file + ext }")
+            FileUtils.rm_f("#{ backup_file }-#{ node }")
           end
         end
       end
