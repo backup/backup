@@ -71,7 +71,7 @@ module Backup
 
         'hipchat' => {
           :require => 'hipchat',
-          :version => '~> 0.4.1',
+          :version => '~> 0.7.0',
           :for => 'Sending notifications to Hipchat'
         },
 
