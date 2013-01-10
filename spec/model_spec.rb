@@ -307,6 +307,24 @@ describe 'Backup::Model' do
       end
     end
 
+    describe "#before" do
+      it "should set before hook" do
+        b = lambda { }
+        model.before &b
+        model.hooks.should be_an_instance_of Backup::Hooks
+        model.hooks.before_proc.should == b
+      end
+    end
+
+    describe "#after" do
+      it "should set after hook" do
+        a = lambda { }
+        model.after &a
+        model.hooks.should be_an_instance_of Backup::Hooks
+        model.hooks.after_proc.should == a
+      end
+    end
+
   end # describe 'DSL Methods'
 
   describe '#prepare!' do
@@ -348,6 +366,16 @@ describe 'Backup::Model' do
       model.perform!
       model.time.should == time
       model.instance_variable_get(:@started_at).should == started_at
+    end
+
+    it 'should call before and after hooks' do
+      h = model.hooks
+      h.expects(:perform!).with(:before)
+      h.expects(:perform!).with(:after)
+
+      model.expects(:log!).with(:started)
+      model.expects(:log!).with(:finished)
+      model.perform!
     end
 
     context 'when no errors occur' do
