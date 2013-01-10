@@ -123,9 +123,11 @@ describe Backup::Database::Riak do
         db.expects(:run).in_sequence(s).
             with('riakadmin_command /dump/path/mydatabase node')
         db.expects(:run).in_sequence(s).with(
-          "compressor_command -c /dump/path/mydatabase > /dump/path/mydatabase.gz"
+          "compressor_command -c " +
+          "/dump/path/mydatabase-riak@localhost > /dump/path/mydatabase.gz"
         )
-        FileUtils.expects(:rm_f).in_sequence(s).with('/dump/path/mydatabase')
+        FileUtils.expects(:rm_f).in_sequence(s).
+            with('/dump/path/mydatabase-riak@localhost')
 
         db.perform!
       end
