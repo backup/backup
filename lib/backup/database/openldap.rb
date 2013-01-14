@@ -1,4 +1,6 @@
-  # encoding: utf-8
+
+# ldapsearch -x -w password -D 'cn=root,dc=example,dc=corp' -b 'dc=example,dc=corp' -LLL > backup-"`date +%Y%m%d`".ldif
+# /usr/sbin/slapcat -v -b "dc=yourDC,dc=local" -l $BACKUPDIR/$LDAPBK
 
 module Backup
   module Database
@@ -7,6 +9,12 @@ module Backup
       ##
       # Name of the ldap backup
       attr_accessor :name
+
+      ##
+      # run slapcat under sudo if needed
+      # make sure to set SUID on a file, to let you run the file with permissions of file owner
+      # eg. sudo chmod u+s /usr/sbin/slapcat
+      attr_accessor :use_sudo
 
       ##
       # Stores the location of the slapd.conf
@@ -30,12 +38,14 @@ module Backup
         instance_eval(&block) if block_given?
 
         @name ||= 'ldap_backup'
+        @use_sudo ||= false
         @slapcat_utility  ||= utility(:slapcat)
         @conf_file        ||= '/etc/ldap/ldap.conf'
+
       end
 
       ##
-      # Performs the mysqldump command and outputs the
+      # Performs the slapcat command and outputs the
       # data to the specified path based on the 'trigger'
       def perform!
         super
@@ -66,10 +76,13 @@ module Backup
       private
 
       ##
-      # Builds the full mysqldump string based on all attributes
+      # Builds the full slapcat string based on all attributes
       def slapcat
-        "#{ slapcat_utility } -f #{ conf_file } #{ user_options } "
-        # "#{ credential_options } #{ connectivity_options } "
+        if @use_sudo
+          "sudo #{ slapcat_utility } -f #{ conf_file } #{ user_options } "
+        else
+          "#{ slapcat_utility } -f #{ conf_file } #{ user_options } "
+        end
       end
 
       ##
@@ -78,19 +91,8 @@ module Backup
         name
       end
 
-      def credential_options
-        # TODO
-      end
-
       ##
-      # Builds the MySQL connectivity options syntax to connect the user
-      # to perform the database dumping process
-      def connectivity_options
-        #TODO
-      end
-
-      ##
-      # Builds a MySQL compatible string for the additional options
+      # Builds a compatible string for the additional options
       # specified by the user
       def user_options
         slapcat_args.join(' ')
