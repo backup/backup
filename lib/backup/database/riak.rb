@@ -20,6 +20,14 @@ module Backup
       # Path to riak-admin utility (optional)
       attr_accessor :riak_admin_utility
 
+      ##
+      # Username for the riak instance (optional)
+      attr_accessor :user
+
+      ##
+      # Group for the riak instance (optional)
+      attr_accessor :group
+
       attr_deprecate :utility_path, :version => '3.0.21',
           :message => 'Use Riak#riak_admin_utility instead.',
           :action => lambda {|klass, val| klass.riak_admin_utility = val }
@@ -32,6 +40,8 @@ module Backup
         instance_eval(&block) if block_given?
 
         @riak_admin_utility ||= utility('riak-admin')
+        @user               ||= 'riak'
+        @group              ||= 'riak'
       end
 
       ##
@@ -41,7 +51,7 @@ module Backup
         super
         # have to make riak the owner since the riak-admin tool runs
         # as the riak user in a default setup.
-        FileUtils.chown_R('riak', 'riak', @dump_path)
+        FileUtils.chown_R(@user, @group, @dump_path)
 
         backup_file = File.join(@dump_path, name)
         run("#{ riakadmin } #{ backup_file } node")
