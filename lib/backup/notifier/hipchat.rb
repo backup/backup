@@ -49,20 +49,6 @@ module Backup
 
         instance_eval(&block) if block_given?
       end
-      
-      def rooms_notified= rooms
-        if rooms.is_a?(Array)
-          @rooms_notified = rooms
-        elsif rooms.is_a?(String)
-          @rooms_notified = rooms.split(/,/).map(&:lstrip).map(&:rstrip)
-        else
-          Logger.error Errors::Hipchat::LoadError.new(<<-EOS)
-            Hipchat rooms_notified configuration error
-            #{rooms.class} (#{rooms.to_s}) provided,
-            Needs to be a String or Array
-          EOS
-        end
-      end
 
       private
 

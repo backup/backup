@@ -105,18 +105,7 @@ describe Backup::Notifier::Hipchat do
         notifier.on_warning.should     == true
         notifier.on_failure.should     == true
       end
-
     end # context 'when pre-configured defaults have been set'
-
-    it 'should accept both an array and string for rooms_notified' do
-      notifier = Backup::Notifier::Hipchat.new(model)
-        
-      notifier.rooms_notified         =  [ 'room3', 'room4' ]
-      notifier.rooms_notified.should  == [ 'room3', 'room4' ]
-      notifier.rooms_notified         =  'room5, room6'
-      notifier.rooms_notified.should  == [ 'room5', 'room6' ]
-      expect { notifier.rooms_notified = { 'room7' => nil} }.to raise_error
-    end
   end # describe '#initialize'
 
   describe '#notify!' do
