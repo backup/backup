@@ -49,8 +49,7 @@ module Backup
       # data to the specified path based on the 'trigger'
       def perform!
         super
-        # have to make riak the owner since the riak-admin tool runs
-        # as the riak user in a default setup.
+        # ensure riak-admin user has permissions to write backup file
         FileUtils.chown_R(@user, @group, @dump_path)
 
         backup_file = File.join(@dump_path, name)
