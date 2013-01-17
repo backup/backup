@@ -418,7 +418,6 @@ describe 'Backup::Model' do
     context 'when errors occur' do
       let(:error_a)   { mock }
       let(:error_b)   { mock }
-      let(:notifier)  { mock }
 
       before do
         error_a.stubs(:backtrace).returns(['many', 'backtrace', 'lines'])
@@ -443,9 +442,7 @@ describe 'Backup::Model' do
         end.returns(error_b)
         Backup::Logger.expects(:message).in_sequence(s).with(error_b)
 
-        # notifiers called, but any Exception is ignored
-        notifier.expects(:perform!).with(true).raises(Exception)
-        model.expects(:notifiers).returns([notifier])
+        model.expects(:send_failure_notifications).in_sequence(s)
 
         # returns to allow next trigger to run
         expect { model.perform! }.not_to raise_error
@@ -470,12 +467,7 @@ describe 'Backup::Model' do
         end.returns(error_b)
         Backup::Logger.expects(:error).in_sequence(s).with(error_b)
 
-        expect do
-          # notifiers called, but any Exception is ignored
-          notifier = mock
-          notifier.expects(:perform!).with(true).raises(Exception)
-          model.expects(:notifiers).returns([notifier])
-        end.not_to raise_error
+        model.expects(:send_failure_notifications).in_sequence(s)
 
         expect do
           model.perform!
@@ -660,6 +652,36 @@ describe 'Backup::Model' do
         model.instance_variable_set(:@started_at, Time.now - duration)
         model.send(:elapsed_time).should == expected
       end
+    end
+  end
+
+  describe '#send_failure_notifications' do
+    let(:notifier_a) { mock }
+    let(:notifier_b) { mock }
+    let(:notifiers) { [notifier_a, notifier_b] }
+
+    before do
+      model.expects(:notifiers).returns(notifiers)
+    end
+
+    it 'calls all notifiers to perform failure notification' do
+      notifier_a.expects(:perform!).with(true)
+      notifier_b.expects(:perform!).with(true)
+      model.send(:send_failure_notifications)
+    end
+
+    it 'logs and ignores exceptions' do
+      notifier_a.expects(:perform!).with(true).raises('failed to notify')
+      notifier_a.expects(:class).returns('Notifier::Name')
+      notifier_b.expects(:perform!).with(true)
+      Backup::Logger.expects(:error).with do |ex|
+        ex.message.should match(/Notifier::Name Failed to send notification/)
+        ex.message.should match(/failed to notify/)
+      end
+
+      expect do
+        model.send(:send_failure_notifications)
+      end.not_to raise_error
     end
   end
 

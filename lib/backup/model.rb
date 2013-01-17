@@ -284,11 +284,7 @@ module Backup
         EOS
       end
 
-      notifiers.each do |n|
-        begin
-          n.perform!(true)
-        rescue Exception; end
-      end
+      send_failure_notifications
 
       exit(1) if fatal
     end
@@ -379,6 +375,22 @@ module Backup
       minutes   = remainder / 60
       seconds   = remainder - (minutes * 60)
       '%02d:%02d:%02d' % [hours, minutes, seconds]
+    end
+
+    ##
+    # Sends notifications when a backup fails.
+    # Errors are logged and rescued, since the error that caused the
+    # backup to fail could have been an error with a notifier.
+    def send_failure_notifications
+      notifiers.each do |n|
+        begin
+          n.perform!(true)
+        rescue Exception => err
+          Logger.error Errors::ModelError.wrap(err, <<-EOS)
+            #{ n.class } Failed to send notification of backup failure.
+          EOS
+        end
+      end
     end
 
   end
