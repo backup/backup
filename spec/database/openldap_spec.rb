@@ -8,7 +8,7 @@ describe Backup::Database::OpenLDAP do
     Backup::Database::OpenLDAP.new(model) do |ldap|
       #ldap.name            = 'ldap_server'
       ldap.conf_file       = '/etc/openldap/slapd.conf'
-      ldap.slapcat_args    = ['-f']
+      ldap.slapcat_args    = ['-c']
       ldap.slapcat_utility = '/usr/sbin/slapcat'
     end
   end
@@ -26,20 +26,20 @@ describe Backup::Database::OpenLDAP do
     end
 
     context 'when options are specified' do
-      it 'should have no configuration file' do
+      it 'should have a configuration file' do
         ldap.conf_file.should == '/etc/openldap/slapd.conf'
       end
 
-      it 'should have no slapcat_utility' do
+      it 'should have a slapcat_utility' do
         ldap.slapcat_utility.should == '/usr/sbin/slapcat'
       end
 
-      it 'should have no slapcat_args' do
-        ldap.slapcat_args.should == ['-f']
+      it 'should have slapcat_args' do
+        ldap.slapcat_args.should == ['-c']
       end
     end
   end  # describe '#initialize'
-
+  
   describe '#perform!' do
     let(:s) { sequence '' }
     let(:pipeline) { mock }
@@ -54,6 +54,8 @@ describe Backup::Database::OpenLDAP do
       ldap.stubs(:dump_filename).returns('dump_filename')
       Backup::Pipeline.expects(:new).returns(pipeline)
     end
+
+    
 
     context 'when no compressor is configured' do
       before do
@@ -117,6 +119,54 @@ describe Backup::Database::OpenLDAP do
         )
       end
     end # context 'when pipeline command fails'
-  end # describe '#perform!'
 
+    context 'use_sudo' do
+      before do
+        ldap.unstub(:slapcat)
+        ldap.conf_file = "slapd.conf"
+        ldap.slapcat_args = []
+        ldap.slapcat_utility = 'slapcat'
+        model.expects(:compressor).returns(nil)
+      end
+
+      it 'should not call sudo when false' do
+        ldap.stubs(:sudo).returns(false)
+        pipeline.expects(:<<).in_sequence(s).with("slapcat -f slapd.conf ")
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '/dump/path/dump_filename.ldif'"
+        )
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          'Database::OpenLDAP Complete!'
+        )
+
+        ldap.perform!
+      end
+
+      it 'should call sudo when true' do
+        ldap.stubs(:sudo).returns(true)
+        pipeline.expects(:<<).in_sequence(s).with("sudo slapcat -f slapd.conf ") #this does not work for some reason...
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '/dump/path/dump_filename.ldif'"
+        )
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+        Backup::Logger.expects(:message).in_sequence(s).with(
+          'Database::OpenLDAP Complete!'
+        )
+
+        ldap.perform!
+      end
+
+
+    end # context 'sudo'
+
+  end # describe '#perform!'
 end
+
+
+
+
+
+

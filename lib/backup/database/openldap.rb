@@ -78,11 +78,15 @@ module Backup
       ##
       # Builds the full slapcat string based on all attributes
       def slapcat
-        if @use_sudo
-          "sudo #{ slapcat_utility } -f #{ conf_file } #{ user_options } "
+        if sudo
+          "sudo #{ slapcat_utility } -f #{ conf_file } #{ user_options }"
         else
-          "#{ slapcat_utility } -f #{ conf_file } #{ user_options } "
+          "#{ slapcat_utility } -f #{ conf_file } #{ user_options }"
         end
+      end
+
+      def sudo
+        use_sudo
       end
 
       ##
