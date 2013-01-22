@@ -260,33 +260,9 @@ module Backup
       log!(:finished)
 
     rescue Exception => err
-      fatal = !err.is_a?(StandardError)
-
-      err = Errors::ModelError.wrap(err, <<-EOS)
-        Backup for #{label} (#{trigger}) Failed!
-        An Error occured which has caused this Backup to abort before completion.
-      EOS
-      Logger.error err
-      Logger.error "\nBacktrace:\n\s\s" + err.backtrace.join("\n\s\s") + "\n\n"
-
-      Cleaner.warnings(self)
-
-      if fatal
-        Logger.error Errors::ModelError.new(<<-EOS)
-          This Error was Fatal and Backup will now exit.
-          If you have other Backup jobs (triggers) configured to run,
-          they will not be processed.
-        EOS
-      else
-        Logger.message Errors::ModelError.new(<<-EOS)
-          If you have other Backup jobs (triggers) configured to run,
-          Backup will now attempt to continue...
-        EOS
-      end
-
+      log!(:failure, err)
       send_failure_notifications
-
-      exit(1) if fatal
+      exit(1) unless err.is_a?(StandardError)
     end
 
     private
@@ -348,8 +324,8 @@ module Backup
     end
 
     ##
-    # Logs messages when the backup starts and finishes
-    def log!(action)
+    # Logs messages when the backup starts, finishes or fails
+    def log!(action, exception = nil)
       case action
       when :started
         Logger.message "Performing Backup for '#{label} (#{trigger})'!\n" +
@@ -362,6 +338,29 @@ module Backup
           Logger.warn msg % 'Successfully (with Warnings)'
         else
           Logger.message msg % 'Successfully'
+        end
+
+      when :failure
+        err = Errors::ModelError.wrap(exception, <<-EOS)
+          Backup for #{label} (#{trigger}) Failed!
+          An Error occured which has caused this Backup to abort before completion.
+        EOS
+        Logger.error err
+        Logger.error "\nBacktrace:\n\s\s" + err.backtrace.join("\n\s\s") + "\n\n"
+
+        Cleaner.warnings(self)
+
+        if exception.is_a?(StandardError)
+          Logger.message Errors::ModelError.new(<<-EOS)
+            If you have other Backup jobs (triggers) configured to run,
+            Backup will now attempt to continue...
+          EOS
+        else
+          Logger.error Errors::ModelError.new(<<-EOS)
+            This Error was Fatal and Backup will now exit.
+            If you have other Backup jobs (triggers) configured to run,
+            they will not be processed.
+          EOS
         end
       end
     end

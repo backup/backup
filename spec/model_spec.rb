@@ -416,58 +416,24 @@ describe 'Backup::Model' do
     # for the purposes of testing the error handling, we're just going to
     # stub the first thing this method calls and raise an error
     context 'when errors occur' do
-      let(:error_a)   { mock }
-      let(:error_b)   { mock }
-
-      before do
-        error_a.stubs(:backtrace).returns(['many', 'backtrace', 'lines'])
-      end
 
       it 'logs, notifies and continues if a StandardError is rescued' do
-        Time.stubs(:now).raises(StandardError, 'non-fatal error')
+        err = StandardError.new 'non-fatal error'
+        Time.stubs(:now).raises(err)
 
-        Backup::Errors::ModelError.expects(:wrap).in_sequence(s).with do |err, msg|
-          err.message.should == 'non-fatal error'
-          msg.should match(/Backup for test label \(test_trigger\) Failed!/)
-        end.returns(error_a)
-        Backup::Logger.expects(:error).in_sequence(s).with(error_a)
-        Backup::Logger.expects(:error).in_sequence(s).with(
-          "\nBacktrace:\n\s\smany\n\s\sbacktrace\n\s\slines\n\n"
-        )
-
-        Backup::Cleaner.expects(:warnings).in_sequence(s).with(model)
-
-        Backup::Errors::ModelError.expects(:new).in_sequence(s).with do |msg|
-          msg.should match(/Backup will now attempt to continue/)
-        end.returns(error_b)
-        Backup::Logger.expects(:message).in_sequence(s).with(error_b)
-
-        model.expects(:send_failure_notifications).in_sequence(s)
+        model.expects(:log!).with(:failure, err)
+        model.expects(:send_failure_notifications)
 
         # returns to allow next trigger to run
         expect { model.perform! }.not_to raise_error
       end
 
       it 'logs, notifies and exits if an Exception is rescued' do
-        Time.stubs(:now).raises(Exception, 'fatal error')
+        err = Exception.new 'fatal error'
+        Time.stubs(:now).raises(err)
 
-        Backup::Errors::ModelError.expects(:wrap).in_sequence(s).with do |err, msg|
-          err.message.should == 'fatal error'
-          msg.should match(/Backup for test label \(test_trigger\) Failed!/)
-        end.returns(error_a)
-        Backup::Logger.expects(:error).in_sequence(s).with(error_a)
-        Backup::Logger.expects(:error).in_sequence(s).with(
-          "\nBacktrace:\n\s\smany\n\s\sbacktrace\n\s\slines\n\n"
-        )
-
-        Backup::Cleaner.expects(:warnings).in_sequence(s).with(model)
-
-        Backup::Errors::ModelError.expects(:new).in_sequence(s).with do |msg|
-          msg.should match(/Backup will now exit/)
-        end.returns(error_b)
-        Backup::Logger.expects(:error).in_sequence(s).with(error_b)
-
-        model.expects(:send_failure_notifications).in_sequence(s)
+        model.expects(:log!).with(:failure, err)
+        model.expects(:send_failure_notifications)
 
         expect do
           model.perform!
@@ -631,6 +597,61 @@ describe 'Backup::Model' do
             "Completed Successfully in 01:02:03"
           )
           model.send(:log!, :finished)
+        end
+      end
+    end
+
+    context 'when action is :failure' do
+      let(:error_a)   { mock }
+      let(:error_b)   { mock }
+
+      before do
+        error_a.stubs(:backtrace).returns(['many', 'backtrace', 'lines'])
+      end
+
+      context 'when Exception is a StandardError' do
+        it 'logs non-fatal error messages' do
+          Backup::Errors::ModelError.expects(:wrap).in_sequence(s).with do |err, msg|
+            err.message.should == 'non-fatal error'
+            msg.should match(/Backup for test label \(test_trigger\) Failed!/)
+          end.returns(error_a)
+          Backup::Logger.expects(:error).in_sequence(s).with(error_a)
+          Backup::Logger.expects(:error).in_sequence(s).with(
+            "\nBacktrace:\n\s\smany\n\s\sbacktrace\n\s\slines\n\n"
+          )
+
+          Backup::Cleaner.expects(:warnings).in_sequence(s).with(model)
+
+          Backup::Errors::ModelError.expects(:new).in_sequence(s).with do |msg|
+            msg.should match(/Backup will now attempt to continue/)
+          end.returns(error_b)
+          Backup::Logger.expects(:message).in_sequence(s).with(error_b)
+
+          exception = StandardError.new 'non-fatal error'
+          model.send(:log!, :failure, exception)
+        end
+      end
+
+      context 'when Exception is not a StandardError' do
+        it 'logs fatal error messages' do
+          Backup::Errors::ModelError.expects(:wrap).in_sequence(s).with do |err, msg|
+            err.message.should == 'fatal error'
+            msg.should match(/Backup for test label \(test_trigger\) Failed!/)
+          end.returns(error_a)
+          Backup::Logger.expects(:error).in_sequence(s).with(error_a)
+          Backup::Logger.expects(:error).in_sequence(s).with(
+            "\nBacktrace:\n\s\smany\n\s\sbacktrace\n\s\slines\n\n"
+          )
+
+          Backup::Cleaner.expects(:warnings).in_sequence(s).with(model)
+
+          Backup::Errors::ModelError.expects(:new).in_sequence(s).with do |msg|
+            msg.should match(/Backup will now exit/)
+          end.returns(error_b)
+          Backup::Logger.expects(:error).in_sequence(s).with(error_b)
+
+          exception = Exception.new 'fatal error'
+          model.send(:log!, :failure, exception)
         end
       end
     end
