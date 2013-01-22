@@ -339,13 +339,16 @@ describe 'Backup::Model' do
     let(:notifiers)     { [notifier_a, notifier_b] }
 
     it 'should set the @time and @started_at variables' do
-      Timecop.freeze(Time.now)
-      started_at = Time.now
-      time = started_at.strftime("%Y.%m.%d.%H.%M.%S")
       model.expects(:log!).with(:started)
       model.expects(:log!).with(:finished)
 
-      model.perform!
+      started_at, time = nil, nil
+      Timecop.freeze do
+        started_at = Time.now
+        time = started_at.strftime("%Y.%m.%d.%H.%M.%S")
+        model.perform!
+      end
+
       model.time.should == time
       model.instance_variable_get(:@started_at).should == started_at
     end
@@ -659,19 +662,20 @@ describe 'Backup::Model' do
 
   describe '#elapsed_time' do
     it 'should return a string representing the elapsed time' do
-      Timecop.freeze(Time.now)
-      { 0       => '00:00:00', 1       => '00:00:01', 59      => '00:00:59',
-        60      => '00:01:00', 61      => '00:01:01', 119     => '00:01:59',
-        3540    => '00:59:00', 3541    => '00:59:01', 3599    => '00:59:59',
-        3600    => '01:00:00', 3601    => '01:00:01', 3659    => '01:00:59',
-        3660    => '01:01:00', 3661    => '01:01:01', 3719    => '01:01:59',
-        7140    => '01:59:00', 7141    => '01:59:01', 7199    => '01:59:59',
-        212400  => '59:00:00', 212401  => '59:00:01', 212459  => '59:00:59',
-        212460  => '59:01:00', 212461  => '59:01:01', 212519  => '59:01:59',
-        215940  => '59:59:00', 215941  => '59:59:01', 215999  => '59:59:59'
-      }.each do |duration, expected|
-        model.instance_variable_set(:@started_at, Time.now - duration)
-        model.send(:elapsed_time).should == expected
+      Timecop.freeze do
+        { 0       => '00:00:00', 1       => '00:00:01', 59      => '00:00:59',
+          60      => '00:01:00', 61      => '00:01:01', 119     => '00:01:59',
+          3540    => '00:59:00', 3541    => '00:59:01', 3599    => '00:59:59',
+          3600    => '01:00:00', 3601    => '01:00:01', 3659    => '01:00:59',
+          3660    => '01:01:00', 3661    => '01:01:01', 3719    => '01:01:59',
+          7140    => '01:59:00', 7141    => '01:59:01', 7199    => '01:59:59',
+          212400  => '59:00:00', 212401  => '59:00:01', 212459  => '59:00:59',
+          212460  => '59:01:00', 212461  => '59:01:01', 212519  => '59:01:59',
+          215940  => '59:59:00', 215941  => '59:59:01', 215999  => '59:59:59'
+        }.each do |duration, expected|
+          model.instance_variable_set(:@started_at, Time.now - duration)
+          model.send(:elapsed_time).should == expected
+        end
       end
     end
   end

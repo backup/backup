@@ -9,7 +9,7 @@ describe Backup::Logger do
   let(:s) { sequence '' }
 
   before do
-    Timecop.freeze(Time.now)
+    Timecop.freeze
 
     # stubbed in spec_helper
     [:message, :error, :warn, :normal, :silent].each do |message_type|
@@ -19,6 +19,10 @@ describe Backup::Logger do
     subject.quiet = nil
     subject.send(:remove_instance_variable, :@messages) rescue nil
     subject.send(:remove_instance_variable, :@has_warnings) rescue nil
+  end
+
+  after do
+    Timecop.return
   end
 
   describe '#message' do

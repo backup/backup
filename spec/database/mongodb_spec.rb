@@ -294,6 +294,10 @@ describe Backup::Database::MongoDB do
         Backup::Pipeline.expects(:new).returns(pipeline)
       end
 
+      after do
+        Timecop.return
+      end
+
       context 'when pipeline command succeeds' do
         it 'should package the dump directory, then remove it' do
 
