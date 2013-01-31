@@ -19,7 +19,7 @@ module Backup
       # Returns STDOUT
       def run(command)
         name = command_name(command)
-        Logger.message "Running system utility '#{ name }'..."
+        Logger.info "Running system utility '#{ name }'..."
 
         begin
           out, err = '', ''
@@ -42,7 +42,7 @@ module Backup
 
         if ps.success?
           unless out.empty?
-            Logger.message(
+            Logger.info(
               out.lines.map {|line| "#{ name }:STDOUT: #{ line }" }.join
             )
           end

@@ -12,7 +12,7 @@ module Backup
           write_password_file!
 
           @directories.each do |directory|
-            Logger.message("#{ syncer_name } started syncing '#{ directory }'.")
+            Logger.info("#{ syncer_name } started syncing '#{ directory }'.")
             run("#{ utility(:rsync) } #{ options } " +
                 "'#{ username }@#{ ip }:#{ directory.sub(/^\~\//, '') }' " +
                 "'#{ dest_path }'")

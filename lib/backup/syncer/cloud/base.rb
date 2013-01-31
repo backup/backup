@@ -49,7 +49,7 @@ module Backup
         ##
         # Performs the Sync operation
         def perform!
-          Logger.message(
+          Logger.info(
             "#{ syncer_name } started the syncing process:\n" +
             "\s\sConcurrency: #{ @concurrency_type } Level: #{ @concurrency_level }"
           )
@@ -60,7 +60,7 @@ module Backup
             ).sync! @mirror, @concurrency_type, @concurrency_level
           end
 
-          Logger.message("#{ syncer_name } Syncing Complete!")
+          Logger.info("#{ syncer_name } Syncing Complete!")
         end
 
         private
@@ -127,7 +127,7 @@ module Backup
           ##
           # Returns a String of file paths and their md5 hashes.
           def local_hashes
-            Logger.message("\s\sGenerating checksums for '#{ @directory }'")
+            Logger.info("\s\sGenerating checksums for '#{ @directory }'")
             `find -L '#{ @directory }' -type f -print0 | xargs -0 openssl md5 2> /dev/null`
           end
 
@@ -160,7 +160,7 @@ module Backup
             if local_file && File.exist?(local_file.path)
               unless remote_file && remote_file.etag == local_file.md5
                 MUTEX.synchronize {
-                  Logger.message("\s\s[transferring] '#{ remote_path }'")
+                  Logger.info("\s\s[transferring] '#{ remote_path }'")
                 }
                 File.open(local_file.path, 'r') do |file|
                   @bucket.files.create(
@@ -170,18 +170,18 @@ module Backup
                 end
               else
                 MUTEX.synchronize {
-                  Logger.message("\s\s[skipping] '#{ remote_path }'")
+                  Logger.info("\s\s[skipping] '#{ remote_path }'")
                 }
               end
             elsif remote_file
               if mirror
                 MUTEX.synchronize {
-                  Logger.message("\s\s[removing] '#{ remote_path }'")
+                  Logger.info("\s\s[removing] '#{ remote_path }'")
                 }
                 remote_file.destroy
               else
                 MUTEX.synchronize {
-                  Logger.message("\s\s[leaving] '#{ remote_path }'")
+                  Logger.info("\s\s[leaving] '#{ remote_path }'")
                 }
               end
             end

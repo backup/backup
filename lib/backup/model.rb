@@ -321,7 +321,7 @@ module Backup
     def log!(action, exception = nil)
       case action
       when :started
-        Logger.message "Performing Backup for '#{label} (#{trigger})'!\n" +
+        Logger.info "Performing Backup for '#{label} (#{trigger})'!\n" +
             "[ backup #{ Version.current } : #{ RUBY_DESCRIPTION } ]"
 
       when :finished
@@ -330,7 +330,7 @@ module Backup
         if Logger.has_warnings?
           Logger.warn msg % 'Successfully (with Warnings)'
         else
-          Logger.message msg % 'Successfully'
+          Logger.info msg % 'Successfully'
         end
 
       when :failure
@@ -344,7 +344,7 @@ module Backup
         Cleaner.warnings(self)
 
         if exception.is_a?(StandardError)
-          Logger.message Errors::ModelError.new(<<-EOS)
+          Logger.info Errors::ModelError.new(<<-EOS)
             If you have other Backup jobs (triggers) configured to run,
             Backup will now attempt to continue...
           EOS

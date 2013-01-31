@@ -25,7 +25,7 @@ module Backup
       # Logs a message to the console and log file to inform
       # the client that Backup is using the compressor
       def log!
-        Logger.message "Using #{ compressor_name } for compression.\n" +
+        Logger.info "Using #{ compressor_name } for compression.\n" +
           "  Command: '#{ @cmd }'\n" +
           "  Ext: '#{ @ext }'"
       end

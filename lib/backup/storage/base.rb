@@ -89,9 +89,9 @@ module Backup
       # containing the original error message.
       def cycle!
         return unless keep.to_i > 0
-        Logger.message "#{ storage_name }: Cycling Started..."
+        Logger.info "#{ storage_name }: Cycling Started..."
         Cycler.cycle!(self, @package)
-        Logger.message "#{ storage_name }: Cycling Complete!"
+        Logger.info "#{ storage_name }: Cycling Complete!"
       end
 
     end

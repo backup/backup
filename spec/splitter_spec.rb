@@ -38,7 +38,7 @@ describe Backup::Splitter do
     end
 
     it 'should set @package and @split_command' do
-      Backup::Logger.expects(:message).with(
+      Backup::Logger.expects(:info).with(
         'Splitter configured with a chunk size of 250MB.'
       )
       splitter.send(:before_packaging)

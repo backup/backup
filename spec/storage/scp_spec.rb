@@ -153,7 +153,7 @@ describe Backup::Storage::SCP do
         ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
       # first yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::SCP started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa' to '123.45.678.90'."
       )
@@ -162,7 +162,7 @@ describe Backup::Storage::SCP do
         File.join('remote/path', 'backup.tar.enc-aa')
       )
       # second yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::SCP started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-ab' to '123.45.678.90'."
       )
@@ -195,7 +195,7 @@ describe Backup::Storage::SCP do
         ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
       # after both yields
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::SCP started removing " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa' from '123.45.678.90'.\n" +
         "Storage::SCP started removing " +
@@ -213,7 +213,7 @@ describe Backup::Storage::SCP do
 
         storage.expects(:transferred_files_for).in_sequence(s).with(package)
 
-        Backup::Logger.expects(:message).in_sequence(s)
+        Backup::Logger.expects(:info).in_sequence(s)
 
         connection.expects(:exec!).with("rm -r 'remote/path'").in_sequence(s).
           yields(:ch, :stderr, 'path not found')

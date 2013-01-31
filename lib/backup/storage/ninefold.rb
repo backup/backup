@@ -68,7 +68,7 @@ module Backup
         directory = directory_for(remote_path, true)
 
         files_to_transfer_for(@package) do |local_file, remote_file|
-          Logger.message "#{storage_name} started transferring '#{ local_file }'."
+          Logger.info "#{storage_name} started transferring '#{ local_file }'."
 
           File.open(File.join(local_path, local_file), 'r') do |file|
             directory.files.create(:key => remote_file, :body => file)
@@ -87,7 +87,7 @@ module Backup
           not_found = []
 
           transferred_files_for(package) do |local_file, remote_file|
-            Logger.message "#{storage_name} started removing " +
+            Logger.info "#{storage_name} started removing " +
                 "'#{ local_file }' from Ninefold."
 
             if file = directory.files.get(remote_file)

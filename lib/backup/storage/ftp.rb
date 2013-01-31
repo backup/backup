@@ -67,7 +67,7 @@ module Backup
           create_remote_path(remote_path, ftp)
 
           files_to_transfer_for(@package) do |local_file, remote_file|
-            Logger.message "#{storage_name} started transferring " +
+            Logger.info "#{storage_name} started transferring " +
                 "'#{ local_file }' to '#{ ip }'."
             ftp.put(
               File.join(local_path, local_file),
@@ -86,7 +86,7 @@ module Backup
 
         connection do |ftp|
           transferred_files_for(package) do |local_file, remote_file|
-            Logger.message "#{storage_name} started removing " +
+            Logger.info "#{storage_name} started removing " +
                 "'#{ local_file }' from '#{ ip }'."
 
             ftp.delete(File.join(remote_path, remote_file))

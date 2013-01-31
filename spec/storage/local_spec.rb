@@ -114,7 +114,7 @@ describe Backup::Storage::Local do
           ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
         )
         # first yield
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Storage::Local started transferring " +
           "'2011.12.31.11.00.02.backup.tar.enc-aa'."
         )
@@ -123,7 +123,7 @@ describe Backup::Storage::Local do
           File.join('remote/path', 'backup.tar.enc-aa')
         )
         # second yield
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Storage::Local started transferring " +
           "'2011.12.31.11.00.02.backup.tar.enc-ab'."
         )
@@ -149,7 +149,7 @@ describe Backup::Storage::Local do
           ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
         )
         # first yield
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Storage::Local started transferring " +
           "'2011.12.31.11.00.02.backup.tar.enc-aa'."
         )
@@ -158,7 +158,7 @@ describe Backup::Storage::Local do
           File.join('remote/path', 'backup.tar.enc-aa')
         )
         # second yield
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Storage::Local started transferring " +
           "'2011.12.31.11.00.02.backup.tar.enc-ab'."
         )
@@ -191,7 +191,7 @@ describe Backup::Storage::Local do
         ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
       # after both yields
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::Local started removing " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa'.\n" +
         "Storage::Local started removing " +

@@ -106,7 +106,7 @@ describe 'Backup::Cleaner' do
 
   describe '#remove_packaging' do
     it 'should remove the packaging directory and log a message' do
-      Backup::Logger.expects(:message).with(
+      Backup::Logger.expects(:info).with(
         "Cleaning up the temporary files..."
       )
       FileUtils.expects(:rm_rf).with(
@@ -121,7 +121,7 @@ describe 'Backup::Cleaner' do
     let(:package) { mock }
     it 'should remove the files for the given package and log a message' do
       package.expects(:filenames).returns(['file1', 'file2'])
-      Backup::Logger.expects(:message).with(
+      Backup::Logger.expects(:info).with(
         "Cleaning up the package files..."
       )
       FileUtils.expects(:rm_f).with(

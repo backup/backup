@@ -573,7 +573,7 @@ describe 'Backup::Model' do
   describe '#log!' do
     context 'when action is :started' do
       it 'should log that the backup has started with the version' do
-        Backup::Logger.expects(:message).with(
+        Backup::Logger.expects(:info).with(
           "Performing Backup for 'test label (test_trigger)'!\n" +
           "[ backup #{ Backup::Version.current } : #{ RUBY_DESCRIPTION } ]"
         )
@@ -596,7 +596,7 @@ describe 'Backup::Model' do
 
       context 'when no warnings were issued' do
         it 'should log that the backup has finished with the elapsed time' do
-          Backup::Logger.expects(:message).with(
+          Backup::Logger.expects(:info).with(
             "Backup for 'test label (test_trigger)' " +
             "Completed Successfully in 01:02:03"
           )
@@ -629,7 +629,7 @@ describe 'Backup::Model' do
           Backup::Errors::ModelError.expects(:new).in_sequence(s).with do |msg|
             msg.should match(/Backup will now attempt to continue/)
           end.returns(error_b)
-          Backup::Logger.expects(:message).in_sequence(s).with(error_b)
+          Backup::Logger.expects(:info).in_sequence(s).with(error_b)
 
           exception = StandardError.new 'non-fatal error'
           model.send(:log!, :failure, exception)

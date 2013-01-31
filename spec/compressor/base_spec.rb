@@ -41,7 +41,7 @@ describe Backup::Compressor::Base do
       compressor.instance_variable_set(:@ext, 'compressor extension')
       compressor.expects(:compressor_name).returns('Compressor Name')
 
-      Backup::Logger.expects(:message).with(
+      Backup::Logger.expects(:info).with(
         "Using Compressor Name for compression.\n" +
         "  Command: 'compressor command'\n" +
         "  Ext: 'compressor extension'"

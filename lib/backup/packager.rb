@@ -13,11 +13,11 @@ module Backup
         @splitter  = model.splitter
         @pipeline  = Pipeline.new
 
-        Logger.message "Packaging the backup files..."
+        Logger.info "Packaging the backup files..."
         procedure.call
 
         if @pipeline.success?
-          Logger.message "Packaging Complete!"
+          Logger.info "Packaging Complete!"
         else
           raise Errors::Packager::PipelineError,
               "Failed to Create Backup Package\n" +

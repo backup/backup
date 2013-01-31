@@ -16,7 +16,7 @@ describe Backup::CLI::Helpers do
       let(:process_success) { true }
 
       before do
-        Backup::Logger.expects(:message).with(
+        Backup::Logger.expects(:info).with(
           "Running system utility 'cmd_name'..."
         )
 
@@ -39,7 +39,7 @@ describe Backup::CLI::Helpers do
         let(:stderr_messages) { '' }
 
         it 'should return stdout and log the stdout messages' do
-          Backup::Logger.expects(:message).with(
+          Backup::Logger.expects(:info).with(
             "cmd_name:STDOUT: out line1\ncmd_name:STDOUT: out line2"
           )
           helpers.send(:run, command).should == stdout_messages.strip
@@ -63,7 +63,7 @@ describe Backup::CLI::Helpers do
         let(:stderr_messages) { "err line1\nerr line2\n" }
 
         it 'should return stdout and log both stdout and stderr messages' do
-          Backup::Logger.expects(:message).with(
+          Backup::Logger.expects(:info).with(
             "cmd_name:STDOUT: out line1\ncmd_name:STDOUT: out line2"
           )
           Backup::Logger.expects(:warn).with(
@@ -84,7 +84,7 @@ describe Backup::CLI::Helpers do
       end
 
       before do
-        Backup::Logger.expects(:message).with(
+        Backup::Logger.expects(:info).with(
           "Running system utility 'cmd_name'..."
         )
 
@@ -166,7 +166,7 @@ describe Backup::CLI::Helpers do
 
     context 'when the system fails to execute the command' do
       before do
-        Backup::Logger.expects(:message).with(
+        Backup::Logger.expects(:info).with(
           "Running system utility 'cmd_name'..."
         )
 

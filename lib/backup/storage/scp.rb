@@ -56,7 +56,7 @@ module Backup
           ssh.exec!("mkdir -p '#{ remote_path }'")
 
           files_to_transfer_for(@package) do |local_file, remote_file|
-            Logger.message "#{storage_name} started transferring " +
+            Logger.info "#{storage_name} started transferring " +
                 "'#{local_file}' to '#{ip}'."
 
             ssh.scp.upload!(
@@ -79,7 +79,7 @@ module Backup
           messages << "#{storage_name} started removing " +
               "'#{local_file}' from '#{ip}'."
         end
-        Logger.message messages.join("\n")
+        Logger.info messages.join("\n")
 
         errors = []
         connection do |ssh|

@@ -32,7 +32,7 @@ module Backup
         FileUtils.mkdir_p(remote_path)
 
         files_to_transfer_for(@package) do |local_file, remote_file|
-          Logger.message "#{storage_name} started transferring '#{ local_file }'."
+          Logger.info "#{storage_name} started transferring '#{ local_file }'."
 
           src_path = File.join(local_path, local_file)
           dst_path = File.join(remote_path, remote_file)
@@ -51,7 +51,7 @@ module Backup
         transferred_files_for(package) do |local_file, remote_file|
           messages << "#{storage_name} started removing '#{ local_file }'."
         end
-        Logger.message messages.join("\n")
+        Logger.info messages.join("\n")
 
         FileUtils.rm_r(remote_path)
       end

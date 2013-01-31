@@ -150,7 +150,7 @@ describe Backup::Archive do
       end
 
       it 'should render the syntax for both' do
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Backup::Archive has started archiving:\n" +
           "  /path/to/add\n" +
           "  /another/path/to/add"
@@ -167,7 +167,7 @@ describe Backup::Archive do
         pipeline.expects(:run).in_sequence(s)
         pipeline.expects(:success?).in_sequence(s).returns(true)
 
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Backup::Archive Complete!"
         )
 
@@ -177,7 +177,7 @@ describe Backup::Archive do
 
     context 'when no excludes were added' do
       it 'should render only the syntax for adds' do
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Backup::Archive has started archiving:\n" +
           "  /path/to/add\n" +
           "  /another/path/to/add"
@@ -192,7 +192,7 @@ describe Backup::Archive do
         pipeline.expects(:run).in_sequence(s)
         pipeline.expects(:success?).in_sequence(s).returns(true)
 
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Backup::Archive Complete!"
         )
 
@@ -207,7 +207,7 @@ describe Backup::Archive do
       end
 
       it 'should render the syntax for all three' do
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Backup::Archive has started archiving:\n" +
           "  /path/to/add\n" +
           "  /another/path/to/add"
@@ -224,7 +224,7 @@ describe Backup::Archive do
         pipeline.expects(:run).in_sequence(s)
         pipeline.expects(:success?).in_sequence(s).returns(true)
 
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Backup::Archive Complete!"
         )
 
@@ -242,7 +242,7 @@ describe Backup::Archive do
       end
 
       it 'should render the syntax with compressor modifications' do
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Backup::Archive has started archiving:\n" +
           "  /path/to/add\n" +
           "  /another/path/to/add"
@@ -260,7 +260,7 @@ describe Backup::Archive do
         pipeline.expects(:run).in_sequence(s)
         pipeline.expects(:success?).in_sequence(s).returns(true)
 
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Backup::Archive Complete!"
         )
 
@@ -277,7 +277,7 @@ describe Backup::Archive do
       end
 
       it 'should raise an error' do
-        Backup::Logger.expects(:message).with(
+        Backup::Logger.expects(:info).with(
           "Backup::Archive has started archiving:\n" +
           "  /path/to/add\n" +
           "  /another/path/to/add"

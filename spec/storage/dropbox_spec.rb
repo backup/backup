@@ -126,7 +126,7 @@ describe Backup::Storage::Dropbox do
     context 'when a cached session does not exist' do
       before do
         storage.expects(:cached_session).in_sequence(s).returns(false)
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           'Creating a new session!'
         )
         storage.expects(:create_write_and_return_new_session!).in_sequence(s).
@@ -178,7 +178,7 @@ describe Backup::Storage::Dropbox do
         it 'should return the sesssion' do
           DropboxSession.expects(:deserialize).with('yaml_data').
               returns(session)
-          Backup::Logger.expects(:message).with(
+          Backup::Logger.expects(:info).with(
             'Session data loaded from cache!'
           )
 
@@ -238,7 +238,7 @@ describe Backup::Storage::Dropbox do
         ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
       # first yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::Dropbox started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa'."
       )
@@ -249,7 +249,7 @@ describe Backup::Storage::Dropbox do
         File.join('remote/path', 'backup.tar.enc-aa'), file
       )
       # second yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::Dropbox started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-ab'."
       )
@@ -283,7 +283,7 @@ describe Backup::Storage::Dropbox do
         ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
       # after both yields
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::Dropbox started removing " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa' from Dropbox.\n" +
         "Storage::Dropbox started removing " +

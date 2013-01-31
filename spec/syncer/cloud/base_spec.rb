@@ -54,11 +54,11 @@ describe 'Backup::Syncer::Cloud::Base' do
     before do
       syncer.stubs(:repository_object).returns(:a_repository_object)
 
-      Backup::Logger.expects(:message).with(
+      Backup::Logger.expects(:info).with(
         "Syncer::Cloud::Base started the syncing process:\n" +
         "\s\sConcurrency: false Level: 2"
       )
-      Backup::Logger.expects(:message).with(
+      Backup::Logger.expects(:info).with(
         'Syncer::Cloud::Base Syncing Complete!'
       )
     end
@@ -250,7 +250,7 @@ describe 'Backup::Syncer::Cloud::Base' do
 
     describe '#local_hashes' do
       it 'should collect file paths and MD5 checksums for @directory' do
-        Backup::Logger.expects(:message).with(
+        Backup::Logger.expects(:info).with(
           "\s\sGenerating checksums for '/dir/to/sync'"
         )
         sync_context.expects(:`).with(
@@ -341,7 +341,7 @@ describe 'Backup::Syncer::Cloud::Base' do
           it 'should skip the file' do
             File.expects(:open).never
             Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
-            Backup::Logger.expects(:message).with(
+            Backup::Logger.expects(:info).with(
               "\s\s[skipping] 'backups/sync/sync.file'"
             )
 
@@ -359,7 +359,7 @@ describe 'Backup::Syncer::Cloud::Base' do
 
           it 'should upload the file' do
             Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
-            Backup::Logger.expects(:message).with(
+            Backup::Logger.expects(:info).with(
               "\s\s[transferring] 'backups/sync/sync.file'"
             )
 
@@ -380,7 +380,7 @@ describe 'Backup::Syncer::Cloud::Base' do
 
           it 'should upload the file' do
             Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
-            Backup::Logger.expects(:message).with(
+            Backup::Logger.expects(:info).with(
               "\s\s[transferring] 'backups/sync/sync.file'"
             )
 
@@ -406,7 +406,7 @@ describe 'Backup::Syncer::Cloud::Base' do
         context 'when the `mirror` option is set to true' do
           it 'should remove the file from the remote' do
             Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
-            Backup::Logger.expects(:message).with(
+            Backup::Logger.expects(:info).with(
               "\s\s[removing] 'backups/sync/sync.file'"
             )
 
@@ -419,7 +419,7 @@ describe 'Backup::Syncer::Cloud::Base' do
         context 'when the `mirror` option is set to false' do
           it 'should leave the file on the remote' do
             Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
-            Backup::Logger.expects(:message).with(
+            Backup::Logger.expects(:info).with(
               "\s\s[leaving] 'backups/sync/sync.file'"
             )
 

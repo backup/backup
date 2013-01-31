@@ -85,7 +85,6 @@ module Backup
       [:info, :warn, :error].each do |level|
         define_method level, lambda {|obj| log(obj, level) }
       end
-      alias :message :info
 
       ##
       # Returns true if any +:warn+ level messages have been received.

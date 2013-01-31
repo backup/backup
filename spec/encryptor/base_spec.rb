@@ -31,7 +31,7 @@ describe Backup::Encryptor::Base do
   describe '#log!' do
     it 'should log a message' do
       base.expects(:encryptor_name).returns('Encryptor Name')
-      Backup::Logger.expects(:message).with(
+      Backup::Logger.expects(:info).with(
         'Using Encryptor Name to encrypt the archive.'
       )
       base.send(:log!)

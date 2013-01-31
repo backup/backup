@@ -183,7 +183,7 @@ describe Backup::Storage::FTP do
         ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
       # first yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::FTP started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa' to '123.45.678.90'."
       )
@@ -192,7 +192,7 @@ describe Backup::Storage::FTP do
         File.join('remote/path', 'backup.tar.enc-aa')
       )
       # second yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::FTP started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-ab' to '123.45.678.90'."
       )
@@ -225,7 +225,7 @@ describe Backup::Storage::FTP do
         ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
       # first yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::FTP started removing " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa' from '123.45.678.90'."
       )
@@ -233,7 +233,7 @@ describe Backup::Storage::FTP do
         File.join('remote/path', 'backup.tar.enc-aa')
       )
       # second yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::FTP started removing " +
         "'2011.12.31.11.00.02.backup.tar.enc-ab' from '123.45.678.90'."
       )

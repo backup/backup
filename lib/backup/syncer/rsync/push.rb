@@ -47,7 +47,7 @@ module Backup
         def perform!
           write_password_file!
 
-          Logger.message(
+          Logger.info(
             "#{ syncer_name } started syncing the following directories:\n\s\s" +
             @directories.join("\n\s\s")
           )
