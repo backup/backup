@@ -16,44 +16,40 @@ describe 'Backup::Model' do
     end
   end
 
-  describe 'finder methods' do
+  describe '.find_by_trigger' do
     before do
-      [:a, :b, :c, :b, :d].each_with_index do |sym, i|
-        Backup::Model.new("trigger_#{sym}", "label#{i}")
+      [:one, :two, :three, :one].each_with_index do |sym, i|
+        Backup::Model.new("trigger_#{ sym }", "label#{ i + 1 }")
       end
     end
 
-    describe '.find' do
-      it 'should return the first matching model' do
-        Backup::Model.find('trigger_b').label.should == 'label1'
-      end
-
-      it 'should accept symbols' do
-        Backup::Model.find(:trigger_b).label.should == 'label1'
-      end
-
-      it 'should raise an error if trigger is not found' do
-        expect do
-          Backup::Model.find(:f)
-        end.to raise_error(
-          Backup::Errors::Model::MissingTriggerError,
-          "Model::MissingTriggerError: Could not find trigger 'f'."
-        )
-      end
+    it 'should return an array of all models matching the trigger' do
+      models = Backup::Model.find_by_trigger('trigger_one')
+      models.should be_a(Array)
+      models.count.should be(2)
+      models[0].label.should == 'label1'
+      models[1].label.should == 'label4'
     end
 
-    describe '.find_matching' do
-      it 'should find all triggers matching a wildcard' do
-        Backup::Model.find_matching('tri*_b').count.should be(2)
-        Backup::Model.find_matching('trigg*').count.should be(5)
-      end
+    it 'should return an array of all models matching a wildcard trigger' do
+      models = Backup::Model.find_by_trigger('trigger_t*')
+      models.count.should be(2)
+      models[0].label.should == 'label2'
+      models[1].label.should == 'label3'
 
-      it 'should return an empty array if no matches are found' do
-        Backup::Model.find_matching('foo*').should == []
-      end
+      models = Backup::Model.find_by_trigger('trig*ne')
+      models.count.should be(2)
+      models[0].label.should == 'label1'
+      models[1].label.should == 'label4'
+
+      Backup::Model.find_by_trigger('trigg*').count.should be(4)
     end
 
-  end # describe 'finder methods'
+    it 'should return an empty array if no matches are found' do
+      Backup::Model.find_by_trigger('foo*').should == []
+    end
+
+  end # describe '.find_by_trigger'
 
   describe '#initialize' do
 
@@ -316,7 +312,7 @@ describe 'Backup::Model' do
       )
       Backup::Cleaner.expects(:prepare).with(model)
 
-      model.prepare!
+      model.send(:prepare!)
     end
   end
 
@@ -340,6 +336,7 @@ describe 'Backup::Model' do
 
     it 'should set the @time and @started_at variables' do
       model.expects(:log!).with(:started)
+      model.expects(:prepare!)
       model.expects(:log!).with(:finished)
 
       started_at, time = nil, nil
@@ -368,6 +365,8 @@ describe 'Backup::Model' do
         it 'should perform all procedures' do
           model.expects(:log!).in_sequence(s).with(:started)
 
+          model.expects(:prepare!).in_sequence(s)
+
           procedure_a.expects(:call).in_sequence(s)
           procedure_b.expects(:perform!).in_sequence(s)
           procedure_c.expects(:perform!).in_sequence(s)
@@ -394,6 +393,8 @@ describe 'Backup::Model' do
 
         it 'should perform all procedures' do
           model.expects(:log!).in_sequence(s).with(:started)
+
+          model.expects(:prepare!).in_sequence(s)
 
           procedure_a.expects(:call).in_sequence(s)
           procedure_b.expects(:perform!).in_sequence(s)

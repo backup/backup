@@ -14,23 +14,14 @@ module Backup
       end
 
       ##
-      # Return the first model matching +trigger+.
-      # Raises Errors::MissingTriggerError if no matches are found.
-      def find(trigger)
-        trigger = trigger.to_s
-        all.each do |model|
-          return model if model.trigger == trigger
+      # Return an Array of Models matching the given +trigger+.
+      def find_by_trigger(trigger)
+        if trigger.include?('*')
+          regex = /^#{ trigger.to_s.gsub('*', '(.*)') }$/
+          all.select {|model| regex =~ model.trigger }
+        else
+          all.select {|model| trigger == model.trigger }
         end
-        raise Errors::Model::MissingTriggerError,
-            "Could not find trigger '#{trigger}'."
-      end
-
-      ##
-      # Find and return an Array of all models matching +trigger+
-      # Used to match triggers using a wildcard (*)
-      def find_matching(trigger)
-        regex = /^#{ trigger.to_s.gsub('*', '(.*)') }$/
-        all.select {|model| regex =~ model.trigger }
       end
     end
 
@@ -184,18 +175,6 @@ module Backup
     end
 
     ##
-    # Ensure DATA_PATH and DATA_PATH/TRIGGER are created
-    # if they do not yet exist
-    #
-    # Clean any temporary files and/or package files left over
-    # from the last time this model/trigger was performed.
-    # Logs warnings if files exist and are cleaned.
-    def prepare!
-      FileUtils.mkdir_p(File.join(Config.data_path, trigger))
-      Cleaner.prepare(self)
-    end
-
-    ##
     # Performs the backup process
     ##
     # [Databases]
@@ -248,6 +227,8 @@ module Backup
       @time = @started_at.strftime("%Y.%m.%d.%H.%M.%S")
       log!(:started)
 
+      prepare!
+
       if databases.any? or archives.any?
         procedures.each do |procedure|
           (procedure.call; next) if procedure.is_a?(Proc)
@@ -266,6 +247,18 @@ module Backup
     end
 
     private
+
+    ##
+    # Ensure DATA_PATH and DATA_PATH/TRIGGER are created
+    # if they do not yet exist
+    #
+    # Clean any temporary files and/or package files left over
+    # from the last time this model/trigger was performed.
+    # Logs warnings if files exist and are cleaned.
+    def prepare!
+      FileUtils.mkdir_p(File.join(Config.data_path, trigger))
+      Cleaner.prepare(self)
+    end
 
     ##
     # After all the databases and archives have been dumped and sorted,

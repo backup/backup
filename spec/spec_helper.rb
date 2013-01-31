@@ -53,12 +53,10 @@ RSpec.configure do |config|
 
     Open4.stubs(:popen4).raises('Unexpected call to Open4::popen4()')
 
-    [:message, :error, :warn, :normal, :silent].each do |method|
-      Backup::Logger.stubs(method).raises("Unexpected call to Backup::Logger.#{ method }")
-    end
+    Backup::Config.send(:reset!)
+    # Logger only queues messages received until Logger.start! is called.
+    Backup::Logger.send(:initialize!)
   end
 end
 
-unless @_put_ruby_version
-  puts @_put_ruby_version = "\n\nRuby version: #{ RUBY_DESCRIPTION }\n\n"
-end
+puts "\nRuby version: #{ RUBY_DESCRIPTION }\n\n"
