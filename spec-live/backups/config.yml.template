@@ -12,11 +12,13 @@ storage:
     password: <password>
     ip: localhost
     port: 22
-    path: /absolute/path/to/spec-live/tmp
+    path: /absolute/path/to/spec-live/.tmp
   dropbox:
     specs_enabled: false
     api_key: <your key>
     api_secret: <your secret>
+    # most likely :app_folder, but :dropbox is also possible
+    access_type: :app_folder
     path:
     timeout:
 notifier:
