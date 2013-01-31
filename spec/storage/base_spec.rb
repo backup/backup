@@ -139,11 +139,11 @@ describe Backup::Storage::Base do
       before { storage.keep = 1 }
       it 'should cycle' do
         s = sequence ''
-        Backup::Logger.expects(:message).in_sequence(s).
+        Backup::Logger.expects(:info).in_sequence(s).
             with('Storage Name: Cycling Started...')
         Backup::Storage::Cycler.expects(:cycle!).in_sequence(s).
             with(storage, package)
-        Backup::Logger.expects(:message).in_sequence(s).
+        Backup::Logger.expects(:info).in_sequence(s).
             with('Storage Name: Cycling Complete!')
 
         storage.send(:cycle!)

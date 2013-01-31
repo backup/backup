@@ -12,7 +12,9 @@ describe 'Notifier::Mail',
       model.perform!
 
       Backup::Logger.has_warnings?.should be_false
-      Backup::Logger.messages.any? {|msg| msg =~ /\[error\]/ }.should be_false
+      Backup::Logger.messages.map(&:formatted_lines).flatten.any? {|msg|
+        msg =~ /\[error\]/
+      }.should be_false
     end
 
     it 'should send a warning email' do
@@ -21,7 +23,9 @@ describe 'Notifier::Mail',
       model.perform!
 
       Backup::Logger.has_warnings?.should be_true
-      Backup::Logger.messages.any? {|msg| msg =~ /\[error\]/ }.should be_false
+      Backup::Logger.messages.map(&:formatted_lines).flatten.any? {|msg|
+        msg =~ /\[error\]/
+      }.should be_false
     end
 
     it 'should send a failure email for non-fatal errors' do
@@ -30,10 +34,10 @@ describe 'Notifier::Mail',
       model.perform!
 
       Backup::Logger.has_warnings?.should be_false
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:formatted_lines).flatten.any? {|msg|
         msg =~ /\[error\]\s+A successful failure/
       }.should be_true
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /Backup will now attempt to continue/
       }.should be_true
     end
@@ -46,10 +50,10 @@ describe 'Notifier::Mail',
       end.to raise_error(SystemExit)
 
       Backup::Logger.has_warnings?.should be_false
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /with increasing frequency/
       }.should be_true
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /Backup will now exit/
       }.should be_true
     end
@@ -64,7 +68,9 @@ describe 'Notifier::Mail',
       model.perform!
 
       Backup::Logger.has_warnings?.should be_false
-      Backup::Logger.messages.any? {|msg| msg =~ /\[error\]/ }.should be_false
+      Backup::Logger.messages.map(&:formatted_lines).flatten.any? {|msg|
+        msg =~ /\[error\]/
+      }.should be_false
 
       File.exist?(test_email).should be_true
       File.read(test_email).should match(/without any errors/)
@@ -76,7 +82,9 @@ describe 'Notifier::Mail',
       model.perform!
 
       Backup::Logger.has_warnings?.should be_true
-      Backup::Logger.messages.any? {|msg| msg =~ /\[error\]/ }.should be_false
+      Backup::Logger.messages.map(&:formatted_lines).flatten.any? {|msg|
+        msg =~ /\[error\]/
+      }.should be_false
 
       File.exist?(test_email).should be_true
       File.read(test_email).should match(/You have been warned/)
@@ -88,10 +96,10 @@ describe 'Notifier::Mail',
       model.perform!
 
       Backup::Logger.has_warnings?.should be_false
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:formatted_lines).flatten.any? {|msg|
         msg =~ /\[error\]\s+A successful failure/
       }.should be_true
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /Backup will now attempt to continue/
       }.should be_true
 
@@ -107,10 +115,10 @@ describe 'Notifier::Mail',
       end.to raise_error(SystemExit)
 
       Backup::Logger.has_warnings?.should be_false
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /with increasing frequency/
       }.should be_true
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /Backup will now exit/
       }.should be_true
 

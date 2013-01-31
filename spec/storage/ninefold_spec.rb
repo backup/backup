@@ -197,7 +197,7 @@ describe Backup::Storage::Ninefold do
         ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
       # first yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::Ninefold started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa'."
       )
@@ -208,7 +208,7 @@ describe Backup::Storage::Ninefold do
         :key => 'backup.tar.enc-aa', :body => file
       )
       # second yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::Ninefold started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-ab'."
       )
@@ -246,7 +246,7 @@ describe Backup::Storage::Ninefold do
         ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
       # first yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::Ninefold started removing " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa' from Ninefold."
       )
@@ -254,7 +254,7 @@ describe Backup::Storage::Ninefold do
           with('backup.tar.enc-aa').returns(file)
       file.expects(:destroy).in_sequence(s)
       # second yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::Ninefold started removing " +
         "'2011.12.31.11.00.02.backup.tar.enc-ab' from Ninefold."
       )
@@ -303,14 +303,14 @@ describe Backup::Storage::Ninefold do
           ['2011.12.31.11.00.02.backup.tar.enc-ac', 'backup.tar.enc-ac']
         )
         # first yield (file not found)
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Storage::Ninefold started removing " +
           "'2011.12.31.11.00.02.backup.tar.enc-aa' from Ninefold."
         )
         directory_files.expects(:get).in_sequence(s).
             with('backup.tar.enc-aa').returns(nil)
         # second yield (file found and removed)
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Storage::Ninefold started removing " +
           "'2011.12.31.11.00.02.backup.tar.enc-ab' from Ninefold."
         )
@@ -318,7 +318,7 @@ describe Backup::Storage::Ninefold do
             with('backup.tar.enc-ab').returns(file)
         file.expects(:destroy).in_sequence(s)
         # third yield (file not found)
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Storage::Ninefold started removing " +
           "'2011.12.31.11.00.02.backup.tar.enc-ac' from Ninefold."
         )

@@ -61,7 +61,7 @@ module Backup
         connection.sync_clock
 
         files_to_transfer_for(@package) do |local_file, remote_file|
-          Logger.message "#{storage_name} started transferring " +
+          Logger.info "#{storage_name} started transferring " +
               "'#{ local_file }' to bucket '#{ bucket }'."
 
           File.open(File.join(local_path, local_file), 'r') do |file|
@@ -82,7 +82,7 @@ module Backup
         connection.sync_clock
 
         transferred_files_for(package) do |local_file, remote_file|
-          Logger.message "#{storage_name} started removing " +
+          Logger.info "#{storage_name} started removing " +
               "'#{ local_file }' from bucket '#{ bucket }'."
 
           connection.delete_object(bucket, File.join(remote_path, remote_file))

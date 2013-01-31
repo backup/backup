@@ -159,7 +159,7 @@ describe Backup::Database::MySQL do
         )
         pipeline.expects(:run).in_sequence(s)
         pipeline.expects(:success?).in_sequence(s).returns(true)
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           'Database::MySQL Complete!'
         )
 
@@ -182,7 +182,7 @@ describe Backup::Database::MySQL do
         )
         pipeline.expects(:run).in_sequence(s)
         pipeline.expects(:success?).in_sequence(s).returns(true)
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           'Database::MySQL Complete!'
         )
 

@@ -169,7 +169,7 @@ describe Backup::Storage::RSync do
           ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
         )
         # first yield
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Storage::RSync started transferring " +
           "'2011.12.31.11.00.02.backup.tar.enc-aa' to '123.45.678.90'."
         )
@@ -179,7 +179,7 @@ describe Backup::Storage::RSync do
           "'my_username@123.45.678.90:#{ File.join('remote/path', 'backup.tar.enc-aa') }'"
         )
         # second yield
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Storage::RSync started transferring " +
           "'2011.12.31.11.00.02.backup.tar.enc-ab' to '123.45.678.90'."
         )
@@ -221,7 +221,7 @@ describe Backup::Storage::RSync do
           ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
         )
         # first yield
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Storage::RSync started transferring " +
           "'2011.12.31.11.00.02.backup.tar.enc-aa' to 'remote/path'."
         )
@@ -231,7 +231,7 @@ describe Backup::Storage::RSync do
           "'#{ File.join('remote/path', 'backup.tar.enc-aa') }'"
         )
         # second yield
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           "Storage::RSync started transferring " +
           "'2011.12.31.11.00.02.backup.tar.enc-ab' to 'remote/path'."
         )

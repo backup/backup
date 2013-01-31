@@ -121,7 +121,7 @@ module Backup
         timestamp = Time.now.to_i.to_s[-5, 5]
         outfile   = @dump_path + '-' + timestamp + '.tar'
 
-        Logger.message(
+        Logger.info(
           "#{ database_name } started compressing and packaging:\n" +
           "  '#{ @dump_path }'"
         )
@@ -135,7 +135,7 @@ module Backup
 
         pipeline.run
         if pipeline.success?
-          Logger.message(
+          Logger.info(
             "#{ database_name } completed compressing and packaging:\n" +
             "  '#{ outfile }'"
           )

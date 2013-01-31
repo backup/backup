@@ -5,14 +5,13 @@ module Backup
     DEFAULTS = {
       :config_file  => 'config.rb',
       :data_path    => 'data',
-      :log_path     => 'log',
       :cache_path   => '.cache',
       :tmp_path     => '.tmp'
     }
 
     class << self
       attr_reader :user, :root_path, :config_file,
-                  :data_path, :log_path, :cache_path, :tmp_path
+                  :data_path, :cache_path, :tmp_path
 
       ##
       # Setup required paths based on the given options

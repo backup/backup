@@ -55,7 +55,7 @@ module Backup
         return @connection if @connection
 
         unless session = cached_session
-          Logger.message "Creating a new session!"
+          Logger.info "Creating a new session!"
           session = create_write_and_return_new_session!
         end
 
@@ -73,7 +73,7 @@ module Backup
         if cache_exists?
           begin
             session = DropboxSession.deserialize(File.read(cached_file))
-            Logger.message "Session data loaded from cache!"
+            Logger.info "Session data loaded from cache!"
 
           rescue => err
             Logger.warn Errors::Storage::Dropbox::CacheError.wrap(err, <<-EOS)
@@ -91,7 +91,7 @@ module Backup
         remote_path = remote_path_for(@package)
 
         files_to_transfer_for(@package) do |local_file, remote_file|
-          Logger.message "#{storage_name} started transferring '#{ local_file }'."
+          Logger.info "#{storage_name} started transferring '#{ local_file }'."
           File.open(File.join(local_path, local_file), 'r') do |file|
             connection.put_file(File.join(remote_path, remote_file), file)
           end
@@ -110,7 +110,7 @@ module Backup
           messages << "#{storage_name} started removing " +
               "'#{ local_file }' from Dropbox."
         end
-        Logger.message messages.join("\n")
+        Logger.info messages.join("\n")
 
         connection.file_delete(remote_path)
       end

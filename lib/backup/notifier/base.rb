@@ -73,7 +73,7 @@ module Backup
       # Logs a message to the console and log file to inform
       # the client that Backup is notifying about the process
       def log!
-        Logger.message "#{ notifier_name } started notifying about the process."
+        Logger.info "#{ notifier_name } started notifying about the process."
       end
 
     end

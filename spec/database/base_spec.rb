@@ -53,7 +53,7 @@ describe Backup::Database::Base do
   describe '#log!' do
     it 'should use #database_name' do
       db.stubs(:name).returns('database_name')
-      Backup::Logger.expects(:message).with(
+      Backup::Logger.expects(:info).with(
         "Database::Base started dumping and archiving 'database_name'."
       )
 

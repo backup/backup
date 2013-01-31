@@ -21,14 +21,14 @@ describe 'Backup::Packager' do
         model.expects(:splitter).in_sequence(s).returns(splitter)
         Backup::Pipeline.expects(:new).in_sequence(s).returns(pipeline)
 
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           'Packaging the backup files...'
         )
         packager.expects(:procedure).in_sequence(s).returns(procedure)
         procedure.expects(:call).in_sequence(s)
 
         pipeline.expects(:success?).in_sequence(s).returns(true)
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           'Packaging Complete!'
         )
 
@@ -48,7 +48,7 @@ describe 'Backup::Packager' do
         model.expects(:splitter).in_sequence(s).returns(splitter)
         Backup::Pipeline.expects(:new).in_sequence(s).returns(pipeline)
 
-        Backup::Logger.expects(:message).in_sequence(s).with(
+        Backup::Logger.expects(:info).in_sequence(s).with(
           'Packaging the backup files...'
         )
         packager.expects(:procedure).in_sequence(s).returns(procedure)

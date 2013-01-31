@@ -37,7 +37,7 @@ describe Backup::Syncer::RSync::Pull do
       syncer.expects(:write_password_file!).in_sequence(s)
 
       # first directory - uses the given full path
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Syncer::RSync::Pull started syncing '/some/directory'."
       )
       syncer.expects(:run).in_sequence(s).with(
@@ -46,7 +46,7 @@ describe Backup::Syncer::RSync::Pull do
       )
 
       # second directory - removes leading '~'
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Syncer::RSync::Pull started syncing '~/home/directory'."
       )
       syncer.expects(:run).in_sequence(s).with(
@@ -55,7 +55,7 @@ describe Backup::Syncer::RSync::Pull do
       )
 
       # third directory - does not expand path
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Syncer::RSync::Pull started syncing 'another/directory'."
       )
       syncer.expects(:run).in_sequence(s).with(

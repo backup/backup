@@ -68,14 +68,14 @@ module Backup
 
         files_to_transfer_for(@package) do |local_file, remote_file|
           if local
-            Logger.message "#{storage_name} started transferring " +
+            Logger.info "#{storage_name} started transferring " +
                 "'#{ local_file }' to '#{ remote_path }'."
             run(
               "#{ utility(:rsync) } '#{ File.join(local_path, local_file) }' " +
               "'#{ File.join(remote_path, remote_file) }'"
             )
           else
-            Logger.message "#{storage_name} started transferring " +
+            Logger.info "#{storage_name} started transferring " +
                 "'#{ local_file }' to '#{ ip }'."
             run(
               "#{ utility(:rsync) } #{ rsync_options } #{ rsync_port } " +

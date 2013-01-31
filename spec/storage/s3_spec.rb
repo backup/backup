@@ -176,7 +176,7 @@ describe Backup::Storage::S3 do
         ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
       # first yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::S3 started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa' to bucket 'my-bucket'."
       )
@@ -187,7 +187,7 @@ describe Backup::Storage::S3 do
         'my-bucket', File.join('remote/path', 'backup.tar.enc-aa'), file
       )
       # second yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::S3 started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-ab' to bucket 'my-bucket'."
       )
@@ -222,7 +222,7 @@ describe Backup::Storage::S3 do
         ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
       # first yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::S3 started removing " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa' from bucket 'my-bucket'."
       )
@@ -230,7 +230,7 @@ describe Backup::Storage::S3 do
         'my-bucket', File.join('remote/path', 'backup.tar.enc-aa')
       )
       # second yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::S3 started removing " +
         "'2011.12.31.11.00.02.backup.tar.enc-ab' from bucket 'my-bucket'."
       )

@@ -301,7 +301,7 @@ describe Backup::Database::MongoDB do
       context 'when pipeline command succeeds' do
         it 'should package the dump directory, then remove it' do
 
-          Backup::Logger.expects(:message).in_sequence(s).with(
+          Backup::Logger.expects(:info).in_sequence(s).with(
             "Database::MongoDB started compressing and packaging:\n" +
             "  '/path/to/dump/folder'"
           )
@@ -316,7 +316,7 @@ describe Backup::Database::MongoDB do
 
           pipeline.expects(:run).in_sequence(s)
           pipeline.expects(:success?).in_sequence(s).returns(true)
-          Backup::Logger.expects(:message).in_sequence(s).with(
+          Backup::Logger.expects(:info).in_sequence(s).with(
             "Database::MongoDB completed compressing and packaging:\n" +
             "  '/path/to/dump/folder-#{ timestamp }.tar.gz'"
           )
@@ -335,7 +335,7 @@ describe Backup::Database::MongoDB do
         end
 
         it 'should raise an error' do
-          Backup::Logger.expects(:message).with(
+          Backup::Logger.expects(:info).with(
             "Database::MongoDB started compressing and packaging:\n" +
             "  '/path/to/dump/folder'"
           )

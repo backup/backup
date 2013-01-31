@@ -96,7 +96,7 @@ describe 'Encryptor::GPG',
       model.perform!
 
       Backup::Logger.has_warnings?.should be_true
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /No public key was found in #keys for '<backupfoo@foo.com>'/
       }.should be_true
 
@@ -117,33 +117,33 @@ describe 'Encryptor::GPG',
 
       # issues warnings about the missing keys
       Backup::Logger.has_warnings?.should be_true
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /No public key was found in #keys for '<backupfoo@foo.com>'/
       }.should be_true
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /No public key was found in #keys for '<backupfoo2@foo.com>'/
       }.should be_true
 
       # issues warning about not being able to perform asymmetric encryption
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /No recipients available for asymmetric encryption/
       }.should be_true
 
       # Since there are no other options for encryption,
       # the backup failes with an error.
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:formatted_lines).flatten.any? {|msg|
         msg =~ /\[error\]\s+ModelError/
       }.should be_true
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:formatted_lines).flatten.any? {|msg|
         msg =~ /\[error\]\s+Reason: Encryptor::GPG::EncryptionError/
       }.should be_true
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:formatted_lines).flatten.any? {|msg|
         msg =~ /\[error\]\s+Encryption could not be performed for mode 'asymmetric'/
       }.should be_true
 
       # Although, any further backup models would be run, as this error
       # is rescued in Backup::Model#perform
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /Backup will now attempt to continue/
       }.should be_true
 
@@ -165,7 +165,7 @@ describe 'Encryptor::GPG',
 
       # note that without specifying any preferences, the default
       # algorithm used is CAST5
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /gpg: CAST5 encrypted data/
       }.should be_true
     end
@@ -188,7 +188,7 @@ describe 'Encryptor::GPG',
       can_decrypt?(model, 'a secret').should be_true
 
       # preferences set in #gpg_config specified using AES256 before CAST5
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /gpg: AES256 encrypted data/
       }.should be_true
     end
@@ -232,15 +232,15 @@ describe 'Encryptor::GPG',
 
       # issues warnings about the missing keys
       Backup::Logger.has_warnings?.should be_true
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /No public key was found in #keys for '16325C61'/
       }.should be_true
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /No public key was found in #keys for '<backup03@foo.com>'/
       }.should be_true
 
       # issues warning about not being able to perform asymmetric encryption
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /No recipients available for asymmetric encryption/
       }.should be_true
 
@@ -272,7 +272,7 @@ describe 'Encryptor::GPG',
       model.perform!
 
       Backup::Logger.has_warnings?.should be_true
-      Backup::Logger.messages.any? {|msg|
+      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
         msg =~ /GPG#key has been deprecated/
       }.should be_true
 

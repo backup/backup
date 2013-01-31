@@ -92,7 +92,7 @@ describe Backup::Syncer::RSync::Local do
     end
 
     it 'should sync two directories' do
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Syncer::RSync::Local started syncing the following directories:\n" +
         "  /some/directory\n" +
         "  ~/home/directory"

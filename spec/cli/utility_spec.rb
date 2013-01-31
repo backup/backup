@@ -13,97 +13,259 @@ describe 'Backup::CLI::Utility' do
   describe '#perform' do
     let(:model_a) { Backup::Model.new(:test_trigger_a, 'test label a') }
     let(:model_b) { Backup::Model.new(:test_trigger_b, 'test label b') }
+    let(:s) { sequence '' }
 
-    after   { Backup::Model.all.clear }
+    after { Backup::Model.all.clear }
 
-    it 'should perform the backup for the given trigger' do
-      Backup::Logger.expects(:quiet=).in_sequence(s)
-      Backup::Config.expects(:update).in_sequence(s)
+    describe 'setting logger options' do
+      let(:logger_options) { Backup::Logger.instance_variable_get(:@config).dsl }
 
-      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.log_path)
-      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
-      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
+      before do
+        Backup::Config.expects(:update).in_sequence(s)
 
-      Backup::Config.expects(:load_config!).in_sequence(s)
+        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
+        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
 
-      Backup::Logger.expects(:truncate!)
+        Backup::Config.expects(:load_config!).in_sequence(s)
 
-      model_a.expects(:prepare!).in_sequence(s)
-      model_a.expects(:perform!).in_sequence(s)
-      Backup::Logger.expects(:clear!).in_sequence(s)
+        Backup::Logger.expects(:start!).in_sequence(s)
 
-      expect do
-        ARGV.replace(['perform', '-t', 'test_trigger_a'])
-        cli.start
-      end.not_to raise_error
-    end
+        model_a.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+        model_b.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+      end
 
-    it 'should perform backups for the multiple triggers' do
-      Backup::Logger.expects(:quiet=).in_sequence(s)
-      Backup::Config.expects(:update).in_sequence(s)
+      it 'configures console and logfile loggers by default' do
+        expect do
+          ARGV.replace(['perform', '-t', 'test_trigger_a,test_trigger_b'])
+          cli.start
+        end.not_to raise_error
 
-      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.log_path)
-      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
-      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
+        logger_options.console.quiet.should be(false)
+        logger_options.logfile.enabled.should be_true
+        logger_options.logfile.log_path.should == ''
+        logger_options.syslog.enabled.should be(false)
+      end
 
-      Backup::Config.expects(:load_config!).in_sequence(s)
+      it 'configures only the syslog' do
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_a,test_trigger_b',
+            '--quiet', '--no-logfile', '--syslog']
+          )
+          cli.start
+        end.not_to raise_error
 
-      Backup::Logger.expects(:truncate!)
+        logger_options.console.quiet.should be_true
+        logger_options.logfile.enabled.should be_nil
+        logger_options.logfile.log_path.should == ''
+        logger_options.syslog.enabled.should be_true
+      end
 
-      model_a.expects(:prepare!).in_sequence(s)
-      model_a.expects(:perform!).in_sequence(s)
-      Backup::Logger.expects(:clear!).in_sequence(s)
+      it 'forces console logging' do
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_a,test_trigger_b', '--no-quiet']
+          )
+          cli.start
+        end.not_to raise_error
 
-      model_b.expects(:prepare!).in_sequence(s)
-      model_b.expects(:perform!).in_sequence(s)
-      Backup::Logger.expects(:clear!).in_sequence(s)
+        logger_options.console.quiet.should be_nil
+        logger_options.logfile.enabled.should be_true
+        logger_options.logfile.log_path.should == ''
+        logger_options.syslog.enabled.should be(false)
+      end
 
-      expect do
-        ARGV.replace(['perform', '-t', 'test_trigger_a,test_trigger_b'])
-        cli.start
-      end.not_to raise_error
-    end
+      it 'forces the logfile and syslog to be disabled' do
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_a,test_trigger_b',
+              '--no-logfile', '--no-syslog']
+          )
+          cli.start
+        end.not_to raise_error
 
-    it 'should perform backups for the multiple triggers when using wildcard' do
-      Backup::Logger.expects(:quiet=).in_sequence(s)
-      Backup::Config.expects(:update).in_sequence(s)
+        logger_options.console.quiet.should be(false)
+        logger_options.logfile.enabled.should be_nil
+        logger_options.logfile.log_path.should == ''
+        logger_options.syslog.enabled.should be_nil
+      end
 
-      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.log_path)
-      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
-      FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
+      it 'configures the log_path' do
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_a,test_trigger_b',
+              '--log-path', 'my/log/path']
+          )
+          cli.start
+        end.not_to raise_error
 
-      Backup::Config.expects(:load_config!).in_sequence(s)
+        logger_options.console.quiet.should be(false)
+        logger_options.logfile.enabled.should be_true
+        logger_options.logfile.log_path.should == 'my/log/path'
+        logger_options.syslog.enabled.should be(false)
+      end
+    end # describe 'setting logger options'
 
-      Backup::Logger.expects(:truncate!)
+    describe 'setting triggers' do
+      let(:model_c) { Backup::Model.new(:test_trigger_c, 'test label c') }
 
-      model_a.expects(:prepare!).in_sequence(s)
-      model_a.expects(:perform!).in_sequence(s)
-      Backup::Logger.expects(:clear!).in_sequence(s)
+      before do
+        Backup::Logger.expects(:configure).in_sequence(s)
 
-      model_b.expects(:prepare!).in_sequence(s)
-      model_b.expects(:perform!).in_sequence(s)
-      Backup::Logger.expects(:clear!).in_sequence(s)
+        Backup::Config.expects(:update).in_sequence(s)
 
-      expect do
-        ARGV.replace(['perform', '-t', 'test_trigger_*'])
-        cli.start
-      end.not_to raise_error
-    end
+        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
+        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
 
-    context 'when errors occur' do
-      it 'should log the error and exit' do
-        Backup::Logger.stubs(:quiet=).raises(SystemCallError, 'yikes!')
-        Backup::Logger.expects(:error).with do |err|
-          err.message.should ==
-              "CLIError: SystemCallError: unknown error - yikes!"
-        end
+        Backup::Config.expects(:load_config!).in_sequence(s)
+
+        Backup::Logger.expects(:start!).in_sequence(s)
+      end
+
+      it 'performs a given trigger' do
+        model_a.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+        model_b.expects(:perform!).never
 
         expect do
-          ARGV.replace(['perform', '-t', 'foo'])
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_a']
+          )
           cli.start
-        end.to raise_error(SystemExit) {|exit| exit.status.should == 1 }
+        end.not_to raise_error
       end
-    end # context 'when errors occur'
+
+      it 'performs multiple triggers' do
+        model_a.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+        model_b.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_a,test_trigger_b']
+          )
+          cli.start
+        end.not_to raise_error
+      end
+
+      it 'performs multiple models that share a trigger name' do
+        model_c.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        model_d = Backup::Model.new(:test_trigger_c, 'test label d')
+        model_d.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_c']
+          )
+          cli.start
+        end.not_to raise_error
+      end
+
+      it 'performs unique models only once, in the order first found' do
+        model_a.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+        model_b.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+        model_c.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        expect do
+          ARGV.replace(
+            ['perform', '-t',
+             'test_trigger_a,test_trigger_b,test_trigger_c,test_trigger_b']
+          )
+          cli.start
+        end.not_to raise_error
+      end
+
+      it 'performs unique models only once, in the order first found (wildcard)' do
+        model_a.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+        model_b.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+        model_c.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_*']
+          )
+          cli.start
+        end.not_to raise_error
+      end
+
+    end # describe 'setting triggers'
+
+    describe 'failure to prepare for backups' do
+      before do
+        Backup::Logger.expects(:configure).in_sequence(s)
+
+        Backup::Config.expects(:update).in_sequence(s)
+
+        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
+        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
+
+        Backup::Logger.expects(:start!).never
+
+        model_a.expects(:preform!).never
+        model_b.expects(:preform!).never
+        Backup::Logger.expects(:clear!).never
+      end
+
+      describe 'when errors are raised while loading config.rb' do
+        before do
+          Backup::Config.expects(:load_config!).in_sequence(s).
+              raises('config load error')
+        end
+
+        it 'aborts and logs messages to the console only' do
+
+          Backup::Logger.expects(:error).in_sequence(s).with do |err|
+            err.should be_a(Backup::Errors::CLIError)
+            err.message.should match(/config load error/)
+          end
+
+          Backup::Logger.expects(:abort!).in_sequence(s)
+
+          expect do
+            ARGV.replace(
+              ['perform', '-t', 'test_trigger_a']
+            )
+            cli.start
+          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
+        end
+      end
+
+      describe 'when no models are found for the given triggers' do
+        before do
+          Backup::Config.expects(:load_config!).in_sequence(s)
+        end
+
+        it 'aborts and logs messages to the console only' do
+          Backup::Logger.expects(:error).in_sequence(s).with do |err|
+            err.should be_a(Backup::Errors::CLIError)
+            err.message.should match(
+              /No Models found for trigger\(s\) 'test_trigger_foo'/
+            )
+          end
+
+          Backup::Logger.expects(:abort!).in_sequence(s)
+
+          expect do
+            ARGV.replace(
+              ['perform', '-t', 'test_trigger_foo']
+            )
+            cli.start
+          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
+        end
+      end
+    end # describe 'failure to prepare for backups'
 
   end # describe '#perform'
 
@@ -121,13 +283,13 @@ describe 'Backup::CLI::Utility' do
       context 'when no config file exists' do
         it 'should create both a config and a model under the given path' do
           Dir.mktmpdir do |path|
-            model_file  = File.join(path, 'custom', 'models', 'test_trigger.rb')
+            model_file  = File.join(path, 'custom', 'models', 'my_test_trigger.rb')
             config_file = File.join(path, 'custom', 'config.rb')
 
             out, err = capture_io do
               ARGV.replace(['generate:model',
                  '--config-path', File.join(path, 'custom'),
-                 '--trigger', 'test_trigger'
+                 '--trigger', 'my test#trigger'
               ])
               cli.start
             end
@@ -143,7 +305,7 @@ describe 'Backup::CLI::Utility' do
       context 'when a config file already exists' do
         it 'should only create a model under the given path' do
           Dir.mktmpdir do |path|
-            model_file  = File.join(path, 'custom', 'models', 'test_trigger.rb')
+            model_file  = File.join(path, 'custom', 'models', 'my_test_trigger.rb')
             config_file = File.join(path, 'custom', 'config.rb')
             FileUtils.mkdir_p(File.join(path, 'custom'))
             FileUtils.touch(config_file)
@@ -151,7 +313,7 @@ describe 'Backup::CLI::Utility' do
             out, err = capture_io do
               ARGV.replace(['generate:model',
                  '--config-path', File.join(path, 'custom'),
-                 '--trigger', 'test_trigger'
+                 '--trigger', 'my+test@trigger'
               ])
               cli.start
             end
@@ -225,12 +387,15 @@ describe 'Backup::CLI::Utility' do
           [--notifiers=NOTIFIERS]      # (campfire, hipchat, mail, prowl, pushover, twitter)
           [--archives]
           [--splitter]                 # use `--no-splitter` to disable
-                                      # Default: true
-        Generates a Backup model file
+                                       # Default: true
 
-        Note:
-          '--config-path' is the path to the directory where 'config.rb' is located.
+        Description:
+          Generates a Backup model file.
+
+          Note: '--config-path' is the path to the directory where 'config.rb' is located.
+
           The model file will be created as '<config_path>/models/<trigger>.rb'
+
           Default: #{ Backup::Config.root_path }
       EOS
 
@@ -408,4 +573,5 @@ describe 'Backup::CLI::Utility' do
       end
     end
   end
+
 end

@@ -184,7 +184,7 @@ describe Backup::Storage::CloudFiles do
         ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
       # first yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::CloudFiles started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa'."
       )
@@ -195,7 +195,7 @@ describe Backup::Storage::CloudFiles do
         'my_container', File.join('remote/path', 'backup.tar.enc-aa'), file
       )
       # second yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::CloudFiles started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-ab'."
       )
@@ -229,7 +229,7 @@ describe Backup::Storage::CloudFiles do
         ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
       )
       # first yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::CloudFiles started removing " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa' " +
         "from container 'my_container'."
@@ -238,7 +238,7 @@ describe Backup::Storage::CloudFiles do
         'my_container', File.join('remote/path', 'backup.tar.enc-aa')
       )
       # second yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
+      Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::CloudFiles started removing " +
         "'2011.12.31.11.00.02.backup.tar.enc-ab' " +
         "from container 'my_container'."
