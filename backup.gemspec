@@ -17,7 +17,6 @@ Gem::Specification.new do |gem|
   ##
   # Files and folder that need to be compiled in to the Ruby Gem
   gem.files         = %x[git ls-files].split("\n")
-  gem.test_files    = %x[git ls-files -- {spec}/*].split("\n")
   gem.require_path  = 'lib'
 
   ##
