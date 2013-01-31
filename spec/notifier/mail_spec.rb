@@ -158,6 +158,11 @@ describe Backup::Notifier::Mail do
       notifier.instance_variable_set(:@template, template)
       notifier.delivery_method = :test
       ::Mail::TestMailer.deliveries.clear
+
+      Backup::Logger.stubs(:messages).returns([
+        stub(:formatted_lines => ['line 1', 'line 2']),
+        stub(:formatted_lines => ['line 3'])
+      ])
     end
 
     context 'when status is :success' do
@@ -177,11 +182,6 @@ describe Backup::Notifier::Mail do
     end
 
     context 'when status is :warning' do
-      before do
-        Backup::Logger.stubs(:has_warnings?).returns(true)
-        Backup::Logger.stubs(:messages).returns(['line 1', 'line 2', 'line 3'])
-      end
-
       it 'should send a Warning email with an attached log' do
         template.expects(:result).
             with('notifier/mail/warning.erb').
@@ -199,10 +199,6 @@ describe Backup::Notifier::Mail do
     end
 
     context 'when status is :failure' do
-      before do
-        Backup::Logger.stubs(:messages).returns(['line 1', 'line 2', 'line 3'])
-      end
-
       it 'should send a Failure email with an attached log' do
         template.expects(:result).
             with('notifier/mail/failure.erb').
