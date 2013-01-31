@@ -56,6 +56,8 @@ module Backup
       method_option :logfile,         :type => :string,  :default => true, :banner => '',
                                       :desc => "Enable Backup's log file. " +
                                                "May be forced disabled using --no-logfile."
+      method_option :check,           :type => :boolean,  :default => false,
+                                      :desc => "Check `config.rb` and all Model configuration for errors or warnings."
 
       def perform
         ##
@@ -101,27 +103,36 @@ module Backup
                 "No Models found for trigger(s) '#{triggers.join(',')}'."
           end
 
+          if options[:check] && Logger.has_warnings?
+            raise Errors::CLIError, 'Configuration Check has warnings.'
+          end
+
           ##
           # Finalize Logger configuration and begin real-time logging.
           Logger.start!
 
         rescue => err
           Logger.error Errors::CLIError.wrap(err)
+          Logger.error 'Configuration Check Failed.' if options[:check]
           # Logger configuration will be ignored
           # and messages will be output to the console only.
           Logger.abort!
           exit(1)
         end
 
-        ##
-        # Perform the backup job for each Model found for the given triggers,
-        # clearing the Logger after each job.
-        #
-        # Model#perform! handles all exceptions from this point,
-        # as each model may fail and return here to allow others to run.
-        models.each do |model|
-          model.perform!
-          Logger.clear!
+        if options[:check]
+          Logger.info 'Configuration Check Succeeded.'
+        else
+          ##
+          # Perform the backup job for each Model found for the given triggers,
+          # clearing the Logger after each job.
+          #
+          # Model#perform! handles all exceptions from this point,
+          # as each model may fail and return here to allow others to run.
+          models.each do |model|
+            model.perform!
+            Logger.clear!
+          end
         end
       end
 
