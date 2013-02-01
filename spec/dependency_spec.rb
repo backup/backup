@@ -24,27 +24,17 @@ describe Backup::Dependency do
         Backup::Dependency.stubs(:gem).raises(LoadError)
       end
 
-      it "should display error message" do
-        Backup::Logger.expects(:error).with do |exception|
-          exception.message.should == "Dependency::LoadError: Dependency missing
+      it "should raise error message" do
+        expect do
+          Backup::Dependency.load("net-sftp")
+        end.to raise_error(Backup::Errors::Dependency::LoadError) {|err|
+          err.message.should == "Dependency::LoadError: Dependency missing
   Dependency required for:
   SFTP Protocol (SFTP Storage)
   To install the gem, issue the following command:
   > gem install net-sftp -v '~> 2.0.5'
   Please try again after installing the missing dependency."
-        end
-
-        expect do
-          Backup::Dependency.load("net-sftp")
-        end.to raise_error(SystemExit)
-      end
-
-      it "should exit with status code 1" do
-        Backup::Logger.expects(:error)
-
-        expect do
-          Backup::Dependency.load("net-sftp")
-        end.to raise_error { |exit| exit.status.should be(1) }
+        }
       end
     end
   end
