@@ -459,31 +459,29 @@ describe 'Backup::CLI::Utility' do
     end
 
     it 'should generate the proper help output' do
-      ruby19_output = <<-EOS
-        Usage:
-          #{ File.basename($0) } generate:model --trigger=TRIGGER
 
-        Options:
-          --trigger=TRIGGER
-          [--config-path=CONFIG_PATH]  # Path to your Backup configuration directory
-          [--databases=DATABASES]      # (mongodb, mysql, postgresql, redis, riak)
-          [--storages=STORAGES]        # (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
-          [--syncers=SYNCERS]          # (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
-          [--encryptors=ENCRYPTORS]    # (gpg, openssl)
-          [--compressors=COMPRESSORS]  # (bzip2, custom, gzip, lzma, pbzip2)
-          [--notifiers=NOTIFIERS]      # (campfire, hipchat, mail, prowl, pushover, twitter)
-          [--archives]
-          [--splitter]                 # use `--no-splitter` to disable
-                                       # Default: true
+      expected_usage = "#{ File.basename($0) } generate:model --trigger=TRIGGER"
+      expected_options = <<-EOS
+        --trigger=TRIGGER
+        [--config-path=CONFIG_PATH]  # Path to your Backup configuration directory
+        [--databases=DATABASES]      # (mongodb, mysql, postgresql, redis, riak)
+        [--storages=STORAGES]        # (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
+        [--syncers=SYNCERS]          # (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
+        [--encryptors=ENCRYPTORS]    # (gpg, openssl)
+        [--compressors=COMPRESSORS]  # (bzip2, custom, gzip, lzma, pbzip2)
+        [--notifiers=NOTIFIERS]      # (campfire, hipchat, mail, prowl, pushover, twitter)
+        [--archives]
+        [--splitter]                 # use `--no-splitter` to disable
+                                      # Default: true
+      EOS
+      expected_description = <<-EOS
+        Generates a Backup model file.
 
-        Description:
-          Generates a Backup model file.
+        Note: '--config-path' is the path to the directory where 'config.rb' is located.
 
-          Note: '--config-path' is the path to the directory where 'config.rb' is located.
+        The model file will be created as '<config_path>/models/<trigger>.rb'
 
-          The model file will be created as '<config_path>/models/<trigger>.rb'
-
-          Default: #{ Backup::Config.root_path }
+        Default: #{ Backup::Config.root_path }
       EOS
 
       out, err = capture_io do
@@ -491,10 +489,29 @@ describe 'Backup::CLI::Utility' do
         cli.start
       end
 
-      expected_lines = ruby19_output.split("\n").map(&:strip).select {|e| !e.empty? }
-      output_lines = out.split("\n").map(&:strip).select {|e| !e.empty? }
+      output_usage, output_options, output_description =
+          out.split(/Usage:|Options:|Description:/, 4)[1..3]
 
-      output_lines.sort.should == expected_lines.sort
+      output_usage.strip.should == expected_usage
+
+      # Thor's output for 'Options:' is ordered differently under 1.8.7
+      # Thor does not auto-wrap lines in this output.
+      output_options =
+          output_options.split("\n").map(&:strip).select {|e| !e.empty? }
+      expected_options =
+          expected_options.split("\n").map(&:strip).select {|e| !e.empty? }
+
+      output_options.sort.should == expected_options.sort
+
+      # Thor will auto-wrap lines in the 'Description:' output
+      # based on the columns in the terminal.
+      output_description =
+          output_description.strip.gsub(/\n/, ' ').gsub(/ +/, ' ')
+      expected_description =
+          expected_description.strip.gsub(/\n/, ' ').gsub(/ +/, ' ')
+      puts output_description
+
+      output_description.should == expected_description
     end
   end # describe '#generate:model'
 
