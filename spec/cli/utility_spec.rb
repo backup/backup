@@ -509,7 +509,6 @@ describe 'Backup::CLI::Utility' do
           output_description.strip.gsub(/\n/, ' ').gsub(/ +/, ' ')
       expected_description =
           expected_description.strip.gsub(/\n/, ' ').gsub(/ +/, ' ')
-      puts output_description
 
       output_description.should == expected_description
     end
