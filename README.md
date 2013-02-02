@@ -52,7 +52,7 @@ Below you find a list of components that Backup currently supports. If you'd lik
 ### Storage Locations and Services
 
 - Amazon Simple Storage Service (S3)
-- Rackspace Cloud Files (Mosso)
+- OpenStack Swift Object Storage (e.g. Rackspace Mosso Cloud Files, SoftLayer Object Storage)
 - Ninefold Cloud Storage
 - Dropbox Web Service
 - Remote Servers *(Available Protocols: FTP, SFTP, SCP and RSync)*
@@ -64,7 +64,7 @@ Below you find a list of components that Backup currently supports. If you'd lik
 
 - **Backup Cycling, applies to:**
   - Amazon Simple Storage Service (S3)
-  - Rackspace Cloud Files (Mosso)
+  - OpenStack Swift Object Storage (e.g. Rackspace Mosso Cloud Files, SoftLayer Object Storage)
   - Ninefold Cloud Storage
   - Dropbox Web Service
   - Remote Servers *(Only Protocols: FTP, SFTP, SCP)*
@@ -74,7 +74,7 @@ Below you find a list of components that Backup currently supports. If you'd lik
 
 - **Backup Splitting, applies to:**
   - Amazon Simple Storage Service (S3)
-  - Rackspace Cloud Files (Mosso)
+  - OpenStack Swift Object Storage (e.g. Rackspace Mosso Cloud Files, SoftLayer Object Storage)
   - Ninefold Cloud Storage
   - Dropbox Web Service
   - Remote Servers *(Only Protocols: FTP, SFTP, SCP)*
@@ -89,7 +89,7 @@ Below you find a list of components that Backup currently supports. If you'd lik
 
 - RSync (Push, Pull and Local)
 - Amazon S3
-- Rackspce Cloud Files
+- OpenStack Swift Object Storage (e.g. Rackspace Mosso Cloud Files, SoftLayer Object Storage)
 
 [Syncer Wiki Page](https://github.com/meskyanichi/backup/wiki/Syncers)
 
@@ -243,15 +243,14 @@ Aside of S3, we have also defined two `SFTP` storage methods, and given them two
 separate servers: `a.my-backup-server.com` and `b.my-backup-server.com`.
 
 As you can see, you can freely mix and match **archives**, **databases**, **compressors**, **encryptors**, **storages**
-and **notifiers** for your backups. You could even specify 4 storage locations if you wanted: Amazon S3, Rackspace Cloud
-Files, Ninefold and Dropbox, it'd then store your packaged backup to 4 separate locations for high redundancy.
+and **notifiers** for your backups. You could even specify 4 storage locations if you wanted: Amazon S3, OpenStack Object Storage, Ninefold and Dropbox, it'd then store your packaged backup to 4 separate locations for high redundancy.
 
 Also, notice the `split_into_chunks_of 4000` at the top of the configuration. This tells Backup to split any backups
 that exceed in 4000 MEGABYTES of size in to multiple smaller chunks. Assuming your backup file is 12000 MEGABYTES (12GB)
 in size, then Backup will take the output which was piped from _tar_ into the OpenSSL Compressor and additionally pipe
 that output through the _split_ utility, which will result in 3 chunks of 4000 MEGABYTES with additional file extensions
 of `-aa`, `-ab` and `-ac`. These files will then be individually transfered. This is useful for when you are using
-Amazon S3, Rackspace Cloud Files, or other 3rd party storage services which limit you to "5GB per file" uploads. So with
+Amazon S3, OpenStack Object Storage, or other 3rd party storage services which limit you to "5GB per file" uploads. So with
 this, the backup file size is no longer a constraint.
 
 Additionally we have also defined a **S3 Syncer** ( `sync_with Cloud::S3` ), which does not follow the above process of
@@ -415,6 +414,10 @@ View the [issue log](https://github.com/meskyanichi/backup/issues) and post them
   <tr>
     <td><a href="https://github.com/hmarr" target="_blank">Harry Marr ( hmarr )</a></td>
     <td>Auth URL for Rackspace Cloud Files Storage</td>
+  </tr>
+    <tr>
+    <td><a href="https://github.com/benmccann" target="_blank">Ben McCann ( benmccann )</a></td>
+    <td>SoftLayer Object Storage</td>
   </tr>
   <tr>
     <td><a href="https://github.com/manuelmeurer" target="_blank">Manuel Meurer ( manuelmeurer )</a></td>
