@@ -21,12 +21,24 @@ module Backup
       attr_accessor :ipv6
 
       ##
+      # Use mongodump
+      attr_accessor :use_mongodump
+
+      ##
+      # Path where DB files are stored
+      attr_accessor :db_path
+
+      ##
+      # Path where the backup is stored
+      attr_accessor :output_path
+
+      ##
       # Collections to dump, collections that aren't specified won't get dumped
       attr_accessor :only_collections
 
       ##
       # Additional "mongodump" options
-      attr_accessor :additional_options
+      attr_accessor :mongodump_options
 
       ##
       # Path to the mongodump utility (optional)
@@ -35,6 +47,10 @@ module Backup
       attr_deprecate :utility_path, :version => '3.0.21',
           :message => 'Use MongoDB#mongodump_utility instead.',
           :action => lambda {|klass, val| klass.mongodump_utility = val }
+
+      attr_deprecate :additional_options, :version => '3.0.28',
+          :message => 'Use MongoDB#mongodump_options instead.',
+          :action => lambda {|klass, val| klass.mongodump_options = val }
 
       ##
       # Path to the mongo utility (optional)
@@ -49,9 +65,16 @@ module Backup
       def initialize(model, &block)
         super(model)
 
+        timestamp = Time.now.to_i.to_s[-5, 5]
+
         @only_collections   ||= Array.new
-        @additional_options ||= Array.new
+        @mongodump_options  ||= Array.new
         @ipv6               ||= false
+        @use_mongodump      ||= false
+        @db_path            ||= '/var/lib/mongodb'
+        @output_path        ||= @use_mongodump ?
+                                @dump_path + '-' + timestamp + '.tar' :
+                                File.join(File.expand_path(ENV['HOME'] || ''), 'backups','mongodb-' + timestamp + '.tar')
         @lock               ||= false
 
         instance_eval(&block) if block_given?
@@ -70,7 +93,10 @@ module Backup
         super
 
         lock_database if @lock
-        @only_collections.empty? ? dump! : specific_collection_dump!
+
+        if @use_mongodump
+          @only_collections.empty? ? dump! : specific_collection_dump!
+        end
 
       rescue => err
         raise Errors::Database::MongoDBError.wrap(err, 'Database Dump Failed!')
@@ -115,35 +141,36 @@ module Backup
       def package!
         return unless @model.compressor
 
+        data_path = @use_mongodump ? @dump_path : @db_path
         pipeline  = Pipeline.new
-        base_dir  = File.dirname(@dump_path)
-        dump_dir  = File.basename(@dump_path)
-        timestamp = Time.now.to_i.to_s[-5, 5]
-        outfile   = @dump_path + '-' + timestamp + '.tar'
+        base_dir  = File.dirname(data_path)
+        data_dir  = File.basename(data_path)
+
+        FileUtils.mkpath(File.dirname(@output_path))
 
         Logger.message(
           "#{ database_name } started compressing and packaging:\n" +
-          "  '#{ @dump_path }'"
+          "  '#{ data_path }'"
         )
 
-        pipeline << "#{ utility(:tar) } -cf - -C '#{ base_dir }' '#{ dump_dir }'"
+        pipeline << "#{ utility(:tar) } -cf - -C '#{ base_dir }' '#{ data_dir }'"
         @model.compressor.compress_with do |command, ext|
           pipeline << command
-          outfile << ext
+          @output_path << ext
         end
-        pipeline << "cat > #{ outfile }"
+        pipeline << "cat > #{ @output_path }"
 
         pipeline.run
         if pipeline.success?
           Logger.message(
             "#{ database_name } completed compressing and packaging:\n" +
-            "  '#{ outfile }'"
+            "  '#{ @output_path }'"
           )
           FileUtils.rm_rf(@dump_path)
         else
           raise Errors::Database::PipelineError,
-            "#{ database_name } Failed to create compressed dump package:\n" +
-            "'#{ outfile }'\n" +
+            "#{ database_name } Failed to create compressed package:\n" +
+            "'#{ @output_path }'\n" +
             pipeline.error_messages
         end
       end
@@ -184,7 +211,7 @@ module Backup
       # Builds a MongoDB compatible string for the
       # additional options specified by the user
       def user_options
-        @additional_options.join(' ')
+        @mongodump_options.join(' ')
       end
 
       ##

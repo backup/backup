@@ -432,6 +432,10 @@ View the [issue log](https://github.com/meskyanichi/backup/issues) and post them
     <td><a href="https://github.com/SteveNewson" target="_blank">Steve Newson ( SteveNewson )</a></td>
     <td>Pushover Notifier</td>
   </tr>
+  <tr>
+    <td><a href="https://github.com/benmccann" target="_blank">Ben McCann ( benmccann )</a></td>
+    <td>MongoDB data directory backup</td>
+  </tr>
 </table>
 
 

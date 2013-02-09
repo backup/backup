@@ -13,8 +13,10 @@ describe Backup::Database::MongoDB do
       db.port      = 123
 
       db.ipv6               = true
+      db.use_mongodump      = true
+      db.db_path            = '/var/lib/mongodb'
       db.only_collections   = ['users', 'pirates']
-      db.additional_options = ['--query', '--foo']
+      db.mongodump_options  = ['--query', '--foo']
       db.mongodump_utility  = '/path/to/mongodump'
       db.mongo_utility      = '/path/to/mongo'
       db.lock               = true
@@ -47,8 +49,10 @@ describe Backup::Database::MongoDB do
           db.port.should      == 123
 
           db.ipv6.should                == true
+          db.use_mongodump.should       == true
+          db.db_path.should             == '/var/lib/mongodb'
           db.only_collections.should    == ['users', 'pirates']
-          db.additional_options.should  == ['--query', '--foo']
+          db.mongodump_options.should   == ['--query', '--foo']
           db.mongodump_utility.should   == '/path/to/mongodump'
           db.mongo_utility.should       == '/path/to/mongo'
           db.lock.should                == true
@@ -73,8 +77,10 @@ describe Backup::Database::MongoDB do
           db.port.should      be_nil
 
           db.ipv6.should                be_false
+          db.use_mongodump.should       be_false
           db.only_collections.should    == []
-          db.additional_options.should  == []
+          db.mongodump_options.should   == []
+          db.db_path.should             == '/var/lib/mongodb'
           db.mongodump_utility.should   == '/real/mongodump'
           db.mongo_utility.should       == '/real/mongo'
           db.lock.should                be_false
@@ -92,8 +98,9 @@ describe Backup::Database::MongoDB do
           db.port       = 789
 
           db.ipv6               = 'default_ipv6'
+          db.use_mongodump      = true
           db.only_collections   = ['collection']
-          db.additional_options = ['--opt']
+          db.mongodump_options  = ['--opt']
           db.mongodump_utility  = '/default/path/to/mongodump'
           db.mongo_utility      = '/default/path/to/mongo'
           db.lock               = 'default_lock'
@@ -111,8 +118,9 @@ describe Backup::Database::MongoDB do
           db.port.should      == 123
 
           db.ipv6.should                == true
+          db.use_mongodump.should       == true
           db.only_collections.should    == ['users', 'pirates']
-          db.additional_options.should  == ['--query', '--foo']
+          db.mongodump_options.should   == ['--query', '--foo']
           db.mongodump_utility.should   == '/path/to/mongodump'
           db.mongo_utility.should       == '/path/to/mongo'
           db.lock.should                == true
@@ -130,8 +138,9 @@ describe Backup::Database::MongoDB do
           db.port.should      == 789
 
           db.ipv6.should                == 'default_ipv6'
+          db.use_mongodump.should       == true
           db.only_collections.should    == ['collection']
-          db.additional_options.should  == ['--opt']
+          db.mongodump_options.should   == ['--opt']
           db.mongodump_utility.should   == '/default/path/to/mongodump'
           db.mongo_utility.should       == '/default/path/to/mongo'
           db.lock.should                == 'default_lock'
@@ -341,7 +350,7 @@ describe Backup::Database::MongoDB do
           end.to raise_error(
             Backup::Errors::Database::PipelineError,
             "Database::PipelineError: Database::MongoDB " +
-            "Failed to create compressed dump package:\n" +
+            "Failed to create compressed package:\n" +
             "  '/path/to/dump/folder-#{ timestamp }.tar.gz'\n" +
             "  pipeline_errors"
           )
@@ -405,15 +414,15 @@ describe Backup::Database::MongoDB do
   end
 
   describe '#user_options' do
-    context 'when #additional_options are set' do
+    context 'when #mongodump_options are set' do
       it 'should return the command string for the options' do
         db.send(:user_options).should == '--query --foo'
       end
     end
 
-    context 'when #additional_options are not set' do
+    context 'when #mongodump_options are not set' do
       it 'should return an empty string' do
-        db.additional_options = []
+        db.mongodump_options = []
         db.send(:user_options).should == ''
       end
     end
