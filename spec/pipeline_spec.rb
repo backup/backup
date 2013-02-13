@@ -8,15 +8,30 @@ describe 'Backup::Pipeline' do
   describe '#initialize' do
     it 'should create a new pipeline' do
       pipeline.instance_variable_get(:@commands).should == []
+      pipeline.instance_variable_get(:@success_codes).should == []
       pipeline.errors.should == []
       pipeline.stderr.should == ''
     end
   end
 
+  describe '#add' do
+    it 'should add a command with the given successful exit codes' do
+      pipeline.add 'a command', [0]
+      pipeline.instance_variable_get(:@commands).should == ['a command']
+      pipeline.instance_variable_get(:@success_codes).should == [[0]]
+
+      pipeline.add 'another command', [1, 3]
+      pipeline.instance_variable_get(:@commands).
+          should == ['a command', 'another command']
+      pipeline.instance_variable_get(:@success_codes).
+          should == [[0],[1, 3]]
+    end
+  end
+
   describe '#<<' do
-    it 'should add a command string to @commands' do
-      pipeline << 'a command string'
-      pipeline.instance_variable_get(:@commands).should == ['a command string']
+    it 'should add a command with the default successful exit code (0)' do
+      pipeline.expects(:add).with('a command', [0])
+      pipeline << 'a command'
     end
   end
 
@@ -37,7 +52,8 @@ describe 'Backup::Pipeline' do
 
       context 'when all commands within the pipeline are successful' do
         before do
-          stdout.expects(:read).returns("0|0:1|0:\n")
+          pipeline.instance_variable_set(:@success_codes, [[0],[0,3]])
+          stdout.expects(:read).returns("0|0:1|3:\n")
         end
 
         context 'when commands output no stderr messages' do
@@ -74,13 +90,14 @@ describe 'Backup::Pipeline' do
       context 'when commands within the pipeline are not successful' do
         before do
           pipeline.instance_variable_set(:@commands, ['first', 'second', 'third'])
+          pipeline.instance_variable_set(:@success_codes, [[0,1],[0,3],[0]])
           stderr.expects(:read).returns("stderr output\n")
           pipeline.stubs(:stderr_messages).returns('success? should be false')
         end
 
         context 'when the commands return in sequence' do
           before do
-            stdout.expects(:read).returns("0|0:1|1:2|0:\n")
+            stdout.expects(:read).returns("0|1:1|1:2|0:\n")
           end
 
           it 'should set @errors and @stderr without logging warnings' do
@@ -99,7 +116,7 @@ describe 'Backup::Pipeline' do
 
         context 'when the commands return out of sequence' do
           before do
-            stdout.expects(:read).returns("1|1:2|0:0|0:\n")
+            stdout.expects(:read).returns("1|3:2|4:0|1:\n")
           end
 
           it 'should properly associate the exitstatus for each command' do
@@ -109,9 +126,9 @@ describe 'Backup::Pipeline' do
             pipeline.stderr.should == 'stderr output'
             pipeline.errors.count.should be(1)
             pipeline.errors.first.should be_a_kind_of SystemCallError
-            pipeline.errors.first.errno.should be(1)
+            pipeline.errors.first.errno.should be(4)
             pipeline.errors.first.message.should match(
-              "'second' returned exit code: 1"
+              "'third' returned exit code: 4"
             )
           end
         end # context 'when the commands return out of sequence'
