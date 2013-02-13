@@ -118,6 +118,7 @@ Below you find a list of components that Backup currently supports. If you'd lik
 - Prowl
 - Hipchat
 - Pushover
+- POST Request
 
 [Notifiers Wiki Page](https://github.com/meskyanichi/backup/wiki/Notifiers)
 
@@ -218,6 +219,15 @@ Backup::Model.new(:sample_backup, 'A sample backup configuration') do
     tweet.on_success = true
     tweet.on_warning = true
     tweet.on_failure = true
+  end
+
+  notify_by PostRequest do |post|
+    post.on_success = true
+    post.on_warning = true
+    post.on_failure = true
+
+    post.host = "http://my-backup-notifier.com"
+    post.token = "123-abc-123-abc"
   end
 
 end
@@ -431,6 +441,10 @@ View the [issue log](https://github.com/meskyanichi/backup/issues) and post them
   <tr>
     <td><a href="https://github.com/SteveNewson" target="_blank">Steve Newson ( SteveNewson )</a></td>
     <td>Pushover Notifier</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/DeanPerry" target="_blank">Dean Perry ( DeanPerry )</a></td>
+    <td>POST Request Notifier</td>
   </tr>
 </table>
 

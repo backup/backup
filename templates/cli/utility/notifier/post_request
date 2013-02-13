@@ -1,0 +1,11 @@
+  ##
+  # Post Request [Notifier]
+  #
+  notify_by PostRequest do |post|
+    post.on_success = true
+    post.on_warning = true
+    post.on_failure = true
+
+    post.host       = "http://host.com"
+    post.token      = "TOKEN" # This is optional
+  end
