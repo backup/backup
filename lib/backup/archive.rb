@@ -6,19 +6,19 @@ module Backup
 
     ##
     # Stores the name of the archive
-    attr_accessor :name
+    attr_reader :name
 
     ##
     # Stores an array of different paths/files to store
-    attr_accessor :paths
+    attr_reader :paths
 
     ##
     # Stores an array of different paths/files to exclude
-    attr_accessor :excludes
+    attr_reader :excludes
 
     ##
     # String of additional arguments for the `tar` command
-    attr_accessor :tar_args
+    attr_reader :tar_args
 
     ##
     # Takes the name of the archive and the configuration block
@@ -76,8 +76,11 @@ module Backup
       archive_ext = 'tar'
       pipeline = Pipeline.new
 
-      pipeline << "#{ utility(:tar) } #{ tar_args } -cPf - " +
-          "#{ paths_to_exclude } #{ paths_to_package }"
+      pipeline.add(
+        "#{ utility(:tar) } #{ tar_args } -cPf - " +
+        "#{ paths_to_exclude } #{ paths_to_package }",
+        [0, 1]
+      )
 
       if @model.compressor
         @model.compressor.compress_with do |command, ext|

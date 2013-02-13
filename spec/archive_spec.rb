@@ -156,10 +156,11 @@ describe Backup::Archive do
           "  /another/path/to/add"
         )
 
-        pipeline.expects(:<<).in_sequence(s).with(
+        pipeline.expects(:add).in_sequence(s).with(
           "tar  -cPf - " +
           "--exclude='/path/to/exclude' --exclude='/another/path/to/exclude' " +
-          "'/path/to/add' '/another/path/to/add'"
+          "'/path/to/add' '/another/path/to/add'",
+          [0, 1]
         )
         pipeline.expects(:<<).in_sequence(s).with(
           "cat > '#{ File.join(archive_path, 'test_archive.tar') }'"
@@ -183,8 +184,8 @@ describe Backup::Archive do
           "  /another/path/to/add"
         )
 
-        pipeline.expects(:<<).in_sequence(s).with(
-          "tar  -cPf -  '/path/to/add' '/another/path/to/add'"
+        pipeline.expects(:add).in_sequence(s).with(
+          "tar  -cPf -  '/path/to/add' '/another/path/to/add'", [0, 1]
         )
         pipeline.expects(:<<).in_sequence(s).with(
           "cat > '#{ File.join(archive_path, 'test_archive.tar') }'"
@@ -213,10 +214,11 @@ describe Backup::Archive do
           "  /another/path/to/add"
         )
 
-        pipeline.expects(:<<).in_sequence(s).with(
+        pipeline.expects(:add).in_sequence(s).with(
           "tar -h --xattrs -cPf - " +
           "--exclude='/path/to/exclude' --exclude='/another/path/to/exclude' " +
-          "'/path/to/add' '/another/path/to/add'"
+          "'/path/to/add' '/another/path/to/add'",
+          [0, 1]
         )
         pipeline.expects(:<<).in_sequence(s).with(
           "cat > '#{ File.join(archive_path, 'test_archive.tar') }'"
@@ -248,10 +250,11 @@ describe Backup::Archive do
           "  /another/path/to/add"
         )
 
-        pipeline.expects(:<<).in_sequence(s).with(
+        pipeline.expects(:add).in_sequence(s).with(
           "tar -h --xattrs -cPf - " +
           "--exclude='/path/to/exclude' --exclude='/another/path/to/exclude' " +
-          "'/path/to/add' '/another/path/to/add'"
+          "'/path/to/add' '/another/path/to/add'",
+          [0, 1]
         )
         pipeline.expects(:<<).in_sequence(s).with('gzip')
         pipeline.expects(:<<).in_sequence(s).with(
@@ -271,6 +274,7 @@ describe Backup::Archive do
     context 'when pipeline command fails' do
       before do
         pipeline.stubs(:<<)
+        pipeline.stubs(:add)
         pipeline.expects(:run)
         pipeline.expects(:success?).returns(false)
         pipeline.expects(:error_messages).returns('pipeline_errors')
