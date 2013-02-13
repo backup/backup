@@ -99,14 +99,15 @@ module Backup
   ##
   # Autoload notification files
   module Notifier
-    autoload :Base,      File.join(NOTIFIER_PATH, 'base')
-    autoload :Binder,    File.join(NOTIFIER_PATH, 'binder')
-    autoload :Mail,      File.join(NOTIFIER_PATH, 'mail')
-    autoload :Twitter,   File.join(NOTIFIER_PATH, 'twitter')
-    autoload :Campfire,  File.join(NOTIFIER_PATH, 'campfire')
-    autoload :Prowl,     File.join(NOTIFIER_PATH, 'prowl')
-    autoload :Hipchat,   File.join(NOTIFIER_PATH, 'hipchat')
-    autoload :Pushover,  File.join(NOTIFIER_PATH, 'pushover')
+    autoload :Base,        File.join(NOTIFIER_PATH, 'base')
+    autoload :Binder,      File.join(NOTIFIER_PATH, 'binder')
+    autoload :Mail,        File.join(NOTIFIER_PATH, 'mail')
+    autoload :Twitter,     File.join(NOTIFIER_PATH, 'twitter')
+    autoload :Campfire,    File.join(NOTIFIER_PATH, 'campfire')
+    autoload :Prowl,       File.join(NOTIFIER_PATH, 'prowl')
+    autoload :Hipchat,     File.join(NOTIFIER_PATH, 'hipchat')
+    autoload :Pushover,    File.join(NOTIFIER_PATH, 'pushover')
+    autoload :PostRequest, File.join(NOTIFIER_PATH, 'post_request')
   end
 
   ##
