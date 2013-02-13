@@ -9,4 +9,3 @@ rvm:
 branches:
   only:
     - master
-    - develop
