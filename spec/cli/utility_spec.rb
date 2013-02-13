@@ -222,7 +222,7 @@ describe 'Backup::CLI::Utility' do
           [--syncers=SYNCERS]          # (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
           [--encryptors=ENCRYPTORS]    # (gpg, openssl)
           [--compressors=COMPRESSORS]  # (bzip2, custom, gzip, lzma, pbzip2)
-          [--notifiers=NOTIFIERS]      # (campfire, hipchat, mail, prowl, pushover, twitter)
+          [--notifiers=NOTIFIERS]      # (campfire, hipchat, mail, post_request, prowl, pushover, twitter)
           [--archives]
           [--splitter]                 # use `--no-splitter` to disable
                                       # Default: true
