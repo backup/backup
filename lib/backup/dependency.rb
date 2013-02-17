@@ -17,31 +17,31 @@ module Backup
       {
         'fog' => {
           :require => 'fog',
-          :version => '~> 1.4.0',
+          :version => '~> 1.4',
           :for     => 'Amazon S3, Rackspace Cloud Files (S3, CloudFiles Storages)'
         },
 
         'dropbox-sdk' => {
           :require => 'dropbox_sdk',
-          :version => '~> 1.2.0',
+          :version => '~> 1.5.0',
           :for     => 'Dropbox Web Service (Dropbox Storage)'
         },
 
         'net-sftp' => {
           :require => 'net/sftp',
-          :version => '~> 2.0.5',
+          :version => ['>= 2.0.0', '<= 2.0.5'],
           :for     => 'SFTP Protocol (SFTP Storage)'
         },
 
         'net-scp' => {
           :require => 'net/scp',
-          :version => '~> 1.0.4',
+          :version => ['>= 1.0.0', '<= 1.0.4'],
           :for     => 'SCP Protocol (SCP Storage)'
         },
 
         'net-ssh' => {
           :require => 'net/ssh',
-          :version => '~> 2.3.0',
+          :version => ['>= 2.3.0', '<= 2.5.2'],
           :for     => 'SSH Protocol (SSH Storage)'
         },
 
@@ -53,19 +53,19 @@ module Backup
 
         'twitter' => {
           :require => 'twitter',
-          :version => '>= 1.7.1',
+          :version => '~> 4.0',
           :for     => 'Sending Twitter Updates (Twitter Notifier)'
         },
 
         'httparty' => {
           :require => 'httparty',
-          :version => '~> 0.8.1',
-          :for     => 'Sending Http Updates'
+          :version => '~> 0.10.2',
+          :for     => 'Sending Http Updates (Campfire Notifier)'
         },
 
         'prowler' => {
           :require => 'prowler',
-          :version => '>= 1.3.1',
+          :version => '~> 1.3.1',
           :for     => 'Sending iOS push notifications (Prowl Notifier)'
         },
 
@@ -77,7 +77,7 @@ module Backup
 
         'parallel' => {
           :require => 'parallel',
-          :version => '~> 0.5.12',
+          :version => '~> 0.6.0',
           :for => 'Adding concurrency to Cloud-based syncers.'
         }
       }
