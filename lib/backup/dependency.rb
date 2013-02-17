@@ -88,15 +88,15 @@ module Backup
     # If the gem with the correct version cannot be found, it'll display a message
     # to the user with instructions on how to install the required gem
     def self.load(name)
-      gem(name, all[name][:version])
+      gem(name, *Array(all[name][:version]))
       require(all[name][:require])
     rescue LoadError
       raise Errors::Dependency::LoadError, <<-EOS
         Dependency missing
         Dependency required for:
-        #{all[name][:for]}
+        #{ all[name][:for] }
         To install the gem, issue the following command:
-        > gem install #{name} -v '#{all[name][:version]}'
+        > gem install #{ name } -v '#{ Array(all[name][:version]).last }'
         Please try again after installing the missing dependency.
       EOS
     end
