@@ -35,16 +35,7 @@ module Backup
     ##
     # Adds new paths to the @paths instance variable array
     def add(path)
-      path = File.expand_path(path)
-      if File.exist?(path)
-        @paths << path
-      else
-        Logger.warn Errors::Archive::NotFoundError.new(<<-EOS)
-          The following path was not found:
-          #{ path }
-          This path will be omitted from the '#{ name }' Archive.
-        EOS
-      end
+      @paths << File.expand_path(path)
     end
 
     ##
@@ -77,7 +68,7 @@ module Backup
       pipeline = Pipeline.new
 
       pipeline.add(
-        "#{ utility(:tar) } #{ tar_args } -cPf - " +
+        "#{ utility(:tar) } --ignore-failed-read #{ tar_args } -cPf - " +
         "#{ paths_to_exclude } #{ paths_to_package }",
         [0, 1]
       )

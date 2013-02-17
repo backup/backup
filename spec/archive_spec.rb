@@ -66,45 +66,9 @@ describe Backup::Archive do
   end # describe '#initialize'
 
   describe '#add' do
-
-    context 'when the path exists' do
-      it 'should expand and add the path to @paths' do
-        File.expects(:exist?).with(File.expand_path('foo')).returns(true)
-        Backup::Logger.expects(:warn).never
-
-        archive.add 'foo'
-        archive.paths.should == [File.expand_path('foo')]
-      end
-    end
-
-    context 'when a path does not exist' do
-      it 'should omit the path and log a warning' do
-        File.expects(:exist?).with(
-          File.expand_path('path')
-        ).returns(true)
-        File.expects(:exist?).with(
-          File.expand_path('foo')
-        ).returns(false)
-        File.expects(:exist?).with(
-          File.expand_path('another/path')
-        ).returns(true)
-
-        Backup::Logger.expects(:warn).with do |err|
-          err.should be_an_instance_of Backup::Errors::Archive::NotFoundError
-          err.message.should ==
-            "Archive::NotFoundError: The following path was not found:\n" +
-            "  #{ File.expand_path('foo') }\n" +
-            "  This path will be omitted from the 'test_archive' Archive."
-        end
-
-        archive.add 'path'
-        archive.add 'foo'
-        archive.add 'another/path'
-        archive.paths.should == [
-          File.expand_path('path'),
-          File.expand_path('another/path')
-        ]
-      end
+    it 'should expand and add the path to @paths' do
+      archive.add 'foo'
+      archive.paths.should == [File.expand_path('foo')]
     end
   end
 
@@ -157,7 +121,7 @@ describe Backup::Archive do
         )
 
         pipeline.expects(:add).in_sequence(s).with(
-          "tar  -cPf - " +
+          "tar --ignore-failed-read  -cPf - " +
           "--exclude='/path/to/exclude' --exclude='/another/path/to/exclude' " +
           "'/path/to/add' '/another/path/to/add'",
           [0, 1]
@@ -185,7 +149,8 @@ describe Backup::Archive do
         )
 
         pipeline.expects(:add).in_sequence(s).with(
-          "tar  -cPf -  '/path/to/add' '/another/path/to/add'", [0, 1]
+          "tar --ignore-failed-read  -cPf -  " +
+          "'/path/to/add' '/another/path/to/add'", [0, 1]
         )
         pipeline.expects(:<<).in_sequence(s).with(
           "cat > '#{ File.join(archive_path, 'test_archive.tar') }'"
@@ -215,7 +180,7 @@ describe Backup::Archive do
         )
 
         pipeline.expects(:add).in_sequence(s).with(
-          "tar -h --xattrs -cPf - " +
+          "tar --ignore-failed-read -h --xattrs -cPf - " +
           "--exclude='/path/to/exclude' --exclude='/another/path/to/exclude' " +
           "'/path/to/add' '/another/path/to/add'",
           [0, 1]
@@ -251,7 +216,7 @@ describe Backup::Archive do
         )
 
         pipeline.expects(:add).in_sequence(s).with(
-          "tar -h --xattrs -cPf - " +
+          "tar --ignore-failed-read -h --xattrs -cPf - " +
           "--exclude='/path/to/exclude' --exclude='/another/path/to/exclude' " +
           "'/path/to/add' '/another/path/to/add'",
           [0, 1]
