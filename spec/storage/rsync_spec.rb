@@ -18,6 +18,11 @@ describe Backup::Storage::RSync do
       superclass.should == Backup::Storage::Base
   end
 
+  it 'should include Utilities::Helpers' do
+    Backup::Storage::RSync.
+        include?(Backup::Utilities::Helpers).should be_true
+  end
+
   describe '#initialize' do
     after { Backup::Storage::RSync.clear_defaults! }
 

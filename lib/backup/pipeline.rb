@@ -2,7 +2,7 @@
 
 module Backup
   class Pipeline
-    include Backup::CLI::Helpers
+    include Backup::Utilities::Helpers
 
     attr_reader :stderr, :errors
 

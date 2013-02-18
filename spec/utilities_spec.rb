@@ -1,9 +1,9 @@
 # encoding: utf-8
 
-require File.expand_path('../../spec_helper.rb', __FILE__)
+require File.expand_path('../spec_helper.rb', __FILE__)
 
-describe Backup::CLI::Helpers do
-  let(:helpers) { Module.new.extend(Backup::CLI::Helpers) }
+describe Backup::Utilities::Helpers do
+  let(:helpers) { Module.new.extend(Backup::Utilities::Helpers) }
 
   describe '#run' do
     let(:stdout_io) { stub(:read => stdout_messages) }
@@ -77,7 +77,7 @@ describe Backup::CLI::Helpers do
     context 'when the command is not successful' do
       let(:process_success) { false }
       let(:message_head) do
-        "CLI::SystemCallError: 'cmd_name' Failed on #{ RUBY_PLATFORM }\n" +
+        "Utilities::SystemCallError: 'cmd_name' Failed on #{ RUBY_PLATFORM }\n" +
         "  The following information should help to determine the problem:\n" +
         "  Command was: /path/to/cmd_name arg1 arg2\n" +
         "  Exit Status: 1\n"
@@ -177,7 +177,7 @@ describe Backup::CLI::Helpers do
         expect do
           helpers.send(:run, command)
         end.to raise_error {|err|
-          err.message.should == "CLI::SystemCallError: " +
+          err.message.should == "Utilities::SystemCallError: " +
             "Failed to execute system command on #{ RUBY_PLATFORM }\n" +
             "  Command was: /path/to/cmd_name arg1 arg2\n" +
             "  Reason: RuntimeError\n" +
@@ -188,7 +188,7 @@ describe Backup::CLI::Helpers do
   end # describe '#run'
 
   describe '#utility' do
-    after { Backup::CLI::Helpers::UTILITY.clear }
+    after { Backup::Utilities::UTILITY.clear }
 
     context 'when a system path for the utility is available' do
       it 'should return the system path with newline removed' do
@@ -209,7 +209,7 @@ describe Backup::CLI::Helpers do
             returns("cached_path\n")
 
         helpers.send(:utility, :once_only).should == 'cached_path'
-        Class.new.extend(Backup::CLI::Helpers).send(
+        Class.new.extend(Backup::Utilities::Helpers).send(
             :utility, :once_only).should == 'cached_path'
       end
     end
@@ -220,7 +220,7 @@ describe Backup::CLI::Helpers do
 
         expect do
           helpers.send(:utility, :unknown)
-        end.to raise_error(Backup::Errors::CLI::UtilityNotFoundError) {|err|
+        end.to raise_error(Backup::Errors::Utilities::NotFoundError) {|err|
           err.message.should match(/Could not locate 'unknown'/)
         }
       end
@@ -230,13 +230,13 @@ describe Backup::CLI::Helpers do
 
         expect do
           helpers.send(:utility, :not_cached)
-        end.to raise_error(Backup::Errors::CLI::UtilityNotFoundError) {|err|
+        end.to raise_error(Backup::Errors::Utilities::NotFoundError) {|err|
           err.message.should match(/Could not locate 'not_cached'/)
         }
 
         expect do
           helpers.send(:utility, :not_cached)
-        end.to raise_error(Backup::Errors::CLI::UtilityNotFoundError) {|err|
+        end.to raise_error(Backup::Errors::Utilities::NotFoundError) {|err|
           err.message.should match(/Could not locate 'not_cached'/)
         }
       end
@@ -246,8 +246,8 @@ describe Backup::CLI::Helpers do
       expect do
         helpers.send(:utility, nil)
       end.to raise_error(
-        Backup::Errors::CLI::UtilityNotFoundError,
-          'CLI::UtilityNotFoundError: Utility Name Empty'
+        Backup::Errors::Utilities::NotFoundError,
+          'Utilities::NotFoundError: Utility Name Empty'
       )
     end
 
@@ -255,8 +255,8 @@ describe Backup::CLI::Helpers do
       expect do
         helpers.send(:utility, ' ')
       end.to raise_error(
-        Backup::Errors::CLI::UtilityNotFoundError,
-          'CLI::UtilityNotFoundError: Utility Name Empty'
+        Backup::Errors::Utilities::NotFoundError,
+          'Utilities::NotFoundError: Utility Name Empty'
       )
     end
   end # describe '#utility'

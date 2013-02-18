@@ -2,8 +2,6 @@
 
 module Backup
   class Model
-    include Backup::CLI::Helpers
-
     class << self
       ##
       # The Backup::Model.all class method keeps track of all the models

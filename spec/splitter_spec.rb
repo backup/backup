@@ -7,6 +7,11 @@ describe Backup::Splitter do
   let(:splitter) { Backup::Splitter.new(model, 250) }
   let(:package) { mock }
 
+  it 'should include Utilities::Helpers' do
+    Backup::Splitter.
+        include?(Backup::Utilities::Helpers).should be_true
+  end
+
   describe '#initialize' do
     it 'should set instance variables' do
       splitter.instance_variable_get(:@model).should be(model)

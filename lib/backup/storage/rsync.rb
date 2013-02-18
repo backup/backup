@@ -7,7 +7,7 @@ Backup::Dependency.load('net-ssh')
 module Backup
   module Storage
     class RSync < Base
-      include Backup::CLI::Helpers
+      include Backup::Utilities::Helpers
 
       ##
       # Server credentials

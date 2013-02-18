@@ -5,14 +5,14 @@ require File.expand_path('../../spec_helper.rb', __FILE__)
 describe Backup::Compressor::Base do
   let(:compressor) { Backup::Compressor::Base.new }
 
-  it 'should include CLI::Helpers' do
+  it 'should include Utilities::Helpers' do
     Backup::Compressor::Base.
-      include?(Backup::CLI::Helpers).should be_true
+        include?(Backup::Utilities::Helpers).should be_true
   end
 
   it 'should include Configuration::Helpers' do
     Backup::Compressor::Base.
-      include?(Backup::Configuration::Helpers).should be_true
+        include?(Backup::Configuration::Helpers).should be_true
   end
 
   describe '#compress_with' do

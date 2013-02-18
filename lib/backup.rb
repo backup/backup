@@ -30,7 +30,6 @@ module Backup
   ##
   # Autoload Backup CLI files
   module CLI
-    autoload :Helpers, File.join(CLI_PATH, 'helpers')
     autoload :Utility, File.join(CLI_PATH, 'utility')
   end
 
@@ -113,6 +112,7 @@ module Backup
   ##
   # Require Backup base files
   %w{
+    utilities
     archive
     binder
     cleaner

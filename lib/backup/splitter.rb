@@ -2,7 +2,7 @@
 
 module Backup
   class Splitter
-    include Backup::CLI::Helpers
+    include Backup::Utilities::Helpers
 
     def initialize(model, chunk_size)
       @model = model

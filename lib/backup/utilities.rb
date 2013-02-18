@@ -1,11 +1,38 @@
 # encoding: utf-8
 
 module Backup
-  module CLI
-    module Helpers
-      UTILITY = {}
+  module Utilities
+    UTILITY = {}
 
+    module Helpers
       private
+
+      ##
+      # Returns the full path to the specified utility.
+      # Raises an error if utility can not be found in the system's $PATH
+      def utility(name)
+        name = name.to_s.strip
+        raise Errors::Utilities::NotFoundError,
+            'Utility Name Empty' if name.empty?
+
+        path = UTILITY[name] || %x[which #{ name } 2>/dev/null].chomp
+        if path.empty?
+          raise Errors::Utilities::NotFoundError, <<-EOS
+            Could not locate '#{ name }'.
+            Make sure the specified utility is installed
+            and available in your system's $PATH.
+          EOS
+        end
+        UTILITY[name] = path
+      end
+
+      ##
+      # Returns the name of the command name from the given command line
+      def command_name(command)
+        i = command =~ /\s/
+        command = command.slice(0, i) if i
+        command.split('/')[-1]
+      end
 
       ##
       # Runs a system command
@@ -32,7 +59,7 @@ module Backup
             out, err = stdout.read.strip, stderr.read.strip
           end
         rescue Exception => e
-          raise Errors::CLI::SystemCallError.wrap(e, <<-EOS)
+          raise Errors::Utilities::SystemCallError.wrap(e, <<-EOS)
             Failed to execute system command on #{ RUBY_PLATFORM }
             Command was: #{ command }
           EOS
@@ -55,7 +82,7 @@ module Backup
 
           return out
         else
-          raise Errors::CLI::SystemCallError, <<-EOS
+          raise Errors::Utilities::SystemCallError, <<-EOS
             '#{ name }' Failed on #{ RUBY_PLATFORM }
             The following information should help to determine the problem:
             Command was: #{ command }
@@ -64,34 +91,6 @@ module Backup
             STDERR Messages: #{ err.empty? ? 'None' : "\n#{ err }" }
           EOS
         end
-      end
-
-
-      ##
-      # Returns the full path to the specified utility.
-      # Raises an error if utility can not be found in the system's $PATH
-      def utility(name)
-        name = name.to_s.strip
-        raise Errors::CLI::UtilityNotFoundError,
-            'Utility Name Empty' if name.empty?
-
-        path = UTILITY[name] || %x[which #{ name } 2>/dev/null].chomp
-        if path.empty?
-          raise Errors::CLI::UtilityNotFoundError, <<-EOS
-            Could not locate '#{ name }'.
-            Make sure the specified utility is installed
-            and available in your system's $PATH.
-          EOS
-        end
-        UTILITY[name] = path
-      end
-
-      ##
-      # Returns the name of the command name from the given command line
-      def command_name(command)
-        i = command =~ /\s/
-        command = command.slice(0, i) if i
-        command.split('/')[-1]
       end
 
     end

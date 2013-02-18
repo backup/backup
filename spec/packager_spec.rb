@@ -5,6 +5,11 @@ require File.expand_path('../spec_helper.rb', __FILE__)
 describe 'Backup::Packager' do
   let(:packager)  { Backup::Packager }
 
+  it 'should include Utilities::Helpers' do
+    packager.instance_eval('class << self; self; end').
+        include?(Backup::Utilities::Helpers).should be_true
+  end
+
   describe '#package!' do
     let(:model)     { mock }
     let(:package)   { mock }

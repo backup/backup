@@ -6,6 +6,10 @@ describe Backup::Archive do
   let(:model) { Backup::Model.new(:test_trigger, 'test model') }
   let(:archive) { Backup::Archive.new(model, :test_archive) }
 
+  it 'should include Utilities::Helpers' do
+    Backup::Archive.include?(Backup::Utilities::Helpers).should be_true
+  end
+
   describe '#initialize' do
 
     it 'should have no paths' do

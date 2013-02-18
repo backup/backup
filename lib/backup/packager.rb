@@ -3,7 +3,7 @@
 module Backup
   module Packager
     class << self
-      include Backup::CLI::Helpers
+      include Backup::Utilities::Helpers
 
       ##
       # Build the final package for the backup model.

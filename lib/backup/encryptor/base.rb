@@ -3,7 +3,7 @@
 module Backup
   module Encryptor
     class Base
-      include Backup::CLI::Helpers
+      include Backup::Utilities::Helpers
       include Backup::Configuration::Helpers
 
       def initialize

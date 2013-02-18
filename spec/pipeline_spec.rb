@@ -5,6 +5,11 @@ require File.expand_path('../spec_helper.rb', __FILE__)
 describe 'Backup::Pipeline' do
   let(:pipeline)  { Backup::Pipeline.new }
 
+  it 'should include Utilities::Helpers' do
+    Backup::Pipeline.
+        include?(Backup::Utilities::Helpers).should be_true
+  end
+
   describe '#initialize' do
     it 'should create a new pipeline' do
       pipeline.instance_variable_get(:@commands).should == []
@@ -41,7 +46,7 @@ describe 'Backup::Pipeline' do
 
     before do
       pipeline.expects(:pipeline).returns('foo')
-      # stub CLI::Helpers#command_name so it simply returns what it's passed
+      # stub Utilities::Helpers#command_name so it simply returns what it's passed
       pipeline.class.send(:define_method, :command_name, lambda {|arg| arg } )
     end
 
