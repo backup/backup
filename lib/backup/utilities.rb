@@ -3,6 +3,13 @@
 module Backup
   module Utilities
     UTILITY = {}
+    NAMES = %w{
+      tar cat split find xargs
+      gzip bzip2 lzma pbzip2
+      mongo mongodump mysqldump pg_dump redis-cli riak-admin
+      gpg openssl
+      rsync
+    }
 
     module Helpers
       private
@@ -93,6 +100,112 @@ module Backup
         end
       end
 
+      def gnu_tar?
+        Utilities.gnu_tar?
+      end
+    end # Helpers
+
+    class << self
+      include Helpers
+
+      ##
+      # Configure the path to system utilities used by Backup.
+      #
+      # Backup will attempt to locate any required system utilities using a
+      # +which+ command call. If a utility can not be found, or you need to
+      # specify an alternate path for a utility, you may do so in your
+      # +config.rb+ file using this method.
+      #
+      # Backup supports both GNU and BSD utilities.
+      # While Backup uses these utilities in a manner compatible with either
+      # version, the +tar+ utility requires some special handling with respect
+      # to +Archive+s. Backup will attempt to detect if the +tar+ command
+      # found (or set here) is GNU or BSD. If for some reason this fails,
+      # this may be set using the +tar_dist+ command shown below.
+      #
+      #   Backup::Utilities.configure do
+      #     # General Utilites
+      #     tar   '/path/to/tar'
+      #     tar_dist :gnu   # or :bsd
+      #     cat   '/path/to/cat'
+      #     split '/path/to/split'
+      #     find  '/path/to/find'
+      #     xargs '/path/to/xargs'
+      #
+      #     # Compressors
+      #     gzip    '/path/to/gzip'
+      #     bzip2   '/path/to/bzip2'
+      #     lzma    '/path/to/lzma'   # deprecated. use a Custom Compressor
+      #     pbzip2  '/path/to/pbzip2' # deprecated. use a Custom Compressor
+      #
+      #     # Database Utilities
+      #     mongo       '/path/to/mongo'
+      #     mongodump   '/path/to/mongodump'
+      #     mysqldump   '/path/to/mysqldump'
+      #     pg_dump     '/path/to/pg_dump'
+      #     redis_cli   '/path/to/redis-cli'
+      #     riak_admin  '/path/to/riak-admin'
+      #
+      #     # Encryptors
+      #     gpg     '/path/to/gpg'
+      #     openssl '/path/to/openssl'
+      #
+      #     # Syncer and Storage
+      #     rsync   '/path/to/rsync'
+      #   end
+      #
+      # These paths may be set using absolute paths, or relative to the
+      # working directory when Backup is run.
+      #
+      # Note that many of Backup's components currently have their own
+      # configuration settings for utility paths. For instance, when configuring
+      # a +MySQL+ database backup, +mysqldump_utility+ may be used:
+      #
+      #   database MySQL do |db|
+      #     db.mysqldump_utility = '/path/to/mysqldump'
+      #   end
+      #
+      # Use of these configuration settings will override the path set here.
+      # (The use of these may be deprecated in the future)
+      def configure(&block)
+        instance_eval(&block)
+      end
+
+      def gnu_tar?
+        return @gnu_tar unless @gnu_tar.nil?
+        @gnu_tar = !!run("#{ utility(:tar) } --version").match(/GNU/)
+      end
+
+      private
+
+      ##
+      # Allow users to set the path for all utilities in the .configure block.
+      #
+      # Utility names with dashes ('redis-cli') will be set using method calls
+      # with an underscore ('redis_cli').
+      NAMES.each do |name|
+        define_method name.gsub('-', '_'), lambda {|val|
+          path = File.expand_path(val)
+          unless File.executable?(path)
+            raise Errors::Utilities::NotFoundError, <<-EOS
+              The path given for '#{ name }' was not found or not executable.
+              Path was: #{ path }
+            EOS
+          end
+          UTILITY[name] = path
+        }
+      end
+
+      ##
+      # Allow users to set the +tar+ distribution if needed. (:gnu or :bsd)
+      def tar_dist(val)
+        @gnu_tar = val == :gnu
+      end
+
+      def reset!
+        UTILITY.clear
+        @gnu_tar = nil
+      end
     end
   end
 end

@@ -53,6 +53,7 @@ RSpec.configure do |config|
 
     Open4.stubs(:popen4).raises('Unexpected call to Open4::popen4()')
 
+    Backup::Utilities.send(:reset!)
     Backup::Config.send(:reset!)
     # Logger only queues messages received until Logger.start! is called.
     Backup::Logger.send(:initialize!)
