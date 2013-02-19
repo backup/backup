@@ -8,14 +8,14 @@
 #
 Backup::Model.new(:<%= @options[:trigger] %>, 'Description for <%= @options[:trigger] %>') do
 <% if @options[:splitter] %>
-<%= Backup::Template.new.result("cli/utility/splitter") %>
+<%= Backup::Template.new.result("cli/splitter") %>
 <% end; if @options[:archives] %>
-<%= Backup::Template.new.result("cli/utility/archive") %>
+<%= Backup::Template.new.result("cli/archive") %>
 <% end; [:databases, :storages, :syncers, :encryptors, :compressors, :notifiers].each do |item|
   if @options[item]
     @options[item].split(',').map(&:strip).uniq.each do |entry|
-      if File.exist?(File.join(Backup::TEMPLATE_PATH, 'cli', 'utility', item.to_s[0..-2], entry)) %>
-<%= Backup::Template.new.result("cli/utility/#{item.to_s[0..-2]}/#{entry}") %>
+      if File.exist?(File.join(Backup::TEMPLATE_PATH, 'cli', item.to_s[0..-2], entry)) %>
+<%= Backup::Template.new.result("cli/#{item.to_s[0..-2]}/#{entry}") %>
 <%    end
     end
   end

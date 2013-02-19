@@ -154,7 +154,7 @@ module Backup
     # options with their available values
     %w{ databases storages syncers
         encryptors compressors notifiers }.map(&:to_sym).each do |name|
-      path = File.join(Backup::TEMPLATE_PATH, 'cli', 'utility', name.to_s[0..-2])
+      path = File.join(Backup::TEMPLATE_PATH, 'cli', name.to_s[0..-2])
       method_option name, :type => :string, :desc =>
           "(#{Dir[path + '/*'].sort.map {|p| File.basename(p) }.join(', ')})"
     end
@@ -177,15 +177,16 @@ module Backup
       FileUtils.mkdir_p(models_path)
       if overwrite?(model)
         File.open(model, 'w') do |file|
-          file.write(Backup::Template.new({:options => opts}).
-                      result("cli/utility/model.erb"))
+          file.write(
+            Backup::Template.new({:options => opts}).result("cli/model.erb")
+          )
         end
         puts "Generated model file: '#{ model }'."
       end
 
       if not File.exist?(config)
         File.open(config, "w") do |file|
-          file.write(Backup::Template.new.result("cli/utility/config"))
+          file.write(Backup::Template.new.result("cli/config"))
         end
         puts "Generated configuration file: '#{ config }'."
       end
@@ -206,7 +207,7 @@ module Backup
       FileUtils.mkdir_p(config_path)
       if overwrite?(config)
         File.open(config, "w") do |file|
-          file.write(Backup::Template.new.result("cli/utility/config"))
+          file.write(Backup::Template.new.result("cli/config"))
         end
         puts "Generated configuration file: '#{ config }'."
       end
