@@ -110,6 +110,7 @@ describe Backup::Archive do
       archive.expects(:utility).with(:tar).returns('tar')
       FileUtils.expects(:mkdir_p).with(archive_path)
       Backup::Pipeline.expects(:new).returns(pipeline)
+      archive.stubs(:gnu_tar?).returns(true)
     end
 
     context 'when both #paths and #excludes were added' do
@@ -125,7 +126,7 @@ describe Backup::Archive do
         )
 
         pipeline.expects(:add).in_sequence(s).with(
-          "tar --ignore-failed-read  -cPf - " +
+          "tar --ignore-failed-read -cPf - " +
           "--exclude='/path/to/exclude' --exclude='/another/path/to/exclude' " +
           "'/path/to/add' '/another/path/to/add'",
           [0, 1]
@@ -153,7 +154,7 @@ describe Backup::Archive do
         )
 
         pipeline.expects(:add).in_sequence(s).with(
-          "tar --ignore-failed-read  -cPf -  " +
+          "tar --ignore-failed-read -cPf -  " +
           "'/path/to/add' '/another/path/to/add'", [0, 1]
         )
         pipeline.expects(:<<).in_sequence(s).with(
@@ -167,6 +168,36 @@ describe Backup::Archive do
         )
 
         archive.perform!
+      end
+
+      context 'when BSD tar is used' do
+        before do
+          archive.stubs(:gnu_tar?).returns(false)
+        end
+
+        it 'should not use GNU specific options' do
+          Backup::Logger.expects(:info).in_sequence(s).with(
+            "Backup::Archive has started archiving:\n" +
+            "  /path/to/add\n" +
+            "  /another/path/to/add"
+          )
+
+          pipeline.expects(:add).in_sequence(s).with(
+            "tar  -cPf -  " +
+            "'/path/to/add' '/another/path/to/add'", [0]
+          )
+          pipeline.expects(:<<).in_sequence(s).with(
+            "cat > '#{ File.join(archive_path, 'test_archive.tar') }'"
+          )
+          pipeline.expects(:run).in_sequence(s)
+          pipeline.expects(:success?).in_sequence(s).returns(true)
+
+          Backup::Logger.expects(:info).in_sequence(s).with(
+            "Backup::Archive Complete!"
+          )
+
+          archive.perform!
+        end
       end
     end # context 'when no excludes were added'
 
@@ -200,6 +231,38 @@ describe Backup::Archive do
         )
 
         archive.perform!
+      end
+
+      context 'when BSD tar is used' do
+        before do
+          archive.stubs(:gnu_tar?).returns(false)
+        end
+
+        it 'should not use GNU specific options' do
+          Backup::Logger.expects(:info).in_sequence(s).with(
+            "Backup::Archive has started archiving:\n" +
+            "  /path/to/add\n" +
+            "  /another/path/to/add"
+          )
+
+          pipeline.expects(:add).in_sequence(s).with(
+            "tar -h --xattrs -cPf - " +
+            "--exclude='/path/to/exclude' --exclude='/another/path/to/exclude' " +
+            "'/path/to/add' '/another/path/to/add'",
+            [0]
+          )
+          pipeline.expects(:<<).in_sequence(s).with(
+            "cat > '#{ File.join(archive_path, 'test_archive.tar') }'"
+          )
+          pipeline.expects(:run).in_sequence(s)
+          pipeline.expects(:success?).in_sequence(s).returns(true)
+
+          Backup::Logger.expects(:info).in_sequence(s).with(
+            "Backup::Archive Complete!"
+          )
+
+          archive.perform!
+        end
       end
     end # context 'with #paths, #excludes and #tar_args'
 

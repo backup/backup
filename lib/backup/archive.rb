@@ -68,9 +68,9 @@ module Backup
       pipeline = Pipeline.new
 
       pipeline.add(
-        "#{ utility(:tar) } --ignore-failed-read #{ tar_args } -cPf - " +
+        "#{ utility(:tar) } #{ tar_arguments } -cPf - " +
         "#{ paths_to_exclude } #{ paths_to_package }",
-        [0, 1]
+        tar_success_codes
       )
 
       if @model.compressor
@@ -107,5 +107,16 @@ module Backup
       end
     end
 
+    ##
+    # Returns arguments for GNU or BSD tar.
+    def tar_arguments
+      gnu_tar? ? "--ignore-failed-read #{ tar_args }".strip : tar_args
+    end
+
+    ##
+    # Returns successful GNU or BSD tar exit codes.
+    def tar_success_codes
+      gnu_tar? ? [0, 1] : [0]
+    end
   end
 end
