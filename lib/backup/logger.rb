@@ -96,7 +96,7 @@ module Backup
       # The Logger is available as soon as Backup is loaded, and stores all
       # messages it receives. Since the Logger may be configured via the
       # command line and/or the user's +config.rb+, no messages are sent
-      # until configuration can be completed. (see CLI::Utility#perform)
+      # until configuration can be completed. (see CLI#perform)
       #
       # Once configuration is completed, this method is called to activate
       # all enabled loggers and send them any messages that have been received

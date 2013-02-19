@@ -1,10 +1,10 @@
 # encoding: utf-8
 
-require File.expand_path('../../spec_helper.rb', __FILE__)
+require File.expand_path('../spec_helper.rb', __FILE__)
 
-describe 'Backup::CLI::Utility' do
-  let(:cli)     { Backup::CLI::Utility }
-  let(:utility) { Backup::CLI::Utility.new }
+describe 'Backup::CLI' do
+  let(:cli)     { Backup::CLI }
+  let(:utility) { Backup::CLI.new }
   let(:s)       { sequence '' }
 
   before  { @argv_save = ARGV }
