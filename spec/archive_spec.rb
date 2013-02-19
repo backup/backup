@@ -108,6 +108,7 @@ describe Backup::Archive do
     before do
       archive.instance_variable_set(:@paths, paths)
       archive.expects(:utility).with(:tar).returns('tar')
+      archive.expects(:utility).with(:cat).returns('cat')
       FileUtils.expects(:mkdir_p).with(archive_path)
       Backup::Pipeline.expects(:new).returns(pipeline)
       archive.stubs(:gnu_tar?).returns(true)

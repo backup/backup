@@ -113,6 +113,11 @@ describe 'Backup::Syncer::Cloud::Base' do
       )
     end
 
+    it 'should include Utilities::Helpers' do
+      Backup::Syncer::Cloud::Base.
+          include?(Backup::Utilities::Helpers).should be_true
+    end
+
     describe '#initialize' do
       it 'should set variables' do
         sync_context.directory.should   == '/dir/to/sync'
@@ -249,6 +254,12 @@ describe 'Backup::Syncer::Cloud::Base' do
     end # describe '#local_files'
 
     describe '#local_hashes' do
+      before do
+        sync_context.expects(:utility).with(:find).returns('find')
+        sync_context.expects(:utility).with(:xargs).returns('xargs')
+        sync_context.expects(:utility).with(:openssl).returns('openssl')
+      end
+
       it 'should collect file paths and MD5 checksums for @directory' do
         Backup::Logger.expects(:info).with(
           "\s\sGenerating checksums for '/dir/to/sync'"

@@ -80,7 +80,8 @@ module Backup
         end
       end
 
-      pipeline << "cat > '#{ File.join(archive_path, "#{name}.#{archive_ext}") }'"
+      pipeline << "#{ utility(:cat) } > " +
+          "'#{ File.join(archive_path, "#{name}.#{archive_ext}") }'"
       pipeline.run
       if pipeline.success?
         Logger.info "#{ self.class } Complete!"

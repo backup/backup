@@ -143,6 +143,7 @@ describe Backup::Database::MySQL do
       db.instance_variable_set(:@dump_path, '/dump/path')
 
       db.stubs(:mysqldump).returns('mysqldump_command')
+      db.expects(:utility).with(:cat).returns('cat')
       db.stubs(:dump_filename).returns('dump_filename')
       Backup::Pipeline.expects(:new).returns(pipeline)
     end

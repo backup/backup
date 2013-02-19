@@ -81,7 +81,7 @@ module Backup
         else
           stack << lambda do
             outfile = File.join(Config.tmp_path, @package.basename)
-            @pipeline << "cat > #{ outfile }"
+            @pipeline << "#{ utility(:cat) } > #{ outfile }"
             stack.shift.call
           end
         end

@@ -143,6 +143,7 @@ describe Backup::Database::PostgreSQL do
       db.instance_variable_set(:@dump_path, '/dump/path')
 
       db.stubs(:pgdump).returns('pgdump_command')
+      db.expects(:utility).with(:cat).returns('cat')
       Backup::Pipeline.expects(:new).returns(pipeline)
     end
 

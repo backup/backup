@@ -68,8 +68,9 @@ module Backup
             dump_ext << ext
           end
         end
-        pipeline << "cat > '#{ File.join(@dump_path, name) }.#{ dump_ext }'"
 
+        pipeline << "#{ utility(:cat) } > " +
+            "'#{ File.join(@dump_path, name) }.#{ dump_ext }'"
         pipeline.run
         if pipeline.success?
           Logger.info "#{ database_name } Complete!"

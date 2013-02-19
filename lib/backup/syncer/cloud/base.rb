@@ -66,6 +66,8 @@ module Backup
         private
 
         class SyncContext
+          include Utilities::Helpers
+
           attr_reader :directory, :bucket, :path, :remote_base
 
           ##
@@ -126,9 +128,14 @@ module Backup
 
           ##
           # Returns a String of file paths and their md5 hashes.
+          #
+          # Utilities#run is not used here because this would produce too much
+          # log output, and Pipeline does not support capturing output.
           def local_hashes
             Logger.info("\s\sGenerating checksums for '#{ @directory }'")
-            `find -L '#{ @directory }' -type f -print0 | xargs -0 openssl md5 2> /dev/null`
+            cmd = "#{ utility(:find) } -L '#{ @directory }' -type f -print0 | " +
+                "#{ utility(:xargs) } -0 #{ utility(:openssl) } md5 2> /dev/null"
+            %x[#{ cmd }]
           end
 
           ##

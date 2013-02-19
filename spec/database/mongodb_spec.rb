@@ -289,6 +289,7 @@ describe Backup::Database::MongoDB do
         Timecop.freeze(Time.now)
         db.instance_variable_set(:@dump_path, '/path/to/dump/folder')
         db.expects(:utility).with(:tar).returns('tar')
+        db.expects(:utility).with(:cat).returns('cat')
         model.expects(:compressor).twice.returns(compressor)
         compressor.expects(:compress_with).yields('compressor_command', '.gz')
         Backup::Pipeline.expects(:new).returns(pipeline)

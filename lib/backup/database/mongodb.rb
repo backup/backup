@@ -131,8 +131,8 @@ module Backup
           pipeline << command
           outfile << ext
         end
-        pipeline << "cat > #{ outfile }"
 
+        pipeline << "#{ utility(:cat) } > #{ outfile }"
         pipeline.run
         if pipeline.success?
           Logger.info(

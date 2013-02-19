@@ -123,6 +123,7 @@ describe 'Backup::Packager' do
 
     context 'when no encryptor or splitter are defined' do
       it 'should package the backup without encryption into a single file' do
+        packager.expects(:utility).with(:cat).returns('cat')
         packager.instance_variable_set(:@encryptor, nil)
         packager.instance_variable_set(:@splitter,  nil)
 
@@ -140,6 +141,7 @@ describe 'Backup::Packager' do
 
     context 'when only an encryptor is configured' do
       it 'should package the backup with encryption' do
+        packager.expects(:utility).with(:cat).returns('cat')
         packager.instance_variable_set(:@encryptor, encryptor)
         packager.instance_variable_set(:@splitter,  nil)
 
@@ -165,6 +167,7 @@ describe 'Backup::Packager' do
 
     context 'when only a splitter is configured' do
       it 'should package the backup without encryption through the splitter' do
+        packager.expects(:utility).with(:cat).never
         packager.instance_variable_set(:@encryptor, nil)
         packager.instance_variable_set(:@splitter,  splitter)
 
@@ -188,6 +191,7 @@ describe 'Backup::Packager' do
 
     context 'when both an encryptor and a splitter are configured' do
       it 'should package the backup with encryption through the splitter' do
+        packager.expects(:utility).with(:cat).never
         packager.instance_variable_set(:@encryptor, encryptor)
         packager.instance_variable_set(:@splitter,  splitter)
 
