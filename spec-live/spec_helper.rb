@@ -43,6 +43,7 @@ module Backup
       # in models.rb, then returns the Model for the given trigger.
       def h_set_trigger(trigger)
         Backup::SpecLive.load_models = true
+        Backup::Utilities.send(:reset!)
         Backup::Logger.clear!
         Backup::Model.all.clear
         Backup::Config.load_config!
@@ -76,6 +77,7 @@ module Backup
       #
       def h_set_single_model(&block)
         Backup::SpecLive.load_models = false
+        Backup::Utilities.send(:reset!)
         Backup::Logger.clear!
         Backup::Model.all.clear
         Backup::Config.load_config!
