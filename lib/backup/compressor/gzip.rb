@@ -14,6 +14,7 @@ module Backup
       #
       # The default `level` is 6.
       attr_accessor :level
+      attr_accessor :rsyncable
 
       attr_deprecate :fast, :version => '3.0.24',
                      :message => 'Use Gzip#level instead.',
@@ -32,6 +33,7 @@ module Backup
         load_defaults!
 
         @level ||= false
+        @rsyncable ||= false
 
         instance_eval(&block) if block_given?
 
@@ -39,10 +41,21 @@ module Backup
         @ext = '.gz'
       end
 
+      def self.has_rsyncable
+        !!`gzip --help`.match(/--rsyncable/)
+      end
+
       private
 
       def options
-        " -#{ @level }" if @level
+        opts = ""
+        opts += " -#{ @level }" if @level
+        if self.class.has_rsyncable
+          opts += " --rsyncable"
+        else
+          Logger.warn Backup::Errors::GzipRsyncableError.new "System gzip command does not support --rsyncable option - option ignored. A patch may be required for --rsyncable."
+        end if @rsyncable
+        return opts
       end
 
     end

@@ -39,6 +39,35 @@ describe Backup::Compressor::Gzip do
         compressor.instance_variable_get(:@cmd).should == 'gzip -5'
         compressor.instance_variable_get(:@ext).should == '.gz'
       end
+
+      it 'should use rsyncable if given and available' do
+        Backup::Compressor::Gzip.stubs(:has_rsyncable).returns(true)
+        compressor = Backup::Compressor::Gzip.new do |c|
+          c.level = 3
+          c.rsyncable = true
+        end
+        compressor.rsyncable.should == true
+        
+        compressor.instance_variable_get(:@cmd).should == 'gzip -3 --rsyncable'
+      end
+
+      it 'should warn and not use rsyncable if not available' do
+        Backup::Logger.expects(:warn).once
+        Backup::Compressor::Gzip.stubs(:has_rsyncable).returns(false)
+        compressor = Backup::Compressor::Gzip.new do |c|
+          c.level = 3
+          c.rsyncable = true
+        end
+        compressor.rsyncable.should == true
+
+        compressor.instance_variable_get(:@cmd).should == 'gzip -3'
+      end
+
+      it 'should provide has_rsyncable flag' do
+        has_rsyncable = Backup::Compressor::Gzip.has_rsyncable
+        has_rsyncable.should == !!has_rsyncable
+      end
+
     end # context 'when no pre-configured defaults have been set'
 
     context 'when pre-configured defaults have been set' do
