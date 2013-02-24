@@ -1,8 +1,5 @@
 # encoding: utf-8
 
-##
-# Only load the Net::SFTP library/gem when the Backup::Storage::SFTP class is loaded
-Backup::Dependency.load('net-ssh')
 Backup::Dependency.load('net-sftp')
 
 module Backup

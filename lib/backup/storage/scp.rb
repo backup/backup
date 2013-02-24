@@ -1,9 +1,5 @@
 # encoding: utf-8
 
-##
-# Only load the Net::SSH and Net::SCP library/gems
-# when the Backup::Storage::SCP class is loaded
-Backup::Dependency.load('net-ssh')
 Backup::Dependency.load('net-scp')
 
 module Backup

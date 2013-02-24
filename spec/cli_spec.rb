@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 require File.expand_path('../spec_helper.rb', __FILE__)
+require 'rubygems/dependency_installer'
 
 describe 'Backup::CLI' do
   let(:cli)     { Backup::CLI }
@@ -637,9 +638,208 @@ describe 'Backup::CLI' do
     end
   end
 
-#  would have the same Thor warnings issues...
-#  describe '#dependencies' do
-#  end
+  describe '#dependencies' do
+    let(:dep_a) {
+      stub('dep_a',
+        :name         => 'dep-a',
+        :requirements => ['~> 1.2.3'],
+        :used_for     => 'Provides A'
+      )
+    }
+    let(:dep_b) {
+      stub('dep_b',
+        :name         => 'dep-b',
+        :requirements => ['>= 2.1.0', '<= 2.5.0'],
+        :used_for     => 'Provides B'
+      )
+    }
+    let(:dep_c) {
+      stub('dep_c',
+        :name         => 'dep-c',
+        :requirements => ['~> 3.4.5'],
+        :used_for     => 'Provides C',
+        :dependencies => [dep_a]
+      )
+    }
+
+    before do
+      Backup::Dependency.stubs(:all).returns([dep_a, dep_b, dep_c])
+      Backup::Dependency.stubs(:find).with('dep-a').returns(dep_a)
+      Backup::Dependency.stubs(:find).with('dep-b').returns(dep_b)
+      Backup::Dependency.stubs(:find).with('dep-c').returns(dep_c)
+      Backup::Dependency.stubs(:find).with('foo').returns(nil)
+    end
+
+    it 'shows help and exits when no arguments are given' do
+      ARGV.replace(['dependencies'])
+      out, err = capture_io do
+        expect do
+          cli.start
+        end.to raise_error(SystemExit) {|exit| exit.status.should be(0) }
+      end
+      err.should == ''
+      out.should match(/To display a list of available dependencies/)
+    end
+
+    describe '#dependencies --list' do
+      it 'lists all dependencies and exits' do
+        ARGV.replace(['dependencies', '--list'])
+        out, err = capture_io do
+          expect do
+            cli.start
+          end.to raise_error(SystemExit) {|exit| exit.status.should be(0) }
+        end
+        err.should == ''
+        out.should == <<-EOS.gsub(/^ +/, '')
+
+          Gem Name:      dep-a
+          Version:       ~> 1.2.3
+          Used for:      Provides A
+          -------------------------
+
+          Gem Name:      dep-b
+          Version:       >= 2.1.0, <= 2.5.0
+          Used for:      Provides B
+          -------------------------
+
+          Gem Name:      dep-c
+          Version:       ~> 3.4.5
+          Used for:      Provides C
+          -------------------------
+        EOS
+      end
+    end
+
+    describe '#dependencies --install' do
+      before do
+        cli::Helpers.stubs(:bundler_loaded?).returns(false)
+      end
+
+      it 'aborts with message if Bundler is loaded' do
+        cli::Helpers.expects(:bundler_loaded?).returns(true)
+
+        ARGV.replace(['dependencies', '--install', 'dep-b'])
+        out, err = capture_io do
+          expect do
+            cli.start
+          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
+        end
+        err.should match(/Bundler Detected/)
+        out.should be_empty
+      end
+
+      it 'aborts with message if gem name is invalid' do
+        ARGV.replace(['dependencies', '--install', 'foo'])
+        out, err = capture_io do
+          expect do
+            cli.start
+          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
+        end
+        err.should == "'foo' is not a Backup dependency.\n"
+        out.should be_empty
+      end
+
+      it 'aborts with message if dependencies are not installed' do
+        dep_a.expects(:installed?).returns(false)
+
+        ARGV.replace(['dependencies', '--install', 'dep-c'])
+        out, err = capture_io do
+          expect do
+            cli.start
+          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
+        end
+        err.should == <<-EOS.gsub(/^ +/, '')
+          The 'dep-c' gem requires 'dep-a'
+          Please install this first using the following command:
+          > backup dependencies --install dep-a
+        EOS
+        out.should be_empty
+      end
+
+      it 'installs the gem if dependencies are met' do
+        dep_a.expects(:installed?).returns(true)
+        dep_c.expects(:install!)
+
+        ARGV.replace(['dependencies', '--install', 'dep-c'])
+        out, err = capture_io do
+          cli.start
+        end
+        err.should be_empty
+        out.should be_empty
+      end
+    end # describe '#dependencies --install'
+
+    describe '#dependencies --installed' do
+      it 'aborts with message if gem name is invalid' do
+        ARGV.replace(['dependencies', '--installed', 'foo'])
+        out, err = capture_io do
+          expect do
+            cli.start
+          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
+        end
+        err.should == "'foo' is not a Backup dependency.\n"
+        out.should be_empty
+      end
+
+      context 'when dependencies are met' do
+        before do
+          dep_a.expects(:installed?).returns(true)
+        end
+
+        it 'returns message if gem is installed' do
+          dep_c.expects(:installed?).returns(true)
+
+          ARGV.replace(['dependencies', '--installed', 'dep-c'])
+          out, err = capture_io do
+            cli.start
+          end
+          err.should be_empty
+          out.should == "'dep-c' is installed.\n"
+        end
+
+        it 'returns error message if gem is not installed' do
+          dep_c.expects(:installed?).returns(false)
+
+          ARGV.replace(['dependencies', '--installed', 'dep-c'])
+          out, err = capture_io do
+            expect do
+              cli.start
+            end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
+          end
+          err.should == <<-EOS.gsub(/^ +/, '')
+            'dep-c' is not installed.
+            To install the gem, issue the following command:
+            > backup dependencies --install dep-c
+            Please try again after installing the missing dependency.
+          EOS
+          out.should be_empty
+        end
+      end # context 'when dependencies are met'
+
+      context 'when dependencies are not met' do
+        before do
+          dep_a.expects(:installed?).returns(false)
+          dep_c.expects(:installed?).never
+        end
+
+        it 'returns error message that the dependency is not installed' do
+          ARGV.replace(['dependencies', '--installed', 'dep-c'])
+          out, err = capture_io do
+            expect do
+              cli.start
+            end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
+          end
+          err.should == <<-EOS.gsub(/^ +/, '')
+            'dep-c' requires the 'dep-a' gem.
+            To install the gem, issue the following command:
+            > backup dependencies --install dep-a
+            Please try again after installing the missing dependency.
+          EOS
+          out.should be_empty
+        end
+      end # context 'when dependencies are met'
+    end # describe '#dependencies --installed'
+  end # describe '#dependencies'
 
   describe '#version' do
     it 'should output the current version' do

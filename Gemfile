@@ -8,8 +8,8 @@ gemspec
 
 # Dynamically define the dependencies specified in Backup::Dependency.all
 require File.expand_path("../lib/backup/dependency", __FILE__)
-Backup::Dependency.all.each do |name, gemspec|
-  gem(name, gemspec[:version])
+Backup::Dependency.all.each do |dep|
+  gem(dep.name, *dep.requirements)
 end
 
 gem 'rspec'
