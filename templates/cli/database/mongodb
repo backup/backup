@@ -8,7 +8,7 @@
     db.host               = "localhost"
     db.port               = 5432
     db.ipv6               = false
-    db.only_collections   = ["only", "these" "collections"]
+    db.only_collections   = ["only", "these", "collections"]
     db.additional_options = []
     db.lock               = false
     # Optional: Use to set the location of these utilities
