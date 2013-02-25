@@ -46,8 +46,13 @@ describe Logger::Console do
   describe 'console logger usage' do
     before { Logger.start! }
 
-    context 'when sending an :info message' do
-      it 'sends colorized, formatted message to $stdout' do
+    context 'when IO is attached to a terminal' do
+      before do
+        $stdout.stubs(:tty?).returns(true)
+        $stderr.stubs(:tty?).returns(true)
+      end
+
+      it 'sends colorized, formatted :info message to $stdout' do
         $stderr.expects(:puts).never
         Timecop.freeze do
           $stdout.expects(:puts).with([
@@ -57,10 +62,8 @@ describe Logger::Console do
           Logger.info "message line one\nmessage line two"
         end
       end
-    end
 
-    context 'when sending an :warn message' do
-      it 'sends colorized, formatted message to $stderr' do
+      it 'sends colorized, formatted :warn message to $stderr' do
         $stdout.expects(:puts).never
         Timecop.freeze do
           $stderr.expects(:puts).with([
@@ -70,10 +73,8 @@ describe Logger::Console do
           Logger.warn "message line one\nmessage line two"
         end
       end
-    end
 
-    context 'when sending an :error message' do
-      it 'sends colorized, formatted message to $stderr' do
+      it 'sends colorized, formatted :error message to $stderr' do
         $stdout.expects(:puts).never
         Timecop.freeze do
           $stderr.expects(:puts).with([
@@ -83,7 +84,47 @@ describe Logger::Console do
           Logger.error "message line one\nmessage line two"
         end
       end
-    end
+    end # context 'when IO is attached to a terminal'
+
+    context 'when IO is not attached to a terminal' do
+      before do
+        $stdout.stubs(:tty?).returns(false)
+        $stderr.stubs(:tty?).returns(false)
+      end
+
+      it 'sends non-colorized, formatted :info message to $stdout' do
+        $stderr.expects(:puts).never
+        Timecop.freeze do
+          $stdout.expects(:puts).with([
+            "[#{ timestamp }][info] message line one",
+            "[#{ timestamp }][info] message line two"
+          ])
+          Logger.info "message line one\nmessage line two"
+        end
+      end
+
+      it 'sends non-colorized, formatted :warn message to $stderr' do
+        $stdout.expects(:puts).never
+        Timecop.freeze do
+          $stderr.expects(:puts).with([
+            "[#{ timestamp }][warn] message line one",
+            "[#{ timestamp }][warn] message line two"
+          ])
+          Logger.warn "message line one\nmessage line two"
+        end
+      end
+
+      it 'sends non-colorized, formatted :error message to $stderr' do
+        $stdout.expects(:puts).never
+        Timecop.freeze do
+          $stderr.expects(:puts).with([
+            "[#{ timestamp }][error] message line one",
+            "[#{ timestamp }][error] message line two"
+          ])
+          Logger.error "message line one\nmessage line two"
+        end
+      end
+    end # context 'when IO is not attached to a terminal'
   end
 end
 end

@@ -38,9 +38,10 @@ module Backup
       def initialize(options = nil); end
 
       def log(message)
-        color = COLORS[message.level]
-        lines = message.formatted_lines.map {|line| color % line }
-        (message.level == :info ? $stdout : $stderr).puts lines
+        io = message.level == :info ? $stdout : $stderr
+        lines = message.formatted_lines
+        lines.map! {|line| COLORS[message.level] % line } if io.tty?
+        io.puts lines
       end
 
     end
