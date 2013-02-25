@@ -35,7 +35,9 @@ module Backup
         :error  => "\e[31m%s\e[0m"  # red
       }
 
-      def initialize(options = nil); end
+      def initialize(options = nil)
+        $stdout.sync = $stderr.sync = true
+      end
 
       def log(message)
         io = message.level == :info ? $stdout : $stderr
