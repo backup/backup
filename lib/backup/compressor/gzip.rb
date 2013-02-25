@@ -3,6 +3,7 @@
 module Backup
   module Compressor
     class Gzip < Base
+      extend Utilities::Helpers
 
       ##
       # Specify the level of compression to use.
@@ -27,11 +28,34 @@ module Backup
                      }
 
       ##
+      # Use the `--rsyncable` option with `gzip`.
+      #
+      # This option directs `gzip` to compress data using an algorithm that
+      # allows `rsync` to efficiently detect changes. This is especially useful
+      # when used to compress `Archive` or `Database` backups that will be
+      # stored using Backup's `RSync` Storage option.
+      #
+      # The `--rsyncable` option is only available on patched versions of `gzip`.
+      # While most distributions apply this patch, this option may not be
+      # available on your system. If it's not available, Backup will log a
+      # warning and continue to use the compressor without this option.
+      attr_accessor :rsyncable
+
+      ##
+      # Determine if +--rsyncable+ is supported and cache the result.
+      def self.has_rsyncable?
+        return @has_rsyncable unless @has_rsyncable.nil?
+        cmd = "#{ utility(:gzip) } --rsyncable --version >/dev/null 2>&1; echo $?"
+        @has_rsyncable = %x[#{ cmd }].chomp == '0'
+      end
+
+      ##
       # Creates a new instance of Backup::Compressor::Gzip
       def initialize(&block)
         load_defaults!
 
         @level ||= false
+        @rsyncable ||= false
 
         instance_eval(&block) if block_given?
 
@@ -42,7 +66,17 @@ module Backup
       private
 
       def options
-        " -#{ @level }" if @level
+        opts = ''
+        opts << " -#{ @level }" if @level
+        if self.class.has_rsyncable?
+          opts << ' --rsyncable'
+        else
+          Logger.warn Errors::Compressor::Gzip::RsyncableError.new(<<-EOS)
+            'rsyncable' option ignored.
+            Your system's 'gzip' does not support the `--rsyncable` option.
+          EOS
+        end if @rsyncable
+        opts
       end
 
     end
