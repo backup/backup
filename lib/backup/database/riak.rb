@@ -45,8 +45,11 @@ module Backup
       end
 
       ##
-      # Performs the riak-admin command and outputs the
-      # data to the specified path based on the 'trigger'
+      # Performs the `riak-admin` command which creates a single dump file in
+      # @dump_path based on the `name` and `node`.
+      #
+      # `riak-admin` will append the `node` to the filename.
+      # i.e. <tmp_path>/<trigger>/databases/Riak/<name>-<node>
       def perform!
         super
         # ensure riak-admin user has permissions to write backup file
@@ -57,8 +60,9 @@ module Backup
 
         if @model.compressor
           @model.compressor.compress_with do |command, ext|
-            run("#{ command } -c #{ backup_file }-#{ node } > #{ backup_file + ext }")
-            FileUtils.rm_f("#{ backup_file }-#{ node }")
+            backup_file << "-#{ node }"
+            run("#{ command } -c #{ backup_file } > #{ backup_file + ext }")
+            FileUtils.rm_f(backup_file)
           end
         end
       end
