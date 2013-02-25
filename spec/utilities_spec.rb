@@ -130,12 +130,12 @@ describe Backup::Utilities::Helpers do
   describe '#utility' do
     context 'when a system path for the utility is available' do
       it 'should return the system path with newline removed' do
-        helpers.expects(:`).with('which foo 2>/dev/null').returns("system_path\n")
+        helpers.expects(:`).with("which 'foo' 2>/dev/null").returns("system_path\n")
         helpers.send(:utility, :foo).should == 'system_path'
       end
 
       it 'should cache the returned path' do
-        helpers.expects(:`).once.with('which cache_me 2>/dev/null').
+        helpers.expects(:`).once.with("which 'cache_me' 2>/dev/null").
             returns("cached_path\n")
 
         helpers.send(:utility, :cache_me).should == 'cached_path'
@@ -143,7 +143,7 @@ describe Backup::Utilities::Helpers do
       end
 
       it 'should cache the value for all extended objects' do
-        helpers.expects(:`).once.with('which once_only 2>/dev/null').
+        helpers.expects(:`).once.with("which 'once_only' 2>/dev/null").
             returns("cached_path\n")
 
         helpers.send(:utility, :once_only).should == 'cached_path'
@@ -154,7 +154,7 @@ describe Backup::Utilities::Helpers do
 
     context 'when a system path for the utility is not available' do
       it 'should raise an error' do
-        helpers.expects(:`).with('which unknown 2>/dev/null').returns("\n")
+        helpers.expects(:`).with("which 'unknown' 2>/dev/null").returns("\n")
 
         expect do
           helpers.send(:utility, :unknown)
@@ -164,7 +164,7 @@ describe Backup::Utilities::Helpers do
       end
 
       it 'should not cache any value for the utility' do
-        helpers.expects(:`).with('which not_cached 2>/dev/null').twice.returns("\n")
+        helpers.expects(:`).with("which 'not_cached' 2>/dev/null").twice.returns("\n")
 
         expect do
           helpers.send(:utility, :not_cached)
@@ -181,6 +181,7 @@ describe Backup::Utilities::Helpers do
     end
 
     it 'should raise an error if name is nil' do
+      helpers.expects(:`).never
       expect do
         helpers.send(:utility, nil)
       end.to raise_error(
@@ -190,6 +191,7 @@ describe Backup::Utilities::Helpers do
     end
 
     it 'should raise an error if name is empty' do
+      helpers.expects(:`).never
       expect do
         helpers.send(:utility, ' ')
       end.to raise_error(

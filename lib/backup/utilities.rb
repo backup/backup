@@ -22,7 +22,7 @@ module Backup
         raise Errors::Utilities::NotFoundError,
             'Utility Name Empty' if name.empty?
 
-        path = UTILITY[name] || %x[which #{ name } 2>/dev/null].chomp
+        path = UTILITY[name] || %x[which '#{ name }' 2>/dev/null].chomp
         if path.empty?
           raise Errors::Utilities::NotFoundError, <<-EOS
             Could not locate '#{ name }'.
