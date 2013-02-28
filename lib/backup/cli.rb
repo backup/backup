@@ -147,7 +147,7 @@ module Backup
               "\s\sThe model file will be created as '<config_path>/models/<trigger>.rb'\n\n" +
               "\s\sDefault: #{Config.root_path}\n\n"
 
-    method_option :trigger,     :type => :string, :required => true
+    method_option :trigger,     :type => :string, :required => true, :aliases => '-t'
     method_option :config_path, :type => :string,
                                 :desc => 'Path to your Backup configuration directory'
 
