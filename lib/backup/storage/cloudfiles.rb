@@ -9,7 +9,7 @@ module Backup
     class CloudFiles < Base
 
       ##
-      # Rackspace Cloud Files Credentials
+      # OpenStack Object Storage Credentials
       attr_accessor :username, :api_key, :auth_url
 
       ##
@@ -18,7 +18,7 @@ module Backup
       attr_accessor :servicenet
 
       ##
-      # Rackspace Cloud Files container name and path
+      # OpenStack Object Storage container name and path
       attr_accessor :container, :path
 
       ##

@@ -6,18 +6,24 @@ module Backup
       class CloudFiles < Base
 
         ##
-        # Rackspace CloudFiles Credentials
+        # OpenStack credentials
         attr_accessor :api_key, :username
 
         ##
-        # Rackspace CloudFiles Container
+        # OpenStack Object Storage container
         attr_accessor :container
 
         ##
-        # Rackspace AuthURL allows you to connect
-        # to a different Rackspace datacenter
-        # - https://auth.api.rackspacecloud.com     (Default: US)
-        # - https://lon.auth.api.rackspacecloud.com (UK)
+        # OpenStack AuthURL allows you to connect
+        # to a different datacenter
+        # - https://auth.api.rackspacecloud.com                             (Rackspace US - Default)
+        # - https://lon.auth.api.rackspacecloud.com                         (Rackspace UK)
+        # - https://dal05.objectstorage.softlayer.net/auth/v1.0             (Soflayer Dallas - Public)
+        # - https://dal05.objectstorage.service.networklayer.com/auth/v1.0  (Soflayer Dallas - Private)
+        # - https://ams01.objectstorage.softlayer.net/auth/v1.0             (Soflayer Amsterdam - Public)
+        # - https://ams01.objectstorage.service.networklayer.com/auth/v1.0  (Soflayer Amsterdam - Private)
+        # - https://sng01.objectstorage.softlayer.net/auth/v1.0             (Soflayer Singapore - Public)
+        # - https://sng01.objectstorage.service.networklayer.com/auth/v1.0  (Soflayer Singapore - Private)
         attr_accessor :auth_url
 
         ##
