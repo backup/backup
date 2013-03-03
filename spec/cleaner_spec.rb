@@ -217,17 +217,19 @@ describe 'Backup::Cleaner' do
 
   describe '#packaging_folder_dirty?' do
     before do
+      @tmpdir = Dir.mktmpdir('backup_spec')
+      SandboxFileUtils.activate!(@tmpdir)
       cleaner.instance_variable_set(:@model, model)
-      FileUtils.unstub(:mkdir_p)
     end
 
     after do
+      FileUtils.rm_r(@tmpdir, :force => true, :secure => true)
       Backup::Config.send(:reset!)
     end
 
     context 'when files exist in the packaging folder' do
       it 'should return true' do
-        Dir.mktmpdir do |path|
+        Dir.chdir(@tmpdir) do |path|
           Backup::Config.update(:root_path => path)
           FileUtils.mkdir_p(
             File.join(Backup::Config.tmp_path, 'test_trigger', 'archives')
@@ -239,7 +241,7 @@ describe 'Backup::Cleaner' do
 
     context 'when files do not exist in the packaging folder' do
       it 'should return false' do
-        Dir.mktmpdir do |path|
+        Dir.chdir(@tmpdir) do |path|
           Backup::Config.update(:root_path => path)
           FileUtils.mkdir_p(
             File.join(Backup::Config.tmp_path, 'test_trigger')
@@ -252,18 +254,19 @@ describe 'Backup::Cleaner' do
 
   describe '#tmp_path_package_files' do
     before do
+      @tmpdir = Dir.mktmpdir('backup_spec')
+      SandboxFileUtils.activate!(@tmpdir)
       cleaner.instance_variable_set(:@model, model)
-      FileUtils.unstub(:mkdir_p)
-      FileUtils.unstub(:touch)
     end
 
     after do
+      FileUtils.rm_r(@tmpdir, :force => true, :secure => true)
       Backup::Config.send(:reset!)
     end
 
     context 'when packaging files exist in the tmp_path' do
       it 'should return the files' do
-        Dir.mktmpdir do |path|
+        Dir.chdir(@tmpdir) do |path|
           Backup::Config.update(:root_path => path)
           FileUtils.mkdir_p(Backup::Config.tmp_path)
 
@@ -290,7 +293,7 @@ describe 'Backup::Cleaner' do
 
     context 'when no packaging files exist in the tmp_path' do
       it 'should return an empty array' do
-        Dir.mktmpdir do |path|
+        Dir.chdir(@tmpdir) do |path|
           Backup::Config.update(:root_path => path)
           FileUtils.mkdir_p(Backup::Config.tmp_path)
 

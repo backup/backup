@@ -1,15 +1,16 @@
 # encoding: utf-8
 
-##
-# Use Bundler
 require 'rubygems' if RUBY_VERSION < '1.9'
 require 'bundler/setup'
-
-##
-# Load Backup
 require 'backup'
 
 require 'timecop'
+
+# ::FileUtils will always be either SandboxFileUtils or FileUtils::NoWrite.
+require File.expand_path('../support/sandbox_file_utils.rb', __FILE__)
+# SandboxFileUtils.deactivate!(:noop) will be called before each example,
+# which will set ::FileUtils to FileUtils::NoWrite if SandboxFileUtils is active.
+SandboxFileUtils.activate!
 
 module Backup::ExampleHelpers
   # ripped from MiniTest :)
@@ -47,9 +48,7 @@ RSpec.configure do |config|
   ##
   # Actions to perform before each example
   config.before(:each) do
-    FileUtils.collect_method(:noop).each do |method|
-      FileUtils.stubs(method).raises("Unexpected call to FileUtils.#{ method }")
-    end
+    SandboxFileUtils.deactivate!(:noop)
 
     Open4.stubs(:popen4).raises('Unexpected call to Open4::popen4()')
 

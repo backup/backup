@@ -6,6 +6,8 @@ module Backup
 describe Logger::Logfile do
   before do
     @tmpdir = Dir.mktmpdir('backup_spec')
+    SandboxFileUtils.activate!(@tmpdir)
+
     @log_path_absolute = File.join(@tmpdir, 'log_path')
     @logfile_absolute = File.join(@log_path_absolute, 'backup.log')
     @root_path = File.join(@tmpdir, 'root_dir')
@@ -25,7 +27,6 @@ describe Logger::Logfile do
   end
 
   after do
-    FileUtils.unstub(:rm_r)
     FileUtils.rm_r(@tmpdir, :force => true, :secure => true)
   end
 
@@ -67,7 +68,6 @@ describe Logger::Logfile do
         logfile.log_path = 'log'
       end
 
-      FileUtils.unstub(:mkdir_p)
       Logger.start!
 
       File.exist?(@log_path_default).should be_false
@@ -77,10 +77,6 @@ describe Logger::Logfile do
   end
 
   describe '#initialize' do
-    before do
-      FileUtils.unstub(:mkdir_p)
-    end
-
     describe 'log_path creation' do
       context 'when log_path is not set' do
         before do
@@ -136,9 +132,6 @@ describe Logger::Logfile do
 
       context 'when log file is larger than max_bytes' do
         before do
-          FileUtils.unstub(:mv)
-          FileUtils.unstub(:rm)
-          FileUtils.unstub(:rm_f)
           FileUtils.mkdir_p(@log_path_default)
         end
 
@@ -187,7 +180,6 @@ describe Logger::Logfile do
     let(:timestamp) { Time.now.strftime("%Y/%m/%d %H:%M:%S") }
 
     before do
-      FileUtils.unstub(:mkdir_p)
       Logger.start!
     end
 

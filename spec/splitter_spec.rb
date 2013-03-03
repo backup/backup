@@ -103,20 +103,25 @@ describe Backup::Splitter do
 
   describe '#chunks' do
     before do
+      @tmpdir = Dir.mktmpdir('backup_spec')
+      SandboxFileUtils.activate!(@tmpdir)
       splitter.instance_variable_set(:@package, package)
       package.expects(:basename).returns('base_filename')
-      FileUtils.unstub(:touch)
+    end
+
+    after do
+      FileUtils.rm_r(@tmpdir, :force => true, :secure => true)
     end
 
     it 'should return a sorted array of chunked file paths' do
-      Dir.mktmpdir do |dir|
-        Backup::Config.expects(:tmp_path).returns(dir)
-        FileUtils.touch(File.join(dir, 'base_filename-aa'))
-        FileUtils.touch(File.join(dir, 'base_filename-ab'))
+      Dir.chdir(@tmpdir) do |path|
+        Backup::Config.expects(:tmp_path).returns(path)
+        FileUtils.touch(File.join(path, 'base_filename-aa'))
+        FileUtils.touch(File.join(path, 'base_filename-ab'))
 
         splitter.send(:chunks).should == [
-          File.join(dir, 'base_filename-aa'),
-          File.join(dir, 'base_filename-ab')
+          File.join(path, 'base_filename-aa'),
+          File.join(path, 'base_filename-ab')
         ]
       end
     end

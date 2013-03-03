@@ -13,7 +13,7 @@ Backup::Dependency.all.each do |dep|
 end
 
 gem 'rspec'
-gem 'mocha', '0.12.7'
+gem 'mocha'
 gem 'timecop'
 
 # Omitted from Travis CI Environment

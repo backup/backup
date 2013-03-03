@@ -359,18 +359,19 @@ describe 'Backup::CLI' do
 
   describe '#generate:model' do
     before do
-      FileUtils.unstub(:mkdir_p)
-      FileUtils.unstub(:touch)
+      @tmpdir = Dir.mktmpdir('backup_spec')
+      SandboxFileUtils.activate!(@tmpdir)
     end
 
     after do
+      FileUtils.rm_r(@tmpdir, :force => true, :secure => true)
       Backup::Config.send(:reset!)
     end
 
     context 'when given a config_path' do
       context 'when no config file exists' do
         it 'should create both a config and a model under the given path' do
-          Dir.mktmpdir do |path|
+          Dir.chdir(@tmpdir) do |path|
             model_file  = File.join(path, 'custom', 'models', 'my_test_trigger.rb')
             config_file = File.join(path, 'custom', 'config.rb')
 
@@ -392,7 +393,7 @@ describe 'Backup::CLI' do
 
       context 'when a config file already exists' do
         it 'should only create a model under the given path' do
-          Dir.mktmpdir do |path|
+          Dir.chdir(@tmpdir) do |path|
             model_file  = File.join(path, 'custom', 'models', 'my_test_trigger.rb')
             config_file = File.join(path, 'custom', 'config.rb')
             FileUtils.mkdir_p(File.join(path, 'custom'))
@@ -416,7 +417,7 @@ describe 'Backup::CLI' do
 #
 #      context 'when a model file already exists' do
 #        it 'should prompt to overwrite the model under the given path' do
-#          Dir.mktmpdir do |path|
+#          Dir.chdir(@tmpdir) do |path|
 #            model_file  = File.join(path, 'models', 'test_trigger.rb')
 #            config_file = File.join(path, 'config.rb')
 #
@@ -441,7 +442,7 @@ describe 'Backup::CLI' do
 
     context 'when not given a config_path' do
       it 'should create both a config and a model under the root path' do
-        Dir.mktmpdir do |path|
+        Dir.chdir(@tmpdir) do |path|
           Backup::Config.update(:root_path => path)
           model_file  = File.join(path, 'models', 'test_trigger.rb')
           config_file = File.join(path, 'config.rb')
@@ -517,17 +518,18 @@ describe 'Backup::CLI' do
 
   describe '#generate:config' do
     before do
-      FileUtils.unstub(:mkdir_p)
-      FileUtils.unstub(:touch)
+      @tmpdir = Dir.mktmpdir('backup_spec')
+      SandboxFileUtils.activate!(@tmpdir)
     end
 
     after do
+      FileUtils.rm_r(@tmpdir, :force => true, :secure => true)
       Backup::Config.send(:reset!)
     end
 
     context 'when given a config_path' do
       it 'should create a config file in the given path' do
-        Dir.mktmpdir do |path|
+        Dir.chdir(@tmpdir) do |path|
           config_file = File.join(path, 'custom', 'config.rb')
 
           out, err = capture_io do
@@ -545,7 +547,7 @@ describe 'Backup::CLI' do
 
     context 'when not given a config_path' do
       it 'should create a config file in the root path' do
-        Dir.mktmpdir do |path|
+        Dir.chdir(@tmpdir) do |path|
           Backup::Config.update(:root_path => path)
           config_file = File.join(path, 'config.rb')
 
@@ -564,7 +566,7 @@ describe 'Backup::CLI' do
 #
 #    context 'when a config file already exists' do
 #      it 'should prompt to overwrite the config file' do
-#        Dir.mktmpdir do |path|
+#        Dir.chdir(@tmpdir) do |path|
 #          Backup::Config.update(:root_path => path)
 #          config_file = File.join(path, 'config.rb')
 #
