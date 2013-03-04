@@ -1,5 +1,5 @@
 
-Copyright (c) 2009-2011 Michael van Rooijen ( [@meskyanichi](http://twitter.com/#!/meskyanichi) )
+Copyright (c) 2009-2013 Michael van Rooijen ( [@meskyanichi](http://twitter.com/#!/meskyanichi) )
 =================================================================================================
 
 The "Backup" RubyGem is released under the **MIT LICENSE**
