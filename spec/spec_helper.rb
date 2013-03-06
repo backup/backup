@@ -6,11 +6,7 @@ require 'backup'
 
 require 'timecop'
 
-# ::FileUtils will always be either SandboxFileUtils or FileUtils::NoWrite.
 require File.expand_path('../support/sandbox_file_utils.rb', __FILE__)
-# SandboxFileUtils.deactivate!(:noop) will be called before each example,
-# which will set ::FileUtils to FileUtils::NoWrite if SandboxFileUtils is active.
-SandboxFileUtils.activate!
 
 module Backup::ExampleHelpers
   # ripped from MiniTest :)
@@ -45,9 +41,14 @@ RSpec.configure do |config|
   config.run_all_when_everything_filtered = true
   config.treat_symbols_as_metadata_keys_with_true_values = true
 
-  ##
-  # Actions to perform before each example
+  config.before(:suite) do
+    # Initializes SandboxFileUtils so the first call to deactivate!(:noop)
+    # will set ::FileUtils to FileUtils::NoWrite
+    SandboxFileUtils.activate!
+  end
+
   config.before(:each) do
+    # ::FileUtils will always be either SandboxFileUtils or FileUtils::NoWrite.
     SandboxFileUtils.deactivate!(:noop)
 
     Open4.stubs(:popen4).raises('Unexpected call to Open4::popen4()')
