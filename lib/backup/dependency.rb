@@ -11,7 +11,7 @@ module Backup
     DEPENDENCIES = {
       'fog' => {
         :require => 'fog',
-        :version => '~> 1.4',
+        :version => '~> 1.9.0',
         :for     => 'Amazon S3, Rackspace Cloud Files (S3, CloudFiles Storages)',
         :dependencies  => ['net-ssh', 'net-scp']
       },
@@ -50,7 +50,7 @@ module Backup
 
       'twitter' => {
         :require => 'twitter',
-        :version => '~> 4.0',
+        :version => '~> 4.5.0',
         :for     => 'Sending Twitter Updates (Twitter Notifier)'
       },
 
