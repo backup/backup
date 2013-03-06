@@ -21,10 +21,9 @@ group :development do
   gem 'guard'
   gem 'guard-rspec'
   gem 'fuubar'
-  gem 'rb-fsevent' # guard notifications for osx
-  gem 'growl'      # $ brew install growlnotify
-  gem 'rb-inotify' # guard notifications for linux
-  gem 'libnotify'  # $ apt-get install ???
+
+  gem 'rb-fsevent', :require => false # Mac OS X
+  gem 'rb-inotify', :require => false # Linux
 
   gem 'yard'
   gem 'redcarpet'
