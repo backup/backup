@@ -1,16 +1,8 @@
 # encoding: utf-8
 
-##
-# Only load the Fog gem when the Backup::Storage::CloudFiles class is loaded
-Backup::Dependency.load('fog')
-
 module Backup
   module Storage
-    class CloudFiles < Base
-
-      ##
-      # Rackspace Cloud Files Credentials
-      attr_accessor :username, :api_key, :auth_url
+    class CloudFiles < OpenStack
 
       ##
       # Rackspace Service Net
@@ -18,21 +10,14 @@ module Backup
       attr_accessor :servicenet
 
       ##
-      # Rackspace Cloud Files container name and path
-      attr_accessor :container, :path
-
-      ##
       # Creates a new instance of the storage object
       def initialize(model, storage_id = nil, &block)
         super(model, storage_id)
 
         @servicenet ||= false
-        @path       ||= 'backups'
-
-        instance_eval(&block) if block_given?
       end
 
-      private
+      protected
 
       ##
       # This is the provider that Fog uses for the Cloud Files Storage
@@ -51,37 +36,6 @@ module Backup
           :rackspace_servicenet => servicenet
         )
       end
-
-      ##
-      # Transfers the archived file to the specified Cloud Files container
-      def transfer!
-        remote_path = remote_path_for(@package)
-
-        files_to_transfer_for(@package) do |local_file, remote_file|
-          Logger.info "#{storage_name} started transferring '#{ local_file }'."
-
-          File.open(File.join(local_path, local_file), 'r') do |file|
-            connection.put_object(
-              container, File.join(remote_path, remote_file), file
-            )
-          end
-        end
-      end
-
-      ##
-      # Removes the transferred archive file(s) from the storage location.
-      # Any error raised will be rescued during Cycling
-      # and a warning will be logged, containing the error message.
-      def remove!(package)
-        remote_path = remote_path_for(package)
-
-        transferred_files_for(package) do |local_file, remote_file|
-          Logger.info "#{storage_name} started removing '#{ local_file }' " +
-              "from container '#{ container }'."
-          connection.delete_object(container, File.join(remote_path, remote_file))
-        end
-      end
-
     end
   end
 end
