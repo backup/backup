@@ -14,9 +14,9 @@ describe Backup::Storage::CloudFiles do
     end
   end
 
-  it 'should be a subclass of Storage::Base' do
+  it 'should be a subclass of Storage::OpenStack' do
     Backup::Storage::CloudFiles.
-      superclass.should == Backup::Storage::Base
+      superclass.should == Backup::Storage::OpenStack
   end
 
   describe '#initialize' do

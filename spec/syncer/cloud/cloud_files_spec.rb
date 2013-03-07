@@ -12,9 +12,9 @@ describe 'Backup::Syncer::Cloud::CloudFiles' do
     end
   end
 
-  it 'should be a subclass of Syncer::Cloud::Base' do
+  it 'should be a subclass of Syncer::Cloud::OpenStack' do
     Backup::Syncer::Cloud::CloudFiles.
-      superclass.should == Backup::Syncer::Cloud::Base
+      superclass.should == Backup::Syncer::Cloud::OpenStack
   end
 
   describe '#initialize' do
