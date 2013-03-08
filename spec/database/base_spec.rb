@@ -3,7 +3,7 @@
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Database::Base do
-  let(:model) { Backup::Model.new('foo', 'foo') }
+  let(:model) { Backup::Model.new('test_trigger', 'foo') }
   let(:db) { Backup::Database::Base.new(model) }
 
   it 'should include Utilities::Helpers' do
@@ -39,7 +39,6 @@ describe Backup::Database::Base do
 
   describe '#prepare!' do
     it 'should set and create #dump_path' do
-      model = stub(:trigger => 'test_trigger')
       db.instance_variable_set(:@model, model)
       FileUtils.expects(:mkdir_p).with(
         File.join(Backup::Config.tmp_path, 'test_trigger', 'databases', 'Base')
