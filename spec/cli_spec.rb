@@ -467,8 +467,8 @@ describe 'Backup::CLI' do
         -t, --trigger=TRIGGER
             [--config-path=CONFIG_PATH]  # Path to your Backup configuration directory
             [--databases=DATABASES]      # (mongodb, mysql, postgresql, redis, riak)
-            [--storages=STORAGES]        # (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
-            [--syncers=SYNCERS]          # (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
+            [--storages=STORAGES]        # (cloud_files, dropbox, ftp, local, ninefold, openstack, rsync, s3, scp, sftp)
+            [--syncers=SYNCERS]          # (cloud_files, openstack, rsync_local, rsync_pull, rsync_push, s3)
             [--encryptors=ENCRYPTORS]    # (gpg, openssl)
             [--compressors=COMPRESSORS]  # (bzip2, custom, gzip, lzma, pbzip2)
             [--notifiers=NOTIFIERS]      # (campfire, hipchat, mail, prowl, pushover, twitter)
