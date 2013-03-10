@@ -14,9 +14,9 @@ describe Backup::Storage::CloudFiles do
     end
   end
 
-  it 'should be a subclass of Storage::Base' do
+  it 'should be a subclass of Storage::OpenStack' do
     Backup::Storage::CloudFiles.
-      superclass.should == Backup::Storage::Base
+      superclass.should == Backup::Storage::OpenStack
   end
 
   describe '#initialize' do
@@ -161,94 +161,5 @@ describe Backup::Storage::CloudFiles do
     end
 
   end # describe '#connection'
-
-  describe '#transfer!' do
-    let(:connection) { mock }
-    let(:package) { mock }
-    let(:file) { mock }
-    let(:s) { sequence '' }
-
-    before do
-      storage.instance_variable_set(:@package, package)
-      storage.stubs(:storage_name).returns('Storage::CloudFiles')
-      storage.stubs(:local_path).returns('/local/path')
-      storage.stubs(:connection).returns(connection)
-    end
-
-    it 'should transfer the package files' do
-      storage.expects(:remote_path_for).in_sequence(s).with(package).
-          returns('remote/path')
-      storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
-        multiple_yields(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
-      )
-      # first yield
-      Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::CloudFiles started transferring " +
-        "'2011.12.31.11.00.02.backup.tar.enc-aa'."
-      )
-      File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'), 'r'
-      ).yields(file)
-      connection.expects(:put_object).in_sequence(s).with(
-        'my_container', File.join('remote/path', 'backup.tar.enc-aa'), file
-      )
-      # second yield
-      Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::CloudFiles started transferring " +
-        "'2011.12.31.11.00.02.backup.tar.enc-ab'."
-      )
-      File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'), 'r'
-      ).yields(file)
-      connection.expects(:put_object).in_sequence(s).with(
-        'my_container', File.join('remote/path', 'backup.tar.enc-ab'), file
-      )
-
-      storage.send(:transfer!)
-    end
-  end # describe '#transfer!'
-
-  describe '#remove!' do
-    let(:package) { mock }
-    let(:connection) { mock }
-    let(:s) { sequence '' }
-
-    before do
-      storage.stubs(:storage_name).returns('Storage::CloudFiles')
-      storage.stubs(:connection).returns(connection)
-    end
-
-    it 'should remove the package files' do
-      storage.expects(:remote_path_for).in_sequence(s).with(package).
-          returns('remote/path')
-      storage.expects(:transferred_files_for).in_sequence(s).with(package).
-        multiple_yields(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
-      )
-      # first yield
-      Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::CloudFiles started removing " +
-        "'2011.12.31.11.00.02.backup.tar.enc-aa' " +
-        "from container 'my_container'."
-      )
-      connection.expects(:delete_object).in_sequence(s).with(
-        'my_container', File.join('remote/path', 'backup.tar.enc-aa')
-      )
-      # second yield
-      Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::CloudFiles started removing " +
-        "'2011.12.31.11.00.02.backup.tar.enc-ab' " +
-        "from container 'my_container'."
-      )
-      connection.expects(:delete_object).in_sequence(s).with(
-        'my_container', File.join('remote/path', 'backup.tar.enc-ab')
-      )
-
-      storage.send(:remove!, package)
-    end
-  end # describe '#remove!'
 
 end
