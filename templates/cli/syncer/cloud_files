@@ -15,7 +15,7 @@
   #
   #   When enabled it will keep an exact mirror of your filesystem on Cloud Files.
   #   This means that when you remove a file from the filesystem,
-  #   it will also remote it from Cloud Files.
+  #   it will also remove it from Cloud Files.
   #
   # Concurrency:
   #
