@@ -31,7 +31,7 @@ module Backup
       ##
       # This is the provider that Fog uses
       def provider
-        'Openstack'
+        'OpenStack'
       end
 
       ##
