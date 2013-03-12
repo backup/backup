@@ -82,6 +82,12 @@ module Backup
         :require => 'parallel',
         :version => '~> 0.6.0',
         :for     => 'Adding concurrency to Cloud-based syncers.'
+      },
+      
+      'carrierwave-aliyun' => {
+        :require => 'carrierwave-aliyun',
+        :version => '>= 0.1.3',
+        :for     => 'Adding concurrency to Aliyun OSS storage.'
       }
     }
 

@@ -85,6 +85,7 @@ Once your final backup package is ready, you can use any number of the following
 - Dropbox Web Service
 - Remote Servers _(Available Protocols: FTP, SFTP, SCP and RSync)_
 - Local Storage _(including network mounted locations)_
+- Aliyun (OSS)
 
 All of the above Storages _(except RSync)_ support:
 
