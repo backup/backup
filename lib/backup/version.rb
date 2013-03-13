@@ -13,7 +13,7 @@ module Backup
     #  Defines the minor version
     # PATCH:
     #  Defines the patch version
-    MAJOR, MINOR, PATCH = 3, 1, 2
+    MAJOR, MINOR, PATCH = 3, 1, 3
 
     ##
     # Returns the major version ( big release based off of multiple minor releases )
