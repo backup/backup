@@ -104,7 +104,7 @@ module Backup
             ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Riak'],
             # Storages
             ['S3', 'CloudFiles', 'Ninefold', 'Dropbox', 'FTP',
-            'SFTP', 'SCP', 'RSync', 'Local', "OSS"],
+            'SFTP', 'SCP', 'RSync', 'Local', "Aliyun"],
             # Compressors
             ['Gzip', 'Bzip2', 'Custom', 'Pbzip2', 'Lzma'],
             # Encryptors

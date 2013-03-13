@@ -2,27 +2,27 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Storage::OSS do
+describe Backup::Storage::Aliyun do
   let(:model)   { Backup::Model.new(:test_trigger, 'test label') }
   let(:storage) do
-    Backup::Storage::OSS.new(model) do |db|
-      db.access_id      = 'my_access_id'
-      db.access_key   = 'my_access_key'
+    Backup::Storage::Aliyun.new(model) do |db|
+      db.access_key_id      = 'my_access_id'
+      db.access_key_secret   = 'my_access_key'
       db.bucket       = 'foo'
       db.keep         = 5
     end
   end
 
   it 'should be a subclass of Storage::Base' do
-    Backup::Storage::OSS.
+    Backup::Storage::Aliyun.
       superclass.should == Backup::Storage::Base
   end
 
   describe '#initialize' do
-    after { Backup::Storage::OSS.clear_defaults! }
+    after { Backup::Storage::Aliyun.clear_defaults! }
 
     it 'should load pre-configured defaults through Base' do
-      Backup::Storage::OSS.any_instance.expects(:load_defaults!)
+      Backup::Storage::Aliyun.any_instance.expects(:load_defaults!)
       storage
     end
 
@@ -31,14 +31,14 @@ describe Backup::Storage::OSS do
     end
 
     it 'should pass the storage_id to Base' do
-      storage = Backup::Storage::OSS.new(model, 'my_storage_id')
+      storage = Backup::Storage::Aliyun.new(model, 'my_storage_id')
       storage.storage_id.should == 'my_storage_id'
     end
 
     context 'when no pre-configured defaults have been set' do
       it 'should use the values given' do
-        storage.access_id.should      == 'my_access_id'
-        storage.access_key.should   == 'my_access_key'
+        storage.access_key_id.should      == 'my_access_id'
+        storage.access_key_secret.should   == 'my_access_key'
         storage.bucket.should  == "foo"
         storage.path.should         == 'backups'
 
@@ -47,9 +47,9 @@ describe Backup::Storage::OSS do
       end
 
       it 'should use default values if none are given' do
-        storage = Backup::Storage::OSS.new(model)
-        storage.access_id.should      be_nil
-        storage.access_key.should   be_nil
+        storage = Backup::Storage::Aliyun.new(model)
+        storage.access_key_id.should      be_nil
+        storage.access_key_secret.should   be_nil
         storage.bucket.should       be_nil
         storage.path.should         == 'backups'
 
@@ -60,9 +60,9 @@ describe Backup::Storage::OSS do
 
     context 'when pre-configured defaults have been set' do
       before do
-        Backup::Storage::OSS.defaults do |s|
-          s.access_id      = 'some_api_key'
-          s.access_key   = 'some_api_secret'
+        Backup::Storage::Aliyun.defaults do |s|
+          s.access_key_id      = 'some_api_key'
+          s.access_key_secret   = 'some_api_secret'
           s.bucket  = 'some_bucket'
           s.path         = 'some_path'
           s.keep         = 15
@@ -70,10 +70,10 @@ describe Backup::Storage::OSS do
       end
 
       it 'should use pre-configured defaults' do
-        storage = Backup::Storage::OSS.new(model)
+        storage = Backup::Storage::Aliyun.new(model)
 
-        storage.access_id.should      == 'some_api_key'
-        storage.access_key.should   == 'some_api_secret'
+        storage.access_key_id.should      == 'some_api_key'
+        storage.access_key_secret.should   == 'some_api_secret'
         storage.bucket.should  == 'some_bucket'
         storage.path.should         == 'some_path'
 
@@ -82,16 +82,16 @@ describe Backup::Storage::OSS do
       end
 
       it 'should override pre-configured defaults' do
-        storage = Backup::Storage::OSS.new(model) do |s|
-          s.access_id      = 'new_api_key'
-          s.access_key   = 'new_api_secret'
+        storage = Backup::Storage::Aliyun.new(model) do |s|
+          s.access_key_id      = 'new_api_key'
+          s.access_key_secret   = 'new_api_secret'
           s.bucket  = 'new_bucket'
           s.path         = 'new_path'
           s.keep         = 10
         end
 
-        storage.access_id.should      == 'new_api_key'
-        storage.access_key.should   == 'new_api_secret'
+        storage.access_key_id.should      == 'new_api_key'
+        storage.access_key_secret.should   == 'new_api_secret'
         storage.bucket.should  == 'new_bucket'
         storage.path.should         == 'new_path'
 
@@ -109,9 +109,10 @@ describe Backup::Storage::OSS do
 
     before do
       storage.instance_variable_set(:@package, package)
-      storage.stubs(:storage_name).returns('Storage::OSS')
+      storage.stubs(:storage_name).returns('Storage::Aliyun')
       storage.stubs(:local_path).returns('/local/path')
       storage.stubs(:connection).returns(connection)
+      file.stubs(:read).returns("foo")
     end
 
     it 'should transfer the package files' do
@@ -124,25 +125,25 @@ describe Backup::Storage::OSS do
       )
       # first yield
       Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::OSS started transferring " +
+        "Storage::Aliyun started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa'."
       )
       File.expects(:open).in_sequence(s).with(
         File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'), 'r'
       ).yields(file)
       connection.expects(:put).in_sequence(s).with(
-        File.join('remote/path', 'backup.tar.enc-aa'), file
+        File.join('remote/path', 'backup.tar.enc-aa'), file.read
       )
       # second yield
       Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::OSS started transferring " +
+        "Storage::Aliyun started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-ab'."
       )
       File.expects(:open).in_sequence(s).with(
         File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'), 'r'
       ).yields(file)
       connection.expects(:put).in_sequence(s).with(
-        File.join('remote/path', 'backup.tar.enc-ab'), file
+        File.join('remote/path', 'backup.tar.enc-ab'), file.read
       )
 
       storage.send(:transfer!)
@@ -155,7 +156,7 @@ describe Backup::Storage::OSS do
     let(:s) { sequence '' }
 
     before do
-      storage.stubs(:storage_name).returns('Storage::OSS')
+      storage.stubs(:storage_name).returns('Storage::Aliyun')
       storage.stubs(:connection).returns(connection)
     end
 
@@ -169,9 +170,9 @@ describe Backup::Storage::OSS do
       )
       # after both yields
       Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::OSS started removing " +
+        "Storage::Aliyun started removing " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa' from Aliyun OSS.\n" +
-        "Storage::OSS started removing " +
+        "Storage::Aliyun started removing " +
         "'2011.12.31.11.00.02.backup.tar.enc-ab' from Aliyun OSS."
       )
       connection.expects(:delete).in_sequence(s).with('remote/path')

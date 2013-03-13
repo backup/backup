@@ -1,0 +1,21 @@
+  ##
+  # Dropbox File Hosting Service [Storage]
+  #
+  # Access Type:
+  #
+  #  - :aliyun
+  #
+  # Note:
+  #
+  #  Initial backup must be performed manually to authorize
+  #  this machine with your Aliyun OSS account.
+  #
+  store_with Aliyun do |db|
+    # You can found you access key in here: 
+    # http://i.aliyun.com/access_key
+    db.access_key_id        = "my_access_key_id"
+    db.access_key_secret    = "my_access_key_secret"
+    db.bucket        = "my_bucket"
+    db.path        = "/path/to/my/backups"
+    db.keep        = 25
+  end
