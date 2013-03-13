@@ -357,7 +357,7 @@ module Backup
     module Helpers
       class << self
         def bundler_loaded?
-          defined?(Bundler)
+          !ENV['BUNDLE_GEMFILE'].to_s.empty?
         end
       end
     end
