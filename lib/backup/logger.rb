@@ -5,7 +5,7 @@ require 'backup/logger/logfile'
 require 'backup/logger/syslog'
 
 module Backup
-  module Logger
+  class Logger
 
     class Config
       class Logger < Struct.new(:class, :options)
@@ -24,7 +24,7 @@ module Backup
           Logger.new(Logfile, Logfile::Options.new),
           Logger.new(Syslog, Syslog::Options.new)
         ]
-        @dsl = DSL.new(*@loggers.map(&:options))
+        @dsl = DSL.new(*loggers.map(&:options))
       end
     end
 
@@ -43,10 +43,10 @@ module Backup
     end
 
     class << self
-      ##
-      # Returns an Array of Message objects for all logged messages received.
-      # These are used to attach log files to Mail notifications.
-      attr_reader :messages
+      extend Forwardable
+      def_delegators :logger,
+          :start!, :abort!, :info, :warn, :error,
+          :messages, :has_warnings?, :has_errors?
 
       ##
       # Allows the Logger to be configured.
@@ -76,75 +76,98 @@ module Backup
       # @see Logfile::Options
       # @see Syslog::Options
       def configure(&block)
-        @config.dsl.instance_eval(&block)
-      end
-
-      ##
-      # Sends a message to the Logger using the specified log level.
-      # +obj+ may be any Object that responds to #to_s (i.e. an Exception)
-      [:info, :warn, :error].each do |level|
-        define_method level, lambda {|obj| log(obj, level) }
-      end
-
-      ##
-      # Returns true if any +:warn+ level messages have been received.
-      def has_warnings?
-        @has_warnings
-      end
-
-      ##
-      # The Logger is available as soon as Backup is loaded, and stores all
-      # messages it receives. Since the Logger may be configured via the
-      # command line and/or the user's +config.rb+, no messages are sent
-      # until configuration can be completed. (see CLI#perform)
-      #
-      # Once configuration is completed, this method is called to activate
-      # all enabled loggers and send them any messages that have been received
-      # up to this point. From this point onward, these loggers will be sent
-      # all messages as soon as they're received.
-      def start!
-        @config.loggers.each do |logger|
-          @loggers << logger.class.new(logger.options) if logger.enabled?
-        end
-        @messages.each do |message|
-          @loggers.each {|logger| logger.log(message) }
-        end
+        config.dsl.instance_eval(&block)
       end
 
       ##
       # Called after each backup model/trigger has been performed.
       def clear!
-        messages.clear
-        @has_warnings = false
-      end
-
-      ##
-      # If errors are encountered by Backup::CLI while preparing to perform
-      # the backup jobs, this method is called to dump all messages to the
-      # console before Backup exits.
-      def abort!
-        console = Console.new
-        console.log(@messages.shift) until @messages.empty?
+        @logger = nil
+        logger.start!
       end
 
       private
 
-      def initialize!
-        @messages = []
-        @loggers = []
-        @config = Config.new
-        @has_warnings = false
+      def config
+        @config ||= Config.new
       end
 
-      def log(obj, level)
-        @has_warnings ||= level == :warn
-        message = Message.new(Time.now, level, obj.to_s.split("\n"))
-        @messages << message
-        @loggers.each {|logger| logger.log(message) }
+      def logger
+        @logger ||= new(config)
       end
 
+      def reset!
+        @config = @logger = nil
+      end
     end
 
-    initialize!
+    ##
+    # Returns an Array of Message objects for all logged messages received.
+    # These are used to attach log files to Mail notifications.
+    attr_reader :messages
+
+    def initialize(config)
+      @config = config
+      @messages = []
+      @loggers = []
+      @has_warnings = @has_errors = false
+    end
+
+    ##
+    # Sends a message to the Logger using the specified log level.
+    # +obj+ may be any Object that responds to #to_s (i.e. an Exception)
+    [:info, :warn, :error].each do |level|
+      define_method level, lambda {|obj| log(obj, level) }
+    end
+
+    ##
+    # Returns true if any +:warn+ level messages have been received.
+    def has_warnings?
+      @has_warnings
+    end
+
+    ##
+    # Returns true if any +:error+ level messages have been received.
+    def has_errors?
+      @has_errors
+    end
+
+    ##
+    # The Logger is available as soon as Backup is loaded, and stores all
+    # messages it receives. Since the Logger may be configured via the
+    # command line and/or the user's +config.rb+, no messages are sent
+    # until configuration can be completed. (see CLI#perform)
+    #
+    # Once configuration is completed, this method is called to activate
+    # all enabled loggers and send them any messages that have been received
+    # up to this point. From this point onward, these loggers will be sent
+    # all messages as soon as they're received.
+    def start!
+      @config.loggers.each do |logger|
+        @loggers << logger.class.new(logger.options) if logger.enabled?
+      end
+      messages.each do |message|
+        @loggers.each {|logger| logger.log(message) }
+      end
+    end
+
+    ##
+    # If errors are encountered by Backup::CLI while preparing to perform
+    # the backup jobs, this method is called to dump all messages to the
+    # console before Backup exits.
+    def abort!
+      console = Console.new
+      console.log(messages.shift) until messages.empty?
+    end
+
+    private
+
+    def log(obj, level)
+      @has_warnings ||= level == :warn
+      @has_errors ||= level == :error
+      message = Message.new(Time.now, level, obj.to_s.split("\n"))
+      messages << message
+      @loggers.each {|logger| logger.log(message) }
+    end
   end
 end

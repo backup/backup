@@ -56,7 +56,7 @@ RSpec.configure do |config|
     Backup::Utilities.send(:reset!)
     Backup::Config.send(:reset!)
     # Logger only queues messages received until Logger.start! is called.
-    Backup::Logger.send(:initialize!)
+    Backup::Logger.send(:reset!)
   end
 end
 

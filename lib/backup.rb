@@ -7,6 +7,7 @@ require 'tempfile'
 require 'syslog'
 require 'yaml'
 require 'etc'
+require 'forwardable'
 
 require 'open4'
 require 'thor'
