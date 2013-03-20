@@ -104,7 +104,8 @@ module Backup
       end
 
       def tar_dist(val)
-        @gnu_tar = val == :gnu
+        # the acceptance tests need to be able to reset this to nil
+        @gnu_tar = val.nil? ? nil : val == :gnu
       end
 
       def gnu_tar?

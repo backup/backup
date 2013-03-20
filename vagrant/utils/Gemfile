@@ -1,0 +1,15 @@
+source "https://rubygems.org"
+
+gem 'rake'
+
+# MySQL, PostgreSQL
+gem 'activerecord'
+gem 'mysql2'
+gem 'pg'
+
+# MongoDB
+gem 'mongo'
+gem 'bson_ext'
+
+# Redis
+gem 'redis'
