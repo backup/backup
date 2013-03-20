@@ -45,6 +45,7 @@ describe 'Backup::Pipeline' do
     let(:stderr) { mock }
 
     before do
+      Backup::Pipeline.any_instance.unstub(:run)
       pipeline.expects(:pipeline).returns('foo')
       # stub Utilities::Helpers#command_name so it simply returns what it's passed
       pipeline.class.send(:define_method, :command_name, lambda {|arg| arg } )

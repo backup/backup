@@ -51,7 +51,11 @@ RSpec.configure do |config|
     # ::FileUtils will always be either SandboxFileUtils or FileUtils::NoWrite.
     SandboxFileUtils.deactivate!(:noop)
 
-    Open4.stubs(:popen4).raises('Unexpected call to Open4::popen4()')
+    # prevent system calls
+    Backup::Utilities.stubs(:gnu_tar?).returns(true)
+    Backup::Utilities.stubs(:utility)
+    Backup::Utilities.stubs(:run)
+    Backup::Pipeline.any_instance.stubs(:run)
 
     Backup::Utilities.send(:reset!)
     Backup::Config.send(:reset!)

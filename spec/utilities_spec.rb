@@ -8,14 +8,11 @@ describe Backup::Utilities do
 
   # Note: spec_helper resets Utilities before each example
 
-  it 'includes Utilities::Helpers' do
-    utilities.instance_eval('class << self; self; end').
-        include?(Backup::Utilities::Helpers).should be_true
-  end
-
   describe '.configure' do
     before do
       File.stubs(:executable?).returns(true)
+      utilities.unstub(:gnu_tar?)
+      utilities.unstub(:utility)
 
       utilities.configure do
         # General Utilites
@@ -91,6 +88,10 @@ describe Backup::Utilities do
   end # describe '.configure'
 
   describe '.gnu_tar?' do
+    before do
+      utilities.unstub(:gnu_tar?)
+    end
+
     it 'determines when tar is GNU tar' do
       utilities.expects(:utility).with(:tar).returns('tar')
       utilities.expects(:run).with('tar --version').returns(
@@ -126,16 +127,21 @@ end # describe Backup::Utilities
 
 describe Backup::Utilities::Helpers do
   let(:helpers) { Module.new.extend(Backup::Utilities::Helpers) }
+  let(:utilities) { Backup::Utilities }
 
   describe '#utility' do
+    before do
+      utilities.unstub(:utility)
+    end
+
     context 'when a system path for the utility is available' do
       it 'should return the system path with newline removed' do
-        helpers.expects(:`).with("which 'foo' 2>/dev/null").returns("system_path\n")
+        utilities.expects(:`).with("which 'foo' 2>/dev/null").returns("system_path\n")
         helpers.send(:utility, :foo).should == 'system_path'
       end
 
       it 'should cache the returned path' do
-        helpers.expects(:`).once.with("which 'cache_me' 2>/dev/null").
+        utilities.expects(:`).once.with("which 'cache_me' 2>/dev/null").
             returns("cached_path\n")
 
         helpers.send(:utility, :cache_me).should == 'cached_path'
@@ -143,7 +149,7 @@ describe Backup::Utilities::Helpers do
       end
 
       it 'should cache the value for all extended objects' do
-        helpers.expects(:`).once.with("which 'once_only' 2>/dev/null").
+        utilities.expects(:`).once.with("which 'once_only' 2>/dev/null").
             returns("cached_path\n")
 
         helpers.send(:utility, :once_only).should == 'cached_path'
@@ -154,7 +160,7 @@ describe Backup::Utilities::Helpers do
 
     context 'when a system path for the utility is not available' do
       it 'should raise an error' do
-        helpers.expects(:`).with("which 'unknown' 2>/dev/null").returns("\n")
+        utilities.expects(:`).with("which 'unknown' 2>/dev/null").returns("\n")
 
         expect do
           helpers.send(:utility, :unknown)
@@ -164,7 +170,7 @@ describe Backup::Utilities::Helpers do
       end
 
       it 'should not cache any value for the utility' do
-        helpers.expects(:`).with("which 'not_cached' 2>/dev/null").twice.returns("\n")
+        utilities.expects(:`).with("which 'not_cached' 2>/dev/null").twice.returns("\n")
 
         expect do
           helpers.send(:utility, :not_cached)
@@ -181,7 +187,7 @@ describe Backup::Utilities::Helpers do
     end
 
     it 'should raise an error if name is nil' do
-      helpers.expects(:`).never
+      utilities.expects(:`).never
       expect do
         helpers.send(:utility, nil)
       end.to raise_error(
@@ -191,7 +197,7 @@ describe Backup::Utilities::Helpers do
     end
 
     it 'should raise an error if name is empty' do
-      helpers.expects(:`).never
+      utilities.expects(:`).never
       expect do
         helpers.send(:utility, ' ')
       end.to raise_error(
@@ -244,6 +250,10 @@ describe Backup::Utilities::Helpers do
     let(:stdin_io)  { stub(:close) }
     let(:process_status) { stub(:success? => process_success) }
     let(:command) { '/path/to/cmd_name arg1 arg2' }
+
+    before do
+      utilities.unstub(:run)
+    end
 
     context 'when the command is successful' do
       let(:process_success) { true }
