@@ -58,16 +58,33 @@ describe Logger do
         end
       end
     end
+
+    describe '#matches?' do
+      let(:message) {
+        Logger::Message.new(
+          :foo, :foo, ['line one of message', 'line two of message']
+        )
+      }
+
+      it 'returns true if message lines match the given matchers' do
+        expect( message.matches?(['not', 'one of']) ).to be(true)
+        expect( message.matches?(['not', "message\nline two"]) ).to be(true)
+        expect( message.matches?(['not', /^line one/]) ).to be(true)
+        expect( message.matches?(['not', /two \w+ message$/]) ).to be(true)
+      end
+
+      it 'returns false if no match is found' do
+        expect( message.matches?(['not', 'three']) ).to be(false)
+        expect( message.matches?(['not', /three/]) ).to be(false)
+      end
+    end
   end # describe Logger::Message
 
   describe '.configure' do
-    before do
-      Logger.info "line 1\nline 2"
-    end
-
     context 'when the console and logfile loggers are enabled' do
       before do
         Logger::Syslog.expects(:new).never
+        Logger.info "line 1\nline 2"
         Logger.configure do
           console.quiet   = false
           logfile.enabled = true
@@ -93,6 +110,7 @@ describe Logger do
     context 'when the logfile and syslog loggers are enabled' do
       before do
         Logger::Console.expects(:new).never
+        Logger.info "line 1\nline 2"
         Logger.configure do
           console.quiet   = true
           logfile.enabled = true
@@ -118,6 +136,7 @@ describe Logger do
     context 'when the console and syslog loggers are enabled' do
       before do
         Logger::Logfile.expects(:new).never
+        Logger.info "line 1\nline 2"
         Logger.configure do
           console.quiet   = false
           logfile.enabled = false
@@ -137,6 +156,40 @@ describe Logger do
         end
 
         Logger.start!
+      end
+    end
+
+    # Note that this will only work for :warn messages
+    # sent *after* the Logger has been configured.
+    context 'when warnings are ignored' do
+      before do
+        Logger.configure do
+          ignore_warning "one\nline two"
+          ignore_warning(/line\nline two/)
+        end
+      end
+
+      it 'converts ignored :warn messages to :info messages' do
+        Logger.warn "message line one\nline two"
+        Logger.warn "first line\nline two of message"
+        Logger.warn "first line\nsecond line"
+        Logger.error 'one of'
+        m1, m2, m3, m4 = Logger.messages
+
+        expect( m1.level ).to be(:info)
+        expect( m2.level ).to be(:info)
+        expect( m3.level ).to be(:warn)
+        expect( m4.level ).to be(:error)
+
+        expect( Logger.has_warnings? ).to be(true)
+        expect( Logger.has_errors? ).to be(true)
+      end
+
+      it 'does not flag logger as having warnings' do
+        Logger.warn "message line one\nline two"
+        Logger.warn "first line\nline two of message"
+
+        expect( Logger.has_warnings? ).to be(false)
       end
     end
   end # describe '.configure'

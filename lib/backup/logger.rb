@@ -14,17 +14,22 @@ module Backup
         end
       end
 
-      DSL = Struct.new(:console, :logfile, :syslog)
+      class DSL < Struct.new(:ignores, :console, :logfile, :syslog)
+        def ignore_warning(str_or_regexp)
+          ignores << str_or_regexp
+        end
+      end
 
-      attr_reader :loggers, :dsl
+      attr_reader :ignores, :loggers, :dsl
 
       def initialize
+        @ignores = []
         @loggers = [
           Logger.new(Console, Console::Options.new),
           Logger.new(Logfile, Logfile::Options.new),
           Logger.new(Syslog, Syslog::Options.new)
         ]
-        @dsl = DSL.new(*loggers.map(&:options))
+        @dsl = DSL.new(ignores, *loggers.map(&:options))
       end
     end
 
@@ -39,6 +44,13 @@ module Backup
       def formatted_lines
         timestamp = time.strftime("%Y/%m/%d %H:%M:%S")
         lines.map {|line| "[#{ timestamp }][#{ level }] #{ line }" }
+      end
+
+      def matches?(ignores)
+        text = lines.join("\n")
+        ignores.any? {|obj|
+          obj.is_a?(Regexp) ? text.match(obj) : text.include?(obj)
+        }
       end
     end
 
@@ -69,6 +81,11 @@ module Backup
       #     syslog.info     = Syslog::LOG_INFO
       #     syslog.warn     = Syslog::LOG_WARNING
       #     syslog.error    = Syslog::LOG_ERR
+      #
+      #     # Ignore Warnings:
+      #     # Converts :warn level messages to level :info
+      #     ignore_warning 'that contains this string'
+      #     ignore_warning /that matches this regexp/
       #   end
       #
       # See each Logger's Option class for details.
@@ -163,9 +180,13 @@ module Backup
     private
 
     def log(obj, level)
-      @has_warnings ||= level == :warn
-      @has_errors ||= level == :error
       message = Message.new(Time.now, level, obj.to_s.split("\n"))
+
+      message.level = :info if message.level == :warn &&
+          message.matches?(@config.ignores)
+      @has_warnings ||= message.level == :warn
+      @has_errors   ||= message.level == :error
+
       messages << message
       @loggers.each {|logger| logger.log(message) }
     end
