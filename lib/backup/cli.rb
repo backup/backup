@@ -9,12 +9,27 @@ module Backup
     ##
     # [Perform]
     # Performs the backup process. The only required option is the --trigger [-t].
-    # If the other options (--config-file, --data-path, --cache-path, --tmp-path) aren't specified
-    # they will fallback to the (good) defaults
+    # If the other options (--config-file, --data-path, --cache-path, --tmp-path)
+    # aren't specified they will fallback to the (good) defaults.
     #
     # If --root-path is given, it will be used as the base path for our defaults,
     # as well as the base path for any option specified as a relative path.
     # Any option given as an absolute path will be used "as-is".
+    #
+    # If the --check option is given, the config.rb and all model files will be
+    # loaded, but no triggers will be run. If the check fails, errors will be
+    # reported to the console. If the check passes, a success message will be
+    # reported to the console unless --quiet is set. Use --no-quiet to ensure
+    # these messages are output. The command will exit with status 0 if
+    # successful, or status 1 if there were problems.
+    #
+    # This command will exit with one of the following status codes:
+    #
+    #   0: All triggers were successful and no warnings were issued.
+    #   1: All triggers were successful, but some had warnings.
+    #   2: All triggers were processed, but some failed.
+    #   3: A fatal error caused Backup to exit.
+    #      Some triggers may not have been processed.
     desc 'perform', "Performs the backup for the specified trigger(s)."
     long_desc "Performs the backup for the specified trigger(s).\n\n" +
               "You may perform multiple backups by providing multiple triggers, separated by commas.\n\n" +
@@ -110,13 +125,13 @@ module Backup
         # Finalize Logger configuration and begin real-time logging.
         Logger.start!
 
-      rescue => err
+      rescue Exception => err
         Logger.error Errors::CLIError.wrap(err)
         Logger.error 'Configuration Check Failed.' if options[:check]
         # Logger configuration will be ignored
         # and messages will be output to the console only.
         Logger.abort!
-        exit(1)
+        exit(options[:check] ? 1 : 3)
       end
 
       if options[:check]
@@ -128,10 +143,14 @@ module Backup
         #
         # Model#perform! handles all exceptions from this point,
         # as each model may fail and return here to allow others to run.
+        warnings = errors = false
         models.each do |model|
           model.perform!
+          warnings ||= Logger.has_warnings?
+          errors   ||= Logger.has_errors?
           Logger.clear!
         end
+        exit(errors ? 2 : 1) if errors || warnings
       end
     end
 

@@ -241,7 +241,7 @@ module Backup
     rescue Exception => err
       log!(:failure, err)
       send_failure_notifications
-      exit(1) unless err.is_a?(StandardError)
+      exit(3) unless err.is_a?(StandardError)
     end
 
     private

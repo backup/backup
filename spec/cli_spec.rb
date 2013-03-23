@@ -214,8 +214,8 @@ describe 'Backup::CLI' do
 
         Backup::Logger.expects(:start!).never
 
-        model_a.expects(:preform!).never
-        model_b.expects(:preform!).never
+        model_a.expects(:perform!).never
+        model_b.expects(:perform!).never
         Backup::Logger.expects(:clear!).never
       end
 
@@ -225,7 +225,7 @@ describe 'Backup::CLI' do
               raises('config load error')
         end
 
-        it 'aborts and logs messages to the console only' do
+        it 'aborts with status code 3 and logs messages to the console only' do
 
           Backup::Logger.expects(:error).in_sequence(s).with do |err|
             err.should be_a(Backup::Errors::CLIError)
@@ -239,7 +239,7 @@ describe 'Backup::CLI' do
               ['perform', '-t', 'test_trigger_a']
             )
             cli.start
-          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
+          end.to raise_error(SystemExit) {|exit| exit.status.should be(3) }
         end
       end
 
@@ -263,10 +263,68 @@ describe 'Backup::CLI' do
               ['perform', '-t', 'test_trigger_foo']
             )
             cli.start
-          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
+          end.to raise_error(SystemExit) {|exit| exit.status.should be(3) }
         end
       end
     end # describe 'failure to prepare for backups'
+
+    describe 'exit codes when backups have errors or warnings' do
+      before do
+        Backup::Config.stubs(:load_config!)
+        Backup::Logger.stubs(:start!)
+      end
+
+      specify 'when a job has warnings' do
+        model_a.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:has_warnings?).in_sequence(s).returns(true)
+        Backup::Logger.expects(:has_errors?).in_sequence(s).returns(false)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+        model_b.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:has_errors?).in_sequence(s).returns(false)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_a,test_trigger_b']
+          )
+          cli.start
+        end.to raise_error(SystemExit) {|err| err.status.should be(1) }
+      end
+
+      specify 'when a job has errors' do
+        model_a.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:has_warnings?).in_sequence(s).returns(false)
+        Backup::Logger.expects(:has_errors?).in_sequence(s).returns(true)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+        model_b.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:has_warnings?).in_sequence(s).returns(false)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_a,test_trigger_b']
+          )
+          cli.start
+        end.to raise_error(SystemExit) {|err| err.status.should be(2) }
+      end
+
+      specify 'when a jobs have errors and warnings' do
+        model_a.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:has_warnings?).in_sequence(s).returns(false)
+        Backup::Logger.expects(:has_errors?).in_sequence(s).returns(true)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+        model_b.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:has_warnings?).in_sequence(s).returns(true)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_a,test_trigger_b']
+          )
+          cli.start
+        end.to raise_error(SystemExit) {|err| err.status.should be(2) }
+      end
+    end # describe 'exit codes when backups have errors or warnings'
 
     describe '--check' do
       before do
@@ -280,8 +338,8 @@ describe 'Backup::CLI' do
 
         Backup::Config.expects(:load_config!).in_sequence(s)
 
-        model_a.expects(:preform!).never
-        model_b.expects(:preform!).never
+        model_a.expects(:perform!).never
+        model_b.expects(:perform!).never
         Backup::Logger.expects(:clear!).never
       end
 
@@ -383,6 +441,7 @@ describe 'Backup::CLI' do
               cli.start
             end
 
+            err.should be_empty
             out.should == "Generated model file: '#{ model_file }'.\n" +
                 "Generated configuration file: '#{ config_file }'.\n"
             File.exist?(model_file).should be_true
@@ -407,6 +466,7 @@ describe 'Backup::CLI' do
               cli.start
             end
 
+            err.should be_empty
             out.should == "Generated model file: '#{ model_file }'.\n"
             File.exist?(model_file).should be_true
           end
@@ -452,6 +512,7 @@ describe 'Backup::CLI' do
             cli.start
           end
 
+          err.should be_empty
           out.should == "Generated model file: '#{ model_file }'.\n" +
               "Generated configuration file: '#{ config_file }'.\n"
           File.exist?(model_file).should be_true
@@ -491,6 +552,7 @@ describe 'Backup::CLI' do
         cli.start
       end
 
+      err.should be_empty
       output_usage, output_options, output_description =
           out.split(/Usage:|Options:|Description:/, 4)[1..3]
 
@@ -539,6 +601,7 @@ describe 'Backup::CLI' do
             cli.start
           end
 
+          err.should be_empty
           out.should == "Generated configuration file: '#{ config_file }'.\n"
           File.exist?(config_file).should be_true
         end
@@ -556,6 +619,7 @@ describe 'Backup::CLI' do
             cli.start
           end
 
+          err.should be_empty
           out.should == "Generated configuration file: '#{ config_file }'.\n"
           File.exist?(config_file).should be_true
         end
@@ -854,6 +918,7 @@ describe 'Backup::CLI' do
       out, err = capture_io do
         cli.start
       end
+      err.should be_empty
       out.should == "Backup #{ Backup::Version.current }\n"
     end
   end

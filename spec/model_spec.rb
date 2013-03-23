@@ -432,7 +432,7 @@ describe 'Backup::Model' do
         expect { model.perform! }.not_to raise_error
       end
 
-      it 'logs, notifies and exits if an Exception is rescued' do
+      it 'logs, notifies and exits with status code 3 if an Exception is rescued' do
         err = Exception.new 'fatal error'
         Time.stubs(:now).raises(err)
 
@@ -441,7 +441,7 @@ describe 'Backup::Model' do
 
         expect do
           model.perform!
-        end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
+        end.to raise_error(SystemExit) {|exit| exit.status.should be(3) }
       end
 
     end # context 'when errors occur'
