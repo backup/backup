@@ -14,8 +14,8 @@ module Backup
           @directories.each do |directory|
             Logger.info("#{ syncer_name } started syncing '#{ directory }'.")
             run("#{ utility(:rsync) } #{ options } " +
-                "'#{ username }@#{ ip }:#{ directory.sub(/^\~\//, '') }' " +
-                "'#{ dest_path }'")
+                    "'#{ username }@#{ ip }#{rsync_path_separator}#{ directory.sub(/^\~\//, '') }' " +
+                    "'#{ dest_path }'")
           end
 
         ensure
