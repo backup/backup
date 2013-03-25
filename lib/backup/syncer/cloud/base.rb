@@ -42,6 +42,7 @@ module Backup
         def initialize
           super
 
+          @path = path.sub(/^~\//, '')
           @concurrency_type  ||= false
           @concurrency_level ||= 2
         end

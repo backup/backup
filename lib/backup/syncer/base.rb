@@ -17,9 +17,9 @@ module Backup
       def initialize
         load_defaults!
 
-        @path               ||= 'backups'
-        @mirror             ||= false
-        @directories          = Array.new
+        @path   ||= '~/backups'
+        @mirror ||= false
+        @directories = Array.new
       end
 
       ##
@@ -29,10 +29,8 @@ module Backup
         instance_eval(&block)
       end
 
-      ##
-      # Adds a path to the @directories array
       def add(path)
-        @directories << path
+        directories << path
       end
 
       private
