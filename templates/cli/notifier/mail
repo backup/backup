@@ -18,5 +18,5 @@
     mail.user_name            = "sender@email.com"
     mail.password             = "my_password"
     mail.authentication       = "plain"
-    mail.enable_starttls_auto = true
+    mail.encryption           = :starttls
   end
