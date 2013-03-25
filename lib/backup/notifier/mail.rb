@@ -76,6 +76,11 @@ module Backup
       attr_accessor :openssl_verify_mode
 
       ##
+      # Automatically set SSL
+      # Example: true
+      attr_accessor :ssl
+
+      ##
       # When using the `:sendmail` `delivery_method` option,
       # this may be used to specify the absolute path to `sendmail` (if needed)
       # Example: '/usr/sbin/sendmail'
@@ -174,7 +179,8 @@ module Backup
                 :password             => @password,
                 :authentication       => @authentication,
                 :enable_starttls_auto => @enable_starttls_auto,
-                :openssl_verify_mode  => @openssl_verify_mode }
+                :openssl_verify_mode  => @openssl_verify_mode,
+                :ssl                  => @ssl }
             when 'sendmail'
               opts = {}
               opts.merge!(:location  => File.expand_path(@sendmail)) if @sendmail
