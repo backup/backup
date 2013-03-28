@@ -39,7 +39,7 @@ module Backup
         # If not specified in the pre-configured defaults,
         # the Cloud specific defaults are set here before evaluating
         # any block provided in the user's configuration file.
-        def initialize
+        def initialize(syncer_id = nil)
           super
 
           @path = path.sub(/^~\//, '')
@@ -50,8 +50,8 @@ module Backup
         ##
         # Performs the Sync operation
         def perform!
+          log!(:started)
           Logger.info(
-            "#{ syncer_name } started the syncing process:\n" +
             "\s\sConcurrency: #{ @concurrency_type } Level: #{ @concurrency_level }"
           )
 
@@ -61,7 +61,7 @@ module Backup
             ).sync! @mirror, @concurrency_type, @concurrency_level
           end
 
-          Logger.info("#{ syncer_name } Syncing Complete!")
+          log!(:finished)
         end
 
         private

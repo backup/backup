@@ -119,6 +119,24 @@ describe Syncer::RSync::Local do
       syncer.perform!
     end
 
+    describe 'logging messages' do
+      it 'logs started/finished messages' do
+        syncer = Syncer::RSync::Local.new
+
+        Logger.expects(:info).with('Syncer::RSync::Local Started...')
+        Logger.expects(:info).with('Syncer::RSync::Local Finished!')
+        syncer.perform!
+      end
+
+      it 'logs messages using optional syncer_id' do
+        syncer = Syncer::RSync::Local.new('My Syncer')
+
+        Logger.expects(:info).with('Syncer::RSync::Local (My Syncer) Started...')
+        Logger.expects(:info).with('Syncer::RSync::Local (My Syncer) Finished!')
+        syncer.perform!
+      end
+    end
+
   end # describe '#perform!'
 
   describe 'deprecations' do

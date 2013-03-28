@@ -166,14 +166,15 @@ describe 'Backup::Model' do
       it 'should add storages' do
         using_fake('Storage', Fake::TwoArgs) do
           model.store_with('Base', 'foo') {|a| a.block_arg = :foo }
-          model.store_with('Base', 'bar') {|a| a.block_arg = :bar }
+          # second arg is optional
+          model.store_with('Base') {|a| a.block_arg = :bar }
           model.storages.count.should be(2)
           s1, s2 = model.storages
           s1.arg1.should be(model)
           s1.arg2.should == 'foo'
           s1.block_arg.should == :foo
           s2.arg1.should be(model)
-          s2.arg2.should == 'bar'
+          s2.arg2.should be_nil
           s2.block_arg.should == :bar
         end
       end
@@ -188,20 +189,23 @@ describe 'Backup::Model' do
 
     describe '#sync_with' do
       it 'should add syncers' do
-        using_fake('Syncer', Fake::NoArg) do
-          model.sync_with('Base') {|a| a.block_arg = :foo }
+        using_fake('Syncer', Fake::OneArg) do
+          model.sync_with('Base', 'foo') {|a| a.block_arg = :foo }
+          # second arg is optional
           model.sync_with('Base') {|a| a.block_arg = :bar }
           model.syncers.count.should be(2)
           s1, s2 = model.syncers
+          s1.arg1.should == 'foo'
           s1.block_arg.should == :foo
+          s2.arg1.should be_nil
           s2.block_arg.should == :bar
         end
       end
 
       it 'should accept a nested class name' do
         using_fake('Syncer', Fake) do
-          model.sync_with('NoArg::Base')
-          model.syncers.first.should be_an_instance_of Fake::NoArg::Base
+          model.sync_with('OneArg::Base')
+          model.syncers.first.should be_an_instance_of Fake::OneArg::Base
         end
       end
 

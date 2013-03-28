@@ -106,6 +106,23 @@ describe Syncer::RSync::Pull do
       end
     end # describe 'password handling'
 
+    describe 'logging messages' do
+      it 'logs started/finished messages' do
+        syncer = Syncer::RSync::Pull.new
+
+        Logger.expects(:info).with('Syncer::RSync::Pull Started...')
+        Logger.expects(:info).with('Syncer::RSync::Pull Finished!')
+        syncer.perform!
+      end
+
+      it 'logs messages using optional syncer_id' do
+        syncer = Syncer::RSync::Pull.new('My Syncer')
+
+        Logger.expects(:info).with('Syncer::RSync::Pull (My Syncer) Started...')
+        Logger.expects(:info).with('Syncer::RSync::Pull (My Syncer) Finished!')
+        syncer.perform!
+      end
+    end
   end # describe '#perform!'
 
   # same deprecations as RSync::Push

@@ -31,10 +31,6 @@ module Backup
           directories.map {|dir| "'#{ File.expand_path(dir) }'" }.join(' ')
         end
 
-        def log!
-          Logger.info "#{ syncer_name } started..."
-        end
-
       end
     end
   end

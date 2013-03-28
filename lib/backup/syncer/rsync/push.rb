@@ -101,7 +101,7 @@ module Backup
         # Flag for compressing (only compresses for the transfer)
         attr_accessor :compress
 
-        def initialize(&block)
+        def initialize(syncer_id = nil, &block)
           super
           instance_eval(&block) if block_given?
 
@@ -111,13 +111,14 @@ module Backup
         end
 
         def perform!
-          log!
+          log!(:started)
           write_password_file!
 
           create_dest_path!
           run("#{ rsync_command } #{ paths_to_push } " +
               "#{ host_options }'#{ dest_path }'")
 
+          log!(:finished)
         ensure
           remove_password_file!
         end

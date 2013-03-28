@@ -112,7 +112,7 @@ module Backup
     ##
     # Adds a syncer method to the array of syncer
     # methods to use during the backup process
-    def sync_with(name, &block)
+    def sync_with(name, syncer_id = nil, &block)
       ##
       # Warn user of DSL changes
       case name.to_s
@@ -134,7 +134,7 @@ module Backup
         EOS
         name = "Cloud::#{ syncer }"
       end
-      @syncers << get_class_from_scope(Syncer, name).new(&block)
+      @syncers << get_class_from_scope(Syncer, name).new(syncer_id, &block)
     end
 
     ##

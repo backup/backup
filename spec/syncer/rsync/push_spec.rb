@@ -15,7 +15,7 @@ describe Syncer::RSync::Push do
     after { Syncer::RSync::Push.clear_defaults! }
 
     it 'should use the values given' do
-      syncer = Syncer::RSync::Push.new do |rsync|
+      syncer = Syncer::RSync::Push.new('my syncer') do |rsync|
         rsync.mode            = :valid_mode
         rsync.host            = '123.45.678.90'
         rsync.port            = 123
@@ -35,6 +35,7 @@ describe Syncer::RSync::Push do
         end
       end
 
+      expect( syncer.syncer_id      ).to eq 'my syncer'
       expect( syncer.mode           ).to eq :valid_mode
       expect( syncer.host           ).to eq '123.45.678.90'
       expect( syncer.port           ).to be 123
@@ -53,6 +54,7 @@ describe Syncer::RSync::Push do
     it 'should use default values if none are given' do
       syncer = Syncer::RSync::Push.new
 
+      expect( syncer.syncer_id      ).to be_nil
       expect( syncer.mode           ).to eq :ssh
       expect( syncer.host           ).to be_nil
       expect( syncer.port           ).to be 22
@@ -624,6 +626,24 @@ describe Syncer::RSync::Push do
         end
       end
     end # describe 'dest_path creation'
+
+    describe 'logging messages' do
+      it 'logs started/finished messages' do
+        syncer = Syncer::RSync::Push.new
+
+        Logger.expects(:info).with('Syncer::RSync::Push Started...')
+        Logger.expects(:info).with('Syncer::RSync::Push Finished!')
+        syncer.perform!
+      end
+
+      it 'logs messages using optional syncer_id' do
+        syncer = Syncer::RSync::Push.new('My Syncer')
+
+        Logger.expects(:info).with('Syncer::RSync::Push (My Syncer) Started...')
+        Logger.expects(:info).with('Syncer::RSync::Push (My Syncer) Finished!')
+        syncer.perform!
+      end
+    end
 
   end # describe '#perform!'
 

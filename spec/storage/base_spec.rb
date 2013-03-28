@@ -70,8 +70,8 @@ describe Backup::Storage::Base do
 
   describe '#storage_name' do
     context 'when given a storage_id' do
-      before { storage.storage_id = 'storage id' }
       it 'should return a log-friendly name with the storage_id' do
+        storage = Backup::Storage::Base.new(model, 'storage id')
         storage.send(:storage_name).should == 'Storage::Base (storage id)'
       end
     end

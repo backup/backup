@@ -11,19 +11,17 @@ module Backup
       attr_accessor :keep
 
       ##
-      # (Optional)
       # User-defined string used to uniquely identify multiple storages of the
-      # same type. This will be appended to the YAML storage file used for
-      # cycling backups.
-      attr_accessor :storage_id
+      # same type. If multiple storages of the same type are added to a single
+      # backup model, then this identifier must be set. This will be appended
+      # to the YAML storage file used for cycling backups.
+      attr_reader :storage_id
 
-      ##
-      # Creates a new instance of the storage object
-      # * Called with super(model, storage_id) from each subclass
       def initialize(model, storage_id = nil)
-        load_defaults!
         @model = model
         @storage_id = storage_id
+
+        load_defaults!
       end
 
       ##
@@ -50,8 +48,8 @@ module Backup
       ##
       # Return the storage name, with optional storage_id
       def storage_name
-        self.class.to_s.sub('Backup::', '') +
-            (storage_id ? " (#{storage_id})" : '')
+        @storage_name ||= self.class.to_s.sub('Backup::', '') +
+            (storage_id ? " (#{ storage_id })" : '')
       end
 
       ##

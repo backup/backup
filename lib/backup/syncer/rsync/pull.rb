@@ -6,12 +6,14 @@ module Backup
       class Pull < Push
 
         def perform!
-          log!
+          log!(:started)
           write_password_file!
 
           create_dest_path!
           run("#{ rsync_command } #{ host_options }#{ paths_to_pull } " +
               "'#{ dest_path }'")
+
+          log!(:finished)
         ensure
           remove_password_file!
         end

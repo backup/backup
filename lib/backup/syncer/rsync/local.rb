@@ -5,16 +5,18 @@ module Backup
     module RSync
       class Local < Base
 
-        def initialize(&block)
+        def initialize(syncer_id = nil, &block)
           super
           instance_eval(&block) if block_given?
         end
 
         def perform!
-          log!
+          log!(:started)
 
           create_dest_path!
           run("#{ rsync_command } #{ paths_to_push } '#{ dest_path }'")
+
+          log!(:finished)
         end
 
         private

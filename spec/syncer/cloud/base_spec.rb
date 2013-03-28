@@ -53,14 +53,6 @@ describe 'Backup::Syncer::Cloud::Base' do
 
     before do
       syncer.stubs(:repository_object).returns(:a_repository_object)
-
-      Backup::Logger.expects(:info).with(
-        "Syncer::Cloud::Base started the syncing process:\n" +
-        "\s\sConcurrency: false Level: 2"
-      )
-      Backup::Logger.expects(:info).with(
-        'Syncer::Cloud::Base Syncing Complete!'
-      )
     end
 
     it 'should sync each directory' do
@@ -102,6 +94,24 @@ describe 'Backup::Syncer::Cloud::Base' do
       sync_context.stubs(:sync!)
 
       syncer.perform!
+    end
+
+    describe 'logging messages' do
+      it 'logs started/finished messages' do
+        Backup::Logger.expects(:info).with('Syncer::Cloud::Base Started...')
+        Backup::Logger.expects(:info).with("\s\sConcurrency: false Level: 2")
+        Backup::Logger.expects(:info).with('Syncer::Cloud::Base Finished!')
+        syncer.perform!
+      end
+
+      it 'logs messages using optional syncer_id' do
+        syncer = Backup::Syncer::Cloud::Base.new('My Syncer')
+
+        Backup::Logger.expects(:info).with('Syncer::Cloud::Base (My Syncer) Started...')
+        Backup::Logger.expects(:info).with("\s\sConcurrency: false Level: 2")
+        Backup::Logger.expects(:info).with('Syncer::Cloud::Base (My Syncer) Finished!')
+        syncer.perform!
+      end
     end
   end # describe '#perform'
 
