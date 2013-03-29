@@ -23,6 +23,11 @@ module Backup
       # Path to where the backups will be stored
       attr_accessor :path
 
+      ##
+      # chunk size for the DropboxClient::ChunkedUploader
+      # specified in bytes
+      attr_accessor :chunk_size
+
       attr_deprecate :email,    :version => '3.0.17'
       attr_deprecate :password, :version => '3.0.17'
 
@@ -35,6 +40,8 @@ module Backup
 
         @path ||= 'backups'
         @access_type ||= :app_folder
+        # 4Mb in bytes
+        @chunk_size ||= 1024 ** 2 * 4
 
         instance_eval(&block) if block_given?
       end
@@ -87,14 +94,20 @@ module Backup
 
       ##
       # Transfers the archived file to the specified Dropbox folder
+      # in chunks of chunk_size
       def transfer!
         remote_path = remote_path_for(@package)
-
         files_to_transfer_for(@package) do |local_file, remote_file|
           Logger.info "#{storage_name} started transferring '#{ local_file }'."
-          File.open(File.join(local_path, local_file), 'r') do |file|
-            connection.put_file(File.join(remote_path, remote_file), file)
+          local_file_path = File.join(local_path, local_file)
+          remote_file_path = File.join(remote_path, remote_file)
+          file = File.open(local_file_path, "r")
+          file_size = File.size(local_file_path)
+          uploader = connection.get_chunked_uploader(file, file_size )
+          while uploader.offset < uploader.total_size
+            uploader.upload(chunk_size)
           end
+          uploader.finish(remote_file_path)
         end
       end
 
