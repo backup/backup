@@ -40,9 +40,11 @@ describe Backup::Storage::Dropbox do
         storage.api_secret.should   == 'my_api_secret'
         storage.access_type.should  == :app_folder
         storage.path.should         == 'backups'
+        storage.chunk_size.should   == 4194304
 
         storage.storage_id.should be_nil
         storage.keep.should       == 5
+
       end
 
       it 'should use default values if none are given' do
@@ -51,6 +53,7 @@ describe Backup::Storage::Dropbox do
         storage.api_secret.should   be_nil
         storage.access_type.should  == :app_folder
         storage.path.should         == 'backups'
+        storage.chunk_size.should   == 4194304
 
         storage.storage_id.should be_nil
         storage.keep.should       be_nil
@@ -65,6 +68,7 @@ describe Backup::Storage::Dropbox do
           s.access_type  = 'some_access_type'
           s.path         = 'some_path'
           s.keep         = 15
+          s.chunk_size   = 50
         end
       end
 
@@ -78,6 +82,7 @@ describe Backup::Storage::Dropbox do
 
         storage.storage_id.should be_nil
         storage.keep.should       == 15
+        storage.chunk_size.should == 50
       end
 
       it 'should override pre-configured defaults' do
@@ -87,6 +92,7 @@ describe Backup::Storage::Dropbox do
           s.access_type  = 'new_access_type'
           s.path         = 'new_path'
           s.keep         = 10
+          s.chunk_size   = 40
         end
 
         storage.api_key.should      == 'new_api_key'
@@ -96,6 +102,7 @@ describe Backup::Storage::Dropbox do
 
         storage.storage_id.should be_nil
         storage.keep.should       == 10
+        storage.chunk_size.should == 40
       end
     end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
@@ -219,7 +226,10 @@ describe Backup::Storage::Dropbox do
   describe '#transfer!' do
     let(:connection) { mock }
     let(:package) { mock }
+    let(:local_file_path) { mock }
+    let(:remote_file_path) { mock }
     let(:file) { mock }
+    let(:uploader) { mock }
     let(:s) { sequence '' }
 
     before do
@@ -227,6 +237,7 @@ describe Backup::Storage::Dropbox do
       storage.stubs(:storage_name).returns('Storage::Dropbox')
       storage.stubs(:local_path).returns('/local/path')
       storage.stubs(:connection).returns(connection)
+      storage.stubs(:chunk_size).returns(50)
     end
 
     it 'should transfer the package files' do
@@ -242,24 +253,58 @@ describe Backup::Storage::Dropbox do
         "Storage::Dropbox started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-aa'."
       )
+      File.expects(:join).in_sequence(s).with(
+          '/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'
+      ).returns(local_file_path)
+      File.expects(:join).in_sequence(s).with(
+          'remote/path', 'backup.tar.enc-aa'
+      ).returns(remote_file_path)
       File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'), 'r'
-      ).yields(file)
-      connection.expects(:put_file).in_sequence(s).with(
-        File.join('remote/path', 'backup.tar.enc-aa'), file
+        local_file_path, 'r'
+      ).returns(file)
+      File.expects(:size).in_sequence(s).with(
+        local_file_path
+      ).returns(250)
+      connection.expects(:get_chunked_uploader).in_sequence(s).with(
+        file, 250
+      ).returns(uploader)
+      uploader.expects(:offset).times(6).returns(0).then.returns(50,100,150,200,250)
+      uploader.expects(:total_size).times(6).returns(250)
+      uploader.expects(:upload).times(5).with(
+        50
       )
+      uploader.expects(:finish).in_sequence(s).with(
+        remote_file_path
+      )
+
       # second yield
       Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::Dropbox started transferring " +
         "'2011.12.31.11.00.02.backup.tar.enc-ab'."
       )
+      File.expects(:join).in_sequence(s).with(
+          '/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'
+      ).returns(local_file_path)
+      File.expects(:join).in_sequence(s).with(
+          'remote/path', 'backup.tar.enc-ab'
+      ).returns(remote_file_path)
       File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'), 'r'
-      ).yields(file)
-      connection.expects(:put_file).in_sequence(s).with(
-        File.join('remote/path', 'backup.tar.enc-ab'), file
+          local_file_path, 'r'
+      ).returns(file)
+      File.expects(:size).in_sequence(s).with(
+          local_file_path
+      ).returns(40)
+      connection.expects(:get_chunked_uploader).in_sequence(s).with(
+          file, 40
+      ).returns(uploader)
+      uploader.expects(:offset).times(2).returns(0).then.returns(40)
+      uploader.expects(:total_size).times(2).returns(40)
+      uploader.expects(:upload).times(1).with(
+        50
       )
-
+      uploader.expects(:finish).in_sequence(s).with(
+          remote_file_path
+      )
       storage.send(:transfer!)
     end
   end # describe '#transfer!'
