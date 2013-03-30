@@ -36,53 +36,61 @@ describe Backup::Storage::Dropbox do
 
     context 'when no pre-configured defaults have been set' do
       it 'should use the values given' do
-        storage.api_key.should      == 'my_api_key'
-        storage.api_secret.should   == 'my_api_secret'
-        storage.access_type.should  == :app_folder
-        storage.path.should         == 'backups'
-        storage.chunk_size.should   == 4194304
+        storage.api_key.should        == 'my_api_key'
+        storage.api_secret.should     == 'my_api_secret'
+        storage.access_type.should    == :app_folder
+        storage.path.should           == 'backups'
+        storage.chunk_size.should     == 4194304
+        storage.chunk_retries.should  == 10
+        storage.retry_waitsec.should  == 30
 
-        storage.storage_id.should be_nil
-        storage.keep.should       == 5
+        storage.storage_id.should     be_nil
+        storage.keep.should           == 5
 
       end
 
       it 'should use default values if none are given' do
         storage = Backup::Storage::Dropbox.new(model)
-        storage.api_key.should      be_nil
-        storage.api_secret.should   be_nil
-        storage.access_type.should  == :app_folder
-        storage.path.should         == 'backups'
-        storage.chunk_size.should   == 4194304
+        storage.api_key.should         be_nil
+        storage.api_secret.should      be_nil
+        storage.access_type.should     == :app_folder
+        storage.path.should            == 'backups'
+        storage.chunk_size.should      == 4194304
+        storage.chunk_retries.should   == 10
+        storage.retry_waitsec.should   == 30
 
-        storage.storage_id.should be_nil
-        storage.keep.should       be_nil
+        storage.storage_id.should      be_nil
+        storage.keep.should            be_nil
       end
     end # context 'when no pre-configured defaults have been set'
 
     context 'when pre-configured defaults have been set' do
       before do
         Backup::Storage::Dropbox.defaults do |s|
-          s.api_key      = 'some_api_key'
-          s.api_secret   = 'some_api_secret'
-          s.access_type  = 'some_access_type'
-          s.path         = 'some_path'
-          s.keep         = 15
-          s.chunk_size   = 50
+          s.api_key       = 'some_api_key'
+          s.api_secret    = 'some_api_secret'
+          s.access_type   = 'some_access_type'
+          s.path          = 'some_path'
+          s.keep          = 15
+          s.chunk_size    = 50
+          s.chunk_retries = 15
+          s.retry_waitsec = 40
         end
       end
 
       it 'should use pre-configured defaults' do
         storage = Backup::Storage::Dropbox.new(model)
 
-        storage.api_key.should      == 'some_api_key'
-        storage.api_secret.should   == 'some_api_secret'
-        storage.access_type.should  == 'some_access_type'
-        storage.path.should         == 'some_path'
+        storage.api_key.should       == 'some_api_key'
+        storage.api_secret.should    == 'some_api_secret'
+        storage.access_type.should   == 'some_access_type'
+        storage.path.should          == 'some_path'
 
-        storage.storage_id.should be_nil
-        storage.keep.should       == 15
-        storage.chunk_size.should == 50
+        storage.storage_id.should    be_nil
+        storage.keep.should          == 15
+        storage.chunk_size.should    == 50
+        storage.chunk_retries.should == 15
+        storage.retry_waitsec.should == 40
       end
 
       it 'should override pre-configured defaults' do
@@ -93,16 +101,21 @@ describe Backup::Storage::Dropbox do
           s.path         = 'new_path'
           s.keep         = 10
           s.chunk_size   = 40
+          s.chunk_retries = 20
+          s.retry_waitsec = 50
         end
 
-        storage.api_key.should      == 'new_api_key'
-        storage.api_secret.should   == 'new_api_secret'
-        storage.access_type.should  == 'new_access_type'
-        storage.path.should         == 'new_path'
+        storage.api_key.should        == 'new_api_key'
+        storage.api_secret.should     == 'new_api_secret'
+        storage.access_type.should    == 'new_access_type'
+        storage.path.should           == 'new_path'
 
-        storage.storage_id.should be_nil
-        storage.keep.should       == 10
-        storage.chunk_size.should == 40
+        storage.storage_id.should     be_nil
+        storage.keep.should           == 10
+        storage.chunk_size.should     == 40
+        storage.chunk_retries.should  == 20
+        storage.retry_waitsec.should  == 50
+
       end
     end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'

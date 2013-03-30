@@ -26,7 +26,7 @@ module Backup
       ##
       # chunk size for the DropboxClient::ChunkedUploader
       # specified in bytes
-      attr_accessor :chunk_size
+      attr_accessor :chunk_size, :chunk_retries, :retry_waitsec
 
       attr_deprecate :email,    :version => '3.0.17'
       attr_deprecate :password, :version => '3.0.17'
@@ -42,6 +42,8 @@ module Backup
         @access_type ||= :app_folder
         # 4Mb in bytes
         @chunk_size ||= 1024 ** 2 * 4
+        @chunk_retries ||= 10
+        @retry_waitsec ||= 30
 
         instance_eval(&block) if block_given?
       end
@@ -103,9 +105,23 @@ module Backup
           remote_file_path = File.join(remote_path, remote_file)
           file = File.open(local_file_path, "r")
           file_size = File.size(local_file_path)
+          # Initialize the chunked_uploader
           uploader = connection.get_chunked_uploader(file, file_size )
+          retries = 0
+          # Start transferring chunks, retry on DropboxError chunk_retries times
+          # sleep retry_waitsec seconds before next attempt
           while uploader.offset < uploader.total_size
-            uploader.upload(chunk_size)
+            begin
+              uploader.upload(chunk_size)
+              retries = 0
+            rescue DropboxError => dbox_err
+              Logger.info "Dropbox chunk retry #{ retries } of #{ chunk_retries }."
+              retries += 1
+              sleep(retry_waitsec)
+              retry unless retries >= chunk_retries
+              raise Errors::Storage::Dropbox::TransferError.
+                wrap(dbox_err, 'Dropbox upload failed!')
+            end
           end
           uploader.finish(remote_file_path)
         end
