@@ -11,6 +11,14 @@ module Backup
       # * Called using super(model) from subclasses *
       def initialize(model)
         @model = model
+
+        @dump_path = File.join(
+          Config.tmp_path,
+          @model.trigger,
+          'databases',
+          self.class.name.split('::').last
+        )
+
         load_defaults!
       end
 
@@ -22,17 +30,11 @@ module Backup
         log!
       end
 
-      private
+      protected
 
       ##
-      # Defines the @dump_path and ensures it exists by creating it
+      # Ensures the @dump_path exists by creating it
       def prepare!
-        @dump_path = File.join(
-          Config.tmp_path,
-          @model.trigger,
-          'databases',
-          self.class.name.split('::').last
-        )
         FileUtils.mkdir_p(@dump_path)
       end
 
