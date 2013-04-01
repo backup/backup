@@ -24,8 +24,6 @@ module Backup
         load_defaults!
       end
 
-      ##
-      # Performs the backup transfer
       def perform!
         @package = @model.package
         transfer!
@@ -69,9 +67,9 @@ module Backup
       ##
       # Yields two arguments to the given block: "local_file, remote_file"
       # The local_file is the full file name:
-      # e.g. "2011.08.30.11.00.02.backup.tar.enc"
+      # e.g. "2011.08.30.11.00.02.trigger.tar.enc"
       # The remote_file is the full file name, minus the timestamp:
-      # e.g. "backup.tar.enc"
+      # e.g. "trigger.tar.enc"
       def files_to_transfer_for(package)
         package.filenames.each do |filename|
           yield filename, filename[20..-1]
