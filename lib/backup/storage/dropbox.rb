@@ -114,7 +114,7 @@ module Backup
             begin
               uploader.upload(chunk_size)
               retries = 0
-            rescue DropboxError => dbox_err
+            rescue => dbox_err
               retries += 1
               Backup::Logger.info "Dropbox chunk retry #{ retries } of #{ chunk_retries }." if chunk_retries > 0 # shouldn't say anything if no retries
               sleep(retry_waitsec)
