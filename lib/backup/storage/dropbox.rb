@@ -100,7 +100,7 @@ module Backup
       def transfer!
         remote_path = remote_path_for(@package)
         files_to_transfer_for(@package) do |local_file, remote_file|
-          Logger.info "#{storage_name} started transferring '#{ local_file }'."
+          Backup::Logger.info "#{storage_name} started transferring '#{ local_file }'."
           local_file_path = File.join(local_path, local_file)
           remote_file_path = File.join(remote_path, remote_file)
           file = File.open(local_file_path, "r")
@@ -115,8 +115,8 @@ module Backup
               uploader.upload(chunk_size)
               retries = 0
             rescue DropboxError => dbox_err
-              Logger.info "Dropbox chunk retry #{ retries } of #{ chunk_retries }."
               retries += 1
+              Backup::Logger.info "Dropbox chunk retry #{ retries } of #{ chunk_retries }." if chunk_retries > 0 # shouldn't say anything if no retries
               sleep(retry_waitsec)
               retry unless retries >= chunk_retries
               raise Errors::Storage::Dropbox::TransferError.
