@@ -43,6 +43,7 @@ describe Backup::Utilities do
 
         # Syncer and Storage
         rsync   '/path/to/rsync'
+        ssh     '/path/to/ssh'
       end
     end
 

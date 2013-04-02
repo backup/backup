@@ -8,7 +8,7 @@ module Backup
       gzip bzip2 lzma pbzip2
       mongo mongodump mysqldump pg_dump redis-cli riak-admin
       gpg openssl
-      rsync
+      rsync ssh
     }
 
     module DSL
@@ -84,6 +84,7 @@ module Backup
       #
       #     # Syncer and Storage
       #     rsync   '/path/to/rsync'
+      #     ssh     '/path/to/ssh'
       #   end
       #
       # These paths may be set using absolute paths, or relative to the
