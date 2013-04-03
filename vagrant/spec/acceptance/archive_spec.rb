@@ -3,7 +3,7 @@
 require File.expand_path('../../spec_helper', __FILE__)
 
 module Backup
-describe 'Backup::Archive' do
+describe Archive do
 
   shared_examples 'GNU or BSD tar' do
 
@@ -24,9 +24,6 @@ describe 'Backup::Archive' do
       EOS
 
       job = backup_perform :my_backup
-
-      expect( job.logger.has_warnings? ).to be_false
-      expect( job.logger.has_errors? ).to be_false
 
       expect( job.package.exist? ).to be_true
 
@@ -94,9 +91,6 @@ describe 'Backup::Archive' do
 
       job = backup_perform :my_backup
 
-      expect( job.logger.has_warnings? ).to be_false
-      expect( job.logger.has_errors? ).to be_false
-
       expect( job.package.exist? ).to be_true
       expect( job.package ).to match_manifest(%q[
         - my_backup/archives/archive_a.tar.gz
@@ -152,9 +146,6 @@ describe 'Backup::Archive' do
 
       job = backup_perform :my_backup
 
-      expect( job.logger.has_warnings? ).to be_false
-      expect( job.logger.has_errors? ).to be_false
-
       expect( job.package.exist? ).to be_true
       expect( job.package ).to match_manifest(%q[
         - my_backup/archives/archive_a.tar.gz
@@ -200,9 +191,6 @@ describe 'Backup::Archive' do
       EOS
 
       job = backup_perform :my_backup
-
-      expect( job.logger.has_warnings? ).to be_false
-      expect( job.logger.has_errors? ).to be_false
 
       expect( job.package.filecount ).to be(2)
 

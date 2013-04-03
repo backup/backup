@@ -4,7 +4,7 @@ module BackupSpec
   class Package
     include Backup::Utilities::Helpers
     extend Forwardable
-    def_delegators :@tarfile, :exist?, :manifest, :contents, :[]
+    def_delegators :@tarfile, :path, :exist?, :manifest, :contents, :[]
 
     # Number of files that made up the final package.
     # If the Splitter was used, this will the number of 'chunks' created.
@@ -15,8 +15,10 @@ module BackupSpec
     # Returns :gpg, :openssl or nil
     attr_reader :encryption
 
+    # Note that this does not ensure the files were stored to the proper path.
+    # When testing storages, package.path should be verified.
     def initialize(trigger)
-      @files = Dir[File.join(LOCAL_STORAGE_PATH, trigger, '**', '*.tar*')]
+      @files = Dir[File.join(LOCAL_STORAGE_PATH, '**', "#{ trigger }.tar*")]
       @filecount = @files.count
 
       path = unsplit

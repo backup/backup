@@ -95,6 +95,11 @@ module BackupSpec
     #
     # When :focus is added to an example, '--no-quiet' will be appended to
     # +options+ so you can see the log output as the backup is performed.
+    #
+    # Note that since `backup perform` will now `exit()` if any jobs have
+    # warnings or errors, it's not neccessary to check the logger for the
+    # returned jobs for errors/warnings. i.e. if `job.logger.has_warnings?`
+    # is true, the spec example will fail due to SystemExit being raised.
     def backup_perform(triggers, *options)
       triggers = Array(triggers).map(&:to_s)
       options << '--no-quiet' if example.metadata[:focus]
