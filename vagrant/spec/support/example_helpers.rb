@@ -112,5 +112,13 @@ module BackupSpec
       jobs.count > 1 ? jobs : jobs.first
     end
 
+    # Return the sorted contents of the given +path+,
+    # relative to the path so the contents may be matched against
+    # the contents of another path.
+    def dir_contents(path)
+      path = File.expand_path(path)
+      Dir["#{ path }/**/*"].map {|e| e.sub(/^#{ path }/, '') }.sort
+    end
+
   end
 end
