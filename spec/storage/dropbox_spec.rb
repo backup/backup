@@ -239,142 +239,124 @@ describe Backup::Storage::Dropbox do
   describe '#transfer!' do
     let(:connection) { mock }
     let(:package) { mock }
-    let(:local_file_path) { mock }
-    let(:remote_file_path) { mock }
     let(:file) { mock }
     let(:uploader) { mock }
     let(:s) { sequence '' }
 
-    context "when there are no errors" do
-      before do
-        storage.instance_variable_set(:@package, package)
-        storage.stubs(:storage_name).returns('Storage::Dropbox')
-        storage.stubs(:local_path).returns('/local/path')
-        storage.stubs(:connection).returns(connection)
-        storage.stubs(:chunk_size).returns(50)
-        storage.stubs(:chunk_retries).returns(10)
-        storage.stubs(:retry_waitsecs).returns(30)
-      end
+    before do
+      storage.instance_variable_set(:@package, package)
+      storage.stubs(:local_path).returns('/local/path')
+      storage.stubs(:connection).returns(connection)
+      storage.stubs(:remote_path_for).with(package).returns('remote/path')
+      file.stubs(:size).returns(250)
+      uploader.stubs(:total_size).returns(250)
+      uploader.stubs(:offset).returns(0,50,100,150,200,250,0,50,100,150,200,250)
+      storage.chunk_size = 50
+      storage.chunk_retries = 1
+    end
 
-      it 'should transfer the package files' do
-        storage.expects(:remote_path_for).in_sequence(s).with(package).
-            returns('remote/path')
-        storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
-            multiple_yields(
+    it 'transfers the package files' do
+      storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
+          multiple_yields(
             ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-            ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']      )
-        # first yield
-        Backup::Logger.expects(:info).in_sequence(s).with(
-            "Storage::Dropbox started transferring " +
-                "'2011.12.31.11.00.02.backup.tar.enc-aa'."
-        )
-        File.expects(:join).in_sequence(s).with(
-            '/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'
-        ).returns(local_file_path)
-        File.expects(:join).in_sequence(s).with(
-            'remote/path', 'backup.tar.enc-aa'
-        ).returns(remote_file_path)
-        File.expects(:open).in_sequence(s).with(
-            local_file_path, 'r'
-        ).returns(file)
-        File.expects(:size).in_sequence(s).with(
-            local_file_path
-        ).returns(250)
-        connection.expects(:get_chunked_uploader).in_sequence(s).with(
-            file, 250
-        ).returns(uploader)
-        uploader.expects(:offset).times(6).returns(0).then.returns(50,100,150,200,250)
-        uploader.expects(:total_size).times(6).returns(250)
-        uploader.expects(:upload).times(5).with(
-            50
-        )
-        uploader.expects(:finish).in_sequence(s).with(
-            remote_file_path
-        )
-
-        # second yield
-        Backup::Logger.expects(:info).in_sequence(s).with(
-            "Storage::Dropbox started transferring " +
-                "'2011.12.31.11.00.02.backup.tar.enc-ab'."
-        )
-        File.expects(:join).in_sequence(s).with(
-            '/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'
-        ).returns(local_file_path)
-        File.expects(:join).in_sequence(s).with(
-            'remote/path', 'backup.tar.enc-ab'
-        ).returns(remote_file_path)
-        File.expects(:open).in_sequence(s).with(
-            local_file_path, 'r'
-        ).returns(file)
-        File.expects(:size).in_sequence(s).with(
-            local_file_path
-        ).returns(40)
-        connection.expects(:get_chunked_uploader).in_sequence(s).with(
-            file, 40
-        ).returns(uploader)
-        uploader.expects(:offset).times(2).returns(0).then.returns(40)
-        uploader.expects(:total_size).times(2).returns(40)
-        uploader.expects(:upload).times(1).with(
-            50
-        )
-        uploader.expects(:finish).in_sequence(s).with(
-            remote_file_path
-        )
-
-        storage.send(:transfer!)
-      end
-    end # context "when there are no errors"
-
-    context "when an error occurs" do
-      before do
-        storage.instance_variable_set(:@package, package)
-        storage.stubs(:storage_name).returns('Storage::Dropbox')
-        storage.stubs(:local_path).returns('/local/path')
-        storage.stubs(:connection).returns(connection)
-        storage.stubs(:chunk_size).returns(10)
-        storage.stubs(:chunk_retries).returns(1)
-        storage.stubs(:retry_waitsec).returns(0)
-      end
-
-      it 'should fail transferring the package files' do
-        storage.expects(:remote_path_for).in_sequence(s).with(package).
-            returns('remote/path')
-        storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
-            multiple_yields(
-            ['2011.12.31.11.00.02.backup.tar.enc-ay', 'backup.tar.enc-ay'],
-            ['2011.12.31.11.00.02.backup.tar.enc-az', 'backup.tar.enc-az']
-        )
-        File.expects(:join).with(
-            '/local/path', '2011.12.31.11.00.02.backup.tar.enc-ay'
-        ).returns(local_file_path)
-        File.expects(:join).with(
-            'remote/path', 'backup.tar.enc-ay'
-        ).returns(remote_file_path)
-        File.expects(:open).with(
-            local_file_path, 'r'
-        ).returns(file)
-        File.expects(:size).with(
-            local_file_path
-        ).returns(10)
-        connection.expects(:get_chunked_uploader).with(
-            file, 10
-        ).returns(uploader)
-        uploader.expects(:offset).returns(0)
-        uploader.expects(:total_size).returns(10)
-        uploader.expects(:upload).with(
-            10
-        ).raises(Backup::Errors::Storage::Dropbox::TransferError.new('error'))
-        Backup::Logger.expects(:info).at_least_once.with(any_parameters)
-
-        expect do
-          storage.send(:transfer!)
-        end.to raise_error {|err|
-          err.should be_an_instance_of(
-            Backup::Errors::Storage::Dropbox::TransferError
+            ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
           )
-        }
-      end
-    end # context "when an error occurs"
+
+      # first yield
+      Backup::Logger.expects(:info).in_sequence(s).with(
+        "Storage::Dropbox started transferring " +
+        "'2011.12.31.11.00.02.backup.tar.enc-aa'."
+      )
+
+      File.expects(:open).in_sequence(s).with(
+        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'), 'r'
+      ).yields(file)
+
+      connection.expects(:get_chunked_uploader).in_sequence(s).
+          with(file, 250).returns(uploader)
+
+      uploader.expects(:upload).in_sequence(s).times(5).with(50)
+      uploader.expects(:finish).in_sequence(s).
+          with(File.join('remote/path', 'backup.tar.enc-aa'))
+
+      # second yield
+      Backup::Logger.expects(:info).in_sequence(s).with(
+        "Storage::Dropbox started transferring " +
+        "'2011.12.31.11.00.02.backup.tar.enc-ab'."
+      )
+
+      File.expects(:open).in_sequence(s).with(
+        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'), 'r'
+      ).yields(file)
+
+      connection.expects(:get_chunked_uploader).in_sequence(s).
+          with(file, 250).returns(uploader)
+
+      uploader.expects(:upload).in_sequence(s).times(5).with(50)
+      uploader.expects(:finish).in_sequence(s).
+          with(File.join('remote/path', 'backup.tar.enc-ab'))
+
+      storage.send(:transfer!)
+    end
+
+    it 'retries on errors' do
+      storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
+          yields(['2011.12.31.11.00.02.backup.tar.enc', 'backup.tar.enc'])
+
+      Backup::Logger.expects(:info).in_sequence(s).with(
+        "Storage::Dropbox started transferring " +
+        "'2011.12.31.11.00.02.backup.tar.enc'."
+      )
+
+      File.expects(:open).in_sequence(s).with(
+        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc'), 'r'
+      ).yields(file)
+
+      connection.expects(:get_chunked_uploader).in_sequence(s).
+          with(file, 250).returns(uploader)
+
+      uploader.expects(:upload).in_sequence(s).raises('an error')
+
+      Backup::Logger.expects(:info).in_sequence(s).with('Chunk retry 1 of 1.')
+      storage.expects(:sleep).with(30)
+
+      uploader.expects(:upload).in_sequence(s).times(5).with(50)
+
+      uploader.expects(:finish).in_sequence(s).
+          with(File.join('remote/path', 'backup.tar.enc'))
+
+      storage.send(:transfer!)
+    end
+
+    it 'fails when retries are exceeded' do
+      storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
+          yields(['2011.12.31.11.00.02.backup.tar.enc', 'backup.tar.enc'])
+
+      Backup::Logger.expects(:info).in_sequence(s).with(
+        "Storage::Dropbox started transferring " +
+        "'2011.12.31.11.00.02.backup.tar.enc'."
+      )
+
+      File.expects(:open).in_sequence(s).with(
+        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc'), 'r'
+      ).yields(file)
+
+      connection.expects(:get_chunked_uploader).in_sequence(s).
+          with(file, 250).returns(uploader)
+
+      uploader.expects(:upload).in_sequence(s).raises('an error')
+
+      Backup::Logger.expects(:info).in_sequence(s).with('Chunk retry 1 of 1.')
+      storage.expects(:sleep).with(30)
+
+      uploader.expects(:upload).in_sequence(s).raises('another error')
+
+      uploader.expects(:finish).never
+
+      expect do
+        storage.send(:transfer!)
+      end.to raise_error(Backup::Errors::Storage::Dropbox::TransferError)
+    end
 
   end # describe '#transfer!'
 

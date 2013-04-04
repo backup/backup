@@ -95,35 +95,36 @@ module Backup
       end
 
       ##
-      # Transfers the archived file to the specified Dropbox folder
-      # in chunks of chunk_size
+      # Transfer each of the package files to Dropbox in chunks of +chunk_size+.
+      # Each chunk will be retried +chunk_retries+ times, pausing +retry_waitsec+
+      # between retries, if errors occur.
       def transfer!
         remote_path = remote_path_for(@package)
+
         files_to_transfer_for(@package) do |local_file, remote_file|
-          Backup::Logger.info "#{storage_name} started transferring '#{ local_file }'."
-          local_file_path = File.join(local_path, local_file)
-          remote_file_path = File.join(remote_path, remote_file)
-          file = File.open(local_file_path, "r")
-          file_size = File.size(local_file_path)
-          # Initialize the chunked_uploader
-          uploader = connection.get_chunked_uploader(file, file_size )
-          retries = 0
-          # Start transferring chunks, retry on DropboxError chunk_retries times
-          # sleep retry_waitsec seconds before next attempt
-          while uploader.offset < uploader.total_size
-            begin
-              uploader.upload(chunk_size)
-              retries = 0
-            rescue => dbox_err
-              retries += 1
-              Backup::Logger.info "Dropbox chunk retry #{ retries } of #{ chunk_retries }." if chunk_retries > 0 # shouldn't say anything if no retries
-              sleep(retry_waitsec)
-              retry unless retries >= chunk_retries
-              raise Errors::Storage::Dropbox::TransferError.
-                wrap(dbox_err, 'Dropbox upload failed!')
+          Logger.info "#{ storage_name } started transferring '#{ local_file }'."
+
+          uploader, retries = nil, 0
+          File.open(File.join(local_path, local_file), 'r') do |file|
+            uploader = connection.get_chunked_uploader(file, file.size)
+            while uploader.offset < uploader.total_size
+              begin
+                uploader.upload(chunk_size)
+                retries = 0
+              rescue => err
+                retries += 1
+                if retries <= chunk_retries
+                  Logger.info "Chunk retry #{ retries } of #{ chunk_retries }."
+                  sleep(retry_waitsec)
+                  retry
+                end
+                raise Errors::Storage::Dropbox::TransferError.
+                    wrap(err, 'Dropbox upload failed!')
+              end
             end
           end
-          uploader.finish(remote_file_path)
+
+          uploader.finish(File.join(remote_path, remote_file))
         end
       end
 
