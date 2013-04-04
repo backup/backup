@@ -26,9 +26,9 @@
   sync_with Cloud::HPCloud do |hpcloud|
     hpcloud.hp_access_key     = 'my_access_key'
     hpcloud.hp_secret_key     = 'my_secret_key'
-    hpcloud.hp_auth_uri       = 'my_auth_uri'
+    hpcloud.hp_auth_uri       = 'https://region-a.geo-1.identity.hpcloudsvc.com:35357/v2.0/tokens'
     hpcloud.hp_tenant_id      = 'my_tenant_id'
-    hpcloud.hp_avl_zone       = 'my_avl_zone'
+    hpcloud.hp_avl_zone       = 'region-a.geo-1'  # or 'region-b.geo-1'
     hpcloud.container         = 'my_container'
     hpcloud.path              = '/backups'
     hpcloud.mirror            = true
@@ -36,7 +36,7 @@
     hpcloud.concurrency_level = 2
 
     hpcloud.directories do |directory|
-      directory.add "/path/to/directory/to/sync"
-      directory.add "/path/to/other/directory/to/sync"
+      directory.add '/path/to/directory/to/sync'
+      directory.add '/path/to/other/directory/to/sync'
     end
   end
