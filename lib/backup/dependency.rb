@@ -12,7 +12,7 @@ module Backup
       'fog' => {
         :require => 'fog',
         :version => '~> 1.9.0',
-        :for     => 'Amazon S3, Rackspace Cloud Files (S3, CloudFiles Storages)',
+        :for     => 'Amazon S3, Rackspace Cloud Files (S3, CloudFiles Storages), HPCloud Object Storage',
         :dependencies  => ['net-ssh', 'net-scp', 'excon']
       },
 
