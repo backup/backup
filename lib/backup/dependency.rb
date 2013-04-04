@@ -11,14 +11,14 @@ module Backup
     DEPENDENCIES = {
       'fog' => {
         :require => 'fog',
-        :version => '~> 1.9.0',
+        :version => '~> 1.10.0',
         :for     => 'Amazon S3, Rackspace Cloud Files (S3, CloudFiles Storages), HPCloud Object Storage',
         :dependencies  => ['net-ssh', 'net-scp', 'excon']
       },
 
       'excon' => {
         :require => 'excon',
-        :version => '~> 0.17.0',
+        :version => '~> 0.20.0',
         :for     => 'HTTP Connection Support for Storages/Syncers'
       },
 
@@ -37,14 +37,14 @@ module Backup
 
       'net-scp' => {
         :require => 'net/scp',
-        :version => ['>= 1.0.0', '<= 1.0.4'],
+        :version => '~> 1.1',
         :for     => 'SCP Protocol (SCP Storage)',
         :dependencies  => 'net-ssh'
       },
 
       'net-ssh' => {
         :require => 'net/ssh',
-        :version => ['>= 2.3.0', '<= 2.5.2'],
+        :version => '>= 2.3.0',
         :for     => 'SSH Protocol (SSH Storage)'
       },
 
