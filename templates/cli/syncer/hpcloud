@@ -1,0 +1,42 @@
+  ##
+  # HPCloud Object Storage [Syncer]
+  #
+  # Available Regions:
+  #
+  #   - region-a.geo-1
+  #   - region-b.geo-1
+  #
+  # Mirroring:
+  #
+  #   When enabled it will keep an exact mirror of your filesystem on HPCloud Object Storage.
+  #   This means that when you remove a file from the filesystem,
+  #   it will also remote it from HPCloud Object Storage.
+  #
+  # Concurrency:
+  #
+  #   `concurrency_type` may be set to:
+  #
+  #     - false (default)
+  #     - :threads
+  #     - :processes
+  #
+  #   Set `concurrency_level` to the number of threads/processes to use.
+  #   Defaults to 2.
+  #
+  sync_with Cloud::HPCloud do |hpcloud|
+    hpcloud.hp_access_key     = 'my_access_key'
+    hpcloud.hp_secret_key     = 'my_secret_key'
+    hpcloud.hp_auth_uri       = 'https://region-a.geo-1.identity.hpcloudsvc.com:35357/v2.0/tokens'
+    hpcloud.hp_tenant_id      = 'my_tenant_id'
+    hpcloud.hp_avl_zone       = 'region-a.geo-1'  # or 'region-b.geo-1'
+    hpcloud.container         = 'my_container'
+    hpcloud.path              = '/backups'
+    hpcloud.mirror            = true
+    hpcloud.concurrency_type  = false
+    hpcloud.concurrency_level = 2
+
+    hpcloud.directories do |directory|
+      directory.add '/path/to/directory/to/sync'
+      directory.add '/path/to/other/directory/to/sync'
+    end
+  end

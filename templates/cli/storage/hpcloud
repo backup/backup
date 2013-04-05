@@ -1,0 +1,12 @@
+  ##
+  # HPCloud Object Storage [Storage]
+  #
+  store_with HPCloud do |hpcloud|
+    hpcloud.hp_access_key    = 'my_access_key'
+    hpcloud.hp_secret_key    = 'my_secret_key'
+    hpcloud.hp_auth_uri      = 'https://region-a.geo-1.identity.hpcloudsvc.com:35357/v2.0/tokens'
+    hpcloud.hp_tenant_id     = 'my_tenant_id'
+    hpcloud.hp_avl_zone      = 'region-a.geo-1'
+    hpcloud.path             = '/path/to/my/backups'
+    hpcloud.keep             = 10
+  end

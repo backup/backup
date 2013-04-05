@@ -36,6 +36,7 @@ module Backup
     autoload :CloudFiles, File.join(STORAGE_PATH, 'cloudfiles')
     autoload :Ninefold,   File.join(STORAGE_PATH, 'ninefold')
     autoload :Dropbox,    File.join(STORAGE_PATH, 'dropbox')
+    autoload :HPCloud,    File.join(STORAGE_PATH, 'hpcloud')
     autoload :FTP,        File.join(STORAGE_PATH, 'ftp')
     autoload :SFTP,       File.join(STORAGE_PATH, 'sftp')
     autoload :SCP,        File.join(STORAGE_PATH, 'scp')
@@ -51,6 +52,7 @@ module Backup
       autoload :Base,       File.join(SYNCER_PATH, 'cloud', 'base')
       autoload :CloudFiles, File.join(SYNCER_PATH, 'cloud', 'cloud_files')
       autoload :S3,         File.join(SYNCER_PATH, 'cloud', 's3')
+      autoload :HPCloud,    File.join(SYNCER_PATH, 'cloud', 'hpcloud')
     end
     module RSync
       autoload :Base,  File.join(SYNCER_PATH, 'rsync', 'base')
