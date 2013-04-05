@@ -85,6 +85,11 @@ module Backup
       end
 
       instance_eval(&block) if block_given?
+
+      # trigger all defined databases to generate their #dump_filename
+      # so warnings may be logged if `backup perform --check` is used
+      databases.each {|db| db.send(:dump_filename) }
+
       Model.all << self
     end
 
@@ -98,15 +103,17 @@ module Backup
     ##
     # Adds a database to the array of databases
     # to dump during the backup process
-    def database(name, &block)
-      @databases << get_class_from_scope(Database, name).new(self, &block)
+    def database(name, database_id = nil, &block)
+      @databases << get_class_from_scope(Database, name).
+          new(self, database_id, &block)
     end
 
     ##
     # Adds a storage method to the array of storage
     # methods to use during the backup process
     def store_with(name, storage_id = nil, &block)
-      @storages << get_class_from_scope(Storage, name).new(self, storage_id, &block)
+      @storages << get_class_from_scope(Storage, name).
+          new(self, storage_id, &block)
     end
 
     ##

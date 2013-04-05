@@ -6,7 +6,7 @@ require 'backup'
 
 require 'timecop'
 
-require File.expand_path('../support/sandbox_file_utils.rb', __FILE__)
+Dir[File.expand_path('../support/**/*.rb', __FILE__)].each {|f| require f }
 
 module Backup::ExampleHelpers
   # ripped from MiniTest :)

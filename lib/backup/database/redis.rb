@@ -36,8 +36,8 @@ module Backup
 
       ##
       # Creates a new instance of the Redis database object
-      def initialize(model, &block)
-        super(model)
+      def initialize(model, database_id = nil, &block)
+        super
 
         @additional_options ||= Array.new
 

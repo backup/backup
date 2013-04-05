@@ -79,6 +79,17 @@ describe 'Backup::Model' do
       Backup::Model.all.should == [model]
     end
 
+    # see also: spec/support/shared_examples/database.rb
+    it "triggers each database to generate it's #dump_filename" do
+      db1, db2 = mock, mock
+      db1.expects(:dump_filename)
+      db2.expects(:dump_filename)
+      Backup::Model.new(:test_trigger, 'test label') do
+        self.databases << db1
+        self.databases << db2
+      end
+    end
+
   end # describe '#initialize'
 
   describe 'DSL Methods' do
@@ -142,22 +153,25 @@ describe 'Backup::Model' do
 
     describe '#database' do
       it 'should add databases' do
-        using_fake('Database', Fake::OneArg) do
-          model.database('Base') {|a| a.block_arg = :foo }
+        using_fake('Database', Fake::TwoArgs) do
+          model.database('Base', 'foo') {|a| a.block_arg = :foo }
+          # second arg is optional
           model.database('Base') {|a| a.block_arg = :bar }
           model.databases.count.should be(2)
           d1, d2 = model.databases
           d1.arg1.should be(model)
+          d1.arg2.should == 'foo'
           d1.block_arg.should == :foo
           d2.arg1.should be(model)
+          d2.arg2.should be_nil
           d2.block_arg.should == :bar
         end
       end
 
       it 'should accept a nested class name' do
         using_fake('Database', Fake) do
-          model.database('OneArg::Base')
-          model.databases.first.should be_an_instance_of Fake::OneArg::Base
+          model.database('TwoArgs::Base')
+          model.databases.first.should be_an_instance_of Fake::TwoArgs::Base
         end
       end
     end

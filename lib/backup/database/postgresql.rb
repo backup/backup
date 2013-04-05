@@ -40,8 +40,8 @@ module Backup
       # Creates a new instance of the PostgreSQL adapter object
       # Sets the PGPASSWORD environment variable to the password
       # so it doesn't prompt and hang in the process
-      def initialize(model, &block)
-        super(model)
+      def initialize(model, database_id = nil, &block)
+        super
 
         @skip_tables        ||= Array.new
         @only_tables        ||= Array.new

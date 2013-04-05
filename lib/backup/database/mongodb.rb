@@ -46,8 +46,8 @@ module Backup
 
       ##
       # Creates a new instance of the MongoDB database object
-      def initialize(model, &block)
-        super(model)
+      def initialize(model, database_id = nil, &block)
+        super
 
         @only_collections   ||= Array.new
         @additional_options ||= Array.new
