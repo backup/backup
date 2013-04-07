@@ -124,15 +124,15 @@ module Backup
         raise Errors::Utilities::NotFoundError,
             'Utility Name Empty' if name.empty?
 
-        path = UTILITY[name] || %x[which '#{ name }' 2>/dev/null].chomp
-        if path.empty?
-          raise Errors::Utilities::NotFoundError, <<-EOS
-            Could not locate '#{ name }'.
-            Make sure the specified utility is installed
-            and available in your system's $PATH.
-          EOS
-        end
-        UTILITY[name] = path
+        UTILITY[name] ||= %x[which '#{ name }' 2>/dev/null].chomp
+        raise(Errors::Utilities::NotFoundError, <<-EOS) if UTILITY[name].empty?
+          Could not locate '#{ name }'.
+          Make sure the specified utility is installed
+          and available in your system's $PATH, or specify it's location
+          in your 'config.rb' file using Backup::Utilities.configure
+        EOS
+
+        UTILITY[name].dup
       end
 
       ##

@@ -149,6 +149,14 @@ describe Backup::Utilities::Helpers do
         helpers.send(:utility, :cache_me).should == 'cached_path'
       end
 
+      it 'should return a mutable copy of the path' do
+        utilities.expects(:`).once.with("which 'cache_me' 2>/dev/null").
+            returns("cached_path\n")
+
+        helpers.send(:utility, :cache_me) << 'foo'
+        helpers.send(:utility, :cache_me).should == 'cached_path'
+      end
+
       it 'should cache the value for all extended objects' do
         utilities.expects(:`).once.with("which 'once_only' 2>/dev/null").
             returns("cached_path\n")
@@ -159,32 +167,14 @@ describe Backup::Utilities::Helpers do
       end
     end
 
-    context 'when a system path for the utility is not available' do
-      it 'should raise an error' do
-        utilities.expects(:`).with("which 'unknown' 2>/dev/null").returns("\n")
+    it 'should raise an error if the utiilty is not found' do
+      utilities.expects(:`).with("which 'unknown' 2>/dev/null").returns("\n")
 
-        expect do
-          helpers.send(:utility, :unknown)
-        end.to raise_error(Backup::Errors::Utilities::NotFoundError) {|err|
-          err.message.should match(/Could not locate 'unknown'/)
-        }
-      end
-
-      it 'should not cache any value for the utility' do
-        utilities.expects(:`).with("which 'not_cached' 2>/dev/null").twice.returns("\n")
-
-        expect do
-          helpers.send(:utility, :not_cached)
-        end.to raise_error(Backup::Errors::Utilities::NotFoundError) {|err|
-          err.message.should match(/Could not locate 'not_cached'/)
-        }
-
-        expect do
-          helpers.send(:utility, :not_cached)
-        end.to raise_error(Backup::Errors::Utilities::NotFoundError) {|err|
-          err.message.should match(/Could not locate 'not_cached'/)
-        }
-      end
+      expect do
+        helpers.send(:utility, :unknown)
+      end.to raise_error(Backup::Errors::Utilities::NotFoundError) {|err|
+        err.message.should match(/Could not locate 'unknown'/)
+      }
     end
 
     it 'should raise an error if name is nil' do
