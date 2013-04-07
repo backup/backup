@@ -19,10 +19,15 @@ module Backup
 
       ##
       # Tables to skip while dumping the database
+      #
+      # If `name` is set to :all (or not specified), these must include
+      # a database name. e.g. 'name.table'.
+      # If `name` is given, these may simply be table names.
       attr_accessor :skip_tables
 
       ##
-      # Tables to dump, tables that aren't specified won't get dumped
+      # Tables to dump. This in only valid if `name` is specified.
+      # If none are given, the entire database will be dumped.
       attr_accessor :only_tables
 
       ##
@@ -33,19 +38,8 @@ module Backup
       # Path to mysqldump utility (optional)
       attr_accessor :mysqldump_utility
 
-      attr_deprecate :utility_path, :version => '3.0.21',
-          :message => 'Use MySQL#mysqldump_utility instead.',
-          :action => lambda {|klass, val| klass.mysqldump_utility = val }
-
-      ##
-      # Creates a new instance of the MySQL adapter object
       def initialize(model, database_id = nil, &block)
         super
-
-        @skip_tables        ||= Array.new
-        @only_tables        ||= Array.new
-        @additional_options ||= Array.new
-
         instance_eval(&block) if block_given?
 
         @name ||= :all
@@ -53,8 +47,10 @@ module Backup
       end
 
       ##
-      # Performs the mysqldump command and outputs the
-      # data to the specified path based on the 'trigger'
+      # Performs the mysqldump command and outputs the dump file
+      # in the +dump_path+ using +dump_filename+.
+      #
+      #   <trigger>/databases/MySQL[-<database_id>].sql[.gz]
       def perform!
         super
 
@@ -62,99 +58,74 @@ module Backup
         dump_ext = 'sql'
 
         pipeline << mysqldump
-        if @model.compressor
-          @model.compressor.compress_with do |command, ext|
-            pipeline << command
-            dump_ext << ext
-          end
-        end
+
+        model.compressor.compress_with do |command, ext|
+          pipeline << command
+          dump_ext << ext
+        end if model.compressor
 
         pipeline << "#{ utility(:cat) } > " +
-            "'#{ File.join(@dump_path, dump_filename) }.#{ dump_ext }'"
+            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
+
         pipeline.run
         if pipeline.success?
-          Logger.info "#{ database_name } Complete!"
+          log!(:finished)
         else
           raise Errors::Database::PipelineError,
-              "#{ database_name } Dump Failed!\n" +
-              pipeline.error_messages
+              "#{ database_name } Dump Failed!\n" + pipeline.error_messages
         end
       end
 
       private
 
-      ##
-      # Builds the full mysqldump string based on all attributes
       def mysqldump
-        "#{ mysqldump_utility } #{ credential_options } #{ connectivity_options } " +
-        "#{ user_options } #{ db_name } #{ tables_to_dump } #{ tables_to_skip }"
+        "#{ mysqldump_utility } #{ credential_options } " +
+        "#{ connectivity_options } #{ user_options } #{ name_option } " +
+        "#{ tables_to_dump } #{ tables_to_skip }"
       end
 
-      ##
-      # Returns the filename to use for dumping the database(s)
-      def dump_filename
-        dump_all? ? 'all-databases' : name
-      end
-
-      ##
-      # Builds the credentials MySQL syntax to authenticate the user
-      # to perform the database dumping process
       def credential_options
-        %w[username password].map do |option|
-          next if send(option).to_s.empty?
-          "--#{option}='#{send(option)}'".gsub('--username', '--user')
-        end.compact.join(' ')
+        opts = []
+        opts << "--user='#{ username }'" if username
+        opts << "--password='#{ password }'" if password
+        opts.join(' ')
       end
 
-      ##
-      # Builds the MySQL connectivity options syntax to connect the user
-      # to perform the database dumping process
       def connectivity_options
-        %w[host port socket].map do |option|
-          next if send(option).to_s.empty?
-          "--#{option}='#{send(option)}'"
-        end.compact.join(' ')
+        return "--socket='#{ socket }'" if socket
+
+        opts = []
+        opts << "--host='#{ host }'" if host
+        opts << "--port='#{ port }'" if port
+        opts.join(' ')
       end
 
-      ##
-      # Builds a MySQL compatible string for the additional options
-      # specified by the user
       def user_options
-        additional_options.join(' ')
+        Array(additional_options).join(' ')
       end
 
-      ##
-      # Returns the database name to use in the mysqldump command.
-      # When dumping all databases, the database name is replaced
-      # with the command option to dump all databases.
-      def db_name
+      def name_option
         dump_all? ? '--all-databases' : name
       end
 
-      ##
-      # Builds the MySQL syntax for specifying which tables to dump
-      # during the dumping of the database
       def tables_to_dump
-        only_tables.join(' ') unless dump_all?
+        Array(only_tables).join(' ') unless dump_all?
       end
 
-      ##
-      # Builds the MySQL syntax for specifying which tables to skip
-      # during the dumping of the database
       def tables_to_skip
-        skip_tables.map do |table|
+        Array(skip_tables).map do |table|
           table = (dump_all? || table['.']) ? table : "#{ name }.#{ table }"
           "--ignore-table='#{ table }'"
         end.join(' ')
       end
 
-      ##
-      # Return true if we're dumping all databases.
-      # `name` will be set to :all if it is not set,
-      # so this will be true by default
       def dump_all?
         name == :all
       end
+
+      attr_deprecate :utility_path, :version => '3.0.21',
+          :message => 'Use MySQL#mysqldump_utility instead.',
+          :action => lambda {|klass, val| klass.mysqldump_utility = val }
 
     end
   end
