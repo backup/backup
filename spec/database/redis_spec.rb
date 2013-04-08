@@ -2,333 +2,255 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Database::Redis do
-  let(:model) { Backup::Model.new('foo', 'foo') }
-  let(:db) do
-    Backup::Database::Redis.new(model) do |db|
-      db.name         = 'mydatabase'
-      db.path         = '/var/lib/redis/db/'
-      db.password     = 'secret'
-      db.host         = 'localhost'
-      db.port         = '123'
-      db.socket       = '/redis.sock'
-      db.invoke_save  = true
+module Backup
+describe Database::Redis do
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:db) { Database::Redis.new(model) }
+  let(:s) { sequence '' }
 
-      db.additional_options = ['--query', '--foo']
-      db.redis_cli_utility  = '/path/to/redis-cli'
-    end
+  before do
+    Database::Redis.any_instance.stubs(:utility).
+        with('redis-cli').returns('redis-cli')
   end
 
-  it 'should be a subclass of Database::Base' do
-    Backup::Database::Redis.superclass.
-      should == Backup::Database::Base
-  end
+  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a subclass of Database::Base'
 
   describe '#initialize' do
-
-    it 'should load pre-configured defaults through Base' do
-      Backup::Database::Redis.any_instance.expects(:load_defaults!)
-      db
+    it 'provides default values' do
+      expect( db.database_id        ).to be_nil
+      expect( db.name               ).to eq 'dump'
+      expect( db.path               ).to be_nil
+      expect( db.password           ).to be_nil
+      expect( db.host               ).to be_nil
+      expect( db.port               ).to be_nil
+      expect( db.socket             ).to be_nil
+      expect( db.invoke_save        ).to be_nil
+      expect( db.additional_options ).to be_nil
+      expect( db.redis_cli_utility  ).to eq 'redis-cli'
     end
-
-    it 'should pass the model reference to Base' do
-      db.instance_variable_get(:@model).should == model
-    end
-
-    context 'when no pre-configured defaults have been set' do
-      context 'when options are specified' do
-        it 'should use the given values' do
-          db.name.should        == 'mydatabase'
-          db.path.should        == '/var/lib/redis/db/'
-          db.password.should    == 'secret'
-          db.host.should        == 'localhost'
-          db.port.should        == '123'
-          db.socket.should      == '/redis.sock'
-          db.invoke_save.should == true
-
-          db.additional_options.should == ['--query', '--foo']
-          db.redis_cli_utility.should  == '/path/to/redis-cli'
-        end
-      end
-
-      context 'when options are not specified' do
-        before do
-          Backup::Database::Redis.any_instance.expects(:utility).
-              with('redis-cli').returns('/real/redis-cli')
-        end
-
-        it 'should provide default values' do
-          db = Backup::Database::Redis.new(model)
-
-          db.name.should        == 'dump'
-          db.path.should        be_nil
-          db.password.should    be_nil
-          db.host.should        be_nil
-          db.port.should        be_nil
-          db.socket.should      be_nil
-          db.invoke_save.should be_nil
-
-          db.additional_options.should  == []
-          db.redis_cli_utility.should   == '/real/redis-cli'
-        end
-      end
-    end # context 'when no pre-configured defaults have been set'
-
-    context 'when pre-configured defaults have been set' do
-      before do
-        Backup::Database::Redis.defaults do |db|
-          db.name         = 'db_name'
-          db.path         = 'db_path'
-          db.password     = 'db_password'
-          db.host         = 'db_host'
-          db.port         = 789
-          db.socket       = '/foo.sock'
-          db.invoke_save  = true
-
-          db.additional_options = ['--add', '--opts']
-          db.redis_cli_utility  = '/default/path/to/redis-cli'
-        end
-      end
-
-      after { Backup::Database::Redis.clear_defaults! }
-
-      context 'when options are specified' do
-        it 'should override the pre-configured defaults' do
-          db.name.should        == 'mydatabase'
-          db.path.should        == '/var/lib/redis/db/'
-          db.password.should    == 'secret'
-          db.host.should        == 'localhost'
-          db.port.should        == '123'
-          db.socket.should      == '/redis.sock'
-          db.invoke_save.should == true
-
-          db.additional_options.should == ['--query', '--foo']
-          db.redis_cli_utility.should  == '/path/to/redis-cli'
-        end
-      end
-
-      context 'when options are not specified' do
-        it 'should use the pre-configured defaults' do
-          db = Backup::Database::Redis.new(model)
-
-          db.name.should        == 'db_name'
-          db.path.should        == 'db_path'
-          db.password.should    == 'db_password'
-          db.host.should        == 'db_host'
-          db.port.should        == 789
-          db.socket.should      == '/foo.sock'
-          db.invoke_save.should == true
-
-          db.additional_options.should  == ['--add', '--opts']
-          db.redis_cli_utility.should   == '/default/path/to/redis-cli'
-        end
-      end
-    end # context 'when no pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#perform!' do
-    let(:s) { sequence '' }
     before do
-      # superclass actions
+      db.expects(:log!).in_sequence(s).with(:started)
       db.expects(:prepare!).in_sequence(s)
-      db.expects(:log!).in_sequence(s)
     end
 
-    context 'when #invoke_save is true' do
-      before { db.invoke_save = true }
-      it 'should copy over after persisting (saving) the most recent updates' do
-        db.expects(:invoke_save!).in_sequence(s)
-        db.expects(:copy!).in_sequence(s)
+    specify 'when #invoke_save is true' do
+      db.invoke_save = true
 
-        db.perform!
-      end
+      db.expects(:invoke_save!).in_sequence(s)
+      db.expects(:copy!).in_sequence(s)
+      db.expects(:log!).in_sequence(s).with(:finished)
+
+      db.perform!
     end
 
-    context 'when #invoke_save is not true' do
-      before { db.invoke_save = nil }
-      it 'should copy over without persisting (saving) first' do
-        db.expects(:invoke_save!).never
-        db.expects(:copy!).in_sequence(s)
+    specify 'when #invoke_save is false' do
+      db.expects(:invoke_save!).never
+      db.expects(:copy!).in_sequence(s)
+      db.expects(:log!).in_sequence(s).with(:finished)
 
-        db.perform!
-      end
+      db.perform!
     end
-
   end # describe '#perform!'
 
   describe '#invoke_save!' do
     before do
-      db.stubs(:credential_options).returns(:credential_options_output)
-      db.stubs(:connectivity_options).returns(:connectivity_options_output)
-      db.stubs(:user_options).returns(:user_options_output)
+      db.stubs(:redis_save_cmd).returns('redis_save_cmd')
     end
 
-    context 'when response is OK' do
-      it 'should run the redis-cli command string' do
-        db.expects(:run).with(
-          '/path/to/redis-cli credential_options_output ' +
-          'connectivity_options_output user_options_output SAVE'
-        ).returns('result OK for command')
+    # the redis docs say this returns "+OK\n", although it appears
+    # to only return "OK\n". Utilities#run strips the STDOUT returned,
+    # so a successful response should =~ /OK$/
 
-        expect do
-          db.send(:invoke_save!)
-        end.not_to raise_error
-      end
+    specify 'when response is OK' do
+      db.expects(:run).with('redis_save_cmd').returns('+OK')
+      db.send(:invoke_save!)
     end
 
-    context 'when response is not OK' do
-      it 'should raise an error' do
-        db.stubs(:run).returns('result not ok for command')
-        db.stubs(:database).returns('database_filename')
-
-        expect do
-          db.send(:invoke_save!)
-        end.to raise_error {|err|
-          err.should be_an_instance_of Backup::Errors::Database::Redis::CommandError
-          err.message.should match(/Could not invoke the Redis SAVE command/)
-          err.message.should match(/The database_filename file/)
-          err.message.should match(/Redis CLI response: result not ok/)
-        }
-      end
+    specify 'when response is not OK' do
+      db.expects(:run).with('redis_save_cmd').returns('No OK Returned')
+      expect do
+        db.send(:invoke_save!)
+      end.to raise_error(Errors::Database::Redis::CommandError) {|err|
+        expect( err.message ).to match(/Command was: redis_save_cmd/)
+        expect( err.message ).to match(/Response was: No OK Returned/)
+      }
     end
-
   end # describe '#invoke_save!'
 
   describe '#copy!' do
-    let(:src_path)    { '/var/lib/redis/db/mydatabase.rdb' }
-    let(:dst_path)    { '/dump/path/mydatabase.rdb' }
-    let(:compressor)  { mock }
+    before do
+      db.stubs(:dump_path).returns('/tmp/trigger/databases')
+      db.path = '/var/lib/redis'
+    end
 
-    context 'when the database exists' do
+    context 'when the redis dump file exists' do
       before do
-        db.instance_variable_set(:@dump_path, '/dump/path')
-        File.expects(:exist?).with(src_path).returns(true)
-      end
-
-      context 'when no compressor is configured' do
-        it 'should copy the database' do
-          db.expects(:run).never
-
-          FileUtils.expects(:cp).with(src_path, dst_path)
-          db.send(:copy!)
-        end
+        File.expects(:exist?).in_sequence(s).with(
+          '/var/lib/redis/dump.rdb'
+        ).returns(true)
       end
 
       context 'when a compressor is configured' do
+        let(:compressor) { mock }
+
         before do
           model.stubs(:compressor).returns(compressor)
-          compressor.expects(:compress_with).yields('compressor_command', '.gz')
+          compressor.stubs(:compress_with).yields('cmp_cmd', '.cmp_ext')
         end
 
-        it 'should copy the database using the compressor' do
+        it 'should copy the redis dump file with compression' do
+          db.expects(:run).in_sequence(s).with(
+            "cmp_cmd -c '/var/lib/redis/dump.rdb' > " +
+            "'/tmp/trigger/databases/Redis.rdb.cmp_ext'"
+          )
           FileUtils.expects(:cp).never
 
-          db.expects(:run).with(
-            "compressor_command -c #{ src_path } > #{ dst_path }.gz"
-          )
           db.send(:copy!)
         end
-      end
-    end
+      end # context 'when a compressor is configured'
 
-    context 'when the database does not exist' do
-      it 'should raise an error if the database dump file is not found' do
-        File.expects(:exist?).returns(false)
+      context 'when no compressor is configured' do
+        it 'should copy the redis dump file without compression' do
+          FileUtils.expects(:cp).in_sequence(s).with(
+            '/var/lib/redis/dump.rdb', '/tmp/trigger/databases/Redis.rdb'
+          )
+          db.expects(:run).never
+
+          db.send(:copy!)
+        end
+      end # context 'when no compressor is configured'
+
+    end # context 'when the redis dump file exists'
+
+    context 'when the redis dump file does not exist' do
+      it 'raises an error' do
+        File.expects(:exist?).in_sequence(s).with(
+          '/var/lib/redis/dump.rdb'
+        ).returns(false)
+
         expect do
           db.send(:copy!)
-        end.to raise_error {|err|
-          err.should be_an_instance_of Backup::Errors::Database::Redis::NotFoundError
-          err.message.should match(/Redis database dump not found/)
-          err.message.should match(/File path was #{src_path}/)
-        }
+        end.to raise_error(Errors::Database::Redis::NotFoundError)
       end
-    end
+    end # context 'when the redis dump file does not exist'
+
   end # describe '#copy!'
 
-  describe '#database' do
-    it 'should return the database name with the extension added' do
-      db.send(:database).should == 'mydatabase.rdb'
-    end
-  end
+  describe '#redis_save_cmd' do
+    let(:option_methods) {%w[
+      redis_cli_utility password_option connectivity_options user_options
+    ]}
 
-  describe '#credential_options' do
-    context 'when #password is set' do
-      it 'should return the redis-cli syntax for the credential options' do
-        db.send(:credential_options).should == "-a 'secret'"
+    it 'returns full redis-cli command built from all options' do
+      option_methods.each {|name| db.stubs(name).returns(name) }
+      expect( db.send(:redis_save_cmd) ).to eq(
+        option_methods.join(' ') + ' SAVE'
+      )
+    end
+
+    it 'handles nil values from option methods' do
+      option_methods.each {|name| db.stubs(name).returns(nil) }
+      expect( db.send(:redis_save_cmd) ).to eq(
+        (' ' * (option_methods.count - 1)) + ' SAVE'
+      )
+    end
+  end # describe '#redis_save_cmd'
+
+  describe 'redis_save_cmd option methods' do
+
+    describe '#password_option' do
+      it 'returns argument if specified' do
+        expect( db.send(:password_option) ).to be_nil
+
+        db.password = 'my_password'
+        expect( db.send(:password_option) ).to eq "-a 'my_password'"
       end
-    end
+    end # describe '#password_option'
 
-    context 'when password is not set' do
-      it 'should return an empty string' do
-        db.password = nil
-        db.send(:credential_options).should == ''
+    describe '#connectivity_options' do
+      it 'returns only the socket argument if #socket specified' do
+        db.host = 'my_host'
+        db.port = 'my_port'
+        db.socket = 'my_socket'
+        expect( db.send(:connectivity_options) ).to eq(
+          "-s 'my_socket'"
+        )
       end
-    end
-  end
 
-  describe '#connectivity_options' do
-    it 'should return the redis syntax for the connectivity options' do
-      db.send(:connectivity_options).should ==
-        "-h 'localhost' -p '123' -s '/redis.sock'"
-    end
+      it 'returns host and port arguments if specified' do
+        expect( db.send(:connectivity_options) ).to eq ''
 
-    context 'when only the #port is set' do
-      it 'should return only the port' do
-        db.host   = nil
-        db.socket = nil
-        db.send(:connectivity_options).should == "-p '123'"
+        db.host = 'my_host'
+        expect( db.send(:connectivity_options) ).to eq(
+          "-h 'my_host'"
+        )
+
+        db.port = 'my_port'
+        expect( db.send(:connectivity_options) ).to eq(
+          "-h 'my_host' -p 'my_port'"
+        )
+
+        db.host = nil
+        expect( db.send(:connectivity_options) ).to eq(
+          "-p 'my_port'"
+        )
       end
-    end
-  end
+    end # describe '#connectivity_options'
 
-  describe '#user_options' do
-    context 'when #additional_options are set' do
-      it 'should return the options' do
-        db.send(:user_options).should == '--query --foo'
-      end
-    end
+    describe '#user_options' do
+      it 'returns arguments for any #additional_options specified' do
+        expect( db.send(:user_options) ).to eq ''
 
-    context 'when #additional_options is not set' do
-      it 'should return an empty string' do
-        db.additional_options = []
-        db.send(:user_options).should == ''
+        db.additional_options = ['--opt1', '--opt2']
+        expect( db.send(:user_options) ).to eq '--opt1 --opt2'
+
+        db.additional_options = '--opta --optb'
+        expect( db.send(:user_options) ).to eq '--opta --optb'
       end
-    end
-  end
+    end # describe '#user_options'
+
+  end # describe 'redis_save_cmd option methods'
 
   describe 'deprecations' do
+
     describe '#utility_path' do
       before do
-        Backup::Database::Redis.any_instance.stubs(:utility)
-        Backup::Logger.expects(:warn).with {|err|
-          err.should be_an_instance_of Backup::Errors::ConfigurationError
-          err.message.should match(
+        Database::Redis.any_instance.stubs(:utility)
+        Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err.message ).to match(
             /Use Redis#redis_cli_utility instead/
           )
         }
       end
       after do
-        Backup::Database::Redis.clear_defaults!
+        Database::Redis.clear_defaults!
       end
 
       context 'when set directly' do
         it 'should issue a deprecation warning and set the replacement value' do
-          redis = Backup::Database::Redis.new(model) do |db|
+          redis = Database::Redis.new(model) do |db|
             db.utility_path = 'foo'
           end
-          redis.redis_cli_utility.should == 'foo'
+          expect( redis.redis_cli_utility ).to eq 'foo'
         end
       end
 
       context 'when set as a default' do
         it 'should issue a deprecation warning and set the replacement value' do
-          redis = Backup::Database::Redis.defaults do |db|
+          redis = Database::Redis.defaults do |db|
             db.utility_path = 'foo'
           end
-          redis = Backup::Database::Redis.new(model)
-          redis.redis_cli_utility.should == 'foo'
+          redis = Database::Redis.new(model)
+          expect( redis.redis_cli_utility ).to eq 'foo'
         end
       end
     end # describe '#utility_path'
-  end
+
+  end # describe 'deprecations'
+end
 end

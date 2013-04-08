@@ -2,15 +2,20 @@
   # Redis [Database]
   #
   database Redis do |db|
-    db.name               = "my_database_name"
-    db.path               = "/usr/local/var/db/redis"
-    db.password           = "my_password"
-    db.host               = "localhost"
-    db.port               = 5432
-    db.socket             = "/tmp/redis.sock"
+    ##
+    # From `dbfilename` in your `redis.conf` under SNAPSHOTTING.
+    # Do not include the '.rdb' extension. Defaults to 'dump'
+    db.name               = 'dump'
+    ##
+    # From `dir` in your `redis.conf` under SNAPSHOTTING.
+    db.path               = '/var/lib/redis'
+    db.password           = 'my_password'
+    db.host               = 'localhost'
+    db.port               = 6379
+    db.socket             = '/tmp/redis.sock'
     db.additional_options = []
     db.invoke_save        = true
     # Optional: Use to set the location of this utility
     #   if it cannot be found by name in your $PATH
-    # db.redis_cli_utility = "/opt/local/bin/redis-cli"
+    # db.redis_cli_utility = '/opt/local/bin/redis-cli'
   end
