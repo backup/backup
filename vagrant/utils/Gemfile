@@ -13,3 +13,6 @@ gem 'bson_ext'
 
 # Redis
 gem 'redis'
+
+# Riak
+gem 'riak-client'

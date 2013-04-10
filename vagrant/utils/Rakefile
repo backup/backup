@@ -14,5 +14,5 @@ task :all => [:archives, 'db:all']
 
 namespace :db do
   desc 'Rebuild All Databases'
-  task :all => [:mysql, :postgresql, :mongodb, :redis] # TODO: riak
+  task :all => [:mysql, :postgresql, :mongodb, :redis, :riak]
 end
