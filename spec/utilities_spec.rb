@@ -201,39 +201,36 @@ describe Backup::Utilities::Helpers do
   end # describe '#utility'
 
   describe '#command_name' do
-    context 'given a command line path with no arguments' do
-      it 'should return the base command name' do
-        cmd = '/path/to/a/command'
-        helpers.send(:command_name, cmd).should == 'command'
-      end
+    it 'returns the base command name' do
+      cmd = '/path/to/a/command'
+      expect( helpers.send(:command_name, cmd) ).to eq 'command'
+
+      cmd = '/path/to/a/command with_args'
+      expect( helpers.send(:command_name, cmd) ).to eq 'command'
+
+      cmd = '/path/to/a/command with multiple args'
+      expect( helpers.send(:command_name, cmd) ).to eq 'command'
+
+      # should not happen, but should handle it
+      cmd = 'command args'
+      expect( helpers.send(:command_name, cmd) ).to eq 'command'
+      cmd = 'command'
+      expect( helpers.send(:command_name, cmd) ).to eq 'command'
     end
 
-    context 'given a command line path with a single argument' do
-      it 'should return the base command name' do
-        cmd = '/path/to/a/command with_args'
-        helpers.send(:command_name, cmd).should == 'command'
-      end
-    end
+    it 'returns command name run with sudo' do
+      cmd = '/path/to/sudo -n /path/to/command args'
+      expect( helpers.send(:command_name, cmd) ).
+          to eq 'sudo -n command'
 
-    context 'given a command line path with multiple arguments' do
-      it 'should return the base command name' do
-        cmd = '/path/to/a/command with multiple args'
-        helpers.send(:command_name, cmd).should == 'command'
-      end
-    end
+      cmd = '/path/to/sudo -n -u username /path/to/command args'
+      expect( helpers.send(:command_name, cmd) ).
+          to eq 'sudo -n -u username command'
 
-    context 'given a command with no path and arguments' do
-      it 'should return the base command name' do
-        cmd = 'command args'
-        helpers.send(:command_name, cmd).should == 'command'
-      end
-    end
-
-    context 'given a command with no path and no arguments' do
-      it 'should return the base command name' do
-        cmd = 'command'
-        helpers.send(:command_name, cmd).should == 'command'
-      end
+      # should not happen, but should handle it
+      cmd = '/path/to/sudo -n -u username command args'
+      expect( helpers.send(:command_name, cmd) ).
+          to eq 'sudo -n -u username command args'
     end
   end # describe '#command_name'
 

@@ -138,11 +138,24 @@ module Backup
       end
 
       ##
-      # Returns the name of the command name from the given command line
+      # Returns the name of the command name from the given command line.
+      # This is only used to simplify log messages.
       def command_name(command)
-        i = command =~ /\s/
-        command = command.slice(0, i) if i
-        command.split('/')[-1]
+        parts = []
+        command = command.split(' ')
+        parts << command.shift.split('/')[-1]
+        if parts[0] == 'sudo'
+          until command.empty?
+            part = command.shift
+            if part.include?('/')
+              parts << part.split('/')[-1]
+              break
+            else
+              parts << part
+            end
+          end
+        end
+        parts.join(' ')
       end
 
       ##
