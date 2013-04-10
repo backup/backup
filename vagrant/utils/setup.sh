@@ -5,6 +5,18 @@ if [[ ! `hostname` == "backup-testbox" ]]; then
   exit
 fi
 
+# This script may also be called any time you install/update a gem
+# to easily install/update it for the other ruby versions.
+
+sync_gem_cache() {
+  cp -n ~/.gem/ruby/2.0.0/cache/*.gem ~/.gem/ruby/1.9.3/cache/
+  cp -n ~/.gem/ruby/2.0.0/cache/*.gem ~/.gem/ruby/1.9.2/cache/
+  cp -n ~/.gem/ruby/1.9.3/cache/*.gem ~/.gem/ruby/2.0.0/cache/
+  cp -n ~/.gem/ruby/1.9.3/cache/*.gem ~/.gem/ruby/1.9.2/cache/
+  cp -n ~/.gem/ruby/1.9.2/cache/*.gem ~/.gem/ruby/2.0.0/cache/
+  cp -n ~/.gem/ruby/1.9.2/cache/*.gem ~/.gem/ruby/1.9.3/cache/
+}
+
 cd /vagrant/utils
 
 echo -n "==> Checking Spec Utils Environment... "
@@ -26,6 +38,7 @@ if [[ $? == "0" ]]; then
   echo "OK"
 else
   echo "Installing Gems..."
+  sync_gem_cache
   bundle install
 fi
 
@@ -35,6 +48,7 @@ if [[ $? == "0" ]]; then
   echo "OK"
 else
   echo "Installing Gems..."
+  sync_gem_cache
   chruby-exec 1.9.3 -- bundle install
 fi
 
@@ -44,6 +58,7 @@ if [[ $? == "0" ]]; then
   echo "OK"
 else
   echo "Installing Gems..."
+  sync_gem_cache
   chruby-exec 1.9.2 -- bundle install
 fi
 
