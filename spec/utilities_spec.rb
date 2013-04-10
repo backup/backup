@@ -22,6 +22,8 @@ describe Backup::Utilities do
         split '/path/to/split'
         find  '/path/to/find'
         xargs '/path/to/xargs'
+        sudo  '/path/to/sudo'
+        chown '/path/to/chown'
 
         # Compressors
         gzip    '/path/to/gzip'

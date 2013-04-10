@@ -4,7 +4,7 @@ module Backup
   module Utilities
     UTILITY = {}
     NAMES = %w{
-      tar cat split find xargs
+      tar cat split find xargs sudo chown
       gzip bzip2 lzma pbzip2
       mongo mongodump mysqldump pg_dump redis-cli riak-admin
       gpg openssl
@@ -63,6 +63,8 @@ module Backup
       #     split '/path/to/split'
       #     find  '/path/to/find'
       #     xargs '/path/to/xargs'
+      #     sudo  '/path/to/sudo'
+      #     chown '/path/to/chown'
       #
       #     # Compressors
       #     gzip    '/path/to/gzip'
