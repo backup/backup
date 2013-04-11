@@ -118,7 +118,7 @@ module Backup
         pipeline  = Pipeline.new
         base_dir  = File.dirname(@dump_path)
         dump_dir  = File.basename(@dump_path)
-        timestamp = Time.now.to_i.to_s[-5, 5]
+        timestamp = Time.now.to_i.to_s[-5, 5] + rand.to_s
         outfile   = @dump_path + '-' + timestamp + '.tar'
 
         Logger.info(
