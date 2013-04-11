@@ -1,101 +1,148 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Encryptor::OpenSSL do
-
-  context "when no block is provided" do
-    let(:encryptor) { Backup::Encryptor::OpenSSL.new }
-
-    it do
-      encryptor.password.should == nil
-    end
-
-    it do
-      encryptor.send(:base64).should == []
-    end
-
-    it do
-      encryptor.send(:salt).should == []
-    end
-
-    it do
-      encryptor.send(:options).should == "aes-256-cbc"
+  let(:encryptor) do
+    Backup::Encryptor::OpenSSL.new do |e|
+      e.password      = 'mypassword'
+      e.password_file = '/my/password/file'
+      e.base64        = true
+      e.salt          = true
     end
   end
 
-  context "when a block is provided" do
-    let(:encryptor) do
-      Backup::Encryptor::OpenSSL.new do |e|
-        e.password = "my_secret_password"
-        e.salt     = true
-        e.base64   = true
+  it 'should be a subclass of Encryptor::Base' do
+    Backup::Encryptor::OpenSSL.
+      superclass.should == Backup::Encryptor::Base
+  end
+
+  describe '#initialize' do
+    after { Backup::Encryptor::OpenSSL.clear_defaults! }
+
+    it 'should load pre-configured defaults' do
+      Backup::Encryptor::OpenSSL.any_instance.expects(:load_defaults!)
+      encryptor
+    end
+
+    context 'when no pre-configured defaults have been set' do
+      it 'should use the values given' do
+        encryptor.password.should       == 'mypassword'
+        encryptor.password_file.should  == '/my/password/file'
+        encryptor.base64.should         == true
+        encryptor.salt.should           == true
+      end
+
+      it 'should use default values if none are given' do
+        encryptor = Backup::Encryptor::OpenSSL.new
+        encryptor.password.should       be_nil
+        encryptor.password_file.should  be_nil
+        encryptor.base64.should         be_false
+        encryptor.salt.should           be_true
+      end
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Encryptor::OpenSSL.defaults do |e|
+          e.password      = 'default_password'
+          e.password_file = '/default/password/file'
+          e.base64        = 'default_base64'
+          e.salt          = 'default_salt'
+        end
+      end
+
+      it 'should use pre-configured defaults' do
+        encryptor = Backup::Encryptor::OpenSSL.new
+        encryptor.password      = 'default_password'
+        encryptor.password_file = '/default/password/file'
+        encryptor.base64        = 'default_base64'
+        encryptor.salt          = 'default_salt'
+      end
+
+      it 'should override pre-configured defaults' do
+        encryptor.password.should       == 'mypassword'
+        encryptor.password_file.should  == '/my/password/file'
+        encryptor.base64.should         == true
+        encryptor.salt.should           == true
+      end
+    end # context 'when pre-configured defaults have been set'
+  end # describe '#initialize'
+
+  describe '#encrypt_with' do
+    it 'should yield the encryption command and extension' do
+      encryptor.expects(:log!)
+      encryptor.expects(:utility).with(:openssl).returns('openssl_cmd')
+      encryptor.expects(:options).returns('cmd_options')
+
+      encryptor.encrypt_with do |command, ext|
+        command.should == 'openssl_cmd cmd_options'
+        ext.should == '.enc'
       end
     end
-
-    it do
-      encryptor.password.should == "my_secret_password"
-    end
-
-    it do
-      encryptor.send(:salt).should == ['-salt']
-    end
-
-    it do
-      encryptor.send(:base64).should == ['-base64']
-    end
-
-    it do
-      encryptor.send(:options).should == "aes-256-cbc -base64 -salt"
-    end
   end
 
-  describe '#perform!' do
+  describe '#options' do
     let(:encryptor) { Backup::Encryptor::OpenSSL.new }
+
     before do
-      Backup::Model.extension = 'tar'
-      [:utility, :run, :rm].each { |method| encryptor.stubs(method) }
+      # salt is true by default
+      encryptor.salt = false
     end
 
-    it do
-      encryptor = Backup::Encryptor::OpenSSL.new
-      encryptor.expects(:utility).returns(:openssl)
-      encryptor.expects(:run).with("openssl aes-256-cbc -in '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar") }' -out '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar.enc") }' -k ''")
-      encryptor.perform!
-    end
-
-    it do
-      encryptor = Backup::Encryptor::OpenSSL.new do |e|
-        e.password = "my_secret_password"
-        e.salt     = true
-        e.base64   = true
+    context 'with no options given' do
+      it 'should always include cipher command' do
+        encryptor.send(:options).should match(/^aes-256-cbc\s.*$/)
       end
-      encryptor.stubs(:utility).returns(:openssl)
-      encryptor.expects(:run).with("openssl aes-256-cbc -base64 -salt -in '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar") }' -out '#{ File.join(Backup::TMP_PATH, "#{Backup::TIME}.#{Backup::TRIGGER}.tar.enc") }' -k 'my_secret_password'")
-      encryptor.perform!
-    end
 
-    it 'should append the .enc extension after the encryption' do
-      Backup::Model.extension.should == 'tar'
-      encryptor.perform!
-      Backup::Model.extension.should == 'tar.enc'
-    end
-
-    it do
-      encryptor.expects(:utility).with(:openssl)
-      encryptor.perform!
-    end
-
-    it do
-      Backup::Logger.expects(:message).with("Backup::Encryptor::OpenSSL started encrypting the archive.")
-      encryptor.perform!
-    end
-
-    context "after encrypting the file (which creates a new file)" do
-      it 'should remove the non-encrypted file' do
-        encryptor.expects(:rm).with(Backup::Model.file)
-        encryptor.perform!
+      it 'should add #password option whenever #password_file not given' do
+        encryptor.send(:options).should ==
+            "aes-256-cbc -k ''"
       end
     end
-  end
+
+    context 'when #password_file is given' do
+      before { encryptor.password_file = 'password_file' }
+
+      it 'should add #password_file option' do
+        encryptor.send(:options).should ==
+            'aes-256-cbc -pass file:password_file'
+      end
+
+      it 'should add #password_file option even when #password given' do
+        encryptor.password = 'password'
+        encryptor.send(:options).should ==
+            'aes-256-cbc -pass file:password_file'
+      end
+    end
+
+    context 'when #password is given (without #password_file given)' do
+      before { encryptor.password = 'password' }
+
+      it 'should include the given password in the #password option' do
+        encryptor.send(:options).should ==
+            "aes-256-cbc -k 'password'"
+      end
+    end
+
+    context 'when #base64 is true' do
+      before { encryptor.base64 = true }
+
+      it 'should add the option' do
+        encryptor.send(:options).should ==
+            "aes-256-cbc -base64 -k ''"
+      end
+    end
+
+    context 'when #salt is true' do
+      before { encryptor.salt = true }
+
+      it 'should add the option' do
+        encryptor.send(:options).should ==
+            "aes-256-cbc -salt -k ''"
+      end
+    end
+
+  end # describe '#options'
+
 end

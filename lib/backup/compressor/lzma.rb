@@ -7,19 +7,15 @@ module Backup
       ##
       # Tells Backup::Compressor::Lzma to compress
       # better (-9) rather than faster when set to true
-      attr_writer :best
+      attr_accessor :best
 
       ##
       # Tells Backup::Compressor::Lzma to compress
       # faster (-1) rather than better when set to true
-      attr_writer :fast
+      attr_accessor :fast
 
       ##
-      # Creates a new instance of Backup::Compressor::Lzma and
-      # configures it to either compress faster or better
-      # Lzma compresses by default with -9 (best compression)
-      # and lower block sizes don't make things significantly faster
-      # (according to official bzip2 docs)
+      # Creates a new instance of Backup::Compressor::Lzma
       def initialize(&block)
         load_defaults!
 
@@ -27,37 +23,30 @@ module Backup
         @fast ||= false
 
         instance_eval(&block) if block_given?
+
+        @cmd = "#{ utility(:lzma) }#{ options }"
+        @ext = '.lzma'
       end
 
+
       ##
-      # Performs the compression of the packages backup file
-      def perform!
-        log!
-        run("#{ utility(:lzma) } #{ options } '#{ Backup::Model.file }'")
-        Backup::Model.extension += '.lzma'
+      # Yields to the block the compressor command and filename extension.
+      def compress_with
+        Backup::Logger.warn(
+          "[DEPRECATION WARNING]\n" +
+          "  Compressor::Lzma is being deprecated as of backup v.3.0.24\n" +
+          "  and will soon be removed. Please see the Compressors wiki page at\n" +
+          "  https://github.com/meskyanichi/backup/wiki/Compressors"
+        )
+        super
       end
 
-    private
+      private
 
-      ##
-      # Combines the provided options and returns a bzip2 options string
       def options
-        (best + fast).join("\s")
+        (' --best' if @best) || (' --fast' if @fast)
       end
 
-      ##
-      # Returns the lzma option syntax for compressing
-      # setting @best to true is redundant, as lzma compresses best by default
-      def best
-        return ['--best'] if @best; []
-      end
-
-      ##
-      # Returns the lzma option syntax for compressing
-      # (not significantly) faster when @fast is set to true
-      def fast
-        return ['--fast'] if @fast; []
-      end
     end
   end
 end

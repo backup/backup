@@ -1,0 +1,11 @@
+source "https://rubygems.org"
+
+gem 'backup', path: '/backup.git'
+
+# Dynamically define Backup's dependencies
+require '/backup.git/lib/backup/dependency'
+Backup::Dependency.all.each do |dep|
+  gem dep.name, *dep.requirements
+end
+
+gem 'rspec'

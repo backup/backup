@@ -1,235 +1,717 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/spec_helper'
+require File.expand_path('../spec_helper.rb', __FILE__)
 
-describe Backup::Model do
-
-  before do
-    # stub out the creation of an archive, for this spec's purpose
-    Backup::Archive.stubs(:new).returns(true)
-
-    # create mockup classes for testing the behavior of Backup::Model
-    class Backup::Database::TestDatabase
-      def initialize(&block); end
-    end
-    class Backup::Storage::TestStorage
-      def initialize(&block); end
-    end
-    class Backup::Compressor::TestGzip
-      def initialize(&block); end
-    end
-    class Backup::Compressor::TestSevenZip
-      def initialize(&block); end
-    end
-    class Backup::Encryptor::TestOpenSSL
-      def initialize(&block); end
-    end
-    class Backup::Encryptor::TestGPG
-      def initialize(&block); end
-    end
-    class Backup::Notifier::TestMail
-      def initialize(&block); end
-    end
-
-  end
-
-  let(:model) { Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {} }
-
-  it do
-    Backup::Model.extension.should == 'tar'
-  end
-
-  it do
-    Backup::Model.new('foo', 'bar') {}
-    Backup::Model.extension.should == 'tar'
-  end
+describe 'Backup::Model' do
+  let(:model) { Backup::Model.new(:test_trigger, 'test label') }
+  let(:s)     { sequence '' }
 
   before do
-    Backup::Model.extension = 'tar'
+    Backup::Model.all.clear
   end
 
-  it do
-    Backup::Model.new('blah', 'blah') {}
-    Backup::Model.extension.should == 'tar'
-  end
-
-  it do
-    Backup::Model.new('blah', 'blah') {}
-    Backup::Model.file.should == "#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }"
-  end
-
-  it do
-    Backup::Model.new('blah', 'blah') {}
-    File.basename(Backup::Model.file).should == "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar"
-  end
-
-  it do
-    Backup::Model.new('blah', 'blah') {}
-    Backup::Model.tmp_path.should == File.join(Backup::TMP_PATH, Backup::TRIGGER)
-  end
-
-  it 'should create a new model with a trigger and label' do
-    model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {}
-    model.trigger.should == 'mysql-s3'
-    model.label.should == 'MySQL S3 Backup for MyApp'
-  end
-
-  it 'should have the time logged in the object' do
-    model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') {}
-    model.time.should == Backup::TIME
-  end
-
-  describe '#extension' do
-    it 'should start out with just .tar before compression occurs' do
-      Backup::Model.extension.should == 'tar'
+  describe '.all' do
+    it 'should be an empty array by default' do
+      Backup::Model.all.should == []
     end
   end
 
-  describe 'databases' do
-    it 'should add the mysql adapter to the array of databases to invoke' do
-      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        database('TestDatabase')
+  describe '.find_by_trigger' do
+    before do
+      [:one, :two, :three, :one].each_with_index do |sym, i|
+        Backup::Model.new("trigger_#{ sym }", "label#{ i + 1 }")
+      end
+    end
+
+    it 'should return an array of all models matching the trigger' do
+      models = Backup::Model.find_by_trigger('trigger_one')
+      models.should be_a(Array)
+      models.count.should be(2)
+      models[0].label.should == 'label1'
+      models[1].label.should == 'label4'
+    end
+
+    it 'should return an array of all models matching a wildcard trigger' do
+      models = Backup::Model.find_by_trigger('trigger_t*')
+      models.count.should be(2)
+      models[0].label.should == 'label2'
+      models[1].label.should == 'label3'
+
+      models = Backup::Model.find_by_trigger('trig*ne')
+      models.count.should be(2)
+      models[0].label.should == 'label1'
+      models[1].label.should == 'label4'
+
+      Backup::Model.find_by_trigger('trigg*').count.should be(4)
+    end
+
+    it 'should return an empty array if no matches are found' do
+      Backup::Model.find_by_trigger('foo*').should == []
+    end
+
+  end # describe '.find_by_trigger'
+
+  describe '#initialize' do
+
+    it 'should convert trigger to a string' do
+      Backup::Model.new(:foo, :bar).trigger.should == 'foo'
+    end
+
+    it 'should convert label to a string' do
+      Backup::Model.new(:foo, :bar).label.should == 'bar'
+    end
+
+    it 'should set all procedure variables to an empty array' do
+      model.send(:procedure_instance_variables).each do |var|
+        model.instance_variable_get(var).should == []
+      end
+    end
+
+    it 'should accept and instance_eval a block' do
+      block = lambda {|model| throw(:instance, model) }
+      caught = catch(:instance) do
+        Backup::Model.new('gotcha', '', &block)
+      end
+      caught.trigger.should == 'gotcha'
+    end
+
+    it 'should add itself to Model.all' do
+      Backup::Model.all.should == [model]
+    end
+
+  end # describe '#initialize'
+
+  describe 'DSL Methods' do
+
+    module Fake
+      module NoArg
+        class Base
+          attr_accessor :block_arg
+          def initialize(&block)
+            instance_eval(&block) if block_given?
+          end
+        end
+      end
+      module OneArg
+        class Base
+          attr_accessor :arg1, :block_arg
+          def initialize(arg1, &block)
+            @arg1 = arg1
+            instance_eval(&block) if block_given?
+          end
+        end
+      end
+      module TwoArgs
+        class Base
+          attr_accessor :arg1, :arg2, :block_arg
+          def initialize(arg1, arg2, &block)
+            @arg1 = arg1
+            @arg2 = arg2
+            instance_eval(&block) if block_given?
+          end
+        end
+      end
+    end
+
+    # Set +const+ to +replacement+ for the calling block
+    def using_fake(const, replacement)
+      orig = Backup.const_get(const)
+      Backup.send(:remove_const, const)
+      Backup.const_set(const, replacement)
+      yield
+      Backup.send(:remove_const, const)
+      Backup.const_set(const, orig)
+    end
+
+    describe '#archive' do
+      it 'should add archives' do
+        using_fake('Archive', Fake::TwoArgs::Base) do
+          model.archive('foo') {|a| a.block_arg = :foo }
+          model.archive('bar') {|a| a.block_arg = :bar }
+          model.archives.count.should == 2
+          a1, a2 = model.archives
+          a1.arg1.should be(model)
+          a1.arg2.should == 'foo'
+          a1.block_arg.should == :foo
+          a2.arg1.should be(model)
+          a2.arg2.should == 'bar'
+          a2.block_arg.should == :bar
+        end
+      end
+    end
+
+    describe '#database' do
+      it 'should add databases' do
+        using_fake('Database', Fake::OneArg) do
+          model.database('Base') {|a| a.block_arg = :foo }
+          model.database('Base') {|a| a.block_arg = :bar }
+          model.databases.count.should be(2)
+          d1, d2 = model.databases
+          d1.arg1.should be(model)
+          d1.block_arg.should == :foo
+          d2.arg1.should be(model)
+          d2.block_arg.should == :bar
+        end
       end
 
-      model.databases.count.should == 1
+      it 'should accept a nested class name' do
+        using_fake('Database', Fake) do
+          model.database('OneArg::Base')
+          model.databases.first.should be_an_instance_of Fake::OneArg::Base
+        end
+      end
     end
 
-    it 'should add 2 mysql adapters to the array of adapters to invoke' do
-      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        database('TestDatabase')
-        database('TestDatabase')
+    describe '#store_with' do
+      it 'should add storages' do
+        using_fake('Storage', Fake::TwoArgs) do
+          model.store_with('Base', 'foo') {|a| a.block_arg = :foo }
+          # second arg is optional
+          model.store_with('Base') {|a| a.block_arg = :bar }
+          model.storages.count.should be(2)
+          s1, s2 = model.storages
+          s1.arg1.should be(model)
+          s1.arg2.should == 'foo'
+          s1.block_arg.should == :foo
+          s2.arg1.should be(model)
+          s2.arg2.should be_nil
+          s2.block_arg.should == :bar
+        end
       end
 
-      model.databases.count.should == 2
+      it 'should accept a nested class name' do
+        using_fake('Storage', Fake) do
+          model.store_with('TwoArgs::Base')
+          model.storages.first.should be_an_instance_of Fake::TwoArgs::Base
+        end
+      end
+    end
+
+    describe '#sync_with' do
+      it 'should add syncers' do
+        using_fake('Syncer', Fake::OneArg) do
+          model.sync_with('Base', 'foo') {|a| a.block_arg = :foo }
+          # second arg is optional
+          model.sync_with('Base') {|a| a.block_arg = :bar }
+          model.syncers.count.should be(2)
+          s1, s2 = model.syncers
+          s1.arg1.should == 'foo'
+          s1.block_arg.should == :foo
+          s2.arg1.should be_nil
+          s2.block_arg.should == :bar
+        end
+      end
+
+      it 'should accept a nested class name' do
+        using_fake('Syncer', Fake) do
+          model.sync_with('OneArg::Base')
+          model.syncers.first.should be_an_instance_of Fake::OneArg::Base
+        end
+      end
+
+      it 'should warn user of change from RSync to RSync::Push' do
+        Backup::Logger.expects(:warn)
+        model.sync_with('Backup::Config::RSync')
+        model.syncers.first.should
+            be_an_instance_of Backup::Syncer::RSync::Push
+      end
+
+      it 'should warn user of change from S3 to Cloud::S3' do
+        Backup::Logger.expects(:warn)
+        model.sync_with('Backup::Config::S3')
+        model.syncers.first.should
+            be_an_instance_of Backup::Syncer::Cloud::S3
+      end
+
+      it 'should warn user of change from CloudFiles to Cloud::CloudFiles' do
+        Backup::Logger.expects(:warn)
+        model.sync_with('Backup::Config::CloudFiles')
+        model.syncers.first.should
+            be_an_instance_of Backup::Syncer::Cloud::CloudFiles
+      end
+    end
+
+    describe '#notify_by' do
+      it 'should add notifiers' do
+        using_fake('Notifier', Fake::OneArg) do
+          model.notify_by('Base') {|a| a.block_arg = :foo }
+          model.notify_by('Base') {|a| a.block_arg = :bar }
+          model.notifiers.count.should be(2)
+          n1, n2 = model.notifiers
+          n1.arg1.should be(model)
+          n1.block_arg.should == :foo
+          n2.arg1.should be(model)
+          n2.block_arg.should == :bar
+        end
+      end
+
+      it 'should accept a nested class name' do
+        using_fake('Notifier', Fake) do
+          model.notify_by('OneArg::Base')
+          model.notifiers.first.should be_an_instance_of Fake::OneArg::Base
+        end
+      end
+    end
+
+    describe '#encrypt_with' do
+      it 'should add an encryptor' do
+        using_fake('Encryptor', Fake::NoArg) do
+          model.encrypt_with('Base') {|a| a.block_arg = :foo }
+          model.encryptor.should be_an_instance_of Fake::NoArg::Base
+          model.encryptor.block_arg.should == :foo
+        end
+      end
+
+      it 'should accept a nested class name' do
+        using_fake('Encryptor', Fake) do
+          model.encrypt_with('NoArg::Base')
+          model.encryptor.should be_an_instance_of Fake::NoArg::Base
+        end
+      end
+    end
+
+    describe '#compress_with' do
+      it 'should add a compressor' do
+        using_fake('Compressor', Fake::NoArg) do
+          model.compress_with('Base') {|a| a.block_arg = :foo }
+          model.compressor.should be_an_instance_of Fake::NoArg::Base
+          model.compressor.block_arg.should == :foo
+        end
+      end
+
+      it 'should accept a nested class name' do
+        using_fake('Compressor', Fake) do
+          model.compress_with('NoArg::Base')
+          model.compressor.should be_an_instance_of Fake::NoArg::Base
+        end
+      end
+    end
+
+    describe '#split_into_chunks_of' do
+      it 'should add a splitter' do
+        using_fake('Splitter', Fake::TwoArgs::Base) do
+          model.split_into_chunks_of(123)
+          model.splitter.should be_an_instance_of Fake::TwoArgs::Base
+          model.splitter.arg1.should be(model)
+          model.splitter.arg2.should == 123
+        end
+      end
+
+      it 'should raise an error if chunk_size is not an Integer' do
+        expect do
+          model.split_into_chunks_of('345')
+        end.to raise_error {|err|
+          err.should be_an_instance_of Backup::Errors::Model::ConfigurationError
+          err.message.should match(/must be an Integer/)
+        }
+      end
+    end
+
+  end # describe 'DSL Methods'
+
+  describe '#prepare!' do
+    it 'should prepare for the backup' do
+      FileUtils.expects(:mkdir_p).with(
+        File.join(Backup::Config.data_path, 'test_trigger')
+      )
+      Backup::Cleaner.expects(:prepare).with(model)
+
+      model.send(:prepare!)
     end
   end
 
-  describe 'storages' do
-    it 'should add a storage to the array of storages to use' do
-      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        store_with('TestStorage')
+  describe '#perform!' do
+    let(:procedure_a)   { lambda {} }
+    let(:procedure_b)   { mock }
+    let(:procedure_c)   { mock }
+    let(:procedure_d)   { lambda {} }
+    let(:procedure_e)   { lambda {} }
+    let(:procedure_f)   { mock }
+    let(:procedures) do
+      [ procedure_a, [procedure_b, procedure_c],
+        procedure_d, procedure_e, [procedure_f] ]
+    end
+    let(:syncer_a)      { mock }
+    let(:syncer_b)      { mock }
+    let(:syncers)       { [syncer_a, syncer_b] }
+    let(:notifier_a)    { mock }
+    let(:notifier_b)    { mock }
+    let(:notifiers)     { [notifier_a, notifier_b] }
+
+    it 'should set the @time and @started_at variables' do
+      model.expects(:log!).with(:started)
+      model.expects(:prepare!)
+      model.expects(:log!).with(:finished)
+
+      started_at, time = nil, nil
+      Timecop.freeze do
+        started_at = Time.now
+        time = started_at.strftime("%Y.%m.%d.%H.%M.%S")
+        model.perform!
       end
 
-      model.storages.count.should == 1
+      model.time.should == time
+      model.instance_variable_get(:@started_at).should == started_at
     end
 
-    it 'should add a storage to the array of storages to use' do
-      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        store_with('TestStorage')
-        store_with('TestStorage')
+    context 'when no errors occur' do
+      before do
+        model.expects(:procedures).returns(procedures)
+        model.expects(:syncers).returns(syncers)
+        model.expects(:notifiers).returns(notifiers)
       end
 
-      model.storages.count.should == 2
-    end
-  end
+      context 'when databases are configured' do
+        before do
+          model.instance_variable_set(:@databases, [true])
+        end
 
-  describe 'archives' do
-    it 'should add an archive to the array of archives to use' do
-      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        archive('my_archive')
+        it 'should perform all procedures' do
+          model.expects(:log!).in_sequence(s).with(:started)
+
+          model.expects(:prepare!).in_sequence(s)
+
+          procedure_a.expects(:call).in_sequence(s)
+          procedure_b.expects(:perform!).in_sequence(s)
+          procedure_c.expects(:perform!).in_sequence(s)
+          procedure_d.expects(:call).in_sequence(s)
+          procedure_e.expects(:call).in_sequence(s)
+          procedure_f.expects(:perform!).in_sequence(s)
+
+          syncer_a.expects(:perform!).in_sequence(s)
+          syncer_b.expects(:perform!).in_sequence(s)
+
+          notifier_a.expects(:perform!).in_sequence(s)
+          notifier_b.expects(:perform!).in_sequence(s)
+
+          model.expects(:log!).in_sequence(s).with(:finished)
+
+          model.perform!
+        end
       end
 
-      model.archives.count.should == 1
-    end
+      context 'when archives are configured' do
+        before do
+          model.instance_variable_set(:@archives, [true])
+        end
 
-    it 'should add a storage to the array of storages to use' do
-      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        archive('TestStorage')
-        archive('TestStorage')
+        it 'should perform all procedures' do
+          model.expects(:log!).in_sequence(s).with(:started)
+
+          model.expects(:prepare!).in_sequence(s)
+
+          procedure_a.expects(:call).in_sequence(s)
+          procedure_b.expects(:perform!).in_sequence(s)
+          procedure_c.expects(:perform!).in_sequence(s)
+          procedure_d.expects(:call).in_sequence(s)
+          procedure_e.expects(:call).in_sequence(s)
+          procedure_f.expects(:perform!).in_sequence(s)
+
+          syncer_a.expects(:perform!).in_sequence(s)
+          syncer_b.expects(:perform!).in_sequence(s)
+
+          notifier_a.expects(:perform!).in_sequence(s)
+          notifier_b.expects(:perform!).in_sequence(s)
+
+          model.expects(:log!).in_sequence(s).with(:finished)
+
+          model.perform!
+        end
       end
 
-      model.archives.count.should == 2
-    end
-  end
+    end # context 'when no errors occur'
 
-  describe '#compress_with' do
-    it 'should add a compressor to the array of compressors to use' do
-      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        compress_with('TestGzip')
+    # for the purposes of testing the error handling, we're just going to
+    # stub the first thing this method calls and raise an error
+    context 'when errors occur' do
+
+      it 'logs, notifies and continues if a StandardError is rescued' do
+        err = StandardError.new 'non-fatal error'
+        Time.stubs(:now).raises(err)
+
+        model.expects(:log!).with(:failure, err)
+        model.expects(:send_failure_notifications)
+
+        # returns to allow next trigger to run
+        expect { model.perform! }.not_to raise_error
       end
 
-      model.compressors.count.should == 1
-    end
+      it 'logs, notifies and exits with status code 3 if an Exception is rescued' do
+        err = Exception.new 'fatal error'
+        Time.stubs(:now).raises(err)
 
-    it 'should add a compressor to the array of compressors to use' do
-      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        compress_with('TestGzip')
-        compress_with('TestSevenZip')
+        model.expects(:log!).with(:failure, err)
+        model.expects(:send_failure_notifications)
+
+        expect do
+          model.perform!
+        end.to raise_error(SystemExit) {|exit| exit.status.should be(3) }
       end
 
-      model.compressors.count.should == 2
-    end
-  end
+    end # context 'when errors occur'
 
-  describe '#encrypt_with' do
-    it 'should add a encryptor to the array of encryptors to use' do
-      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        encrypt_with('TestOpenSSL')
-      end
-
-      model.encryptors.count.should == 1
-    end
-
-    it 'should add a encryptor to the array of encryptors to use' do
-      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        encrypt_with('TestOpenSSL')
-        encrypt_with('TestGPG')
-      end
-
-      model.encryptors.count.should == 2
-    end
-  end
-
-  describe '#notify_by' do
-    it 'should add a notifier to the array of notifiers to use' do
-      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        notify_by('TestMail')
-      end
-
-      model.notifiers.count.should == 1
-    end
-
-    it 'should add a notifier to the array of notifiers to use' do
-      model = Backup::Model.new('mysql-s3', 'MySQL S3 Backup for MyApp') do
-        notify_by('TestMail')
-        notify_by('TestMail')
-      end
-
-      model.notifiers.count.should == 2
-    end
-  end
+  end # describe '#perform!'
 
   describe '#package!' do
-    before do
-      [:utility, :run].each { |method| model.stubs(method) }
-    end
+    it 'should package the backup' do
+      Backup::Packager.expects(:package!).in_sequence(s).with(model)
+      Backup::Cleaner.expects(:remove_packaging).in_sequence(s).with(model)
 
-    it 'should package the folder' do
-      model.expects(:utility).with(:tar).returns(:tar)
-      model.expects(:run).with(%|tar -c -f '#{ File.join( Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar" ) }' -C '#{ Backup::TMP_PATH }' '#{ Backup::TRIGGER }'|)
       model.send(:package!)
-    end
-
-    it 'should log' do
-      Backup::Logger.expects(:message).with("Backup started packaging everything to a single archive file.")
-      model.send(:package!)
+      model.package.should be_an_instance_of Backup::Package
     end
   end
 
-  describe '#clean!' do
+  describe '#clean' do
+    it 'should remove the final packaged files' do
+      package = mock
+      model.instance_variable_set(:@package, package)
+      Backup::Cleaner.expects(:remove_package).with(package)
+
+      model.send(:clean!)
+    end
+  end
+
+  describe '#procedures' do
+    it 'should return an array of specific, ordered procedures' do
+      model.stubs(:databases).returns(:databases)
+      model.stubs(:archives).returns(:archives)
+      model.stubs(:package!).returns(:package)
+      model.stubs(:storages).returns(:storages)
+      model.stubs(:clean!).returns(:clean)
+
+      one, two, three, four, five = model.send(:procedures)
+      one.should == :databases
+      two.should == :archives
+      three.call.should == :package
+      four.should == :storages
+      five.call.should == :clean
+    end
+  end
+
+  describe '#procedure_instance_variables' do
+    # these are all set to an empty Array in #initialize
+    it 'should return an array of Array holding instance variables' do
+      model.send(:procedure_instance_variables).should ==
+          [:@databases, :@archives, :@storages, :@notifiers, :@syncers]
+    end
+  end
+
+  describe '#get_class_from_scope' do
+
+    module Fake
+      module TestScope
+        class TestKlass; end
+      end
+    end
+    module TestScope
+      module TestKlass; end
+    end
+
+    context 'when name is given as a string' do
+      it 'should return the constant for the given scope and name' do
+        model.send(
+          :get_class_from_scope,
+          Fake,
+          'TestScope'
+        ).should == Fake::TestScope
+      end
+
+      it 'should accept a nested class name' do
+        model.send(
+          :get_class_from_scope,
+          Fake,
+          'TestScope::TestKlass'
+        ).should == Fake::TestScope::TestKlass
+      end
+    end
+
+    context 'when name is given as a module' do
+      it 'should return the constant for the given scope and name' do
+        model.send(
+          :get_class_from_scope,
+          Fake,
+          TestScope
+        ).should == Fake::TestScope
+      end
+
+      it 'should accept a nested class name' do
+        model.send(
+          :get_class_from_scope,
+          Fake,
+          TestScope::TestKlass
+        ).should == Fake::TestScope::TestKlass
+      end
+    end
+
+    context 'when name is given as a module defined under Backup::Config' do
+      # this is necessary since the specs in spec/config_spec.rb
+      # remove all the constants from Backup::Config as part of those tests.
+      before(:all) do
+        module Backup::Config
+          module TestScope
+            module TestKlass; end
+          end
+        end
+      end
+
+      it 'should return the constant for the given scope and name' do
+        model.send(
+          :get_class_from_scope,
+          Fake,
+          Backup::Config::TestScope
+        ).should == Fake::TestScope
+      end
+
+      it 'should accept a nested class name' do
+        model.send(
+          :get_class_from_scope,
+          Fake,
+          Backup::Config::TestScope::TestKlass
+        ).should == Fake::TestScope::TestKlass
+      end
+    end
+
+  end # describe '#get_class_from_scope'
+
+  describe '#log!' do
+    context 'when action is :started' do
+      it 'should log that the backup has started with the version' do
+        Backup::Logger.expects(:info).with(
+          "Performing Backup for 'test label (test_trigger)'!\n" +
+          "[ backup #{ Backup::Version.current } : #{ RUBY_DESCRIPTION } ]"
+        )
+        model.send(:log!, :started)
+      end
+    end
+
+    context 'when action is :finished' do
+      before { model.expects(:elapsed_time).returns('01:02:03') }
+      context 'when warnings were issued' do
+        before { Backup::Logger.expects(:has_warnings?).returns(true) }
+        it 'should log a warning that the backup has finished with warnings' do
+          Backup::Logger.expects(:warn).with(
+            "Backup for 'test label (test_trigger)' " +
+            "Completed Successfully (with Warnings) in 01:02:03"
+          )
+          model.send(:log!, :finished)
+        end
+      end
+
+      context 'when no warnings were issued' do
+        it 'should log that the backup has finished with the elapsed time' do
+          Backup::Logger.expects(:info).with(
+            "Backup for 'test label (test_trigger)' " +
+            "Completed Successfully in 01:02:03"
+          )
+          model.send(:log!, :finished)
+        end
+      end
+    end
+
+    context 'when action is :failure' do
+      let(:error_a)   { mock }
+      let(:error_b)   { mock }
+
+      before do
+        error_a.stubs(:backtrace).returns(['many', 'backtrace', 'lines'])
+      end
+
+      context 'when Exception is a StandardError' do
+        it 'logs non-fatal error messages' do
+          Backup::Errors::ModelError.expects(:wrap).in_sequence(s).with do |err, msg|
+            err.message.should == 'non-fatal error'
+            msg.should match(/Backup for test label \(test_trigger\) Failed!/)
+          end.returns(error_a)
+          Backup::Logger.expects(:error).in_sequence(s).with(error_a)
+          Backup::Logger.expects(:error).in_sequence(s).with(
+            "\nBacktrace:\n\s\smany\n\s\sbacktrace\n\s\slines\n\n"
+          )
+
+          Backup::Cleaner.expects(:warnings).in_sequence(s).with(model)
+
+          Backup::Errors::ModelError.expects(:new).in_sequence(s).with do |msg|
+            msg.should match(/Backup will now attempt to continue/)
+          end.returns(error_b)
+          Backup::Logger.expects(:info).in_sequence(s).with(error_b)
+
+          exception = StandardError.new 'non-fatal error'
+          model.send(:log!, :failure, exception)
+        end
+      end
+
+      context 'when Exception is not a StandardError' do
+        it 'logs fatal error messages' do
+          Backup::Errors::ModelError.expects(:wrap).in_sequence(s).with do |err, msg|
+            err.message.should == 'fatal error'
+            msg.should match(/Backup for test label \(test_trigger\) Failed!/)
+          end.returns(error_a)
+          Backup::Logger.expects(:error).in_sequence(s).with(error_a)
+          Backup::Logger.expects(:error).in_sequence(s).with(
+            "\nBacktrace:\n\s\smany\n\s\sbacktrace\n\s\slines\n\n"
+          )
+
+          Backup::Cleaner.expects(:warnings).in_sequence(s).with(model)
+
+          Backup::Errors::ModelError.expects(:new).in_sequence(s).with do |msg|
+            msg.should match(/Backup will now exit/)
+          end.returns(error_b)
+          Backup::Logger.expects(:error).in_sequence(s).with(error_b)
+
+          exception = Exception.new 'fatal error'
+          model.send(:log!, :failure, exception)
+        end
+      end
+    end
+  end # describe '#log!'
+
+  describe '#elapsed_time' do
+    it 'should return a string representing the elapsed time' do
+      Timecop.freeze do
+        { 0       => '00:00:00', 1       => '00:00:01', 59      => '00:00:59',
+          60      => '00:01:00', 61      => '00:01:01', 119     => '00:01:59',
+          3540    => '00:59:00', 3541    => '00:59:01', 3599    => '00:59:59',
+          3600    => '01:00:00', 3601    => '01:00:01', 3659    => '01:00:59',
+          3660    => '01:01:00', 3661    => '01:01:01', 3719    => '01:01:59',
+          7140    => '01:59:00', 7141    => '01:59:01', 7199    => '01:59:59',
+          212400  => '59:00:00', 212401  => '59:00:01', 212459  => '59:00:59',
+          212460  => '59:01:00', 212461  => '59:01:01', 212519  => '59:01:59',
+          215940  => '59:59:00', 215941  => '59:59:01', 215999  => '59:59:59'
+        }.each do |duration, expected|
+          model.instance_variable_set(:@started_at, Time.now - duration)
+          model.send(:elapsed_time).should == expected
+        end
+      end
+    end
+  end
+
+  describe '#send_failure_notifications' do
+    let(:notifier_a) { mock }
+    let(:notifier_b) { mock }
+    let(:notifiers) { [notifier_a, notifier_b] }
+
     before do
-      [:utility, :run, :rm].each { |method| model.stubs(method) }
+      model.expects(:notifiers).returns(notifiers)
     end
 
-    it 'should remove the temporary files and folders that were created' do
-      model.expects(:utility).with(:rm).returns(:rm)
-      model.expects(:run).with("rm -rf '#{ File.join(Backup::TMP_PATH, Backup::TRIGGER) }' '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'")
-      model.send(:clean!)
+    it 'calls all notifiers to perform failure notification' do
+      notifier_a.expects(:perform!).with(true)
+      notifier_b.expects(:perform!).with(true)
+      model.send(:send_failure_notifications)
     end
 
-    it do
-      Backup::Logger.expects(:message).with("Backup started cleaning up the temporary files.")
-      model.send(:clean!)
+    it 'logs and ignores exceptions' do
+      notifier_a.expects(:perform!).with(true).raises('failed to notify')
+      notifier_a.expects(:class).returns('Notifier::Name')
+      notifier_b.expects(:perform!).with(true)
+      Backup::Logger.expects(:error).with do |ex|
+        ex.message.should match(/Notifier::Name Failed to send notification/)
+        ex.message.should match(/failed to notify/)
+      end
+
+      expect do
+        model.send(:send_failure_notifications)
+      end.not_to raise_error
     end
   end
 

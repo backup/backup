@@ -1,0 +1,11 @@
+  ##
+  # Pushover [Notifier]
+  #
+  notify_by Pushover do |push|
+    push.on_success = true
+    push.on_warning = true
+    push.on_failure = true
+
+    push.user       = "USER_TOKEN"
+    push.token      = "APP_TOKEN"
+  end

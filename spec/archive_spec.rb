@@ -1,95 +1,212 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/spec_helper'
+require File.expand_path('../spec_helper.rb', __FILE__)
 
-describe Backup::Archive do
+module Backup
+describe Archive do
+  let(:model) { Model.new(:test_trigger, 'test model') }
 
-  let(:archive) do
-    Backup::Archive.new(:dummy_archive) do |a|
-      a.add '/home/rspecuser/somefile'
-      a.add '/home/rspecuser/logs/'
-      a.add '/home/rspecuser/dotfiles/'
-      a.exclude '/home/rspecuser/badfile'
-      a.exclude '/home/rspecuser/wrongdir/'
-    end
-  end
+  describe '#initialize' do
+    it 'sets default values' do
+      archive = Archive.new(model, :test_archive) {}
 
-  it 'should have no paths' do
-    archive = Backup::Archive.new(:dummy_archive) { |a| }
-    archive.paths.count.should == 0
-  end
-
-  it 'should have no excludes' do
-    archive = Backup::Archive.new(:dummy_archive) { |a| }
-    archive.excludes.count.should == 0
-  end
-
-  it 'should have 3 paths' do
-    archive.paths.count.should == 3
-  end
-
-  it 'should have 2 excludes' do
-    archive.excludes.count.should == 2
-  end
-
-  it do
-    archive.name.should == :dummy_archive
-  end
-
-  describe '#paths_to_package' do
-    it 'should return a tar -c friendly string' do
-      archive.send(:paths_to_package).should ==
-      "'/home/rspecuser/somefile' '/home/rspecuser/logs' '/home/rspecuser/dotfiles'"
-    end
-  end
-
-  describe '#paths_to_exclude' do
-    it 'should be empty' do
-      archive = Backup::Archive.new(:dummy_archive) { |a| }
-      archive.send(:paths_to_exclude).should be_nil
+      expect( archive.name ).to eq 'test_archive'
+      expect( archive.options[:root]        ).to be(false)
+      expect( archive.options[:paths]       ).to eq []
+      expect( archive.options[:excludes]    ).to eq []
+      expect( archive.options[:tar_options] ).to eq ''
     end
 
-    it 'should return a tar -c friendly string' do
-      archive.send(:paths_to_exclude).should ==
-      "--exclude='/home/rspecuser/badfile' --exclude='/home/rspecuser/wrongdir'"
+    it 'sets configured values' do
+      archive = Archive.new(model, :test_archive) do |a|
+        a.root 'root/path'
+        a.add 'a/path'
+        a.add '/another/path'
+        a.exclude 'excluded/path'
+        a.exclude '/another/excluded/path'
+        a.tar_options '-h --xattrs'
+      end
+
+      expect( archive.name ).to eq 'test_archive'
+      expect( archive.options[:root] ).to eq 'root/path'
+
+      expect( archive.options[:paths] ).to eq(
+        ['a/path', '/another/path']
+      )
+      expect( archive.options[:excludes] ).to eq(
+        ['excluded/path', '/another/excluded/path']
+      )
+      expect( archive.options[:tar_options] ).to eq '-h --xattrs'
     end
-  end
+  end # describe '#initialize'
 
   describe '#perform!' do
     before do
-      [:mkdir, :run, :utility].each { |method| archive.stubs(method) }
+      Archive.any_instance.stubs(:utility).with(:tar).returns('tar')
+      Archive.any_instance.stubs(:utility).with(:cat).returns('cat')
+      Config.stubs(:tmp_path).returns('/tmp/path')
+      Pipeline.any_instance.stubs(:success?).returns(true)
     end
 
-    context 'when both paths were added and paths that should be excluded were added' do
-      it 'should render both the syntax for the paths that be included as well as excluded' do
-        archive.expects(:mkdir).with(File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive'))
-        archive.expects(:run).with(
-          "tar -c -f '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}' --exclude='/home/rspecuser/badfile' --exclude='/home/rspecuser/wrongdir' '/home/rspecuser/somefile' '/home/rspecuser/logs' '/home/rspecuser/dotfiles'",
-          :ignore_exit_codes => [1]
-        )
-        archive.expects(:utility).with(:tar).returns(:tar)
+    describe 'success/failure messages' do
+      let(:archive) { Archive.new(model, :my_archive) {} }
+
+      it 'logs info messages on success' do
+        Logger.expects(:info).with("Creating Archive 'my_archive'...")
+        Logger.expects(:info).with("Archive 'my_archive' Complete!")
+
         archive.perform!
+      end
+
+      it 'raises error on failure' do
+        Pipeline.any_instance.stubs(:success?).returns(false)
+        Pipeline.any_instance.stubs(:error_messages).returns('error messages')
+
+        Logger.expects(:info).with("Creating Archive 'my_archive'...")
+        Logger.expects(:info).with("Archive 'my_archive' Complete!").never
+
+        expect do
+          archive.perform!
+        end.to raise_error(Errors::Archive::PipelineError) {|err|
+          expect( err.message ).to eq(
+            "Archive::PipelineError: Failed to Create Archive 'my_archive'\n" +
+            "  error messages"
+          )
+        }
       end
     end
 
-    context 'when there are paths to add, and no exclude patterns were defined' do
-      it 'should only render syntax for the defined paths' do
-        archive = Backup::Archive.new(:dummy_archive) do |a|
-          a.add '/path/to/archive'
+    describe 'using GNU tar' do
+      before do
+        Pipeline.any_instance.expects(:<<).with(
+          "cat > '/tmp/path/test_trigger/archives/my_archive.tar'"
+        )
+      end
+
+      it 'returns GNU tar options' do
+        archive = Archive.new(model, :my_archive) {}
+
+        Pipeline.any_instance.expects(:add).with(
+          'tar --ignore-failed-read -cPf -  ', [0, 1]
+        )
+        archive.perform!
+      end
+
+      it 'prepends GNU tar options' do
+        archive = Archive.new(model, :my_archive) do |a|
+          a.tar_options '-h --xattrs'
         end
 
-        archive.stubs(:utility).returns(:tar)
-        archive.expects(:run).with(
-          "tar -c -f '#{File.join(Backup::TMP_PATH, Backup::TRIGGER, 'archive', "#{:dummy_archive}.tar")}'  '/path/to/archive'",
-          :ignore_exit_codes => [1]
+        Pipeline.any_instance.expects(:add).with(
+          'tar --ignore-failed-read -h --xattrs -cPf -  ', [0, 1]
         )
         archive.perform!
       end
     end
 
-    it 'should log the status' do
-      Backup::Logger.expects(:message).with("Backup::Archive started packaging and archiving \"/home/rspecuser/somefile\", \"/home/rspecuser/logs\", \"/home/rspecuser/dotfiles\".")
-      archive.perform!
+    describe 'using BSD tar' do
+      before do
+        Archive.any_instance.stubs(:gnu_tar?).returns(false)
+        Pipeline.any_instance.expects(:<<).with(
+          "cat > '/tmp/path/test_trigger/archives/my_archive.tar'"
+        )
+      end
+
+      it 'returns no GNU options' do
+        archive = Archive.new(model, :my_archive) {}
+
+        Pipeline.any_instance.expects(:add).with('tar  -cPf -  ', [0])
+        archive.perform!
+      end
+
+      it 'returns only the configured options' do
+        archive = Archive.new(model, :my_archive) do |a|
+          a.tar_options '-h --xattrs'
+        end
+
+        Pipeline.any_instance.expects(:add).with('tar -h --xattrs -cPf -  ', [0])
+        archive.perform!
+      end
     end
-  end
+
+    describe 'root path option' do
+      context 'when a root path is given' do
+        it 'changes directories to create relative path archives' do
+          archive = Archive.new(model, :my_archive) do |a|
+            a.root 'root/path'
+            a.add 'this/path'
+            a.add '/that/path'
+            a.exclude 'other/path'
+            a.exclude '/another/path'
+          end
+
+          Pipeline.any_instance.expects(:add).with(
+            "tar --ignore-failed-read -cPf - " +
+            "-C '#{ File.expand_path('root/path') }' " +
+            "--exclude='other/path' --exclude='/another/path' " +
+            "'this/path' '/that/path'",
+            [0, 1]
+          )
+          Pipeline.any_instance.expects(:<<).with(
+            "cat > '/tmp/path/test_trigger/archives/my_archive.tar'"
+          )
+
+          archive.perform!
+        end
+      end
+
+      context 'when no root path is given' do
+        it 'creates archives with expanded paths' do
+          archive = Archive.new(model, :my_archive) do |a|
+            a.add 'this/path'
+            a.add '/that/path'
+            a.exclude 'other/path'
+            a.exclude '/another/path'
+          end
+
+          Pipeline.any_instance.expects(:add).with(
+            "tar --ignore-failed-read -cPf - " +
+            "--exclude='#{ File.expand_path('other/path') }' " +
+            "--exclude='/another/path' " +
+            "'#{ File.expand_path('this/path') }' " +
+            "'/that/path'",
+            [0, 1]
+          )
+          Pipeline.any_instance.expects(:<<).with(
+            "cat > '/tmp/path/test_trigger/archives/my_archive.tar'"
+          )
+
+          archive.perform!
+        end
+      end
+    end
+
+    describe 'compressor usage' do
+      let(:archive) { Archive.new(model, :my_archive) {} }
+
+      it 'creates a compressed archive' do
+        compressor = mock
+        model.stubs(:compressor).returns(compressor)
+        compressor.stubs(:compress_with).yields('comp_command', '.comp_ext')
+
+        Pipeline.any_instance.expects(:<<).with('comp_command')
+        Pipeline.any_instance.expects(:<<).with(
+          "cat > '/tmp/path/test_trigger/archives/my_archive.tar.comp_ext'"
+        )
+
+        archive.perform!
+      end
+
+      it 'creates an uncompressed archive' do
+        Pipeline.any_instance.expects(:<<).with('comp_command').never
+        Pipeline.any_instance.expects(:<<).with(
+          "cat > '/tmp/path/test_trigger/archives/my_archive.tar'"
+        )
+
+        archive.perform!
+      end
+    end
+  end # describe '#perform!'
+
+end
 end

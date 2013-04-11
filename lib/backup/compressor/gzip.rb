@@ -3,57 +3,80 @@
 module Backup
   module Compressor
     class Gzip < Base
+      extend Utilities::Helpers
 
       ##
-      # Tells Backup::Compressor::Gzip to compress
-      # better rather than faster when set to true
-      attr_writer :best
+      # Specify the level of compression to use.
+      #
+      # Values should be a single digit from 1 to 9.
+      # Note that setting the level to either extreme may or may not
+      # give the desired result. Be sure to check the documentation
+      # for the compressor being used.
+      #
+      # The default `level` is 6.
+      attr_accessor :level
+
+      attr_deprecate :fast, :version => '3.0.24',
+                     :message => 'Use Gzip#level instead.',
+                     :action => lambda {|klass, val|
+                       klass.level = 1 if val
+                     }
+      attr_deprecate :best, :version => '3.0.24',
+                     :message => 'Use Gzip#level instead.',
+                     :action => lambda {|klass, val|
+                       klass.level = 9 if val
+                     }
 
       ##
-      # Tells Backup::Compressor::Gzip to compress
-      # faster rather than better when set to true
-      attr_writer :fast
+      # Use the `--rsyncable` option with `gzip`.
+      #
+      # This option directs `gzip` to compress data using an algorithm that
+      # allows `rsync` to efficiently detect changes. This is especially useful
+      # when used to compress `Archive` or `Database` backups that will be
+      # stored using Backup's `RSync` Storage option.
+      #
+      # The `--rsyncable` option is only available on patched versions of `gzip`.
+      # While most distributions apply this patch, this option may not be
+      # available on your system. If it's not available, Backup will log a
+      # warning and continue to use the compressor without this option.
+      attr_accessor :rsyncable
 
       ##
-      # Creates a new instance of Backup::Compressor::Gzip and
-      # configures it to either compress faster or better
+      # Determine if +--rsyncable+ is supported and cache the result.
+      def self.has_rsyncable?
+        return @has_rsyncable unless @has_rsyncable.nil?
+        cmd = "#{ utility(:gzip) } --rsyncable --version >/dev/null 2>&1; echo $?"
+        @has_rsyncable = %x[#{ cmd }].chomp == '0'
+      end
+
+      ##
+      # Creates a new instance of Backup::Compressor::Gzip
       def initialize(&block)
         load_defaults!
 
-        @best ||= false
-        @fast ||= false
+        @level ||= false
+        @rsyncable ||= false
 
         instance_eval(&block) if block_given?
+
+        @cmd = "#{ utility(:gzip) }#{ options }"
+        @ext = '.gz'
       end
 
-      ##
-      # Performs the compression of the packages backup file
-      def perform!
-        log!
-        run("#{ utility(:gzip) } #{ options } '#{ Backup::Model.file }'")
-        Backup::Model.extension += '.gz'
-      end
+      private
 
-    private
-
-      ##
-      # Combines the provided options and returns a gzip options string
       def options
-        (best + fast).join("\s")
-      end
-
-      ##
-      # Returns the gzip option syntax for compressing
-      # better when @best is set to true
-      def best
-        return ['--best'] if @best; []
-      end
-
-      ##
-      # Returns the gzip option syntax for compressing
-      # faster when @fast is set to true
-      def fast
-        return ['--fast'] if @fast; []
+        opts = ''
+        opts << " -#{ @level }" if @level
+        if self.class.has_rsyncable?
+          opts << ' --rsyncable'
+        else
+          Logger.warn Errors::Compressor::Gzip::RsyncableError.new(<<-EOS)
+            'rsyncable' option ignored.
+            Your system's 'gzip' does not support the `--rsyncable` option.
+          EOS
+        end if @rsyncable
+        opts
       end
 
     end

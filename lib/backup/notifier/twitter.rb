@@ -9,14 +9,6 @@ module Backup
     class Twitter < Base
 
       ##
-      # Container for the Twitter Client object
-      attr_accessor :twitter_client
-
-      ##
-      # Container for the Model object
-      attr_accessor :model
-
-      ##
       # Twitter consumer key credentials
       attr_accessor :consumer_key, :consumer_secret
 
@@ -24,62 +16,53 @@ module Backup
       # OAuth credentials
       attr_accessor :oauth_token, :oauth_token_secret
 
-      ##
-      # Instantiates a new Backup::Notifier::Twitter object
-      def initialize(&block)
-        load_defaults!
+      def initialize(model, &block)
+        super(model)
 
         instance_eval(&block) if block_given?
-
-        set_defaults!
       end
 
+      private
+
       ##
-      # Performs the notification
-      # Takes an exception object that might've been created if an exception occurred.
-      # If this is the case it'll invoke notify_failure!(exception), otherwise, if no
-      # error was raised, it'll go ahead and notify_success!
+      # Notify the user of the backup operation results.
+      # `status` indicates one of the following:
       #
-      # If'll only perform these if on_success is true or on_failure is true
-      def perform!(model, exception = false)
-        @model = model
-
-        if notify_on_success? and exception.eql?(false)
-          log!
-          notify_success!
-        elsif notify_on_failure? and not exception.eql?(false)
-          log!
-          notify_failure!(exception)
-        end
+      # `:success`
+      # : The backup completed successfully.
+      # : Notification will be sent if `on_success` was set to `true`
+      #
+      # `:warning`
+      # : The backup completed successfully, but warnings were logged
+      # : Notification will be sent, including a copy of the current
+      # : backup log, if `on_warning` was set to `true`
+      #
+      # `:failure`
+      # : The backup operation failed.
+      # : Notification will be sent, including the Exception which caused
+      # : the failure, the Exception's backtrace, a copy of the current
+      # : backup log and other information if `on_failure` was set to `true`
+      #
+      def notify!(status)
+        name = case status
+               when :success then 'Success'
+               when :warning then 'Warning'
+               when :failure then 'Failure'
+               end
+        message = "[Backup::%s] #{@model.label} (#{@model.trigger}) (@ #{@model.time})" % name
+        send_message(message)
       end
 
-    private
-
-      ##
-      # Sends a tweet informing the user that the backup operation
-      # proceeded without any errors
-      def notify_success!
-        twitter_client.update("[Backup::Succeeded] #{model.label} (#{ File.basename(Backup::Model.file) })")
-      end
-
-      ##
-      # Sends a tweet informing the user that the backup operation
-      # raised an exception
-      def notify_failure!(exception)
-        twitter_client.update("[Backup::Failed] #{model.label} (#{ File.basename(Backup::Model.file) })")
-      end
-
-      ##
-      # Configures the Twitter object by passing in the @consumer_key, @consumer_secret
-      # @oauth_token and @oauth_token_secret. Instantiates and sets the @twitter_client object
-      def set_defaults!
+      def send_message(message)
         ::Twitter.configure do |config|
           config.consumer_key       = @consumer_key
           config.consumer_secret    = @consumer_secret
           config.oauth_token        = @oauth_token
           config.oauth_token_secret = @oauth_token_secret
         end
-        @twitter_client = ::Twitter::Client.new
+
+        client = ::Twitter::Client.new
+        client.update(message)
       end
 
     end

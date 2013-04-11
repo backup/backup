@@ -1,7 +1,0 @@
-  ##
-  # Lzma [Compressor]
-  #
-  compress_with Lzma do |compression|
-    compression.best = true
-    compression.fast = false
-  end

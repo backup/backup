@@ -29,52 +29,78 @@ module Backup
       attr_accessor :additional_options
 
       ##
+      # Path to pg_dump utility (optional)
+      attr_accessor :pg_dump_utility
+
+      attr_deprecate :utility_path, :version => '3.0.21',
+          :message => 'Use PostgreSQL#pg_dump_utility instead.',
+          :action => lambda {|klass, val| klass.pg_dump_utility = val }
+
+      ##
       # Creates a new instance of the PostgreSQL adapter object
       # Sets the PGPASSWORD environment variable to the password
       # so it doesn't prompt and hang in the process
-      def initialize(&block)
-        load_defaults!
+      def initialize(model, &block)
+        super(model)
 
         @skip_tables        ||= Array.new
         @only_tables        ||= Array.new
         @additional_options ||= Array.new
 
-        instance_eval(&block)
-        ENV['PGPASSWORD'] = password
+        instance_eval(&block) if block_given?
+
+        @pg_dump_utility ||= utility(:pg_dump)
       end
 
       ##
-      # Builds the PostgreSQL syntax for specifying which tables to skip
-      # during the dumping of the database
-      def tables_to_skip
-        skip_tables.map do |table|
-          "--exclude-table='#{table}'"
-        end.join("\s")
+      # Performs the pgdump command and outputs the
+      # data to the specified path based on the 'trigger'
+      def perform!
+        super
+
+        pipeline = Pipeline.new
+        dump_ext = 'sql'
+
+        pipeline << pgdump
+        if @model.compressor
+          @model.compressor.compress_with do |command, ext|
+            pipeline << command
+            dump_ext << ext
+          end
+        end
+
+        pipeline << "#{ utility(:cat) } > " +
+            "'#{ File.join(@dump_path, name) }.#{ dump_ext }'"
+        pipeline.run
+        if pipeline.success?
+          Logger.info "#{ database_name } Complete!"
+        else
+          raise Errors::Database::PipelineError,
+              "#{ database_name } Dump Failed!\n" +
+              pipeline.error_messages
+        end
       end
 
       ##
-      # Builds the PostgreSQL syntax for specifying which tables to dump
-      # during the dumping of the database
-      def tables_to_dump
-        only_tables.map do |table|
-          "--table='#{table}'"
-        end.join("\s")
-      end
-
-      ##
-      # Builds the credentials PostgreSQL syntax to authenticate the user
-      # to perform the database dumping process
-      def username_options
-        return '' unless username.is_a?(String) and not username.empty?
-        "--username='#{username}'"
+      # Builds the full pgdump string based on all attributes
+      def pgdump
+        "#{password_options}" +
+        "#{ pg_dump_utility } #{ username_options } #{ connectivity_options } " +
+        "#{ user_options } #{ tables_to_dump } #{ tables_to_skip } #{ name }"
       end
 
       ##
       # Builds the password syntax PostgreSQL uses to authenticate the user
       # to perform database dumping
       def password_options
-        return '' unless password.is_a?(String) and not username.empty?
-        "PGPASSWORD='#{password}'"
+        password.to_s.empty? ? '' : "PGPASSWORD='#{password}' "
+      end
+
+      ##
+      # Builds the credentials PostgreSQL syntax to authenticate the user
+      # to perform the database dumping process
+      def username_options
+        username.to_s.empty? ? '' : "--username='#{username}'"
       end
 
       ##
@@ -84,35 +110,34 @@ module Backup
       # both the host and the socket are specified, the socket will take priority over the host
       def connectivity_options
         %w[host port socket].map do |option|
-          next if send(option).nil? or (send(option).respond_to?(:empty?) and send(option).empty?)
+          next if send(option).to_s.empty?
           "--#{option}='#{send(option)}'".gsub('--socket=', '--host=')
-        end.compact.join("\s")
+        end.compact.join(' ')
       end
 
       ##
       # Builds a PostgreSQL compatible string for the additional options
       # specified by the user
-      def options
-        additional_options.join("\s")
+      def user_options
+        additional_options.join(' ')
       end
 
       ##
-      # Builds the full pgdump string based on all attributes
-      def pgdump
-        ("#{password_options} " +
-        "#{ utility(:pg_dump) } #{ username_options } #{ connectivity_options } " +
-        "#{ options } #{ tables_to_dump } #{ tables_to_skip } #{ name }").strip
+      # Builds the PostgreSQL syntax for specifying which tables to dump
+      # during the dumping of the database
+      def tables_to_dump
+        only_tables.map do |table|
+          "--table='#{table}'"
+        end.join(' ')
       end
 
       ##
-      # Performs the pgdump command and outputs the
-      # data to the specified path based on the 'trigger'
-      # and resets the 'PGPASSWORD' environment variable to nil
-      def perform!
-        super
-
-        run("#{pgdump} > '#{File.join(dump_path, name)}.sql'")
-        ENV['PGPASSWORD'] = nil
+      # Builds the PostgreSQL syntax for specifying which tables to skip
+      # during the dumping of the database
+      def tables_to_skip
+        skip_tables.map do |table|
+          "--exclude-table='#{table}'"
+        end.join(' ')
       end
 
     end

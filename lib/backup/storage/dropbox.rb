@@ -2,11 +2,7 @@
 
 ##
 # Only load the Dropbox gem when the Backup::Storage::Dropbox class is loaded
-Backup::Dependency.load('dropbox')
-
-##
-# Only load the timeout library when the Backup::Storage::Dropbox class is loaded
-require 'timeout'
+Backup::Dependency.load('dropbox-sdk')
 
 module Backup
   module Storage
@@ -17,118 +13,112 @@ module Backup
       attr_accessor :api_key, :api_secret
 
       ##
+      # Dropbox Access Type
+      # Valid values are:
+      #   :app_folder (default)
+      #   :dropbox (full access)
+      attr_accessor :access_type
+
+      ##
       # Path to where the backups will be stored
       attr_accessor :path
 
-      ##
-      # Dropbox connection timeout
-      attr_accessor :timeout
+      attr_deprecate :email,    :version => '3.0.17'
+      attr_deprecate :password, :version => '3.0.17'
+
+      attr_deprecate :timeout, :version => '3.0.21'
 
       ##
-      # Creates a new instance of the Dropbox storage object
-      # First it sets the defaults (if any exist) and then evaluates
-      # the configuration block which may overwrite these defaults
-      def initialize(&block)
-        load_defaults!(:except => ['password', 'email'])
+      # Creates a new instance of the storage object
+      def initialize(model, storage_id = nil, &block)
+        super(model, storage_id)
 
         @path ||= 'backups'
+        @access_type ||= :app_folder
 
         instance_eval(&block) if block_given?
-
-        @timeout ||= 300
-        @time = TIME
       end
 
-      ##
-      # This is the remote path to where the backup files will be stored
-      def remote_path
-        File.join(path, TRIGGER)
-      end
+      private
 
       ##
-      # Performs the backup transfer
-      def perform!
-        transfer!
-        cycle!
-      end
-
-    private
-
-      ##
-      # The initial connection to Dropbox will provide the user with an authorization url.
-      # The user must open this URL and confirm that the authorization successfully took place.
-      # If this is the case, then the user hits 'enter' and the session will be properly established.
-      # Immediately after establishing the session, the session will be serialized and written to a cache file
-      # in Backup::CACHE_PATH. The cached file will be used from that point on to re-establish a connection with
-      # Dropbox at a later time. This allows the user to avoid having to go to a new Dropbox URL to authorize over and over again.
+      # The initial connection to Dropbox will provide the user with an
+      # authorization url. The user must open this URL and confirm that the
+      # authorization successfully took place. If this is the case, then the
+      # user hits 'enter' and the session will be properly established.
+      # Immediately after establishing the session, the session will be
+      # serialized and written to a cache file in Backup::Config.cache_path.
+      # The cached file will be used from that point on to re-establish a
+      # connection with Dropbox at a later time. This allows the user to avoid
+      # having to go to a new Dropbox URL to authorize over and over again.
       def connection
-        if cache_exists?
-          begin
-            cached_session = ::Dropbox::Session.deserialize(File.read(cached_file))
-            if cached_session.authorized?
-              Logger.message "Session data loaded from cache!"
-              return cached_session
-            end
-          rescue ArgumentError => error
-            Logger.warn "Could not read session data from cache. Cache data might be corrupt."
-          end
+        return @connection if @connection
+
+        unless session = cached_session
+          Logger.info "Creating a new session!"
+          session = create_write_and_return_new_session!
         end
 
-        Logger.message "Creating a new session!"
-        create_write_and_return_new_session!
+        # will raise an error if session not authorized
+        @connection = DropboxClient.new(session, access_type)
+
+      rescue => err
+        raise Errors::Storage::Dropbox::ConnectionError.wrap(err)
+      end
+
+      ##
+      # Attempt to load a cached session
+      def cached_session
+        session = false
+        if cache_exists?
+          begin
+            session = DropboxSession.deserialize(File.read(cached_file))
+            Logger.info "Session data loaded from cache!"
+
+          rescue => err
+            Logger.warn Errors::Storage::Dropbox::CacheError.wrap(err, <<-EOS)
+              Could not read session data from cache.
+              Cache data might be corrupt.
+            EOS
+          end
+        end
+        session
       end
 
       ##
       # Transfers the archived file to the specified Dropbox folder
       def transfer!
-        Logger.message("#{ self.class } started transferring \"#{ remote_file }\".")
-        connection.upload(File.join(local_path, local_file), remote_path, :timeout => timeout)
-      end
+        remote_path = remote_path_for(@package)
 
-      ##
-      # Removes the transferred archive file from the Dropbox folder
-      def remove!
-        begin
-          connection.delete(File.join(remote_path, remote_file))
-        rescue ::Dropbox::FileNotFoundError
-          Logger.warn "File \"#{ File.join(remote_path, remote_file) }\" does not exist, skipping removal."
+        files_to_transfer_for(@package) do |local_file, remote_file|
+          Logger.info "#{storage_name} started transferring '#{ local_file }'."
+          File.open(File.join(local_path, local_file), 'r') do |file|
+            connection.put_file(File.join(remote_path, remote_file), file)
+          end
         end
       end
 
       ##
-      # Create a new session, write a serialized version of it to the
-      # .cache directory, and return the session object
-      def create_write_and_return_new_session!
-        session      = ::Dropbox::Session.new(api_key, api_secret)
-        session.mode = :dropbox
-        Logger.message "Open the following URL in a browser to authorize a session for your Dropbox account:"
-        Logger.message ""
-        Logger.message "\s\s#{session.authorize_url}"
-        Logger.message ""
-        Logger.message "Once Dropbox says you're authorized, hit enter to proceed."
-        Timeout::timeout(180) { STDIN.gets }
-        begin
-          session.authorize
-        rescue OAuth::Unauthorized => error
-          Logger.error "Authorization failed!"
-          raise error
+      # Removes the transferred archive file(s) from the storage location.
+      # Any error raised will be rescued during Cycling
+      # and a warning will be logged, containing the error message.
+      def remove!(package)
+        remote_path = remote_path_for(package)
+
+        messages = []
+        transferred_files_for(package) do |local_file, remote_file|
+          messages << "#{storage_name} started removing " +
+              "'#{ local_file }' from Dropbox."
         end
-        Logger.message "Authorized!"
+        Logger.info messages.join("\n")
 
-        Logger.message "Caching session data to file: #{cached_file}.."
-        write_cache!(session)
-        Logger.message "Cache data written! You will no longer need to manually authorize this Dropbox account via an URL on this machine."
-        Logger.message "Note: If you run Backup with this Dropbox account on other machines, you will need to either authorize them the same way,"
-        Logger.message "\s\sor simply copy over #{cached_file} to the cache directory"
-        Logger.message "\s\son your other machines to use this Dropbox account there as well."
-
-        session
+        connection.file_delete(remote_path)
       end
 
       ##
       # Returns the path to the cached file
       def cached_file
-        File.join(Backup::CACHE_PATH, "#{api_key + api_secret}")
+        File.join(Config.cache_path, api_key + api_secret)
       end
 
       ##
@@ -145,22 +135,42 @@ module Backup
         end
       end
 
-    public # DEPRECATED METHODS #############################################
+      ##
+      # Create a new session, write a serialized version of it to the
+      # .cache directory, and return the session object
+      def create_write_and_return_new_session!
+        require 'timeout'
 
-      def email
-        Logger.warn "[DEPRECATED] Backup::Storage::Dropbox.email is deprecated and will be removed at some point."
-      end
+        session = DropboxSession.new(api_key, api_secret)
 
-      def email=(value)
-        Logger.warn "[DEPRECATED] Backup::Storage::Dropbox.email= is deprecated and will be removed at some point."
-      end
+        # grab the request token for session
+        session.get_request_token
 
-      def password
-        Logger.warn "[DEPRECATED] Backup::Storage::Dropbox.password is deprecated and will be removed at some point."
-      end
+        template = Backup::Template.new(
+          {:session => session, :cached_file => cached_file}
+        )
+        template.render("storage/dropbox/authorization_url.erb")
 
-      def password=(value)
-        Logger.warn "[DEPRECATED] Backup::Storage::Dropbox.password= is deprecated and will be removed at some point."
+        # wait for user to hit 'return' to continue
+        Timeout::timeout(180) { STDIN.gets }
+
+        # this will raise an error if the user did not
+        # visit the authorization_url and grant access
+        #
+        # get the access token from the server
+        # this will be stored with the session in the cache file
+        session.get_access_token
+
+        template.render("storage/dropbox/authorized.erb")
+        write_cache!(session)
+        template.render("storage/dropbox/cache_file_written.erb")
+
+        session
+
+        rescue => err
+          raise Errors::Storage::Dropbox::AuthenticationError.wrap(
+            err, 'Could not create or authenticate a new session'
+          )
       end
 
     end

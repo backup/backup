@@ -1,16 +1,6 @@
 # encoding: utf-8
 
 ##
-# If the Ruby version of this process is 1.8.x or less
-# then use the JSON gem. Otherwise if the current process is running
-# Ruby 1.9.x or later then it is built in and we can load it from the Ruby core lib
-if RUBY_VERSION < '1.9.0'
-  Backup::Dependency.load('json')
-else
-  require 'json'
-end
-
-##
 # Load the HTTParty library from the gem
 Backup::Dependency.load('httparty')
 
@@ -30,63 +20,41 @@ module Backup
       # Campfire account's room id
       attr_accessor :room_id
 
-      ##
-      # Container for the Model object
-      attr_accessor :model
-
-      ##
-      # Instantiates a new Backup::Notifier::Campfire object
-      def initialize(&block)
-        load_defaults!
+      def initialize(model, &block)
+        super(model)
 
         instance_eval(&block) if block_given?
-
-        set_defaults!
       end
 
+      private
+
       ##
-      # Performs the notification
-      # Takes an exception object that might've been created if an exception occurred.
-      # If this is the case it'll invoke notify_failure!(exception), otherwise, if no
-      # error was raised, it'll go ahead and notify_success!
+      # Notify the user of the backup operation results.
+      # `status` indicates one of the following:
       #
-      # If'll only perform these if on_success is true or on_failure is true
-      def perform!(model, exception = false)
-        @model = model
-
-        if notify_on_success? and exception.eql?(false)
-          log!
-          notify_success!
-        elsif notify_on_failure? and not exception.eql?(false)
-          log!
-          notify_failure!(exception)
-        end
-      end
-
-    private
-
-      ##
-      # Sends a message informing the user that the backup operation
-      # proceeded without any errors
-      def notify_success!
-        send_message("[Backup::Succeeded] #{model.label} (#{ File.basename(Backup::Model.file) })")
-      end
-
-      ##
-      # Sends a message informing the user that the backup operation
-      # raised an exception
-      def notify_failure!(exception)
-        send_message("[Backup::Failed] #{model.label} (#{ File.basename(Backup::Model.file) })")
-      end
-
-      ##
-      # Setting up credentials
-      def set_defaults!
-        @campfire_client = {
-          :api_token => @api_token,
-          :subdomain => @subdomain,
-          :room_id   => @room_id
-        }
+      # `:success`
+      # : The backup completed successfully.
+      # : Notification will be sent if `on_success` was set to `true`
+      #
+      # `:warning`
+      # : The backup completed successfully, but warnings were logged
+      # : Notification will be sent, including a copy of the current
+      # : backup log, if `on_warning` was set to `true`
+      #
+      # `:failure`
+      # : The backup operation failed.
+      # : Notification will be sent, including the Exception which caused
+      # : the failure, the Exception's backtrace, a copy of the current
+      # : backup log and other information if `on_failure` was set to `true`
+      #
+      def notify!(status)
+        name = case status
+               when :success then 'Success'
+               when :warning then 'Warning'
+               when :failure then 'Failure'
+               end
+        message = "[Backup::%s] #{@model.label} (#{@model.trigger})" % name
+        send_message(message)
       end
 
       ##
@@ -94,11 +62,7 @@ module Backup
       # campfire clients "room_id", "subdomain" and "api_token". Using this object
       # the provided "message" will be sent to the desired Campfire chat room
       def send_message(message)
-        room = Interface.room(
-          @campfire_client[:room_id],
-          @campfire_client[:subdomain],
-          @campfire_client[:api_token]
-        )
+        room = Interface.room(room_id, subdomain, api_token)
         room.message(message)
       end
 
@@ -158,19 +122,16 @@ module Backup
           send_message(message)
         end
 
-      private
+        private
 
         ##
         # Takes a "message" as argument, the "type" defaults to "Textmessage".
         # This method builds up a POST request with the necessary params (serialized to JSON format)
         # and sends it to the Campfire service in order to submit the message
         def send_message(message, type = 'Textmessage')
-          post 'speak', :body => {
-            :message => {
-              :body => message,
-              :type => type
-            }
-          }.to_json
+          post 'speak', :body => MultiJson.encode(
+            { :message => { :body => message, :type => type } }
+          )
         end
 
         ##

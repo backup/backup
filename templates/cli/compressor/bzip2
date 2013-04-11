@@ -1,0 +1,4 @@
+  ##
+  # Bzip2 [Compressor]
+  #
+  compress_with Bzip2

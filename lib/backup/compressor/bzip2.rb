@@ -5,58 +5,44 @@ module Backup
     class Bzip2 < Base
 
       ##
-      # Tells Backup::Compressor::Bzip2 to compress
-      # better (-9) rather than faster when set to true
-      attr_writer :best
+      # Specify the level of compression to use.
+      #
+      # Values should be a single digit from 1 to 9.
+      # Note that setting the level to either extreme may or may not
+      # give the desired result. Be sure to check the documentation
+      # for the compressor being used.
+      #
+      # The default `level` is 9.
+      attr_accessor :level
+
+      attr_deprecate :fast, :version => '3.0.24',
+                     :message => 'Use Bzip2#level instead.',
+                     :action => lambda {|klass, val|
+                       klass.level = 1 if val
+                     }
+      attr_deprecate :best, :version => '3.0.24',
+                     :message => 'Use Bzip2#level instead.',
+                     :action => lambda {|klass, val|
+                       klass.level = 9 if val
+                     }
 
       ##
-      # Tells Backup::Compressor::Bzip2 to compress
-      # faster (-1) rather than better when set to true
-      attr_writer :fast
-
-      ##
-      # Creates a new instance of Backup::Compressor::Bzip2 and
-      # configures it to either compress faster or better
-      # bzip2 compresses by default with -9 (best compression)
-      # and lower block sizes don't make things significantly faster
-      # (according to official bzip2 docs)
+      # Creates a new instance of Backup::Compressor::Bzip2
       def initialize(&block)
         load_defaults!
 
-        @best ||= false
-        @fast ||= false
+        @level ||= false
 
         instance_eval(&block) if block_given?
+
+        @cmd = "#{ utility(:bzip2) }#{ options }"
+        @ext = '.bz2'
       end
 
-      ##
-      # Performs the compression of the packages backup file
-      def perform!
-        log!
-        run("#{ utility(:bzip2) } #{ options } '#{ Backup::Model.file }'")
-        Backup::Model.extension += '.bz2'
-      end
+      private
 
-    private
-
-      ##
-      # Combines the provided options and returns a bzip2 options string
       def options
-        (best + fast).join("\s")
-      end
-
-      ##
-      # Returns the bzip2 option syntax for compressing
-      # setting @best to true is redundant, as bzip2 compresses best by default
-      def best
-        return ['--best'] if @best; []
-      end
-
-      ##
-      # Returns the bzip2 option syntax for compressing
-      # (not significantly) faster when @fast is set to true
-      def fast
-        return ['--fast'] if @fast; []
+        " -#{ @level }" if @level
       end
 
     end

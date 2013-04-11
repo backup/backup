@@ -1,58 +1,217 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Compressor::Bzip2 do
-  let(:compressor) { Backup::Compressor::Bzip2.new }
-
   before do
-    Backup::Model.extension = 'tar'
+    Backup::Compressor::Bzip2.any_instance.stubs(:utility).returns('bzip2')
   end
 
-  describe 'the options' do
-    it do
-      compressor.send(:best).should == []
-    end
-
-    it do
-      compressor.send(:fast).should == []
-    end
+  it 'should be a subclass of Compressor::Base' do
+    Backup::Compressor::Bzip2.
+      superclass.should == Backup::Compressor::Base
   end
 
-  describe '#perform!' do
-    before do
-      [:run, :utility].each { |method| compressor.stubs(method) }
+  describe '#initialize' do
+    let(:compressor) { Backup::Compressor::Bzip2.new }
+
+    after { Backup::Compressor::Bzip2.clear_defaults! }
+
+    it 'should load pre-configured defaults' do
+      Backup::Compressor::Bzip2.any_instance.expects(:load_defaults!)
+      compressor
     end
 
-    it 'should perform the compression' do
-      compressor.expects(:utility).with(:bzip2).returns(:bzip2)
-      compressor.expects(:run).with("bzip2  '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'")
-      compressor.perform!
-    end
+    context 'when no pre-configured defaults have been set' do
+      it 'should use default values' do
+        compressor.level.should be_false
 
-    it 'should perform the compression with the --best and --fast options' do
-      compressor = Backup::Compressor::Bzip2.new do |c|
-        c.best = true
-        c.fast = true
+        compressor.instance_variable_get(:@cmd).should == 'bzip2'
+        compressor.instance_variable_get(:@ext).should == '.bz2'
       end
 
-      compressor.stubs(:utility).returns(:bzip2)
-      compressor.expects(:run).with("bzip2 --best --fast '#{ File.join(Backup::TMP_PATH, "#{ Backup::TIME }.#{ Backup::TRIGGER }.tar") }'")
-      compressor.perform!
-    end
+      it 'should use the values given' do
+        compressor = Backup::Compressor::Bzip2.new do |c|
+          c.level = 5
+        end
+        compressor.level.should == 5
 
-    it 'should set the class variable @extension (Backup::Model.extension) to .bz2' do
-      compressor.stubs(:utility).returns(:bzip2)
-      compressor.expects(:run)
+        compressor.instance_variable_get(:@cmd).should == 'bzip2 -5'
+        compressor.instance_variable_get(:@ext).should == '.bz2'
+      end
+    end # context 'when no pre-configured defaults have been set'
 
-      Backup::Model.extension.should == 'tar'
-      compressor.perform!
-      Backup::Model.extension.should == 'tar.bz2'
-    end
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Compressor::Bzip2.defaults do |c|
+          c.level = 7
+        end
+      end
 
-    it 'should log' do
-      Backup::Logger.expects(:message).with("Backup::Compressor::Bzip2 started compressing the archive.")
-      compressor.perform!
-    end
-  end
+      it 'should use pre-configured defaults' do
+        compressor.level.should == 7
+
+        compressor.instance_variable_get(:@cmd).should == 'bzip2 -7'
+        compressor.instance_variable_get(:@ext).should == '.bz2'
+      end
+
+      it 'should override pre-configured defaults' do
+        compressor = Backup::Compressor::Bzip2.new do |c|
+          c.level = 6
+        end
+        compressor.level.should == 6
+
+        compressor.instance_variable_get(:@cmd).should == 'bzip2 -6'
+        compressor.instance_variable_get(:@ext).should == '.bz2'
+      end
+    end # context 'when pre-configured defaults have been set'
+  end # describe '#initialize'
+
+  describe 'deprecations' do
+    describe 'fast and best options' do
+      context 'when only the fast option is used' do
+        before do
+          Backup::Logger.expects(:warn).with {|err|
+            err.should be_an_instance_of Backup::Errors::ConfigurationError
+            err.message.should match(
+              /Use Bzip2#level instead/
+            )
+          }
+        end
+
+        context 'when set to true' do
+          it 'should log a warning and set `level` to 1' do
+            compressor = Backup::Compressor::Bzip2.new do |c|
+              c.fast = true
+            end
+            compressor.level.should == 1
+          end
+        end
+
+        context 'when set to false' do
+          it 'should only log a warning' do
+            compressor = Backup::Compressor::Bzip2.new do |c|
+              c.fast = false
+            end
+            compressor.level.should be_false
+          end
+        end
+      end
+
+      context 'when only the best option is used' do
+        before do
+          Backup::Logger.expects(:warn).with {|err|
+            err.should be_an_instance_of Backup::Errors::ConfigurationError
+            err.message.should match(
+              /Use Bzip2#level instead/
+            )
+          }
+        end
+
+        context 'when set to true' do
+          it 'should log a warning and set `level` to 1' do
+            compressor = Backup::Compressor::Bzip2.new do |c|
+              c.best = true
+            end
+            compressor.level.should == 9
+          end
+        end
+
+        context 'when set to false' do
+          it 'should only log a warning' do
+            compressor = Backup::Compressor::Bzip2.new do |c|
+              c.best = false
+            end
+            compressor.level.should be_false
+          end
+        end
+
+      end
+
+      context 'when both fast and best options are used' do
+        before do
+          Backup::Logger.expects(:warn).twice.with {|err|
+            err.should be_an_instance_of Backup::Errors::ConfigurationError
+            err.message.should match(
+              /Use Bzip2#level instead/
+            )
+          }
+        end
+
+        context 'when both are set true' do
+          context 'when fast is set first' do
+            it 'should cause the best option to be set' do
+              compressor = Backup::Compressor::Bzip2.new do |c|
+                c.fast = true
+                c.best = true
+              end
+              compressor.level.should == 9
+            end
+          end
+
+          context 'when best is set first' do
+            it 'should cause the fast option to be set' do
+              compressor = Backup::Compressor::Bzip2.new do |c|
+                c.best = true
+                c.fast = true
+              end
+              compressor.level.should == 1
+            end
+          end
+        end
+
+        context 'when only one is set true' do
+          context 'when fast is set true before best' do
+            it 'should cause the fast option to be set' do
+              compressor = Backup::Compressor::Bzip2.new do |c|
+                c.fast = true
+                c.best = false
+              end
+              compressor.level.should == 1
+            end
+          end
+
+          context 'when fast is set true after best' do
+            it 'should cause the fast option to be set' do
+              compressor = Backup::Compressor::Bzip2.new do |c|
+                c.best = false
+                c.fast = true
+              end
+              compressor.level.should == 1
+            end
+          end
+
+          context 'when best is set true before fast' do
+            it 'should cause the best option to be set' do
+              compressor = Backup::Compressor::Bzip2.new do |c|
+                c.best = true
+                c.fast = false
+              end
+              compressor.level.should == 9
+            end
+          end
+
+          context 'when best is set true after fast' do
+            it 'should cause the best option to be set' do
+              compressor = Backup::Compressor::Bzip2.new do |c|
+                c.fast = false
+                c.best = true
+              end
+              compressor.level.should == 9
+            end
+          end
+        end
+
+        context 'when both are set false' do
+          it 'should only issue the two warnings' do
+            compressor = Backup::Compressor::Bzip2.new do |c|
+              c.fast = false
+              c.best = false
+            end
+            compressor.level.should be_false
+          end
+        end
+      end
+    end # describe 'fast and best options'
+  end # describe 'deprecations'
 end
