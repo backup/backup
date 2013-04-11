@@ -217,6 +217,35 @@ describe Archive do
       EOS
     end
 
+    specify 'Using sudo' do
+      create_model :my_backup, <<-EOS
+        Backup::Model.new(:my_backup, 'a description') do
+          archive :my_archive do |archive|
+            archive.use_sudo
+            archive.add '~/test_root_data'
+          end
+
+          store_with Local
+        end
+      EOS
+
+      job = backup_perform :my_backup
+
+      expect( job.package.exist? ).to be_true
+      expect( job.package ).to match_manifest(%q[
+        - my_backup/archives/my_archive.tar
+      ])
+
+      expect(
+        job.package['my_backup/archives/my_archive.tar']
+      ).to match_manifest(<<-EOS)
+        5_000 /home/vagrant/test_root_data/dir_a/file_a
+        5_000 /home/vagrant/test_root_data/dir_a/file_b
+        5_000 /home/vagrant/test_root_data/dir_a/file_c
+      EOS
+    end
+
+
   end # shared_examples 'GNU or BSD tar'
 
   describe 'Using GNU tar' do

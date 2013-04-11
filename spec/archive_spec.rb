@@ -11,6 +11,7 @@ describe Archive do
       archive = Archive.new(model, :test_archive) {}
 
       expect( archive.name ).to eq 'test_archive'
+      expect( archive.options[:sudo]        ).to be(false)
       expect( archive.options[:root]        ).to be(false)
       expect( archive.options[:paths]       ).to eq []
       expect( archive.options[:excludes]    ).to eq []
@@ -19,6 +20,7 @@ describe Archive do
 
     it 'sets configured values' do
       archive = Archive.new(model, :test_archive) do |a|
+        a.use_sudo
         a.root 'root/path'
         a.add 'a/path'
         a.add '/another/path'
@@ -28,6 +30,7 @@ describe Archive do
       end
 
       expect( archive.name ).to eq 'test_archive'
+      expect( archive.options[:sudo] ).to be(true)
       expect( archive.options[:root] ).to eq 'root/path'
 
       expect( archive.options[:paths] ).to eq(
@@ -44,6 +47,7 @@ describe Archive do
     before do
       Archive.any_instance.stubs(:utility).with(:tar).returns('tar')
       Archive.any_instance.stubs(:utility).with(:cat).returns('cat')
+      Archive.any_instance.stubs(:utility).with(:sudo).returns('sudo')
       Config.stubs(:tmp_path).returns('/tmp/path')
       Pipeline.any_instance.stubs(:success?).returns(true)
     end
@@ -179,7 +183,7 @@ describe Archive do
           archive.perform!
         end
       end
-    end
+    end # describe 'root path option'
 
     describe 'compressor usage' do
       let(:archive) { Archive.new(model, :my_archive) {} }
@@ -206,6 +210,19 @@ describe Archive do
         archive.perform!
       end
     end
+
+    specify 'may use sudo' do
+      archive = Archive.new(model, :my_archive) {|a| a.use_sudo }
+
+      Pipeline.any_instance.expects(:add).with(
+        'sudo -n tar --ignore-failed-read -cPf -  ', [0, 1]
+      )
+      Pipeline.any_instance.expects(:<<).with(
+        "cat > '/tmp/path/test_trigger/archives/my_archive.tar'"
+      )
+      archive.perform!
+    end
+
   end # describe '#perform!'
 
 end

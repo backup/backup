@@ -53,6 +53,7 @@ module Backup
       @model   = model
       @name    = name.to_s
       @options = {
+        :sudo        => false,
         :root        => false,
         :paths       => [],
         :excludes    => [],
@@ -69,7 +70,7 @@ module Backup
 
       pipeline = Pipeline.new
       pipeline.add(
-        "#{ utility(:tar) } #{ tar_options } -cPf -#{ tar_root } " +
+        "#{ tar_command } #{ tar_options } -cPf -#{ tar_root } " +
         "#{ paths_to_exclude } #{ paths_to_package }",
         tar_success_codes
       )
@@ -94,6 +95,11 @@ module Backup
     end
 
     private
+
+    def tar_command
+      tar = utility(:tar)
+      options[:sudo] ? "#{ utility(:sudo) } -n #{ tar }" : tar
+    end
 
     def tar_root
       options[:root] ? " -C '#{ File.expand_path(options[:root]) }'" : ''
@@ -127,6 +133,10 @@ module Backup
     class DSL
       def initialize(options)
         @options = options
+      end
+
+      def use_sudo(val = true)
+        @options[:sudo] = val
       end
 
       def root(path)
