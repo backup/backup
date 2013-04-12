@@ -74,9 +74,13 @@ module Backup
         end
       end
 
+      def backup_all?
+        [:all, ":all", "all"].include?(index)
+      end
+
       def copy!
         src_path = File.join(path, 'nodes/0/indices')
-        src_path = File.join(src_path, index) unless index == :all
+        src_path = File.join(src_path, index) unless backup_all?
         unless File.exist?(src_path)
           raise Errors::Database::Elasticsearch::NotFoundError, <<-EOS
             Elasticsearch index directory not found
