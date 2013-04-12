@@ -4,7 +4,6 @@
 # Build the Backup Command Line Interface using Thor
 module Backup
   class CLI < Thor
-    include Thor::Actions
 
     ##
     # [Perform]
@@ -194,7 +193,7 @@ module Backup
       model          = File.join(models_path, "#{opts[:trigger]}.rb")
 
       FileUtils.mkdir_p(models_path)
-      if overwrite?(model)
+      if Helpers.overwrite?(model)
         File.open(model, 'w') do |file|
           file.write(
             Backup::Template.new({:options => opts}).result("cli/model.erb")
@@ -224,7 +223,7 @@ module Backup
       config = File.join(config_path, "config.rb")
 
       FileUtils.mkdir_p(config_path)
-      if overwrite?(config)
+      if Helpers.overwrite?(config)
         File.open(config, "w") do |file|
           file.write(Backup::Template.new.result("cli/config"))
         end
@@ -247,13 +246,20 @@ module Backup
       case options[:encryptor].downcase
       when 'openssl'
         base64   = options[:base64] ? '-base64' : ''
-        password = options[:password_file].empty? ? '' : "-pass file:#{options[:password_file]}"
+        password = options[:password_file].empty? ? '' :
+            "-pass file:#{ options[:password_file] }"
         salt     = options[:salt] ? '-salt' : ''
-        %x[openssl aes-256-cbc -d #{base64} #{password} #{salt} -in '#{options[:in]}' -out '#{options[:out]}']
+
+        Helpers.exec!(
+          "openssl aes-256-cbc -d #{ base64 } #{ password } #{ salt } " +
+          "-in '#{ options[:in] }' -out '#{ options[:out] }'"
+        )
       when 'gpg'
-        %x[gpg -o '#{options[:out]}' -d '#{options[:in]}']
+        Helpers.exec!(
+          "gpg -o '#{ options[:out] }' -d '#{ options[:in] }'"
+        )
       else
-        puts "Unknown encryptor: #{options[:encryptor]}"
+        puts "Unknown encryptor: #{ options[:encryptor] }"
         puts "Use either 'openssl' or 'gpg'."
       end
     end
@@ -361,23 +367,27 @@ module Backup
       puts "Backup #{Backup::Version.current}"
     end
 
-    private
-
-    ##
-    # Helper method for asking the user if he/she wants to overwrite the file
-    def overwrite?(path)
-      if File.exist?(path)
-        return yes? "A file already exists at '#{ path }'. Do you want to overwrite? [y/n]"
-      end
-      true
-    end
-
     # This is to avoid Thor's warnings when stubbing methods on the Thor class.
     module Helpers
       class << self
+
+        def overwrite?(path)
+          return true unless File.exist?(path)
+
+          $stderr.print "A file already exists at '#{ path }'.\n" +
+                        "Do you want to overwrite? [y/n] "
+          /^[Yy]/ =~ $stdin.gets
+        end
+
+        def exec!(cmd)
+          puts "Lauching: #{ cmd }"
+          exec(cmd)
+        end
+
         def bundler_loaded?
           !ENV['BUNDLE_GEMFILE'].to_s.empty?
         end
+
       end
     end
 

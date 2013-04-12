@@ -5,7 +5,6 @@ require 'rubygems/dependency_installer'
 
 describe 'Backup::CLI' do
   let(:cli)     { Backup::CLI }
-  let(:utility) { Backup::CLI.new }
   let(:s)       { sequence '' }
 
   before  { @argv_save = ARGV }
@@ -423,7 +422,6 @@ describe 'Backup::CLI' do
 
     after do
       FileUtils.rm_r(@tmpdir, :force => true, :secure => true)
-      Backup::Config.send(:reset!)
     end
 
     context 'when given a config_path' do
@@ -473,30 +471,29 @@ describe 'Backup::CLI' do
         end
       end
 
-# These pass, but generate Thor warnings...
-#
-#      context 'when a model file already exists' do
-#        it 'should prompt to overwrite the model under the given path' do
-#          Dir.chdir(@tmpdir) do |path|
-#            model_file  = File.join(path, 'models', 'test_trigger.rb')
-#            config_file = File.join(path, 'config.rb')
-#
-#            cli.any_instance.expects(:overwrite?).with(model_file).returns(false)
-#
-#            out, err = capture_io do
-#              ARGV.replace(['generate:model',
-#                 '--config-path', path,
-#                 '--trigger', 'test_trigger'
-#              ])
-#              cli.start
-#            end
-#
-#            out.should == "Generated configuration file: '#{ config_file }'.\n"
-#            File.exist?(config_file).should be_true
-#            File.exist?(model_file).should be_false
-#          end
-#        end
-#      end
+      context 'when a model file already exists' do
+        it 'should prompt to overwrite the model under the given path' do
+          Dir.chdir(@tmpdir) do |path|
+            model_file  = File.join(path, 'models', 'test_trigger.rb')
+            config_file = File.join(path, 'config.rb')
+
+            cli::Helpers.expects(:overwrite?).with(model_file).returns(false)
+
+            out, err = capture_io do
+              ARGV.replace(['generate:model',
+                  '--config-path', path,
+                  '--trigger', 'test_trigger'
+              ])
+              cli.start
+            end
+
+            err.should be_empty
+            out.should == "Generated configuration file: '#{ config_file }'.\n"
+            File.exist?(config_file).should be_true
+            File.exist?(model_file).should be_false
+          end
+        end
+      end
 
     end # context 'when given a config_path'
 
@@ -586,7 +583,6 @@ describe 'Backup::CLI' do
 
     after do
       FileUtils.rm_r(@tmpdir, :force => true, :secure => true)
-      Backup::Config.send(:reset!)
     end
 
     context 'when given a config_path' do
@@ -626,70 +622,67 @@ describe 'Backup::CLI' do
       end
     end
 
-# These pass, but generate Thor warnings...
-#
-#    context 'when a config file already exists' do
-#      it 'should prompt to overwrite the config file' do
-#        Dir.chdir(@tmpdir) do |path|
-#          Backup::Config.update(:root_path => path)
-#          config_file = File.join(path, 'config.rb')
-#
-#          cli.any_instance.expects(:overwrite?).with(config_file).returns(false)
-#
-#          out, err = capture_io do
-#            ARGV.replace(['generate:config'])
-#            cli.start
-#          end
-#
-#          out.should be_empty
-#          File.exist?(config_file).should be_false
-#        end
-#      end
-#    end
+    context 'when a config file already exists' do
+      it 'should prompt to overwrite the config file' do
+        Dir.chdir(@tmpdir) do |path|
+          Backup::Config.update(:root_path => path)
+          config_file = File.join(path, 'config.rb')
+
+          cli::Helpers.expects(:overwrite?).with(config_file).returns(false)
+
+          out, err = capture_io do
+            ARGV.replace(['generate:config'])
+            cli.start
+          end
+
+          err.should be_empty
+          out.should be_empty
+          File.exist?(config_file).should be_false
+        end
+      end
+    end
 
   end # describe '#generate:config'
 
   describe '#decrypt' do
 
-# These pass, but generate Thor warnings...
-#
-#    it 'should perform OpenSSL decryption' do
-#      ARGV.replace(['decrypt', '--encryptor', 'openssl',
-#                    '--in', 'in_file',
-#                    '--out', 'out_file',
-#                    '--base64', '--salt',
-#                    '--password-file', 'pwd_file'])
-#
-#      cli.any_instance.expects(:`).with(
-#        "openssl aes-256-cbc -d -base64 -pass file:pwd_file -salt " +
-#        "-in 'in_file' -out 'out_file'"
-#      )
-#      cli.start
-#    end
-#
-#    it 'should omit -pass option if no --password-file given' do
-#      ARGV.replace(['decrypt', '--encryptor', 'openssl',
-#                    '--in', 'in_file',
-#                    '--out', 'out_file',
-#                    '--base64', '--salt'])
-#
-#      cli.any_instance.expects(:`).with(
-#        "openssl aes-256-cbc -d -base64  -salt " +
-#        "-in 'in_file' -out 'out_file'"
-#      )
-#      cli.start
-#    end
-#
-#    it 'should perform GnuPG decryption' do
-#      ARGV.replace(['decrypt', '--encryptor', 'gpg',
-#                    '--in', 'in_file',
-#                    '--out', 'out_file'])
-#
-#      cli.any_instance.expects(:`).with(
-#        "gpg -o 'out_file' -d 'in_file'"
-#      )
-#      cli.start
-#    end
+    it 'should perform OpenSSL decryption' do
+      ARGV.replace(['decrypt', '--encryptor', 'openssl',
+                    '--in', 'in_file',
+                    '--out', 'out_file',
+                    '--base64', '--salt',
+                    '--password-file', 'pwd_file'])
+
+      cli::Helpers.expects(:exec!).with(
+        "openssl aes-256-cbc -d -base64 -pass file:pwd_file -salt " +
+        "-in 'in_file' -out 'out_file'"
+      )
+      cli.start
+    end
+
+    it 'should omit -pass option if no --password-file given' do
+      ARGV.replace(['decrypt', '--encryptor', 'openssl',
+                    '--in', 'in_file',
+                    '--out', 'out_file',
+                    '--base64', '--salt'])
+
+      cli::Helpers.expects(:exec!).with(
+        "openssl aes-256-cbc -d -base64  -salt " +
+        "-in 'in_file' -out 'out_file'"
+      )
+      cli.start
+    end
+
+    it 'should perform GnuPG decryption' do
+      ARGV.replace(['decrypt', '--encryptor', 'gpg',
+                    '--in', 'in_file',
+                    '--out', 'out_file'])
+
+      cli::Helpers.expects(:exec!).with(
+        "gpg -o 'out_file' -d 'in_file'"
+      )
+      cli.start
+    end
 
     it 'should show a message if given an invalid encryptor' do
       ARGV.replace(['decrypt', '--encryptor', 'foo',
@@ -702,7 +695,7 @@ describe 'Backup::CLI' do
       out.should == "Unknown encryptor: foo\n" +
           "Use either 'openssl' or 'gpg'.\n"
     end
-  end
+  end # describe '#decrypt'
 
   describe '#dependencies' do
     let(:dep_a) {
@@ -908,12 +901,16 @@ describe 'Backup::CLI' do
   end # describe '#dependencies'
 
   describe '#version' do
-    it 'should output the current version' do
-      utility.expects(:puts).with("Backup #{ Backup::Version.current }")
-      utility.version
+    specify 'using `backup version`' do
+      ARGV.replace ['version']
+      out, err = capture_io do
+        cli.start
+      end
+      err.should be_empty
+      out.should == "Backup #{ Backup::Version.current }\n"
     end
 
-    it 'should output the current version for "-v"' do
+    specify 'using `backup -v`' do
       ARGV.replace ['-v']
       out, err = capture_io do
         cli.start
@@ -923,25 +920,38 @@ describe 'Backup::CLI' do
     end
   end
 
-  describe '#overwrite?' do
-    context 'when the path exists' do
-      before { File.expects(:exist?).returns(true) }
+  describe 'Helpers' do
+    let(:helpers) { Backup::CLI::Helpers }
 
-      it 'should prompt user' do
-        utility.expects(:yes?).with(
-          "A file already exists at 'a/path'. Do you want to overwrite? [y/n]"
-        ).returns(:response)
-        utility.send(:overwrite?, 'a/path').should == :response
+    describe '#overwrite?' do
+
+      it 'prompts user and accepts confirmation' do
+        File.expects(:exist?).with('a/path').returns(true)
+        $stderr.expects(:print).with(
+          "A file already exists at 'a/path'.\nDo you want to overwrite? [y/n] "
+        )
+        $stdin.expects(:gets).returns("yes\n")
+
+        expect( helpers.overwrite?('a/path') ).to be_true
+      end
+
+      it 'prompts user and accepts cancelation' do
+        File.expects(:exist?).with('a/path').returns(true)
+        $stderr.expects(:print).with(
+          "A file already exists at 'a/path'.\nDo you want to overwrite? [y/n] "
+        )
+        $stdin.expects(:gets).returns("no\n")
+
+        expect( helpers.overwrite?('a/path') ).to be_false
+      end
+
+      it 'returns true if path does not exist' do
+        File.expects(:exist?).with('a/path').returns(false)
+        $stderr.expects(:print).never
+        expect( helpers.overwrite?('a/path') ).to be_true
       end
     end
 
-    context 'when the path does not exist' do
-      before { File.expects(:exist?).returns(false) }
-      it 'should return true' do
-        utility.expects(:yes?).never
-        utility.send(:overwrite?, 'a/path').should be_true
-      end
-    end
-  end
+  end # describe 'Helpers'
 
 end
