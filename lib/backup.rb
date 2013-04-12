@@ -62,12 +62,13 @@ module Backup
   ##
   # Autoload Backup database files
   module Database
-    autoload :Base,       File.join(DATABASE_PATH, 'base')
-    autoload :MySQL,      File.join(DATABASE_PATH, 'mysql')
-    autoload :PostgreSQL, File.join(DATABASE_PATH, 'postgresql')
-    autoload :MongoDB,    File.join(DATABASE_PATH, 'mongodb')
-    autoload :Redis,      File.join(DATABASE_PATH, 'redis')
-    autoload :Riak,       File.join(DATABASE_PATH, 'riak')
+    autoload :Base,          File.join(DATABASE_PATH, 'base')
+    autoload :MySQL,         File.join(DATABASE_PATH, 'mysql')
+    autoload :PostgreSQL,    File.join(DATABASE_PATH, 'postgresql')
+    autoload :MongoDB,       File.join(DATABASE_PATH, 'mongodb')
+    autoload :Redis,         File.join(DATABASE_PATH, 'redis')
+    autoload :Riak,          File.join(DATABASE_PATH, 'riak')
+    autoload :Elasticsearch, File.join(DATABASE_PATH, 'elasticsearch')
   end
 
   ##

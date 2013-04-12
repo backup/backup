@@ -101,7 +101,7 @@ module Backup
         create_modules(
           self,
           [ # Databases
-            ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Riak'],
+            ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Riak', 'Elasticsearch'],
             # Storages
             ['S3', 'CloudFiles', 'Ninefold', 'Dropbox', 'FTP',
             'SFTP', 'SCP', 'RSync', 'Local'],
