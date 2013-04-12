@@ -18,7 +18,7 @@ module Backup
       ##
       # Elasticsearch index name to backup.
       #
-      # eg. logstash-2013-04-11
+      # To backup all indexes, set this to `:all` or leave blank.
       #
       attr_accessor :index
 
@@ -36,7 +36,7 @@ module Backup
         super
         instance_eval(&block) if block_given?
 
-        @name ||= 'logstash-' + (Date.today-1).strftime("%Y.%m.%d")
+        @index ||= :all
         @host ||= 'localhost'
         @port ||= 9200
       end
@@ -75,16 +75,17 @@ module Backup
       end
 
       def copy!
-        src_path = File.join(path, 'nodes/0/indices', index)
+        src_path = File.join(path, 'nodes/0/indices')
+        src_path = File.join(src_path, index) unless index == :all
         unless File.exist?(src_path)
           raise Errors::Database::Elasticsearch::NotFoundError, <<-EOS
             Elasticsearch index directory not found
-            Folder path was #{ src_path }
+            Directory path was #{ src_path }
           EOS
         end
 
         dst_path = File.join(dump_path, dump_filename + '.tar')
-        cmd = "tar -cf - #{ src_path } |"
+        cmd = "#{ utility(:tar) } -cf - #{ src_path } |"
         if model.compressor
           model.compressor.compress_with do |comp_cmd, ext|
             run("#{ cmd } #{ comp_cmd } -c '#{ src_path }' > '#{ dst_path + ext }'")
