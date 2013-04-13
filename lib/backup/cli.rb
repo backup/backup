@@ -15,13 +15,6 @@ module Backup
     # as well as the base path for any option specified as a relative path.
     # Any option given as an absolute path will be used "as-is".
     #
-    # If the --check option is given, the config.rb and all model files will be
-    # loaded, but no triggers will be run. If the check fails, errors will be
-    # reported to the console. If the check passes, a success message will be
-    # reported to the console unless --quiet is set. Use --no-quiet to ensure
-    # these messages are output. The command will exit with status 0 if
-    # successful, or status 1 if there were problems.
-    #
     # This command will exit with one of the following status codes:
     #
     #   0: All triggers were successful and no warnings were issued.
@@ -29,6 +22,9 @@ module Backup
     #   2: All triggers were processed, but some failed.
     #   3: A fatal error caused Backup to exit.
     #      Some triggers may not have been processed.
+    #
+    # If the --check option is given, `backup check` will be run
+    # and no triggers will be performed.
     desc 'perform', "Performs the backup for the specified trigger(s)."
     long_desc "Performs the backup for the specified trigger(s).\n\n" +
               "You may perform multiple backups by providing multiple triggers, separated by commas.\n\n" +
@@ -73,77 +69,108 @@ module Backup
                                     :desc => "Check `config.rb` and all Model configuration for errors or warnings."
 
     def perform
-      ##
-      # Prepare to perform requested backup jobs.
+      check if options[:check] # this will exit()
+
       models = nil
       begin
-        ##
         # Set logger options
         opts = options
         Logger.configure do
-          console.quiet = opts[:quiet]
-          logfile.enabled = opts[:logfile]
-          logfile.log_path = opts[:log_path]
-          syslog.enabled = opts[:syslog]
+          console.quiet     = opts[:quiet]
+          logfile.enabled   = opts[:logfile]
+          logfile.log_path  = opts[:log_path]
+          syslog.enabled    = opts[:syslog]
         end
 
-        ##
         # Update Config variables
         # (config_file, root_path, data_path, cache_path, tmp_path)
         Config.update(options)
 
-        ##
         # Load the user's +config.rb+ file (and all their Models).
-        # May update Logger options.
+        # May update Logger (and Config) options.
         Config.load_config!
 
-        ##
         # Identify all Models to be run for the given +triggers+.
         triggers = options[:trigger].split(',').map(&:strip)
         models = triggers.map {|trigger|
           Model.find_by_trigger(trigger)
         }.flatten.uniq
 
-        if models.empty?
-          raise Errors::CLIError,
-              "No Models found for trigger(s) '#{triggers.join(',')}'."
-        end
+        raise Errors::CLIError, "No Models found for trigger(s) " +
+            "'#{ triggers.join(',') }'." if models.empty?
 
-        if options[:check] && Logger.has_warnings?
-          raise Errors::CLIError, 'Configuration Check has warnings.'
-        end
-
-        ##
-        # Finalize Logger configuration and begin real-time logging.
+        # Finalize Logger and begin real-time logging.
         Logger.start!
 
       rescue Exception => err
         Logger.error Errors::CLIError.wrap(err)
-        Logger.error 'Configuration Check Failed.' if options[:check]
         # Logger configuration will be ignored
         # and messages will be output to the console only.
         Logger.abort!
-        exit(options[:check] ? 1 : 3)
+        exit(3)
       end
 
-      if options[:check]
-        Logger.info 'Configuration Check Succeeded.'
-      else
-        ##
-        # Perform the backup job for each Model found for the given triggers,
-        # clearing the Logger after each job.
-        #
-        # Model#perform! handles all exceptions from this point,
-        # as each model may fail and return here to allow others to run.
-        warnings = errors = false
-        models.each do |model|
-          model.perform!
-          warnings ||= Logger.has_warnings?
-          errors   ||= Logger.has_errors?
-          Logger.clear!
-        end
-        exit(errors ? 2 : 1) if errors || warnings
+      # Model#perform! handles all exceptions from this point,
+      # as each model may fail and return here to allow others to run.
+      warnings = errors = false
+      models.each do |model|
+        model.perform!
+        warnings ||= Logger.has_warnings?
+        errors   ||= Logger.has_errors?
+        Logger.clear!
       end
+      exit(errors ? 2 : 1) if errors || warnings
+    end
+
+    ##
+    # [Check]
+    #
+    # Loads the user's `config.rb` (and all Model files) and reports any Errors
+    # or Warnings. This is primarily for checking for syntax errors, missing
+    # dependencies and deprecation warnings.
+    #
+    # This may also be invoked using the `--check` option to `backup perform`.
+    #
+    # This command only requires `Config.config_file` to be correct.
+    # All other Config paths are irrelevant.
+    #
+    # All output will be sent to the console only.
+    # Logger options will be ignored.
+    #
+    # If successful, this method with exit(0).
+    # If there are Errors or Warnings, it will exit(1).
+    desc 'check', 'Check for configuration errors or warnings'
+
+    long_desc <<-EOS.gsub(/^ +/, '')
+      Loads your 'config.rb' file and all models and reports any
+      errors or warnings with your configuration, including missing
+      dependencies and the use of any deprecated settings.
+    EOS
+
+    method_option :config_file,
+                  :aliases  => '-c',
+                  :type     => :string,
+                  :default  => '',
+                  :desc     => "Path to your config.rb file."
+
+    def check
+      begin
+        Config.update(options)
+        Config.load_config!
+      rescue Exception => err
+        Logger.error Errors::CLIError.wrap(err)
+      end
+
+      if Logger.has_warnings? || Logger.has_errors?
+        Logger.error 'Configuration Check Failed.'
+        exit_code = 1
+      else
+        Logger.info 'Configuration Check Succeeded.'
+        exit_code = 0
+      end
+
+      Logger.abort!
+      exit(exit_code)
     end
 
     ##

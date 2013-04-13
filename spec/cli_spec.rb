@@ -317,93 +317,78 @@ describe 'Backup::CLI' do
     end # describe 'exit codes when backups have errors or warnings'
 
     describe '--check' do
-      before do
-        # performs no jobs
-        Backup::Logger.expects(:configure).in_sequence(s)
-
-        Backup::Config.expects(:update).in_sequence(s)
-
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
-
-        Backup::Config.expects(:load_config!).in_sequence(s)
-
-        model_a.expects(:perform!).never
-        model_b.expects(:perform!).never
-        Backup::Logger.expects(:clear!).never
-      end
-
-      context 'when errors are raised' do
-        it 'fails the check' do
-          Backup::Logger.expects(:start!).never
-
-          Backup::Logger.expects(:error).twice.in_sequence(s).with {|err|
-            # this is aggrevating. is there no way to expect the same method
-            # twice with different arguments in a sequence?
-            if err.is_a?(Exception)
-              err.message.should match(
-                /No Models found for trigger/
-              )
-            else
-              err.should == 'Configuration Check Failed.'
-            end
-          }
-          Backup::Logger.expects(:abort!).in_sequence(s)
-
-          expect do
-            ARGV.replace(
-              ['perform', '-t', 'test_trigger_foo', '--check']
-            )
-            cli.start
-          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
-        end
-      end
-
-      context 'when warnings are issued' do
-        it 'fails the check' do
-          Backup::Logger.stubs(:has_warnings?).returns(true)
-          Backup::Logger.expects(:start!).never
-
-          Backup::Logger.expects(:error).twice.in_sequence(s).with {|err|
-            if err.is_a?(Exception)
-              err.message.should match(
-                /Configuration Check has warnings/
-              )
-            else
-              err.should == 'Configuration Check Failed.'
-            end
-          }
-          Backup::Logger.expects(:abort!).in_sequence(s)
-
-          expect do
-            ARGV.replace(
-              ['perform', '-t', 'test_trigger_a', '--check']
-            )
-            cli.start
-          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
-        end
-      end
-
-      context 'when no errors or warnings are issued' do
-        it 'passes the check' do
-          Backup::Logger.expects(:start!).in_sequence(s)
-          Backup::Logger.expects(:abort!).never
-
-          Backup::Logger.expects(:info).in_sequence(s).with(
-            'Configuration Check Succeeded.'
+      it 'runs the check command' do
+        cli.any_instance.expects(:check).raises(SystemExit)
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_foo', '--check']
           )
-
-          expect do
-            ARGV.replace(
-              ['perform', '-t', 'test_trigger_a', '--check']
-            )
-            cli.start
-          end.not_to raise_error
-        end
+          cli.start
+        end.to raise_error(SystemExit)
       end
-    end
+    end # describe '--check'
 
   end # describe '#perform'
+
+  describe '#check' do
+    it 'fails if errors are raised' do
+      Backup::Config.stubs(:load_config!).raises('an error')
+
+      out, err = capture_io do
+        ARGV.replace(['check'])
+        expect do
+          cli.start
+        end.to raise_error(SystemExit) {|exit| expect( exit.status ).to be(1) }
+      end
+
+      expect( err ).to match(/RuntimeError: an error/)
+      expect( err ).to match(/\[error\] Configuration Check Failed/)
+      expect( out ).to be_empty
+    end
+
+    it 'fails if warnings are issued' do
+      Backup::Config.stubs(:load_config!).with do
+        Backup::Logger.warn 'warning message'
+      end
+
+      out, err = capture_io do
+        ARGV.replace(['check'])
+        expect do
+          cli.start
+        end.to raise_error(SystemExit) {|exit| expect( exit.status ).to be(1) }
+      end
+
+      expect( err ).to match(/\[warn\] warning message/)
+      expect( err ).to match(/\[error\] Configuration Check Failed/)
+      expect( out ).to be_empty
+    end
+
+    it 'succeeds if there are no errors or warnings' do
+      Backup::Config.stubs(:load_config!)
+
+      out, err = capture_io do
+        ARGV.replace(['check'])
+        expect do
+          cli.start
+        end.to raise_error(SystemExit) {|exit| expect( exit.status ).to be(0) }
+      end
+
+      expect( err ).to be_empty
+      expect( out ).to match(/\[info\] Configuration Check Succeeded/)
+    end
+
+    it 'updates path to config.rb if given' do
+      Backup::Config.stubs(:load_config!)
+      Backup::Logger.stubs(:abort!) # suppress output
+
+      ARGV.replace(['check', '--config-file', '/my/config.rb'])
+      expect do
+        cli.start
+      end.to raise_error(SystemExit) {|exit| expect( exit.status ).to be(0) }
+
+      expect( Backup::Config.config_file ).to eq '/my/config.rb'
+    end
+  end # describe '#check'
 
   describe '#generate:model' do
     before do
