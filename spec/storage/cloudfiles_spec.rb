@@ -178,6 +178,7 @@ describe Backup::Storage::CloudFiles do
     it 'should transfer the package files' do
       storage.expects(:remote_path_for).in_sequence(s).with(package).
           returns('remote/path')
+      connection.expects(:put_container).in_sequence(s).with('my_container')
       storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
         multiple_yields(
         ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],

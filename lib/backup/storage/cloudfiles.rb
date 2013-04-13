@@ -57,6 +57,8 @@ module Backup
       def transfer!
         remote_path = remote_path_for(@package)
 
+        connection.put_container(container)
+
         files_to_transfer_for(@package) do |local_file, remote_file|
           Logger.info "#{storage_name} started transferring '#{ local_file }'."
 
