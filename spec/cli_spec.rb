@@ -516,32 +516,14 @@ describe 'Backup::CLI' do
       end
     end
 
-    it 'should generate the proper help output' do
-
-      expected_usage = "#{ File.basename($0) } generate:model -t, --trigger=TRIGGER"
-      expected_options = <<-EOS
--t, --trigger=TRIGGER            # Trigger name for the Backup model
-    [--config-path=CONFIG_PATH]  # Path to your Backup configuration directory
-    [--databases=DATABASES]      # (mongodb, mysql, postgresql, redis, riak)
-    [--storages=STORAGES]        # (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
-    [--syncers=SYNCERS]          # (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
-    [--encryptors=ENCRYPTORS]    # (gpg, openssl)
-    [--compressors=COMPRESSORS]  # (bzip2, custom, gzip, lzma, pbzip2)
-    [--notifiers=NOTIFIERS]      # (campfire, hipchat, mail, prowl, pushover, twitter)
-    [--archives]                 # Model will include tar archives.
-    [--splitter]                 # Use `--no-splitter` to disable
-                                  # Default: true
-      EOS
-      expected_description = <<-EOS
-        Generates a Backup model file.
-
-        '--config-path' is the path to the *directory* where 'config.rb' is located.
-
-        The model file will be created as '<config_path>/models/<trigger>.rb'
-
-        The default location would be:
-
-        /home/wizard/Backup/models/
+    it 'should include the correct option values' do
+      options = <<-EOS.lines.to_a.map(&:strip).map {|l| l.partition(' ') }
+        databases (mongodb, mysql, postgresql, redis, riak)
+        storages (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
+        syncers (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
+        encryptors (gpg, openssl)
+        compressors (bzip2, custom, gzip, lzma, pbzip2)
+        notifiers (campfire, hipchat, mail, prowl, pushover, twitter)
       EOS
 
       out, err = capture_io do
@@ -549,30 +531,12 @@ describe 'Backup::CLI' do
         cli.start
       end
 
-      err.should be_empty
-      output_usage, output_options, output_description =
-          out.split(/Usage:|Options:|Description:/, 4)[1..3]
-
-      output_usage.strip.should == expected_usage
-
-      # Thor's output for 'Options:' is ordered differently under 1.8.7
-      # Thor does not auto-wrap lines in this output.
-      output_options =
-          output_options.split("\n").map(&:strip).select {|e| !e.empty? }
-      expected_options =
-          expected_options.split("\n").map(&:strip).select {|e| !e.empty? }
-
-      output_options.sort.should == expected_options.sort
-
-      # Thor will auto-wrap lines in the 'Description:' output
-      # based on the columns in the terminal.
-      output_description =
-          output_description.strip.gsub(/\n/, ' ').gsub(/ +/, ' ')
-      expected_description =
-          expected_description.strip.gsub(/\n/, ' ').gsub(/ +/, ' ')
-
-      output_description.should == expected_description
+      expect( err ).to be_empty
+      options.each do |option|
+        expect( out ).to match(/#{ option[0] }.*#{ option[2] }/)
+      end
     end
+
   end # describe '#generate:model'
 
   describe '#generate:config' do
