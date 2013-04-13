@@ -34,16 +34,11 @@ module Backup
       # Additional "mysqldump" options
       attr_accessor :additional_options
 
-      ##
-      # Path to mysqldump utility (optional)
-      attr_accessor :mysqldump_utility
-
       def initialize(model, database_id = nil, &block)
         super
         instance_eval(&block) if block_given?
 
         @name ||= :all
-        @mysqldump_utility ||= utility(:mysqldump)
       end
 
       ##
@@ -79,7 +74,7 @@ module Backup
       private
 
       def mysqldump
-        "#{ mysqldump_utility } #{ credential_options } " +
+        "#{ utility(:mysqldump) } #{ credential_options } " +
         "#{ connectivity_options } #{ user_options } #{ name_option } " +
         "#{ tables_to_dump } #{ tables_to_skip }"
       end
@@ -124,8 +119,16 @@ module Backup
       end
 
       attr_deprecate :utility_path, :version => '3.0.21',
-          :message => 'Use MySQL#mysqldump_utility instead.',
-          :action => lambda {|klass, val| klass.mysqldump_utility = val }
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { mysqldump val }
+          }
+
+      attr_deprecate :mysqldump_utility, :version => '3.3.0',
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { mysqldump val }
+          }
 
     end
   end

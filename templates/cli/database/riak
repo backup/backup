@@ -14,8 +14,4 @@
     # The user for the Riak instance.
     # default: 'riak'
     db.user = 'riak'
-    ##
-    # Use to set the location of this utility
-    # if it cannot be found by name in your $PATH
-    # db.riak_admin_utility = '/opt/local/bin/riak-admin'
   end

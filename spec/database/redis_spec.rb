@@ -27,7 +27,6 @@ describe Database::Redis do
       expect( db.socket             ).to be_nil
       expect( db.invoke_save        ).to be_nil
       expect( db.additional_options ).to be_nil
-      expect( db.redis_cli_utility  ).to eq 'redis-cli'
     end
   end # describe '#initialize'
 
@@ -142,20 +141,20 @@ describe Database::Redis do
 
   describe '#redis_save_cmd' do
     let(:option_methods) {%w[
-      redis_cli_utility password_option connectivity_options user_options
+      password_option connectivity_options user_options
     ]}
 
     it 'returns full redis-cli command built from all options' do
       option_methods.each {|name| db.stubs(name).returns(name) }
       expect( db.send(:redis_save_cmd) ).to eq(
-        option_methods.join(' ') + ' SAVE'
+        "redis-cli #{ option_methods.join(' ') } SAVE"
       )
     end
 
     it 'handles nil values from option methods' do
       option_methods.each {|name| db.stubs(name).returns(nil) }
       expect( db.send(:redis_save_cmd) ).to eq(
-        (' ' * (option_methods.count - 1)) + ' SAVE'
+        "redis-cli #{ (' ' * (option_methods.count - 1)) } SAVE"
       )
     end
   end # describe '#redis_save_cmd'
@@ -219,11 +218,12 @@ describe Database::Redis do
 
     describe '#utility_path' do
       before do
-        Database::Redis.any_instance.stubs(:utility)
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
         Logger.expects(:warn).with {|err|
           expect( err ).to be_an_instance_of Errors::ConfigurationError
           expect( err.message ).to match(
-            /Use Redis#redis_cli_utility instead/
+            /Use Backup::Utilities\.configure instead/
           )
         }
       end
@@ -233,23 +233,62 @@ describe Database::Redis do
 
       context 'when set directly' do
         it 'should issue a deprecation warning and set the replacement value' do
-          redis = Database::Redis.new(model) do |db|
-            db.utility_path = 'foo'
+          Database::Redis.new(model) do |db|
+            db.utility_path = '/foo'
           end
-          expect( redis.redis_cli_utility ).to eq 'foo'
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['redis-cli'] ).to eq '/foo'
         end
       end
 
       context 'when set as a default' do
         it 'should issue a deprecation warning and set the replacement value' do
-          redis = Database::Redis.defaults do |db|
-            db.utility_path = 'foo'
+          Database::Redis.defaults do |db|
+            db.utility_path = '/foo'
           end
-          redis = Database::Redis.new(model)
-          expect( redis.redis_cli_utility ).to eq 'foo'
+          Database::Redis.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['redis-cli'] ).to eq '/foo'
         end
       end
     end # describe '#utility_path'
+
+    describe '#redis_cli_utility' do
+      before do
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
+        Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err.message ).to match(
+            /Use Backup::Utilities\.configure instead/
+          )
+        }
+      end
+      after do
+        Database::Redis.clear_defaults!
+      end
+
+      context 'when set directly' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Database::Redis.new(model) do |db|
+            db.redis_cli_utility = '/foo'
+          end
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['redis-cli'] ).to eq '/foo'
+        end
+      end
+
+      context 'when set as a default' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Database::Redis.defaults do |db|
+            db.redis_cli_utility = '/foo'
+          end
+          Database::Redis.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['redis-cli'] ).to eq '/foo'
+        end
+      end
+    end # describe '#redis_cli_utility'
 
   end # describe 'deprecations'
 end

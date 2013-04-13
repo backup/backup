@@ -33,8 +33,6 @@ describe Database::MongoDB do
       expect( db.ipv6               ).to be_nil
       expect( db.only_collections   ).to be_nil
       expect( db.additional_options ).to be_nil
-      expect( db.mongodump_utility  ).to eq 'mongodump'
-      expect( db.mongo_utility      ).to eq 'mongo'
       expect( db.lock               ).to be_nil
       expect( db.oplog              ).to be_nil
     end
@@ -203,21 +201,21 @@ describe Database::MongoDB do
 
   describe '#mongodump' do
     let(:option_methods) {%w[
-      mongodump_utility name_option credential_options connectivity_options
+      name_option credential_options connectivity_options
       ipv6_option oplog_option user_options dump_packaging_path
     ]}
 
     it 'returns full mongodump command built from all options' do
       option_methods.each {|name| db.stubs(name).returns(name) }
       expect( db.send(:mongodump) ).to eq(
-        "mongodump_utility name_option credential_options connectivity_options " +
+        "mongodump name_option credential_options connectivity_options " +
         "ipv6_option oplog_option user_options --out='dump_packaging_path'"
       )
     end
 
     it 'handles nil values from option methods' do
       option_methods.each {|name| db.stubs(name).returns(nil) }
-      expect( db.send(:mongodump) ).to eq "       --out=''"
+      expect( db.send(:mongodump) ).to eq "mongodump       --out=''"
     end
   end # describe '#mongodump'
 
@@ -357,11 +355,12 @@ describe Database::MongoDB do
 
     describe '#utility_path' do
       before do
-        Database::MongoDB.any_instance.stubs(:utility)
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
         Logger.expects(:warn).with {|err|
           expect( err ).to be_an_instance_of Errors::ConfigurationError
           expect( err.message ).to match(
-            /Use MongoDB#mongodump_utility instead/
+            /Use Backup::Utilities\.configure instead/
           )
         }
       end
@@ -371,23 +370,99 @@ describe Database::MongoDB do
 
       context 'when set directly' do
         it 'should issue a deprecation warning and set the replacement value' do
-          mongodb = Database::MongoDB.new(model) do |db|
-            db.utility_path = 'foo'
+          Database::MongoDB.new(model) do |db|
+            db.utility_path = '/foo'
           end
-          expect( mongodb.mongodump_utility ).to eq 'foo'
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['mongodump'] ).to eq '/foo'
         end
       end
 
       context 'when set as a default' do
         it 'should issue a deprecation warning and set the replacement value' do
-          mongodb = Database::MongoDB.defaults do |db|
-            db.utility_path = 'foo'
+          Database::MongoDB.defaults do |db|
+            db.utility_path = '/foo'
           end
-          mongodb = Database::MongoDB.new(model)
-          expect( mongodb.mongodump_utility ).to eq 'foo'
+          Database::MongoDB.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['mongodump'] ).to eq '/foo'
         end
       end
     end # describe '#utility_path'
+
+    describe '#mongodump_utility' do
+      before do
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
+        Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err.message ).to match(
+            /Use Backup::Utilities\.configure instead/
+          )
+        }
+      end
+      after do
+        Database::MongoDB.clear_defaults!
+      end
+
+      context 'when set directly' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Database::MongoDB.new(model) do |db|
+            db.mongodump_utility = '/foo'
+          end
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['mongodump'] ).to eq '/foo'
+        end
+      end
+
+      context 'when set as a default' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Database::MongoDB.defaults do |db|
+            db.mongodump_utility = '/foo'
+          end
+          Database::MongoDB.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['mongodump'] ).to eq '/foo'
+        end
+      end
+    end # describe '#mongodump_utility'
+
+    describe '#mongo_utility' do
+      before do
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
+        Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err.message ).to match(
+            /Use Backup::Utilities\.configure instead/
+          )
+        }
+      end
+      after do
+        Database::MongoDB.clear_defaults!
+      end
+
+      context 'when set directly' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Database::MongoDB.new(model) do |db|
+            db.mongo_utility = '/foo'
+          end
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['mongo'] ).to eq '/foo'
+        end
+      end
+
+      context 'when set as a default' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Database::MongoDB.defaults do |db|
+            db.mongo_utility = '/foo'
+          end
+          Database::MongoDB.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['mongo'] ).to eq '/foo'
+        end
+      end
+    end # describe '#mongo_utility'
 
   end # describe 'deprecations'
 

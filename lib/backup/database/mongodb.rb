@@ -29,14 +29,6 @@ module Backup
       attr_accessor :additional_options
 
       ##
-      # Path to the mongodump utility (optional)
-      attr_accessor :mongodump_utility
-
-      ##
-      # Path to the mongo utility (optional)
-      attr_accessor :mongo_utility
-
-      ##
       # Forces mongod to flush all pending write operations to the disk and
       # locks the entire mongod instance to prevent additional writes until the
       # dump is complete.
@@ -59,9 +51,6 @@ module Backup
       def initialize(model, database_id = nil, &block)
         super
         instance_eval(&block) if block_given?
-
-        @mongodump_utility  ||= utility(:mongodump)
-        @mongo_utility      ||= utility(:mongo)
       end
 
       def perform!
@@ -130,7 +119,7 @@ module Backup
       end
 
       def mongodump
-        "#{ mongodump_utility } #{ name_option } #{ credential_options } " +
+        "#{ utility(:mongodump) } #{ name_option } #{ credential_options } " +
         "#{ connectivity_options } #{ ipv6_option } #{ oplog_option } " +
         "#{ user_options } --out='#{ dump_packaging_path }'"
       end
@@ -185,7 +174,7 @@ module Backup
       end
 
       def mongo_shell
-        cmd = "#{ mongo_utility } #{ connectivity_options }".rstrip
+        cmd = "#{ utility(:mongo) } #{ connectivity_options }".rstrip
         cmd << " #{ credential_options }".rstrip
         cmd << " #{ ipv6_option }".rstrip
         cmd << " '#{ name }'" if name
@@ -193,8 +182,22 @@ module Backup
       end
 
       attr_deprecate :utility_path, :version => '3.0.21',
-          :message => 'Use MongoDB#mongodump_utility instead.',
-          :action => lambda {|klass, val| klass.mongodump_utility = val }
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { mongodump val }
+          }
+
+      attr_deprecate :mongodump_utility, :version => '3.3.0',
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { mongodump val }
+          }
+
+      attr_deprecate :mongo_utility, :version => '3.3.0',
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { mongo val }
+          }
 
     end
   end

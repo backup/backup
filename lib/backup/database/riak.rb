@@ -19,10 +19,6 @@ module Backup
       # Default: riak
       attr_accessor :user
 
-      ##
-      # Path to riak-admin utility (optional)
-      attr_accessor :riak_admin_utility
-
       def initialize(model, database_id = nil, &block)
         super
         instance_eval(&block) if block_given?
@@ -30,7 +26,6 @@ module Backup
         @node   ||= 'riak@127.0.0.1'
         @cookie ||= 'riak'
         @user   ||= 'riak'
-        @riak_admin_utility ||= utility('riak-admin')
       end
 
       ##
@@ -79,12 +74,20 @@ module Backup
       # `riak-admin` must be run as the riak +user+.
       # It will do this itself, but without `-n` and emits a message on STDERR.
       def riakadmin
-        "#{ utility(:sudo) } -n -u #{ user } #{ riak_admin_utility }"
+        "#{ utility(:sudo) } -n -u #{ user } #{ utility('riak-admin') }"
       end
 
       attr_deprecate :utility_path, :version => '3.0.21',
-          :message => 'Use Riak#riak_admin_utility instead.',
-          :action => lambda {|klass, val| klass.riak_admin_utility = val }
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { riak_admin val }
+          }
+
+      attr_deprecate :riak_admin_utility, :version => '3.3.0',
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { riak_admin val }
+          }
 
       attr_deprecate :name, :version => '3.3.0',
           :message => "If you wish to add an identifier to the dump filename,\n" +

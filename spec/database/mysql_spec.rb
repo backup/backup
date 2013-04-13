@@ -30,7 +30,6 @@ describe Database::MySQL do
       expect( db.skip_tables        ).to be_nil
       expect( db.only_tables        ).to be_nil
       expect( db.additional_options ).to be_nil
-      expect( db.mysqldump_utility  ).to eq 'mysqldump'
     end
   end # describe '#initialize'
 
@@ -112,18 +111,22 @@ describe Database::MySQL do
 
   describe '#mysqldump' do
     let(:option_methods) {%w[
-      mysqldump_utility credential_options connectivity_options user_options
+      credential_options connectivity_options user_options
       name_option tables_to_dump tables_to_skip
     ]}
 
     it 'returns full mysqldump command built from all options' do
       option_methods.each {|name| db.stubs(name).returns(name) }
-      expect( db.send(:mysqldump) ).to eq option_methods.join(' ')
+      expect( db.send(:mysqldump) ).to eq(
+        "mysqldump #{ option_methods.join(' ') }"
+      )
     end
 
     it 'handles nil values from option methods' do
       option_methods.each {|name| db.stubs(name).returns(nil) }
-      expect( db.send(:mysqldump) ).to eq ' ' * (option_methods.count - 1)
+      expect( db.send(:mysqldump) ).to eq(
+        "mysqldump #{ ' ' * (option_methods.count - 1) }"
+      )
     end
   end # describe '#mysqldump'
 
@@ -251,13 +254,15 @@ describe Database::MySQL do
   end # describe 'mysqldump option methods'
 
   describe 'deprecations' do
+
     describe '#utility_path' do
       before do
-        Database::MySQL.any_instance.stubs(:utility)
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
         Logger.expects(:warn).with {|err|
           expect( err ).to be_an_instance_of Errors::ConfigurationError
           expect( err.message ).to match(
-            /Use MySQL#mysqldump_utility instead/
+            /Use Backup::Utilities\.configure instead/
           )
         }
       end
@@ -267,23 +272,63 @@ describe Database::MySQL do
 
       context 'when set directly' do
         it 'should issue a deprecation warning and set the replacement value' do
-          mysql = Database::MySQL.new(model) do |db|
-            db.utility_path = 'foo'
+          Database::MySQL.new(model) do |db|
+            db.utility_path = '/foo'
           end
-          expect( mysql.mysqldump_utility ).to eq 'foo'
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['mysqldump'] ).to eq '/foo'
         end
       end
 
       context 'when set as a default' do
         it 'should issue a deprecation warning and set the replacement value' do
-          mysql = Database::MySQL.defaults do |db|
-            db.utility_path = 'foo'
+          Database::MySQL.defaults do |db|
+            db.utility_path = '/foo'
           end
-          mysql = Database::MySQL.new(model)
-          expect( mysql.mysqldump_utility ).to eq 'foo'
+          Database::MySQL.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['mysqldump'] ).to eq '/foo'
         end
       end
     end # describe '#utility_path'
+
+    describe '#mysqldump_utility' do
+      before do
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
+        Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err.message ).to match(
+            /Use Backup::Utilities\.configure instead/
+          )
+        }
+      end
+      after do
+        Database::MySQL.clear_defaults!
+      end
+
+      context 'when set directly' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Database::MySQL.new(model) do |db|
+            db.mysqldump_utility = '/foo'
+          end
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['mysqldump'] ).to eq '/foo'
+        end
+      end
+
+      context 'when set as a default' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Database::MySQL.defaults do |db|
+            db.mysqldump_utility = '/foo'
+          end
+          Database::MySQL.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['mysqldump'] ).to eq '/foo'
+        end
+      end
+    end # describe '#mysqldump_utility'
+
   end # describe 'deprecations'
 
 end

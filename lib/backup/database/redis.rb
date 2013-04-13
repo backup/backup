@@ -37,16 +37,11 @@ module Backup
       # Additional "redis-cli" options
       attr_accessor :additional_options
 
-      ##
-      # Path to the redis-cli utility (optional)
-      attr_accessor :redis_cli_utility
-
       def initialize(model, database_id = nil, &block)
         super
         instance_eval(&block) if block_given?
 
         @name ||= 'dump'
-        @redis_cli_utility ||= utility('redis-cli')
       end
 
       ##
@@ -98,7 +93,7 @@ module Backup
       end
 
       def redis_save_cmd
-        "#{ redis_cli_utility } #{ password_option } " +
+        "#{ utility('redis-cli') } #{ password_option } " +
         "#{ connectivity_options } #{ user_options } SAVE"
       end
 
@@ -120,8 +115,16 @@ module Backup
       end
 
       attr_deprecate :utility_path, :version => '3.0.21',
-          :message => 'Use Redis#redis_cli_utility instead.',
-          :action => lambda {|klass, val| klass.redis_cli_utility = val }
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { redis_cli val }
+          }
+
+      attr_deprecate :redis_cli_utility, :version => '3.3.0',
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { redis_cli val }
+          }
 
     end
   end

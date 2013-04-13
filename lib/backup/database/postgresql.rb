@@ -28,15 +28,9 @@ module Backup
       # Additional "pg_dump" options
       attr_accessor :additional_options
 
-      ##
-      # Path to pg_dump utility (optional)
-      attr_accessor :pg_dump_utility
-
       def initialize(model, database_id = nil, &block)
         super
         instance_eval(&block) if block_given?
-
-        @pg_dump_utility ||= utility(:pg_dump)
       end
 
       ##
@@ -71,7 +65,7 @@ module Backup
 
       def pgdump
         "#{ password_option }" +
-        "#{ pg_dump_utility } #{ username_option } #{ connectivity_options } " +
+        "#{ utility(:pg_dump) } #{ username_option } #{ connectivity_options } " +
         "#{ user_options } #{ tables_to_dump } #{ tables_to_skip } #{ name }"
       end
 
@@ -109,8 +103,16 @@ module Backup
       end
 
       attr_deprecate :utility_path, :version => '3.0.21',
-          :message => 'Use PostgreSQL#pg_dump_utility instead.',
-          :action => lambda {|klass, val| klass.pg_dump_utility = val }
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { pg_dump val }
+          }
+
+      attr_deprecate :pg_dump_utility, :version => '3.3.0',
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { pg_dump val }
+          }
 
     end
   end

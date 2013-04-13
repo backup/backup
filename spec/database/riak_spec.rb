@@ -26,7 +26,6 @@ describe Database::Riak do
       expect( db.node               ).to eq 'riak@127.0.0.1'
       expect( db.cookie             ).to eq 'riak'
       expect( db.user               ).to eq 'riak'
-      expect( db.riak_admin_utility ).to eq 'riak-admin'
     end
   end # describe '#initialize'
 
@@ -125,34 +124,71 @@ describe Database::Riak do
 
     describe '#utility_path' do
       before do
-        Database::Riak.any_instance.stubs(:utility)
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
         Logger.expects(:warn).with {|err|
           expect( err ).to be_an_instance_of Errors::ConfigurationError
           expect( err.message ).to match(
-            /Use Riak#riak_admin_utility instead/
+            /Use Backup::Utilities\.configure instead/
           )
         }
       end
 
       context 'when set directly' do
         it 'should issue a deprecation warning and set the replacement value' do
-          riak = Database::Riak.new(model) do |db|
-            db.utility_path = 'foo'
+          Database::Riak.new(model) do |db|
+            db.utility_path = '/foo'
           end
-          expect( riak.riak_admin_utility ).to eq 'foo'
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['riak-admin'] ).to eq '/foo'
         end
       end
 
       context 'when set as a default' do
         it 'should issue a deprecation warning and set the replacement value' do
-          riak = Database::Riak.defaults do |db|
-            db.utility_path = 'foo'
+          Database::Riak.defaults do |db|
+            db.utility_path = '/foo'
           end
-          riak = Database::Riak.new(model)
-          expect( riak.riak_admin_utility ).to eq 'foo'
+          Database::Riak.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['riak-admin'] ).to eq '/foo'
         end
       end
     end # describe '#utility_path'
+
+    describe '#riak_admin_utility' do
+      before do
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
+        Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err.message ).to match(
+            /Use Backup::Utilities\.configure instead/
+          )
+        }
+      end
+
+      context 'when set directly' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Database::Riak.new(model) do |db|
+            db.riak_admin_utility = '/foo'
+          end
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['riak-admin'] ).to eq '/foo'
+        end
+      end
+
+      context 'when set as a default' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Database::Riak.defaults do |db|
+            db.riak_admin_utility = '/foo'
+          end
+          Database::Riak.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['riak-admin'] ).to eq '/foo'
+        end
+      end
+    end # describe '#riak_admin_utility'
 
     describe '#name' do
       before do
