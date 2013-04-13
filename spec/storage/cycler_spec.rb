@@ -162,9 +162,12 @@ describe 'Backup::Storage::Cycler' do
     let(:file) { mock }
     let(:pkgs) { [ [1, 2, 3], [4, 5, 6] ] }
     let(:pkgs_to_yaml) { pkgs.to_yaml }
+    let(:storage_file) { '/path/to/data_path/trigger/file.yml' }
 
     it 'should save the given packages to the storage file in YAML format' do
       cycler.instance_variable_set(:@storage_file, storage_file)
+
+      FileUtils.expects(:mkdir_p).with('/path/to/data_path/trigger')
       File.expects(:open).with(storage_file, 'w').yields(file)
       file.expects(:write).with(pkgs_to_yaml)
       cycler.send(:yaml_save, pkgs)

@@ -319,6 +319,8 @@ describe Backup::Storage::Dropbox do
       storage.expects(:cached_file).returns('/path/to/cache_file')
       session.expects(:serialize).returns('serialized_data')
 
+      FileUtils.expects(:mkdir_p).with(Backup::Config.cache_path)
+
       File.expects(:open).with('/path/to/cache_file', 'w').yields(cache_file)
       cache_file.expects(:write).with('serialized_data')
 

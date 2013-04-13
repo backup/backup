@@ -93,13 +93,6 @@ module Backup
         Config.update(options)
 
         ##
-        # Ensure the :cache_path and :tmp_path are created
-        # if they do not yet exist
-        [Config.cache_path, Config.tmp_path].each do |path|
-          FileUtils.mkdir_p(path)
-        end
-
-        ##
         # Load the user's +config.rb+ file (and all their Models).
         # May update Logger options.
         Config.load_config!

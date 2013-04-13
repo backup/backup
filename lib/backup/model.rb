@@ -254,14 +254,10 @@ module Backup
     private
 
     ##
-    # Ensure DATA_PATH and DATA_PATH/TRIGGER are created
-    # if they do not yet exist
-    #
     # Clean any temporary files and/or package files left over
     # from the last time this model/trigger was performed.
     # Logs warnings if files exist and are cleaned.
     def prepare!
-      FileUtils.mkdir_p(File.join(Config.data_path, trigger))
       Cleaner.prepare(self)
     end
 

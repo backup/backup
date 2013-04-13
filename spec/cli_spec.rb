@@ -23,9 +23,6 @@ describe 'Backup::CLI' do
       before do
         Backup::Config.expects(:update).in_sequence(s)
 
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
-
         Backup::Config.expects(:load_config!).in_sequence(s)
 
         Backup::Logger.expects(:start!).in_sequence(s)
@@ -116,9 +113,6 @@ describe 'Backup::CLI' do
 
         Backup::Config.expects(:update).in_sequence(s)
 
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
-
         Backup::Config.expects(:load_config!).in_sequence(s)
 
         Backup::Logger.expects(:start!).in_sequence(s)
@@ -207,9 +201,6 @@ describe 'Backup::CLI' do
         Backup::Logger.expects(:configure).in_sequence(s)
 
         Backup::Config.expects(:update).in_sequence(s)
-
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
 
         Backup::Logger.expects(:start!).never
 

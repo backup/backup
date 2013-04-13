@@ -53,7 +53,7 @@ module Backup
         # based on the current values of @storage and @package
         def storage_file
           type     = @storage.class.to_s.split('::').last
-          suffix   = @storage.storage_id.to_s.strip.gsub(/[\W\s]/, '_')
+          suffix   = @storage.storage_id.to_s.strip.gsub(/[\W]/, '_')
           filename = suffix.empty? ? type : "#{type}-#{suffix}"
           File.join(Config.data_path, @package.trigger, "#{filename}.yml")
         end
@@ -77,6 +77,7 @@ module Backup
         ##
         # Store the given package objects to the YAML data file.
         def yaml_save(packages)
+          FileUtils.mkdir_p(File.dirname(@storage_file))
           File.open(@storage_file, 'w') do |file|
             file.write(packages.to_yaml)
           end

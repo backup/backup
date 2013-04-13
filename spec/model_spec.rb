@@ -325,9 +325,6 @@ describe 'Backup::Model' do
 
   describe '#prepare!' do
     it 'should prepare for the backup' do
-      FileUtils.expects(:mkdir_p).with(
-        File.join(Backup::Config.data_path, 'test_trigger')
-      )
       Backup::Cleaner.expects(:prepare).with(model)
 
       model.send(:prepare!)

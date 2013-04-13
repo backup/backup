@@ -130,6 +130,7 @@ module Backup
       ##
       # Serializes and writes the Dropbox session to a cache file
       def write_cache!(session)
+        FileUtils.mkdir_p(Config.cache_path)
         File.open(cached_file, "w") do |cache_file|
           cache_file.write(session.serialize)
         end
