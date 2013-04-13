@@ -7,10 +7,10 @@ module Backup
 
     ##
     # [Perform]
-    # Performs the backup process. The only required option is the --trigger [-t].
-    # If the other options (--config-file, --data-path, --cache-path, --tmp-path)
-    # aren't specified they will fallback to the (good) defaults.
     #
+    # The only required option is the --trigger [-t].
+    # If --config-file, --data-path, --cache-path, --tmp-path aren't specified
+    # they will fallback to defaults defined in Backup::Config.
     # If --root-path is given, it will be used as the base path for our defaults,
     # as well as the base path for any option specified as a relative path.
     # Any option given as an absolute path will be used "as-is".
@@ -26,47 +26,93 @@ module Backup
     # If the --check option is given, `backup check` will be run
     # and no triggers will be performed.
     desc 'perform', "Performs the backup for the specified trigger(s)."
-    long_desc "Performs the backup for the specified trigger(s).\n\n" +
-              "You may perform multiple backups by providing multiple triggers, separated by commas.\n\n" +
-              "Example:\n\s\s$ backup perform --triggers backup1,backup2,backup3,backup4\n\n" +
-              "This will invoke 4 backups, and they will run in the order specified (not asynchronous).\n\n" +
-              "\n\n" +
-              "--root-path may be an absolute path or relative to the current working directory.\n\n" +
-              "To use the current directory, you can use: `--root-path .` (i.e. a period for the argument)"
 
-    method_option :trigger,         :type => :string,  :required => true, :aliases => ['-t', '--triggers'],
-                                    :desc => "Triggers to perform. e.g. 'trigger_a,trigger_b'"
-    method_option :config_file,     :type => :string,  :default => '',    :aliases => '-c',
-                                    :desc => "Path to your config.rb file. " +
-                                              "Absolute, or relative to --root-path."
-    method_option :root_path,       :type => :string,  :default => '',    :aliases => '-r',
-                                    :desc => "Root path to base all relative path on. " +
-                                              "Absolute or relative to current directory (#{Dir.pwd})."
-    method_option :data_path,       :type => :string,  :default => '',    :aliases => '-d',
-                                    :desc => "Path to store persisted data (storage 'keep' data). " +
-                                              "Absolute, or relative to --root-path."
-    method_option :log_path,        :type => :string,  :default => '',    :aliases => '-l',
-                                    :desc => "Path to store Backup's log file. " +
-                                              "Absolute, or relative to --root-path."
-    method_option :cache_path,      :type => :string,  :default => '',
-                                    :desc => "Path to store Dropbox's cached authorization. " +
-                                              "Absolute, or relative to --root-path."
-    method_option :tmp_path,        :type => :string,  :default => '',
-                                    :desc => "Path to store temporary data during the backup process. " +
-                                              "Absolute, or relative to --root-path."
+    long_desc <<-EOS.gsub(/^ +/, '')
+      Performs the backup for the specified trigger(s).
+
+      You may perform multiple backups by providing multiple triggers,
+      separated by commas. Each will run in the order specified.
+
+      $ backup perform --triggers backup1,backup2,backup3,backup4
+
+      --root-path may be an absolute path or relative to the current directory.
+
+      To use the current directory, use: `--root-path .`
+
+      Relative paths given for --config-file, --data-path, --log-path,
+      --cache-path and --tmp-path will be relative to --root-path.
+
+      Console log output may be forced using --no-quiet.
+
+      Logging to file or syslog may be disabled using --no-logfile or --no-syslog
+      respectively. This will override logging options set in `config.rb`.
+    EOS
+
+    method_option :trigger,
+                  :aliases  => ['-t', '--triggers'],
+                  :required => true,
+                  :type     => :string,
+                  :desc     => "Triggers to perform. e.g. 'trigger_a,trigger_b'"
+
+    method_option :config_file,
+                  :aliases  => '-c',
+                  :type     => :string,
+                  :default  => '',
+                  :desc     => 'Path to your config.rb file.'
+
+    method_option :root_path,
+                  :aliases  => '-r',
+                  :type     => :string,
+                  :default  => '',
+                  :desc     => 'Root path to base all relative path on.'
+
+    method_option :data_path,
+                  :aliases  => '-d',
+                  :type     => :string,
+                  :default  => '',
+                  :desc     => 'Path to store storage cycling data.'
+
+    method_option :log_path,
+                  :aliases  => '-l',
+                  :type     => :string,
+                  :default  => '',
+                  :desc     => "Path to store Backup's log file."
+
+    method_option :cache_path,
+                  :type     => :string,
+                  :default  => '',
+                  :desc     => "Path to store Dropbox's cached authorization."
+
+    method_option :tmp_path,
+                  :type     => :string,
+                  :default  => '',
+                  :desc     => 'Path to store temporary data during the backup.'
+
     # Note that :quiet, :syslog and :logfile are specified as :string types,
     # so the --no-<option> usage will set the value to nil instead of false.
-    method_option :quiet,           :type => :string,  :default => false, :aliases => '-q', :banner => '',
-                                    :desc => "Disable console log output. " +
-                                              "May be force enabled using --no-quiet."
-    method_option :syslog,          :type => :string,  :default => false, :banner => '',
-                                    :desc => "Enable logging to syslog. " +
-                                              "May be forced disabled using --no-syslog."
-    method_option :logfile,         :type => :string,  :default => true, :banner => '',
-                                    :desc => "Enable Backup's log file. " +
-                                              "May be forced disabled using --no-logfile."
-    method_option :check,           :type => :boolean,  :default => false,
-                                    :desc => "Check `config.rb` and all Model configuration for errors or warnings."
+    method_option :quiet,
+                  :aliases  => '-q',
+                  :type     => :string,
+                  :default  => false,
+                  :banner   => '',
+                  :desc     => 'Disable console log output.'
+
+    method_option :syslog,
+                  :type     => :string,
+                  :default  => false,
+                  :banner   => '',
+                  :desc     => 'Enable logging to syslog.'
+
+    method_option :logfile,
+                  :type     => :string,
+                  :default  => true,
+                  :banner   => '',
+                  :desc     => "Enable Backup's log file."
+
+    method_option :check,
+                  :type     => :boolean,
+                  :default  => false,
+                  :desc     => 'Check configuration for errors or warnings.'
 
     def perform
       check if options[:check] # this will exit()
@@ -180,14 +226,28 @@ module Backup
     #   $ backup generate:model --trigger my_backup --databases='mongodb'
     # will generate a pre-populated model with a base MongoDB setup
     desc 'generate:model', "Generates a Backup model file."
-    long_desc "Generates a Backup model file.\n\n" +
-              "\s\sNote: '--config-path' is the path to the directory where 'config.rb' is located.\n\n" +
-              "\s\sThe model file will be created as '<config_path>/models/<trigger>.rb'\n\n" +
-              "\s\sDefault: #{Config.root_path}\n\n"
 
-    method_option :trigger,     :type => :string, :required => true, :aliases => '-t'
-    method_option :config_path, :type => :string,
-                                :desc => 'Path to your Backup configuration directory'
+    long_desc <<-EOS.gsub(/^ +/, '')
+      Generates a Backup model file.
+
+      '--config-path' is the path to the *directory* where 'config.rb' is located.
+
+      The model file will be created as '<config_path>/models/<trigger>.rb'
+
+      The default location would be:
+
+      #{ Config.root_path }/models/
+    EOS
+
+    method_option :trigger,
+                  :aliases  => '-t',
+                  :required => true,
+                  :type     => :string,
+                  :desc     => 'Trigger name for the Backup model'
+
+    method_option :config_path,
+                  :type     => :string,
+                  :desc     => 'Path to your Backup configuration directory'
 
     # options with their available values
     %w{ databases storages syncers
@@ -197,9 +257,13 @@ module Backup
           "(#{Dir[path + '/*'].sort.map {|p| File.basename(p) }.join(', ')})"
     end
 
-    method_option :archives,    :type => :boolean
-    method_option :splitter,    :type => :boolean, :default => true,
-                                :desc => "use `--no-splitter` to disable"
+    method_option :archives,
+                  :type     => :boolean,
+                  :desc     => 'Model will include tar archives.'
+    method_option :splitter,
+                  :type     => :boolean,
+                  :default  => true,
+                  :desc     => "Use `--no-splitter` to disable"
 
     define_method "generate:model" do
       opts = options.merge(
@@ -212,6 +276,10 @@ module Backup
       config         = File.join(config_path, "config.rb")
       model          = File.join(models_path, "#{opts[:trigger]}.rb")
 
+      if File.file?(config_path)
+        abort('--config-path should be a directory, not a file.')
+      end
+
       FileUtils.mkdir_p(models_path)
       if Helpers.overwrite?(model)
         File.open(model, 'w') do |file|
@@ -222,7 +290,7 @@ module Backup
         puts "Generated model file: '#{ model }'."
       end
 
-      if not File.exist?(config)
+      unless File.exist?(config)
         File.open(config, "w") do |file|
           file.write(Backup::Template.new.result("cli/config"))
         end
@@ -234,8 +302,18 @@ module Backup
     # [Generate:Config]
     # Generates the main configuration file
     desc 'generate:config', 'Generates the main Backup bootstrap/configuration file'
-    method_option :config_path, :type => :string,
-                                :desc => "Path to your Backup configuration directory. Default: #{Config.root_path}"
+
+    long_desc <<-EOS.gsub(/^ +/, '')
+      Path to your Backup configuration directory.
+
+      Default path would be:
+
+      #{ Config.root_path }
+    EOS
+
+    method_option :config_path,
+                  :type => :string,
+                  :desc => 'Path to your Backup configuration directory.'
 
     define_method 'generate:config' do
       config_path = options[:config_path] ?
@@ -288,24 +366,27 @@ module Backup
     # [Dependencies]
     # Returns a list of Backup's dependencies
     desc 'dependencies', 'Display, Check or Install Dependencies for Backup.'
-    long_desc 'Display the list of dependencies for Backup, check the installation status, or install them through Backup.'
-    method_option :install, :type => :string
+
+    long_desc <<-EOS.gsub(/^ +/, '')
+        To display a list of available dependencies, run:
+
+        $ backup dependencies --list
+
+        To install one of these dependencies, run:
+
+        $ backup dependencies --install <name>
+
+        To check if a dependency is already installed, run:
+
+        $ backup dependencies --installed <name>
+    EOS
+
+    method_option :install, :type => :string, :banner => 'NAME'
     method_option :list,    :type => :boolean
-    method_option :installed, :type => :string
+    method_option :installed, :type => :string, :banner => 'NAME'
 
     def dependencies
-      unless options.any?
-        puts
-        puts "To display a list of available dependencies, run:\n\n"
-        puts "  backup dependencies --list"
-        puts
-        puts "To install one of these dependencies (with the correct version), run:\n\n"
-        puts "  backup dependencies --install <name>"
-        puts
-        puts "To check if a dependency is already installed, run:\n\n"
-        puts "  backup dependencies --installed <name>"
-        exit
-      end
+      Helpers.exec!("#{ $0 } help dependencies") unless options.any?
 
       if options[:list]
         deps = Dependency.all

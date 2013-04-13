@@ -445,6 +445,28 @@ describe 'Backup::CLI' do
             File.exist?(model_file).should be_true
           end
         end
+
+        it 'should abort if --config-path is the path to config.rb itself' do
+          Dir.chdir(@tmpdir) do |path|
+            config_file = File.join(path, 'custom', 'config.rb')
+            FileUtils.mkdir_p(File.join(path, 'custom'))
+            FileUtils.touch(config_file)
+
+            out, err = capture_io do
+              ARGV.replace(['generate:model',
+                 '--config-path', config_file,
+                 '--trigger', 'foo'
+              ])
+              expect do
+                cli.start
+              end.to raise_error(SystemExit)
+            end
+
+            err.should == "--config-path should be a directory, not a file.\n"
+            out.should be_empty
+          end
+
+        end
       end
 
       context 'when a model file already exists' do
@@ -498,26 +520,28 @@ describe 'Backup::CLI' do
 
       expected_usage = "#{ File.basename($0) } generate:model -t, --trigger=TRIGGER"
       expected_options = <<-EOS
-        -t, --trigger=TRIGGER
-            [--config-path=CONFIG_PATH]  # Path to your Backup configuration directory
-            [--databases=DATABASES]      # (mongodb, mysql, postgresql, redis, riak)
-            [--storages=STORAGES]        # (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
-            [--syncers=SYNCERS]          # (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
-            [--encryptors=ENCRYPTORS]    # (gpg, openssl)
-            [--compressors=COMPRESSORS]  # (bzip2, custom, gzip, lzma, pbzip2)
-            [--notifiers=NOTIFIERS]      # (campfire, hipchat, mail, prowl, pushover, twitter)
-            [--archives]
-            [--splitter]                 # use `--no-splitter` to disable
-                                         # Default: true
+-t, --trigger=TRIGGER            # Trigger name for the Backup model
+    [--config-path=CONFIG_PATH]  # Path to your Backup configuration directory
+    [--databases=DATABASES]      # (mongodb, mysql, postgresql, redis, riak)
+    [--storages=STORAGES]        # (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
+    [--syncers=SYNCERS]          # (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
+    [--encryptors=ENCRYPTORS]    # (gpg, openssl)
+    [--compressors=COMPRESSORS]  # (bzip2, custom, gzip, lzma, pbzip2)
+    [--notifiers=NOTIFIERS]      # (campfire, hipchat, mail, prowl, pushover, twitter)
+    [--archives]                 # Model will include tar archives.
+    [--splitter]                 # Use `--no-splitter` to disable
+                                  # Default: true
       EOS
       expected_description = <<-EOS
         Generates a Backup model file.
 
-        Note: '--config-path' is the path to the directory where 'config.rb' is located.
+        '--config-path' is the path to the *directory* where 'config.rb' is located.
 
         The model file will be created as '<config_path>/models/<trigger>.rb'
 
-        Default: #{ Backup::Config.root_path }
+        The default location would be:
+
+        /home/wizard/Backup/models/
       EOS
 
       out, err = capture_io do
@@ -706,14 +730,13 @@ describe 'Backup::CLI' do
     end
 
     it 'shows help and exits when no arguments are given' do
+      cli::Helpers.expects(:exec!).with("#{ $0 } help dependencies").
+          raises(SystemExit)
+
       ARGV.replace(['dependencies'])
-      out, err = capture_io do
-        expect do
-          cli.start
-        end.to raise_error(SystemExit) {|exit| exit.status.should be(0) }
-      end
-      err.should == ''
-      out.should match(/To display a list of available dependencies/)
+      expect do
+        cli.start
+      end.to raise_error(SystemExit)
     end
 
     describe '#dependencies --list' do
