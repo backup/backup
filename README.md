@@ -68,10 +68,8 @@ $ tar -tvf my_backup.tar
   my_backup/archives/user_avatars.tar.gz
   my_backup/archives/log_files.tar.gz
   my_backup/databases/
-  my_backup/databases/PostgreSQL/
-  my_backup/databases/PostgreSQL/pg_db_name.sql.gz
-  my_backup/databases/Redis/
-  my_backup/databases/Redis/redis_db_name.rdb.gz
+  my_backup/databases/PostgreSQL.sql.gz
+  my_backup/databases/Redis.rdb.gz
 ```
 
 ### Storages
@@ -200,7 +198,7 @@ Backup::Model.new(:my_backup, 'Description for my_backup') do
     mail.user_name            = "sender@email.com"
     mail.password             = "my_password"
     mail.authentication       = "plain"
-    mail.enable_starttls_auto = true
+    mail.encryption           = :starttls
   end
 
   notify_by Twitter do |tweet|
