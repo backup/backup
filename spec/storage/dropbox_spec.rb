@@ -36,48 +36,61 @@ describe Backup::Storage::Dropbox do
 
     context 'when no pre-configured defaults have been set' do
       it 'should use the values given' do
-        storage.api_key.should      == 'my_api_key'
-        storage.api_secret.should   == 'my_api_secret'
-        storage.access_type.should  == :app_folder
-        storage.path.should         == 'backups'
+        storage.api_key.should        == 'my_api_key'
+        storage.api_secret.should     == 'my_api_secret'
+        storage.access_type.should    == :app_folder
+        storage.path.should           == 'backups'
+        storage.chunk_size.should     == 4194304
+        storage.chunk_retries.should  == 10
+        storage.retry_waitsec.should  == 30
 
-        storage.storage_id.should be_nil
-        storage.keep.should       == 5
+        storage.storage_id.should     be_nil
+        storage.keep.should           == 5
+
       end
 
       it 'should use default values if none are given' do
         storage = Backup::Storage::Dropbox.new(model)
-        storage.api_key.should      be_nil
-        storage.api_secret.should   be_nil
-        storage.access_type.should  == :app_folder
-        storage.path.should         == 'backups'
+        storage.api_key.should         be_nil
+        storage.api_secret.should      be_nil
+        storage.access_type.should     == :app_folder
+        storage.path.should            == 'backups'
+        storage.chunk_size.should      == 4194304
+        storage.chunk_retries.should   == 10
+        storage.retry_waitsec.should   == 30
 
-        storage.storage_id.should be_nil
-        storage.keep.should       be_nil
+        storage.storage_id.should      be_nil
+        storage.keep.should            be_nil
       end
     end # context 'when no pre-configured defaults have been set'
 
     context 'when pre-configured defaults have been set' do
       before do
         Backup::Storage::Dropbox.defaults do |s|
-          s.api_key      = 'some_api_key'
-          s.api_secret   = 'some_api_secret'
-          s.access_type  = 'some_access_type'
-          s.path         = 'some_path'
-          s.keep         = 15
+          s.api_key       = 'some_api_key'
+          s.api_secret    = 'some_api_secret'
+          s.access_type   = 'some_access_type'
+          s.path          = 'some_path'
+          s.keep          = 15
+          s.chunk_size    = 50
+          s.chunk_retries = 15
+          s.retry_waitsec = 40
         end
       end
 
       it 'should use pre-configured defaults' do
         storage = Backup::Storage::Dropbox.new(model)
 
-        storage.api_key.should      == 'some_api_key'
-        storage.api_secret.should   == 'some_api_secret'
-        storage.access_type.should  == 'some_access_type'
-        storage.path.should         == 'some_path'
+        storage.api_key.should       == 'some_api_key'
+        storage.api_secret.should    == 'some_api_secret'
+        storage.access_type.should   == 'some_access_type'
+        storage.path.should          == 'some_path'
 
-        storage.storage_id.should be_nil
-        storage.keep.should       == 15
+        storage.storage_id.should    be_nil
+        storage.keep.should          == 15
+        storage.chunk_size.should    == 50
+        storage.chunk_retries.should == 15
+        storage.retry_waitsec.should == 40
       end
 
       it 'should override pre-configured defaults' do
@@ -87,15 +100,22 @@ describe Backup::Storage::Dropbox do
           s.access_type  = 'new_access_type'
           s.path         = 'new_path'
           s.keep         = 10
+          s.chunk_size   = 40
+          s.chunk_retries = 20
+          s.retry_waitsec = 50
         end
 
-        storage.api_key.should      == 'new_api_key'
-        storage.api_secret.should   == 'new_api_secret'
-        storage.access_type.should  == 'new_access_type'
-        storage.path.should         == 'new_path'
+        storage.api_key.should        == 'new_api_key'
+        storage.api_secret.should     == 'new_api_secret'
+        storage.access_type.should    == 'new_access_type'
+        storage.path.should           == 'new_path'
 
-        storage.storage_id.should be_nil
-        storage.keep.should       == 10
+        storage.storage_id.should     be_nil
+        storage.keep.should           == 10
+        storage.chunk_size.should     == 40
+        storage.chunk_retries.should  == 20
+        storage.retry_waitsec.should  == 50
+
       end
     end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
@@ -219,49 +239,143 @@ describe Backup::Storage::Dropbox do
   describe '#transfer!' do
     let(:connection) { mock }
     let(:package) { mock }
+    let(:local_file_path) { mock }
+    let(:remote_file_path) { mock }
     let(:file) { mock }
+    let(:uploader) { mock }
     let(:s) { sequence '' }
 
-    before do
-      storage.instance_variable_set(:@package, package)
-      storage.stubs(:storage_name).returns('Storage::Dropbox')
-      storage.stubs(:local_path).returns('/local/path')
-      storage.stubs(:connection).returns(connection)
-    end
+    context "when there are no errors" do
+      before do
+        storage.instance_variable_set(:@package, package)
+        storage.stubs(:storage_name).returns('Storage::Dropbox')
+        storage.stubs(:local_path).returns('/local/path')
+        storage.stubs(:connection).returns(connection)
+        storage.stubs(:chunk_size).returns(50)
+        storage.stubs(:chunk_retries).returns(10)
+        storage.stubs(:retry_waitsecs).returns(30)
+      end
 
-    it 'should transfer the package files' do
-      storage.expects(:remote_path_for).in_sequence(s).with(package).
-          returns('remote/path')
-      storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
-        multiple_yields(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
-      )
-      # first yield
-      Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::Dropbox started transferring " +
-        "'2011.12.31.11.00.02.backup.tar.enc-aa'."
-      )
-      File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'), 'r'
-      ).yields(file)
-      connection.expects(:put_file).in_sequence(s).with(
-        File.join('remote/path', 'backup.tar.enc-aa'), file
-      )
-      # second yield
-      Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::Dropbox started transferring " +
-        "'2011.12.31.11.00.02.backup.tar.enc-ab'."
-      )
-      File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'), 'r'
-      ).yields(file)
-      connection.expects(:put_file).in_sequence(s).with(
-        File.join('remote/path', 'backup.tar.enc-ab'), file
-      )
+      it 'should transfer the package files' do
+        storage.expects(:remote_path_for).in_sequence(s).with(package).
+            returns('remote/path')
+        storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
+            multiple_yields(
+            ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
+            ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']      )
+        # first yield
+        Backup::Logger.expects(:info).in_sequence(s).with(
+            "Storage::Dropbox started transferring " +
+                "'2011.12.31.11.00.02.backup.tar.enc-aa'."
+        )
+        File.expects(:join).in_sequence(s).with(
+            '/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'
+        ).returns(local_file_path)
+        File.expects(:join).in_sequence(s).with(
+            'remote/path', 'backup.tar.enc-aa'
+        ).returns(remote_file_path)
+        File.expects(:open).in_sequence(s).with(
+            local_file_path, 'r'
+        ).returns(file)
+        File.expects(:size).in_sequence(s).with(
+            local_file_path
+        ).returns(250)
+        connection.expects(:get_chunked_uploader).in_sequence(s).with(
+            file, 250
+        ).returns(uploader)
+        uploader.expects(:offset).times(6).returns(0).then.returns(50,100,150,200,250)
+        uploader.expects(:total_size).times(6).returns(250)
+        uploader.expects(:upload).times(5).with(
+            50
+        )
+        uploader.expects(:finish).in_sequence(s).with(
+            remote_file_path
+        )
 
-      storage.send(:transfer!)
-    end
+        # second yield
+        Backup::Logger.expects(:info).in_sequence(s).with(
+            "Storage::Dropbox started transferring " +
+                "'2011.12.31.11.00.02.backup.tar.enc-ab'."
+        )
+        File.expects(:join).in_sequence(s).with(
+            '/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'
+        ).returns(local_file_path)
+        File.expects(:join).in_sequence(s).with(
+            'remote/path', 'backup.tar.enc-ab'
+        ).returns(remote_file_path)
+        File.expects(:open).in_sequence(s).with(
+            local_file_path, 'r'
+        ).returns(file)
+        File.expects(:size).in_sequence(s).with(
+            local_file_path
+        ).returns(40)
+        connection.expects(:get_chunked_uploader).in_sequence(s).with(
+            file, 40
+        ).returns(uploader)
+        uploader.expects(:offset).times(2).returns(0).then.returns(40)
+        uploader.expects(:total_size).times(2).returns(40)
+        uploader.expects(:upload).times(1).with(
+            50
+        )
+        uploader.expects(:finish).in_sequence(s).with(
+            remote_file_path
+        )
+
+        storage.send(:transfer!)
+      end
+    end # context "when there are no errors"
+
+    context "when an error occurs" do
+      before do
+        storage.instance_variable_set(:@package, package)
+        storage.stubs(:storage_name).returns('Storage::Dropbox')
+        storage.stubs(:local_path).returns('/local/path')
+        storage.stubs(:connection).returns(connection)
+        storage.stubs(:chunk_size).returns(10)
+        storage.stubs(:chunk_retries).returns(1)
+        storage.stubs(:retry_waitsec).returns(0)
+      end
+
+      it 'should fail transferring the package files' do
+        storage.expects(:remote_path_for).in_sequence(s).with(package).
+            returns('remote/path')
+        storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
+            multiple_yields(
+            ['2011.12.31.11.00.02.backup.tar.enc-ay', 'backup.tar.enc-ay'],
+            ['2011.12.31.11.00.02.backup.tar.enc-az', 'backup.tar.enc-az']
+        )
+        File.expects(:join).with(
+            '/local/path', '2011.12.31.11.00.02.backup.tar.enc-ay'
+        ).returns(local_file_path)
+        File.expects(:join).with(
+            'remote/path', 'backup.tar.enc-ay'
+        ).returns(remote_file_path)
+        File.expects(:open).with(
+            local_file_path, 'r'
+        ).returns(file)
+        File.expects(:size).with(
+            local_file_path
+        ).returns(10)
+        connection.expects(:get_chunked_uploader).with(
+            file, 10
+        ).returns(uploader)
+        uploader.expects(:offset).returns(0)
+        uploader.expects(:total_size).returns(10)
+        uploader.expects(:upload).with(
+            10
+        ).raises(Backup::Errors::Storage::Dropbox::TransferError.new('error'))
+        Backup::Logger.expects(:info).at_least_once.with(any_parameters)
+
+        expect do
+          storage.send(:transfer!)
+        end.to raise_error {|err|
+          err.should be_an_instance_of(
+            Backup::Errors::Storage::Dropbox::TransferError
+          )
+        }
+      end
+    end # context "when an error occurs"
+
   end # describe '#transfer!'
 
   describe '#remove!' do
