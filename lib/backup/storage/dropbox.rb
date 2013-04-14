@@ -23,6 +23,11 @@ module Backup
       # Path to where the backups will be stored
       attr_accessor :path
 
+      ##
+      # chunk size for the DropboxClient::ChunkedUploader
+      # specified in bytes
+      attr_accessor :chunk_size, :chunk_retries, :retry_waitsec
+
       attr_deprecate :email,    :version => '3.0.17'
       attr_deprecate :password, :version => '3.0.17'
 
@@ -35,6 +40,10 @@ module Backup
 
         @path ||= 'backups'
         @access_type ||= :app_folder
+        # 4Mb in bytes
+        @chunk_size ||= 1024 ** 2 * 4
+        @chunk_retries ||= 10
+        @retry_waitsec ||= 30
 
         instance_eval(&block) if block_given?
       end
@@ -86,15 +95,36 @@ module Backup
       end
 
       ##
-      # Transfers the archived file to the specified Dropbox folder
+      # Transfer each of the package files to Dropbox in chunks of +chunk_size+.
+      # Each chunk will be retried +chunk_retries+ times, pausing +retry_waitsec+
+      # between retries, if errors occur.
       def transfer!
         remote_path = remote_path_for(@package)
 
         files_to_transfer_for(@package) do |local_file, remote_file|
-          Logger.info "#{storage_name} started transferring '#{ local_file }'."
+          Logger.info "#{ storage_name } started transferring '#{ local_file }'."
+
+          uploader, retries = nil, 0
           File.open(File.join(local_path, local_file), 'r') do |file|
-            connection.put_file(File.join(remote_path, remote_file), file)
+            uploader = connection.get_chunked_uploader(file, file.size)
+            while uploader.offset < uploader.total_size
+              begin
+                uploader.upload(chunk_size)
+                retries = 0
+              rescue => err
+                retries += 1
+                if retries <= chunk_retries
+                  Logger.info "Chunk retry #{ retries } of #{ chunk_retries }."
+                  sleep(retry_waitsec)
+                  retry
+                end
+                raise Errors::Storage::Dropbox::TransferError.
+                    wrap(err, 'Dropbox upload failed!')
+              end
+            end
           end
+
+          uploader.finish(File.join(remote_path, remote_file))
         end
       end
 
@@ -174,6 +204,30 @@ module Backup
           )
       end
 
+    end
+  end
+end
+
+# Patch for dropbox-ruby-sdk-1.5.1
+class DropboxClient
+  class ChunkedUploader
+    def upload(chunk_size = 1024**2 * 4)
+      while @offset < @total_size
+        @file_obj.seek(@offset) unless @file_obj.pos == @offset
+        data = @file_obj.read(chunk_size)
+
+        begin
+          resp = @client.parse_response(
+            @client.partial_chunked_upload(data, @upload_id, @offset)
+          )
+        rescue DropboxError => err
+          resp = JSON.parse(err.http_response.body) rescue {}
+          raise err unless resp['offset']
+        end
+
+        @offset = resp['offset']
+        @upload_id ||= resp['upload_id']
+      end
     end
   end
 end
