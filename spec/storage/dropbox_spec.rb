@@ -301,7 +301,7 @@ describe Backup::Storage::Dropbox do
 
     it 'retries on errors' do
       storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
-          yields(['2011.12.31.11.00.02.backup.tar.enc', 'backup.tar.enc'])
+          yields('2011.12.31.11.00.02.backup.tar.enc', 'backup.tar.enc')
 
       Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::Dropbox started transferring " +
@@ -330,7 +330,7 @@ describe Backup::Storage::Dropbox do
 
     it 'fails when retries are exceeded' do
       storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
-          yields(['2011.12.31.11.00.02.backup.tar.enc', 'backup.tar.enc'])
+          yields('2011.12.31.11.00.02.backup.tar.enc', 'backup.tar.enc')
 
       Backup::Logger.expects(:info).in_sequence(s).with(
         "Storage::Dropbox started transferring " +
