@@ -40,7 +40,7 @@ describe Backup::Storage::Dropbox do
         storage.api_secret.should     == 'my_api_secret'
         storage.access_type.should    == :app_folder
         storage.path.should           == 'backups'
-        storage.chunk_size.should     == 4194304
+        storage.chunk_size.should     == 4
         storage.chunk_retries.should  == 10
         storage.retry_waitsec.should  == 30
 
@@ -55,7 +55,7 @@ describe Backup::Storage::Dropbox do
         storage.api_secret.should      be_nil
         storage.access_type.should     == :app_folder
         storage.path.should            == 'backups'
-        storage.chunk_size.should      == 4194304
+        storage.chunk_size.should      == 4
         storage.chunk_retries.should   == 10
         storage.retry_waitsec.should   == 30
 
@@ -248,10 +248,13 @@ describe Backup::Storage::Dropbox do
       storage.stubs(:local_path).returns('/local/path')
       storage.stubs(:connection).returns(connection)
       storage.stubs(:remote_path_for).with(package).returns('remote/path')
-      file.stubs(:size).returns(250)
-      uploader.stubs(:total_size).returns(250)
-      uploader.stubs(:offset).returns(0,50,100,150,200,250,0,50,100,150,200,250)
-      storage.chunk_size = 50
+      file.stubs(:size).returns(6_291_456)
+      uploader.stubs(:total_size).returns(6_291_456)
+      uploader.stubs(:offset).returns(
+        0, 2_097_152, 4_194_304, 6_291_456,
+        0, 2_097_152, 4_194_304, 6_291_456
+      )
+      storage.chunk_size = 2
       storage.chunk_retries = 1
     end
 
@@ -273,9 +276,9 @@ describe Backup::Storage::Dropbox do
       ).yields(file)
 
       connection.expects(:get_chunked_uploader).in_sequence(s).
-          with(file, 250).returns(uploader)
+          with(file, 6_291_456).returns(uploader)
 
-      uploader.expects(:upload).in_sequence(s).times(5).with(50)
+      uploader.expects(:upload).in_sequence(s).times(3).with(2_097_152)
       uploader.expects(:finish).in_sequence(s).
           with(File.join('remote/path', 'backup.tar.enc-aa'))
 
@@ -290,9 +293,9 @@ describe Backup::Storage::Dropbox do
       ).yields(file)
 
       connection.expects(:get_chunked_uploader).in_sequence(s).
-          with(file, 250).returns(uploader)
+          with(file, 6_291_456).returns(uploader)
 
-      uploader.expects(:upload).in_sequence(s).times(5).with(50)
+      uploader.expects(:upload).in_sequence(s).times(3).with(2_097_152)
       uploader.expects(:finish).in_sequence(s).
           with(File.join('remote/path', 'backup.tar.enc-ab'))
 
@@ -313,14 +316,14 @@ describe Backup::Storage::Dropbox do
       ).yields(file)
 
       connection.expects(:get_chunked_uploader).in_sequence(s).
-          with(file, 250).returns(uploader)
+          with(file, 6_291_456).returns(uploader)
 
       uploader.expects(:upload).in_sequence(s).raises('an error')
 
       Backup::Logger.expects(:info).in_sequence(s).with('Chunk retry 1 of 1.')
       storage.expects(:sleep).with(30)
 
-      uploader.expects(:upload).in_sequence(s).times(5).with(50)
+      uploader.expects(:upload).in_sequence(s).times(3).with(2_097_152)
 
       uploader.expects(:finish).in_sequence(s).
           with(File.join('remote/path', 'backup.tar.enc'))
@@ -342,7 +345,7 @@ describe Backup::Storage::Dropbox do
       ).yields(file)
 
       connection.expects(:get_chunked_uploader).in_sequence(s).
-          with(file, 250).returns(uploader)
+          with(file, 6_291_456).returns(uploader)
 
       uploader.expects(:upload).in_sequence(s).raises('an error')
 

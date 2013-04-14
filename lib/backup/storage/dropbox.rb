@@ -24,9 +24,16 @@ module Backup
       attr_accessor :path
 
       ##
-      # chunk size for the DropboxClient::ChunkedUploader
-      # specified in bytes
-      attr_accessor :chunk_size, :chunk_retries, :retry_waitsec
+      # Chunk size, specified in MiB, for the ChunkedUploader.
+      attr_accessor :chunk_size
+
+      ##
+      # Number of times to retry a failed chunk.
+      attr_accessor :chunk_retries
+
+      ##
+      # Seconds to wait between chunk retries.
+      attr_accessor :retry_waitsec
 
       attr_deprecate :email,    :version => '3.0.17'
       attr_deprecate :password, :version => '3.0.17'
@@ -38,12 +45,11 @@ module Backup
       def initialize(model, storage_id = nil, &block)
         super(model, storage_id)
 
-        @path ||= 'backups'
-        @access_type ||= :app_folder
-        # 4Mb in bytes
-        @chunk_size ||= 1024 ** 2 * 4
-        @chunk_retries ||= 10
-        @retry_waitsec ||= 30
+        @path           ||= 'backups'
+        @access_type    ||= :app_folder
+        @chunk_size     ||= 4 # MiB
+        @chunk_retries  ||= 10
+        @retry_waitsec  ||= 30
 
         instance_eval(&block) if block_given?
       end
@@ -109,7 +115,7 @@ module Backup
             uploader = connection.get_chunked_uploader(file, file.size)
             while uploader.offset < uploader.total_size
               begin
-                uploader.upload(chunk_size)
+                uploader.upload(1024**2 * chunk_size)
                 retries = 0
               rescue => err
                 retries += 1
