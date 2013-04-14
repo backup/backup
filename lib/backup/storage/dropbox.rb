@@ -207,3 +207,27 @@ module Backup
     end
   end
 end
+
+# Patch for dropbox-ruby-sdk-1.5.1
+class DropboxClient
+  class ChunkedUploader
+    def upload(chunk_size = 1024**2 * 4)
+      while @offset < @total_size
+        @file_obj.seek(@offset) unless @file_obj.pos == @offset
+        data = @file_obj.read(chunk_size)
+
+        begin
+          resp = @client.parse_response(
+            @client.partial_chunked_upload(data, @upload_id, @offset)
+          )
+        rescue DropboxError => err
+          resp = JSON.parse(err.http_response.body) rescue {}
+          raise err unless resp['offset']
+        end
+
+        @offset = resp['offset']
+        @upload_id ||= resp['upload_id']
+      end
+    end
+  end
+end
