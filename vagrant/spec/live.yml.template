@@ -1,0 +1,10 @@
+---
+storage:
+  dropbox:
+    specs_enabled: false
+    api_key: <your key>
+    api_secret: <your secret>
+    # these may be changed if needed
+    access_type: :app_folder
+    path: backup_testing
+
