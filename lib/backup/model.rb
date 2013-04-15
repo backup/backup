@@ -14,8 +14,9 @@ module Backup
       ##
       # Return an Array of Models matching the given +trigger+.
       def find_by_trigger(trigger)
+        trigger = trigger.to_s
         if trigger.include?('*')
-          regex = /^#{ trigger.to_s.gsub('*', '(.*)') }$/
+          regex = /^#{ trigger.gsub('*', '(.*)') }$/
           all.select {|model| regex =~ model.trigger }
         else
           all.select {|model| trigger == model.trigger }

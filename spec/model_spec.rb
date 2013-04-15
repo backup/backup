@@ -45,6 +45,12 @@ describe 'Backup::Model' do
       Backup::Model.find_by_trigger('trigg*').count.should be(4)
     end
 
+    it 'should accept a symbol' do
+      models = Backup::Model.find_by_trigger(:trigger_two)
+      models.count.should be(1)
+      models[0].label.should == 'label2'
+    end
+
     it 'should return an empty array if no matches are found' do
       Backup::Model.find_by_trigger('foo*').should == []
     end
