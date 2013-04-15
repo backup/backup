@@ -12,12 +12,6 @@ describe 'Storage::Local' do
     )
   end
 
-  it 'should store a local archive' do
-    model = h_set_trigger(trigger)
-    model.perform!
-    File.exist?(archive_file_for(model)).should be_true
-  end
-
   describe 'Storage::Local Cycling' do
 
     context 'when archives exceed `keep` setting' do
