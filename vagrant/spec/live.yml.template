@@ -7,4 +7,11 @@ storage:
     # these may be changed if needed
     access_type: :app_folder
     path: backup_testing
-
+  s3:
+    specs_enabled: false
+    access_key_id: <your key>
+    secret_access_key: <your secret>
+    region: <your region>
+    bucket: <your bucket>
+    # change if needed
+    path: backup_testing
