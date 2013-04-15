@@ -75,7 +75,7 @@ module Backup
       end
 
       def backup_all?
-        [:all, ":all", "all"].include?(index)
+        [:all, ':all', 'all'].include?(index)
       end
 
       def copy!
@@ -87,16 +87,18 @@ module Backup
             Directory path was #{ src_path }
           EOS
         end
-
-        dst_path = File.join(dump_path, dump_filename + '.tar')
-        cmd = "#{ utility(:tar) } -cf - #{ src_path } |"
+        pipeline = Pipeline.new
+        pipeline << "#{ utility(:tar) } -cf - #{ src_path }"
+        dst_ext = '.tar'
         if model.compressor
-          model.compressor.compress_with do |comp_cmd, ext|
-            run("#{ cmd } #{ comp_cmd } > '#{ dst_path + ext }'")
+          model.compressor.compress_with do |cmd, ext|
+            pipeline << cmd
+            dst_ext << ext
           end
-        else
-          run("#{ cmd } #{ utility(:cat) } > '#{ dst_path }'")
         end
+        dst_path = File.join(dump_path, dump_filename + dst_ext)
+        pipeline << "#{ utility(:cat) } > '#{ dst_path }'"
+        pipeline.run
       end
 
     end
