@@ -59,17 +59,38 @@ module Backup
 
       private
 
-      def close_index_cmd
-        "curl -iXPOST http://#{ host }:#{ port }/#{ index }/_close"
+      def close_index_uri
+        "/#{ index }/_close"
+      end
+
+      def close_index!
+        begin
+          http = Net::HTTP.new(host, port)
+          request = Net::HTTP::Post.new(close_index_uri)
+          http.request(request)
+        rescue Errno::ECONNREFUSED, Errno::ECONNRESET,
+          Errno::EINVAL, Errno::ECONNRESET, EOFError,
+          Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError => error
+          raise Errors::Database::Elasticsearch::QueryError, <<-EOS
+            Could not close the Elasticsearch index.
+            Host was: #{ host }
+            Port was: #{ port }
+            URI was: #{ close_index_uri }
+            Error was: #{ error.message }
+          EOS
+        end
       end
 
       def invoke_close!
-        resp = run(close_index_cmd)
-        unless resp =~ /200 OK/
-          raise Errors::Database::Elasticsearch::CommandError, <<-EOS
-            Could not invoke the close index command.
-            Command was: #{ close_index_cmd }
-            Response was: #{ resp }
+        response = close_index!
+        unless response.code == '200'
+          raise Errors::Database::Elasticsearch::QueryError, <<-EOS
+            Could not close the Elasticsearch index.
+            Host was: #{ host }
+            Port was: #{ port }
+            URI was: #{ close_index_uri }
+            Response body was: #{ response.body }
+            Response code was: #{ response.code }
           EOS
         end
       end
