@@ -92,10 +92,10 @@ module Backup
         cmd = "#{ utility(:tar) } -cf - #{ src_path } |"
         if model.compressor
           model.compressor.compress_with do |comp_cmd, ext|
-            run("#{ cmd } #{ comp_cmd } -c '#{ src_path }' > '#{ dst_path + ext }'")
+            run("#{ cmd } #{ comp_cmd } > '#{ dst_path + ext }'")
           end
         else
-          run("#{ cmd } > '#{ dst_path }'")
+          run("#{ cmd } #{ utility(:cat) } > '#{ dst_path }'")
         end
       end
 
