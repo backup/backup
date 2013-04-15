@@ -248,7 +248,7 @@ describe Backup::Storage::Dropbox do
       storage.stubs(:local_path).returns('/local/path')
       storage.stubs(:connection).returns(connection)
       storage.stubs(:remote_path_for).with(package).returns('remote/path')
-      file.stubs(:size).returns(6_291_456)
+      file.stubs(:stat).returns(stub(:size => 6_291_456))
       uploader.stubs(:total_size).returns(6_291_456)
       uploader.stubs(:offset).returns(
         0, 2_097_152, 4_194_304, 6_291_456,

@@ -112,7 +112,7 @@ module Backup
 
           uploader, retries = nil, 0
           File.open(File.join(local_path, local_file), 'r') do |file|
-            uploader = connection.get_chunked_uploader(file, file.size)
+            uploader = connection.get_chunked_uploader(file, file.stat.size)
             while uploader.offset < uploader.total_size
               begin
                 uploader.upload(1024**2 * chunk_size)
