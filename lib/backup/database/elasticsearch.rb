@@ -23,13 +23,20 @@ module Backup
       attr_accessor :index
 
       ##
+      # Determines whether Backup should flush the index with the
+      # Elasticsearch API before copying the index directory.
+      #
+      attr_accessor :invoke_flush
+
+      ##
       # Determines whether Backup should close the index with the
       # Elasticsearch API before copying the index directory.
       #
       attr_accessor :invoke_close
 
       ##
-      # Elasticsearch API options for the +invoke_close+ option.
+      # Elasticsearch API options for the +invoke_flush+ and
+      # +invoke_close+ options.
       attr_accessor :host, :port
 
       def initialize(model, database_id = nil, &block)
@@ -47,11 +54,15 @@ module Backup
       #
       #   <trigger>/databases/Eliasticsearch[-<database_id>].tar[.gz]
       #
+      # If +invoke_flush+ is true, `POST $index/_flush` will be invoked.
       # If +invoke_close+ is true, `POST $index/_close` will be invoked.
       def perform!
         super
 
-        invoke_close! if invoke_close
+        invoke_flush! if invoke_flush
+        unless backup_all?
+          invoke_close! if invoke_close
+        end
         copy!
 
         log!(:finished)
@@ -59,44 +70,64 @@ module Backup
 
       private
 
-      def close_index_uri
-        "/#{ index }/_close"
+      def backup_all?
+        [:all, ':all', 'all'].include?(index)
       end
 
-      def close_index!
+      def api_request(http_method, endpoint, body=nil)
+        http = Net::HTTP.new(host, port)
+        request = case http_method.to_sym
+        when :post
+          Net::HTTP::Post.new(endpoint)
+        end
+        request.body = body
         begin
-          http = Net::HTTP.new(host, port)
-          request = Net::HTTP::Post.new(close_index_uri)
           http.request(request)
-        rescue Errno::ECONNREFUSED, Errno::ECONNRESET,
-          Errno::EINVAL, Errno::ECONNRESET, EOFError,
-          Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError => error
+        rescue => error
           raise Errors::Database::Elasticsearch::QueryError, <<-EOS
-            Could not close the Elasticsearch index.
+            Could not query the Elasticsearch API.
             Host was: #{ host }
             Port was: #{ port }
-            URI was: #{ close_index_uri }
+            Endpoint was: #{ endpoint }
             Error was: #{ error.message }
           EOS
         end
       end
 
-      def invoke_close!
-        response = close_index!
+      def flush_index_endpoint
+        backup_all? ? '/_flush' : "/#{ index }/_flush"
+      end
+
+      def invoke_flush!
+        response = api_request(:post, flush_index_endpoint)
         unless response.code == '200'
           raise Errors::Database::Elasticsearch::QueryError, <<-EOS
-            Could not close the Elasticsearch index.
+            Could not flush the Elasticsearch index.
             Host was: #{ host }
             Port was: #{ port }
-            URI was: #{ close_index_uri }
+            Endpoint was: #{ flush_index_endpoint }
             Response body was: #{ response.body }
             Response code was: #{ response.code }
           EOS
         end
       end
 
-      def backup_all?
-        [:all, ':all', 'all'].include?(index)
+      def close_index_endpoint
+        "/#{ index }/_close"
+      end
+
+      def invoke_close!
+        response = api_request(:post, close_index_endpoint)
+        unless response.code == '200'
+          raise Errors::Database::Elasticsearch::QueryError, <<-EOS
+            Could not close the Elasticsearch index.
+            Host was: #{ host }
+            Port was: #{ port }
+            Endpoint was: #{ close_index_endpoint }
+            Response body was: #{ response.body }
+            Response code was: #{ response.code }
+          EOS
+        end
       end
 
       def copy!
