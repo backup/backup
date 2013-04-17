@@ -82,7 +82,9 @@ module Backup
         end
         request.body = body
         begin
-          http.request(request)
+          Timeout::timeout(180) do
+            http.request(request)
+          end
         rescue => error
           raise Errors::Database::Elasticsearch::QueryError, <<-EOS
             Could not query the Elasticsearch API.
