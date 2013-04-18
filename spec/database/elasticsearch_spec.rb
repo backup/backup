@@ -49,7 +49,7 @@ module Backup
       specify 'when #invoke_close is true and #index is :all' do
         db.invoke_close = true
 
-        db.expects(:invoke_close!).never        
+        db.expects(:invoke_close!).never
         db.expects(:copy!).in_sequence(s)
         db.expects(:log!).in_sequence(s).with(:finished)
 
@@ -66,7 +66,7 @@ module Backup
 
         db.perform!
       end
-      
+
       specify 'when #invoke_close is false' do
         db.expects(:invoke_close!).never
         db.expects(:copy!).in_sequence(s)
@@ -78,33 +78,47 @@ module Backup
 
     describe '#invoke_flush!' do
       let(:api_response) do
-        mock('Net::HTTPResponse').stubs(
-          :code => '200',
-          :message => "OK",
-          :content_type => "application/json",
-          :body => ''
-        )
+        Struct.new(:code, :message, :body)
+      end
+      let(:api_response_ok) { api_response.new('200', 'OK', '') }
+      let(:api_response_not_found) { api_response.new('404', 'Not Found', '') }
+
+      specify 'when response is OK' do
+        db.stubs(:api_request).returns(api_response_ok)
+        db.send(:invoke_flush!)
       end
 
-      before do
-        db.stubs(:api_request).returns(api_response)
+      specify 'when response is not OK' do
+        db.stubs(:api_request).returns(api_response_not_found)
+        expect do
+          db.send(:invoke_flush!)
+        end.to raise_error(Errors::Database::Elasticsearch::QueryError) {|err|
+          expect( err.message ).to match(/Response code was: 404/)
+        }
+      end
+    end # describe '#invoke_flush!'
+
+    describe '#invoke_close!' do
+      let(:api_response) do
+        Struct.new(:code, :message, :body)
+      end
+      let(:api_response_ok) { api_response.new('200', 'OK', '') }
+      let(:api_response_not_found) { api_response.new('404', 'Not Found', '') }
+
+      specify 'when response is OK' do
+        db.stubs(:api_request).returns(api_response_ok)
+        db.send(:invoke_close!)
       end
 
-#      specify 'when response is OK' do
-#        db.expects(:run).with('redis_save_cmd').returns('+OK')
-#        db.send(:invoke_flush!)
-#      end
-#
-#      specify 'when response is not OK' do
-#        db.expects(:run).with('redis_save_cmd').returns('No OK Returned')
-#        expect do
-#          db.send(:invoke_save!)
-#        end.to raise_error(Errors::Database::Redis::CommandError) {|err|
-#          expect( err.message ).to match(/Command was: redis_save_cmd/)
-#          expect( err.message ).to match(/Response was: No OK Returned/)
-#        }
-#      end
-    end # describe '#invoke_save!'
+      specify 'when response is not OK' do
+        db.stubs(:api_request).returns(api_response_not_found)
+        expect do
+          db.send(:invoke_close!)
+        end.to raise_error(Errors::Database::Elasticsearch::QueryError) {|err|
+          expect( err.message ).to match(/Response code was: 404/)
+        }
+      end
+    end # describe '#invoke_close!'
 
 #    describe '#copy!' do
 #      before do
