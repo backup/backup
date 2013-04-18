@@ -120,139 +120,76 @@ module Backup
       end
     end # describe '#invoke_close!'
 
-#    describe '#copy!' do
-#      before do
-#        db.stubs(:dump_path).returns('/tmp/trigger/databases')
-#        db.path = '/var/lib/redis'
-#      end
-#
-#      context 'when the redis dump file exists' do
-#        before do
-#          File.expects(:exist?).in_sequence(s).with(
-#                                                    '/var/lib/redis/dump.rdb'
-#                                                    ).returns(true)
-#        end
-#
-#        context 'when a compressor is configured' do
-#          let(:compressor) { mock }
-#
-#          before do
-#            model.stubs(:compressor).returns(compressor)
-#            compressor.stubs(:compress_with).yields('cmp_cmd', '.cmp_ext')
-#          end
-#
-#          it 'should copy the redis dump file with compression' do
-#            db.expects(:run).in_sequence(s).with(
-#                                                 "cmp_cmd -c '/var/lib/redis/dump.rdb' > " +
-#                                                 "'/tmp/trigger/databases/Redis.rdb.cmp_ext'"
-#                                                 )
-#            FileUtils.expects(:cp).never
-#
-#            db.send(:copy!)
-#          end
-#        end # context 'when a compressor is configured'
-#
-#        context 'when no compressor is configured' do
-#          it 'should copy the redis dump file without compression' do
-#            FileUtils.expects(:cp).in_sequence(s).with(
-#                                                       '/var/lib/redis/dump.rdb', '/tmp/trigger/databases/Redis.rdb'
-#                                                       )
-#            db.expects(:run).never
-#
-#            db.send(:copy!)
-#          end
-#        end # context 'when no compressor is configured'
-#
-#      end # context 'when the redis dump file exists'
-#
-#      context 'when the redis dump file does not exist' do
-#        it 'raises an error' do
-#          File.expects(:exist?).in_sequence(s).with(
-#                                                    '/var/lib/redis/dump.rdb'
-#                                                    ).returns(false)
-#
-#          expect do
-#            db.send(:copy!)
-#          end.to raise_error(Errors::Database::Redis::NotFoundError)
-#        end
-#      end # context 'when the redis dump file does not exist'
-#
-#    end # describe '#copy!'
-#
-#    describe '#redis_save_cmd' do
-#      let(:option_methods) {%w[
-#      redis_cli_utility password_option connectivity_options user_options
-#    ]}
-#
-#      it 'returns full redis-cli command built from all options' do
-#        option_methods.each {|name| db.stubs(name).returns(name) }
-#        expect( db.send(:redis_save_cmd) ).to eq(
-#                                                 option_methods.join(' ') + ' SAVE'
-#                                                 )
-#      end
-#
-#      it 'handles nil values from option methods' do
-#        option_methods.each {|name| db.stubs(name).returns(nil) }
-#        expect( db.send(:redis_save_cmd) ).to eq(
-#                                                 (' ' * (option_methods.count - 1)) + ' SAVE'
-#                                                 )
-#      end
-#    end # describe '#redis_save_cmd'
-#
-#    describe 'redis_save_cmd option methods' do
-#
-#      describe '#password_option' do
-#        it 'returns argument if specified' do
-#          expect( db.send(:password_option) ).to be_nil
-#
-#          db.password = 'my_password'
-#          expect( db.send(:password_option) ).to eq "-a 'my_password'"
-#        end
-#      end # describe '#password_option'
-#
-#      describe '#connectivity_options' do
-#        it 'returns only the socket argument if #socket specified' do
-#          db.host = 'my_host'
-#          db.port = 'my_port'
-#          db.socket = 'my_socket'
-#          expect( db.send(:connectivity_options) ).to eq(
-#                                                         "-s 'my_socket'"
-#                                                         )
-#        end
-#
-#        it 'returns host and port arguments if specified' do
-#          expect( db.send(:connectivity_options) ).to eq ''
-#
-#          db.host = 'my_host'
-#          expect( db.send(:connectivity_options) ).to eq(
-#                                                         "-h 'my_host'"
-#                                                         )
-#
-#          db.port = 'my_port'
-#          expect( db.send(:connectivity_options) ).to eq(
-#                                                         "-h 'my_host' -p 'my_port'"
-#                                                         )
-#
-#          db.host = nil
-#          expect( db.send(:connectivity_options) ).to eq(
-#                                                         "-p 'my_port'"
-#                                                         )
-#        end
-#      end # describe '#connectivity_options'
-#
-#      describe '#user_options' do
-#        it 'returns arguments for any #additional_options specified' do
-#          expect( db.send(:user_options) ).to eq ''
-#
-#          db.additional_options = ['--opt1', '--opt2']
-#          expect( db.send(:user_options) ).to eq '--opt1 --opt2'
-#
-#          db.additional_options = '--opta --optb'
-#          expect( db.send(:user_options) ).to eq '--opta --optb'
-#        end
-#      end # describe '#user_options'
-#
-#    end # describe 'redis_save_cmd option methods'
+    describe '#copy!' do
+      let(:src_path) { '/var/data/elasticsearch/nodes/0/indices' }
 
+      before do
+        db.stubs(:dump_path).returns('/tmp/trigger/databases')
+        db.stubs(:utility).with(:tar).returns('tar')
+        db.stubs(:utility).with(:cat).returns('cat')
+        db.path = '/var/data/elasticsearch'
+      end
+
+      context 'when the elasticsearch index directory exists' do
+        before do
+          File.expects(:exist?).in_sequence(s).with(src_path).returns(true)
+        end
+
+        context 'when a compressor is configured' do
+          let(:pipeline) { mock }
+          let(:compressor) { mock }
+
+          before do
+            model.stubs(:compressor).returns(compressor)
+            compressor.stubs(:compress_with).yields('cmp_cmd', '.cmp_ext')
+          end
+
+          it 'packages the directory with compression' do
+            Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+
+            pipeline.expects(:<<).in_sequence(s).with("tar -cf - #{src_path}")
+
+            pipeline.expects(:<<).in_sequence(s).with('cmp_cmd')
+
+            pipeline.expects(:<<).in_sequence(s).with(
+              "cat > '/tmp/trigger/databases/Elasticsearch.tar.cmp_ext'"
+            )
+
+            pipeline.expects(:run).in_sequence(s)
+            pipeline.expects(:success?).in_sequence(s).returns(true)
+
+            db.send(:copy!)
+          end
+        end # context 'when a compressor is configured'
+
+        context 'when no compressor is configured' do
+          let(:pipeline) { mock }
+
+          it 'packages the directory without compression' do
+            Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+
+            pipeline.expects(:<<).in_sequence(s).with("tar -cf - #{src_path}")
+
+            pipeline.expects(:<<).in_sequence(s).with(
+              "cat > '/tmp/trigger/databases/Elasticsearch.tar'"
+            )
+
+            pipeline.expects(:run).in_sequence(s)
+            pipeline.expects(:success?).in_sequence(s).returns(true)
+
+            db.send(:copy!)
+          end
+        end # context 'when no compressor is configured'
+      end # context 'when the elasticsearch index directory exists'
+
+      context 'when the elasticsearch index directory does not exist' do
+        it 'raises an error' do
+          File.expects(:exist?).in_sequence(s).with(src_path).returns(false)
+          expect do
+            db.send(:copy!)
+          end.to raise_error(Errors::Database::Elasticsearch::NotFoundError)
+        end
+      end # context 'when the elasticsearch index directory does not exist'
+    end # describe '#copy!'
   end
 end

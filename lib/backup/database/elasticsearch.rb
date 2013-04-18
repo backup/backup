@@ -153,6 +153,10 @@ module Backup
         dst_path = File.join(dump_path, dump_filename + dst_ext)
         pipeline << "#{ utility(:cat) } > '#{ dst_path }'"
         pipeline.run
+        unless pipeline.success?
+          raise Errors::Database::PipelineError,
+            "Elasticsearch Index '#{ index }' Backup Failed!\n" + pipeline.error_messages
+        end
       end
 
     end
