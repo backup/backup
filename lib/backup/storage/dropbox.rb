@@ -117,7 +117,8 @@ module Backup
               begin
                 uploader.upload(1024**2 * chunk_size)
                 retries = 0
-              rescue => err
+              # Timeout::Error is not a StandardError under ruby-1.8.7
+              rescue StandardError, Timeout::Error => err
                 retries += 1
                 if retries <= chunk_retries
                   Logger.info "Chunk retry #{ retries } of #{ chunk_retries }."
