@@ -67,6 +67,11 @@ describe 'Backup::Model' do
       Backup::Model.new(:foo, :bar).label.should == 'bar'
     end
 
+    it 'should instantiate a package for the model' do
+      Backup::Model.new(:foo, :bar).package.
+          should be_an_instance_of Backup::Package
+    end
+
     it 'should set all procedure variables to an empty array' do
       model.send(:procedure_instance_variables).each do |var|
         model.instance_variable_get(var).should == []
@@ -355,7 +360,7 @@ describe 'Backup::Model' do
     let(:notifier_b)    { mock }
     let(:notifiers)     { [notifier_a, notifier_b] }
 
-    it 'should set the @time and @started_at variables' do
+    it 'should set @started_at, @time and @package.time' do
       model.expects(:log!).with(:started)
       model.expects(:prepare!)
       model.expects(:log!).with(:finished)
@@ -368,6 +373,7 @@ describe 'Backup::Model' do
       end
 
       model.time.should == time
+      model.package.time.should == time
       model.instance_variable_get(:@started_at).should == started_at
     end
 
@@ -475,15 +481,12 @@ describe 'Backup::Model' do
       Backup::Cleaner.expects(:remove_packaging).in_sequence(s).with(model)
 
       model.send(:package!)
-      model.package.should be_an_instance_of Backup::Package
     end
   end
 
-  describe '#clean' do
+  describe '#clean!' do
     it 'should remove the final packaged files' do
-      package = mock
-      model.instance_variable_set(:@package, package)
-      Backup::Cleaner.expects(:remove_package).with(package)
+      Backup::Cleaner.expects(:remove_package).with(model.package)
 
       model.send(:clean!)
     end

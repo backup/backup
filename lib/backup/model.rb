@@ -80,6 +80,7 @@ module Backup
     def initialize(trigger, label, &block)
       @trigger = trigger.to_s
       @label   = label.to_s
+      @package = Package.new(self)
 
       procedure_instance_variables.each do |variable|
         instance_variable_set(variable, Array.new)
@@ -230,7 +231,7 @@ module Backup
     #
     def perform!
       @started_at = Time.now
-      @time = @started_at.strftime("%Y.%m.%d.%H.%M.%S")
+      @time = package.time = @started_at.strftime("%Y.%m.%d.%H.%M.%S")
       log!(:started)
 
       prepare!
@@ -263,13 +264,12 @@ module Backup
     end
 
     ##
-    # After all the databases and archives have been dumped and sorted,
+    # After all the databases and archives have been dumped and stored,
     # these files will be bundled in to a .tar archive (uncompressed),
     # which may be optionally Encrypted and/or Split into multiple "chunks".
     # All information about this final archive is stored in the @package.
     # Once complete, the temporary folder used during packaging is removed.
     def package!
-      @package = Package.new(self)
       Packager.package!(self)
       Cleaner.remove_packaging(self)
     end
@@ -277,7 +277,7 @@ module Backup
     ##
     # Removes the final package file(s) once all configured Storages have run.
     def clean!
-      Cleaner.remove_package(@package)
+      Cleaner.remove_package(package)
     end
 
     ##
