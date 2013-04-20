@@ -106,17 +106,16 @@ describe Backup::Storage::Base do
     let(:given_block) { mock }
     before do
       package.stubs(:filenames).returns(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa',
-         '2011.12.31.11.00.02.backup.tar.enc-ab']
+        ['backup.tar.enc-aa', 'backup.tar.enc-ab']
       )
     end
 
     it 'should yield the full filename and the filename without the timestamp' do
       given_block.expects(:got).with(
-        '2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'
+        'backup.tar.enc-aa', 'backup.tar.enc-aa'
       )
       given_block.expects(:got).with(
-        '2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab'
+        'backup.tar.enc-ab', 'backup.tar.enc-ab'
       )
       storage.send(:files_to_transfer_for, package) do |local_file, remote_file|
         given_block.got(local_file, remote_file)

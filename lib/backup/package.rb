@@ -40,7 +40,7 @@ module Backup
     end
 
     def basename
-      "#{ time }.#{ trigger }.#{ extension }"
+      "#{ trigger }.#{ extension }"
     end
 
   end

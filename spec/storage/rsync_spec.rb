@@ -149,8 +149,7 @@ describe Storage::RSync do
     let(:package) { mock }
     let(:package_files) {
       # source paths for package files never change
-      ['2011.12.31.11.00.02.test_trigger.tar.enc-aa',
-       '2011.12.31.11.00.02.test_trigger.tar.enc-ab'].map {|name|
+      ['test_trigger.tar.enc-aa', 'test_trigger.tar.enc-ab'].map {|name|
         File.join(Config.tmp_path, name)
       }
     }
@@ -158,8 +157,7 @@ describe Storage::RSync do
     before do
       package.stubs(:trigger).returns(model.trigger)
       package.stubs(:filenames).returns(
-        ['2011.12.31.11.00.02.test_trigger.tar.enc-aa',
-         '2011.12.31.11.00.02.test_trigger.tar.enc-ab']
+        ['test_trigger.tar.enc-aa', 'test_trigger.tar.enc-ab']
       )
       model.stubs(:package).returns(package)
     end

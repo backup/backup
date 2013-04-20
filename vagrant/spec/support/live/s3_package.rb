@@ -11,8 +11,7 @@ module BackupSpec
       @storage = model.storages.
           select {|s| s.class == Backup::Storage::S3 }.first
       @remote_path = @storage.send(:remote_path_for, @package)
-      # see Storage::Base#files_to_transfer_for
-      @files_sent = @package.filenames.map {|name| name[20..-1] }.sort
+      @files_sent = @package.filenames.sort
     end
 
     # Find all the file names on the remote in remote_path

@@ -72,7 +72,7 @@ module Backup
       # e.g. "trigger.tar.enc"
       def files_to_transfer_for(package)
         package.filenames.each do |filename|
-          yield filename, filename[20..-1]
+          yield filename, filename
         end
       end
       alias :transferred_files_for :files_to_transfer_for
