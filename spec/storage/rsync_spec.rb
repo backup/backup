@@ -4,7 +4,9 @@ require File.expand_path('../../spec_helper.rb', __FILE__)
 
 module Backup
 describe Storage::RSync do
-  let(:model) { Backup::Model.new(:test_trigger, 'test label') }
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:storage) { Storage::RSync.new(model) }
+  let(:s) { sequence '' }
 
   before do
     Storage::RSync.any_instance.
@@ -13,59 +15,61 @@ describe Storage::RSync do
         stubs(:utility).with(:ssh).returns('ssh')
   end
 
+  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a subclass of Storage::Base' do
+    let(:cycling_supported) { false }
+  end
+
   describe '#initialize' do
-    after { Storage::RSync.clear_defaults! }
 
-    it 'should use the values given' do
-      storage = Storage::RSync.new(model, 'my storage') do |rsync|
-        rsync.mode            = :valid_mode
-        rsync.host            = '123.45.678.90'
-        rsync.port            = 123
-        rsync.ssh_user        = 'ssh_username'
-        rsync.rsync_user      = 'rsync_username'
-        rsync.rsync_password  = 'rsync_password'
-        rsync.rsync_password_file = '/my/rsync_password'
-        rsync.compress        = true
-        rsync.path            = "~/my_backups/"
-        rsync.additional_ssh_options = 'ssh options'
-        rsync.additional_rsync_options = 'rsync options'
-      end
-
-      expect( storage.storage_id     ).to eq 'my storage'
-      expect( storage.mode           ).to eq :valid_mode
-      expect( storage.host           ).to eq '123.45.678.90'
-      expect( storage.port           ).to be 123
-      expect( storage.ssh_user       ).to eq 'ssh_username'
-      expect( storage.rsync_user     ).to eq 'rsync_username'
-      expect( storage.rsync_password ).to eq 'rsync_password'
-      expect( storage.rsync_password_file ).to eq '/my/rsync_password'
-      expect( storage.compress       ).to be true
-      expect( storage.path           ).to eq '~/my_backups/'
-      expect( storage.additional_ssh_options   ).to eq 'ssh options'
-      expect( storage.additional_rsync_options ).to eq 'rsync options'
-    end
-
-    it 'should use default values if none are given' do
-      storage = Storage::RSync.new(model)
-
-      expect( storage.storage_id     ).to be_nil
-      expect( storage.mode           ).to eq :ssh
-      expect( storage.host           ).to be_nil
-      expect( storage.port           ).to be 22
-      expect( storage.ssh_user       ).to be_nil
-      expect( storage.rsync_user     ).to be_nil
-      expect( storage.rsync_password ).to be_nil
-      expect( storage.rsync_password_file ).to be_nil
-      expect( storage.compress       ).to be(false)
-      expect( storage.path           ).to eq '~/backups'
-      expect( storage.additional_ssh_options   ).to be_nil
-      expect( storage.additional_rsync_options ).to be_nil
+    it 'provides default values' do
+      expect( storage.storage_id                ).to be_nil
+      expect( storage.mode                      ).to eq :ssh
+      expect( storage.host                      ).to be_nil
+      expect( storage.port                      ).to be 22
+      expect( storage.ssh_user                  ).to be_nil
+      expect( storage.rsync_user                ).to be_nil
+      expect( storage.rsync_password            ).to be_nil
+      expect( storage.rsync_password_file       ).to be_nil
+      expect( storage.compress                  ).to be(false)
+      expect( storage.path                      ).to eq '~/backups'
+      expect( storage.additional_ssh_options    ).to be_nil
+      expect( storage.additional_rsync_options  ).to be_nil
 
       # this storage doesn't support cycling, but `keep` is still inherited
       expect( storage.keep ).to be_nil
     end
 
-    it 'should use default port 22 for :ssh_daemon mode' do
+    it 'configures the storage' do
+      storage = Storage::RSync.new(model, :my_id) do |rsync|
+        rsync.mode                      = :valid_mode
+        rsync.host                      = '123.45.678.90'
+        rsync.port                      = 123
+        rsync.ssh_user                  = 'ssh_username'
+        rsync.rsync_user                = 'rsync_username'
+        rsync.rsync_password            = 'rsync_password'
+        rsync.rsync_password_file       = '/my/rsync_password'
+        rsync.compress                  = true
+        rsync.path                      = "~/my_backups/"
+        rsync.additional_ssh_options    = 'ssh options'
+        rsync.additional_rsync_options  = 'rsync options'
+      end
+
+      expect( storage.storage_id                ).to eq 'my_id'
+      expect( storage.mode                      ).to eq :valid_mode
+      expect( storage.host                      ).to eq '123.45.678.90'
+      expect( storage.port                      ).to be 123
+      expect( storage.ssh_user                  ).to eq 'ssh_username'
+      expect( storage.rsync_user                ).to eq 'rsync_username'
+      expect( storage.rsync_password            ).to eq 'rsync_password'
+      expect( storage.rsync_password_file       ).to eq '/my/rsync_password'
+      expect( storage.compress                  ).to be true
+      expect( storage.path                      ).to eq '~/my_backups/'
+      expect( storage.additional_ssh_options    ).to eq 'ssh options'
+      expect( storage.additional_rsync_options  ).to eq 'rsync options'
+    end
+
+    it 'uses default port 22 for :ssh_daemon mode' do
       storage = Storage::RSync.new(model) do |s|
         s.mode = :ssh_daemon
       end
@@ -73,7 +77,7 @@ describe Storage::RSync do
       expect( storage.port ).to be 22
     end
 
-    it 'should use default port 873 for :rsync_daemon mode' do
+    it 'uses default port 873 for :rsync_daemon mode' do
       storage = Storage::RSync.new(model) do |s|
         s.mode = :rsync_daemon
       end
@@ -81,106 +85,35 @@ describe Storage::RSync do
       expect( storage.port ).to be 873
     end
 
-    context 'when pre-configured defaults have been set' do
-      before do
-        Storage::RSync.defaults do |rsync|
-          rsync.mode            = :default_mode
-          rsync.host            = 'default_host'
-          rsync.port            = 456
-          rsync.ssh_user        = 'default_ssh_username'
-          rsync.rsync_user      = 'default_rsync_username'
-          rsync.rsync_password  = 'default_rsync_password'
-          rsync.rsync_password_file = '/my/default_rsync_password'
-          rsync.compress        = true
-          rsync.path            = "~/default_my_backups"
-          rsync.additional_ssh_options = 'default ssh options'
-          rsync.additional_rsync_options = 'default rsync options'
-        end
-      end
-
-      it 'should use pre-configured defaults' do
-        storage = Storage::RSync.new(model)
-
-        expect( storage.mode           ).to eq :default_mode
-        expect( storage.host           ).to eq 'default_host'
-        expect( storage.port           ).to be 456
-        expect( storage.ssh_user       ).to eq 'default_ssh_username'
-        expect( storage.rsync_user     ).to eq 'default_rsync_username'
-        expect( storage.rsync_password ).to eq 'default_rsync_password'
-        expect( storage.rsync_password_file ).to eq '/my/default_rsync_password'
-        expect( storage.compress       ).to be true
-        expect( storage.path           ).to eq '~/default_my_backups'
-        expect( storage.additional_ssh_options   ).to eq 'default ssh options'
-        expect( storage.additional_rsync_options ).to eq 'default rsync options'
-      end
-
-      it 'should override pre-configured defaults' do
-        storage = Storage::RSync.new(model) do |rsync|
-          rsync.mode            = :valid_mode
-          rsync.host            = '123.45.678.90'
-          rsync.port            = 123
-          rsync.ssh_user        = 'ssh_username'
-          rsync.rsync_user      = 'rsync_username'
-          rsync.rsync_password  = 'rsync_password'
-          rsync.rsync_password_file = '/my/rsync_password'
-          rsync.compress        = true
-          rsync.path            = "~/my_backups"
-          rsync.additional_ssh_options = 'ssh options'
-          rsync.additional_rsync_options = 'rsync options'
-        end
-
-        expect( storage.mode           ).to eq :valid_mode
-        expect( storage.host           ).to eq '123.45.678.90'
-        expect( storage.port           ).to be 123
-        expect( storage.ssh_user       ).to eq 'ssh_username'
-        expect( storage.rsync_user     ).to eq 'rsync_username'
-        expect( storage.rsync_password ).to eq 'rsync_password'
-        expect( storage.rsync_password_file ).to eq '/my/rsync_password'
-        expect( storage.compress       ).to be true
-        expect( storage.path           ).to eq '~/my_backups'
-        expect( storage.additional_ssh_options   ).to eq 'ssh options'
-        expect( storage.additional_rsync_options ).to eq 'rsync options'
-      end
-    end # context 'when pre-configured defaults have been set'
   end #describe '#initialize'
 
-  describe '#perform!' do
-    let(:s) { sequence '' }
-    let(:package) { mock }
+  describe '#transfer!' do
     let(:package_files) {
       # source paths for package files never change
-      ['test_trigger.tar.enc-aa', 'test_trigger.tar.enc-ab'].map {|name|
+      ['test_trigger.tar-aa', 'test_trigger.tar-ab'].map {|name|
         File.join(Config.tmp_path, name)
       }
     }
 
     before do
-      package.stubs(:trigger).returns(model.trigger)
-      package.stubs(:filenames).returns(
-        ['test_trigger.tar.enc-aa', 'test_trigger.tar.enc-ab']
+      storage.package.stubs(:filenames).returns(
+        ['test_trigger.tar-aa', 'test_trigger.tar-ab']
       )
-      model.stubs(:package).returns(package)
     end
 
     context 'local transfer' do
       it 'performs transfer with default values' do
-        storage = Storage::RSync.new(model)
-
-        Logger.expects(:info).in_sequence(s).with(
-          'Storage::RSync Started...'
-        )
-
-        # write_password_file! does nothing
+        # write_password_file does nothing
         Tempfile.expects(:new).never
 
-        # create_dest_path! creates the local dest_path
+        # create_remote_path
         FileUtils.expects(:mkdir_p).with(
           File.join(File.expand_path('~/backups'), 'test_trigger')
         )
 
         # First Package File
         dest = File.join(
-          File.expand_path('~/backups'), 'test_trigger', 'test_trigger.tar.enc-aa'
+          File.expand_path('~/backups'), 'test_trigger', 'test_trigger.tar-aa'
         )
         Logger.expects(:info).in_sequence(s).with(
           "Syncing to '#{ dest }'..."
@@ -191,7 +124,7 @@ describe Storage::RSync do
 
         # Second Package File
         dest = File.join(
-          File.expand_path('~/backups'), 'test_trigger', 'test_trigger.tar.enc-ab'
+          File.expand_path('~/backups'), 'test_trigger', 'test_trigger.tar-ab'
         )
         Logger.expects(:info).in_sequence(s).with(
           "Syncing to '#{ dest }'..."
@@ -200,11 +133,7 @@ describe Storage::RSync do
           "rsync --archive '#{ package_files[1] }' '#{ dest }'"
         )
 
-        Logger.expects(:info).in_sequence(s).with(
-          'Storage::RSync Finished!'
-        )
-
-        storage.perform!
+        storage.send(:transfer!)
       end
 
       it 'uses given path, storage id and additional_rsync_options' do
@@ -213,18 +142,14 @@ describe Storage::RSync do
           rsync.additional_rsync_options = ['--arg1', '--arg2']
         end
 
-        Logger.expects(:info).in_sequence(s).with(
-          'Storage::RSync (my storage) Started...'
-        )
-
-        # write_password_file! does nothing
+        # write_password_file does nothing
         Tempfile.expects(:new).never
 
-        # create_dest_path! creates the local dest_path
+        # create_remote_path
         FileUtils.expects(:mkdir_p).with('/my/backups/test_trigger')
 
         # First Package File
-        dest = '/my/backups/test_trigger/test_trigger.tar.enc-aa'
+        dest = '/my/backups/test_trigger/test_trigger.tar-aa'
         Logger.expects(:info).in_sequence(s).with(
           "Syncing to '#{ dest }'..."
         )
@@ -233,7 +158,7 @@ describe Storage::RSync do
         )
 
         # Second Package File
-        dest = '/my/backups/test_trigger/test_trigger.tar.enc-ab'
+        dest = '/my/backups/test_trigger/test_trigger.tar-ab'
         Logger.expects(:info).in_sequence(s).with(
           "Syncing to '#{ dest }'..."
         )
@@ -241,11 +166,7 @@ describe Storage::RSync do
           "rsync --archive --arg1 --arg2 '#{ package_files[1] }' '#{ dest }'"
         )
 
-        Logger.expects(:info).in_sequence(s).with(
-          'Storage::RSync (my storage) Finished!'
-        )
-
-        storage.perform!
+        storage.send(:transfer!)
       end
     end # context 'local transfer'
 
@@ -255,27 +176,27 @@ describe Storage::RSync do
           rsync.host = 'host.name'
         end
 
-        # write_password_file! does nothing
+        # write_password_file does nothing
         Tempfile.expects(:new).never
 
-        # create_dest_path! creates on the remote
+        # create_remote_path
         storage.expects(:run).in_sequence(s).with(
           %q[ssh -p 22 host.name "mkdir -p 'backups/test_trigger'"]
         )
 
         # First Package File
-        dest = "host.name:'backups/test_trigger/test_trigger.tar.enc-aa'"
+        dest = "host.name:'backups/test_trigger/test_trigger.tar-aa'"
         storage.expects(:run).in_sequence(s).with(
           %Q[rsync --archive -e "ssh -p 22" '#{ package_files[0] }' #{ dest }]
         )
 
         # Second Package File
-        dest = "host.name:'backups/test_trigger/test_trigger.tar.enc-ab'"
+        dest = "host.name:'backups/test_trigger/test_trigger.tar-ab'"
         storage.expects(:run).in_sequence(s).with(
           %Q[rsync --archive -e "ssh -p 22" '#{ package_files[1] }' #{ dest }]
         )
 
-        storage.perform!
+        storage.send(:transfer!)
       end
 
       it 'uses additional options' do
@@ -288,17 +209,17 @@ describe Storage::RSync do
           rsync.additional_rsync_options = '--opt1'
         end
 
-        # write_password_file! does nothing
+        # write_password_file does nothing
         Tempfile.expects(:new).never
 
-        # create_dest_path! creates on the remote
+        # create_remote_path
         storage.expects(:run).in_sequence(s).with(
           "ssh -p 123 -l ssh_username -i '/my/id_rsa' " +
           %q[host.name "mkdir -p 'backups/test_trigger'"]
         )
 
         # First Package File
-        dest = "host.name:'backups/test_trigger/test_trigger.tar.enc-aa'"
+        dest = "host.name:'backups/test_trigger/test_trigger.tar-aa'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive --opt1 --compress " +
           %Q[-e "ssh -p 123 -l ssh_username -i '/my/id_rsa'" ] +
@@ -306,14 +227,14 @@ describe Storage::RSync do
         )
 
         # Second Package File
-        dest = "host.name:'backups/test_trigger/test_trigger.tar.enc-ab'"
+        dest = "host.name:'backups/test_trigger/test_trigger.tar-ab'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive --opt1 --compress " +
           %Q[-e "ssh -p 123 -l ssh_username -i '/my/id_rsa'" ] +
           "'#{ package_files[1] }' #{ dest }"
         )
 
-        storage.perform!
+        storage.send(:transfer!)
       end
 
     end # context 'remote transfer in :ssh mode'
@@ -326,26 +247,26 @@ describe Storage::RSync do
           rsync.path = 'module/path'
         end
 
-        # write_password_file! does nothing
+        # write_password_file does nothing
         Tempfile.expects(:new).never
 
-        # create_dest_path! will do nothing
+        # create_remote_path does nothing
         # (a call to #run would be an unexpected expectation)
         FileUtils.expects(:mkdir_p).never
 
         # First Package File
-        dest = "host.name::'module/path/test_trigger.tar.enc-aa'"
+        dest = "host.name::'module/path/test_trigger.tar-aa'"
         storage.expects(:run).in_sequence(s).with(
           %Q[rsync --archive -e "ssh -p 22" '#{ package_files[0] }' #{ dest }]
         )
 
         # Second Package File
-        dest = "host.name::'module/path/test_trigger.tar.enc-ab'"
+        dest = "host.name::'module/path/test_trigger.tar-ab'"
         storage.expects(:run).in_sequence(s).with(
           %Q[rsync --archive -e "ssh -p 22" '#{ package_files[1] }' #{ dest }]
         )
 
-        storage.perform!
+        storage.send(:transfer!)
       end
 
       it 'uses additional options, with password' do
@@ -361,17 +282,17 @@ describe Storage::RSync do
           rsync.additional_rsync_options = '--opt1'
         end
 
-        # write_password_file!
+        # write_password_file
         password_file = stub(:path => '/path/to/password_file')
         Tempfile.expects(:new).in_sequence(s).
             with('backup-rsync-password').returns(password_file)
         password_file.expects(:write).in_sequence(s).with('secret')
         password_file.expects(:close).in_sequence(s)
 
-        # create_dest_path! does nothing
+        # create_remote_path does nothing
 
         # First Package File
-        dest = "rsync_username@host.name::'backups/test_trigger.tar.enc-aa'"
+        dest = "rsync_username@host.name::'backups/test_trigger.tar-aa'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive --opt1 --compress " +
           "--password-file='/path/to/password_file' " +
@@ -380,7 +301,7 @@ describe Storage::RSync do
         )
 
         # Second Package File
-        dest = "rsync_username@host.name::'backups/test_trigger.tar.enc-ab'"
+        dest = "rsync_username@host.name::'backups/test_trigger.tar-ab'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive --opt1 --compress " +
           "--password-file='/path/to/password_file' " +
@@ -388,10 +309,10 @@ describe Storage::RSync do
           "'#{ package_files[1] }' #{ dest }"
         )
 
-        # remove_password_file!
+        # remove_password_file
         password_file.expects(:delete).in_sequence(s)
 
-        storage.perform!
+        storage.send(:transfer!)
       end
 
       it 'ensures temporary password file is removed' do
@@ -401,17 +322,17 @@ describe Storage::RSync do
           rsync.rsync_password = 'secret'
         end
 
-        # write_password_file!
+        # write_password_file
         password_file = stub(:path => '/path/to/password_file')
         Tempfile.expects(:new).in_sequence(s).
             with('backup-rsync-password').returns(password_file)
         password_file.expects(:write).in_sequence(s).with('secret')
         password_file.expects(:close).in_sequence(s)
 
-        # create_dest_path! does nothing
+        # create_remote_path does nothing
 
         # First Package File (fails)
-        dest = "host.name::'backups/test_trigger.tar.enc-aa'"
+        dest = "host.name::'backups/test_trigger.tar-aa'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive " +
           "--password-file='/path/to/password_file' " +
@@ -419,11 +340,11 @@ describe Storage::RSync do
           "'#{ package_files[0] }' #{ dest }"
         ).raises('an error')
 
-        # remove_password_file!
+        # remove_password_file
         password_file.expects(:delete).in_sequence(s)
 
         expect do
-          storage.perform!
+          storage.send(:transfer!)
         end.to raise_error('an error')
       end
 
@@ -440,13 +361,13 @@ describe Storage::RSync do
           rsync.additional_rsync_options = '--opt1'
         end
 
-        # write_password_file! does nothing
+        # write_password_file does nothing
         Tempfile.expects(:new).never
 
-        # create_dest_path! does nothing
+        # create_remote_path does nothing
 
         # First Package File
-        dest = "rsync_username@host.name::'backups/test_trigger.tar.enc-aa'"
+        dest = "rsync_username@host.name::'backups/test_trigger.tar-aa'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive --opt1 --compress " +
           "--password-file='#{ File.expand_path('my/pwd_file') }' " +
@@ -455,7 +376,7 @@ describe Storage::RSync do
         )
 
         # Second Package File
-        dest = "rsync_username@host.name::'backups/test_trigger.tar.enc-ab'"
+        dest = "rsync_username@host.name::'backups/test_trigger.tar-ab'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive --opt1 --compress " +
           "--password-file='#{ File.expand_path('my/pwd_file') }' " +
@@ -463,7 +384,7 @@ describe Storage::RSync do
           "'#{ package_files[1] }' #{ dest }"
         )
 
-        storage.perform!
+        storage.send(:transfer!)
       end
     end # context 'remote transfer in :ssh_daemon mode'
 
@@ -475,24 +396,24 @@ describe Storage::RSync do
           rsync.path = 'module/path'
         end
 
-        # write_password_file! does nothing
+        # write_password_file does nothing
         Tempfile.expects(:new).never
 
-        # create_dest_path! does nothing
+        # create_remote_path does nothing
 
         # First Package File
-        dest = "host.name::'module/path/test_trigger.tar.enc-aa'"
+        dest = "host.name::'module/path/test_trigger.tar-aa'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive --port 873 '#{ package_files[0] }' #{ dest }"
         )
 
         # Second Package File
-        dest = "host.name::'module/path/test_trigger.tar.enc-ab'"
+        dest = "host.name::'module/path/test_trigger.tar-ab'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive --port 873 '#{ package_files[1] }' #{ dest }"
         )
 
-        storage.perform!
+        storage.send(:transfer!)
       end
 
       it 'uses additional options, with password' do
@@ -506,17 +427,17 @@ describe Storage::RSync do
           rsync.additional_rsync_options = '--opt1'
         end
 
-        # write_password_file!
+        # write_password_file
         password_file = stub(:path => '/path/to/password_file')
         Tempfile.expects(:new).in_sequence(s).
             with('backup-rsync-password').returns(password_file)
         password_file.expects(:write).in_sequence(s).with('secret')
         password_file.expects(:close).in_sequence(s)
 
-        # create_dest_path! does nothing
+        # create_remote_path does nothing
 
         # First Package File
-        dest = "rsync_username@host.name::'backups/test_trigger.tar.enc-aa'"
+        dest = "rsync_username@host.name::'backups/test_trigger.tar-aa'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive --opt1 --compress " +
           "--password-file='/path/to/password_file' --port 123 " +
@@ -524,7 +445,7 @@ describe Storage::RSync do
         )
 
         # Second Package File
-        dest = "rsync_username@host.name::'backups/test_trigger.tar.enc-ab'"
+        dest = "rsync_username@host.name::'backups/test_trigger.tar-ab'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive --opt1 --compress " +
           "--password-file='/path/to/password_file' --port 123 " +
@@ -534,7 +455,7 @@ describe Storage::RSync do
         # remove_password_file!
         password_file.expects(:delete).in_sequence(s)
 
-        storage.perform!
+        storage.send(:transfer!)
       end
 
       it 'ensures temporary password file is removed' do
@@ -544,28 +465,28 @@ describe Storage::RSync do
           rsync.rsync_password = 'secret'
         end
 
-        # write_password_file!
+        # write_password_file
         password_file = stub(:path => '/path/to/password_file')
         Tempfile.expects(:new).in_sequence(s).
             with('backup-rsync-password').returns(password_file)
         password_file.expects(:write).in_sequence(s).with('secret')
         password_file.expects(:close).in_sequence(s)
 
-        # create_dest_path! does nothing
+        # create_remote_path does nothing
 
         # First Package File (fails)
-        dest = "host.name::'backups/test_trigger.tar.enc-aa'"
+        dest = "host.name::'backups/test_trigger.tar-aa'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive " +
           "--password-file='/path/to/password_file' --port 873 " +
           "'#{ package_files[0] }' #{ dest }"
         ).raises('an error')
 
-        # remove_password_file!
+        # remove_password_file
         password_file.expects(:delete).in_sequence(s)
 
         expect do
-          storage.perform!
+          storage.send(:transfer!)
         end.to raise_error('an error')
       end
 
@@ -580,13 +501,13 @@ describe Storage::RSync do
           rsync.additional_rsync_options = '--opt1'
         end
 
-        # write_password_file! does nothing
+        # write_password_file does nothing
         Tempfile.expects(:new).never
 
-        # create_dest_path! does nothing
+        # create_remote_path does nothing
 
         # First Package File
-        dest = "rsync_username@host.name::'backups/test_trigger.tar.enc-aa'"
+        dest = "rsync_username@host.name::'backups/test_trigger.tar-aa'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive --opt1 --compress " +
           "--password-file='#{ File.expand_path('my/pwd_file') }' --port 123 " +
@@ -594,14 +515,14 @@ describe Storage::RSync do
         )
 
         # Second Package File
-        dest = "rsync_username@host.name::'backups/test_trigger.tar.enc-ab'"
+        dest = "rsync_username@host.name::'backups/test_trigger.tar-ab'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive --opt1 --compress " +
           "--password-file='#{ File.expand_path('my/pwd_file') }' --port 123 " +
           "'#{ package_files[1] }' #{ dest }"
         )
 
-        storage.perform!
+        storage.send(:transfer!)
       end
     end # context 'remote transfer in :rsync_daemon mode'
 

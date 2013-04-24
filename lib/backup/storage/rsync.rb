@@ -145,46 +145,40 @@ module Backup
       private
 
       def transfer!
-        Logger.info "#{ storage_name } Started..."
+        write_password_file
+        create_remote_path
 
-        write_password_file!
-        create_dest_path!
-
-        files_to_transfer_for(@package) do |local_file, remote_file|
-          src = "'#{ File.join(local_path, local_file) }'"
-          dest = "#{ host_options }'#{ File.join(dest_path, remote_file) }'"
+        package.filenames.each do |filename|
+          src = "'#{ File.join(Config.tmp_path, filename) }'"
+          dest = "#{ host_options }'#{ File.join(remote_path, filename) }'"
           Logger.info "Syncing to #{ dest }..."
           run("#{ rsync_command } #{ src } #{ dest }")
         end
-
-        Logger.info "#{ storage_name } Finished!"
       ensure
-        remove_password_file!
+        remove_password_file
       end
 
-      ##
       # Storage::RSync doesn't cycle
       def cycle!; end
 
       ##
-      # Other storages use #remote_path_for to set the dest_path,
-      # which adds an additional timestamp directory to the path.
+      # Other storages add an additional timestamp directory to this path.
       # This is not desired here, since we need to transfer the package files
       # to the same location each time.
       #
       # Note: In v4.0, the additional trigger directory will to be dropped
-      # from dest_path for both local and :ssh mode, so the package files will
-      # be stored directly in #path.
-      def dest_path
-        @dest_path ||= begin
+      # from remote_path for both local and :ssh mode, so the package files
+      # will be stored directly in #path.
+      def remote_path
+        @remote_path ||= begin
           if host
             if mode == :ssh
-              File.join(path.sub(/^~\//, ''), @package.trigger)
+              File.join(path.sub(/^~\//, ''), package.trigger)
             else
               path.sub(/^~\//, '').sub(/\/$/, '')
             end
           else
-            File.join(File.expand_path(path), @package.trigger)
+            File.join(File.expand_path(path), package.trigger)
           end
         end
       end
@@ -197,12 +191,12 @@ module Backup
       # This is only applicable locally and in :ssh mode.
       # In :ssh_daemon and :rsync_daemon modes the `path` would include a
       # module name that must define a path on the remote that already exists.
-      def create_dest_path!
+      def create_remote_path
         if host
           run("#{ utility(:ssh) } #{ ssh_transport_args } #{ host } " +
-                  %Q["mkdir -p '#{ dest_path }'"]) if mode == :ssh
+                  %Q["mkdir -p '#{ remote_path }'"]) if mode == :ssh
         else
-          FileUtils.mkdir_p dest_path
+          FileUtils.mkdir_p(remote_path)
         end
       end
 
@@ -254,7 +248,7 @@ module Backup
         args.rstrip
       end
 
-      def write_password_file!
+      def write_password_file
         return unless host && rsync_password && mode != :ssh
 
         @password_file = Tempfile.new('backup-rsync-password')
@@ -262,7 +256,7 @@ module Backup
         @password_file.close
       end
 
-      def remove_password_file!
+      def remove_password_file
         @password_file.delete if @password_file
       end
 
