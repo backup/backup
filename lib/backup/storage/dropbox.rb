@@ -1,7 +1,5 @@
 # encoding: utf-8
 
-##
-# Only load the Dropbox gem when the Backup::Storage::Dropbox class is loaded
 Backup::Dependency.load('dropbox-sdk')
 
 module Backup
@@ -20,10 +18,6 @@ module Backup
       attr_accessor :access_type
 
       ##
-      # Path to where the backups will be stored
-      attr_accessor :path
-
-      ##
       # Chunk size, specified in MiB, for the ChunkedUploader.
       attr_accessor :chunk_size
 
@@ -35,23 +29,18 @@ module Backup
       # Seconds to wait between chunk retries.
       attr_accessor :retry_waitsec
 
-      attr_deprecate :email,    :version => '3.0.17'
-      attr_deprecate :password, :version => '3.0.17'
-
-      attr_deprecate :timeout, :version => '3.0.21'
-
       ##
       # Creates a new instance of the storage object
       def initialize(model, storage_id = nil, &block)
-        super(model, storage_id)
+        super
+        instance_eval(&block) if block_given?
 
         @path           ||= 'backups'
         @access_type    ||= :app_folder
         @chunk_size     ||= 4 # MiB
         @chunk_retries  ||= 10
         @retry_waitsec  ||= 30
-
-        instance_eval(&block) if block_given?
+        path.sub!(/^\//, '')
       end
 
       private
@@ -85,7 +74,7 @@ module Backup
       # Attempt to load a cached session
       def cached_session
         session = false
-        if cache_exists?
+        if File.exist?(cached_file)
           begin
             session = DropboxSession.deserialize(File.read(cached_file))
             Logger.info "Session data loaded from cache!"
@@ -105,13 +94,13 @@ module Backup
       # Each chunk will be retried +chunk_retries+ times, pausing +retry_waitsec+
       # between retries, if errors occur.
       def transfer!
-        remote_path = remote_path_for(@package)
-
-        files_to_transfer_for(@package) do |local_file, remote_file|
-          Logger.info "#{ storage_name } started transferring '#{ local_file }'."
+        package.filenames.each do |filename|
+          src = File.join(Config.tmp_path, filename)
+          dest = File.join(remote_path, filename)
+          Logger.info "Storing '#{ dest }'..."
 
           uploader, retries = nil, 0
-          File.open(File.join(local_path, local_file), 'r') do |file|
+          File.open(src, 'r') do |file|
             uploader = connection.get_chunked_uploader(file, file.stat.size)
             while uploader.offset < uploader.total_size
               begin
@@ -131,37 +120,20 @@ module Backup
             end
           end
 
-          uploader.finish(File.join(remote_path, remote_file))
+          uploader.finish(dest)
         end
       end
 
-      ##
-      # Removes the transferred archive file(s) from the storage location.
-      # Any error raised will be rescued during Cycling
-      # and a warning will be logged, containing the error message.
+      # Called by the Cycler.
+      # Any error raised will be logged as a warning.
       def remove!(package)
-        remote_path = remote_path_for(package)
+        Logger.info "Removing backup package dated #{ package.time }..."
 
-        messages = []
-        transferred_files_for(package) do |local_file, remote_file|
-          messages << "#{storage_name} started removing " +
-              "'#{ local_file }' from Dropbox."
-        end
-        Logger.info messages.join("\n")
-
-        connection.file_delete(remote_path)
+        connection.file_delete(remote_path_for(package))
       end
 
-      ##
-      # Returns the path to the cached file
       def cached_file
         File.join(Config.cache_path, api_key + api_secret)
-      end
-
-      ##
-      # Checks to see if the cache file exists
-      def cache_exists?
-        File.exist?(cached_file)
       end
 
       ##
@@ -210,6 +182,10 @@ module Backup
             err, 'Could not create or authenticate a new session'
           )
       end
+
+      attr_deprecate :email,    :version => '3.0.17'
+      attr_deprecate :password, :version => '3.0.17'
+      attr_deprecate :timeout,  :version => '3.0.21'
 
     end
   end
