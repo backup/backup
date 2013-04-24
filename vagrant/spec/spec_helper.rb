@@ -26,14 +26,10 @@ RSpec.configure do |config|
   config.before(:each) do
     # Reset to default paths
     Backup::Config.send(:reset!)
+
     # Remove default and alt config paths if they exist.
     FileUtils.rm_rf File.dirname(Backup::Config.config_file)
     FileUtils.rm_rf BackupSpec::ALT_CONFIG_PATH
-
-    # Reset utility paths, the logger and clear previously loaded models.
-    Backup::Utilities.send(:reset!)
-    Backup::Logger.send(:reset!)
-    Backup::Model.all.clear
 
     # Remove the local storage path if it exists.
     FileUtils.rm_rf BackupSpec::LOCAL_STORAGE_PATH

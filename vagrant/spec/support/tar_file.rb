@@ -10,13 +10,9 @@ module BackupSpec
       @path = path
     end
 
-    def exist?
-      @exist ||= File.exist?(path.to_s)
-    end
-
     def manifest
       @manifest ||= begin
-        if exist?
+        if File.exist?(path.to_s)
           %x[#{ utility(:tar) } -tvf #{ path } 2>/dev/null]
         else
           ''

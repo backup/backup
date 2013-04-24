@@ -192,7 +192,7 @@ describe Archive do
 
       job = backup_perform :my_backup
 
-      expect( job.package.filecount ).to be(2)
+      expect( job.package.files.count ).to be(2)
 
       expect( job.package ).to match_manifest(%q[
         1_105_920 my_backup/archives/my_archive.tar

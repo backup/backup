@@ -105,10 +105,20 @@ module BackupSpec
       options << '--no-quiet' if example.metadata[:focus]
       argv = ['perform', '-t', triggers.join(',')] + options
 
+      # Reset config paths, utility paths and the logger.
+      Backup::Config.send(:reset!)
+      Backup::Utilities.send(:reset!)
+      Backup::Logger.send(:reset!)
+      # Ensure multiple runs have different timestamps
+      sleep 1 unless Backup::Model.all.empty?
+      # Clear previously loaded models
+      Backup::Model.all.clear
+
       ARGV.replace(argv)
       Backup::CLI.start
 
-      jobs = triggers.map {|t| BackupSpec::PerformedJob.new(t) }
+      models = triggers.map {|t| Backup::Model.find_by_trigger(t).first }
+      jobs = models.map {|m| BackupSpec::PerformedJob.new(m) }
       jobs.count > 1 ? jobs : jobs.first
     end
 

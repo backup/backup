@@ -4,37 +4,73 @@ module BackupSpec
   class Package
     include Backup::Utilities::Helpers
     extend Forwardable
-    def_delegators :@tarfile, :path, :exist?, :manifest, :contents, :[]
-
-    # Number of files that made up the final package.
-    # If the Splitter was used, this will the number of 'chunks' created.
-    # Otherwise, it will be 1 (or 0 if exist? is false)
-    attr_reader :filecount
+    def_delegators :tarfile, :manifest, :contents, :[]
 
     # Type of encryption used.
     # Returns :gpg, :openssl or nil
     attr_reader :encryption
 
-    # Note that this does not ensure the files were stored to the proper path.
-    # When testing storages, package.path should be verified.
-    def initialize(trigger)
-      @files = Dir[File.join(LOCAL_STORAGE_PATH, '**', "#{ trigger }.tar*")]
-      @filecount = @files.count
+    attr_reader :model
 
-      path = unsplit
-      path = decrypt(path)
-      @tarfile = TarFile.new(path)
+    def initialize(model)
+      @model = model
+    end
+
+    def exist?
+      !files.empty? && files.all? {|f| File.exist?(f) }
+    end
+
+    # Note that once the package is inspected with the match_manifest matcher,
+    # a Tarfile will be created. If the Splitter was used, this will create an
+    # additional file (the re-joined tar) in the remote_path. If #[] is used,
+    # the package will be extracted into the remote_path. Some cycling
+    # operations remove each package file, then the timestamp directory which
+    # should be empty at that point. So you can't inspect a split package's
+    # manifest or inspect tar files within the package when testing cycling.
+    def removed?
+      files.all? {|f| !File.exist?(f) }
+    end
+
+    # If a trigger is run multiple times within a test (like when testing cycling),
+    # multiple packages will exist under different timestamp folders.
+    # This allows us to find the package files for the specific model given.
+    #
+    # For most tests the Local storage is used, which will have a remote_path
+    # that's already expanded. Others like SCP, RSync (:ssh mode), etc... will
+    # have a remote_path that's relative to the vagrant user's home.
+    # The exception is the RSync daemon modes, where remote_path will begin
+    # with daemon module names, which are mapped to the vagrant user's home.
+    def files
+      @files ||= begin
+        storage = model.storages.first
+        return [] unless storage # model didn't store anything
+
+        path = storage.send(:remote_path)
+        unless path == File.expand_path(path)
+          path.sub!(/(ssh|rsync)-daemon-module/, '')
+          path = File.expand_path(File.join('~/', path))
+        end
+        Dir[File.join(path, "#{ model.trigger }.tar*")]
+      end
     end
 
     private
 
-    def unsplit
-      return @files.first unless filecount > 1
+    def tarfile
+      @tarfile ||= begin
+        path = unsplit
+        path = decrypt(path)
+        TarFile.new(path)
+      end
+    end
 
-      base_dir = File.dirname(@files.first)
-      orig_ext = File.extname(@files.first)
+    def unsplit
+      return files.first unless files.count > 1
+
+      base_dir = File.dirname(files.first)
+      orig_ext = File.extname(files.first)
       base_ext = orig_ext.split('-').first
-      outfile = File.basename(@files.first).sub(/#{ orig_ext }$/, base_ext)
+      outfile = File.basename(files.first).sub(/#{ orig_ext }$/, base_ext)
       Dir.chdir(base_dir) do
         %x[#{ utility(:cat) } #{ outfile }-* > #{ outfile }]
       end
