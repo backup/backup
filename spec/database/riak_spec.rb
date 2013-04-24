@@ -27,6 +27,19 @@ describe Database::Riak do
       expect( db.cookie             ).to eq 'riak'
       expect( db.user               ).to eq 'riak'
     end
+
+    it 'configures the database' do
+      db = Database::Riak.new(model, :my_id) do |riak|
+        riak.node   = 'my_node'
+        riak.cookie = 'my_cookie'
+        riak.user   = 'my_user'
+      end
+
+      expect( db.database_id ).to eq 'my_id'
+      expect( db.node        ).to eq 'my_node'
+      expect( db.cookie      ).to eq 'my_cookie'
+      expect( db.user        ).to eq 'my_user'
+    end
   end # describe '#initialize'
 
 

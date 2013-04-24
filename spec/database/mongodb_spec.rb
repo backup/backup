@@ -36,6 +36,33 @@ describe Database::MongoDB do
       expect( db.lock               ).to be_nil
       expect( db.oplog              ).to be_nil
     end
+
+    it 'configures the database' do
+      db = Database::MongoDB.new(model, :my_id) do |mongodb|
+        mongodb.name               = 'my_name'
+        mongodb.username           = 'my_username'
+        mongodb.password           = 'my_password'
+        mongodb.host               = 'my_host'
+        mongodb.port               = 'my_port'
+        mongodb.ipv6               = 'my_ipv6'
+        mongodb.only_collections   = 'my_only_collections'
+        mongodb.additional_options = 'my_additional_options'
+        mongodb.lock               = 'my_lock'
+        mongodb.oplog              = 'my_oplog'
+      end
+
+      expect( db.database_id        ).to eq 'my_id'
+      expect( db.name               ).to eq 'my_name'
+      expect( db.username           ).to eq 'my_username'
+      expect( db.password           ).to eq 'my_password'
+      expect( db.host               ).to eq 'my_host'
+      expect( db.port               ).to eq 'my_port'
+      expect( db.ipv6               ).to eq 'my_ipv6'
+      expect( db.only_collections   ).to eq 'my_only_collections'
+      expect( db.additional_options ).to eq 'my_additional_options'
+      expect( db.lock               ).to eq 'my_lock'
+      expect( db.oplog              ).to eq 'my_oplog'
+    end
   end # describe '#initialize'
 
   describe '#perform!' do

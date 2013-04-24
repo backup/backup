@@ -8,6 +8,10 @@ module Backup
 
       attr_reader :model, :database_id, :dump_path
 
+      ##
+      # If given, +database_id+ will be appended to the #dump_filename.
+      # This is required if multiple Databases of the same class are added to
+      # the model.
       def initialize(model, database_id = nil)
         @model = model
         @database_id = database_id.to_s.gsub(/\W/, '_') if database_id
@@ -37,7 +41,7 @@ module Backup
       # is defined, the user will be warned and one will be auto-generated.
       #
       # Model#initialize calls this method *after* all defined databases have
-      # been initialized so `backup perform --check` can report these warnings.
+      # been initialized so `backup check` can report these warnings.
       def dump_filename
         @dump_filename ||= begin
           unless database_id

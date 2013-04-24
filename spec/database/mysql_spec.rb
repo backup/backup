@@ -31,6 +31,31 @@ describe Database::MySQL do
       expect( db.only_tables        ).to be_nil
       expect( db.additional_options ).to be_nil
     end
+
+    it 'configures the database' do
+      db = Database::MySQL.new(model, :my_id) do |mysql|
+        mysql.name               = 'my_name'
+        mysql.username           = 'my_username'
+        mysql.password           = 'my_password'
+        mysql.host               = 'my_host'
+        mysql.port               = 'my_port'
+        mysql.socket             = 'my_socket'
+        mysql.skip_tables        = 'my_skip_tables'
+        mysql.only_tables        = 'my_only_tables'
+        mysql.additional_options = 'my_additional_options'
+      end
+
+      expect( db.database_id        ).to eq 'my_id'
+      expect( db.name               ).to eq 'my_name'
+      expect( db.username           ).to eq 'my_username'
+      expect( db.password           ).to eq 'my_password'
+      expect( db.host               ).to eq 'my_host'
+      expect( db.port               ).to eq 'my_port'
+      expect( db.socket             ).to eq 'my_socket'
+      expect( db.skip_tables        ).to eq 'my_skip_tables'
+      expect( db.only_tables        ).to eq 'my_only_tables'
+      expect( db.additional_options ).to eq 'my_additional_options'
+    end
   end # describe '#initialize'
 
   describe '#perform!' do

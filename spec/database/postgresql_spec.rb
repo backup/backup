@@ -31,6 +31,31 @@ describe Database::PostgreSQL do
       expect( db.only_tables        ).to be_nil
       expect( db.additional_options ).to be_nil
     end
+
+    it 'configures the database' do
+      db = Database::PostgreSQL.new(model, :my_id) do |pgsql|
+        pgsql.name               = 'my_name'
+        pgsql.username           = 'my_username'
+        pgsql.password           = 'my_password'
+        pgsql.host               = 'my_host'
+        pgsql.port               = 'my_port'
+        pgsql.socket             = 'my_socket'
+        pgsql.skip_tables        = 'my_skip_tables'
+        pgsql.only_tables        = 'my_only_tables'
+        pgsql.additional_options = 'my_additional_options'
+      end
+
+      expect( db.database_id        ).to eq 'my_id'
+      expect( db.name               ).to eq 'my_name'
+      expect( db.username           ).to eq 'my_username'
+      expect( db.password           ).to eq 'my_password'
+      expect( db.host               ).to eq 'my_host'
+      expect( db.port               ).to eq 'my_port'
+      expect( db.socket             ).to eq 'my_socket'
+      expect( db.skip_tables        ).to eq 'my_skip_tables'
+      expect( db.only_tables        ).to eq 'my_only_tables'
+      expect( db.additional_options ).to eq 'my_additional_options'
+    end
   end # describe '#initialize'
 
   describe '#perform!' do
