@@ -12,12 +12,16 @@ describe 'Backup::Storage::Cycler' do
   let(:pkg_c)         { mock }
   let(:s)             { sequence '' }
 
+  before do
+    storage.stubs(:package).returns(package)
+  end
+
   describe '#cycle!' do
     it 'should setup variables and initiate cycling' do
       cycler.expects(:storage_file).in_sequence(s).returns(storage_file)
       cycler.expects(:update_storage_file!).in_sequence(s)
       cycler.expects(:remove_packages!).in_sequence(s)
-      cycler.cycle!(storage, package)
+      cycler.cycle!(storage)
       cycler.instance_variable_get(:@storage).should be(storage)
       cycler.instance_variable_get(:@package).should be(package)
       cycler.instance_variable_get(:@storage_file).should be(storage_file)
@@ -102,17 +106,17 @@ describe 'Backup::Storage::Cycler' do
 
     context 'when the @storage.storage_id is not set' do
       before { storage.stubs(:storage_id).returns(nil) }
-      it 'should return the path to the YAML storage file with no suffix' do
+      it 'returns the path to the YAML storage file with no suffix' do
         cycler.send(:storage_file).should ==
             File.join(Backup::Config.data_path, 'pkg_trigger', 'S3.yml')
       end
     end
 
     context 'when the @storage.storage_id is set' do
-      before { storage.stubs(:storage_id).returns('Storage #1') }
-      it 'should sanitize the storage_id to use as a filename suffix' do
+      before { storage.stubs(:storage_id).returns('my_id') }
+      it 'appends the storage_id to the filename' do
         cycler.send(:storage_file).should ==
-            File.join(Backup::Config.data_path, 'pkg_trigger', 'S3-Storage__1.yml')
+            File.join(Backup::Config.data_path, 'pkg_trigger', 'S3-my_id.yml')
       end
     end
 
