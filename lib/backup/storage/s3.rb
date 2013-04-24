@@ -1,7 +1,5 @@
 # encoding: utf-8
 
-##
-# Only load the Fog gem when the Backup::Storage::S3 class is loaded
 Backup::Dependency.load('fog')
 
 module Backup
@@ -13,79 +11,56 @@ module Backup
       attr_accessor :access_key_id, :secret_access_key
 
       ##
-      # Amazon S3 bucket name and path
-      attr_accessor :bucket, :path
+      # Amazon S3 bucket name
+      attr_accessor :bucket
 
       ##
       # Region of the specified S3 bucket
       attr_accessor :region
 
-      ##
-      # Creates a new instance of the storage object
       def initialize(model, storage_id = nil, &block)
-        super(model, storage_id)
+        super
+        instance_eval(&block) if block_given?
 
         @path ||= 'backups'
-
-        instance_eval(&block) if block_given?
+        path.sub!(/^\//, '')
       end
 
       private
 
-      ##
-      # This is the provider that Fog uses for the S3 Storage
-      def provider
-        'AWS'
-      end
-
-      ##
-      # Establishes a connection to Amazon S3
       def connection
-        @connection ||= Fog::Storage.new(
-          :provider               => provider,
-          :aws_access_key_id      => access_key_id,
-          :aws_secret_access_key  => secret_access_key,
-          :region                 => region
-        )
+        @connection ||= begin
+          conn = Fog::Storage.new(
+            :provider               => 'AWS',
+            :aws_access_key_id      => access_key_id,
+            :aws_secret_access_key  => secret_access_key,
+            :region                 => region
+          )
+          conn.sync_clock
+          conn
+        end
       end
 
-      def remote_path_for(package)
-        super(package).sub(/^\//, '')
-      end
-
-      ##
-      # Transfers the archived file to the specified Amazon S3 bucket
       def transfer!
-        remote_path = remote_path_for(@package)
-
-        connection.sync_clock
-
-        files_to_transfer_for(@package) do |local_file, remote_file|
-          Logger.info "#{storage_name} started transferring " +
-              "'#{ local_file }' to bucket '#{ bucket }'."
-
-          File.open(File.join(local_path, local_file), 'r') do |file|
-            connection.put_object(
-              bucket, File.join(remote_path, remote_file), file
-            )
+        package.filenames.each do |filename|
+          src = File.join(Config.tmp_path, filename)
+          dest = File.join(remote_path, filename)
+          Logger.info "Storing '#{ bucket }/#{ dest }'..."
+          File.open(src, 'r') do |file|
+            connection.put_object(bucket, dest, file)
           end
         end
       end
 
-      ##
-      # Removes the transferred archive file(s) from the storage location.
-      # Any error raised will be rescued during Cycling
-      # and a warning will be logged, containing the error message.
+      # Called by the Cycler.
+      # Any error raised will be logged as a warning.
       def remove!(package)
+        Logger.info "Removing backup package dated #{ package.time }..."
+
         remote_path = remote_path_for(package)
-
-        connection.sync_clock
-
-        transferred_files_for(package) do |local_file, remote_file|
-          Logger.info "#{storage_name} started removing " +
-              "'#{ local_file }' from bucket '#{ bucket }'."
-
-          connection.delete_object(bucket, File.join(remote_path, remote_file))
+        package.filenames.each do |filename|
+          target = File.join(remote_path, filename)
+          connection.delete_object(bucket, target)
         end
       end
 

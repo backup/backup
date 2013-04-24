@@ -2,244 +2,159 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-##
-# available S3 regions:
-# eu-west-1, us-east-1, ap-southeast-1, us-west-1
-describe Backup::Storage::S3 do
-  let(:model)   { Backup::Model.new(:test_trigger, 'test label') }
-  let(:storage) do
-    Backup::Storage::S3.new(model) do |s3|
-      s3.access_key_id      = 'my_access_key_id'
-      s3.secret_access_key  = 'my_secret_access_key'
-      s3.bucket             = 'my-bucket'
-      s3.region             = 'us-east-1'
-      s3.keep               = 5
-    end
-  end
+module Backup
+describe Storage::S3 do
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:storage) { Storage::S3.new(model) }
+  let(:s) { sequence '' }
 
-  it 'should be a subclass of Storage::Base' do
-    Backup::Storage::S3.
-      superclass.should == Backup::Storage::Base
+  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a subclass of Storage::Base' do
+    let(:cycling_supported) { true }
   end
 
   describe '#initialize' do
-    after { Backup::Storage::S3.clear_defaults! }
-
-    it 'should load pre-configured defaults through Base' do
-      Backup::Storage::S3.any_instance.expects(:load_defaults!)
-      storage
+    it 'provides default values' do
+      expect( storage.storage_id        ).to be_nil
+      expect( storage.keep              ).to be_nil
+      expect( storage.access_key_id     ).to be_nil
+      expect( storage.secret_access_key ).to be_nil
+      expect( storage.bucket            ).to be_nil
+      expect( storage.region            ).to be_nil
+      expect( storage.path              ).to eq 'backups'
     end
 
-    it 'should pass the model reference to Base' do
-      storage.instance_variable_get(:@model).should == model
+    it 'configures the storage' do
+      storage = Storage::S3.new(model, :my_id) do |s3|
+        s3.keep               = 2
+        s3.access_key_id      = 'my_access_key_id'
+        s3.secret_access_key  = 'my_secret_access_key'
+        s3.bucket             = 'my_bucket'
+        s3.region             = 'my_region'
+        s3.path               = 'my/path'
+      end
+
+      expect( storage.storage_id        ).to eq 'my_id'
+      expect( storage.keep              ).to be 2
+      expect( storage.access_key_id     ).to eq 'my_access_key_id'
+      expect( storage.secret_access_key ).to eq 'my_secret_access_key'
+      expect( storage.bucket            ).to eq 'my_bucket'
+      expect( storage.region            ).to eq 'my_region'
+      expect( storage.path              ).to eq 'my/path'
     end
 
-    it 'should pass the storage_id to Base' do
-      storage = Backup::Storage::S3.new(model, 'my_storage_id')
-      storage.storage_id.should == 'my_storage_id'
+    it 'strips leading path separator' do
+      storage = Storage::S3.new(model) do |s3|
+        s3.path = '/this/path'
+      end
+      expect( storage.path ).to eq 'this/path'
     end
 
-    context 'when no pre-configured defaults have been set' do
-      it 'should use the values given' do
-        storage.access_key_id.should      == 'my_access_key_id'
-        storage.secret_access_key.should  == 'my_secret_access_key'
-        storage.bucket.should             == 'my-bucket'
-        storage.path.should               == 'backups'
-        storage.region.should             == 'us-east-1'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 5
-      end
-
-      it 'should use default values if none are given' do
-        storage = Backup::Storage::S3.new(model)
-
-        storage.access_key_id.should      be_nil
-        storage.secret_access_key.should  be_nil
-        storage.bucket.should             be_nil
-        storage.path.should               == 'backups'
-        storage.region.should             be_nil
-
-        storage.storage_id.should be_nil
-        storage.keep.should       be_nil
-      end
-    end # context 'when no pre-configured defaults have been set'
-
-    context 'when pre-configured defaults have been set' do
-      before do
-        Backup::Storage::S3.defaults do |s|
-          s.access_key_id      = 'some_access_key_id'
-          s.secret_access_key  = 'some_secret_access_key'
-          s.bucket             = 'some-bucket'
-          s.path               = 'some_path'
-          s.region             = 'some_region'
-          s.keep               = 15
-        end
-      end
-
-      it 'should use pre-configured defaults' do
-        storage = Backup::Storage::S3.new(model)
-
-        storage.access_key_id.should      == 'some_access_key_id'
-        storage.secret_access_key.should  == 'some_secret_access_key'
-        storage.bucket.should             == 'some-bucket'
-        storage.path.should               == 'some_path'
-        storage.region.should             == 'some_region'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 15
-      end
-
-      it 'should override pre-configured defaults' do
-        storage = Backup::Storage::S3.new(model) do |s|
-          s.access_key_id      = 'new_access_key_id'
-          s.secret_access_key  = 'new_secret_access_key'
-          s.bucket             = 'new-bucket'
-          s.path               = 'new_path'
-          s.region             = 'new_region'
-          s.keep               = 10
-        end
-
-        storage.access_key_id.should      == 'new_access_key_id'
-        storage.secret_access_key.should  == 'new_secret_access_key'
-        storage.bucket.should             == 'new-bucket'
-        storage.path.should               == 'new_path'
-        storage.region.should             == 'new_region'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 10
-      end
-    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
-
-  describe '#provider' do
-    it 'should set the Fog provider' do
-      storage.send(:provider).should == 'AWS'
-    end
-  end
 
   describe '#connection' do
     let(:connection) { mock }
 
-    it 'should create a new connection' do
-      Fog::Storage.expects(:new).once.with(
+    before do
+      storage.access_key_id     = 'my_access_key_id'
+      storage.secret_access_key = 'my_secret_access_key'
+      storage.region            = 'my_region'
+    end
+
+    it 'creates a new connection' do
+      Fog::Storage.expects(:new).with(
         :provider               => 'AWS',
         :aws_access_key_id      => 'my_access_key_id',
         :aws_secret_access_key  => 'my_secret_access_key',
-        :region                 => 'us-east-1'
+        :region                 => 'my_region'
       ).returns(connection)
-      storage.send(:connection).should == connection
+      connection.expects(:sync_clock)
+      expect( storage.send(:connection) ).to eq connection
     end
 
-    it 'should return an existing connection' do
+    it 'caches the connection' do
       Fog::Storage.expects(:new).once.returns(connection)
-      storage.send(:connection).should == connection
-      storage.send(:connection).should == connection
+      connection.expects(:sync_clock).once
+      expect( storage.send(:connection) ).to eq connection
+      expect( storage.send(:connection) ).to eq connection
     end
+
   end # describe '#connection'
-
-  describe '#remote_path_for' do
-    let(:package) { mock }
-
-    before do
-      # for superclass method
-      package.expects(:trigger).returns('trigger')
-      package.expects(:time).returns('time')
-    end
-
-    it 'should remove any preceeding slash from the remote path' do
-      storage.path = '/backups'
-      storage.send(:remote_path_for, package).should == 'backups/trigger/time'
-    end
-  end
 
   describe '#transfer!' do
     let(:connection) { mock }
-    let(:package) { mock }
+    let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
+    let(:remote_path) { File.join('my/path/test_trigger', timestamp) }
     let(:file) { mock }
-    let(:s) { sequence '' }
 
     before do
-      storage.instance_variable_set(:@package, package)
-      storage.stubs(:storage_name).returns('Storage::S3')
-      storage.stubs(:local_path).returns('/local/path')
+      Timecop.freeze
+      storage.package.time = timestamp
+      storage.package.stubs(:filenames).returns(
+        ['test_trigger.tar-aa', 'test_trigger.tar-ab']
+      )
       storage.stubs(:connection).returns(connection)
+      storage.bucket = 'my_bucket'
+      storage.path = 'my/path'
     end
 
-    it 'should transfer the package files' do
-      storage.expects(:remote_path_for).in_sequence(s).with(package).
-          returns('remote/path')
-      connection.expects(:sync_clock).in_sequence(s)
-      storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
-        multiple_yields(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
-      )
-      # first yield
-      Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::S3 started transferring " +
-        "'2011.12.31.11.00.02.backup.tar.enc-aa' to bucket 'my-bucket'."
-      )
-      File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'), 'r'
-      ).yields(file)
-      connection.expects(:put_object).in_sequence(s).with(
-        'my-bucket', File.join('remote/path', 'backup.tar.enc-aa'), file
-      )
-      # second yield
-      Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::S3 started transferring " +
-        "'2011.12.31.11.00.02.backup.tar.enc-ab' to bucket 'my-bucket'."
-      )
-      File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'), 'r'
-      ).yields(file)
-      connection.expects(:put_object).in_sequence(s).with(
-        'my-bucket', File.join('remote/path', 'backup.tar.enc-ab'), file
-      )
+    after { Timecop.return }
+
+    it 'transfers the package files' do
+      src = File.join(Config.tmp_path, 'test_trigger.tar-aa')
+      dest = File.join(remote_path, 'test_trigger.tar-aa')
+
+      Logger.expects(:info).in_sequence(s).with("Storing 'my_bucket/#{ dest }'...")
+      File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
+      connection.expects(:put_object).in_sequence(s).with('my_bucket', dest, file)
+
+      src = File.join(Config.tmp_path, 'test_trigger.tar-ab')
+      dest = File.join(remote_path, 'test_trigger.tar-ab')
+
+      Logger.expects(:info).in_sequence(s).with("Storing 'my_bucket/#{ dest }'...")
+      File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
+      connection.expects(:put_object).in_sequence(s).with('my_bucket', dest, file)
 
       storage.send(:transfer!)
     end
+
   end # describe '#transfer!'
 
   describe '#remove!' do
-    let(:package) { mock }
     let(:connection) { mock }
-    let(:s) { sequence '' }
+    let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
+    let(:remote_path) { File.join('my/path/test_trigger', timestamp) }
+    let(:package) {
+      stub( # loaded from YAML storage file
+        :trigger    => 'test_trigger',
+        :time       => timestamp,
+        :filenames  => ['test_trigger.tar-aa', 'test_trigger.tar-ab']
+      )
+    }
 
     before do
-      storage.stubs(:storage_name).returns('Storage::S3')
+      Timecop.freeze
       storage.stubs(:connection).returns(connection)
+      storage.bucket = 'my_bucket'
+      storage.path = 'my/path'
     end
 
-    it 'should remove the package files' do
-      storage.expects(:remote_path_for).in_sequence(s).with(package).
-          returns('remote/path')
-      connection.expects(:sync_clock).in_sequence(s)
-      storage.expects(:transferred_files_for).in_sequence(s).with(package).
-        multiple_yields(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
-      )
-      # first yield
-      Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::S3 started removing " +
-        "'2011.12.31.11.00.02.backup.tar.enc-aa' from bucket 'my-bucket'."
-      )
-      connection.expects(:delete_object).in_sequence(s).with(
-        'my-bucket', File.join('remote/path', 'backup.tar.enc-aa')
-      )
-      # second yield
-      Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::S3 started removing " +
-        "'2011.12.31.11.00.02.backup.tar.enc-ab' from bucket 'my-bucket'."
-      )
-      connection.expects(:delete_object).in_sequence(s).with(
-        'my-bucket', File.join('remote/path', 'backup.tar.enc-ab')
-      )
+    after { Timecop.return }
+
+    it 'removes the given package from the remote' do
+      Logger.expects(:info).in_sequence(s).
+          with("Removing backup package dated #{ timestamp }...")
+
+      target = File.join(remote_path, 'test_trigger.tar-aa')
+      connection.expects(:delete_object).in_sequence(s).with('my_bucket', target)
+
+      target = File.join(remote_path, 'test_trigger.tar-ab')
+      connection.expects(:delete_object).in_sequence(s).with('my_bucket', target)
 
       storage.send(:remove!, package)
     end
+
   end # describe '#remove!'
 
+end
 end
