@@ -10,7 +10,7 @@ module BackupSpec
       @package = model.package
       @storage = model.storages.
           select {|s| s.class == Backup::Storage::Dropbox }.first
-      @remote_path = @storage.send(:remote_path_for, @package)
+      @remote_path = @storage.send(:remote_path)
       @files_sent = @package.filenames.sort
     end
 

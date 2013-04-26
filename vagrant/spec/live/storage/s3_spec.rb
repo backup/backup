@@ -31,8 +31,8 @@ describe Storage::S3,
       end
     EOS
 
-    backup_perform :my_backup
-    package = BackupSpec::S3Package.new(Model.all.first)
+    job = backup_perform :my_backup
+    package = BackupSpec::S3Package.new(job.model)
 
     expect( package.files_sent.count ).to be(1)
     expect( package.files_on_remote ).to eq package.files_sent
@@ -63,8 +63,8 @@ describe Storage::S3,
       end
     EOS
 
-    backup_perform :my_backup
-    package = BackupSpec::S3Package.new(Model.all.first)
+    job = backup_perform :my_backup
+    package = BackupSpec::S3Package.new(job.model)
 
     expect( package.files_sent.count ).to be(3)
     expect( package.files_on_remote ).to eq package.files_sent
@@ -90,13 +90,11 @@ describe Storage::S3,
       end
     EOS
 
-    backup_perform :my_backup
-    package_a = BackupSpec::S3Package.new(Model.all.first)
-    Model.all.clear
+    job = backup_perform :my_backup
+    package_a = BackupSpec::S3Package.new(job.model)
 
-    backup_perform :my_backup
-    package_b = BackupSpec::S3Package.new(Model.all.first)
-    Model.all.clear
+    job = backup_perform :my_backup
+    package_b = BackupSpec::S3Package.new(job.model)
 
     # a and b should be on the remote
     expect( package_a.files_sent.count ).to be(1)
@@ -104,8 +102,8 @@ describe Storage::S3,
     expect( package_b.files_sent.count ).to be(1)
     expect( package_b.files_on_remote ).to eq package_b.files_sent
 
-    backup_perform :my_backup
-    package_c = BackupSpec::S3Package.new(Model.all.first)
+    job = backup_perform :my_backup
+    package_c = BackupSpec::S3Package.new(job.model)
 
     # b and c should be on the remote
     expect( package_b.files_sent.count ).to be(1)

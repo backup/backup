@@ -34,8 +34,8 @@ describe Storage::Dropbox,
       end
     EOS
 
-    backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
-    package = BackupSpec::DropboxPackage.new(Model.all.first)
+    job = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
+    package = BackupSpec::DropboxPackage.new(job.model)
 
     expect( package.files_sent.count ).to be(1)
     expect( package.files_on_remote ).to eq package.files_sent
@@ -65,8 +65,8 @@ describe Storage::Dropbox,
       end
     EOS
 
-    backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
-    package = BackupSpec::DropboxPackage.new(Model.all.first)
+    job = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
+    package = BackupSpec::DropboxPackage.new(job.model)
 
     expect( package.files_sent.count ).to be(3)
     expect( package.files_on_remote ).to eq package.files_sent
@@ -91,13 +91,11 @@ describe Storage::Dropbox,
       end
     EOS
 
-    backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
-    package_a = BackupSpec::DropboxPackage.new(Model.all.first)
-    Model.all.clear
+    job = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
+    package_a = BackupSpec::DropboxPackage.new(job.model)
 
-    backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
-    package_b = BackupSpec::DropboxPackage.new(Model.all.first)
-    Model.all.clear
+    job = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
+    package_b = BackupSpec::DropboxPackage.new(job.model)
 
     # a and b should be on the remote
     expect( package_a.files_sent.count ).to be(1)
@@ -105,8 +103,8 @@ describe Storage::Dropbox,
     expect( package_b.files_sent.count ).to be(1)
     expect( package_b.files_on_remote ).to eq package_b.files_sent
 
-    backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
-    package_c = BackupSpec::DropboxPackage.new(Model.all.first)
+    job = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
+    package_c = BackupSpec::DropboxPackage.new(job.model)
 
     # b and c should be on the remote
     expect( package_b.files_sent.count ).to be(1)

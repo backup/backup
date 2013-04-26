@@ -10,12 +10,11 @@ module BackupSpec
       @package = model.package
       @storage = model.storages.
           select {|s| s.class == Backup::Storage::S3 }.first
-      @remote_path = @storage.send(:remote_path_for, @package)
+      @remote_path = @storage.send(:remote_path)
       @files_sent = @package.filenames.sort
     end
 
-    # Find all the file names on the remote in remote_path
-    # that include the trigger in their name.
+    # Find all the file names on the remote in remote_path.
     #
     # If files were sent successfully, this will match #files_sent.
     # If the files do not exist, or were removed by cycling, this will return [].
