@@ -15,3 +15,11 @@ storage:
     bucket: <your bucket>
     # change if needed
     path: backup_testing
+  cloudfiles:
+    specs_enabled: false
+    username: <your username>
+    api_key: <your key>
+    auth_url: # if needed
+    servicenet: false
+    container: <your container>
+    path: backup_testing
