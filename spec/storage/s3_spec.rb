@@ -22,6 +22,9 @@ describe Storage::S3 do
       expect( storage.bucket            ).to be_nil
       expect( storage.region            ).to be_nil
       expect( storage.path              ).to eq 'backups'
+      expect( storage.chunk_size        ).to be 5
+      expect( storage.max_retries       ).to be 10
+      expect( storage.retry_waitsec     ).to be 30
     end
 
     it 'configures the storage' do
@@ -32,6 +35,9 @@ describe Storage::S3 do
         s3.bucket             = 'my_bucket'
         s3.region             = 'my_region'
         s3.path               = 'my/path'
+        s3.chunk_size         = 10
+        s3.max_retries        = 5
+        s3.retry_waitsec      = 60
       end
 
       expect( storage.storage_id        ).to eq 'my_id'
@@ -41,6 +47,9 @@ describe Storage::S3 do
       expect( storage.bucket            ).to eq 'my_bucket'
       expect( storage.region            ).to eq 'my_region'
       expect( storage.path              ).to eq 'my/path'
+      expect( storage.chunk_size        ).to be 10
+      expect( storage.max_retries       ).to be 5
+      expect( storage.retry_waitsec     ).to be 60
     end
 
     it 'strips leading path separator' do
@@ -83,9 +92,9 @@ describe Storage::S3 do
 
   describe '#transfer!' do
     let(:connection) { mock }
+    let(:uploader) { mock }
     let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
     let(:remote_path) { File.join('my/path/test_trigger', timestamp) }
-    let(:file) { mock }
 
     before do
       Timecop.freeze
@@ -105,15 +114,19 @@ describe Storage::S3 do
       dest = File.join(remote_path, 'test_trigger.tar-aa')
 
       Logger.expects(:info).in_sequence(s).with("Storing 'my_bucket/#{ dest }'...")
-      File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
-      connection.expects(:put_object).in_sequence(s).with('my_bucket', dest, file)
+      Storage::S3::Uploader.expects(:new).in_sequence(s).with(
+        connection, 'my_bucket', src, dest, 5, 10, 30
+      ).returns(uploader)
+      uploader.expects(:run).in_sequence(s)
 
       src = File.join(Config.tmp_path, 'test_trigger.tar-ab')
       dest = File.join(remote_path, 'test_trigger.tar-ab')
 
       Logger.expects(:info).in_sequence(s).with("Storing 'my_bucket/#{ dest }'...")
-      File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
-      connection.expects(:put_object).in_sequence(s).with('my_bucket', dest, file)
+      Storage::S3::Uploader.expects(:new).in_sequence(s).with(
+        connection, 'my_bucket', src, dest, 5, 10, 30
+      ).returns(uploader)
+      uploader.expects(:run).in_sequence(s)
 
       storage.send(:transfer!)
     end
@@ -127,9 +140,15 @@ describe Storage::S3 do
     let(:package) {
       stub( # loaded from YAML storage file
         :trigger    => 'test_trigger',
-        :time       => timestamp,
-        :filenames  => ['test_trigger.tar-aa', 'test_trigger.tar-ab']
+        :time       => timestamp
       )
+    }
+    let(:response) { mock }
+    let(:bucket_with_keys) {
+      { 'Contents' => [ { 'Key' => 'file_a' }, { 'Key' => 'file_b' } ] }
+    }
+    let(:bucket_without_keys) {
+      { 'Contents' => [] }
     }
 
     before do
@@ -142,19 +161,332 @@ describe Storage::S3 do
     after { Timecop.return }
 
     it 'removes the given package from the remote' do
-      Logger.expects(:info).in_sequence(s).
-          with("Removing backup package dated #{ timestamp }...")
+      Logger.expects(:info).with("Removing backup package dated #{ timestamp }...")
 
-      target = File.join(remote_path, 'test_trigger.tar-aa')
-      connection.expects(:delete_object).in_sequence(s).with('my_bucket', target)
+      connection.expects(:get_bucket).
+          with('my_bucket', :prefix => remote_path).returns(response)
+      response.expects(:body).returns(bucket_with_keys)
 
-      target = File.join(remote_path, 'test_trigger.tar-ab')
-      connection.expects(:delete_object).in_sequence(s).with('my_bucket', target)
+      connection.expects(:delete_multiple_objects).
+          with('my_bucket', ['file_a', 'file_b'])
 
       storage.send(:remove!, package)
     end
 
+    it 'raises an error if remote package is missing' do
+      Logger.expects(:info).with("Removing backup package dated #{ timestamp }...")
+
+      connection.expects(:get_bucket).
+          with('my_bucket', :prefix => remote_path).returns(response)
+      response.expects(:body).returns(bucket_without_keys)
+
+      connection.expects(:delete_multiple_objects).never
+
+      expect do
+        storage.send(:remove!, package)
+      end.to raise_error(
+        Errors::Storage::S3::NotFoundError,
+        "Storage::S3::NotFoundError: Package at '#{ remote_path }' not found"
+      )
+    end
+
   end # describe '#remove!'
+
+  describe Storage::S3::Uploader do
+    let(:connection) { mock }
+    let(:uploader) {
+      Storage::S3::Uploader.new(
+          connection, 'my_bucket', 'src/file', 'dest/file', 5, 10, 30)
+    }
+    let(:s) { sequence '' }
+
+    before do
+      uploader.stubs(:sleep)
+    end
+
+    describe '#run' do
+      context 'when chunk_size is 0' do
+        let(:uploader) {
+          Storage::S3::Uploader.new(
+              connection, 'my_bucket', 'src/file', 'dest/file', 0, 10, 30)
+        }
+
+        it 'uploads file using put_object' do
+          File.expects(:size).never
+          uploader.expects(:initiate_multipart).never
+          uploader.expects(:upload_parts).never
+          uploader.expects(:complete_multipart).never
+
+          uploader.expects(:upload)
+
+          uploader.run
+        end
+      end
+
+      context 'when src file is greater than chunk_size' do
+        before do
+          File.expects(:size).with('src/file').returns(1024**2 * 6)
+        end
+
+        it 'uploads file using multipart upload' do
+          uploader.expects(:upload).never
+
+          uploader.expects(:initiate_multipart)
+          uploader.expects(:upload_parts)
+          uploader.expects(:complete_multipart)
+
+          uploader.run
+        end
+      end
+
+      context 'when src file is less than or equal to chunk_size' do
+        before do
+          File.expects(:size).with('src/file').returns(1024**2 * 5)
+        end
+
+        it 'uploads file using put_object' do
+          uploader.expects(:initiate_multipart).never
+          uploader.expects(:upload_parts).never
+          uploader.expects(:complete_multipart).never
+
+          uploader.expects(:upload)
+
+          uploader.run
+        end
+      end
+
+      context 'when an error is raised' do
+        it 'wraps the error' do
+          File.stubs(:size).raises('error message')
+
+          expect do
+            uploader.run
+          end.to raise_error(
+            Errors::Storage::S3::UploaderError,
+            "Storage::S3::UploaderError: Upload Failed!\n" +
+            "  Reason: RuntimeError\n" +
+            "  error message"
+          )
+        end
+      end
+    end # describe '#run'
+
+    describe '#upload' do
+      let(:file) { mock }
+      let(:digest_file) { mock }
+
+      before do
+        Digest::MD5.expects(:file).in_sequence(s).
+            with('src/file').returns(digest_file)
+        digest_file.expects(:digest).in_sequence(s).
+            returns('md5_digest')
+        Base64.expects(:encode64).in_sequence(s).
+            with('md5_digest').returns("encoded_digest\n")
+      end
+
+      it 'uploads file using put_object' do
+        File.expects(:open).in_sequence(s).with('src/file', 'r').yields(file)
+        connection.expects(:put_object).in_sequence(s).with(
+          'my_bucket', 'dest/file', file, { 'Content-MD5' => 'encoded_digest' }
+        )
+
+        uploader.send(:upload)
+      end
+
+      it 'retries on errors' do
+        File.expects(:open).in_sequence(s).with('src/file', 'r').yields(file)
+        connection.expects(:put_object).in_sequence(s).with(
+          'my_bucket', 'dest/file', file, { 'Content-MD5' => 'encoded_digest' }
+        ).raises('error message')
+
+        File.expects(:open).in_sequence(s).with('src/file', 'r').yields(file)
+        connection.expects(:put_object).in_sequence(s).with(
+          'my_bucket', 'dest/file', file, { 'Content-MD5' => 'encoded_digest' }
+        )
+
+        uploader.send(:upload)
+      end
+    end # describe '#upload'
+
+    describe '#initiate_multipart' do
+      let(:response) { mock }
+
+      before do
+        response.stubs(:body).returns({ 'UploadId' => 123 })
+      end
+
+      it 'initiates the multipart upload' do
+        connection.expects(:initiate_multipart_upload).
+            with('my_bucket', 'dest/file').returns(response)
+
+        uploader.send(:initiate_multipart)
+        expect( uploader.upload_id ).to be 123
+      end
+
+      it 'retries on errors' do
+        connection.expects(:initiate_multipart_upload).in_sequence(s).
+            with('my_bucket', 'dest/file').raises('error message')
+
+        connection.expects(:initiate_multipart_upload).in_sequence(s).
+            with('my_bucket', 'dest/file').returns(response)
+
+        uploader.send(:initiate_multipart)
+        expect( uploader.upload_id ).to be 123
+      end
+    end # describe '#initiate_multipart'
+
+    describe '#upload_parts' do
+      let(:file) { mock }
+      let(:chunk_size) { 1024**2 * 5 }
+      let(:response) { mock }
+
+      before do
+        uploader.stubs(:upload_id).returns(123)
+      end
+
+      it 'uploads the file in chunks' do
+        File.expects(:open).in_sequence(s).with('src/file', 'r').yields(file)
+
+        # first chunk
+        file.expects(:read).in_sequence(s).
+            with(chunk_size).returns('chunk one')
+        Digest::MD5.expects(:digest).in_sequence(s).
+            with('chunk one').returns('chunk one digest')
+        Base64.expects(:encode64).in_sequence(s).
+            with('chunk one digest').returns("encoded chunk one digest\n")
+        connection.expects(:upload_part).in_sequence(s).
+            with('my_bucket', 'dest/file', 123, 1, 'chunk one',
+                 { 'Content-MD5' => 'encoded chunk one digest' }).returns(response)
+        response.expects(:headers).in_sequence(s).
+            returns({ 'ETag' => 'part one etag' })
+
+        # second chunk
+        file.expects(:read).in_sequence(s).
+            with(chunk_size).returns('chunk two')
+        Digest::MD5.expects(:digest).in_sequence(s).
+            with('chunk two').returns('chunk two digest')
+        Base64.expects(:encode64).in_sequence(s).
+            with('chunk two digest').returns("encoded chunk two digest\n")
+        connection.expects(:upload_part).in_sequence(s).
+            with('my_bucket', 'dest/file', 123, 2, 'chunk two',
+                 { 'Content-MD5' => 'encoded chunk two digest' }).returns(response)
+        response.expects(:headers).in_sequence(s).
+            returns({ 'ETag' => 'part two etag' })
+
+        # EOF
+        file.expects(:read).in_sequence(s).with(chunk_size).returns(nil)
+
+        uploader.send(:upload_parts)
+        expect( uploader.parts ).to eq ['part one etag', 'part two etag']
+      end
+
+      it 'retries failed chunks' do
+        File.expects(:open).in_sequence(s).with('src/file', 'r').yields(file)
+
+        file.expects(:read).in_sequence(s).
+            with(chunk_size).returns('chunk one')
+        Digest::MD5.expects(:digest).in_sequence(s).
+            with('chunk one').returns('chunk one digest')
+        Base64.expects(:encode64).in_sequence(s).
+            with('chunk one digest').returns("encoded chunk one digest\n")
+
+        # chunk failure
+        connection.expects(:upload_part).in_sequence(s).
+            with('my_bucket', 'dest/file', 123, 1, 'chunk one',
+                 { 'Content-MD5' => 'encoded chunk one digest' }).
+            raises('error message')
+
+        # chunk retry
+        connection.expects(:upload_part).in_sequence(s).
+            with('my_bucket', 'dest/file', 123, 1, 'chunk one',
+                 { 'Content-MD5' => 'encoded chunk one digest' }).
+            returns(response)
+        response.expects(:headers).in_sequence(s).
+            returns({ 'ETag' => 'part one etag' })
+
+        # EOF
+        file.expects(:read).in_sequence(s).with(chunk_size).returns(nil)
+
+        uploader.send(:upload_parts)
+        expect( uploader.parts ).to eq ['part one etag']
+      end
+
+    end # describe '#upload_parts'
+
+    describe '#complete_multipart' do
+      before do
+        uploader.stubs(:upload_id).returns(123)
+        uploader.stubs(:parts).returns(['etag_a', 'etag_b'])
+      end
+
+      it 'completes the multipart upload' do
+        connection.expects(:complete_multipart_upload).
+            with('my_bucket', 'dest/file', 123, ['etag_a', 'etag_b'])
+
+        uploader.send(:complete_multipart)
+      end
+
+      it 'retries on errors' do
+        connection.expects(:complete_multipart_upload).in_sequence(s).
+            with('my_bucket', 'dest/file', 123, ['etag_a', 'etag_b']).
+            raises('error message')
+
+        connection.expects(:complete_multipart_upload).in_sequence(s).
+            with('my_bucket', 'dest/file', 123, ['etag_a', 'etag_b'])
+
+        uploader.send(:complete_multipart)
+      end
+    end # describe '#complete_multipart'
+
+    describe '#with_retries' do
+      it 'retries the given block max_retries times' do
+        errors_collected = []
+        Logger.expects(:info).times(10).with do |err|
+          errors_collected << err
+        end
+        uploader.expects(:sleep).times(10).with(30)
+
+        expect do
+          uploader.send(:with_retries) do
+            raise 'error message'
+          end
+        end.to raise_error(RuntimeError, 'error message')
+
+        10.times do |n|
+          expect( errors_collected.shift.message ).
+              to match(/Retry ##{ n + 1 } of 10./)
+        end
+      end
+    end # describe '#with_retries'
+
+    describe '#error_with' do
+      it 'avoids wrapping Excon::Errors::HTTPStatusError' do
+        ex = Excon::Errors::HTTPStatusError.
+            new('excon_message', 'excon_request', 'excon_response')
+        err = uploader.send(:error_with, ex, 'my message')
+
+        expect( err ).to be_an_instance_of Errors::Storage::S3::UploaderError
+        expect( err.message ).to eq(
+          "Storage::S3::UploaderError: my message\n" +
+          "  Reason: Excon::Errors::HTTPStatusError\n" +
+          "  response => \"excon_response\""
+        )
+      end
+
+      it 'wraps other errors' do
+        ex = StandardError.new('error message')
+        err = uploader.send(:error_with, ex, 'my message')
+
+        expect( err ).to be_an_instance_of Errors::Storage::S3::UploaderError
+        expect( err.message ).to eq(
+          "Storage::S3::UploaderError: my message\n" +
+          "  Reason: StandardError\n" +
+          "  error message"
+        )
+      end
+    end # describe '#error_with'
+
+  end # describe Storage::S3::Uploader
 
 end
 end

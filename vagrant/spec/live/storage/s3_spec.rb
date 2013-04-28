@@ -40,16 +40,31 @@ describe Storage::S3,
     package.clean_remote!
   end
 
-  # With Splitter set a 1 MiB, this will create 3 package files.
+  # Each archive is 1.09 MB (1,090,000).
+  # This will create 2 package files (6,291,456 + 248,544).
+  # Minimum chunk_size for multipart upload is 5 MiB.
+  # The first package file will use multipart, the second won't.
   it 'stores multiple package files', :live do
     create_model :my_backup, <<-EOS
       Backup::Model.new(:my_backup, 'a description') do
-        split_into_chunks_of 1
+        split_into_chunks_of 6 # MiB
 
         archive :archive_a do |archive|
           archive.add '~/test_data'
         end
         archive :archive_b do |archive|
+          archive.add '~/test_data'
+        end
+        archive :archive_c do |archive|
+          archive.add '~/test_data'
+        end
+        archive :archive_d do |archive|
+          archive.add '~/test_data'
+        end
+        archive :archive_e do |archive|
+          archive.add '~/test_data'
+        end
+        archive :archive_f do |archive|
           archive.add '~/test_data'
         end
 
@@ -66,7 +81,7 @@ describe Storage::S3,
     job = backup_perform :my_backup
     package = BackupSpec::S3Package.new(job.model)
 
-    expect( package.files_sent.count ).to be(3)
+    expect( package.files_sent.count ).to be(2)
     expect( package.files_on_remote ).to eq package.files_sent
 
     package.clean_remote!
