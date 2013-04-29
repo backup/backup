@@ -178,7 +178,6 @@ describe Storage::S3 do
       )
       storage.path = 'my/path'
       storage.chunk_size = 2
-      storage.chunk_retries = 1
     end
 
     after { Timecop.return }
@@ -214,22 +213,48 @@ describe Storage::S3 do
     end
 
     it 'retries on errors' do
+      storage.chunk_retries = 1
       storage.package.stubs(:filenames).returns(['test_trigger.tar'])
 
       src = File.join(Config.tmp_path, 'test_trigger.tar')
       dest = File.join(remote_path, 'test_trigger.tar')
 
-      Logger.expects(:info).in_sequence(s).with("Storing '#{ dest }'...")
+      @logger_calls = 0
+      Logger.expects(:info).times(3).with do |arg|
+        @logger_calls += 1
+        case @logger_calls
+        when 1
+          expect( arg ).to eq "Storing '#{ dest }'..."
+        when 2
+          expect( arg ).to be_an_instance_of Errors::Storage::Dropbox::TransferError
+          expect( arg.message ).to eq(
+            "Storage::Dropbox::TransferError: Retry #1 of 1.\n" +
+            "  Reason: RuntimeError\n" +
+            "  chunk failed"
+          )
+        when 3
+          expect( arg ).to be_an_instance_of Errors::Storage::Dropbox::TransferError
+          expect( arg.message ).to eq(
+            "Storage::Dropbox::TransferError: Retry #1 of 1.\n" +
+            "  Reason: RuntimeError\n" +
+            "  finish failed"
+          )
+        end
+      end
+
       File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
       connection.expects(:get_chunked_uploader).in_sequence(s).
           with(file, 6_291_456).returns(uploader)
 
-      uploader.expects(:upload).in_sequence(s).raises('an error')
+      uploader.expects(:upload).in_sequence(s).raises('chunk failed')
 
-      Logger.expects(:info).in_sequence(s).with('Chunk retry 1 of 1.')
-      storage.expects(:sleep).with(30)
+      storage.expects(:sleep).in_sequence(s).with(30)
 
       uploader.expects(:upload).in_sequence(s).times(3).with(2_097_152)
+
+      uploader.expects(:finish).in_sequence(s).with(dest).raises('finish failed')
+
+      storage.expects(:sleep).in_sequence(s).with(30)
 
       uploader.expects(:finish).in_sequence(s).with(dest)
 
@@ -237,28 +262,58 @@ describe Storage::S3 do
     end
 
     it 'fails when retries are exceeded' do
+      storage.chunk_retries = 2
       storage.package.stubs(:filenames).returns(['test_trigger.tar'])
 
       src = File.join(Config.tmp_path, 'test_trigger.tar')
       dest = File.join(remote_path, 'test_trigger.tar')
 
-      Logger.expects(:info).in_sequence(s).with("Storing '#{ dest }'...")
+      @logger_calls = 0
+      Logger.expects(:info).times(3).with do |arg|
+        @logger_calls += 1
+        case @logger_calls
+        when 1
+          expect( arg ).to eq "Storing '#{ dest }'..."
+        when 2
+          expect( arg ).to be_an_instance_of Errors::Storage::Dropbox::TransferError
+          expect( arg.message ).to eq(
+            "Storage::Dropbox::TransferError: Retry #1 of 2.\n" +
+            "  Reason: RuntimeError\n" +
+            "  chunk failed"
+          )
+        when 3
+          expect( arg ).to be_an_instance_of Errors::Storage::Dropbox::TransferError
+          expect( arg.message ).to eq(
+            "Storage::Dropbox::TransferError: Retry #2 of 2.\n" +
+            "  Reason: RuntimeError\n" +
+            "  chunk failed again"
+          )
+        end
+      end
+
       File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
       connection.expects(:get_chunked_uploader).in_sequence(s).
           with(file, 6_291_456).returns(uploader)
 
-      uploader.expects(:upload).in_sequence(s).raises('an error')
+      uploader.expects(:upload).in_sequence(s).raises('chunk failed')
 
-      Logger.expects(:info).in_sequence(s).with('Chunk retry 1 of 1.')
-      storage.expects(:sleep).with(30)
+      storage.expects(:sleep).in_sequence(s).with(30)
 
-      uploader.expects(:upload).in_sequence(s).raises('another error')
+      uploader.expects(:upload).in_sequence(s).raises('chunk failed again')
+
+      storage.expects(:sleep).in_sequence(s).with(30)
+
+      uploader.expects(:upload).in_sequence(s).raises('strike three')
 
       uploader.expects(:finish).never
 
       expect do
         storage.send(:transfer!)
-      end.to raise_error(Errors::Storage::Dropbox::TransferError)
+      end.to raise_error(Errors::Storage::Dropbox::TransferError,
+        "Storage::Dropbox::TransferError: Upload Failed!\n" +
+        "  Reason: RuntimeError\n" +
+        "  strike three"
+      )
     end
 
   end # describe '#transfer!'

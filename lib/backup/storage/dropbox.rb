@@ -99,28 +99,38 @@ module Backup
           dest = File.join(remote_path, filename)
           Logger.info "Storing '#{ dest }'..."
 
-          uploader, retries = nil, 0
+          uploader = nil
           File.open(src, 'r') do |file|
             uploader = connection.get_chunked_uploader(file, file.stat.size)
             while uploader.offset < uploader.total_size
-              begin
+              with_retries do
                 uploader.upload(1024**2 * chunk_size)
-                retries = 0
-              # Timeout::Error is not a StandardError under ruby-1.8.7
-              rescue StandardError, Timeout::Error => err
-                retries += 1
-                if retries <= chunk_retries
-                  Logger.info "Chunk retry #{ retries } of #{ chunk_retries }."
-                  sleep(retry_waitsec)
-                  retry
-                end
-                raise Errors::Storage::Dropbox::TransferError.
-                    wrap(err, 'Dropbox upload failed!')
               end
             end
           end
 
-          uploader.finish(dest)
+          with_retries do
+            uploader.finish(dest)
+          end
+        end
+
+      rescue => err
+        raise Errors::Storage::Dropbox::TransferError.wrap(err, 'Upload Failed!')
+      end
+
+      # Timeout::Error is not a StandardError under ruby-1.8.7
+      def with_retries
+        retries = 0
+        begin
+          yield
+        rescue StandardError, Timeout::Error => err
+          retries += 1
+          raise if retries > chunk_retries
+
+          Logger.info Errors::Storage::Dropbox::TransferError.
+              wrap(err, "Retry ##{ retries } of #{ chunk_retries }.")
+          sleep(retry_waitsec)
+          retry
         end
       end
 
