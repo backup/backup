@@ -8,7 +8,7 @@ Gem::Specification.new do |gem|
   gem.platform    = Gem::Platform::RUBY
   gem.authors     = 'Michael van Rooijen'
   gem.email       = 'meskyanichi@gmail.com'
-  gem.homepage    = 'http://rubygems.org/gems/backup'
+  gem.homepage    = 'https://github.com/meskyanichi/backup'
   gem.license     = 'MIT'
   gem.summary     = 'Provides an elegant DSL in Ruby for performing backups on UNIX-like systems.'
   gem.description = <<-EOS.gsub(/\s+/, ' ').strip
