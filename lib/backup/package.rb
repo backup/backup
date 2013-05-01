@@ -42,5 +42,13 @@ module Backup
       "#{ trigger }.#{ extension }"
     end
 
+    ##
+    # Used exclusively by Storages.
+    # Each Storage will clear this before it runs and use it to store
+    # data in it's YAML storage file (primarily used for cycling).
+    def metadata
+      @metadata ||= {}
+    end
+
   end
 end

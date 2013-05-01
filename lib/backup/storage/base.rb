@@ -31,6 +31,7 @@ module Backup
 
       def perform!
         Logger.info "#{ storage_name } Started..."
+        package.metadata.clear
         transfer!
         cycle!
         Logger.info "#{ storage_name } Finished!"
