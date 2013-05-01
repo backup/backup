@@ -23,3 +23,9 @@ storage:
     servicenet: false
     container: <your container>
     path: backup_testing
+  glacier:
+    specs_enabled: false
+    access_key_id: <your key>
+    secret_access_key: <your secret>
+    region: <your region>
+    vault: <your vault>
