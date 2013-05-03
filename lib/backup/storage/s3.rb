@@ -34,6 +34,22 @@ module Backup
       attr_accessor :chunk_size
 
       ##
+      # Type of encryption header to send for Amazon Server Side encryption
+      #
+      # This is the type of header to send to enable server side encryption.
+      # The only supported value based on the current AWS SDK documentation
+      # is:
+      #
+      # - "AES256"
+      #
+      # For more information see:
+      #
+      # http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html
+      #
+      # Default: nil
+      attr_accessor :encryption
+
+      ##
       # Number of times to retry failed operations.
       #
       # The retry count is reset when the failing operation succeeds,
@@ -88,7 +104,7 @@ module Backup
           dest = File.join(remote_path, filename)
           Logger.info "Storing '#{ bucket }/#{ dest }'..."
           Uploader.new(connection, bucket, src, dest,
-                       chunk_size, max_retries, retry_waitsec).run
+                       chunk_size, max_retries, retry_waitsec, encryption).run
         end
       end
 
@@ -108,12 +124,12 @@ module Backup
       end
 
       class Uploader
-        attr_reader :connection, :bucket, :src, :dest
+        attr_reader :connection, :bucket, :src, :dest, :encryption
         attr_reader :chunk_size, :max_retries, :retry_waitsec
         attr_reader :upload_id, :parts
 
         def initialize(connection, bucket, src, dest,
-                       chunk_size, max_retries, retry_waitsec)
+                       chunk_size, max_retries, retry_waitsec, encryption)
           @connection = connection
           @bucket = bucket
           @src = src
@@ -121,6 +137,7 @@ module Backup
           @chunk_size = 1024**2 * chunk_size
           @max_retries = max_retries
           @retry_waitsec = retry_waitsec
+          @encryption = encryption
           @parts = []
         end
 
@@ -142,7 +159,7 @@ module Backup
           md5 = Base64.encode64(Digest::MD5.file(src).digest).chomp
           with_retries do
             File.open(src, 'r') do |file|
-              connection.put_object(bucket, dest, file, { 'Content-MD5' => md5 })
+              connection.put_object(bucket, dest, file, headers(md5))
             end
           end
         end
@@ -163,12 +180,19 @@ module Backup
               with_retries do
                 resp = connection.upload_part(
                   bucket, dest, upload_id, part_number, data,
-                  { 'Content-MD5' => md5 }
+                  headers(md5)
                 )
                 parts << resp.headers['ETag']
               end
             end
           end
+        end
+
+        def headers(md5)
+          headers = { 'Content-MD5' => md5 }
+          headers.merge!({ "x-amz-server-side-encryption" => encryption.upcase }) if encryption
+
+          headers
         end
 
         def complete_multipart

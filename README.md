@@ -186,6 +186,7 @@ Backup::Model.new(:my_backup, 'Description for my_backup') do
     s3.bucket            = "bucket-name"
     s3.path              = "/path/to/my/backups"
     s3.keep              = 10
+    s3.encryption        = 'aes256'
   end
 
   notify_by Mail do |mail|
