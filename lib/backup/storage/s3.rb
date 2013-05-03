@@ -69,6 +69,20 @@ module Backup
       # Default: 30
       attr_accessor :retry_waitsec
 
+      ##
+      # Storage class to use for the S3 objects uploaded
+      #
+      # This is the storage class for the files uploaded to S3. The supported values
+      # are:
+      #
+      # - :standard (default)
+      # - :reduced_redundancy
+      #
+      # @see http://docs.aws.amazon.com/AmazonS3/latest/dev/SetStoClsOfObjUploaded.html
+      #
+      # Default: :standard
+      attr_accessor :storage_class
+
       def initialize(model, storage_id = nil, &block)
         super
         instance_eval(&block) if block_given?
@@ -77,6 +91,7 @@ module Backup
         @max_retries    ||= 10
         @retry_waitsec  ||= 30
         @path           ||= 'backups'
+        @storage_class  ||= :standard
         path.sub!(/^\//, '')
       end
 
@@ -101,7 +116,7 @@ module Backup
           dest = File.join(remote_path, filename)
           Logger.info "Storing '#{ bucket }/#{ dest }'..."
           Uploader.new(connection, bucket, src, dest,
-                       chunk_size, max_retries, retry_waitsec, encryption).run
+                       chunk_size, max_retries, retry_waitsec, encryption, storage_class).run
         end
       end
 
@@ -123,10 +138,10 @@ module Backup
       class Uploader
         attr_reader :connection, :bucket, :src, :dest, :encryption
         attr_reader :chunk_size, :max_retries, :retry_waitsec
-        attr_reader :upload_id, :parts
+        attr_reader :storage_class, :upload_id, :parts
 
         def initialize(connection, bucket, src, dest,
-                       chunk_size, max_retries, retry_waitsec, encryption)
+                       chunk_size, max_retries, retry_waitsec, encryption, storage_class)
           @connection = connection
           @bucket = bucket
           @src = src
@@ -135,6 +150,7 @@ module Backup
           @max_retries = max_retries
           @retry_waitsec = retry_waitsec
           @encryption = encryption
+          @storage_class = storage_class
           @parts = []
         end
 
@@ -189,6 +205,7 @@ module Backup
         def request_headers
           headers = {}
           headers.merge!({ "x-amz-server-side-encryption" => encryption.upcase }) if encryption
+          headers.merge!({ "x-amz-storage-class" => storage_class.upcase }) if storage_class && storage_class.to_sym != :standard
 
           headers
         end
