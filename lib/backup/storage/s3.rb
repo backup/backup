@@ -81,7 +81,7 @@ module Backup
       #
       # @see http://docs.aws.amazon.com/AmazonS3/latest/dev/SetStoClsOfObjUploaded.html
       #
-      # Default: nil
+      # Default: :standard
       attr_accessor :storage_class
 
       def initialize(model, storage_id = nil, &block)
