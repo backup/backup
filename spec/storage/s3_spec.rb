@@ -26,6 +26,7 @@ describe Storage::S3 do
       expect( storage.max_retries       ).to be 10
       expect( storage.retry_waitsec     ).to be 30
       expect( storage.encryption        ).to be_nil
+      expect( storage.storage_class     ).to be :standard
     end
 
     it 'configures the storage' do
@@ -40,6 +41,7 @@ describe Storage::S3 do
         s3.max_retries        = 5
         s3.retry_waitsec      = 60
         s3.encryption         = 'aes256'
+        s3.storage_class      = :reduced_redundancy
       end
 
       expect( storage.storage_id        ).to eq 'my_id'
@@ -53,6 +55,7 @@ describe Storage::S3 do
       expect( storage.max_retries       ).to be 5
       expect( storage.retry_waitsec     ).to be 60
       expect( storage.encryption        ).to eq 'aes256'
+      expect( storage.storage_class     ).to eq :reduced_redundancy
     end
 
     it 'strips leading path separator' do
@@ -118,7 +121,7 @@ describe Storage::S3 do
 
       Logger.expects(:info).in_sequence(s).with("Storing 'my_bucket/#{ dest }'...")
       Storage::S3::Uploader.expects(:new).in_sequence(s).with(
-        connection, 'my_bucket', src, dest, 5, 10, 30, nil
+        connection, 'my_bucket', src, dest, 5, 10, 30, nil, :standard
       ).returns(uploader)
       uploader.expects(:run).in_sequence(s)
 
@@ -127,7 +130,7 @@ describe Storage::S3 do
 
       Logger.expects(:info).in_sequence(s).with("Storing 'my_bucket/#{ dest }'...")
       Storage::S3::Uploader.expects(:new).in_sequence(s).with(
-        connection, 'my_bucket', src, dest, 5, 10, 30, nil
+        connection, 'my_bucket', src, dest, 5, 10, 30, nil, :standard
       ).returns(uploader)
       uploader.expects(:run).in_sequence(s)
 
@@ -199,7 +202,7 @@ describe Storage::S3 do
     let(:connection) { mock }
     let(:uploader) {
       Storage::S3::Uploader.new(
-          connection, 'my_bucket', 'src/file', 'dest/file', 5, 10, 30, nil)
+          connection, 'my_bucket', 'src/file', 'dest/file', 5, 10, 30, nil, nil)
     }
     let(:s) { sequence '' }
 
@@ -211,7 +214,7 @@ describe Storage::S3 do
       context 'when chunk_size is 0' do
         let(:uploader) {
           Storage::S3::Uploader.new(
-              connection, 'my_bucket', 'src/file', 'dest/file', 0, 10, 30, nil)
+              connection, 'my_bucket', 'src/file', 'dest/file', 0, 10, 30, nil, nil)
         }
 
         it 'uploads file using put_object' do
@@ -424,6 +427,13 @@ describe Storage::S3 do
         uploader.send(:request_headers).should == {'x-amz-server-side-encryption' => encryption.upcase}
       end
 
+      it 'returns a hash with the S3 storage class header when the storage_class attr_reader is set' do
+        storage_class = 'reduced_redundancy'
+        uploader.stubs(:storage_class).returns(storage_class)
+
+        uploader.send(:request_headers).should == {'x-amz-storage-class' => storage_class.upcase}
+      end
+    end # describe '#request_headers
 
     describe '#md5_request_header' do
       it 'returns a hash with the Content-MD5 key set to the md5 string passed into the method' do
