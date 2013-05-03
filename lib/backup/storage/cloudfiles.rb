@@ -1,6 +1,5 @@
 # encoding: utf-8
-
-Backup::Dependency.load('fog')
+require 'fog'
 
 module Backup
   module Storage

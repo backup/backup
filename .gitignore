@@ -7,4 +7,3 @@ vagrant/spec/live/.cache
 vagrant/spec/live.yml
 *.swp
 *.swo
-Gemfile.lock

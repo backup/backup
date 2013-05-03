@@ -1,7 +1,5 @@
 # encoding: utf-8
-
-# Load the HipChat library from the gem
-Backup::Dependency.load('hipchat')
+require 'hipchat'
 
 module Backup
   module Notifier

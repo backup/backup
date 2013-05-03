@@ -324,7 +324,7 @@ module Backup
       case action
       when :started
         Logger.info "Performing Backup for '#{label} (#{trigger})'!\n" +
-            "[ backup #{ Version.current } : #{ RUBY_DESCRIPTION } ]"
+            "[ backup #{ VERSION } : #{ RUBY_DESCRIPTION } ]"
 
       when :finished
         msg = "Backup for '#{ label } (#{ trigger })' " +

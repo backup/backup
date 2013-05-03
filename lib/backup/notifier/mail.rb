@@ -1,8 +1,5 @@
 # encoding: utf-8
-
-##
-# Only load the Mail gem when using Mail notifications
-Backup::Dependency.load('mail')
+require 'mail'
 
 module Backup
   module Notifier

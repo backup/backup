@@ -1,6 +1,5 @@
 # encoding: utf-8
-
-Backup::Dependency.load('net-sftp')
+require 'net/sftp'
 
 module Backup
   module Storage

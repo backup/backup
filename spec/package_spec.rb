@@ -13,7 +13,7 @@ describe Package do
       expect( package.trigger         ).to eq 'test_trigger'
       expect( package.extension       ).to eq 'tar'
       expect( package.chunk_suffixes  ).to eq []
-      expect( package.version         ).to eq Version.current
+      expect( package.version         ).to eq VERSION
     end
   end
 

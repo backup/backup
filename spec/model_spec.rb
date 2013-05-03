@@ -599,7 +599,7 @@ describe 'Backup::Model' do
       it 'should log that the backup has started with the version' do
         Backup::Logger.expects(:info).with(
           "Performing Backup for 'test label (test_trigger)'!\n" +
-          "[ backup #{ Backup::Version.current } : #{ RUBY_DESCRIPTION } ]"
+          "[ backup #{ Backup::VERSION } : #{ RUBY_DESCRIPTION } ]"
         )
         model.send(:log!, :started)
       end

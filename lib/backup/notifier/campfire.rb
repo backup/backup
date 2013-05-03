@@ -1,8 +1,5 @@
 # encoding: utf-8
-
-##
-# Load the HTTParty library from the gem
-Backup::Dependency.load('httparty')
+require 'httparty'
 
 module Backup
   module Notifier

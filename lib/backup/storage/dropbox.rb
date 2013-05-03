@@ -1,6 +1,5 @@
 # encoding: utf-8
-
-Backup::Dependency.load('dropbox-sdk')
+require 'dropbox_sdk'
 
 module Backup
   module Storage

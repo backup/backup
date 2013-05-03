@@ -1,6 +1,5 @@
 # encoding: utf-8
-
-Backup::Dependency.load('net-scp')
+require 'net/scp'
 
 module Backup
   module Storage

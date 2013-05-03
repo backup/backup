@@ -27,7 +27,7 @@ module Backup
       @trigger = model.trigger
       @extension = 'tar'
       @chunk_suffixes = Array.new
-      @version = Version.current
+      @version = VERSION
     end
 
     def filenames

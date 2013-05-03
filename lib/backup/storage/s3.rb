@@ -1,6 +1,5 @@
 # encoding: utf-8
-
-Backup::Dependency.load('fog')
+require 'fog'
 require 'base64'
 require 'digest/md5'
 

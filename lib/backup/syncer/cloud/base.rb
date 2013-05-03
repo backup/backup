@@ -3,8 +3,10 @@
 ##
 # Only load the Fog gem, along with the Parallel gem, when the
 # Backup::Syncer::Cloud class is loaded
-Backup::Dependency.load('fog')
-Backup::Dependency.load('parallel')
+# Backup::Dependency.load('fog')
+# Backup::Dependency.load('parallel')
+require 'fog'
+require 'parallel'
 
 module Backup
   module Syncer

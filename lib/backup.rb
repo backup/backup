@@ -1,7 +1,6 @@
 # encoding: utf-8
 
 # Load Ruby Core Libraries
-require 'rubygems'
 require 'fileutils'
 require 'tempfile'
 require 'syslog'
@@ -112,7 +111,6 @@ module Backup
     config
     cli
     configuration
-    dependency
     errors
     logger
     model

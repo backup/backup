@@ -363,109 +363,12 @@ module Backup
     end
 
     ##
-    # [Dependencies]
-    # Returns a list of Backup's dependencies
-    desc 'dependencies', 'Display, Check or Install Dependencies for Backup.'
-
-    long_desc <<-EOS.gsub(/^ +/, '')
-        To display a list of available dependencies, run:
-
-        $ backup dependencies --list
-
-        To install one of these dependencies, run:
-
-        $ backup dependencies --install <name>
-
-        To check if a dependency is already installed, run:
-
-        $ backup dependencies --installed <name>
-    EOS
-
-    method_option :install, :type => :string, :banner => 'NAME'
-    method_option :list,    :type => :boolean
-    method_option :installed, :type => :string, :banner => 'NAME'
-
-    def dependencies
-      Helpers.exec!("#{ $0 } help dependencies") unless options.any?
-
-      if options[:list]
-        deps = Dependency.all
-        width = 15 + deps.map {|dep| dep.used_for }.map(&:length).max
-        deps.each do |dep|
-          puts
-          puts "Gem Name:      #{ dep.name }"
-          puts "Version:       #{ dep.requirements.join(', ') }"
-          puts "Used for:      #{ dep.used_for }"
-          puts '-' * width
-        end
-        exit
-      end
-
-      name = options[:install] || options[:installed]
-      unless dep = Dependency.find(name)
-        abort "'#{ name }' is not a Backup dependency."
-      end
-
-      if options[:install]
-        if Helpers.bundler_loaded?
-          abort <<-EOS.gsub(/^ +/, '')
-            === Bundler Detected ===
-            This command should not be run within a Bundler managed environment.
-            While it is possible to install Backup and it's dependencies using
-            Bundler, the gem version requirements must still be met as shown by:
-            > backup dependencies --list
-          EOS
-        end
-
-        dep.dependencies.each do |_dep|
-          unless _dep.installed?
-            abort <<-EOS.gsub(/^ +/, '')
-              The '#{ dep.name }' gem requires '#{ _dep.name }'
-              Please install this first using the following command:
-              > backup dependencies --install #{ _dep.name }
-            EOS
-          end
-        end
-
-        dep.install!
-      end
-
-      if options[:installed]
-        name, err_msg = nil, nil
-
-        dep.dependencies.each do |_dep|
-          unless _dep.installed?
-            name = _dep.name
-            err_msg = "'#{ dep.name }' requires the '#{ name }' gem."
-            break
-          end
-        end
-
-        unless err_msg || dep.installed?
-          name = dep.name
-          err_msg = "'#{ name }' is not installed."
-        end
-
-        if err_msg
-          abort <<-EOS.gsub(/^ +/, '')
-            #{ err_msg }
-            To install the gem, issue the following command:
-            > backup dependencies --install #{ name }
-            Please try again after installing the missing dependency.
-          EOS
-        else
-          puts "'#{ dep.name }' is installed."
-        end
-      end
-    end
-
-    ##
     # [Version]
     # Returns the current version of the Backup gem
     map '-v' => :version
     desc 'version', 'Display installed Backup version'
     def version
-      puts "Backup #{Backup::Version.current}"
+      puts "Backup #{ Backup::VERSION }"
     end
 
     # This is to avoid Thor's warnings when stubbing methods on the Thor class.
@@ -483,10 +386,6 @@ module Backup
         def exec!(cmd)
           puts "Lauching: #{ cmd }"
           exec(cmd)
-        end
-
-        def bundler_loaded?
-          !ENV['BUNDLE_GEMFILE'].to_s.empty?
         end
 
       end
