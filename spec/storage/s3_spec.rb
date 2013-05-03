@@ -320,7 +320,7 @@ describe Storage::S3 do
 
       it 'initiates the multipart upload' do
         connection.expects(:initiate_multipart_upload).
-            with('my_bucket', 'dest/file').returns(response)
+            with('my_bucket', 'dest/file', {}).returns(response)
 
         uploader.send(:initiate_multipart)
         expect( uploader.upload_id ).to be 123
@@ -328,10 +328,10 @@ describe Storage::S3 do
 
       it 'retries on errors' do
         connection.expects(:initiate_multipart_upload).in_sequence(s).
-            with('my_bucket', 'dest/file').raises('error message')
+            with('my_bucket', 'dest/file', {}).raises('error message')
 
         connection.expects(:initiate_multipart_upload).in_sequence(s).
-            with('my_bucket', 'dest/file').returns(response)
+            with('my_bucket', 'dest/file', {}).returns(response)
 
         uploader.send(:initiate_multipart)
         expect( uploader.upload_id ).to be 123
@@ -416,23 +416,22 @@ describe Storage::S3 do
 
     end # describe '#upload_parts'
 
-    describe '#headers' do
-      it 'returns a hash with the Content-MD5 key set to the md5 string passed into the method' do
-        md5 = 'encoded_digest'
-
-        uploader.send(:headers, md5).should == {'Content-MD5' => md5}
-      end
-
+    describe '#request_headers' do
       it 'returns a hash with the S3 server side encryption header when the encryption attr_reader is set' do
-        md5 = 'encoded_digest'
         encryption = 'aes256'
         uploader.stubs(:encryption).returns(encryption)
 
-        headers = uploader.send(:headers, md5)
-        headers.should == {'Content-MD5' => md5,
-                           'x-amz-server-side-encryption' => encryption.upcase}
+        uploader.send(:request_headers).should == {'x-amz-server-side-encryption' => encryption.upcase}
       end
-    end # describe '#headers
+
+
+    describe '#md5_request_header' do
+      it 'returns a hash with the Content-MD5 key set to the md5 string passed into the method' do
+        md5 = 'encoded_digest'
+
+        uploader.send(:md5_request_header, md5).should == {'Content-MD5' => md5}
+      end
+    end # describe '#md5_request_header'
 
     describe '#complete_multipart' do
       before do

@@ -42,9 +42,7 @@ module Backup
       #
       # - "AES256"
       #
-      # For more information see:
-      #
-      # http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html
+      # @see http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html
       #
       # Default: nil
       attr_accessor :encryption
@@ -157,16 +155,17 @@ module Backup
 
         def upload
           md5 = Base64.encode64(Digest::MD5.file(src).digest).chomp
+          upload_request_headers = request_headers.merge(md5_request_header(md5))
           with_retries do
             File.open(src, 'r') do |file|
-              connection.put_object(bucket, dest, file, headers(md5))
+              connection.put_object(bucket, dest, file, upload_request_headers)
             end
           end
         end
 
         def initiate_multipart
           with_retries do
-            resp = connection.initiate_multipart_upload(bucket, dest)
+            resp = connection.initiate_multipart_upload(bucket, dest, request_headers)
             @upload_id = resp.body['UploadId']
           end
         end
@@ -180,7 +179,7 @@ module Backup
               with_retries do
                 resp = connection.upload_part(
                   bucket, dest, upload_id, part_number, data,
-                  headers(md5)
+                  md5_request_header(md5)
                 )
                 parts << resp.headers['ETag']
               end
@@ -188,11 +187,15 @@ module Backup
           end
         end
 
-        def headers(md5)
-          headers = { 'Content-MD5' => md5 }
+        def request_headers
+          headers = {}
           headers.merge!({ "x-amz-server-side-encryption" => encryption.upcase }) if encryption
 
           headers
+        end
+
+        def md5_request_header(md5)
+          { 'Content-MD5' => md5 }
         end
 
         def complete_multipart
