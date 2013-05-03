@@ -202,7 +202,7 @@ describe Storage::S3 do
     let(:connection) { mock }
     let(:uploader) {
       Storage::S3::Uploader.new(
-          connection, 'my_bucket', 'src/file', 'dest/file', 5, 10, 30, nil, nil)
+          connection, 'my_bucket', 'src/file', 'dest/file', 5, 10, 30, nil, :standard)
     }
     let(:s) { sequence '' }
 
@@ -214,7 +214,7 @@ describe Storage::S3 do
       context 'when chunk_size is 0' do
         let(:uploader) {
           Storage::S3::Uploader.new(
-              connection, 'my_bucket', 'src/file', 'dest/file', 0, 10, 30, nil, nil)
+              connection, 'my_bucket', 'src/file', 'dest/file', 0, 10, 30, nil, :standard)
         }
 
         it 'uploads file using put_object' do
