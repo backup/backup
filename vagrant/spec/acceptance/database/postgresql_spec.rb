@@ -5,6 +5,43 @@ require File.expand_path('../../../spec_helper', __FILE__)
 module Backup
 describe 'Database::PostgreSQL' do
 
+  describe 'All Databases' do
+
+    specify 'With compression' do
+      create_model :my_backup, <<-EOS
+        Backup::Model.new(:my_backup, 'a description') do
+          database PostgreSQL
+          compress_with Gzip
+          store_with Local
+        end
+      EOS
+
+      job = backup_perform :my_backup
+
+      expect( job.package.exist? ).to be_true
+      expect( job.package ).to match_manifest(%q[
+        3094 my_backup/databases/PostgreSQL.sql.gz
+      ])
+    end
+
+    specify 'Without compression' do
+      create_model :my_backup, <<-EOS
+        Backup::Model.new(:my_backup, 'a description') do
+          database PostgreSQL
+          store_with Local
+        end
+      EOS
+
+      job = backup_perform :my_backup
+
+      expect( job.package.exist? ).to be_true
+      expect( job.package ).to match_manifest(%q[
+        21616 my_backup/databases/PostgreSQL.sql
+      ])
+    end
+
+  end # describe 'All Databases'
+
   describe 'Single Database' do
 
     specify 'All tables' do
@@ -22,25 +59,6 @@ describe 'Database::PostgreSQL' do
       expect( job.package.exist? ).to be_true
       expect( job.package ).to match_manifest(%q[
         9199 my_backup/databases/PostgreSQL.sql
-      ])
-    end
-
-    specify 'All tables with compression' do
-      create_model :my_backup, <<-EOS
-        Backup::Model.new(:my_backup, 'a description') do
-          database PostgreSQL do |db|
-            db.name = 'backup_test_01'
-          end
-          compress_with Gzip
-          store_with Local
-        end
-      EOS
-
-      job = backup_perform :my_backup
-
-      expect( job.package.exist? ).to be_true
-      expect( job.package ).to match_manifest(%q[
-        2552 my_backup/databases/PostgreSQL.sql.gz
       ])
     end
 
