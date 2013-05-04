@@ -8,12 +8,16 @@ was built with modularity, extensibility and simplicity in mind.
 
 ## Installation
 
-To get the latest stable version:
+To install the latest version, run:
 
-    gem install backup
+    $ [sudo] gem install backup
 
-See [Release Notes](https://github.com/meskyanichi/backup/wiki/Release-Notes) in the wiki for changes in the latest
-version.
+_Do not add `gem backup` to an application's `Gemfile`_
+
+See [Installation](https://github.com/meskyanichi/backup/wiki/Installation) for more information about installing and
+updating your installation of Backup.
+
+See [Release Notes](https://github.com/meskyanichi/backup/wiki/Release-Notes) for changes in the latest version.
 
 Backup supports Ruby versions 1.8.7, 1.9.2, 1.9.3 and 2.0.0.
 
