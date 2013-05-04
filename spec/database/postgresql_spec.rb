@@ -12,6 +12,8 @@ describe Database::PostgreSQL do
     Database::PostgreSQL.any_instance.stubs(:utility).
         with(:pg_dump).returns('pg_dump')
     Database::PostgreSQL.any_instance.stubs(:utility).
+        with(:pg_dumpall).returns('pg_dumpall')
+    Database::PostgreSQL.any_instance.stubs(:utility).
         with(:cat).returns('cat')
   end
 
@@ -21,7 +23,7 @@ describe Database::PostgreSQL do
   describe '#initialize' do
     it 'provides default values' do
       expect( db.database_id        ).to be_nil
-      expect( db.name               ).to be_nil
+      expect( db.name               ).to eq :all
       expect( db.username           ).to be_nil
       expect( db.password           ).to be_nil
       expect( db.host               ).to be_nil
@@ -64,6 +66,7 @@ describe Database::PostgreSQL do
 
     before do
       db.stubs(:pgdump).returns('pgdump_command')
+      db.stubs(:pgdumpall).returns('pgdumpall_command')
       db.stubs(:dump_path).returns('/tmp/trigger/databases')
 
       db.expects(:log!).in_sequence(s).with(:started)
@@ -74,7 +77,7 @@ describe Database::PostgreSQL do
       it 'packages the dump without compression' do
         Pipeline.expects(:new).in_sequence(s).returns(pipeline)
 
-        pipeline.expects(:<<).in_sequence(s).with('pgdump_command')
+        pipeline.expects(:<<).in_sequence(s).with('pgdumpall_command')
 
         pipeline.expects(:<<).in_sequence(s).with(
           "cat > '/tmp/trigger/databases/PostgreSQL.sql'"
@@ -98,12 +101,35 @@ describe Database::PostgreSQL do
       it 'packages the dump with compression' do
         Pipeline.expects(:new).in_sequence(s).returns(pipeline)
 
-        pipeline.expects(:<<).in_sequence(s).with('pgdump_command')
+        pipeline.expects(:<<).in_sequence(s).with('pgdumpall_command')
 
         pipeline.expects(:<<).in_sequence(s).with('cmp_cmd')
 
         pipeline.expects(:<<).in_sequence(s).with(
           "cat > '/tmp/trigger/databases/PostgreSQL.sql.cmp_ext'"
+        )
+
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+
+        db.expects(:log!).in_sequence(s).with(:finished)
+
+        db.perform!
+      end
+    end # context 'without a compressor'
+
+    context 'when #name is set' do
+      before do
+        db.name = 'my_db'
+      end
+
+      it 'uses the pg_dump command' do
+        Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+
+        pipeline.expects(:<<).in_sequence(s).with('pgdump_command')
+
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '/tmp/trigger/databases/PostgreSQL.sql'"
         )
 
         pipeline.expects(:run).in_sequence(s)
@@ -157,6 +183,29 @@ describe Database::PostgreSQL do
       )
     end
   end # describe '#pgdump'
+
+  describe '#pgdumpall' do
+    let(:option_methods) {%w[
+      username_option connectivity_options user_options
+    ]}
+    # password_option leaves no leading space if it's not used
+
+    it 'returns full pg_dump command built from all options' do
+      option_methods.each {|name| db.stubs(name).returns(name) }
+      db.stubs(:password_option).returns('password_option')
+      expect( db.send(:pgdumpall) ).to eq(
+        "password_optionpg_dumpall #{ option_methods.join(' ') }"
+      )
+    end
+
+    it 'handles nil values from option methods' do
+      option_methods.each {|name| db.stubs(name).returns(nil) }
+      db.stubs(:password_option).returns(nil)
+      expect( db.send(:pgdumpall) ).to eq(
+        "pg_dumpall #{ ' ' * (option_methods.count - 1) }"
+      )
+    end
+  end # describe '#pgdumpall'
 
   describe 'pgdump option methods' do
 

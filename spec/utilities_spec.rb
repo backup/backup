@@ -36,6 +36,7 @@ describe Backup::Utilities do
         mongodump   '/path/to/mongodump'
         mysqldump   '/path/to/mysqldump'
         pg_dump     '/path/to/pg_dump'
+        pg_dumpall  '/path/to/pg_dumpall'
         redis_cli   '/path/to/redis-cli'
         riak_admin  '/path/to/riak-admin'
 
