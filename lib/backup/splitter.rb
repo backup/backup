@@ -2,10 +2,12 @@
 
 module Backup
   class Splitter
-    include Backup::CLI::Helpers
+    include Backup::Utilities::Helpers
+
+    attr_reader :package, :chunk_size
 
     def initialize(model, chunk_size)
-      @model = model
+      @package = model.package
       @chunk_size = chunk_size
     end
 
@@ -17,8 +19,8 @@ module Backup
     # Once the packaging procedure is complete, it will return and
     # @package.chunk_suffixes will be set based on the resulting files.
     def split_with
-      before_packaging
-      yield @split_command
+      Logger.info "Splitter configured with a chunk size of #{ chunk_size }MB."
+      yield split_command
       after_packaging
     end
 
@@ -30,13 +32,9 @@ module Backup
     # written using the given `prefix`, which is the full path to the
     # final @package.basename, plus a '-' separator. This `prefix` will then
     # be suffixed using 'aa', 'ab', and so on... for each file.
-    def before_packaging
-      @package = @model.package
-      Logger.message "Splitter configured with a chunk size of " +
-          "#{ @chunk_size }MB."
-
-      @split_command = "#{ utility(:split) } -b #{ @chunk_size }m - " +
-          "'#{ File.join(Config.tmp_path, @package.basename + '-') }'"
+    def split_command
+      "#{ utility(:split) } -b #{ chunk_size }m - " +
+          "'#{ File.join(Config.tmp_path, package.basename + '-') }'"
     end
 
     ##
@@ -49,11 +47,11 @@ module Backup
       suffixes = chunk_suffixes
       if suffixes == ['aa']
         FileUtils.mv(
-          File.join(Config.tmp_path, @package.basename + '-aa'),
-          File.join(Config.tmp_path, @package.basename)
+          File.join(Config.tmp_path, package.basename + '-aa'),
+          File.join(Config.tmp_path, package.basename)
         )
       else
-        @package.chunk_suffixes = suffixes
+        package.chunk_suffixes = suffixes
       end
     end
 
@@ -68,7 +66,7 @@ module Backup
     # Returns an array of full paths to the backup chunks.
     # Chunks are sorted in alphabetical order.
     def chunks
-      Dir[File.join(Config.tmp_path, @package.basename + '-*')].sort
+      Dir[File.join(Config.tmp_path, package.basename + '-*')].sort
     end
 
   end

@@ -94,7 +94,7 @@ describe 'Backup::Notifier::Base' do
 
   describe '#log!' do
     it 'should log a message' do
-      Backup::Logger.expects(:message).with(
+      Backup::Logger.expects(:info).with(
         "Notifier::Base started notifying about the process."
       )
       notifier.send(:log!)

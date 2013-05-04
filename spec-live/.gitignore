@@ -1,6 +1,3 @@
 backups/config.yml
-backups/data
-backups/log
 backups/.cache
-backups/.tmp
-tmp/
+backups/log

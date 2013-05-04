@@ -2,135 +2,75 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Storage::CloudFiles do
-  let(:model)   { Backup::Model.new(:test_trigger, 'test label') }
-  let(:storage) do
-    Backup::Storage::CloudFiles.new(model) do |cf|
-      cf.username  = 'my_username'
-      cf.api_key   = 'my_api_key'
-      cf.auth_url  = 'lon.auth.api.rackspacecloud.com'
-      cf.container = 'my_container'
-      cf.keep      = 5
-    end
-  end
+module Backup
+describe Storage::CloudFiles do
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:storage) { Storage::CloudFiles.new(model) }
+  let(:s) { sequence '' }
 
-  it 'should be a subclass of Storage::Base' do
-    Backup::Storage::CloudFiles.
-      superclass.should == Backup::Storage::Base
+  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a subclass of Storage::Base' do
+    let(:cycling_supported) { true }
   end
 
   describe '#initialize' do
-    after { Backup::Storage::CloudFiles.clear_defaults! }
-
-    it 'should load pre-configured defaults through Base' do
-      Backup::Storage::CloudFiles.any_instance.expects(:load_defaults!)
-      storage
+    it 'provides default values' do
+      expect( storage.storage_id  ).to be_nil
+      expect( storage.keep        ).to be_nil
+      expect( storage.username    ).to be_nil
+      expect( storage.api_key     ).to be_nil
+      expect( storage.auth_url    ).to be_nil
+      expect( storage.servicenet  ).to be false
+      expect( storage.container   ).to be_nil
+      expect( storage.path        ).to eq 'backups'
     end
 
-    it 'should pass the model reference to Base' do
-      storage.instance_variable_get(:@model).should == model
+    it 'configures the storage' do
+      storage = Storage::CloudFiles.new(model, :my_id) do |cf|
+        cf.keep       = 2
+        cf.username   = 'my_username'
+        cf.api_key    = 'my_api_key'
+        cf.auth_url   = 'my_auth_url'
+        cf.servicenet = true
+        cf.container  = 'my_container'
+        cf.path       = 'my/path'
+      end
+
+      expect( storage.storage_id  ).to eq 'my_id'
+      expect( storage.keep        ).to be 2
+      expect( storage.username    ).to eq 'my_username'
+      expect( storage.api_key     ).to eq 'my_api_key'
+      expect( storage.auth_url    ).to eq 'my_auth_url'
+      expect( storage.servicenet  ).to be true
+      expect( storage.container   ).to eq 'my_container'
+      expect( storage.path        ).to eq 'my/path'
     end
 
-    it 'should pass the storage_id to Base' do
-      storage = Backup::Storage::CloudFiles.new(model, 'my_storage_id')
-      storage.storage_id.should == 'my_storage_id'
+    it 'strips leading path separator' do
+      storage = Storage::CloudFiles.new(model) do |cf|
+        cf.path = '/this/path'
+      end
+      expect( storage.path ).to eq 'this/path'
     end
 
-    context 'when no pre-configured defaults have been set' do
-      it 'should use the values given' do
-        storage.username.should   == 'my_username'
-        storage.api_key.should    == 'my_api_key'
-        storage.auth_url.should   == 'lon.auth.api.rackspacecloud.com'
-        storage.container.should  == 'my_container'
-        storage.servicenet.should == false
-        storage.path.should       == 'backups'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 5
-      end
-
-      it 'should use default values if none are given' do
-        storage = Backup::Storage::CloudFiles.new(model)
-
-        storage.username.should   be_nil
-        storage.api_key.should    be_nil
-        storage.auth_url.should   be_nil
-        storage.container.should  be_nil
-        storage.servicenet.should == false
-        storage.path.should       == 'backups'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       be_nil
-      end
-    end # context 'when no pre-configured defaults have been set'
-
-    context 'when pre-configured defaults have been set' do
-      before do
-        Backup::Storage::CloudFiles.defaults do |s|
-          s.username   = 'some_username'
-          s.api_key    = 'some_api_key'
-          s.auth_url   = 'some_auth_url'
-          s.container  = 'some_container'
-          s.servicenet = true
-          s.path       = 'some_path'
-          s.keep       = 15
-        end
-      end
-
-      it 'should use pre-configured defaults' do
-        storage = Backup::Storage::CloudFiles.new(model)
-
-        storage.username.should   == 'some_username'
-        storage.api_key.should    == 'some_api_key'
-        storage.auth_url.should   == 'some_auth_url'
-        storage.container.should  == 'some_container'
-        storage.servicenet.should == true
-        storage.path.should       == 'some_path'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 15
-      end
-
-      it 'should override pre-configured defaults' do
-        storage = Backup::Storage::CloudFiles.new(model) do |s|
-          s.username   = 'new_username'
-          s.api_key    = 'new_api_key'
-          s.auth_url   = 'new_auth_url'
-          s.container  = 'new_container'
-          s.servicenet = false
-          s.path       = 'new_path'
-          s.keep       = 10
-        end
-
-        storage.username.should   == 'new_username'
-        storage.api_key.should    == 'new_api_key'
-        storage.auth_url.should   == 'new_auth_url'
-        storage.container.should  == 'new_container'
-        storage.servicenet.should == false
-        storage.path.should       == 'new_path'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 10
-      end
-    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
-
-  describe '#provider' do
-    it 'should set the Fog provider' do
-      storage.send(:provider).should == 'Rackspace'
-    end
-  end
 
   describe '#connection' do
     let(:connection) { mock }
 
+    before do
+      storage.username = 'my_username'
+      storage.api_key  = 'my_api_key'
+      storage.auth_url = 'my_auth_url'
+    end
+
     context 'when @servicenet is set to false' do
-      it 'should create a new standard connection' do
+      it 'creates a new standard connection' do
         Fog::Storage.expects(:new).once.with(
           :provider             => 'Rackspace',
           :rackspace_username   => 'my_username',
           :rackspace_api_key    => 'my_api_key',
-          :rackspace_auth_url   => 'lon.auth.api.rackspacecloud.com',
+          :rackspace_auth_url   => 'my_auth_url',
           :rackspace_servicenet => false
         ).returns(connection)
         storage.send(:connection).should == connection
@@ -142,113 +82,102 @@ describe Backup::Storage::CloudFiles do
         storage.servicenet = true
       end
 
-      it 'should create a new servicenet connection' do
+      it 'creates a new servicenet connection' do
         Fog::Storage.expects(:new).once.with(
           :provider             => 'Rackspace',
           :rackspace_username   => 'my_username',
           :rackspace_api_key    => 'my_api_key',
-          :rackspace_auth_url   => 'lon.auth.api.rackspacecloud.com',
+          :rackspace_auth_url   => 'my_auth_url',
           :rackspace_servicenet => true
         ).returns(connection)
         storage.send(:connection).should == connection
       end
     end
 
-    it 'should return an existing connection' do
+    it 'caches the connection' do
       Fog::Storage.expects(:new).once.returns(connection)
-      storage.send(:connection).should == connection
-      storage.send(:connection).should == connection
+      expect( storage.send(:connection) ).to eq connection
+      expect( storage.send(:connection) ).to eq connection
     end
 
   end # describe '#connection'
 
   describe '#transfer!' do
     let(:connection) { mock }
-    let(:package) { mock }
+    let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
+    let(:remote_path) { File.join('my/path/test_trigger', timestamp) }
     let(:file) { mock }
-    let(:s) { sequence '' }
 
     before do
-      storage.instance_variable_set(:@package, package)
-      storage.stubs(:storage_name).returns('Storage::CloudFiles')
-      storage.stubs(:local_path).returns('/local/path')
+      Timecop.freeze
+      storage.package.time = timestamp
+      storage.package.stubs(:filenames).returns(
+        ['test_trigger.tar-aa', 'test_trigger.tar-ab']
+      )
       storage.stubs(:connection).returns(connection)
+      storage.container = 'my_container'
+      storage.path = 'my/path'
     end
 
-    it 'should transfer the package files' do
-      storage.expects(:remote_path_for).in_sequence(s).with(package).
-          returns('remote/path')
-      storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
-        multiple_yields(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
-      )
-      # first yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
-        "Storage::CloudFiles started transferring " +
-        "'2011.12.31.11.00.02.backup.tar.enc-aa'."
-      )
-      File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'), 'r'
-      ).yields(file)
-      connection.expects(:put_object).in_sequence(s).with(
-        'my_container', File.join('remote/path', 'backup.tar.enc-aa'), file
-      )
-      # second yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
-        "Storage::CloudFiles started transferring " +
-        "'2011.12.31.11.00.02.backup.tar.enc-ab'."
-      )
-      File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'), 'r'
-      ).yields(file)
-      connection.expects(:put_object).in_sequence(s).with(
-        'my_container', File.join('remote/path', 'backup.tar.enc-ab'), file
-      )
+    after { Timecop.return }
+
+    it 'transfers the package files' do
+      connection.expects(:put_container).in_sequence(s).with('my_container')
+
+      src = File.join(Config.tmp_path, 'test_trigger.tar-aa')
+      dest = File.join(remote_path, 'test_trigger.tar-aa')
+
+      Logger.expects(:info).in_sequence(s).with("Storing 'my_container/#{ dest }'...")
+      File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
+      connection.expects(:put_object).in_sequence(s).with('my_container', dest, file)
+
+      src = File.join(Config.tmp_path, 'test_trigger.tar-ab')
+      dest = File.join(remote_path, 'test_trigger.tar-ab')
+
+      Logger.expects(:info).in_sequence(s).with("Storing 'my_container/#{ dest }'...")
+      File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
+      connection.expects(:put_object).in_sequence(s).with('my_container', dest, file)
 
       storage.send(:transfer!)
     end
+
   end # describe '#transfer!'
 
   describe '#remove!' do
-    let(:package) { mock }
     let(:connection) { mock }
-    let(:s) { sequence '' }
+    let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
+    let(:remote_path) { File.join('my/path/test_trigger', timestamp) }
+    let(:package) {
+      stub( # loaded from YAML storage file
+        :trigger    => 'test_trigger',
+        :time       => timestamp,
+        :filenames  => ['test_trigger.tar-aa', 'test_trigger.tar-ab']
+      )
+    }
 
     before do
-      storage.stubs(:storage_name).returns('Storage::CloudFiles')
+      Timecop.freeze
       storage.stubs(:connection).returns(connection)
+      storage.container = 'my_container'
+      storage.path = 'my/path'
     end
 
-    it 'should remove the package files' do
-      storage.expects(:remote_path_for).in_sequence(s).with(package).
-          returns('remote/path')
-      storage.expects(:transferred_files_for).in_sequence(s).with(package).
-        multiple_yields(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
-      )
-      # first yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
-        "Storage::CloudFiles started removing " +
-        "'2011.12.31.11.00.02.backup.tar.enc-aa' " +
-        "from container 'my_container'."
-      )
-      connection.expects(:delete_object).in_sequence(s).with(
-        'my_container', File.join('remote/path', 'backup.tar.enc-aa')
-      )
-      # second yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
-        "Storage::CloudFiles started removing " +
-        "'2011.12.31.11.00.02.backup.tar.enc-ab' " +
-        "from container 'my_container'."
-      )
-      connection.expects(:delete_object).in_sequence(s).with(
-        'my_container', File.join('remote/path', 'backup.tar.enc-ab')
-      )
+    after { Timecop.return }
+
+    it 'removes the given package from the remote' do
+      Logger.expects(:info).in_sequence(s).
+          with("Removing backup package dated #{ timestamp }...")
+
+      target = File.join(remote_path, 'test_trigger.tar-aa')
+      connection.expects(:delete_object).in_sequence(s).with('my_container', target)
+
+      target = File.join(remote_path, 'test_trigger.tar-ab')
+      connection.expects(:delete_object).in_sequence(s).with('my_container', target)
 
       storage.send(:remove!, package)
     end
+
   end # describe '#remove!'
 
+end
 end

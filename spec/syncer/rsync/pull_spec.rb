@@ -2,97 +2,129 @@
 
 require File.expand_path('../../../spec_helper.rb', __FILE__)
 
-describe Backup::Syncer::RSync::Pull do
-  let(:syncer) do
-    Backup::Syncer::RSync::Pull.new do |rsync|
-      rsync.username  = 'my_username'
-      rsync.password  = 'my_password'
-      rsync.ip        = '123.45.678.90'
-      rsync.port      = 22
-      rsync.compress  = true
-      rsync.path      = "~/my_backups"
-
-      rsync.directories do |directory|
-        directory.add "/some/directory"
-        directory.add "~/home/directory"
-        directory.add "another/directory"
-      end
-
-      rsync.mirror             = true
-      rsync.additional_options = ['--opt-a', '--opt-b']
-    end
-  end
-
-  it 'should be a subclass of RSync::Push' do
-    Backup::Syncer::RSync::Pull.superclass.should == Backup::Syncer::RSync::Push
+module Backup
+describe Syncer::RSync::Pull do
+  before do
+    Syncer::RSync::Pull.any_instance.
+        stubs(:utility).with(:rsync).returns('rsync')
+    Syncer::RSync::Pull.any_instance.
+        stubs(:utility).with(:ssh).returns('ssh')
   end
 
   describe '#perform!' do
-    let(:s) { sequence '' }
 
-    it 'should perform the RSync::Pull operation on two directories' do
-      syncer.expects(:utility).times(3).with(:rsync).returns('rsync')
-      syncer.expects(:options).times(3).returns('options_output')
+    describe 'pulling from the remote host' do
 
-      syncer.expects(:write_password_file!).in_sequence(s)
+      specify 'using :ssh mode' do
+        syncer = Syncer::RSync::Pull.new do |s|
+          s.mode = :ssh
+          s.host = 'my_host'
+          s.path = '~/some/path/'
+          s.directories do |dirs|
+            dirs.add '/this/dir/'
+            dirs.add 'that/dir'
+            dirs.add '~/home/dir/'
+          end
+        end
 
-      # first directory - uses the given full path
-      Backup::Logger.expects(:message).in_sequence(s).with(
-        "Syncer::RSync::Pull started syncing '/some/directory'."
-      )
-      syncer.expects(:run).in_sequence(s).with(
-        "rsync options_output 'my_username@123.45.678.90:/some/directory' " +
-        "'#{ File.expand_path('~/my_backups') }'"
-      )
+        FileUtils.expects(:mkdir_p).with(File.expand_path('~/some/path/'))
 
-      # second directory - removes leading '~'
-      Backup::Logger.expects(:message).in_sequence(s).with(
-        "Syncer::RSync::Pull started syncing '~/home/directory'."
-      )
-      syncer.expects(:run).in_sequence(s).with(
-        "rsync options_output 'my_username@123.45.678.90:home/directory' " +
-        "'#{ File.expand_path('~/my_backups') }'"
-      )
-
-      # third directory - does not expand path
-      Backup::Logger.expects(:message).in_sequence(s).with(
-        "Syncer::RSync::Pull started syncing 'another/directory'."
-      )
-      syncer.expects(:run).in_sequence(s).with(
-        "rsync options_output 'my_username@123.45.678.90:another/directory' " +
-        "'#{ File.expand_path('~/my_backups') }'"
-      )
-
-      syncer.expects(:remove_password_file!).in_sequence(s)
-
-      syncer.perform!
-    end
-
-    it 'should ensure passoword file removal' do
-      syncer.expects(:write_password_file!).raises('error message')
-      syncer.expects(:remove_password_file!)
-
-      expect do
+        syncer.expects(:run).with(
+          "rsync --archive -e \"ssh -p 22\" " +
+          "my_host:'/this/dir' :'that/dir' :'home/dir' " +
+          "'#{ File.expand_path('~/some/path/') }'"
+        )
         syncer.perform!
-      end.to raise_error(RuntimeError, 'error message')
+      end
+
+      specify 'using :ssh_daemon mode' do
+        syncer = Syncer::RSync::Pull.new do |s|
+          s.mode = :ssh_daemon
+          s.host = 'my_host'
+          s.path = '~/some/path/'
+          s.directories do |dirs|
+            dirs.add '/this/dir/'
+            dirs.add 'that/dir'
+            dirs.add '~/home/dir/'
+          end
+        end
+
+        FileUtils.expects(:mkdir_p).with(File.expand_path('~/some/path/'))
+
+        syncer.expects(:run).with(
+          "rsync --archive -e \"ssh -p 22\" " +
+          "my_host::'/this/dir' ::'that/dir' ::'home/dir' " +
+          "'#{ File.expand_path('~/some/path/') }'"
+        )
+        syncer.perform!
+      end
+
+      specify 'using :rsync_daemon mode' do
+        syncer = Syncer::RSync::Pull.new do |s|
+          s.mode = :rsync_daemon
+          s.host = 'my_host'
+          s.path = '~/some/path/'
+          s.directories do |dirs|
+            dirs.add '/this/dir/'
+            dirs.add 'that/dir'
+            dirs.add '~/home/dir/'
+          end
+        end
+
+        FileUtils.expects(:mkdir_p).with(File.expand_path('~/some/path/'))
+
+        syncer.expects(:run).with(
+          "rsync --archive --port 873 " +
+          "my_host::'/this/dir' ::'that/dir' ::'home/dir' " +
+          "'#{ File.expand_path('~/some/path/') }'"
+        )
+        syncer.perform!
+      end
+
+    end # describe 'pulling from the remote host'
+
+    describe 'password handling' do
+      let(:s) { sequence '' }
+      let(:syncer) { Syncer::RSync::Pull.new }
+
+      it 'writes and removes the temporary password file' do
+        syncer.expects(:write_password_file!).in_sequence(s)
+        syncer.expects(:run).in_sequence(s)
+        syncer.expects(:remove_password_file!).in_sequence(s)
+
+        syncer.perform!
+      end
+
+      it 'ensures temporary password file removal' do
+        syncer.expects(:write_password_file!).in_sequence(s)
+        syncer.expects(:run).in_sequence(s).raises('error')
+        syncer.expects(:remove_password_file!).in_sequence(s)
+
+        expect do
+          syncer.perform!
+        end.to raise_error
+      end
+    end # describe 'password handling'
+
+    describe 'logging messages' do
+      it 'logs started/finished messages' do
+        syncer = Syncer::RSync::Pull.new
+
+        Logger.expects(:info).with('Syncer::RSync::Pull Started...')
+        Logger.expects(:info).with('Syncer::RSync::Pull Finished!')
+        syncer.perform!
+      end
+
+      it 'logs messages using optional syncer_id' do
+        syncer = Syncer::RSync::Pull.new('My Syncer')
+
+        Logger.expects(:info).with('Syncer::RSync::Pull (My Syncer) Started...')
+        Logger.expects(:info).with('Syncer::RSync::Pull (My Syncer) Finished!')
+        syncer.perform!
+      end
     end
   end # describe '#perform!'
 
-  describe '#dest_path' do
-    it 'should return @path expanded' do
-      syncer.send(:dest_path).should == File.expand_path('~/my_backups')
-    end
-
-    it 'should set @dest_path' do
-      syncer.send(:dest_path)
-      syncer.instance_variable_get(:@dest_path).should ==
-          File.expand_path('~/my_backups')
-    end
-
-    it 'should return @dest_path if already set' do
-      syncer.instance_variable_set(:@dest_path, 'foo')
-      syncer.send(:dest_path).should == 'foo'
-    end
-  end
-
+  # same deprecations as RSync::Push
+end
 end

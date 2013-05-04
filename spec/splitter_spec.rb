@@ -2,119 +2,105 @@
 
 require File.expand_path('../spec_helper.rb', __FILE__)
 
-describe Backup::Splitter do
-  let(:model) { Backup::Model.new(:test_trigger, 'test label') }
-  let(:splitter) { Backup::Splitter.new(model, 250) }
-  let(:package) { mock }
+module Backup
+describe Splitter do
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:package) { model.package }
+  let(:splitter) { Splitter.new(model, 250) }
+  let(:s) { sequence '' }
+
+  before do
+    Splitter.any_instance.stubs(:utility).with(:split).returns('split')
+  end
+
+  # Note: BSD split will not accept a 'M' suffix for the byte size
+  # e.g. split -b 250M
 
   describe '#initialize' do
-    it 'should set instance variables' do
-      splitter.instance_variable_get(:@model).should be(model)
-      splitter.instance_variable_get(:@chunk_size).should be(250)
+    it 'sets instance variables' do
+      expect( splitter.package    ).to be package
+      expect( splitter.chunk_size ).to be 250
     end
   end
 
   describe '#split_with' do
-    it 'should yield the split command, performing before/after methods' do
-      s = sequence ''
-      given_block = mock
-      block = lambda {|arg| given_block.got(arg) }
-      splitter.instance_variable_set(:@split_command, 'split command')
+    let(:given_block) { mock }
+    let(:block) { lambda {|arg| given_block.got(arg) } }
 
-      splitter.expects(:before_packaging).in_sequence(s)
-      given_block.expects(:got).in_sequence(s).with('split command')
-      splitter.expects(:after_packaging).in_sequence(s)
-
-      splitter.split_with(&block)
-    end
-  end
-
-  # Note: using a 'M' suffix for the byte size is not OSX compatible
-  describe '#before_packaging' do
-    before do
-      model.instance_variable_set(:@package, package)
-      splitter.expects(:utility).with(:split).returns('split')
-      package.expects(:basename).returns('base_filename')
-    end
-
-    it 'should set @package and @split_command' do
-      Backup::Logger.expects(:message).with(
-        'Splitter configured with a chunk size of 250MB.'
-      )
-      splitter.send(:before_packaging)
-
-      splitter.instance_variable_get(:@package).should be(package)
-
-      split_suffix = File.join(Backup::Config.tmp_path, 'base_filename-')
-      splitter.instance_variable_get(:@split_command).should ==
-          "split -b 250m - '#{ split_suffix }'"
-    end
-  end
-
-  describe '#after_packaging' do
-    before do
-      splitter.instance_variable_set(:@package, package)
-    end
-
-    context 'when splitting occurred during packaging' do
+    context 'when the final package is large enough to be split' do
       before do
-        splitter.expects(:chunk_suffixes).returns(['aa', 'ab'])
-      end
-
-      it 'should set the chunk_suffixes for the package' do
-        package.expects(:chunk_suffixes=).with(['aa', 'ab'])
-        splitter.send(:after_packaging)
-      end
-    end
-
-    context 'when splitting did not occur during packaging' do
-      before do
-        splitter.expects(:chunk_suffixes).returns(['aa'])
-        package.expects(:basename).twice.returns('base_filename')
-      end
-
-      it 'should remove the suffix from the only package file' do
-        package.expects(:chunk_suffixes=).never
-        FileUtils.expects(:mv).with(
-          File.join(Backup::Config.tmp_path, 'base_filename-aa'),
-          File.join(Backup::Config.tmp_path, 'base_filename')
+        splitter.stubs(:chunks).returns(
+          ['/tmp/test_trigger.tar-aa', '/tmp/test_trigger.tar-ab']
         )
-        splitter.send(:after_packaging)
+      end
+
+      it 'updates chunk_suffixes for the package' do
+        Logger.expects(:info).in_sequence(s).with(
+          'Splitter configured with a chunk size of 250MB.'
+        )
+
+        given_block.expects(:got).in_sequence(s).with(
+          "split -b 250m - '#{ File.join(Config.tmp_path, 'test_trigger.tar-') }'"
+        )
+
+        FileUtils.expects(:mv).never
+
+        splitter.split_with(&block)
+
+        expect( package.chunk_suffixes ).to eq ['aa', 'ab']
       end
     end
-  end # describe '#after_packaging'
 
-  describe '#chunk_suffixes' do
-    before do
-      splitter.expects(:chunks).returns(
-        ['/path/to/file.tar-aa', '/path/to/file.tar-ab']
-      )
+    context 'when the final package is not large enough to be split' do
+      before do
+        splitter.stubs(:chunks).returns(['/tmp/test_trigger.tar-aa'])
+      end
+
+      it 'removes the suffix from the single file output by split' do
+        Logger.expects(:info).in_sequence(s).with(
+          'Splitter configured with a chunk size of 250MB.'
+        )
+
+        given_block.expects(:got).in_sequence(s).with(
+          "split -b 250m - '#{ File.join(Config.tmp_path, 'test_trigger.tar-') }'"
+        )
+
+        FileUtils.expects(:mv).in_sequence(s).with(
+          File.join(Config.tmp_path, 'test_trigger.tar-aa'),
+          File.join(Config.tmp_path, 'test_trigger.tar')
+        )
+
+        splitter.split_with(&block)
+
+        expect( package.chunk_suffixes ).to eq []
+      end
     end
 
-    it 'should return an array of chunk suffixes' do
-      splitter.send(:chunk_suffixes).should == ['aa', 'ab']
-    end
-  end
+  end # describe '#split_with'
 
   describe '#chunks' do
     before do
-      splitter.instance_variable_set(:@package, package)
-      package.expects(:basename).returns('base_filename')
-      FileUtils.unstub(:touch)
+      @tmpdir = Dir.mktmpdir('backup_spec')
+      SandboxFileUtils.activate!(@tmpdir)
+      Config.update(:root_path => @tmpdir)
+      FileUtils.mkdir_p(Config.tmp_path)
+    end
+
+    after do
+      FileUtils.rm_r(@tmpdir, :force => true, :secure => true)
     end
 
     it 'should return a sorted array of chunked file paths' do
-      Dir.mktmpdir do |dir|
-        Backup::Config.expects(:tmp_path).returns(dir)
-        FileUtils.touch(File.join(dir, 'base_filename-aa'))
-        FileUtils.touch(File.join(dir, 'base_filename-ab'))
+      files = [
+        'test_trigger.tar-aa',
+        'test_trigger.tar-ab',
+        'other_trigger.tar-aa'
+      ].map {|name| File.join(Config.tmp_path, name) }
+      FileUtils.touch(files)
 
-        splitter.send(:chunks).should == [
-          File.join(dir, 'base_filename-aa'),
-          File.join(dir, 'base_filename-ab')
-        ]
-      end
+      expect( splitter.send(:chunks) ).to eq files[0..1]
     end
   end
 
+end
 end

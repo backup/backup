@@ -1,8 +1,5 @@
 # encoding: utf-8
-
-##
-# Only load the Twitter gem when using Twitter notifications
-Backup::Dependency.load('twitter')
+require 'twitter'
 
 module Backup
   module Notifier

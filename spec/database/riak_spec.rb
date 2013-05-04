@@ -2,175 +2,264 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Database::Riak do
-  let(:model) { Backup::Model.new('foo', 'foo') }
-  let(:db) do
-    Backup::Database::Riak.new(model) do |db|
-      db.name         = 'mydatabase'
-      db.node         = 'riak@localhost'
-      db.cookie       = 'riak'
-      db.riak_admin_utility = '/path/to/riak-admin'
-    end
+module Backup
+describe Database::Riak do
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:db) { Database::Riak.new(model) }
+  let(:s) { sequence '' }
+
+  before do
+    Database::Riak.any_instance.stubs(:utility).
+        with('riak-admin').returns('riak-admin')
+    Database::Riak.any_instance.stubs(:utility).
+        with(:sudo).returns('sudo')
+    Database::Riak.any_instance.stubs(:utility).
+        with(:chown).returns('chown')
   end
 
-  it 'should be a subclass of Database::Base' do
-    Backup::Database::Riak.superclass.
-      should == Backup::Database::Base
-  end
+  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a subclass of Database::Base'
 
   describe '#initialize' do
-
-    it 'should load pre-configured defaults through Base' do
-      Backup::Database::Riak.any_instance.expects(:load_defaults!)
-      db
+    it 'provides default values' do
+      expect( db.database_id        ).to be_nil
+      expect( db.node               ).to eq 'riak@127.0.0.1'
+      expect( db.cookie             ).to eq 'riak'
+      expect( db.user               ).to eq 'riak'
     end
 
-    it 'should pass the model reference to Base' do
-      db.instance_variable_get(:@model).should == model
+    it 'configures the database' do
+      db = Database::Riak.new(model, :my_id) do |riak|
+        riak.node   = 'my_node'
+        riak.cookie = 'my_cookie'
+        riak.user   = 'my_user'
+      end
+
+      expect( db.database_id ).to eq 'my_id'
+      expect( db.node        ).to eq 'my_node'
+      expect( db.cookie      ).to eq 'my_cookie'
+      expect( db.user        ).to eq 'my_user'
     end
-
-    context 'when no pre-configured defaults have been set' do
-      context 'when options are specified' do
-        it 'should use the given values' do
-          db.name.should      == 'mydatabase'
-          db.node.should      == 'riak@localhost'
-          db.cookie.should    == 'riak'
-          db.riak_admin_utility.should == '/path/to/riak-admin'
-        end
-      end
-
-      context 'when options are not specified' do
-        before do
-          Backup::Database::Riak.any_instance.expects(:utility).
-              with('riak-admin').returns('/real/riak-admin')
-        end
-
-        it 'should provide default values' do
-          db = Backup::Database::Riak.new(model)
-
-          db.name.should        be_nil
-          db.node.should        be_nil
-          db.cookie.should      be_nil
-          db.riak_admin_utility.should == '/real/riak-admin'
-        end
-      end
-    end # context 'when no pre-configured defaults have been set'
-
-    context 'when pre-configured defaults have been set' do
-      before do
-        Backup::Database::Riak.defaults do |db|
-          db.name         = 'db_name'
-          db.node         = 'db_node'
-          db.cookie       = 'db_cookie'
-          db.riak_admin_utility = '/default/path/to/riak-admin'
-        end
-      end
-
-      after { Backup::Database::Riak.clear_defaults! }
-
-      context 'when options are specified' do
-        it 'should override the pre-configured defaults' do
-          db.name.should      == 'mydatabase'
-          db.node.should      == 'riak@localhost'
-          db.cookie.should    == 'riak'
-          db.riak_admin_utility.should == '/path/to/riak-admin'
-        end
-      end
-
-      context 'when options are not specified' do
-        it 'should use the pre-configured defaults' do
-          db = Backup::Database::Riak.new(model)
-
-          db.name.should        == 'db_name'
-          db.node.should        == 'db_node'
-          db.cookie.should      == 'db_cookie'
-          db.riak_admin_utility.should == '/default/path/to/riak-admin'
-        end
-      end
-    end # context 'when no pre-configured defaults have been set'
   end # describe '#initialize'
 
+
   describe '#perform!' do
-    let(:compressor) { mock }
-    let(:s) { sequence '' }
     before do
-      # superclass actions
+      db.stubs(:dump_path).returns('/tmp/trigger/databases')
+      Config.stubs(:user).returns('backup_user')
+
+      db.expects(:log!).in_sequence(s).with(:started)
       db.expects(:prepare!).in_sequence(s)
-      db.expects(:log!).in_sequence(s)
-      db.instance_variable_set(:@dump_path, '/dump/path')
-
-      db.stubs(:riakadmin).returns('riakadmin_command')
     end
 
-    context 'when no compressor is configured' do
-      it 'should only perform the riak-admin backup command' do
-        FileUtils.expects(:chown_R).with('riak', 'riak', '/dump/path')
-        db.expects(:run).in_sequence(s).
-            with('riakadmin_command /dump/path/mydatabase node')
+    context 'with a compressor configured' do
+      let(:compressor) { mock }
 
-        db.perform!
-      end
-    end
-
-    context 'when a compressor is configured' do
       before do
         model.stubs(:compressor).returns(compressor)
-        compressor.expects(:compress_with).yields('compressor_command', '.gz')
+        compressor.stubs(:compress_with).yields('cmp_cmd', '.cmp_ext')
       end
 
-      it 'should compress the backup file and remove the source file' do
-        FileUtils.expects(:chown_R).with('riak', 'riak', '/dump/path')
-        db.expects(:run).in_sequence(s).
-            with('riakadmin_command /dump/path/mydatabase node')
+      it 'dumps the database with compression' do
         db.expects(:run).in_sequence(s).with(
-          "compressor_command -c /dump/path/mydatabase > /dump/path/mydatabase.gz"
+          "sudo -n chown riak '/tmp/trigger/databases'"
         )
-        FileUtils.expects(:rm_f).in_sequence(s).with('/dump/path/mydatabase')
+
+        db.expects(:run).in_sequence(s).with(
+          "sudo -n -u riak riak-admin backup riak@127.0.0.1 riak " +
+          "'/tmp/trigger/databases/Riak' node"
+        )
+
+        db.expects(:run).in_sequence(s).with(
+          "sudo -n chown -R backup_user '/tmp/trigger/databases'"
+        )
+
+        db.expects(:run).in_sequence(s).with(
+          "cmp_cmd -c '/tmp/trigger/databases/Riak-riak@127.0.0.1' " +
+          "> '/tmp/trigger/databases/Riak-riak@127.0.0.1.cmp_ext'"
+        )
+
+        FileUtils.expects(:rm_f).in_sequence(s).with(
+          '/tmp/trigger/databases/Riak-riak@127.0.0.1'
+        )
+
+        db.expects(:log!).in_sequence(s).with(:finished)
 
         db.perform!
       end
-    end
-  end
+    end # context 'with a compressor configured'
 
-  describe '#riakadmin' do
-    it 'should return the full riakadmin string' do
-      db.send(:riakadmin).should == "/path/to/riak-admin backup riak@localhost riak"
+    context 'without a compressor configured' do
+      it 'dumps the database without compression' do
+        db.expects(:run).in_sequence(s).with(
+          "sudo -n chown riak '/tmp/trigger/databases'"
+        )
+
+        db.expects(:run).in_sequence(s).with(
+          "sudo -n -u riak riak-admin backup riak@127.0.0.1 riak " +
+          "'/tmp/trigger/databases/Riak' node"
+        )
+
+        db.expects(:run).in_sequence(s).with(
+          "sudo -n chown -R backup_user '/tmp/trigger/databases'"
+        )
+
+        FileUtils.expects(:rm_f).never
+
+        db.expects(:log!).in_sequence(s).with(:finished)
+
+        db.perform!
+      end
+    end # context 'without a compressor configured'
+
+    it 'ensures dump_path ownership is reclaimed' do
+      db.expects(:run).in_sequence(s).with(
+        "sudo -n chown riak '/tmp/trigger/databases'"
+      )
+
+      db.expects(:run).in_sequence(s).with(
+        "sudo -n -u riak riak-admin backup riak@127.0.0.1 riak " +
+        "'/tmp/trigger/databases/Riak' node"
+      ).raises('an error')
+
+      db.expects(:run).in_sequence(s).with(
+        "sudo -n chown -R backup_user '/tmp/trigger/databases'"
+      )
+
+      expect do
+        db.perform!
+      end.to raise_error('an error')
     end
-  end
+  end # describe '#perform!'
 
   describe 'deprecations' do
+    after { Database::Riak.clear_defaults! }
+
     describe '#utility_path' do
       before do
-        Backup::Database::Riak.any_instance.stubs(:utility)
-        Backup::Logger.expects(:warn).with {|err|
-          err.should be_an_instance_of Backup::Errors::ConfigurationError
-          err.message.should match(
-            /Use Riak#riak_admin_utility instead/
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
+        Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err.message ).to match(
+            /Use Backup::Utilities\.configure instead/
           )
         }
-      end
-      after do
-        Backup::Database::Riak.clear_defaults!
       end
 
       context 'when set directly' do
         it 'should issue a deprecation warning and set the replacement value' do
-          riak = Backup::Database::Riak.new(model) do |db|
-            db.utility_path = 'foo'
+          Database::Riak.new(model) do |db|
+            db.utility_path = '/foo'
           end
-          riak.riak_admin_utility.should == 'foo'
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['riak-admin'] ).to eq '/foo'
         end
       end
 
       context 'when set as a default' do
         it 'should issue a deprecation warning and set the replacement value' do
-          riak = Backup::Database::Riak.defaults do |db|
-            db.utility_path = 'foo'
+          Database::Riak.defaults do |db|
+            db.utility_path = '/foo'
           end
-          riak = Backup::Database::Riak.new(model)
-          riak.riak_admin_utility.should == 'foo'
+          Database::Riak.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['riak-admin'] ).to eq '/foo'
         end
       end
     end # describe '#utility_path'
-  end
+
+    describe '#riak_admin_utility' do
+      before do
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
+        Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err.message ).to match(
+            /Use Backup::Utilities\.configure instead/
+          )
+        }
+      end
+
+      context 'when set directly' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Database::Riak.new(model) do |db|
+            db.riak_admin_utility = '/foo'
+          end
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['riak-admin'] ).to eq '/foo'
+        end
+      end
+
+      context 'when set as a default' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Database::Riak.defaults do |db|
+            db.riak_admin_utility = '/foo'
+          end
+          Database::Riak.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['riak-admin'] ).to eq '/foo'
+        end
+      end
+    end # describe '#riak_admin_utility'
+
+    describe '#name' do
+      before do
+        Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err.message ).to match(
+            /If you wish to add an identifier/
+          )
+        }
+      end
+
+      context 'when set directly' do
+        it 'should issue a deprecation warning' do
+          Database::Riak.new(model) do |db|
+            db.name = 'foo'
+          end
+        end
+      end
+
+      context 'when set as a default' do
+        it 'should issue a deprecation warning' do
+          riak = Database::Riak.defaults do |db|
+            db.name = 'foo'
+          end
+          riak = Database::Riak.new(model)
+        end
+      end
+    end # describe '#name'
+
+    describe '#group' do
+      before do
+        Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err.message ).to match(
+            /#group has been deprecated/
+          )
+        }
+      end
+
+      context 'when set directly' do
+        it 'should issue a deprecation warning' do
+          Database::Riak.new(model) do |db|
+            db.group = 'foo'
+          end
+        end
+      end
+
+      context 'when set as a default' do
+        it 'should issue a deprecation warning' do
+          riak = Database::Riak.defaults do |db|
+            db.group = 'foo'
+          end
+          riak = Database::Riak.new(model)
+        end
+      end
+    end # describe '#group'
+
+  end # describe 'deprecations'
+
+end
 end

@@ -14,7 +14,8 @@ module Backup
       attr_accessor :token
 
       ##
-      # The user's device identifier to sent he message directly to that device rather than all of the user's devices
+      # The user's device identifier to sent the message directly to,
+      # rather than all of the user's devices
       attr_accessor :device
 
       ##
@@ -68,7 +69,7 @@ module Backup
         url = URI.parse("https://api.pushover.net/1/messages.json")
 
         request = Net::HTTP::Post.new(url.path)
-        request.set_form_data(parameters.merge ({:message => message}))
+        request.set_form_data(parameters.merge({:message => message}))
         response = Net::HTTP.new(url.host, url.port)
 
         response.use_ssl = true
@@ -80,7 +81,9 @@ module Backup
       # List available parameters
       def parameters
         @values = {}
-        [:token, :user, :message, :title, :priority, :device].each { |k| @values.merge! k => self.instance_variable_get("@#{k}") }
+        [:token, :user, :message, :title, :priority, :device].each do |k|
+          @values.merge! k => self.instance_variable_get("@#{k}")
+        end
         @values
       end
     end

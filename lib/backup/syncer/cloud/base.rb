@@ -3,8 +3,10 @@
 ##
 # Only load the Fog gem, along with the Parallel gem, when the
 # Backup::Syncer::Cloud class is loaded
-Backup::Dependency.load('fog')
-Backup::Dependency.load('parallel')
+# Backup::Dependency.load('fog')
+# Backup::Dependency.load('parallel')
+require 'fog'
+require 'parallel'
 
 module Backup
   module Syncer
@@ -39,9 +41,10 @@ module Backup
         # If not specified in the pre-configured defaults,
         # the Cloud specific defaults are set here before evaluating
         # any block provided in the user's configuration file.
-        def initialize
+        def initialize(syncer_id = nil)
           super
 
+          @path = path.sub(/^~\//, '')
           @concurrency_type  ||= false
           @concurrency_level ||= 2
         end
@@ -49,8 +52,8 @@ module Backup
         ##
         # Performs the Sync operation
         def perform!
-          Logger.message(
-            "#{ syncer_name } started the syncing process:\n" +
+          log!(:started)
+          Logger.info(
             "\s\sConcurrency: #{ @concurrency_type } Level: #{ @concurrency_level }"
           )
 
@@ -60,12 +63,14 @@ module Backup
             ).sync! @mirror, @concurrency_type, @concurrency_level
           end
 
-          Logger.message("#{ syncer_name } Syncing Complete!")
+          log!(:finished)
         end
 
         private
 
         class SyncContext
+          include Utilities::Helpers
+
           attr_reader :directory, :bucket, :path, :remote_base
 
           ##
@@ -126,9 +131,14 @@ module Backup
 
           ##
           # Returns a String of file paths and their md5 hashes.
+          #
+          # Utilities#run is not used here because this would produce too much
+          # log output, and Pipeline does not support capturing output.
           def local_hashes
-            Logger.message("\s\sGenerating checksums for '#{ @directory }'")
-            `find '#{ @directory }' -print0 | xargs -0 openssl md5 2> /dev/null`
+            Logger.info("\s\sGenerating checksums for '#{ @directory }'")
+            cmd = "#{ utility(:find) } -L '#{ @directory }' -type f -print0 | " +
+                "#{ utility(:xargs) } -0 #{ utility(:openssl) } md5 2> /dev/null"
+            %x[#{ cmd }]
           end
 
           ##
@@ -160,7 +170,7 @@ module Backup
             if local_file && File.exist?(local_file.path)
               unless remote_file && remote_file.etag == local_file.md5
                 MUTEX.synchronize {
-                  Logger.message("\s\s[transferring] '#{ remote_path }'")
+                  Logger.info("\s\s[transferring] '#{ remote_path }'")
                 }
                 File.open(local_file.path, 'r') do |file|
                   @bucket.files.create(
@@ -170,18 +180,18 @@ module Backup
                 end
               else
                 MUTEX.synchronize {
-                  Logger.message("\s\s[skipping] '#{ remote_path }'")
+                  Logger.info("\s\s[skipping] '#{ remote_path }'")
                 }
               end
             elsif remote_file
               if mirror
                 MUTEX.synchronize {
-                  Logger.message("\s\s[removing] '#{ remote_path }'")
+                  Logger.info("\s\s[removing] '#{ remote_path }'")
                 }
                 remote_file.destroy
               else
                 MUTEX.synchronize {
-                  Logger.message("\s\s[leaving] '#{ remote_path }'")
+                  Logger.info("\s\s[leaving] '#{ remote_path }'")
                 }
               end
             end

@@ -1,11 +1,5 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
 
-# Load the Backup core library
 require File.expand_path("../../lib/backup", __FILE__)
-
-# Load the Backup command line interface utility
-require File.expand_path("../../lib/backup/cli/utility", __FILE__)
-
-# Initialize the Backup command line utility
-Backup::CLI::Utility.start
+Backup::CLI.start

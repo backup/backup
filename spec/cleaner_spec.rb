@@ -2,311 +2,311 @@
 
 require File.expand_path('../spec_helper.rb', __FILE__)
 
-describe 'Backup::Cleaner' do
-  let(:model)   { Backup::Model.new(:test_trigger, 'test label') }
-  let(:cleaner) { Backup::Cleaner }
+module Backup
+describe Cleaner do
+  let(:model) { Model.new(:test_trigger, 'test label') }
 
   describe '#prepare' do
-    let(:error_tail) do
-      "  Please check the log for messages and/or your notifications\n" +
-      "  concerning this backup: 'test label (test_trigger)'\n" +
-      "  The temporary files which had to be removed should not have existed."
-    end
+    let(:error_tail) { <<-EOS.gsub(/^ +/, '  ')
 
-    context 'when neither the tmp_path is dirty or package files exist' do
-      it 'should do nothing' do
-        cleaner.expects(:packaging_folder_dirty?).returns(false)
-        cleaner.expects(:tmp_path_package_files).returns([])
+      Please check the log for messages and/or your notifications
+      concerning this backup: 'test label (test_trigger)'
+      The temporary files which had to be removed should not have existed.
+      EOS
+    }
+
+    context 'when no temporary packaging folder or package files exist' do
+      it 'does nothing' do
+        File.expects(:exist?).with(
+          File.join(Config.tmp_path, 'test_trigger')
+        ).returns(false)
+
+        Cleaner.expects(:package_files_for).with('test_trigger').returns([])
+
         FileUtils.expects(:rm_rf).never
         FileUtils.expects(:rm_f).never
-        Backup::Logger.expects(:warn).never
+        Logger.expects(:warn).never
 
-        cleaner.prepare(model)
+        Cleaner.prepare(model)
       end
     end
 
-    context 'when the tmp_path is dirty' do
-      it 'should remove tmp_path and log a warning' do
-        cleaner.expects(:packaging_folder_dirty?).returns(true)
-        cleaner.expects(:tmp_path_package_files).returns([])
-        FileUtils.expects(:rm_f).never
+    context 'when a temporary packaging folder exists' do
+      it 'removes the folder and logs a warning' do
+        File.expects(:exist?).with(
+          File.join(Config.tmp_path, 'test_trigger')
+        ).returns(true)
+
+        Cleaner.expects(:package_files_for).with('test_trigger').returns([])
 
         FileUtils.expects(:rm_rf).with(
-          File.join(Backup::Config.tmp_path, 'test_trigger')
+          File.join(Config.tmp_path, 'test_trigger')
         )
-        Backup::Logger.expects(:warn).with do |err|
-          err.should be_an_instance_of Backup::Errors::CleanerError
-          err.message.should == "CleanerError: Cleanup Warning\n" +
-            "  The temporary backup folder still contains files!\n" +
-            "  '#{ File.join(Backup::Config.tmp_path, 'test_trigger') }'\n" +
-            "  These files will now be removed.\n" +
-            "  \n" + error_tail
+
+        FileUtils.expects(:rm_f).never
+
+        Logger.expects(:warn).with do |err|
+          expect( err ).to be_an_instance_of Errors::CleanerError
+          expect( err.message ).to eq(<<-EOS.gsub(/^ +/, '  ').strip)
+            CleanerError: Cleanup Warning
+            The temporary packaging folder still exists!
+            '#{ File.join(Config.tmp_path, 'test_trigger') }'
+            It will now be removed.
+            #{ error_tail }
+          EOS
         end
 
-        cleaner.prepare(model)
+        Cleaner.prepare(model)
       end
     end
 
     context 'when package files exist' do
-      it 'should remove the files and log a warning' do
-        cleaner.expects(:packaging_folder_dirty?).returns(false)
-        cleaner.expects(:tmp_path_package_files).returns(['file1', 'file2'])
+      it 'removes the files and logs a warning' do
+        File.expects(:exist?).with(
+          File.join(Config.tmp_path, 'test_trigger')
+        ).returns(false)
+
+        Cleaner.expects(:package_files_for).with('test_trigger').
+            returns(['file1', 'file2'])
+
         FileUtils.expects(:rm_rf).never
 
         FileUtils.expects(:rm_f).with('file1')
         FileUtils.expects(:rm_f).with('file2')
 
-        Backup::Logger.expects(:warn).with do |err|
-          err.should be_an_instance_of Backup::Errors::CleanerError
-          err.message.should == "CleanerError: Cleanup Warning\n" +
-            "  The temporary backup folder '#{ Backup::Config.tmp_path }'\n" +
-            "  appears to contain the package files from the previous backup!\n" +
-            "  file1\n" +
-            "  file2\n" +
-            "  These files will now be removed.\n" +
-            "  \n" + error_tail
+        Logger.expects(:warn).with do |err|
+          expect( err ).to be_an_instance_of Errors::CleanerError
+          expect( err.message ).to eq(<<-EOS.gsub(/^ +/, '  ').strip)
+            CleanerError: Cleanup Warning
+            The temporary backup folder '#{ Config.tmp_path }'
+            appears to contain the package files from the previous backup!
+            file1
+            file2
+            These files will now be removed.
+            #{ error_tail }
+          EOS
         end
 
-        cleaner.prepare(model)
+        Cleaner.prepare(model)
       end
     end
 
-    context 'both the tmp_path is dirty and package files exist' do
-      it 'should clean both and log a warning' do
-        cleaner.expects(:packaging_folder_dirty?).returns(true)
-        cleaner.expects(:tmp_path_package_files).returns(['file1', 'file2'])
+    context 'when both the temporary packaging folder and package files exist' do
+      it 'removes both and logs a warning' do
+        File.expects(:exist?).with(
+          File.join(Config.tmp_path, 'test_trigger')
+        ).returns(true)
+
+        Cleaner.expects(:package_files_for).with('test_trigger').
+            returns(['file1', 'file2'])
 
         FileUtils.expects(:rm_rf).with(
-          File.join(Backup::Config.tmp_path, 'test_trigger')
+          File.join(Config.tmp_path, 'test_trigger')
         )
+
         FileUtils.expects(:rm_f).with('file1')
         FileUtils.expects(:rm_f).with('file2')
 
-        Backup::Logger.expects(:warn).with do |err|
-          err.should be_an_instance_of Backup::Errors::CleanerError
-          err.message.should == "CleanerError: Cleanup Warning\n" +
-            "  The temporary backup folder still contains files!\n" +
-            "  '#{ File.join(Backup::Config.tmp_path, 'test_trigger') }'\n" +
-            "  These files will now be removed.\n" +
-            "  \n" +
-            "  #{ '-' * 74 }\n" +
-            "  The temporary backup folder '#{ Backup::Config.tmp_path }'\n" +
-            "  appears to contain the package files from the previous backup!\n" +
-            "  file1\n" +
-            "  file2\n" +
-            "  These files will now be removed.\n" +
-            "  \n" + error_tail
+        Logger.expects(:warn).with do |err|
+          expect( err ).to be_an_instance_of Errors::CleanerError
+          expect( err.message ).to eq(<<-EOS.gsub(/^ +/, '  ').strip)
+            CleanerError: Cleanup Warning
+            The temporary packaging folder still exists!
+            '#{ File.join(Config.tmp_path, 'test_trigger') }'
+            It will now be removed.
+            #{ "\n  #{ '-' * 74 }" }
+            The temporary backup folder '#{ Config.tmp_path }'
+            appears to contain the package files from the previous backup!
+            file1
+            file2
+            These files will now be removed.
+            #{ error_tail }
+          EOS
         end
 
-        cleaner.prepare(model)
+        Cleaner.prepare(model)
       end
     end
 
   end # describe '#prepare'
 
   describe '#remove_packaging' do
-    it 'should remove the packaging directory and log a message' do
-      Backup::Logger.expects(:message).with(
-        "Cleaning up the temporary files..."
-      )
+    it 'removes the packaging directory' do
+      Logger.expects(:info).with("Cleaning up the temporary files...")
       FileUtils.expects(:rm_rf).with(
-        File.join(Backup::Config.tmp_path, 'test_trigger')
+        File.join(Config.tmp_path, 'test_trigger')
       )
-
-      cleaner.remove_packaging(model)
+      Cleaner.remove_packaging(model)
     end
   end
 
   describe '#remove_package' do
-    let(:package) { mock }
-    it 'should remove the files for the given package and log a message' do
-      package.expects(:filenames).returns(['file1', 'file2'])
-      Backup::Logger.expects(:message).with(
-        "Cleaning up the package files..."
+    it 'removes the package files' do
+      package = stub(:filenames => ['file1', 'file2'])
+      Backup::Logger.expects(:info).with("Cleaning up the package files...")
+      FileUtils.expects(:rm_f).with(
+        File.join(Config.tmp_path, 'file1')
       )
       FileUtils.expects(:rm_f).with(
-        File.join(Backup::Config.tmp_path, 'file1')
+        File.join(Config.tmp_path, 'file2')
       )
-      FileUtils.expects(:rm_f).with(
-        File.join(Backup::Config.tmp_path, 'file2')
-      )
-
-      cleaner.remove_package(package)
+      Cleaner.remove_package(package)
     end
   end
 
   describe '#warnings' do
-    let(:error_tail) do
-      "  Make sure you check these files before the next scheduled backup for\n" +
-      "  'test label (test_trigger)'\n" +
-      "  These files will be removed at that time!"
-    end
+    let(:error_tail) { <<-EOS.gsub(/^ +/, '  ')
 
-    context 'when neither the tmp_path is dirty or package files exist' do
-      it 'should do nothing' do
-        cleaner.expects(:packaging_folder_dirty?).returns(false)
-        cleaner.expects(:tmp_path_package_files).returns([])
-        Backup::Logger.expects(:warn).never
+      Make sure you check these files before the next scheduled backup for
+      'test label (test_trigger)'
+      These files will be removed at that time!
+      EOS
+    }
 
-        cleaner.warnings(model)
+    context 'when no temporary packaging folder or package files exist' do
+      it 'does nothing' do
+        File.expects(:exist?).with(
+          File.join(Config.tmp_path, 'test_trigger')
+        ).returns(false)
+
+        Cleaner.expects(:package_files_for).with('test_trigger').returns([])
+
+        Logger.expects(:warn).never
+
+        Cleaner.warnings(model)
       end
     end
 
-    context 'when the tmp_path is dirty' do
-      it 'should remove tmp_path and log a warning' do
-        cleaner.expects(:packaging_folder_dirty?).returns(true)
-        cleaner.expects(:tmp_path_package_files).returns([])
+    context 'when a temporary packaging folder exists' do
+      it 'logs a warning' do
+        File.expects(:exist?).with(
+          File.join(Config.tmp_path, 'test_trigger')
+        ).returns(true)
 
-        Backup::Logger.expects(:warn).with do |err|
-          err.should be_an_instance_of Backup::Errors::CleanerError
-          err.message.should == "CleanerError: Cleanup Warning\n" +
-            "  The temporary backup folder still contains files!\n" +
-            "  '#{ File.join(Backup::Config.tmp_path, 'test_trigger') }'\n" +
-            "  This folder may contain completed Archives and/or Database backups.\n" +
-            "  \n" + error_tail
+        Cleaner.expects(:package_files_for).with('test_trigger').returns([])
+
+        Logger.expects(:warn).with do |err|
+          expect( err ).to be_an_instance_of Errors::CleanerError
+          expect( err.message ).to eq(<<-EOS.gsub(/^ +/, '  ').strip)
+            CleanerError: Cleanup Warning
+            The temporary packaging folder still exists!
+            '#{ File.join(Config.tmp_path, 'test_trigger') }'
+            This folder may contain completed Archives and/or Database backups.
+            #{ error_tail }
+          EOS
         end
 
-        cleaner.warnings(model)
+        Cleaner.warnings(model)
       end
     end
 
     context 'when package files exist' do
-      it 'should remove the files and log a warning' do
-        cleaner.expects(:packaging_folder_dirty?).returns(false)
-        cleaner.expects(:tmp_path_package_files).returns(['file1', 'file2'])
+      it 'logs a warning' do
+        File.expects(:exist?).with(
+          File.join(Config.tmp_path, 'test_trigger')
+        ).returns(false)
 
-        Backup::Logger.expects(:warn).with do |err|
-          err.should be_an_instance_of Backup::Errors::CleanerError
-          err.message.should == "CleanerError: Cleanup Warning\n" +
-            "  The temporary backup folder '#{ Backup::Config.tmp_path }'\n" +
-            "  appears to contain the backup files which were to be stored:\n" +
-            "  file1\n" +
-            "  file2\n" +
-            "  \n" + error_tail
+        Cleaner.expects(:package_files_for).with('test_trigger').
+            returns(['file1', 'file2'])
+
+        Logger.expects(:warn).with do |err|
+          expect( err ).to be_an_instance_of Errors::CleanerError
+          expect( err.message ).to eq(<<-EOS.gsub(/^ +/, '  ').strip)
+            CleanerError: Cleanup Warning
+            The temporary backup folder '#{ Config.tmp_path }'
+            appears to contain the backup files which were to be stored:
+            file1
+            file2
+            #{ error_tail }
+          EOS
         end
 
-        cleaner.warnings(model)
+        Cleaner.warnings(model)
       end
     end
 
-    context 'both the tmp_path is dirty and package files exist' do
-      it 'should clean both and log a warning' do
-        cleaner.expects(:packaging_folder_dirty?).returns(true)
-        cleaner.expects(:tmp_path_package_files).returns(['file1', 'file2'])
+    context 'when both the temporary packaging folder and package files exist' do
+      it 'logs a warning' do
+        File.expects(:exist?).with(
+          File.join(Config.tmp_path, 'test_trigger')
+        ).returns(true)
 
-        Backup::Logger.expects(:warn).with do |err|
-          err.should be_an_instance_of Backup::Errors::CleanerError
-          err.message.should == "CleanerError: Cleanup Warning\n" +
-            "  The temporary backup folder still contains files!\n" +
-            "  '#{ File.join(Backup::Config.tmp_path, 'test_trigger') }'\n" +
-            "  This folder may contain completed Archives and/or Database backups.\n" +
-            "  \n" +
-            "  #{ '-' * 74 }\n" +
-            "  The temporary backup folder '#{ Backup::Config.tmp_path }'\n" +
-            "  appears to contain the backup files which were to be stored:\n" +
-            "  file1\n" +
-            "  file2\n" +
-            "  \n" + error_tail
+        Cleaner.expects(:package_files_for).with('test_trigger').
+            returns(['file1', 'file2'])
+
+        Logger.expects(:warn).with do |err|
+          expect( err ).to be_an_instance_of Errors::CleanerError
+          expect( err.message ).to eq(<<-EOS.gsub(/^ +/, '  ').strip)
+            CleanerError: Cleanup Warning
+            The temporary packaging folder still exists!
+            '#{ File.join(Config.tmp_path, 'test_trigger') }'
+            This folder may contain completed Archives and/or Database backups.
+            #{ "\n  #{ '-' * 74 }" }
+            The temporary backup folder '#{ Config.tmp_path }'
+            appears to contain the backup files which were to be stored:
+            file1
+            file2
+            #{ error_tail }
+          EOS
         end
 
-        cleaner.warnings(model)
+        Cleaner.warnings(model)
       end
     end
 
   end # describe '#warnings'
 
-  describe '#packaging_folder_dirty?' do
+  describe '#package_files_for' do
     before do
-      cleaner.instance_variable_set(:@model, model)
-      FileUtils.unstub(:mkdir_p)
+      @tmpdir = Dir.mktmpdir('backup_spec')
+      SandboxFileUtils.activate!(@tmpdir)
+      Config.update(:root_path => @tmpdir)
+      FileUtils.mkdir_p(Config.tmp_path)
     end
 
     after do
-      Backup::Config.send(:reset!)
+      FileUtils.rm_r(@tmpdir, :force => true, :secure => true)
     end
 
-    context 'when files exist in the packaging folder' do
-      it 'should return true' do
-        Dir.mktmpdir do |path|
-          Backup::Config.update(:root_path => path)
-          FileUtils.mkdir_p(
-            File.join(Backup::Config.tmp_path, 'test_trigger', 'archives')
-          )
-          cleaner.send(:packaging_folder_dirty?).should be_true
-        end
+    context 'when package files exist' do
+      it 'returns the package files for the given trigger' do
+        package_files = [
+          'test_trigger.tar',
+          'test_trigger.tar-aa',
+          'test_trigger.tar.enc',
+          'test_trigger.tar.enc-aa'
+        ].map! {|f| File.join(Config.tmp_path, f) }
+
+        other_files = [
+          'test_trigger.target.tar',
+          'other_trigger.tar',
+          'foo.tar'
+        ].map! {|f| File.join(Config.tmp_path, f) }
+
+        FileUtils.touch(package_files + other_files)
+        expect( Dir[File.join(Config.tmp_path, '*')].count ).to be 7
+
+        expect(
+          Cleaner.send(:package_files_for, 'test_trigger').sort
+        ).to eq package_files
       end
     end
 
-    context 'when files do not exist in the packaging folder' do
-      it 'should return false' do
-        Dir.mktmpdir do |path|
-          Backup::Config.update(:root_path => path)
-          FileUtils.mkdir_p(
-            File.join(Backup::Config.tmp_path, 'test_trigger')
-          )
-          cleaner.send(:packaging_folder_dirty?).should be_false
-        end
+    context 'when no packaging files exist' do
+      it 'returns an empty array' do
+        other_files = [
+          'test_trigger.target.tar',
+          'other_trigger.tar',
+          'foo.tar'
+        ].map! {|f| File.join(Config.tmp_path, f) }
+
+        FileUtils.touch(other_files)
+        expect( Dir[File.join(Config.tmp_path, '*')].count ).to be 3
+
+        expect( Cleaner.send(:package_files_for, 'test_trigger') ).to eq []
       end
     end
-  end
+  end # describe '#package_files_for'
 
-  describe '#tmp_path_package_files' do
-    before do
-      cleaner.instance_variable_set(:@model, model)
-      FileUtils.unstub(:mkdir_p)
-      FileUtils.unstub(:touch)
-    end
-
-    after do
-      Backup::Config.send(:reset!)
-    end
-
-    context 'when packaging files exist in the tmp_path' do
-      it 'should return the files' do
-        Dir.mktmpdir do |path|
-          Backup::Config.update(:root_path => path)
-          FileUtils.mkdir_p(Backup::Config.tmp_path)
-
-          package_files = [
-            '2012.01.06.12.05.30.test_trigger.tar',
-            '2012.02.06.12.05.30.test_trigger.tar-aa',
-            '2012.03.06.12.05.30.test_trigger.tar.enc',
-            '2012.04.06.12.05.30.test_trigger.tar.enc-aa'
-          ].map! {|f| File.join(Backup::Config.tmp_path, f) }
-
-          other_files = [
-            '2012.01.06.12.05.30.test_trigger.target.tar',
-            '2012.01.06.12.05.30.other_trigger.tar',
-            'foo.tar'
-          ].map! {|f| File.join(Backup::Config.tmp_path, f) }
-
-          FileUtils.touch(package_files + other_files)
-          Dir[File.join(Backup::Config.tmp_path, '*')].count.should be(7)
-
-          cleaner.send(:tmp_path_package_files).sort.should == package_files
-        end
-      end
-    end
-
-    context 'when no packaging files exist in the tmp_path' do
-      it 'should return an empty array' do
-        Dir.mktmpdir do |path|
-          Backup::Config.update(:root_path => path)
-          FileUtils.mkdir_p(Backup::Config.tmp_path)
-
-          other_files = [
-            '2012.01.06.12.05.30.test_trigger.target.tar',
-            '2012.01.06.12.05.30.other_trigger.tar',
-            'foo.tar'
-          ].map! {|f| File.join(Backup::Config.tmp_path, f) }
-
-          FileUtils.touch(other_files)
-          Dir[File.join(Backup::Config.tmp_path, '*')].count.should be(3)
-
-          cleaner.send(:tmp_path_package_files).should == []
-        end
-      end
-    end
-  end
-
+end
 end

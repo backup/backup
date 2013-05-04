@@ -16,9 +16,8 @@ require File.expand_path('../encryptor/gpg_keys.rb', __FILE__)
 module Backup
   module SpecLive
     PATH = File.expand_path('..', __FILE__)
-    # to archive local backups, etc...
-    TMP_PATH = PATH + '/tmp'
-    SYNC_PATH = PATH + '/sync'
+    TMP_PATH = PATH + '/.tmp'
+    SYNC_PATH = PATH + '/.sync'
 
     ARCHIVE_JOB = lambda do |archive|
       archive.add     File.expand_path('../../lib/backup', __FILE__)
@@ -44,11 +43,11 @@ module Backup
       # in models.rb, then returns the Model for the given trigger.
       def h_set_trigger(trigger)
         Backup::SpecLive.load_models = true
+        Backup::Utilities.send(:reset!)
         Backup::Logger.clear!
         Backup::Model.all.clear
         Backup::Config.load_config!
-        model = Backup::Model.find(trigger)
-        model.prepare!
+        model = Backup::Model.find_by_trigger(trigger).first
         model
       end
 
@@ -78,19 +77,20 @@ module Backup
       #
       def h_set_single_model(&block)
         Backup::SpecLive.load_models = false
+        Backup::Utilities.send(:reset!)
         Backup::Logger.clear!
         Backup::Model.all.clear
         Backup::Config.load_config!
         block.call
         model = Backup::Model.all.first
-        model.prepare!
         model
       end
 
       def h_clean_data_paths!
-        paths = [:data_path, :log_path, :tmp_path ].map do |name|
+        # keep cache_path and log_path
+        paths = [:data_path, :tmp_path ].map do |name|
           Backup::Config.send(name)
-        end + [Backup::SpecLive::TMP_PATH]
+        end + [Backup::SpecLive::TMP_PATH, Backup::SpecLive::SYNC_PATH]
         paths.each do |path|
           h_safety_check(path)
           FileUtils.rm_rf(path)
@@ -115,7 +115,14 @@ module Backup
 
   Config.update(:root_path => SpecLive::PATH + '/backups')
 
-  Logger.quiet = true unless ENV['VERBOSE']
+  # Logfile will also be logging everything to
+  # SpecLive::PATH/backups/log/backup.log
+  # This is not cleaned before/after the specs,
+  # so it will keep a running (truncated) log.
+  Logger.configure do
+    console.quiet = !ENV['VERBOSE']
+  end
+  Logger.start!
 end
 
 ##
@@ -133,9 +140,12 @@ RSpec.configure do |config|
       puts '-' * 78
     end
   end
+  config.after(:all) do
+    h_clean_data_paths!
+  end
 end
 
-puts "\nRuby version: #{ RUBY_DESCRIPTION }\n"
+puts "\nRuby version: #{ RUBY_DESCRIPTION }\n\n"
 
 unless ENV['VERBOSE']
   puts <<-EOS
@@ -143,6 +153,9 @@ unless ENV['VERBOSE']
     Some of these tests can be slow, so be patient.
     It's recommended you run these with:
       $ VERBOSE=1 rspec spec-live/
+    so you can view the log messages as the tests run.
+    Log messages are also available in ./backups/log/backup.log
+
     For some tests, [error] and [warning] messages are normal.
     Some could pass, but still have problems.
     So, pay attention to the messages :)

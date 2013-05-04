@@ -5,50 +5,36 @@ module Backup
     module RSync
       class Local < Base
 
-        ##
-        # Instantiates a new RSync::Local Syncer.
-        #
-        # Pre-configured defaults specified in
-        # Configuration::Syncer::RSync::Local
-        # are set via a super() call to RSync::Base,
-        # which in turn will invoke Syncer::Base.
-        #
-        # Once pre-configured defaults and RSync specific defaults are set,
-        # the block from the user's configuration file is evaluated.
-        def initialize(&block)
+        def initialize(syncer_id = nil, &block)
           super
-
           instance_eval(&block) if block_given?
         end
 
-        ##
-        # Performs the RSync::Local operation
-        # debug options: -vhP
         def perform!
-          Logger.message(
-            "#{ syncer_name } started syncing the following directories:\n\s\s" +
-            @directories.join("\n\s\s")
-          )
-          run("#{ utility(:rsync) } #{ options } " +
-              "#{ directories_option } '#{ dest_path }'")
+          log!(:started)
+
+          create_dest_path!
+          run("#{ rsync_command } #{ paths_to_push } '#{ dest_path }'")
+
+          log!(:finished)
         end
 
         private
 
-        ##
-        # Return expanded @path
+        # Expand path, since this is local and shell-quoted.
         def dest_path
-          @dest_path ||= File.expand_path(@path)
+          @dest_path ||= File.expand_path(path)
         end
 
-        ##
-        # Returns all the specified Rsync::Local options,
-        # concatenated, ready for the CLI
-        def options
-          ([archive_option, mirror_option] +
-            additional_options).compact.join("\s")
+        def create_dest_path!
+          FileUtils.mkdir_p dest_path
         end
 
+        attr_deprecate :additional_options, :version => '3.2.0',
+                       :message => 'Use #additional_rsync_options instead.',
+                       :action => lambda {|klass, val|
+                         klass.additional_rsync_options = val
+                       }
       end
     end
   end

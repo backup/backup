@@ -6,7 +6,7 @@ describe Backup::Compressor::Custom do
   let(:compressor) { Backup::Compressor::Custom.new }
 
   before(:all) do
-    # CLI::Helpers#utility will raise an error
+    # Utilities::Helpers#utility will raise an error
     # if the command is invalid or not set
     Backup::Compressor::Custom.send(
       :define_method, :utility,
@@ -29,7 +29,7 @@ describe Backup::Compressor::Custom do
       compressor
     end
 
-    it 'should call CLI::Helpers#utility to validate command' do
+    it 'should call Utilities::Helpers#utility to validate command' do
       Backup::Compressor::Custom.any_instance.expects(:utility)
       compressor
     end

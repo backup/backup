@@ -15,7 +15,7 @@ describe Backup::Notifier::Mail do
       mail.user_name            = 'user'
       mail.password             = 'secret'
       mail.authentication       = 'plain'
-      mail.enable_starttls_auto = true
+      mail.encryption           = :starttls
 
       mail.sendmail             = '/path/to/sendmail'
       mail.sendmail_args        = '-i -t -X/tmp/traffic.log'
@@ -26,22 +26,8 @@ describe Backup::Notifier::Mail do
     end
   end
 
-  it 'should be a subclass of Notifier::Base' do
-    Backup::Notifier::Mail.
-      superclass.should == Backup::Notifier::Base
-  end
-
   describe '#initialize' do
     after { Backup::Notifier::Mail.clear_defaults! }
-
-    it 'should load pre-configured defaults through Base' do
-      Backup::Notifier::Mail.any_instance.expects(:load_defaults!)
-      notifier
-    end
-
-    it 'should pass the model reference to Base' do
-      notifier.instance_variable_get(:@model).should == model
-    end
 
     context 'when no pre-configured defaults have been set' do
       it 'should use the values given' do
@@ -54,7 +40,7 @@ describe Backup::Notifier::Mail do
         notifier.user_name.should            == 'user'
         notifier.password.should             == 'secret'
         notifier.authentication.should       == 'plain'
-        notifier.enable_starttls_auto.should == true
+        notifier.encryption.should           == :starttls
 
         notifier.sendmail.should             == '/path/to/sendmail'
         notifier.sendmail_args.should        == '-i -t -X/tmp/traffic.log'
@@ -79,7 +65,7 @@ describe Backup::Notifier::Mail do
         notifier.user_name.should             be_nil
         notifier.password.should              be_nil
         notifier.authentication.should        be_nil
-        notifier.enable_starttls_auto.should  be_nil
+        notifier.encryption.should            be_nil
 
         notifier.sendmail.should              be_nil
         notifier.sendmail_args.should         be_nil
@@ -115,7 +101,7 @@ describe Backup::Notifier::Mail do
         notifier.user_name.should             be_nil
         notifier.password.should              be_nil
         notifier.authentication.should        be_nil
-        notifier.enable_starttls_auto.should  be_nil
+        notifier.encryption.should            be_nil
 
         notifier.sendmail.should              be_nil
         notifier.sendmail_args.should         be_nil
@@ -158,6 +144,11 @@ describe Backup::Notifier::Mail do
       notifier.instance_variable_set(:@template, template)
       notifier.delivery_method = :test
       ::Mail::TestMailer.deliveries.clear
+
+      Backup::Logger.stubs(:messages).returns([
+        stub(:formatted_lines => ['line 1', 'line 2']),
+        stub(:formatted_lines => ['line 3'])
+      ])
     end
 
     context 'when status is :success' do
@@ -177,11 +168,6 @@ describe Backup::Notifier::Mail do
     end
 
     context 'when status is :warning' do
-      before do
-        Backup::Logger.stubs(:has_warnings?).returns(true)
-        Backup::Logger.stubs(:messages).returns(['line 1', 'line 2', 'line 3'])
-      end
-
       it 'should send a Warning email with an attached log' do
         template.expects(:result).
             with('notifier/mail/warning.erb').
@@ -199,10 +185,6 @@ describe Backup::Notifier::Mail do
     end
 
     context 'when status is :failure' do
-      before do
-        Backup::Logger.stubs(:messages).returns(['line 1', 'line 2', 'line 3'])
-      end
-
       it 'should send a Failure email with an attached log' do
         template.expects(:result).
             with('notifier/mail/failure.erb').
@@ -251,8 +233,26 @@ describe Backup::Notifier::Mail do
         settings[:user_name].should             == 'user'
         settings[:password].should              == 'secret'
         settings[:authentication].should        == 'plain'
-        settings[:enable_starttls_auto].should  == true
+        settings[:enable_starttls_auto].should  be(true)
         settings[:openssl_verify_mode].should   be_nil
+        settings[:ssl].should                   be(false)
+        settings[:tls].should                   be(false)
+      end
+
+      it 'should properly set other encryption settings' do
+        notifier.encryption = :ssl
+        email = notifier.send(:new_email)
+        settings = email.delivery_method.settings
+        settings[:enable_starttls_auto].should  be(false)
+        settings[:ssl].should                   be(true)
+        settings[:tls].should                   be(false)
+
+        notifier.encryption = :tls
+        email = notifier.send(:new_email)
+        settings = email.delivery_method.settings
+        settings[:enable_starttls_auto].should  be(false)
+        settings[:ssl].should                   be(false)
+        settings[:tls].should                   be(true)
       end
     end
 
@@ -313,4 +313,54 @@ describe Backup::Notifier::Mail do
     end
   end # describe '#new_email'
 
+  describe 'deprecations' do
+
+    describe '#enable_starttls_auto' do
+      before do
+        Backup::Logger.expects(:warn).with {|err|
+          err.should be_an_instance_of Backup::Errors::ConfigurationError
+          err.message.should match(
+            /Use #encryption instead/
+          )
+        }
+      end
+
+      context 'when set directly' do
+        it 'warns and transfers true value' do
+          notifier = Backup::Notifier::Mail.new(model) do |mail|
+            mail.enable_starttls_auto = true
+          end
+          notifier.encryption.should == :starttls
+        end
+
+        it 'warns and transfers false value' do
+          notifier = Backup::Notifier::Mail.new(model) do |mail|
+            mail.enable_starttls_auto = false
+          end
+          notifier.encryption.should == :none
+        end
+      end
+
+      context 'when set as a default' do
+        after { Backup::Notifier::Mail.clear_defaults! }
+
+        it 'warns and transfers true value' do
+          Backup::Notifier::Mail.defaults do |mail|
+            mail.enable_starttls_auto = true
+          end
+          notifier = Backup::Notifier::Mail.new(model)
+          notifier.encryption.should == :starttls
+        end
+
+        it 'warns and transfers false value' do
+          Backup::Notifier::Mail.defaults do |mail|
+            mail.enable_starttls_auto = false
+          end
+          notifier = Backup::Notifier::Mail.new(model)
+          notifier.encryption.should == :none
+        end
+      end
+    end # describe '#enable_starttls_auto'
+
+  end # describe 'deprecations'
 end

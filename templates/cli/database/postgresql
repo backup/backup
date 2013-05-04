@@ -1,0 +1,16 @@
+  ##
+  # PostgreSQL [Database]
+  #
+  database PostgreSQL do |db|
+    # To dump all databases, set `db.name = :all` (or leave blank)
+    db.name               = "my_database_name"
+    db.username           = "my_username"
+    db.password           = "my_password"
+    db.host               = "localhost"
+    db.port               = 5432
+    db.socket             = "/tmp/pg.sock"
+    # When dumping all databases, `skip_tables` and `only_tables` are ignored.
+    db.skip_tables        = ["skip", "these", "tables"]
+    db.only_tables        = ["only", "these", "tables"]
+    db.additional_options = ["-xc", "-E=utf8"]
+  end

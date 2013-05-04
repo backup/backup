@@ -1,0 +1,18 @@
+  ##
+  # Redis [Database]
+  #
+  database Redis do |db|
+    ##
+    # From `dbfilename` in your `redis.conf` under SNAPSHOTTING.
+    # Do not include the '.rdb' extension. Defaults to 'dump'
+    db.name               = 'dump'
+    ##
+    # From `dir` in your `redis.conf` under SNAPSHOTTING.
+    db.path               = '/var/lib/redis'
+    db.password           = 'my_password'
+    db.host               = 'localhost'
+    db.port               = 6379
+    db.socket             = '/tmp/redis.sock'
+    db.additional_options = []
+    db.invoke_save        = true
+  end

@@ -1,8 +1,5 @@
 # encoding: utf-8
-
-##
-# Only load the Fog gem when the Backup::Storage::CloudFiles class is loaded
-Backup::Dependency.load('fog')
+require 'fog'
 
 module Backup
   module Storage
@@ -18,33 +15,23 @@ module Backup
       attr_accessor :servicenet
 
       ##
-      # Rackspace Cloud Files container name and path
-      attr_accessor :container, :path
+      # Rackspace Cloud Files container name
+      attr_accessor :container
 
-      ##
-      # Creates a new instance of the storage object
       def initialize(model, storage_id = nil, &block)
-        super(model, storage_id)
+        super
+        instance_eval(&block) if block_given?
 
         @servicenet ||= false
         @path       ||= 'backups'
-
-        instance_eval(&block) if block_given?
+        path.sub!(/^\//, '')
       end
 
       private
 
-      ##
-      # This is the provider that Fog uses for the Cloud Files Storage
-      def provider
-        'Rackspace'
-      end
-
-      ##
-      # Establishes a connection to Rackspace Cloud Files
       def connection
         @connection ||= Fog::Storage.new(
-          :provider             => provider,
+          :provider             => 'Rackspace',
           :rackspace_username   => username,
           :rackspace_api_key    => api_key,
           :rackspace_auth_url   => auth_url,
@@ -52,33 +39,27 @@ module Backup
         )
       end
 
-      ##
-      # Transfers the archived file to the specified Cloud Files container
       def transfer!
-        remote_path = remote_path_for(@package)
+        connection.put_container(container)
 
-        files_to_transfer_for(@package) do |local_file, remote_file|
-          Logger.message "#{storage_name} started transferring '#{ local_file }'."
-
-          File.open(File.join(local_path, local_file), 'r') do |file|
-            connection.put_object(
-              container, File.join(remote_path, remote_file), file
-            )
+        package.filenames.each do |filename|
+          src = File.join(Config.tmp_path, filename)
+          dest = File.join(remote_path, filename)
+          Logger.info "Storing '#{ container }/#{ dest }'..."
+          File.open(src, 'r') do |file|
+            connection.put_object(container, dest, file)
           end
         end
       end
 
-      ##
-      # Removes the transferred archive file(s) from the storage location.
-      # Any error raised will be rescued during Cycling
-      # and a warning will be logged, containing the error message.
+      # Called by the Cycler.
+      # Any error raised will be logged as a warning.
       def remove!(package)
-        remote_path = remote_path_for(package)
+        Logger.info "Removing backup package dated #{ package.time }..."
 
-        transferred_files_for(package) do |local_file, remote_file|
-          Logger.message "#{storage_name} started removing '#{ local_file }' " +
-              "from container '#{ container }'."
-          connection.delete_object(container, File.join(remote_path, remote_file))
+        remote_path = remote_path_for(package)
+        package.filenames.each do |filename|
+          connection.delete_object(container, File.join(remote_path, filename))
         end
       end
 

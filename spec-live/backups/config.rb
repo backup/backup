@@ -30,16 +30,6 @@ Backup::Storage::SCP.defaults do |storage|
   storage.keep     = 2
 end
 
-Backup::Storage::Dropbox.defaults do |storage|
-  opts = SpecLive::CONFIG['storage']['dropbox']
-
-  storage.api_key     = opts['api_key']
-  storage.api_secret  = opts['api_secret']
-  storage.access_type = opts['access_type']
-  storage.path        = opts['path']
-  storage.keep        = 2
-end
-
 Backup::Notifier::Mail.defaults do |notifier|
   opts = SpecLive::CONFIG['notifier']['mail']
 

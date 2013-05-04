@@ -2,258 +2,143 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Storage::Local do
-  let(:model)   { Backup::Model.new(:test_trigger, 'test label') }
-  let(:storage_path) do
-    File.join(File.expand_path(ENV['HOME'] || ''), 'backups')
-  end
-  let(:storage) do
-    Backup::Storage::Local.new(model) do |local|
-      local.keep = 5
-    end
-  end
+module Backup
+describe Storage::Local do
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:storage) { Storage::Local.new(model) }
+  let(:s) { sequence '' }
 
-  it 'should be a subclass of Storage::Base' do
-    Backup::Storage::Local.
-      superclass.should == Backup::Storage::Base
+  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a subclass of Storage::Base' do
+    let(:cycling_supported) { true }
   end
 
   describe '#initialize' do
-    after { Backup::Storage::Local.clear_defaults! }
 
-    it 'should load pre-configured defaults through Base' do
-      Backup::Storage::Local.any_instance.expects(:load_defaults!)
-      storage
+    it 'provides default values' do
+      expect( storage.storage_id ).to be_nil
+      expect( storage.keep       ).to be_nil
+      expect( storage.path       ).to eq '~/backups'
     end
 
-    it 'should pass the model reference to Base' do
-      storage.instance_variable_get(:@model).should == model
+    it 'configures the storage' do
+      storage = Storage::Local.new(model, :my_id) do |local|
+        local.keep = 2
+        local.path = '/my/path'
+      end
+
+      expect( storage.storage_id ).to eq 'my_id'
+      expect( storage.keep       ).to be 2
+      expect( storage.path       ).to eq '/my/path'
     end
 
-    it 'should pass the storage_id to Base' do
-      storage = Backup::Storage::Local.new(model, 'my_storage_id')
-      storage.storage_id.should == 'my_storage_id'
-    end
-
-    it 'should expand any path given' do
-      storage = Backup::Storage::Local.new(model) do |local|
-        local.path = 'my_backups/path'
-      end
-      storage.path.should == File.expand_path('my_backups/path')
-    end
-
-    context 'when no pre-configured defaults have been set' do
-      it 'should use the values given' do
-        storage.path.should == storage_path
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 5
-      end
-
-      it 'should use default values if none are given' do
-        storage = Backup::Storage::Local.new(model)
-
-        storage.path.should == storage_path
-
-        storage.storage_id.should be_nil
-        storage.keep.should       be_nil
-      end
-    end # context 'when no pre-configured defaults have been set'
-
-    context 'when pre-configured defaults have been set' do
-      before do
-        Backup::Storage::Local.defaults do |s|
-          s.path = 'some_path'
-          s.keep = 'some_keep'
-        end
-      end
-
-      it 'should use pre-configured defaults' do
-        storage = Backup::Storage::Local.new(model)
-
-        storage.path.should == File.expand_path('some_path')
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 'some_keep'
-      end
-
-      it 'should override pre-configured defaults' do
-        storage = Backup::Storage::Local.new(model) do |s|
-          s.path = 'new_path'
-          s.keep = 'new_keep'
-        end
-
-        storage.path.should == File.expand_path('new_path')
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 'new_keep'
-      end
-    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#transfer!' do
-    let(:package) { mock }
-    let(:s) { sequence '' }
+    let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
+    let(:remote_path) {
+      File.expand_path(File.join('my/path/test_trigger', timestamp))
+    }
 
     before do
-      storage.instance_variable_set(:@package, package)
-      storage.stubs(:storage_name).returns('Storage::Local')
-      storage.stubs(:local_path).returns('/local/path')
-    end
-
-    context 'when transfer_method is :mv' do
-      before { storage.stubs(:transfer_method).returns(:mv) }
-      it 'should move the package files to their destination' do
-        storage.expects(:remote_path_for).in_sequence(s).with(package).
-            returns('remote/path')
-        FileUtils.expects(:mkdir_p).in_sequence(s).with('remote/path')
-
-        storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
-          multiple_yields(
-          ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-          ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
-        )
-        # first yield
-        Backup::Logger.expects(:message).in_sequence(s).with(
-          "Storage::Local started transferring " +
-          "'2011.12.31.11.00.02.backup.tar.enc-aa'."
-        )
-        FileUtils.expects(:mv).in_sequence(s).with(
-          File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'),
-          File.join('remote/path', 'backup.tar.enc-aa')
-        )
-        # second yield
-        Backup::Logger.expects(:message).in_sequence(s).with(
-          "Storage::Local started transferring " +
-          "'2011.12.31.11.00.02.backup.tar.enc-ab'."
-        )
-        FileUtils.expects(:mv).in_sequence(s).with(
-          File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'),
-          File.join('remote/path', 'backup.tar.enc-ab')
-        )
-
-        storage.send(:transfer!)
-      end
-    end # context 'when transfer_method is :mv'
-
-    context 'when transfer_method is :cp' do
-      before { storage.stubs(:transfer_method).returns(:cp) }
-      it 'should copy the package files to their destination' do
-        storage.expects(:remote_path_for).in_sequence(s).with(package).
-            returns('remote/path')
-        FileUtils.expects(:mkdir_p).in_sequence(s).with('remote/path')
-
-        storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
-          multiple_yields(
-          ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-          ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
-        )
-        # first yield
-        Backup::Logger.expects(:message).in_sequence(s).with(
-          "Storage::Local started transferring " +
-          "'2011.12.31.11.00.02.backup.tar.enc-aa'."
-        )
-        FileUtils.expects(:cp).in_sequence(s).with(
-          File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'),
-          File.join('remote/path', 'backup.tar.enc-aa')
-        )
-        # second yield
-        Backup::Logger.expects(:message).in_sequence(s).with(
-          "Storage::Local started transferring " +
-          "'2011.12.31.11.00.02.backup.tar.enc-ab'."
-        )
-        FileUtils.expects(:cp).in_sequence(s).with(
-          File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'),
-          File.join('remote/path', 'backup.tar.enc-ab')
-        )
-
-        storage.send(:transfer!)
-      end
-    end # context 'when transfer_method is :cp'
-
-  end # describe '#transfer!'
-
-  describe '#remove!' do
-    let(:package) { mock }
-    let(:s) { sequence '' }
-
-    before do
-      storage.stubs(:storage_name).returns('Storage::Local')
-    end
-
-    it 'should remove the package files' do
-      storage.expects(:remote_path_for).in_sequence(s).with(package).
-          returns('remote/path')
-
-      storage.expects(:transferred_files_for).in_sequence(s).with(package).
-        multiple_yields(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
+      Timecop.freeze
+      storage.package.time = timestamp
+      storage.package.stubs(:filenames).returns(
+        ['test_trigger.tar-aa', 'test_trigger.tar-ab']
       )
-      # after both yields
-      Backup::Logger.expects(:message).in_sequence(s).with(
-        "Storage::Local started removing " +
-        "'2011.12.31.11.00.02.backup.tar.enc-aa'.\n" +
-        "Storage::Local started removing " +
-        "'2011.12.31.11.00.02.backup.tar.enc-ab'."
-      )
-      FileUtils.expects(:rm_r).in_sequence(s).with('remote/path')
-
-      storage.send(:remove!, package)
+      storage.path = 'my/path'
     end
-  end # describe '#remove!'
 
-  describe '#transfer_method' do
+    after { Timecop.return }
+
     context 'when the storage is the last for the model' do
       before do
         model.storages << storage
       end
 
-      it 'should return :mv' do
-        storage.send(:transfer_method).should == :mv
-        storage.instance_variable_get(:@transfer_method).should == :mv
-      end
+      it 'moves the package files to their destination' do
+        FileUtils.expects(:mkdir_p).in_sequence(s).with(remote_path)
 
-      it 'should only check once' do
-        storage.instance_variable_set(:@transfer_method, :mv)
-        model.expects(:storages).never
-        storage.send(:transfer_method).should == :mv
+        Logger.expects(:warn).never
+
+        src = File.join(Config.tmp_path, 'test_trigger.tar-aa')
+        dest = File.join(remote_path, 'test_trigger.tar-aa')
+        Logger.expects(:info).in_sequence(s).with("Storing '#{ dest }'...")
+        FileUtils.expects(:mv).in_sequence(s).with(src, dest)
+
+        src = File.join(Config.tmp_path, 'test_trigger.tar-ab')
+        dest = File.join(remote_path, 'test_trigger.tar-ab')
+        Logger.expects(:info).in_sequence(s).with("Storing '#{ dest }'...")
+        FileUtils.expects(:mv).in_sequence(s).with(src, dest)
+
+        storage.send(:transfer!)
       end
-    end # context 'when the storage is the last for the model'
+    end
 
     context 'when the storage is not the last for the model' do
-      let(:package) { mock }
-
       before do
         model.storages << storage
-        model.storages << Backup::Storage::Local.new(model)
-
-        storage.instance_variable_set(:@package, package)
+        model.storages << Storage::Local.new(model)
       end
 
-      it 'should log a warning and return :cp' do
-        storage.expects(:remote_path_for).with(package).returns('remote_path')
-        Backup::Logger.expects(:warn).with do |err|
-          err.should be_an_instance_of Backup::Errors::Storage::Local::TransferError
-          err.message.should ==
-            "Storage::Local::TransferError: Local File Copy Warning!\n" +
-            "  The final backup file(s) for 'test label' (test_trigger)\n" +
-            "  will be *copied* to 'remote_path'\n" +
-            "  To avoid this, when using more than one Storage, the 'Local' Storage\n" +
-            "  should be added *last* so the files may be *moved* to their destination."
+      it 'logs a warning and copies the package files to their destination' do
+        FileUtils.expects(:mkdir_p).in_sequence(s).with(remote_path)
+
+        Logger.expects(:warn).in_sequence(s).with do |err|
+          expect( err ).to be_an_instance_of Errors::Storage::Local::TransferError
+          expect( err.message ).to eq <<-EOS.gsub(/^ +/, '  ').strip
+            Storage::Local::TransferError: Local File Copy Warning!
+              The final backup file(s) for 'test label' (test_trigger)
+              will be *copied* to '#{ remote_path }'
+              To avoid this, when using more than one Storage, the 'Local' Storage
+              should be added *last* so the files may be *moved* to their destination.
+          EOS
         end
 
-        storage.send(:transfer_method).should == :cp
-        storage.instance_variable_get(:@transfer_method).should == :cp
+        src = File.join(Config.tmp_path, 'test_trigger.tar-aa')
+        dest = File.join(remote_path, 'test_trigger.tar-aa')
+        Logger.expects(:info).in_sequence(s).with("Storing '#{ dest }'...")
+        FileUtils.expects(:cp).in_sequence(s).with(src, dest)
+
+        src = File.join(Config.tmp_path, 'test_trigger.tar-ab')
+        dest = File.join(remote_path, 'test_trigger.tar-ab')
+        Logger.expects(:info).in_sequence(s).with("Storing '#{ dest }'...")
+        FileUtils.expects(:cp).in_sequence(s).with(src, dest)
+
+        storage.send(:transfer!)
       end
+    end
 
-      it 'should only check once' do
-        storage.instance_variable_set(:@transfer_method, :cp)
-        model.expects(:storages).never
-        storage.send(:transfer_method).should == :cp
-      end
-    end # context 'when the storage is not the last for the model'
+  end # describe '#transfer!'
 
-  end # describe '#transfer_method'
+  describe '#remove!' do
+    let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
+    let(:remote_path) {
+      File.expand_path(File.join('my/path/test_trigger', timestamp))
+    }
+    let(:package) {
+      stub( # loaded from YAML storage file
+        :trigger    => 'test_trigger',
+        :time       => timestamp
+      )
+    }
 
+    before do
+      Timecop.freeze
+      storage.path = 'my/path'
+    end
+
+    after { Timecop.return }
+
+    it 'removes the given package from the remote' do
+      Logger.expects(:info).in_sequence(s).
+          with("Removing backup package dated #{ timestamp }...")
+
+      FileUtils.expects(:rm_r).in_sequence(s).with(remote_path)
+
+      storage.send(:remove!, package)
+    end
+  end # describe '#remove!'
+
+end
 end

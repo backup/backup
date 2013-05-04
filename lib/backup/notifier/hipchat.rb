@@ -1,7 +1,5 @@
 # encoding: utf-8
-
-# Load the HipChat library from the gem
-Backup::Dependency.load('hipchat')
+require 'hipchat'
 
 module Backup
   module Notifier
@@ -83,7 +81,7 @@ module Backup
 
       def send_message(msg, color)
         client = HipChat::Client.new(token)
-        [rooms_notified].flatten.each do |room|
+        Array(rooms_notified).map {|r| r.split(',').map(&:strip) }.flatten.each do |room|
           client[room].send(from, msg, :color => color, :notify => notify_users)
         end
       end

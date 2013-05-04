@@ -1,8 +1,5 @@
 # encoding: utf-8
-
-##
-# Only load the Mail gem when using Mail notifications
-Backup::Dependency.load('mail')
+require 'mail'
 
 module Backup
   module Notifier
@@ -10,101 +7,131 @@ module Backup
 
       ##
       # Mail delivery method to be used by the Mail gem.
+      #
       # Supported methods:
       #
-      # `:smtp` [::Mail::SMTP] (default)
-      # : Settings used only by this method:
-      # : `address`, `port`, `domain`, `user_name`, `password`
-      # : `authentication`, `enable_starttls_auto`, `openssl_verify_mode`
+      # [:smtp - ::Mail::SMTP (default)]
+      #   Settings used by this method:
+      #   {#address}, {#port}, {#domain}, {#user_name}, {#password},
+      #   {#authentication}, {#encryption}, {#openssl_verify_mode}
       #
-      # `:sendmail` [::Mail::Sendmail]
-      # : Settings used only by this method:
-      # : `sendmail`, `sendmail_args`
+      # [:sendmail - ::Mail::Sendmail]
+      #   Settings used by this method:
+      #   {#sendmail}, {#sendmail_args}
       #
-      # `:exim` [::Mail::Exim]
-      # : Settings used only by this method:
-      # : `exim`, `exim_args`
+      # [:exim - ::Mail::Exim]
+      #   Settings used by this method:
+      #   {#exim}, {#exim_args}
       #
-      # `:file` [::Mail::FileDelivery]
-      # : Settings used only by this method:
-      # : `mail_folder`
+      # [:file - ::Mail::FileDelivery]
+      #   Settings used by this method:
+      #   {#mail_folder}
       #
       attr_accessor :delivery_method
 
       ##
-      # Sender and Receiver email addresses
-      # Examples:
-      #  sender   - my.email.address@gmail.com
-      #  receiver - your.email.address@gmail.com
-      attr_accessor :from, :to
+      # Sender Email Address
+      attr_accessor :from
 
       ##
-      # The address to use
-      # Example: smtp.gmail.com
+      # Receiver Email Address
+      attr_accessor :to
+
+      ##
+      # SMTP Server Address
       attr_accessor :address
 
       ##
-      # The port to connect to
-      # Example: 587
+      # SMTP Server Port
       attr_accessor :port
 
       ##
       # Your domain (if applicable)
-      # Example: mydomain.com
       attr_accessor :domain
 
       ##
-      # Username and Password (sender email's credentials)
-      # Examples:
-      #  user_name - meskyanichi
-      #  password  - my_secret_password
-      attr_accessor :user_name, :password
+      # SMTP Server Username (sender email's credentials)
+      attr_accessor :user_name
+
+      ##
+      # SMTP Server Password (sender email's credentials)
+      attr_accessor :password
 
       ##
       # Authentication type
-      # Example: plain
+      #
+      # Acceptable values: +:plain+, +:login+, +:cram_md5+
       attr_accessor :authentication
 
       ##
-      # Automatically set TLS
-      # Example: true
-      attr_accessor :enable_starttls_auto
+      # Set the method of encryption to be used for the +SMTP+ connection.
+      #
+      # [:none (default)]
+      #   No encryption will be used.
+      #
+      # [:starttls]
+      #   Use +STARTTLS+ to upgrade the connection to a +SSL/TLS+ connection.
+      #
+      # [:tls or :ssl]
+      #   Use a +SSL/TLS+ connection.
+      attr_accessor :encryption
+
+      attr_deprecate :enable_starttls_auto, :version => '3.2.0',
+                     :message => "Use #encryption instead.\n" +
+                        'e.g. mail.encryption = :starttls',
+                     :action => lambda {|klass, val|
+                       klass.encryption = val ? :starttls : :none
+                     }
 
       ##
       # OpenSSL Verify Mode
-      # Example: none - Only use this option for a self-signed and/or wildcard certificate
+      #
+      # Valid modes: +:none+, +:peer+, +:client_once+, +:fail_if_no_peer_cert+
+      # See +OpenSSL::SSL+ for details.
+      #
+      # Use +:none+ for a self-signed and/or wildcard certificate
       attr_accessor :openssl_verify_mode
 
       ##
+      # Path to `sendmail` (if needed)
+      #
       # When using the `:sendmail` `delivery_method` option,
-      # this may be used to specify the absolute path to `sendmail` (if needed)
+      # this may be used to specify the absolute path to `sendmail`
+      #
       # Example: '/usr/sbin/sendmail'
       attr_accessor :sendmail
 
       ##
       # Optional arguments to pass to `sendmail`
+      #
       # Note that this will override the defaults set by the Mail gem (currently: '-i -t')
       # So, if set here, be sure to set all the arguments you require.
+      #
       # Example: '-i -t -X/tmp/traffic.log'
       attr_accessor :sendmail_args
 
       ##
+      # Path to `exim` (if needed)
+      #
       # When using the `:exim` `delivery_method` option,
-      # this may be used to specify the absolute path to `exim` (if needed)
+      # this may be used to specify the absolute path to `exim`
+      #
       # Example: '/usr/sbin/exim'
       attr_accessor :exim
 
       ##
       # Optional arguments to pass to `exim`
+      #
       # Note that this will override the defaults set by the Mail gem (currently: '-i -t')
       # So, if set here, be sure to set all the arguments you require.
+      #
       # Example: '-i -t -X/tmp/traffic.log'
       attr_accessor :exim_args
 
       ##
       # Folder where mail will be kept when using the `:file` `delivery_method` option.
+      #
       # Default location is '$HOME/Backup/emails'
-      # Example: '/tmp/test-mails'
       attr_accessor :mail_folder
 
       def initialize(model, &block)
@@ -117,22 +144,23 @@ module Backup
 
       ##
       # Notify the user of the backup operation results.
+      #
       # `status` indicates one of the following:
       #
-      # `:success`
-      # : The backup completed successfully.
-      # : Notification will be sent if `on_success` was set to `true`
+      # [:success]
+      #   The backup completed successfully.
+      #   Notification will be sent if `on_success` was set to `true`
       #
-      # `:warning`
-      # : The backup completed successfully, but warnings were logged
-      # : Notification will be sent, including a copy of the current
-      # : backup log, if `on_warning` was set to `true`
+      # [:warning]
+      #   The backup completed successfully, but warnings were logged
+      #   Notification will be sent, including a copy of the current
+      #   backup log, if `on_warning` was set to `true`
       #
-      # `:failure`
-      # : The backup operation failed.
-      # : Notification will be sent, including the Exception which caused
-      # : the failure, the Exception's backtrace, a copy of the current
-      # : backup log and other information if `on_failure` was set to `true`
+      # [:failure]
+      #   The backup operation failed.
+      #   Notification will be sent, including the Exception which caused
+      #   the failure, the Exception's backtrace, a copy of the current
+      #   backup log and other information if `on_failure` was set to `true`
       #
       def notify!(status)
         name, send_log =
@@ -150,7 +178,7 @@ module Backup
           email.convert_to_multipart
           email.attachments["#{@model.time}.#{@model.trigger}.log"] = {
             :mime_type => 'text/plain;',
-            :content   => Logger.messages.join("\n")
+            :content   => Logger.messages.map(&:formatted_lines).flatten.join("\n")
           }
         end
 
@@ -173,8 +201,11 @@ module Backup
                 :user_name            => @user_name,
                 :password             => @password,
                 :authentication       => @authentication,
-                :enable_starttls_auto => @enable_starttls_auto,
-                :openssl_verify_mode  => @openssl_verify_mode }
+                :enable_starttls_auto => @encryption == :starttls,
+                :openssl_verify_mode  => @openssl_verify_mode,
+                :ssl                  => @encryption == :ssl,
+                :tls                  => @encryption == :tls
+              }
             when 'sendmail'
               opts = {}
               opts.merge!(:location  => File.expand_path(@sendmail)) if @sendmail

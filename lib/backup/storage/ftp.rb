@@ -1,7 +1,4 @@
 # encoding: utf-8
-
-##
-# Only load the Net::FTP library/gem when the Backup::Storage::FTP class is loaded
 require 'net/ftp'
 
 module Backup
@@ -17,25 +14,17 @@ module Backup
       attr_accessor :ip, :port
 
       ##
-      # Path to store backups to
-      attr_accessor :path
-
-      ##
       # use passive mode?
       attr_accessor :passive_mode
 
-      ##
-      # Creates a new instance of the storage object
       def initialize(model, storage_id = nil, &block)
-        super(model, storage_id)
+        super
+        instance_eval(&block) if block_given?
 
         @port         ||= 21
         @path         ||= 'backups'
         @passive_mode ||= false
-
-        instance_eval(&block) if block_given?
-
-        @path = path.sub(/^\~\//, '')
+        path.sub!(/^~\//, '')
       end
 
       private
@@ -58,38 +47,28 @@ module Backup
         end
       end
 
-      ##
-      # Transfers the archived file to the specified remote server
       def transfer!
-        remote_path = remote_path_for(@package)
-
         connection do |ftp|
-          create_remote_path(remote_path, ftp)
+          create_remote_path(ftp)
 
-          files_to_transfer_for(@package) do |local_file, remote_file|
-            Logger.message "#{storage_name} started transferring " +
-                "'#{ local_file }' to '#{ ip }'."
-            ftp.put(
-              File.join(local_path, local_file),
-              File.join(remote_path, remote_file)
-            )
+          package.filenames.each do |filename|
+            src = File.join(Config.tmp_path, filename)
+            dest = File.join(remote_path, filename)
+            Logger.info "Storing '#{ ip }:#{ dest }'..."
+            ftp.put(src, dest)
           end
         end
       end
 
-      ##
-      # Removes the transferred archive file(s) from the storage location.
-      # Any error raised will be rescued during Cycling
-      # and a warning will be logged, containing the error message.
+      # Called by the Cycler.
+      # Any error raised will be logged as a warning.
       def remove!(package)
+        Logger.info "Removing backup package dated #{ package.time }..."
+
         remote_path = remote_path_for(package)
-
         connection do |ftp|
-          transferred_files_for(package) do |local_file, remote_file|
-            Logger.message "#{storage_name} started removing " +
-                "'#{ local_file }' from '#{ ip }'."
-
-            ftp.delete(File.join(remote_path, remote_file))
+          package.filenames.each do |filename|
+            ftp.delete(File.join(remote_path, filename))
           end
 
           ftp.rmdir(remote_path)
@@ -104,7 +83,7 @@ module Backup
       # '/') and loop through that to create the directories one by one.
       # Net::FTP raises an exception when the directory it's trying to create
       # already exists, so we have rescue it
-      def create_remote_path(remote_path, ftp)
+      def create_remote_path(ftp)
         path_parts = Array.new
         remote_path.split('/').each do |path_part|
           path_parts << path_part

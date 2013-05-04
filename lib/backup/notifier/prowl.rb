@@ -1,8 +1,5 @@
 # encoding: utf-8
-
-##
-# Only load the Prowler gem when using Prowler notifications
-Backup::Dependency.load('prowler')
+require 'prowler'
 
 module Backup
   module Notifier

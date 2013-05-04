@@ -5,7 +5,7 @@ module Backup
 
     ##
     # The time when the backup initiated (in format: 2011.02.20.03.29.59)
-    attr_reader :time
+    attr_accessor :time
 
     ##
     # The trigger which initiated the backup process
@@ -24,11 +24,10 @@ module Backup
     attr_reader :version
 
     def initialize(model)
-      @time = model.time
       @trigger = model.trigger
       @extension = 'tar'
       @chunk_suffixes = Array.new
-      @version = Backup::Version.current
+      @version = VERSION
     end
 
     def filenames
@@ -40,7 +39,7 @@ module Backup
     end
 
     def basename
-      "#{ time }.#{ trigger }.#{ extension }"
+      "#{ trigger }.#{ extension }"
     end
 
   end

@@ -4,76 +4,57 @@ module Backup
   module Storage
     class Local < Base
 
-      ##
-      # Path where the backup will be stored.
-      attr_accessor :path
-
-      ##
-      # Creates a new instance of the storage object
       def initialize(model, storage_id = nil, &block)
-        super(model, storage_id)
-
-        @path ||= File.join(
-          File.expand_path(ENV['HOME'] || ''),
-          'backups'
-        )
-
+        super
         instance_eval(&block) if block_given?
 
-        @path = File.expand_path(@path)
+        @path ||= '~/backups'
       end
 
       private
 
-      ##
-      # Transfers the archived file to the specified path
       def transfer!
-        remote_path = remote_path_for(@package)
         FileUtils.mkdir_p(remote_path)
 
-        files_to_transfer_for(@package) do |local_file, remote_file|
-          Logger.message "#{storage_name} started transferring '#{ local_file }'."
+        transfer_method = package_movable? ? :mv : :cp
+        package.filenames.each do |filename|
+          src = File.join(Config.tmp_path, filename)
+          dest = File.join(remote_path, filename)
+          Logger.info "Storing '#{ dest }'..."
 
-          src_path = File.join(local_path, local_file)
-          dst_path = File.join(remote_path, remote_file)
-          FileUtils.send(transfer_method, src_path, dst_path)
+          FileUtils.send(transfer_method, src, dest)
         end
       end
 
-      ##
-      # Removes the transferred archive file(s) from the storage location.
-      # Any error raised will be rescued during Cycling
-      # and a warning will be logged, containing the error message.
+      # Called by the Cycler.
+      # Any error raised will be logged as a warning.
       def remove!(package)
-        remote_path = remote_path_for(package)
+        Logger.info "Removing backup package dated #{ package.time }..."
 
-        messages = []
-        transferred_files_for(package) do |local_file, remote_file|
-          messages << "#{storage_name} started removing '#{ local_file }'."
-        end
-        Logger.message messages.join("\n")
-
-        FileUtils.rm_r(remote_path)
+        FileUtils.rm_r(remote_path_for(package))
       end
 
+      # expanded since this is a local path
+      def remote_path(pkg = package)
+        File.expand_path(super)
+      end
+      alias :remote_path_for :remote_path
+
       ##
-      # Set and return the transfer method.
       # If this Local Storage is not the last Storage for the Model,
       # force the transfer to use a *copy* operation and issue a warning.
-      def transfer_method
-        return @transfer_method if @transfer_method
-
-        if self == @model.storages.last
-          @transfer_method = :mv
+      def package_movable?
+        if self == model.storages.last
+          true
         else
           Logger.warn Errors::Storage::Local::TransferError.new(<<-EOS)
             Local File Copy Warning!
-            The final backup file(s) for '#{@model.label}' (#{@model.trigger})
-            will be *copied* to '#{remote_path_for(@package)}'
+            The final backup file(s) for '#{ model.label }' (#{ model.trigger })
+            will be *copied* to '#{ remote_path }'
             To avoid this, when using more than one Storage, the 'Local' Storage
             should be added *last* so the files may be *moved* to their destination.
           EOS
-          @transfer_method = :cp
+          false
         end
       end
 

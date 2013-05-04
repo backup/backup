@@ -29,201 +29,175 @@ module Backup
       attr_accessor :additional_options
 
       ##
-      # Path to the mongodump utility (optional)
-      attr_accessor :mongodump_utility
-
-      attr_deprecate :utility_path, :version => '3.0.21',
-          :message => 'Use MongoDB#mongodump_utility instead.',
-          :action => lambda {|klass, val| klass.mongodump_utility = val }
-
-      ##
-      # Path to the mongo utility (optional)
-      attr_accessor :mongo_utility
-
-      ##
-      # 'lock' dump meaning wrapping mongodump with fsync & lock
+      # Forces mongod to flush all pending write operations to the disk and
+      # locks the entire mongod instance to prevent additional writes until the
+      # dump is complete.
+      #
+      # Note that if Profiling is enabled, this will disable it and will not
+      # re-enable it after the dump is complete.
       attr_accessor :lock
 
       ##
-      # Creates a new instance of the MongoDB database object
-      def initialize(model, &block)
-        super(model)
+      # Creates a dump of the database that includes an oplog, to create a
+      # point-in-time snapshot of the state of a mongod instance.
+      #
+      # If this option is used, you would not use the `lock` option.
+      #
+      # This will only work against nodes that maintain a oplog.
+      # This includes all members of a replica set, as well as master nodes in
+      # master/slave replication deployments.
+      attr_accessor :oplog
 
-        @only_collections   ||= Array.new
-        @additional_options ||= Array.new
-        @ipv6               ||= false
-        @lock               ||= false
-
+      def initialize(model, database_id = nil, &block)
+        super
         instance_eval(&block) if block_given?
-
-        @mongodump_utility  ||= utility(:mongodump)
-        @mongo_utility      ||= utility(:mongo)
       end
 
-      ##
-      # Performs the mongodump command and outputs the data to the
-      # specified path based on the 'trigger'. If the user hasn't specified any
-      # specific collections to dump, it'll dump everything. If the user has specified
-      # collections to dump, it'll loop through the array of collections and invoke the
-      # 'mongodump' command once per collection
       def perform!
         super
 
         lock_database if @lock
-        @only_collections.empty? ? dump! : specific_collection_dump!
+        dump!
+        package!
 
-      rescue => err
-        raise Errors::Database::MongoDBError.wrap(err, 'Database Dump Failed!')
       ensure
         unlock_database if @lock
-        package! unless err
       end
 
       private
 
       ##
-      # Builds and runs the mongodump command
+      # Performs all required mongodump commands, dumping the output files
+      # into the +dump_packaging_path+ directory for packaging.
       def dump!
-        run(mongodump)
-      end
+        FileUtils.mkdir_p dump_packaging_path
 
-      ##
-      # For each collection in the @only_collections array, it'll
-      # build the whole 'mongodump' command, append the '--collection' option,
-      # and run the command built command
-      def specific_collection_dump!
-        @only_collections.each do |collection|
-          run("#{mongodump} --collection='#{collection}'")
+        collections = Array(only_collections)
+        if collections.empty?
+          run(mongodump)
+        else
+          collections.each do |collection|
+            run("#{ mongodump } --collection='#{ collection }'")
+          end
         end
       end
 
       ##
-      # Builds the full mongodump string based on all attributes
-      def mongodump
-        "#{ mongodump_utility } #{ database } #{ credential_options } " +
-        "#{ connectivity_options } #{ ipv6_option } #{ user_options } #{ dump_directory }"
-      end
-
-      ##
-      # If a compressor is configured, packages the dump_path into a
-      # single compressed tar archive, then removes the dump_path.
-      # e.g.
-      #   if the database was dumped to:
-      #     ~/Backup/.tmp/databases/MongoDB/
-      #   then it will be packaged into:
-      #     ~/Backup/.tmp/databases/MongoDB-<timestamp>.tar.gz
+      # Creates a tar archive of the +dump_packaging_path+ directory
+      # and stores it in the +dump_path+ using +dump_filename+.
+      #
+      #   <trigger>/databases/MongoDB[-<database_id>].tar[.gz]
+      #
+      # If successful, +dump_packaging_path+ is removed.
       def package!
-        return unless @model.compressor
+        pipeline = Pipeline.new
+        dump_ext = 'tar'
 
-        pipeline  = Pipeline.new
-        base_dir  = File.dirname(@dump_path)
-        dump_dir  = File.basename(@dump_path)
-        timestamp = Time.now.to_i.to_s[-5, 5]
-        outfile   = @dump_path + '-' + timestamp + '.tar'
+        pipeline << "#{ utility(:tar) } -cf - " +
+            "-C '#{ dump_path }' '#{ dump_filename }'"
 
-        Logger.message(
-          "#{ database_name } started compressing and packaging:\n" +
-          "  '#{ @dump_path }'"
-        )
-
-        pipeline << "#{ utility(:tar) } -cf - -C '#{ base_dir }' '#{ dump_dir }'"
-        @model.compressor.compress_with do |command, ext|
+        model.compressor.compress_with do |command, ext|
           pipeline << command
-          outfile << ext
-        end
-        pipeline << "cat > #{ outfile }"
+          dump_ext << ext
+        end if model.compressor
+
+        pipeline << "#{ utility(:cat) } > " +
+            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
 
         pipeline.run
         if pipeline.success?
-          Logger.message(
-            "#{ database_name } completed compressing and packaging:\n" +
-            "  '#{ outfile }'"
-          )
-          FileUtils.rm_rf(@dump_path)
+          FileUtils.rm_rf dump_packaging_path
+          log!(:finished)
         else
           raise Errors::Database::PipelineError,
-            "#{ database_name } Failed to create compressed dump package:\n" +
-            "'#{ outfile }'\n" +
-            pipeline.error_messages
+              "#{ database_name } Dump Failed!\n" + pipeline.error_messages
         end
       end
 
-      ##
-      # Returns the MongoDB database selector syntax
-      def database
+      def dump_packaging_path
+        File.join(dump_path, dump_filename)
+      end
+
+      def mongodump
+        "#{ utility(:mongodump) } #{ name_option } #{ credential_options } " +
+        "#{ connectivity_options } #{ ipv6_option } #{ oplog_option } " +
+        "#{ user_options } --out='#{ dump_packaging_path }'"
+      end
+
+      def name_option
         "--db='#{ name }'" if name
       end
 
-      ##
-      # Builds the MongoDB credentials syntax to authenticate the user
-      # to perform the database dumping process
       def credential_options
-        %w[username password].map do |option|
-          next if send(option).to_s.empty?
-          "--#{option}='#{send(option)}'"
-        end.compact.join(' ')
+        opts = []
+        opts << "--username='#{ username }'" if username
+        opts << "--password='#{ password }'" if password
+        opts.join(' ')
       end
 
-      ##
-      # Builds the MongoDB connectivity options syntax to connect the user
-      # to perform the database dumping process
       def connectivity_options
-        %w[host port].map do |option|
-          next if send(option).to_s.empty?
-          "--#{option}='#{send(option)}'"
-        end.compact.join(' ')
+        opts = []
+        opts << "--host='#{ host }'" if host
+        opts << "--port='#{ port }'" if port
+        opts.join(' ')
       end
 
-      ##
-      # Returns the mongodump syntax for enabling ipv6
       def ipv6_option
-        @ipv6 ? '--ipv6' : ''
+        '--ipv6' if ipv6
       end
 
-      ##
-      # Builds a MongoDB compatible string for the
-      # additional options specified by the user
+      def oplog_option
+        '--oplog' if oplog
+      end
+
       def user_options
-        @additional_options.join(' ')
+        Array(additional_options).join(' ')
       end
 
-      ##
-      # Returns the MongoDB syntax for determining where to output all the database dumps,
-      # e.g. ~/Backup/.tmp/databases/MongoDB/<databases here>/<database collections>
-      def dump_directory
-        "--out='#{ @dump_path }'"
-      end
-
-      ##
-      # Locks and FSyncs the database to bring it up to sync
-      # and ensure no 'write operations' are performed during the
-      # dump process
       def lock_database
-        lock_command = <<-EOS.gsub(/^ +/, ' ')
+        lock_command = <<-EOS.gsub(/^ +/, '')
           echo 'use admin
-          db.runCommand({"fsync" : 1, "lock" : 1})' | #{ "#{ mongo_utility } #{ mongo_uri }" }
+          db.setProfilingLevel(0)
+          db.fsyncLock()' | #{ mongo_shell }
         EOS
 
         run(lock_command)
       end
 
-      ##
-      # Unlocks the (locked) database
       def unlock_database
-        unlock_command = <<-EOS.gsub(/^ +/, ' ')
+        unlock_command = <<-EOS.gsub(/^ +/, '')
           echo 'use admin
-          db.$cmd.sys.unlock.findOne()' | #{ "#{ mongo_utility } #{ mongo_uri }" }
+          db.fsyncUnlock()' | #{ mongo_shell }
         EOS
 
         run(unlock_command)
       end
 
-      ##
-      # Builds a Mongo URI based on the provided attributes
-      def mongo_uri
-        ["#{ host }:#{ port }#{ ('/' + name) if name }",
-         credential_options, ipv6_option].join(' ').strip
+      def mongo_shell
+        cmd = "#{ utility(:mongo) } #{ connectivity_options }".rstrip
+        cmd << " #{ credential_options }".rstrip
+        cmd << " #{ ipv6_option }".rstrip
+        cmd << " '#{ name }'" if name
+        cmd
       end
+
+      attr_deprecate :utility_path, :version => '3.0.21',
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { mongodump val }
+          }
+
+      attr_deprecate :mongodump_utility, :version => '3.3.0',
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { mongodump val }
+          }
+
+      attr_deprecate :mongo_utility, :version => '3.3.0',
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { mongo val }
+          }
 
     end
   end

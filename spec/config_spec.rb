@@ -4,13 +4,8 @@ require File.expand_path('../spec_helper.rb', __FILE__)
 
 describe 'Backup::Config' do
   let(:config) { Backup::Config }
-  before(:all) { config.send(:reset!) }
-  after(:each) do
-    config.unstub(:update)
-    config.unstub(:set_root_path)
-    config.unstub(:set_path_variable)
-    config.send(:reset!)
-  end
+
+  # Note: spec_helper resets Config before each example
 
   describe '#update' do
     let(:default_root_path) { config.root_path }

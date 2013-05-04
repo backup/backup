@@ -16,44 +16,46 @@ describe 'Backup::Model' do
     end
   end
 
-  describe 'finder methods' do
+  describe '.find_by_trigger' do
     before do
-      [:a, :b, :c, :b, :d].each_with_index do |sym, i|
-        Backup::Model.new("trigger_#{sym}", "label#{i}")
+      [:one, :two, :three, :one].each_with_index do |sym, i|
+        Backup::Model.new("trigger_#{ sym }", "label#{ i + 1 }")
       end
     end
 
-    describe '.find' do
-      it 'should return the first matching model' do
-        Backup::Model.find('trigger_b').label.should == 'label1'
-      end
-
-      it 'should accept symbols' do
-        Backup::Model.find(:trigger_b).label.should == 'label1'
-      end
-
-      it 'should raise an error if trigger is not found' do
-        expect do
-          Backup::Model.find(:f)
-        end.to raise_error(
-          Backup::Errors::Model::MissingTriggerError,
-          "Model::MissingTriggerError: Could not find trigger 'f'."
-        )
-      end
+    it 'should return an array of all models matching the trigger' do
+      models = Backup::Model.find_by_trigger('trigger_one')
+      models.should be_a(Array)
+      models.count.should be(2)
+      models[0].label.should == 'label1'
+      models[1].label.should == 'label4'
     end
 
-    describe '.find_matching' do
-      it 'should find all triggers matching a wildcard' do
-        Backup::Model.find_matching('tri*_b').count.should be(2)
-        Backup::Model.find_matching('trigg*').count.should be(5)
-      end
+    it 'should return an array of all models matching a wildcard trigger' do
+      models = Backup::Model.find_by_trigger('trigger_t*')
+      models.count.should be(2)
+      models[0].label.should == 'label2'
+      models[1].label.should == 'label3'
 
-      it 'should return an empty array if no matches are found' do
-        Backup::Model.find_matching('foo*').should == []
-      end
+      models = Backup::Model.find_by_trigger('trig*ne')
+      models.count.should be(2)
+      models[0].label.should == 'label1'
+      models[1].label.should == 'label4'
+
+      Backup::Model.find_by_trigger('trigg*').count.should be(4)
     end
 
-  end # describe 'finder methods'
+    it 'should accept a symbol' do
+      models = Backup::Model.find_by_trigger(:trigger_two)
+      models.count.should be(1)
+      models[0].label.should == 'label2'
+    end
+
+    it 'should return an empty array if no matches are found' do
+      Backup::Model.find_by_trigger('foo*').should == []
+    end
+
+  end # describe '.find_by_trigger'
 
   describe '#initialize' do
 
@@ -63,6 +65,11 @@ describe 'Backup::Model' do
 
     it 'should convert label to a string' do
       Backup::Model.new(:foo, :bar).label.should == 'bar'
+    end
+
+    it 'should instantiate a package for the model' do
+      Backup::Model.new(:foo, :bar).package.
+          should be_an_instance_of Backup::Package
     end
 
     it 'should set all procedure variables to an empty array' do
@@ -81,6 +88,17 @@ describe 'Backup::Model' do
 
     it 'should add itself to Model.all' do
       Backup::Model.all.should == [model]
+    end
+
+    # see also: spec/support/shared_examples/database.rb
+    it "triggers each database to generate it's #dump_filename" do
+      db1, db2 = mock, mock
+      db1.expects(:dump_filename)
+      db2.expects(:dump_filename)
+      Backup::Model.new(:test_trigger, 'test label') do
+        self.databases << db1
+        self.databases << db2
+      end
     end
 
   end # describe '#initialize'
@@ -146,22 +164,25 @@ describe 'Backup::Model' do
 
     describe '#database' do
       it 'should add databases' do
-        using_fake('Database', Fake::OneArg) do
-          model.database('Base') {|a| a.block_arg = :foo }
+        using_fake('Database', Fake::TwoArgs) do
+          model.database('Base', 'foo') {|a| a.block_arg = :foo }
+          # second arg is optional
           model.database('Base') {|a| a.block_arg = :bar }
           model.databases.count.should be(2)
           d1, d2 = model.databases
           d1.arg1.should be(model)
+          d1.arg2.should == 'foo'
           d1.block_arg.should == :foo
           d2.arg1.should be(model)
+          d2.arg2.should be_nil
           d2.block_arg.should == :bar
         end
       end
 
       it 'should accept a nested class name' do
         using_fake('Database', Fake) do
-          model.database('OneArg::Base')
-          model.databases.first.should be_an_instance_of Fake::OneArg::Base
+          model.database('TwoArgs::Base')
+          model.databases.first.should be_an_instance_of Fake::TwoArgs::Base
         end
       end
     end
@@ -170,14 +191,15 @@ describe 'Backup::Model' do
       it 'should add storages' do
         using_fake('Storage', Fake::TwoArgs) do
           model.store_with('Base', 'foo') {|a| a.block_arg = :foo }
-          model.store_with('Base', 'bar') {|a| a.block_arg = :bar }
+          # second arg is optional
+          model.store_with('Base') {|a| a.block_arg = :bar }
           model.storages.count.should be(2)
           s1, s2 = model.storages
           s1.arg1.should be(model)
           s1.arg2.should == 'foo'
           s1.block_arg.should == :foo
           s2.arg1.should be(model)
-          s2.arg2.should == 'bar'
+          s2.arg2.should be_nil
           s2.block_arg.should == :bar
         end
       end
@@ -192,20 +214,23 @@ describe 'Backup::Model' do
 
     describe '#sync_with' do
       it 'should add syncers' do
-        using_fake('Syncer', Fake::NoArg) do
-          model.sync_with('Base') {|a| a.block_arg = :foo }
+        using_fake('Syncer', Fake::OneArg) do
+          model.sync_with('Base', 'foo') {|a| a.block_arg = :foo }
+          # second arg is optional
           model.sync_with('Base') {|a| a.block_arg = :bar }
           model.syncers.count.should be(2)
           s1, s2 = model.syncers
+          s1.arg1.should == 'foo'
           s1.block_arg.should == :foo
+          s2.arg1.should be_nil
           s2.block_arg.should == :bar
         end
       end
 
       it 'should accept a nested class name' do
         using_fake('Syncer', Fake) do
-          model.sync_with('NoArg::Base')
-          model.syncers.first.should be_an_instance_of Fake::NoArg::Base
+          model.sync_with('OneArg::Base')
+          model.syncers.first.should be_an_instance_of Fake::OneArg::Base
         end
       end
 
@@ -311,12 +336,9 @@ describe 'Backup::Model' do
 
   describe '#prepare!' do
     it 'should prepare for the backup' do
-      FileUtils.expects(:mkdir_p).with(
-        File.join(Backup::Config.data_path, 'test_trigger')
-      )
       Backup::Cleaner.expects(:prepare).with(model)
 
-      model.prepare!
+      model.send(:prepare!)
     end
   end
 
@@ -338,15 +360,20 @@ describe 'Backup::Model' do
     let(:notifier_b)    { mock }
     let(:notifiers)     { [notifier_a, notifier_b] }
 
-    it 'should set the @time and @started_at variables' do
-      Timecop.freeze(Time.now)
-      started_at = Time.now
-      time = started_at.strftime("%Y.%m.%d.%H.%M.%S")
+    it 'should set @started_at, @time and @package.time' do
       model.expects(:log!).with(:started)
+      model.expects(:prepare!)
       model.expects(:log!).with(:finished)
 
-      model.perform!
+      started_at, time = nil, nil
+      Timecop.freeze do
+        started_at = Time.now
+        time = started_at.strftime("%Y.%m.%d.%H.%M.%S")
+        model.perform!
+      end
+
       model.time.should == time
+      model.package.time.should == time
       model.instance_variable_get(:@started_at).should == started_at
     end
 
@@ -364,6 +391,8 @@ describe 'Backup::Model' do
 
         it 'should perform all procedures' do
           model.expects(:log!).in_sequence(s).with(:started)
+
+          model.expects(:prepare!).in_sequence(s)
 
           procedure_a.expects(:call).in_sequence(s)
           procedure_b.expects(:perform!).in_sequence(s)
@@ -392,6 +421,8 @@ describe 'Backup::Model' do
         it 'should perform all procedures' do
           model.expects(:log!).in_sequence(s).with(:started)
 
+          model.expects(:prepare!).in_sequence(s)
+
           procedure_a.expects(:call).in_sequence(s)
           procedure_b.expects(:perform!).in_sequence(s)
           procedure_c.expects(:perform!).in_sequence(s)
@@ -416,70 +447,28 @@ describe 'Backup::Model' do
     # for the purposes of testing the error handling, we're just going to
     # stub the first thing this method calls and raise an error
     context 'when errors occur' do
-      let(:error_a)   { mock }
-      let(:error_b)   { mock }
-      let(:notifier)  { mock }
-
-      before do
-        error_a.stubs(:backtrace).returns(['many', 'backtrace', 'lines'])
-      end
 
       it 'logs, notifies and continues if a StandardError is rescued' do
-        Time.stubs(:now).raises(StandardError, 'non-fatal error')
+        err = StandardError.new 'non-fatal error'
+        Time.stubs(:now).raises(err)
 
-        Backup::Errors::ModelError.expects(:wrap).in_sequence(s).with do |err, msg|
-          err.message.should == 'non-fatal error'
-          msg.should match(/Backup for test label \(test_trigger\) Failed!/)
-        end.returns(error_a)
-        Backup::Logger.expects(:error).in_sequence(s).with(error_a)
-        Backup::Logger.expects(:error).in_sequence(s).with(
-          "\nBacktrace:\n\s\smany\n\s\sbacktrace\n\s\slines\n\n"
-        )
-
-        Backup::Cleaner.expects(:warnings).in_sequence(s).with(model)
-
-        Backup::Errors::ModelError.expects(:new).in_sequence(s).with do |msg|
-          msg.should match(/Backup will now attempt to continue/)
-        end.returns(error_b)
-        Backup::Logger.expects(:message).in_sequence(s).with(error_b)
-
-        # notifiers called, but any Exception is ignored
-        notifier.expects(:perform!).with(true).raises(Exception)
-        model.expects(:notifiers).returns([notifier])
+        model.expects(:log!).with(:failure, err)
+        model.expects(:send_failure_notifications)
 
         # returns to allow next trigger to run
         expect { model.perform! }.not_to raise_error
       end
 
-      it 'logs, notifies and exits if an Exception is rescued' do
-        Time.stubs(:now).raises(Exception, 'fatal error')
+      it 'logs, notifies and exits with status code 3 if an Exception is rescued' do
+        err = Exception.new 'fatal error'
+        Time.stubs(:now).raises(err)
 
-        Backup::Errors::ModelError.expects(:wrap).in_sequence(s).with do |err, msg|
-          err.message.should == 'fatal error'
-          msg.should match(/Backup for test label \(test_trigger\) Failed!/)
-        end.returns(error_a)
-        Backup::Logger.expects(:error).in_sequence(s).with(error_a)
-        Backup::Logger.expects(:error).in_sequence(s).with(
-          "\nBacktrace:\n\s\smany\n\s\sbacktrace\n\s\slines\n\n"
-        )
-
-        Backup::Cleaner.expects(:warnings).in_sequence(s).with(model)
-
-        Backup::Errors::ModelError.expects(:new).in_sequence(s).with do |msg|
-          msg.should match(/Backup will now exit/)
-        end.returns(error_b)
-        Backup::Logger.expects(:error).in_sequence(s).with(error_b)
-
-        expect do
-          # notifiers called, but any Exception is ignored
-          notifier = mock
-          notifier.expects(:perform!).with(true).raises(Exception)
-          model.expects(:notifiers).returns([notifier])
-        end.not_to raise_error
+        model.expects(:log!).with(:failure, err)
+        model.expects(:send_failure_notifications)
 
         expect do
           model.perform!
-        end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
+        end.to raise_error(SystemExit) {|exit| exit.status.should be(3) }
       end
 
     end # context 'when errors occur'
@@ -492,15 +481,12 @@ describe 'Backup::Model' do
       Backup::Cleaner.expects(:remove_packaging).in_sequence(s).with(model)
 
       model.send(:package!)
-      model.package.should be_an_instance_of Backup::Package
     end
   end
 
-  describe '#clean' do
+  describe '#clean!' do
     it 'should remove the final packaged files' do
-      package = mock
-      model.instance_variable_set(:@package, package)
-      Backup::Cleaner.expects(:remove_package).with(package)
+      Backup::Cleaner.expects(:remove_package).with(model.package)
 
       model.send(:clean!)
     end
@@ -611,9 +597,9 @@ describe 'Backup::Model' do
   describe '#log!' do
     context 'when action is :started' do
       it 'should log that the backup has started with the version' do
-        Backup::Logger.expects(:message).with(
+        Backup::Logger.expects(:info).with(
           "Performing Backup for 'test label (test_trigger)'!\n" +
-          "[ backup #{ Backup::Version.current } : #{ RUBY_DESCRIPTION } ]"
+          "[ backup #{ Backup::VERSION } : #{ RUBY_DESCRIPTION } ]"
         )
         model.send(:log!, :started)
       end
@@ -634,7 +620,7 @@ describe 'Backup::Model' do
 
       context 'when no warnings were issued' do
         it 'should log that the backup has finished with the elapsed time' do
-          Backup::Logger.expects(:message).with(
+          Backup::Logger.expects(:info).with(
             "Backup for 'test label (test_trigger)' " +
             "Completed Successfully in 01:02:03"
           )
@@ -642,24 +628,110 @@ describe 'Backup::Model' do
         end
       end
     end
+
+    context 'when action is :failure' do
+      let(:error_a)   { mock }
+      let(:error_b)   { mock }
+
+      before do
+        error_a.stubs(:backtrace).returns(['many', 'backtrace', 'lines'])
+      end
+
+      context 'when Exception is a StandardError' do
+        it 'logs non-fatal error messages' do
+          Backup::Errors::ModelError.expects(:wrap).in_sequence(s).with do |err, msg|
+            err.message.should == 'non-fatal error'
+            msg.should match(/Backup for test label \(test_trigger\) Failed!/)
+          end.returns(error_a)
+          Backup::Logger.expects(:error).in_sequence(s).with(error_a)
+          Backup::Logger.expects(:error).in_sequence(s).with(
+            "\nBacktrace:\n\s\smany\n\s\sbacktrace\n\s\slines\n\n"
+          )
+
+          Backup::Cleaner.expects(:warnings).in_sequence(s).with(model)
+
+          Backup::Errors::ModelError.expects(:new).in_sequence(s).with do |msg|
+            msg.should match(/Backup will now attempt to continue/)
+          end.returns(error_b)
+          Backup::Logger.expects(:info).in_sequence(s).with(error_b)
+
+          exception = StandardError.new 'non-fatal error'
+          model.send(:log!, :failure, exception)
+        end
+      end
+
+      context 'when Exception is not a StandardError' do
+        it 'logs fatal error messages' do
+          Backup::Errors::ModelError.expects(:wrap).in_sequence(s).with do |err, msg|
+            err.message.should == 'fatal error'
+            msg.should match(/Backup for test label \(test_trigger\) Failed!/)
+          end.returns(error_a)
+          Backup::Logger.expects(:error).in_sequence(s).with(error_a)
+          Backup::Logger.expects(:error).in_sequence(s).with(
+            "\nBacktrace:\n\s\smany\n\s\sbacktrace\n\s\slines\n\n"
+          )
+
+          Backup::Cleaner.expects(:warnings).in_sequence(s).with(model)
+
+          Backup::Errors::ModelError.expects(:new).in_sequence(s).with do |msg|
+            msg.should match(/Backup will now exit/)
+          end.returns(error_b)
+          Backup::Logger.expects(:error).in_sequence(s).with(error_b)
+
+          exception = Exception.new 'fatal error'
+          model.send(:log!, :failure, exception)
+        end
+      end
+    end
   end # describe '#log!'
 
   describe '#elapsed_time' do
     it 'should return a string representing the elapsed time' do
-      Timecop.freeze(Time.now)
-      { 0       => '00:00:00', 1       => '00:00:01', 59      => '00:00:59',
-        60      => '00:01:00', 61      => '00:01:01', 119     => '00:01:59',
-        3540    => '00:59:00', 3541    => '00:59:01', 3599    => '00:59:59',
-        3600    => '01:00:00', 3601    => '01:00:01', 3659    => '01:00:59',
-        3660    => '01:01:00', 3661    => '01:01:01', 3719    => '01:01:59',
-        7140    => '01:59:00', 7141    => '01:59:01', 7199    => '01:59:59',
-        212400  => '59:00:00', 212401  => '59:00:01', 212459  => '59:00:59',
-        212460  => '59:01:00', 212461  => '59:01:01', 212519  => '59:01:59',
-        215940  => '59:59:00', 215941  => '59:59:01', 215999  => '59:59:59'
-      }.each do |duration, expected|
-        model.instance_variable_set(:@started_at, Time.now - duration)
-        model.send(:elapsed_time).should == expected
+      Timecop.freeze do
+        { 0       => '00:00:00', 1       => '00:00:01', 59      => '00:00:59',
+          60      => '00:01:00', 61      => '00:01:01', 119     => '00:01:59',
+          3540    => '00:59:00', 3541    => '00:59:01', 3599    => '00:59:59',
+          3600    => '01:00:00', 3601    => '01:00:01', 3659    => '01:00:59',
+          3660    => '01:01:00', 3661    => '01:01:01', 3719    => '01:01:59',
+          7140    => '01:59:00', 7141    => '01:59:01', 7199    => '01:59:59',
+          212400  => '59:00:00', 212401  => '59:00:01', 212459  => '59:00:59',
+          212460  => '59:01:00', 212461  => '59:01:01', 212519  => '59:01:59',
+          215940  => '59:59:00', 215941  => '59:59:01', 215999  => '59:59:59'
+        }.each do |duration, expected|
+          model.instance_variable_set(:@started_at, Time.now - duration)
+          model.send(:elapsed_time).should == expected
+        end
       end
+    end
+  end
+
+  describe '#send_failure_notifications' do
+    let(:notifier_a) { mock }
+    let(:notifier_b) { mock }
+    let(:notifiers) { [notifier_a, notifier_b] }
+
+    before do
+      model.expects(:notifiers).returns(notifiers)
+    end
+
+    it 'calls all notifiers to perform failure notification' do
+      notifier_a.expects(:perform!).with(true)
+      notifier_b.expects(:perform!).with(true)
+      model.send(:send_failure_notifications)
+    end
+
+    it 'logs and ignores exceptions' do
+      notifier_a.expects(:perform!).with(true).raises('failed to notify')
+      notifier_a.expects(:class).returns('Notifier::Name')
+      notifier_b.expects(:perform!).with(true)
+      Backup::Logger.expects(:error).with do |ex|
+        ex.message.should match(/Notifier::Name Failed to send notification/)
+        ex.message.should match(/failed to notify/)
+      end
+
+      expect do
+        model.send(:send_failure_notifications)
+      end.not_to raise_error
     end
   end
 

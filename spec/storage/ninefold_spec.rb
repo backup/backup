@@ -2,123 +2,119 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Storage::Ninefold do
-  let(:model)   { Backup::Model.new(:test_trigger, 'test label') }
-  let(:storage) do
-    Backup::Storage::Ninefold.new(model) do |nf|
-      nf.storage_token    = 'my_token'
-      nf.storage_secret   = 'my_secret'
-      nf.keep             = 5
-    end
-  end
+module Backup
+describe Storage::Ninefold do
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:storage) { Storage::Ninefold.new(model) }
+  let(:s) { sequence '' }
 
-  it 'should be a subclass of Storage::Base' do
-    Backup::Storage::Ninefold.
-      superclass.should == Backup::Storage::Base
+  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a subclass of Storage::Base' do
+    let(:cycling_supported) { true }
   end
 
   describe '#initialize' do
-    after { Backup::Storage::Ninefold.clear_defaults! }
-
-    it 'should load pre-configured defaults through Base' do
-      Backup::Storage::Ninefold.any_instance.expects(:load_defaults!)
-      storage
+    it 'provides default values' do
+      expect( storage.storage_id      ).to be_nil
+      expect( storage.keep            ).to be_nil
+      expect( storage.storage_token   ).to be_nil
+      expect( storage.storage_secret  ).to be_nil
+      expect( storage.path            ).to eq 'backups'
     end
 
-    it 'should pass the model reference to Base' do
-      storage.instance_variable_get(:@model).should == model
+    it 'configures the storage' do
+      storage = Storage::Ninefold.new(model, :my_id) do |nf|
+        nf.keep           = 2
+        nf.storage_token  = 'my_storage_token'
+        nf.storage_secret = 'my_storage_secret'
+        nf.path           = 'my/path'
+      end
+
+      expect( storage.storage_id      ).to eq 'my_id'
+      expect( storage.keep            ).to be 2
+      expect( storage.storage_token   ).to eq 'my_storage_token'
+      expect( storage.storage_secret  ).to eq 'my_storage_secret'
+      expect( storage.path            ).to eq 'my/path'
     end
 
-    it 'should pass the storage_id to Base' do
-      storage = Backup::Storage::Ninefold.new(model, 'my_storage_id')
-      storage.storage_id.should == 'my_storage_id'
+    it 'strips leading path separator' do
+      storage = Storage::Ninefold.new(model) do |s3|
+        s3.path = '/this/path'
+      end
+      expect( storage.path ).to eq 'this/path'
     end
 
-    context 'when no pre-configured defaults have been set' do
-      it 'should use the values given' do
-        storage.storage_token.should  == 'my_token'
-        storage.storage_secret.should == 'my_secret'
-        storage.path.should       == 'backups'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 5
-      end
-
-      it 'should use default values if none are given' do
-        storage = Backup::Storage::Ninefold.new(model)
-
-        storage.storage_token.should  be_nil
-        storage.storage_secret.should be_nil
-        storage.path.should       == 'backups'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       be_nil
-      end
-    end # context 'when no pre-configured defaults have been set'
-
-    context 'when pre-configured defaults have been set' do
-      before do
-        Backup::Storage::Ninefold.defaults do |s|
-          s.storage_token    = 'some_token'
-          s.storage_secret   = 'some_secret'
-          s.path             = 'some_path'
-          s.keep             = 15
-        end
-      end
-
-      it 'should use pre-configured defaults' do
-        storage = Backup::Storage::Ninefold.new(model)
-
-        storage.storage_token.should  == 'some_token'
-        storage.storage_secret.should == 'some_secret'
-        storage.path.should           == 'some_path'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 15
-      end
-
-      it 'should override pre-configured defaults' do
-        storage = Backup::Storage::Ninefold.new(model) do |s|
-          s.storage_token    = 'new_token'
-          s.storage_secret   = 'new_secret'
-          s.path             = 'new_path'
-          s.keep             = 10
-        end
-
-        storage.storage_token.should  == 'new_token'
-        storage.storage_secret.should == 'new_secret'
-        storage.path.should           == 'new_path'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 10
-      end
-    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
-
-  describe '#provider' do
-    it 'should set the Fog provider' do
-      storage.send(:provider).should == 'Ninefold'
-    end
-  end
 
   describe '#connection' do
     let(:connection) { mock }
 
-    it 'should create a new connection' do
-      Fog::Storage.expects(:new).once.with(
-        :provider                => 'Ninefold',
-        :ninefold_storage_token  => 'my_token',
-        :ninefold_storage_secret => 'my_secret'
-      ).returns(connection)
-      storage.send(:connection).should == connection
+    before do
+      storage.storage_token  = 'my_storage_token'
+      storage.storage_secret = 'my_storage_secret'
     end
 
-    it 'should return an existing connection' do
-      Fog::Storage.expects(:new).once.returns(connection)
-      storage.send(:connection).should == connection
-      storage.send(:connection).should == connection
+    it 'creates a new connection' do
+      Fog::Storage.expects(:new).with(
+        :provider                 => 'Ninefold',
+        :ninefold_storage_token   => 'my_storage_token',
+        :ninefold_storage_secret  => 'my_storage_secret'
+      ).returns(connection)
+      expect( storage.send(:connection) ).to eq connection
     end
+
+    it 'caches the connection' do
+      Fog::Storage.expects(:new).once.returns(connection)
+      expect( storage.send(:connection) ).to eq connection
+      expect( storage.send(:connection) ).to eq connection
+    end
+
   end # describe '#connection'
+
+  describe '#transfer!' do
+    let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
+    let(:remote_path) { File.join('my/path/test_trigger', timestamp) }
+    let(:directory) { mock }
+    let(:files) { mock }
+    let(:file) { mock }
+
+    before do
+      Timecop.freeze
+      storage.package.time = timestamp
+      storage.package.stubs(:filenames).returns(
+        ['test_trigger.tar-aa', 'test_trigger.tar-ab']
+      )
+      directory.stubs(:files).returns(files)
+      storage.path = 'my/path'
+    end
+
+    after { Timecop.return }
+
+    it 'transfers the package files' do
+      storage.expects(:directory_for).with(remote_path, true).returns(directory)
+
+      src = File.join(Config.tmp_path, 'test_trigger.tar-aa')
+      dest = File.join(remote_path, 'test_trigger.tar-aa')
+
+      Logger.expects(:info).in_sequence(s).with("Storing '#{ dest }'...")
+      File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
+      files.expects(:create).in_sequence(s).with(
+        { :key => 'test_trigger.tar-aa', :body => file }
+      )
+
+      src = File.join(Config.tmp_path, 'test_trigger.tar-ab')
+      dest = File.join(remote_path, 'test_trigger.tar-ab')
+
+      Logger.expects(:info).in_sequence(s).with("Storing '#{ dest }'...")
+      File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
+      files.expects(:create).in_sequence(s).with(
+        { :key => 'test_trigger.tar-ab', :body => file }
+      )
+
+      storage.send(:transfer!)
+    end
+
+  end # describe '#transfer!'
 
   describe '#directory_for' do
     let(:connection)  { mock }
@@ -131,213 +127,110 @@ describe Backup::Storage::Ninefold do
     end
 
     context 'when the directory for the remote_path exists' do
-      it 'should return the directory' do
-        directories.expects(:get).with('remote_path').returns(directory)
-        storage.send(:directory_for, 'remote_path').should be(directory)
+      it 'returns the directory' do
+        directories.expects(:get).with('remote/path').returns(directory)
+        storage.send(:directory_for, 'remote/path').should be(directory)
       end
     end
 
     context 'when the directory for the remote_path does not exist' do
       before do
-        directories.expects(:get).with('remote_path').returns(nil)
+        directories.expects(:get).with('remote/path').returns(nil)
       end
 
       context 'when create is set to false' do
-        it 'should return nil' do
-          storage.send(:directory_for, 'remote_path').should be_nil
+        it 'returns nil' do
+          storage.send(:directory_for, 'remote/path').should be_nil
         end
       end
 
       context 'when create is set to true' do
-        it 'should create and return the directory' do
-          directories.expects(:create).with(:key => 'remote_path').returns(directory)
-          storage.send(:directory_for, 'remote_path', true).should be(directory)
+        it 'creates and returns the directory' do
+          directories.expects(:create).with(:key => 'remote/path').returns(directory)
+          storage.send(:directory_for, 'remote/path', true).should be(directory)
         end
       end
     end
   end # describe '#directory_for'
 
-  describe '#remote_path_for' do
-    let(:package) { mock }
-
-    before do
-      # for superclass method
-      package.expects(:trigger).returns('trigger')
-      package.expects(:time).returns('time')
-    end
-
-    it 'should remove any preceeding slash from the remote path' do
-      storage.path = '/backups'
-      storage.send(:remote_path_for, package).should == 'backups/trigger/time'
-    end
-  end
-
-  describe '#transfer!' do
-    let(:package) { mock }
-    let(:directory)       { mock }
-    let(:directory_files) { mock }
-    let(:file) { mock }
-    let(:s) { sequence '' }
-
-    before do
-      storage.instance_variable_set(:@package, package)
-      storage.stubs(:storage_name).returns('Storage::Ninefold')
-      storage.stubs(:local_path).returns('/local/path')
-      directory.stubs(:files).returns(directory_files)
-    end
-
-    it 'should transfer the package files' do
-      storage.expects(:remote_path_for).in_sequence(s).with(package).
-          returns('remote/path')
-      storage.expects(:directory_for).with('remote/path', true).returns(directory)
-
-      storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
-        multiple_yields(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
-      )
-      # first yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
-        "Storage::Ninefold started transferring " +
-        "'2011.12.31.11.00.02.backup.tar.enc-aa'."
-      )
-      File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'), 'r'
-      ).yields(file)
-      directory_files.expects(:create).in_sequence(s).with(
-        :key => 'backup.tar.enc-aa', :body => file
-      )
-      # second yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
-        "Storage::Ninefold started transferring " +
-        "'2011.12.31.11.00.02.backup.tar.enc-ab'."
-      )
-      File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'), 'r'
-      ).yields(file)
-      directory_files.expects(:create).in_sequence(s).with(
-        :key => 'backup.tar.enc-ab', :body => file
-      )
-
-      storage.send(:transfer!)
-    end
-  end # describe '#transfer!'
-
   describe '#remove!' do
-    let(:package) { mock }
-    let(:directory)       { mock }
-    let(:directory_files) { mock }
+    let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
+    let(:remote_path) { File.join('my/path/test_trigger', timestamp) }
+    let(:directory) { mock }
+    let(:files) { mock }
     let(:file) { mock }
-    let(:s) { sequence '' }
+    let(:package) {
+      stub( # loaded from YAML storage file
+        :trigger    => 'test_trigger',
+        :time       => timestamp,
+        :filenames  => ['test_trigger.tar-aa', 'test_trigger.tar-ab']
+      )
+    }
 
     before do
-      storage.stubs(:storage_name).returns('Storage::Ninefold')
-      directory.stubs(:files).returns(directory_files)
+      Timecop.freeze
+      directory.stubs(:files).returns(files)
+      storage.path = 'my/path'
     end
 
-    it 'should remove the package files' do
-      storage.expects(:remote_path_for).in_sequence(s).with(package).
-          returns('remote/path')
-      storage.expects(:directory_for).with('remote/path').returns(directory)
+    after { Timecop.return }
 
-      storage.expects(:transferred_files_for).in_sequence(s).with(package).
-        multiple_yields(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
-      )
-      # first yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
-        "Storage::Ninefold started removing " +
-        "'2011.12.31.11.00.02.backup.tar.enc-aa' from Ninefold."
-      )
-      directory_files.expects(:get).in_sequence(s).
-          with('backup.tar.enc-aa').returns(file)
+    it 'removes the given package from the remote' do
+      Logger.expects(:info).in_sequence(s).
+          with("Removing backup package dated #{ timestamp }...")
+
+      storage.expects(:directory_for).with(remote_path).returns(directory)
+
+      target = File.join(remote_path, 'test_trigger.tar-aa')
+      files.expects(:get).in_sequence(s).with('test_trigger.tar-aa').returns(file)
       file.expects(:destroy).in_sequence(s)
-      # second yield
-      Backup::Logger.expects(:message).in_sequence(s).with(
-        "Storage::Ninefold started removing " +
-        "'2011.12.31.11.00.02.backup.tar.enc-ab' from Ninefold."
-      )
-      directory_files.expects(:get).in_sequence(s).
-          with('backup.tar.enc-ab').returns(file)
+
+      target = File.join(remote_path, 'test_trigger.tar-ab')
+      files.expects(:get).in_sequence(s).with('test_trigger.tar-ab').returns(file)
       file.expects(:destroy).in_sequence(s)
 
       directory.expects(:destroy).in_sequence(s)
 
+      storage.send(:remove!, package)
+    end
+
+    it 'ignores missing files on the remote' do
+      Logger.expects(:info).in_sequence(s).
+          with("Removing backup package dated #{ timestamp }...")
+
+      storage.expects(:directory_for).with(remote_path).returns(directory)
+
+      target = File.join(remote_path, 'test_trigger.tar-aa')
+      files.expects(:get).in_sequence(s).with('test_trigger.tar-aa').returns(nil)
+
+      target = File.join(remote_path, 'test_trigger.tar-ab')
+      files.expects(:get).in_sequence(s).with('test_trigger.tar-ab').returns(file)
+      file.expects(:destroy).in_sequence(s)
+
+      directory.expects(:destroy).in_sequence(s)
+
+      storage.send(:remove!, package)
+    end
+
+    it 'raises an error if the remote_path is missing' do
+      Logger.expects(:info).in_sequence(s).
+          with("Removing backup package dated #{ timestamp }...")
+
+      storage.expects(:directory_for).with(remote_path).returns(nil)
+
+      files.expects(:get).never
+      directory.expects(:destroy).never
+
       expect do
         storage.send(:remove!, package)
-      end.not_to raise_error
-    end
-
-    context 'when the remote directory does not exist' do
-      it 'should raise an error' do
-        storage.expects(:remote_path_for).in_sequence(s).with(package).
-            returns('remote/path')
-        storage.expects(:directory_for).with('remote/path').returns(nil)
-
-        storage.expects(:transferred_files_for).never
-        directory_files.expects(:get).never
-        file.expects(:destroy).never
-        directory.expects(:destroy).never
-
-        expect do
-          storage.send(:remove!, package)
-        end.to raise_error {|err|
-          err.should be_an_instance_of Backup::Errors::Storage::Ninefold::NotFoundError
-          err.message.should == 'Storage::Ninefold::NotFoundError: ' +
-              "Directory at 'remote/path' not found"
-        }
-      end
-    end
-
-    context 'when remote files do not exist' do
-      it 'should collect their names and raise an error after proceeding' do
-        storage.expects(:remote_path_for).in_sequence(s).with(package).
-            returns('remote/path')
-        storage.expects(:directory_for).with('remote/path').returns(directory)
-
-        storage.expects(:transferred_files_for).in_sequence(s).with(package).
-          multiple_yields(
-          ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-          ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab'],
-          ['2011.12.31.11.00.02.backup.tar.enc-ac', 'backup.tar.enc-ac']
+      end.to raise_error(Errors::Storage::Ninefold::NotFoundError) {|err|
+        expect( err.message ).to eq(
+          'Storage::Ninefold::NotFoundError: ' +
+          "Directory at '#{ remote_path }' not found"
         )
-        # first yield (file not found)
-        Backup::Logger.expects(:message).in_sequence(s).with(
-          "Storage::Ninefold started removing " +
-          "'2011.12.31.11.00.02.backup.tar.enc-aa' from Ninefold."
-        )
-        directory_files.expects(:get).in_sequence(s).
-            with('backup.tar.enc-aa').returns(nil)
-        # second yield (file found and removed)
-        Backup::Logger.expects(:message).in_sequence(s).with(
-          "Storage::Ninefold started removing " +
-          "'2011.12.31.11.00.02.backup.tar.enc-ab' from Ninefold."
-        )
-        directory_files.expects(:get).in_sequence(s).
-            with('backup.tar.enc-ab').returns(file)
-        file.expects(:destroy).in_sequence(s)
-        # third yield (file not found)
-        Backup::Logger.expects(:message).in_sequence(s).with(
-          "Storage::Ninefold started removing " +
-          "'2011.12.31.11.00.02.backup.tar.enc-ac' from Ninefold."
-        )
-        directory_files.expects(:get).in_sequence(s).
-            with('backup.tar.enc-ac').returns(nil)
-
-        # directory removed
-        directory.expects(:destroy).in_sequence(s)
-
-        expect do
-          storage.send(:remove!, package)
-        end.to raise_error {|err|
-          err.should be_an_instance_of Backup::Errors::Storage::Ninefold::NotFoundError
-          err.message.should == 'Storage::Ninefold::NotFoundError: ' +
-              "The following file(s) were not found in 'remote/path'\n" +
-              "  backup.tar.enc-aa\n  backup.tar.enc-ac"
-        }
-      end
+      }
     end
   end # describe '#remove!'
 
+end
 end

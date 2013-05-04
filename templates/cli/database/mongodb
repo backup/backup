@@ -1,0 +1,15 @@
+  ##
+  # MongoDB [Database]
+  #
+  database MongoDB do |db|
+    db.name               = "my_database_name"
+    db.username           = "my_username"
+    db.password           = "my_password"
+    db.host               = "localhost"
+    db.port               = 5432
+    db.ipv6               = false
+    db.only_collections   = ["only", "these", "collections"]
+    db.additional_options = []
+    db.lock               = false
+    db.oplog              = false
+  end

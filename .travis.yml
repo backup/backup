@@ -1,10 +1,12 @@
+language: ruby
+bundler_args: --without no_ci
 script: "bundle exec rspec ./spec/"
 rvm:
   - 1.8.7
   - 1.9.2
   - 1.9.3
+  - 2.0.0
   - ree
 branches:
   only:
     - master
-    - develop

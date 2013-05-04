@@ -4,43 +4,31 @@ module Backup
   module Syncer
     module RSync
       class Base < Syncer::Base
-        ##
-        # Additional options for the rsync cli
-        attr_accessor :additional_options
 
         ##
-        # Instantiates a new RSync Syncer object
-        # and sets the default configuration
-        def initialize
-          super
-
-          @additional_options ||= Array.new
-        end
+        # Additional String or Array of options for the rsync cli
+        attr_accessor :additional_rsync_options
 
         private
 
         ##
-        # Returns the @directories as a space-delimited string of
-        # single-quoted values for use in the `rsync` command line.
-        # Each path is expanded, since these refer to local paths
-        # for both RSync::Local and RSync::Push.
-        # RSync::Pull does not use this method.
-        def directories_option
-          @directories.map do |directory|
-            "'#{ File.expand_path(directory) }'"
-          end.join(' ')
+        # Common base command for Local/Push/Pull
+        def rsync_command
+          utility(:rsync) << ' --archive' << mirror_option <<
+              " #{ Array(additional_rsync_options).join(' ') }".rstrip
         end
 
-        ##
-        # Returns Rsync syntax for enabling mirroring
         def mirror_option
-          '--delete' if @mirror
+          mirror ? ' --delete' : ''
         end
 
         ##
-        # Returns Rsync syntax for invoking "archive" mode
-        def archive_option
-          '--archive'
+        # Each path is expanded, since these refer to local paths and are
+        # being shell-quoted. This will also remove any trailing `/` from
+        # each path, as we don't want rsync's "trailing / on source directories"
+        # behavior. This method is used by RSync::Local and RSync::Push.
+        def paths_to_push
+          directories.map {|dir| "'#{ File.expand_path(dir) }'" }.join(' ')
         end
 
       end

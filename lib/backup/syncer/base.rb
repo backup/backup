@@ -3,7 +3,7 @@
 module Backup
   module Syncer
     class Base
-      include Backup::CLI::Helpers
+      include Backup::Utilities::Helpers
       include Backup::Configuration::Helpers
 
       ##
@@ -14,12 +14,20 @@ module Backup
       # Flag for mirroring the files/directories
       attr_accessor :mirror
 
-      def initialize
+      ##
+      # Optional user-defined identifier to differentiate multiple syncers
+      # defined within a single backup model. Currently this is only used
+      # in the log messages.
+      attr_reader :syncer_id
+
+      def initialize(syncer_id = nil)
+        @syncer_id = syncer_id
+
         load_defaults!
 
-        @path               ||= 'backups'
-        @mirror             ||= false
-        @directories          = Array.new
+        @path   ||= '~/backups'
+        @mirror ||= false
+        @directories = Array.new
       end
 
       ##
@@ -29,16 +37,23 @@ module Backup
         instance_eval(&block)
       end
 
-      ##
-      # Adds a path to the @directories array
       def add(path)
-        @directories << path
+        directories << path
       end
 
       private
 
       def syncer_name
-        self.class.to_s.sub('Backup::', '')
+        @syncer_name ||= self.class.to_s.sub('Backup::', '') +
+            (syncer_id ? " (#{ syncer_id })" : '')
+      end
+
+      def log!(action)
+        msg = case action
+              when :started then 'Started...'
+              when :finished then 'Finished!'
+              end
+        Logger.info "#{ syncer_name } #{ msg }"
       end
 
     end

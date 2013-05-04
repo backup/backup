@@ -2,366 +2,405 @@
 
 require File.expand_path('../spec_helper.rb', __FILE__)
 
-describe Backup::Logger do
-  let(:logger_time)  { Time.now.strftime("%Y/%m/%d %H:%M:%S") }
-  let(:logfile_path) { File.join(Backup::Config.log_path, 'backup.log') }
-  let(:logfile_mock) { mock }
-  let(:s) { sequence '' }
+module Backup
+describe Logger do
+  let(:console_logger) { mock('Console Logger') }
+  let(:logfile_logger) { mock('Logfile Logger') }
+  let(:syslog_logger)  { mock('Syslog Logger') }
+  let(:default_loggers) { [console_logger, logfile_logger] }
 
+  # Note: spec_helper calls Logger.reset! before each example
   before do
-    Timecop.freeze(Time.now)
-
-    # stubbed in spec_helper
-    [:message, :error, :warn, :normal, :silent].each do |message_type|
-      subject.unstub(message_type)
-    end
-
-    subject.quiet = nil
-    subject.send(:remove_instance_variable, :@messages) rescue nil
-    subject.send(:remove_instance_variable, :@has_warnings) rescue nil
+    Logger::Console.stubs(:new).
+        with(kind_of(Logger::Console::Options)).
+        returns(console_logger)
+    Logger::Logfile.stubs(:new).
+        with(kind_of(Logger::Logfile::Options)).
+        returns(logfile_logger)
+    Logger::Syslog.stubs(:new).
+        with(kind_of(Logger::Syslog::Options)).
+        returns(syslog_logger)
   end
 
-  describe '#message' do
-    it 'sends a regular message to the console and log file' do
-      subject.expects(:loggify).in_sequence(s).
-          with('regular message', :message, :green).
-          returns(:green_regular_message)
-      subject.expects(:to_console).in_sequence(s).
-          with(:green_regular_message)
-      subject.expects(:loggify).in_sequence(s).
-          with('regular message', :message).
-          returns(:uncolored_regular_message)
-      subject.expects(:to_file).in_sequence(s).
-          with(:uncolored_regular_message)
-
-      subject.message('regular message')
-    end
-  end
-
-  describe '#error' do
-    it 'sends an error message to the console (stderr) and log file' do
-      subject.expects(:loggify).in_sequence(s).
-          with('error message', :error, :red).
-          returns(:red_error_message)
-      subject.expects(:to_console).in_sequence(s).
-          with(:red_error_message, true)
-      subject.expects(:loggify).in_sequence(s).
-          with('error message', :error).
-          returns(:uncolored_error_message)
-      subject.expects(:to_file).in_sequence(s).
-          with(:uncolored_error_message)
-
-      subject.error('error message')
-    end
-  end
-
-  describe '#warn' do
-    it 'sends a warning message to the console (stderr) and log file' do
-      subject.expects(:loggify).in_sequence(s).
-          with('warning message', :warning, :yellow).
-          returns(:yellow_warning_message)
-      subject.expects(:to_console).in_sequence(s).
-          with(:yellow_warning_message, true)
-      subject.expects(:loggify).in_sequence(s).
-          with('warning message', :warning).
-          returns(:uncolored_warning_message)
-      subject.expects(:to_file).in_sequence(s).
-          with(:uncolored_warning_message)
-
-      subject.warn('warning message')
-    end
-
-    it 'sets has_warnings? to true' do
-      subject.stubs(:to_console)
-      subject.stubs(:to_file)
-      expect { subject.warn('warning') }.
-        to change{ subject.has_warnings? }.from(false).to(true)
-    end
-  end
-
-  describe '#normal' do
-    it 'sends a normal, unformatted message to the console and log file' do
-      subject.expects(:loggify).in_sequence(s).
-          with('normal message').
-          returns(:unformatted_message)
-      subject.expects(:to_console).in_sequence(s).
-          with(:unformatted_message)
-      subject.expects(:loggify).in_sequence(s).
-          with('normal message').
-          returns(:unformatted_message)
-      subject.expects(:to_file).in_sequence(s).
-          with(:unformatted_message)
-
-      subject.normal('normal message')
-    end
-  end
-
-  describe '#silent' do
-    it 'sends a silent message to the log file' do
-      subject.expects(:to_console).never
-      subject.expects(:loggify).in_sequence(s).
-          with('silent message', :silent).
-          returns(:silent_message)
-      subject.expects(:to_file).in_sequence(s).
-          with(:silent_message)
-
-      subject.silent('silent message')
-    end
-  end
-
-  describe '#messages' do
-
-    it 'returns an empty array if no messages have been sent' do
-      subject.messages.should == []
-    end
-
-    it 'returns an array of all lines sent to the log file' do
-      File.stubs(:open).yields(stub(:puts))
-      strings = ['an array', 'of message', 'strings']
-      subject.send(:to_file, strings)
-      subject.messages.should == strings
-    end
-
-    it 'does not track lines sent to the console' do
-      subject.stubs(:puts)
-      strings = ['an array', 'of message', 'strings']
-      subject.send(:to_console, strings)
-      subject.messages.should == []
-    end
-
-  end # describe '#messages'
-
-  describe '#clear!' do
-    it 'should clear the log and reset has_warnings?' do
-      subject.messages << 'foo'
-      subject.instance_variable_set(:@has_warnings, true)
-      subject.messages.count.should == 1
-      subject.has_warnings?.should be_true
-
-      subject.clear!
-      subject.messages.should be_empty
-      subject.has_warnings?.should be_false
-    end
-  end # describe '#clear!'
-
-  describe '#truncate!' do
-    context 'when log file does not exist' do
-      before { File.stubs(:exist?).returns(false) }
-      it 'should do nothing' do
-        File.expects(:stat).never
-        subject.truncate!
-      end
-    end
-
-    context 'when log file is <= max_bytes' do
-      before { File.stubs(:exist?).returns(true) }
-      it 'should do nothing' do
-        stat = mock
-        File.expects(:stat).twice.with(
-          File.join(Backup::Config.log_path, 'backup.log')
-        ).returns(stat)
-
-        [1, 2].each do |size|
-          stat.expects(:size).returns(size)
-
-          FileUtils.expects(:mv).never
-          File.expects(:open).never
-          FileUtils.expects(:rm_f).never
-
-          subject.truncate!(2)
+  describe Logger::Message do
+    describe '#initialize' do
+      it 'returns a new message object' do
+        Timecop.freeze do
+          msg = Logger::Message.new(Time.now, :log_level, ['message', 'lines'])
+          msg.time.should == Time.now
+          msg.level.should == :log_level
+          msg.lines.should == ['message', 'lines']
         end
       end
     end
 
-    context 'when log file is > max_bytes' do
+    describe '#formatted_lines' do
+      it 'returns the message lines formatted' do
+        Timecop.freeze do
+          timestamp = Time.now.strftime("%Y/%m/%d %H:%M:%S")
+          msg = Logger::Message.new(Time.now, :log_level, ['message', 'lines'])
+          msg.formatted_lines.should == [
+            "[#{ timestamp }][log_level] message",
+            "[#{ timestamp }][log_level] lines"
+          ]
+        end
+      end
+
+      it 'preserves blank lines in messages' do
+        Timecop.freeze do
+          timestamp = Time.now.strftime("%Y/%m/%d %H:%M:%S")
+          msg = Logger::Message.new(Time.now, :log_level, ['message', '', 'lines'])
+          msg.formatted_lines.should == [
+            "[#{ timestamp }][log_level] message",
+            "[#{ timestamp }][log_level] ",
+            "[#{ timestamp }][log_level] lines"
+          ]
+        end
+      end
+    end
+
+    describe '#matches?' do
+      let(:message) {
+        Logger::Message.new(
+          :foo, :foo, ['line one of message', 'line two of message']
+        )
+      }
+
+      it 'returns true if message lines match the given matchers' do
+        expect( message.matches?(['not', 'one of']) ).to be(true)
+        expect( message.matches?(['not', "message\nline two"]) ).to be(true)
+        expect( message.matches?(['not', /^line one/]) ).to be(true)
+        expect( message.matches?(['not', /two \w+ message$/]) ).to be(true)
+      end
+
+      it 'returns false if no match is found' do
+        expect( message.matches?(['not', 'three']) ).to be(false)
+        expect( message.matches?(['not', /three/]) ).to be(false)
+      end
+    end
+  end # describe Logger::Message
+
+  describe '.configure' do
+    context 'when the console and logfile loggers are enabled' do
       before do
-        FileUtils.unstub(:mkdir_p)
-        FileUtils.unstub(:mv)
-        FileUtils.unstub(:rm)
-        FileUtils.unstub(:rm_f)
-      end
-
-      after do
-        Backup::Config.send(:reset!)
-      end
-
-      it 'should truncate the file, removing older lines' do
-        max_bytes = 5_000
-        line_len  = 120
-        Dir.mktmpdir do |dir|
-          Backup::Config.update(:root_path => dir)
-          FileUtils.mkdir_p(Backup::Config.log_path)
-          log_file = File.join(Backup::Config.log_path, 'backup.log')
-
-          lineno = 0
-          over_max = (max_bytes * 1.25).to_i
-          File.open(log_file, 'w') do |f|
-            until f.pos > over_max
-              f.puts "#{ lineno += 1 }: ".ljust(line_len, 'x')
-            end
-          end
-          File.stat(log_file).size.
-              should be_within(line_len + 2).of(over_max)
-
-          subject.truncate!(max_bytes)
-
-          File.stat(log_file).size.
-              should be_within(line_len + 2).of(max_bytes)
-
-          File.readlines(log_file).last.chomp.
-              should == "#{ lineno }: ".ljust(line_len, 'x')
-
-          File.exist?(log_file + '~').should be_false
+        Logger::Syslog.expects(:new).never
+        Logger.info "line 1\nline 2"
+        Logger.configure do
+          console.quiet   = false
+          logfile.enabled = true
+          syslog.enabled  = false
         end
       end
-    end
 
-  end # describe '#truncate!'
+      it 'sends messages to only the enabled loggers' do
+        console_logger.expects(:log).with do |msg|
+          msg.lines.should == ['line 1', 'line 2']
+        end
 
-  describe '#loggify' do
+        logfile_logger.expects(:log).with do |msg|
+          msg.lines.should == ['line 1', 'line 2']
+        end
 
-    it 'returns an array of strings split on newline separators' do
-      str_aa = "first line\nsecond line"
-      str_ab = "first line\nsecond line\n"
-      expected_a = ["[#{logger_time}][msg_type] first line",
-                  "[#{logger_time}][msg_type] second line"]
+        syslog_logger.expects(:log).never
 
-      str_b = 'string with no newline'
-      expected_b = ["[#{logger_time}][msg_type] string with no newline"]
-
-      subject.send(:loggify, str_aa, :msg_type).should == expected_a
-      subject.send(:loggify, str_ab, :msg_type).should == expected_a
-      subject.send(:loggify, str_b,  :msg_type).should == expected_b
-    end
-
-    it 'formats a string with color if color is given' do
-      green_type  = ["[#{logger_time}][#{"\e[32mmsg_type\e[0m"}] foo"]
-      yellow_type = ["[#{logger_time}][#{"\e[33mmsg_type\e[0m"}] foo"]
-      red_type    = ["[#{logger_time}][#{"\e[31mmsg_type\e[0m"}] foo"]
-
-      subject.send(:loggify, 'foo', :msg_type, :green ).should == green_type
-      subject.send(:loggify, 'foo', :msg_type, :yellow).should == yellow_type
-      subject.send(:loggify, 'foo', :msg_type, :red   ).should == red_type
-    end
-
-    it 'does not colorize if no color given' do
-      no_color = ["[#{logger_time}][msg_type] foo"]
-      subject.send(:loggify, 'foo', :msg_type).should == no_color
-    end
-
-    it 'accepts blank lines in the message' do
-      str = "first line\n\nthird line"
-      expected = ["[#{logger_time}][msg_type] first line",
-                  "[#{logger_time}][msg_type] ",
-                  "[#{logger_time}][msg_type] third line"]
-
-      subject.send(:loggify, str, :msg_type).should == expected
-    end
-
-    it 'accepts an object responding to #to_s for the message' do
-      obj = StandardError.new("first line\nsecond line")
-      expected = ["[#{logger_time}][msg_type] first line",
-                  "[#{logger_time}][msg_type] second line"]
-
-      subject.send(:loggify, obj, :msg_type).should == expected
-    end
-
-    it 'returns an unformatted lines if type is not given' do
-      str_a = 'single line'
-      str_b = "first line\n\nthird line"
-      expected_a = ['single line']
-      expected_b = ['first line', '', 'third line']
-
-      subject.send(:loggify, str_a).should == expected_a
-      subject.send(:loggify, str_b).should == expected_b
-    end
-
-  end # describe '#loggify'
-
-  describe '#to_console' do
-
-    context 'when +stderr+ is not set (false)' do
-      it 'writes an array of strings to stdout' do
-        lines = [ 'line one', 'line two', 'line three']
-        lines.each {|line| subject.expects(:puts).with(line).in_sequence(s) }
-        subject.send(:to_console, lines)
+        Logger.start!
       end
     end
 
-    context 'when +stderr+ is set (true)' do
-      it 'writes an array of strings to stdout' do
-        lines = [ 'line one', 'line two', 'line three']
-        lines.each {|line| Kernel.expects(:warn).with(line).in_sequence(s) }
-        subject.send(:to_console, lines, true)
+    context 'when the logfile and syslog loggers are enabled' do
+      before do
+        Logger::Console.expects(:new).never
+        Logger.info "line 1\nline 2"
+        Logger.configure do
+          console.quiet   = true
+          logfile.enabled = true
+          syslog.enabled  = true
+        end
+      end
+
+      it 'sends messages to only the enabled loggers' do
+        console_logger.expects(:log).never
+
+        logfile_logger.expects(:log).with do |msg|
+          msg.lines.should == ['line 1', 'line 2']
+        end
+
+        syslog_logger.expects(:log).with do |msg|
+          msg.lines.should == ['line 1', 'line 2']
+        end
+
+        Logger.start!
       end
     end
 
-    it 'returns nil if quiet? is true' do
-      subject.quiet = true
-      subject.expects(:puts).never
-      subject.send(:to_console, 'a string')
-    end
-
-  end # describe '#to_console'
-
-  describe '#to_file' do
-
-    it 'writes an array of strings to the log file' do
-      lines = ['line one', 'line two', 'line three']
-      File.stubs(:open).yields(logfile_mock)
-      lines.each {|line| logfile_mock.expects(:puts).with(line).in_sequence(s) }
-      subject.send(:to_file, lines)
-    end
-
-    it 'appends each line written to #messages' do
-      lines = ['line one', 'line two', 'line three']
-      File.stubs(:open)
-      a_mock = mock
-      subject.expects(:messages).returns(a_mock)
-      a_mock.expects(:push).with('line one', 'line two', 'line three')
-      subject.send(:to_file, lines)
-    end
-
-    it 'only opens the log file once to append multiple lines' do
-      lines = ['line one', 'line two', 'line three']
-      File.expects(:open).once.with(logfile_path, 'a').yields(logfile_mock)
-      logfile_mock.expects(:puts).times(3)
-      subject.send(:to_file, lines)
-    end
-
-  end # describe '#to_file'
-
-  describe 'color methods' do
-
-    it 'color methods send strings to #colorize with color codes' do
-      colors = [ [:green, 32], [:yellow, 33], [:red, 31] ]
-      colors.each do |color, code|
-        subject.expects(:colorize).with('foo', code).in_sequence(s)
+    context 'when the console and syslog loggers are enabled' do
+      before do
+        Logger::Logfile.expects(:new).never
+        Logger.info "line 1\nline 2"
+        Logger.configure do
+          console.quiet   = false
+          logfile.enabled = false
+          syslog.enabled  = true
+        end
       end
-      colors.each {|color, code| subject.send(color, 'foo') }
-    end
 
-    it '#colorize adds the code to the string' do
-      [32, 33, 31].each do |code|
-        subject.send(:colorize, 'foo', code).
-            should == "\e[#{code}mfoo\e[0m"
+      it 'sends messages to only the enabled loggers' do
+        console_logger.expects(:log).with do |msg|
+          msg.lines.should == ['line 1', 'line 2']
+        end
+
+        logfile_logger.expects(:log).never
+
+        syslog_logger.expects(:log).with do |msg|
+          msg.lines.should == ['line 1', 'line 2']
+        end
+
+        Logger.start!
       end
     end
 
-  end # color methods
+    # Note that this will only work for :warn messages
+    # sent *after* the Logger has been configured.
+    context 'when warnings are ignored' do
+      before do
+        Logger.configure do
+          ignore_warning "one\nline two"
+          ignore_warning(/line\nline two/)
+        end
+      end
 
-  describe '#quiet' do
-    it 'should be nil by default' do
-      # of course, 'before' is setting it to nil ;)
-      subject.quiet.should be_nil
+      it 'converts ignored :warn messages to :info messages' do
+        Logger.warn "message line one\nline two"
+        Logger.warn "first line\nline two of message"
+        Logger.warn "first line\nsecond line"
+        Logger.error 'one of'
+        m1, m2, m3, m4 = Logger.messages
+
+        expect( m1.level ).to be(:info)
+        expect( m2.level ).to be(:info)
+        expect( m3.level ).to be(:warn)
+        expect( m4.level ).to be(:error)
+
+        expect( Logger.has_warnings? ).to be(true)
+        expect( Logger.has_errors? ).to be(true)
+      end
+
+      it 'does not flag logger as having warnings' do
+        Logger.warn "message line one\nline two"
+        Logger.warn "first line\nline two of message"
+
+        expect( Logger.has_warnings? ).to be(false)
+      end
+    end
+  end # describe '.configure'
+
+  describe '.start!' do
+    context 'before the Logger is started' do
+      it 'only stores the messages to be sent' do
+        default_loggers.each {|logger| logger.expects(:log).never }
+
+        Logger.info 'a message'
+        Logger.messages.first.lines.should == ['a message']
+      end
+
+      it 'does not instantiate any loggers' do
+        Logger::Console.expects(:new).never
+        Logger::Logfile.expects(:new).never
+        Logger::Syslog.expects(:new).never
+
+        Logger.info 'a message'
+        Logger.send(:logger).instance_variable_get(:@loggers).should be_empty
+      end
     end
 
-    it 'can be set true/false' do
-      subject.quiet = true
-      subject.quiet.should be_true
-      subject.quiet = false
-      subject.quiet.should be_false
+    context 'when Logger is started' do
+      let(:s1) { sequence '1' }
+      let(:s2) { sequence '2' }
+
+      before do
+        Logger.info 'info message'
+        Logger.warn 'warn message'
+        Logger.error 'error message'
+      end
+
+      it 'sends all messages sent before being started' do
+        m1, m2, m3 = Logger.messages
+
+        seq = s1
+        default_loggers.each do |logger|
+          logger.expects(:log).in_sequence(seq).with(m1)
+          logger.expects(:log).in_sequence(seq).with(m2)
+          logger.expects(:log).in_sequence(seq).with(m3)
+          seq = s2
+        end
+
+        Logger.start!
+      end
+    end
+
+    context 'after the Logger is started' do
+      it 'stores and sends messages' do
+        default_loggers.each do |logger|
+          logger.expects(:log).with do |msg|
+            msg.lines.should == ['a message']
+          end
+        end
+
+        Logger.start!
+        Logger.info 'a message'
+        Logger.messages.first.lines.should == ['a message']
+      end
+
+      it 'instantiates all enabled loggers' do
+        Logger.start!
+        Logger.send(:logger).instance_variable_get(:@loggers).
+            should == default_loggers
+      end
+    end
+  end # describe '.start!'
+
+  describe 'log messaging methods' do
+    describe '.info' do
+      it 'sends messages with log level :info' do
+        Logger.info 'info message'
+        msg = Logger.messages.last
+        msg.level.should == :info
+        msg.lines.should == ['info message']
+
+        default_loggers.each {|logger| logger.expects(:log).with(msg) }
+        Logger.start!
+      end
+    end
+
+    describe '.warn' do
+      it 'sends messages with log level :warn' do
+        Logger.warn 'warn message'
+        msg = Logger.messages.last
+        msg.level.should == :warn
+        msg.lines.should == ['warn message']
+
+        default_loggers.each {|logger| logger.expects(:log).with(msg) }
+        Logger.start!
+      end
+    end
+
+    describe '.error' do
+      it 'sends messages with log level :error' do
+        Logger.error 'error message'
+        msg = Logger.messages.last
+        msg.level.should == :error
+        msg.lines.should == ['error message']
+
+        default_loggers.each {|logger| logger.expects(:log).with(msg) }
+        Logger.start!
+      end
+    end
+
+    it 'accepts objects responding to #to_s' do
+      Logger.info StandardError.new('message')
+      msg = Logger.messages.last
+      msg.level.should == :info
+      msg.lines.should == ['message']
+    end
+
+    it 'preserves blank lines in messages' do
+      Logger.info "line one\n\nline two"
+      msg = Logger.messages.last
+      msg.level.should == :info
+      msg.lines.should == ['line one', '', 'line two']
+    end
+  end # describe 'log messaging methods'
+
+  describe '.has_warnings?' do
+    context 'when messages with :warn log level are sent' do
+      it 'returns true' do
+        Logger.warn 'warn message'
+        Logger.has_warnings?.should be_true
+      end
+    end
+
+    context 'when no messages with :warn log level are sent' do
+      it 'returns false' do
+        Logger.info 'info message'
+        Logger.error 'error message'
+        Logger.has_warnings?.should be_false
+      end
     end
   end
 
+  describe '.has_errors?' do
+    context 'when messages with :error log level are sent' do
+      it 'returns true' do
+        Logger.error 'error message'
+        Logger.has_errors?.should be_true
+      end
+    end
+
+    context 'when no messages with :warn log level are sent' do
+      it 'returns false' do
+        Logger.info 'info message'
+        Logger.warn 'warn message'
+        Logger.has_errors?.should be_false
+      end
+    end
+  end
+
+  describe '.clear!' do
+    before do
+      Logger.info 'info message'
+      Logger.warn 'warn message'
+      Logger.error 'error message'
+
+      Logger.messages.count.should be(3)
+      Logger.has_warnings?.should be_true
+      Logger.has_errors?.should be_true
+
+      @initial_logger = Logger.instance_variable_get(:@logger)
+      Logger.clear!
+      @current_logger = Logger.instance_variable_get(:@logger)
+    end
+
+    it 'clears all stored messages' do
+      Logger.messages.should be_empty
+    end
+
+    it 'resets has_warnings? to false' do
+      Logger.has_warnings?.should be_false
+    end
+
+    it 'resets has_errors? to false' do
+      Logger.has_errors?.should be_false
+    end
+
+    it 'replaces the logger' do
+      @current_logger.should be_a(Backup::Logger)
+      @current_logger.should_not be(@initial_logger)
+    end
+
+    it 'starts the new logger' do
+      @current_logger.instance_variable_get(:@loggers).should == default_loggers
+    end
+  end
+
+  describe '.abort!' do
+    before do
+      Logger::Console.stubs(:new).
+          with(Not(kind_of(Logger::Console::Options))).
+          returns(console_logger)
+      Logger::Logfile.expects(:new).never
+      Logger::Syslog.expects(:new).never
+
+      Logger.info 'info message'
+      Logger.warn 'warn message'
+      Logger.error 'error message'
+    end
+
+    it 'dumps all messages via a new console logger' do
+      logfile_logger.expects(:log).never
+      console_logger.expects(:log).times(3)
+      Logger.abort!
+    end
+  end
+
+end
 end

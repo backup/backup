@@ -2,410 +2,359 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Database::MySQL do
-  let(:model) { Backup::Model.new('foo', 'foo') }
-  let(:db) do
-    Backup::Database::MySQL.new(model) do |db|
-      db.name      = 'mydatabase'
-      db.username  = 'someuser'
-      db.password  = 'secret'
-      db.host      = 'localhost'
-      db.port      = '123'
-      db.socket    = '/mysql.sock'
+module Backup
+describe Database::MySQL do
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:db) { Database::MySQL.new(model) }
+  let(:s) { sequence '' }
 
-      db.skip_tables = ['logs', 'profiles']
-      db.only_tables = ['users', 'pirates']
-      db.additional_options = ['--single-transaction', '--quick']
-      db.mysqldump_utility  = '/path/to/mysqldump'
-    end
+  before do
+    Database::MySQL.any_instance.stubs(:utility).
+        with(:mysqldump).returns('mysqldump')
+    Database::MySQL.any_instance.stubs(:utility).
+        with(:cat).returns('cat')
   end
 
-  it 'should be a subclass of Database::Base' do
-    Backup::Database::MySQL.superclass.
-      should == Backup::Database::Base
-  end
+  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a subclass of Database::Base'
 
   describe '#initialize' do
-
-    it 'should load pre-configured defaults through Base' do
-      Backup::Database::MySQL.any_instance.expects(:load_defaults!)
-      db
+    it 'provides default values' do
+      expect( db.database_id        ).to be_nil
+      expect( db.name               ).to be :all
+      expect( db.username           ).to be_nil
+      expect( db.password           ).to be_nil
+      expect( db.host               ).to be_nil
+      expect( db.port               ).to be_nil
+      expect( db.socket             ).to be_nil
+      expect( db.skip_tables        ).to be_nil
+      expect( db.only_tables        ).to be_nil
+      expect( db.additional_options ).to be_nil
     end
 
-    it 'should pass the model reference to Base' do
-      db.instance_variable_get(:@model).should == model
+    it 'configures the database' do
+      db = Database::MySQL.new(model, :my_id) do |mysql|
+        mysql.name               = 'my_name'
+        mysql.username           = 'my_username'
+        mysql.password           = 'my_password'
+        mysql.host               = 'my_host'
+        mysql.port               = 'my_port'
+        mysql.socket             = 'my_socket'
+        mysql.skip_tables        = 'my_skip_tables'
+        mysql.only_tables        = 'my_only_tables'
+        mysql.additional_options = 'my_additional_options'
+      end
+
+      expect( db.database_id        ).to eq 'my_id'
+      expect( db.name               ).to eq 'my_name'
+      expect( db.username           ).to eq 'my_username'
+      expect( db.password           ).to eq 'my_password'
+      expect( db.host               ).to eq 'my_host'
+      expect( db.port               ).to eq 'my_port'
+      expect( db.socket             ).to eq 'my_socket'
+      expect( db.skip_tables        ).to eq 'my_skip_tables'
+      expect( db.only_tables        ).to eq 'my_only_tables'
+      expect( db.additional_options ).to eq 'my_additional_options'
     end
-
-    context 'when no pre-configured defaults have been set' do
-      context 'when options are specified' do
-        it 'should use the given values' do
-          db.name.should      == 'mydatabase'
-          db.username.should  == 'someuser'
-          db.password.should  == 'secret'
-          db.host.should      == 'localhost'
-          db.port.should      == '123'
-          db.socket.should    == '/mysql.sock'
-
-          db.skip_tables.should == ['logs', 'profiles']
-          db.only_tables.should == ['users', 'pirates']
-          db.additional_options.should == ['--single-transaction', '--quick']
-          db.mysqldump_utility.should  == '/path/to/mysqldump'
-        end
-      end
-
-      context 'when options are not specified' do
-        before do
-          Backup::Database::MySQL.any_instance.expects(:utility).
-              with(:mysqldump).returns('/real/mysqldump')
-        end
-
-        it 'should provide default values' do
-          db = Backup::Database::MySQL.new(model)
-
-          db.name.should      == :all
-          db.username.should  be_nil
-          db.password.should  be_nil
-          db.host.should      be_nil
-          db.port.should      be_nil
-          db.socket.should    be_nil
-
-          db.skip_tables.should         == []
-          db.only_tables.should         == []
-          db.additional_options.should  == []
-          db.mysqldump_utility.should  == '/real/mysqldump'
-        end
-      end
-    end # context 'when no pre-configured defaults have been set'
-
-    context 'when pre-configured defaults have been set' do
-      before do
-        Backup::Database::MySQL.defaults do |db|
-          db.name       = 'db_name'
-          db.username   = 'db_username'
-          db.password   = 'db_password'
-          db.host       = 'db_host'
-          db.port       = 789
-          db.socket     = '/foo.sock'
-
-          db.skip_tables = ['skip', 'tables']
-          db.only_tables = ['only', 'tables']
-          db.additional_options = ['--add', '--opts']
-          db.mysqldump_utility  = '/default/path/to/mysqldump'
-        end
-      end
-
-      after { Backup::Database::MySQL.clear_defaults! }
-
-      context 'when options are specified' do
-        it 'should override the pre-configured defaults' do
-          db.name.should      == 'mydatabase'
-          db.username.should  == 'someuser'
-          db.password.should  == 'secret'
-          db.host.should      == 'localhost'
-          db.port.should      == '123'
-          db.socket.should    == '/mysql.sock'
-
-          db.skip_tables.should == ['logs', 'profiles']
-          db.only_tables.should == ['users', 'pirates']
-          db.additional_options.should == ['--single-transaction', '--quick']
-          db.mysqldump_utility.should  == '/path/to/mysqldump'
-        end
-      end
-
-      context 'when options are not specified' do
-        it 'should use the pre-configured defaults' do
-          db = Backup::Database::MySQL.new(model)
-
-          db.name.should      == 'db_name'
-          db.username.should  == 'db_username'
-          db.password.should  == 'db_password'
-          db.host.should      == 'db_host'
-          db.port.should      == 789
-          db.socket.should    == '/foo.sock'
-
-          db.skip_tables.should         == ['skip', 'tables']
-          db.only_tables.should         == ['only', 'tables']
-          db.additional_options.should  == ['--add', '--opts']
-          db.mysqldump_utility.should   == '/default/path/to/mysqldump'
-        end
-      end
-    end # context 'when no pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#perform!' do
-    let(:s) { sequence '' }
     let(:pipeline) { mock }
+    let(:compressor) { mock }
 
     before do
-      # superclass actions
-      db.expects(:prepare!).in_sequence(s)
-      db.expects(:log!).in_sequence(s)
-      db.instance_variable_set(:@dump_path, '/dump/path')
-
       db.stubs(:mysqldump).returns('mysqldump_command')
-      db.stubs(:dump_filename).returns('dump_filename')
-      Backup::Pipeline.expects(:new).returns(pipeline)
+      db.stubs(:dump_path).returns('/tmp/trigger/databases')
+
+      db.expects(:log!).in_sequence(s).with(:started)
+      db.expects(:prepare!).in_sequence(s)
     end
 
-    context 'when no compressor is configured' do
-      before do
-        model.expects(:compressor).returns(nil)
-      end
+    context 'without a compressor' do
+      it 'packages the dump without compression' do
+        Pipeline.expects(:new).in_sequence(s).returns(pipeline)
 
-      it 'should run mysqldump without compression' do
         pipeline.expects(:<<).in_sequence(s).with('mysqldump_command')
+
         pipeline.expects(:<<).in_sequence(s).with(
-          "cat > '/dump/path/dump_filename.sql'"
+          "cat > '/tmp/trigger/databases/MySQL.sql'"
         )
+
         pipeline.expects(:run).in_sequence(s)
         pipeline.expects(:success?).in_sequence(s).returns(true)
-        Backup::Logger.expects(:message).in_sequence(s).with(
-          'Database::MySQL Complete!'
-        )
+
+        db.expects(:log!).in_sequence(s).with(:finished)
 
         db.perform!
       end
-    end
+    end # context 'without a compressor'
 
-    context 'when a compressor is configured' do
+    context 'with a compressor' do
       before do
-        compressor = mock
-        model.expects(:compressor).twice.returns(compressor)
-        compressor.expects(:compress_with).yields('gzip', '.gz')
+        model.stubs(:compressor).returns(compressor)
+        compressor.stubs(:compress_with).yields('cmp_cmd', '.cmp_ext')
       end
 
-      it 'should run mysqldump with compression' do
+      it 'packages the dump with compression' do
+        Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+
         pipeline.expects(:<<).in_sequence(s).with('mysqldump_command')
-        pipeline.expects(:<<).in_sequence(s).with('gzip')
+
+        pipeline.expects(:<<).in_sequence(s).with('cmp_cmd')
+
         pipeline.expects(:<<).in_sequence(s).with(
-          "cat > '/dump/path/dump_filename.sql.gz'"
+          "cat > '/tmp/trigger/databases/MySQL.sql.cmp_ext'"
         )
+
         pipeline.expects(:run).in_sequence(s)
         pipeline.expects(:success?).in_sequence(s).returns(true)
-        Backup::Logger.expects(:message).in_sequence(s).with(
-          'Database::MySQL Complete!'
-        )
+
+        db.expects(:log!).in_sequence(s).with(:finished)
 
         db.perform!
       end
-    end
+    end # context 'without a compressor'
 
-    context 'when pipeline command fails' do
+    context 'when the pipeline fails' do
       before do
-        model.expects(:compressor).returns(nil)
-        pipeline.stubs(:<<)
-        pipeline.expects(:run)
-        pipeline.expects(:success?).returns(false)
-        pipeline.expects(:error_messages).returns('pipeline_errors')
+        Pipeline.any_instance.stubs(:success?).returns(false)
+        Pipeline.any_instance.stubs(:error_messages).returns('error messages')
       end
 
-      it 'should raise an error' do
+      it 'raises an error' do
         expect do
           db.perform!
-        end.to raise_error(
-          Backup::Errors::Database::PipelineError,
-          "Database::PipelineError: Database::MySQL Dump Failed!\n" +
-          "  pipeline_errors"
-        )
+        end.to raise_error(Errors::Database::PipelineError) {|err|
+          expect( err.message ).to match(
+            "Database::MySQL Dump Failed!\n  error messages"
+          )
+        }
       end
-    end # context 'when pipeline command fails'
+    end # context 'when the pipeline fails'
 
   end # describe '#perform!'
 
   describe '#mysqldump' do
-    before do
-      db.stubs(:mysqldump_utility).returns(:mysqldump_utility)
-      db.stubs(:credential_options).returns(:credential_options)
-      db.stubs(:connectivity_options).returns(:connectivity_options)
-      db.stubs(:user_options).returns(:user_options)
-      db.stubs(:db_name).returns(:db_name)
-      db.stubs(:tables_to_dump).returns(:tables_to_dump)
-      db.stubs(:tables_to_skip).returns(:tables_to_skip)
+    let(:option_methods) {%w[
+      credential_options connectivity_options user_options
+      name_option tables_to_dump tables_to_skip
+    ]}
+
+    it 'returns full mysqldump command built from all options' do
+      option_methods.each {|name| db.stubs(name).returns(name) }
+      expect( db.send(:mysqldump) ).to eq(
+        "mysqldump #{ option_methods.join(' ') }"
+      )
     end
 
-    it 'should return the mysqldump command string' do
-      db.send(:mysqldump).should ==
-        "mysqldump_utility credential_options connectivity_options " +
-        "user_options db_name tables_to_dump tables_to_skip"
+    it 'handles nil values from option methods' do
+      option_methods.each {|name| db.stubs(name).returns(nil) }
+      expect( db.send(:mysqldump) ).to eq(
+        "mysqldump #{ ' ' * (option_methods.count - 1) }"
+      )
     end
-  end
+  end # describe '#mysqldump'
 
-  describe '#dump_filename' do
-    context 'when @name is set to :all' do
-      before { db.name = :all }
-      it 'should set the filename to "all-databases"' do
-        db.send(:dump_filename).should == 'all-databases'
+  describe 'mysqldump option methods' do
+
+    describe '#credential_options' do
+      it 'returns the credentials arguments' do
+        expect( db.send(:credential_options) ).to eq ''
+
+        db.username = 'my_user'
+        expect( db.send(:credential_options) ).to eq(
+          "--user='my_user'"
+        )
+
+        db.password = 'my_password'
+        expect( db.send(:credential_options) ).to eq(
+          "--user='my_user' --password='my_password'"
+        )
+
+        db.username = nil
+        expect( db.send(:credential_options) ).to eq(
+          "--password='my_password'"
+        )
       end
-    end
+    end # describe '#credential_options'
 
-    context 'when @name is not set to :all' do
-      it 'should return @name' do
-        db.send(:dump_filename).should == 'mydatabase'
+    describe '#connectivity_options' do
+      it 'returns only the socket argument if #socket specified' do
+        db.host = 'my_host'
+        db.port = 'my_port'
+        db.socket = 'my_socket'
+        expect( db.send(:connectivity_options) ).to eq(
+          "--socket='my_socket'"
+        )
       end
-    end
-  end
 
-  describe '#credential_options' do
-    context 'when a password is set' do
-      it 'should return the command string for the user credentials' do
-        db.send(:credential_options).should ==
-          "--user='someuser' --password='secret'"
+      it 'returns host and port arguments if specified' do
+        expect( db.send(:connectivity_options) ).to eq ''
+
+        db.host = 'my_host'
+        expect( db.send(:connectivity_options) ).to eq(
+          "--host='my_host'"
+        )
+
+        db.port = 'my_port'
+        expect( db.send(:connectivity_options) ).to eq(
+          "--host='my_host' --port='my_port'"
+        )
+
+        db.host = nil
+        expect( db.send(:connectivity_options) ).to eq(
+          "--port='my_port'"
+        )
       end
-    end
+    end # describe '#connectivity_options'
 
-    context 'when no password is set' do
-      before { db.password = nil }
-      it 'should return the command string for the user credentials' do
-        db.send(:credential_options).should ==
-          "--user='someuser'"
+    describe '#user_options' do
+      it 'returns arguments for any #additional_options specified' do
+        expect( db.send(:user_options) ).to eq ''
+
+        db.additional_options = ['--opt1', '--opt2']
+        expect( db.send(:user_options) ).to eq '--opt1 --opt2'
+
+        db.additional_options = '--opta --optb'
+        expect( db.send(:user_options) ).to eq '--opta --optb'
       end
-    end
-  end
+    end # describe '#user_options'
 
-  describe '#connectivity_options' do
-    it 'should return the mysql syntax for the connectivity options' do
-      db.send(:connectivity_options).should ==
-        "--host='localhost' --port='123' --socket='/mysql.sock'"
-    end
-
-    context 'when only the socket is set' do
-      it 'should return only the socket' do
-        db.host   = ''
-        db.port   = nil
-        db.send(:connectivity_options).should == "--socket='/mysql.sock'"
+    describe '#name_option' do
+      it 'returns argument to dump all databases if name is :all' do
+        expect( db.send(:name_option) ).to eq '--all-databases'
       end
-    end
 
-    context 'when only the host and port are set' do
-      it 'should return only the host and port' do
-        db.socket = nil
-        db.send(:connectivity_options).should ==
-          "--host='localhost' --port='123'"
+      it 'returns the database name if name is not :all' do
+        db.name = 'my_db'
+        expect( db.send(:name_option) ).to eq 'my_db'
       end
-    end
-  end
+    end # describe '#name_option'
 
-  describe '#user_options' do
-    it 'should return a string of additional options specified by the user' do
-      db.send(:user_options).should == '--single-transaction --quick'
-    end
-
-    context 'when #additional_options is not set' do
-      before { db.additional_options = [] }
-      it 'should return an empty string' do
-        db.send(:user_options).should == ''
+    describe '#tables_to_dump' do
+      it 'returns nil if dumping all databases' do
+        db.only_tables = 'will be ignored'
+        expect( db.send(:tables_to_dump) ).to be_nil
       end
-    end
-  end
 
-  describe '#db_name' do
-    context 'when @name is set to :all' do
-      before { db.name = :all }
-      it 'should return the mysqldump flag to dump all databases' do
-        db.send(:db_name).should == '--all-databases'
+      it 'returns arguments for only_tables' do
+        db.name = 'not_all'
+
+        db.only_tables = ['one', 'two', 'three']
+        expect( db.send(:tables_to_dump) ).to eq 'one two three'
+
+        db.only_tables = 'four five six'
+        expect( db.send(:tables_to_dump) ).to eq 'four five six'
       end
-    end
+    end # describe '#tables_to_dump'
 
-    context 'when @name is not set to :all' do
-      it 'should return @name' do
-        db.send(:db_name).should == 'mydatabase'
+    describe '#tables_to_skip' do
+      specify 'when no #skip_tables are specified' do
+        expect( db.send(:tables_to_skip) ).to eq ''
       end
-    end
-  end
 
-  describe '#tables_to_dump' do
-    it 'should return a string for the mysqldump selected table to dump option' do
-      db.send(:tables_to_dump).should == 'users pirates'
-    end
+      context 'when dumping all databases' do
+        it 'returns arguments for all tables given, as given' do
+          db.skip_tables = ['my_db.my_table', 'foo']
 
-    context 'when #only_tables is not set' do
-      before { db.only_tables = [] }
-      it 'should return an empty string' do
-        db.send(:tables_to_dump).should == ''
+          # Note that mysqldump will exit(1) if these don't include the db name.
+          expect( db.send(:tables_to_skip) ).to eq(
+            "--ignore-table='my_db.my_table' --ignore-table='foo'"
+          )
+        end
       end
-    end
 
-    context 'when dump_all? is true' do
-      before { db.stubs(:dump_all?).returns(true) }
-      it 'should return nil' do
-        db.send(:tables_to_dump).should be_nil
+      context 'when a database name is specified' do
+        it 'will add the database name prefix if missing' do
+          db.name = 'my_db'
+          db.skip_tables = ['my_table', 'foo.bar']
+
+          expect( db.send(:tables_to_skip) ).to eq(
+            "--ignore-table='my_db.my_table' --ignore-table='foo.bar'"
+          )
+        end
       end
-    end
-  end
+    end # describe '#tables_to_skip'
 
-  describe '#tables_to_skip' do
-    it 'should return a string for the mysqldump --ignore-tables option' do
-      db.send(:tables_to_skip).should ==
-        "--ignore-table='mydatabase.logs' --ignore-table='mydatabase.profiles'"
-    end
-
-    it 'should return an empty string if #skip_tables is empty' do
-      db.skip_tables = []
-      db.send(:tables_to_skip).should == ''
-    end
-
-    it 'should accept table names prefixed with the database name' do
-      db.skip_tables = ['table_name', 'db_name.table_name']
-      db.send(:tables_to_skip).should ==
-        "--ignore-table='mydatabase.table_name' --ignore-table='db_name.table_name'"
-    end
-
-    it 'should not prefix table name if dump_all? is true' do
-      db.name = :all
-      db.skip_tables = ['table_name', 'db_name.table_name']
-      db.send(:tables_to_skip).should ==
-        "--ignore-table='table_name' --ignore-table='db_name.table_name'"
-    end
-  end
-
-  describe '#dump_all?' do
-    context 'when @name is set to :all' do
-      before { db.name = :all }
-      it 'should return true' do
-        db.send(:dump_all?).should be_true
-      end
-    end
-
-    context 'when @name is not set to :all' do
-      it 'should return false' do
-        db.send(:dump_all?).should be_false
-      end
-    end
-  end
+  end # describe 'mysqldump option methods'
 
   describe 'deprecations' do
+
     describe '#utility_path' do
       before do
-        Backup::Database::MySQL.any_instance.stubs(:utility)
-        Backup::Logger.expects(:warn).with {|err|
-          err.should be_an_instance_of Backup::Errors::ConfigurationError
-          err.message.should match(
-            /Use MySQL#mysqldump_utility instead/
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
+        Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err.message ).to match(
+            /Use Backup::Utilities\.configure instead/
           )
         }
       end
       after do
-        Backup::Database::MySQL.clear_defaults!
+        Database::MySQL.clear_defaults!
       end
 
       context 'when set directly' do
         it 'should issue a deprecation warning and set the replacement value' do
-          mysql = Backup::Database::MySQL.new(model) do |db|
-            db.utility_path = 'foo'
+          Database::MySQL.new(model) do |db|
+            db.utility_path = '/foo'
           end
-          mysql.mysqldump_utility.should == 'foo'
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['mysqldump'] ).to eq '/foo'
         end
       end
 
       context 'when set as a default' do
         it 'should issue a deprecation warning and set the replacement value' do
-          mysql = Backup::Database::MySQL.defaults do |db|
-            db.utility_path = 'foo'
+          Database::MySQL.defaults do |db|
+            db.utility_path = '/foo'
           end
-          mysql = Backup::Database::MySQL.new(model)
-          mysql.mysqldump_utility.should == 'foo'
+          Database::MySQL.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['mysqldump'] ).to eq '/foo'
         end
       end
     end # describe '#utility_path'
-  end
+
+    describe '#mysqldump_utility' do
+      before do
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
+        Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err.message ).to match(
+            /Use Backup::Utilities\.configure instead/
+          )
+        }
+      end
+      after do
+        Database::MySQL.clear_defaults!
+      end
+
+      context 'when set directly' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Database::MySQL.new(model) do |db|
+            db.mysqldump_utility = '/foo'
+          end
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['mysqldump'] ).to eq '/foo'
+        end
+      end
+
+      context 'when set as a default' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Database::MySQL.defaults do |db|
+            db.mysqldump_utility = '/foo'
+          end
+          Database::MySQL.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['mysqldump'] ).to eq '/foo'
+        end
+      end
+    end # describe '#mysqldump_utility'
+
+  end # describe 'deprecations'
+
+end
 end

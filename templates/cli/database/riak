@@ -1,0 +1,17 @@
+  ##
+  # Riak [Database]
+  #
+  database Riak do |db|
+    ##
+    # The node from which to perform the backup.
+    # default: 'riak@127.0.0.1'
+    db.node = 'riak@hostname'
+    ##
+    # The Erlang cookie/shared secret used to connect to the node.
+    # default: 'riak'
+    db.cookie = 'cookie'
+    ##
+    # The user for the Riak instance.
+    # default: 'riak'
+    db.user = 'riak'
+  end

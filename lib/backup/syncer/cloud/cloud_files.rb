@@ -36,7 +36,7 @@ module Backup
         #
         # Once pre-configured defaults and Cloud specific defaults are set,
         # the block from the user's configuration file is evaluated.
-        def initialize(&block)
+        def initialize(syncer_id = nil, &block)
           super
 
           instance_eval(&block) if block_given?

@@ -160,25 +160,32 @@ describe Backup::Notifier::Hipchat do
       notifier.send(:send_message, 'a message', 'a color')
     end
 
+    it 'should handle rooms_notified being set as a comma-delimited string' do
+      notifier.rooms_notified = 'a_room, another room'
+      HipChat::Client.expects(:new).with('token').returns(client)
+      client.expects(:[]).with('a_room').returns(room)
+      client.expects(:[]).with('another room').returns(room)
+      room.expects(:send).with(
+        'application',
+        'a message',
+        {:color => 'a color', :notify => false}
+      ).twice
+
+      notifier.send(:send_message, 'a message', 'a color')
+    end
+
     context 'when notify_users is set to true' do
       before { notifier.notify_users = true }
 
       it 'should notify rooms with :notify => true' do
         HipChat::Client.expects(:new).with('token').returns(client)
-
         client.expects(:[]).with('room1').returns(room)
-        room.expects(:send).with(
-          'application',
-          'a message',
-          {:color => 'a color', :notify => true}
-        )
-
         client.expects(:[]).with('room2').returns(room)
         room.expects(:send).with(
           'application',
           'a message',
           {:color => 'a color', :notify => true}
-        )
+        ).twice
 
         notifier.send(:send_message, 'a message', 'a color')
       end
@@ -189,20 +196,13 @@ describe Backup::Notifier::Hipchat do
 
       it 'should notify rooms with :notify => false' do
         HipChat::Client.expects(:new).with('token').returns(client)
-
         client.expects(:[]).with('room1').returns(room)
-        room.expects(:send).with(
-          'application',
-          'a message',
-          {:color => 'a color', :notify => false}
-        )
-
         client.expects(:[]).with('room2').returns(room)
         room.expects(:send).with(
           'application',
           'a message',
           {:color => 'a color', :notify => false}
-        )
+        ).twice
 
         notifier.send(:send_message, 'a message', 'a color')
       end

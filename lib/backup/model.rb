@@ -2,8 +2,6 @@
 
 module Backup
   class Model
-    include Backup::CLI::Helpers
-
     class << self
       ##
       # The Backup::Model.all class method keeps track of all the models
@@ -14,23 +12,15 @@ module Backup
       end
 
       ##
-      # Return the first model matching +trigger+.
-      # Raises Errors::MissingTriggerError if no matches are found.
-      def find(trigger)
+      # Return an Array of Models matching the given +trigger+.
+      def find_by_trigger(trigger)
         trigger = trigger.to_s
-        all.each do |model|
-          return model if model.trigger == trigger
+        if trigger.include?('*')
+          regex = /^#{ trigger.gsub('*', '(.*)') }$/
+          all.select {|model| regex =~ model.trigger }
+        else
+          all.select {|model| trigger == model.trigger }
         end
-        raise Errors::Model::MissingTriggerError,
-            "Could not find trigger '#{trigger}'."
-      end
-
-      ##
-      # Find and return an Array of all models matching +trigger+
-      # Used to match triggers using a wildcard (*)
-      def find_matching(trigger)
-        regex = /^#{ trigger.to_s.gsub('*', '(.*)') }$/
-        all.select {|model| regex =~ model.trigger }
       end
     end
 
@@ -90,12 +80,18 @@ module Backup
     def initialize(trigger, label, &block)
       @trigger = trigger.to_s
       @label   = label.to_s
+      @package = Package.new(self)
 
       procedure_instance_variables.each do |variable|
         instance_variable_set(variable, Array.new)
       end
 
       instance_eval(&block) if block_given?
+
+      # trigger all defined databases to generate their #dump_filename
+      # so warnings may be logged if `backup perform --check` is used
+      databases.each {|db| db.send(:dump_filename) }
+
       Model.all << self
     end
 
@@ -109,21 +105,23 @@ module Backup
     ##
     # Adds a database to the array of databases
     # to dump during the backup process
-    def database(name, &block)
-      @databases << get_class_from_scope(Database, name).new(self, &block)
+    def database(name, database_id = nil, &block)
+      @databases << get_class_from_scope(Database, name).
+          new(self, database_id, &block)
     end
 
     ##
     # Adds a storage method to the array of storage
     # methods to use during the backup process
     def store_with(name, storage_id = nil, &block)
-      @storages << get_class_from_scope(Storage, name).new(self, storage_id, &block)
+      @storages << get_class_from_scope(Storage, name).
+          new(self, storage_id, &block)
     end
 
     ##
     # Adds a syncer method to the array of syncer
     # methods to use during the backup process
-    def sync_with(name, &block)
+    def sync_with(name, syncer_id = nil, &block)
       ##
       # Warn user of DSL changes
       case name.to_s
@@ -145,7 +143,7 @@ module Backup
         EOS
         name = "Cloud::#{ syncer }"
       end
-      @syncers << get_class_from_scope(Syncer, name).new(&block)
+      @syncers << get_class_from_scope(Syncer, name).new(syncer_id, &block)
     end
 
     ##
@@ -181,18 +179,6 @@ module Backup
           Argument to #split_into_chunks_of() must be an Integer
         EOS
       end
-    end
-
-    ##
-    # Ensure DATA_PATH and DATA_PATH/TRIGGER are created
-    # if they do not yet exist
-    #
-    # Clean any temporary files and/or package files left over
-    # from the last time this model/trigger was performed.
-    # Logs warnings if files exist and are cleaned.
-    def prepare!
-      FileUtils.mkdir_p(File.join(Config.data_path, trigger))
-      Cleaner.prepare(self)
     end
 
     ##
@@ -245,8 +231,10 @@ module Backup
     #
     def perform!
       @started_at = Time.now
-      @time = @started_at.strftime("%Y.%m.%d.%H.%M.%S")
+      @time = package.time = @started_at.strftime("%Y.%m.%d.%H.%M.%S")
       log!(:started)
+
+      prepare!
 
       if databases.any? or archives.any?
         procedures.each do |procedure|
@@ -260,49 +248,28 @@ module Backup
       log!(:finished)
 
     rescue Exception => err
-      fatal = !err.is_a?(StandardError)
-
-      err = Errors::ModelError.wrap(err, <<-EOS)
-        Backup for #{label} (#{trigger}) Failed!
-        An Error occured which has caused this Backup to abort before completion.
-      EOS
-      Logger.error err
-      Logger.error "\nBacktrace:\n\s\s" + err.backtrace.join("\n\s\s") + "\n\n"
-
-      Cleaner.warnings(self)
-
-      if fatal
-        Logger.error Errors::ModelError.new(<<-EOS)
-          This Error was Fatal and Backup will now exit.
-          If you have other Backup jobs (triggers) configured to run,
-          they will not be processed.
-        EOS
-      else
-        Logger.message Errors::ModelError.new(<<-EOS)
-          If you have other Backup jobs (triggers) configured to run,
-          Backup will now attempt to continue...
-        EOS
-      end
-
-      notifiers.each do |n|
-        begin
-          n.perform!(true)
-        rescue Exception; end
-      end
-
-      exit(1) if fatal
+      log!(:failure, err)
+      send_failure_notifications
+      exit(3) unless err.is_a?(StandardError)
     end
 
     private
 
     ##
-    # After all the databases and archives have been dumped and sorted,
+    # Clean any temporary files and/or package files left over
+    # from the last time this model/trigger was performed.
+    # Logs warnings if files exist and are cleaned.
+    def prepare!
+      Cleaner.prepare(self)
+    end
+
+    ##
+    # After all the databases and archives have been dumped and stored,
     # these files will be bundled in to a .tar archive (uncompressed),
     # which may be optionally Encrypted and/or Split into multiple "chunks".
     # All information about this final archive is stored in the @package.
     # Once complete, the temporary folder used during packaging is removed.
     def package!
-      @package = Package.new(self)
       Packager.package!(self)
       Cleaner.remove_packaging(self)
     end
@@ -310,7 +277,7 @@ module Backup
     ##
     # Removes the final package file(s) once all configured Storages have run.
     def clean!
-      Cleaner.remove_package(@package)
+      Cleaner.remove_package(package)
     end
 
     ##
@@ -352,12 +319,12 @@ module Backup
     end
 
     ##
-    # Logs messages when the backup starts and finishes
-    def log!(action)
+    # Logs messages when the backup starts, finishes or fails
+    def log!(action, exception = nil)
       case action
       when :started
-        Logger.message "Performing Backup for '#{label} (#{trigger})'!\n" +
-            "[ backup #{ Version.current } : #{ RUBY_DESCRIPTION } ]"
+        Logger.info "Performing Backup for '#{label} (#{trigger})'!\n" +
+            "[ backup #{ VERSION } : #{ RUBY_DESCRIPTION } ]"
 
       when :finished
         msg = "Backup for '#{ label } (#{ trigger })' " +
@@ -365,7 +332,30 @@ module Backup
         if Logger.has_warnings?
           Logger.warn msg % 'Successfully (with Warnings)'
         else
-          Logger.message msg % 'Successfully'
+          Logger.info msg % 'Successfully'
+        end
+
+      when :failure
+        err = Errors::ModelError.wrap(exception, <<-EOS)
+          Backup for #{label} (#{trigger}) Failed!
+          An Error occured which has caused this Backup to abort before completion.
+        EOS
+        Logger.error err
+        Logger.error "\nBacktrace:\n\s\s" + err.backtrace.join("\n\s\s") + "\n\n"
+
+        Cleaner.warnings(self)
+
+        if exception.is_a?(StandardError)
+          Logger.info Errors::ModelError.new(<<-EOS)
+            If you have other Backup jobs (triggers) configured to run,
+            Backup will now attempt to continue...
+          EOS
+        else
+          Logger.error Errors::ModelError.new(<<-EOS)
+            This Error was Fatal and Backup will now exit.
+            If you have other Backup jobs (triggers) configured to run,
+            they will not be processed.
+          EOS
         end
       end
     end
@@ -379,6 +369,22 @@ module Backup
       minutes   = remainder / 60
       seconds   = remainder - (minutes * 60)
       '%02d:%02d:%02d' % [hours, minutes, seconds]
+    end
+
+    ##
+    # Sends notifications when a backup fails.
+    # Errors are logged and rescued, since the error that caused the
+    # backup to fail could have been an error with a notifier.
+    def send_failure_notifications
+      notifiers.each do |n|
+        begin
+          n.perform!(true)
+        rescue Exception => err
+          Logger.error Errors::ModelError.wrap(err, <<-EOS)
+            #{ n.class } Failed to send notification of backup failure.
+          EOS
+        end
+      end
     end
 
   end
