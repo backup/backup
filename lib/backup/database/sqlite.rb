@@ -22,8 +22,8 @@ module Backup
 
       ##
       # Creates a new instance of the SQLite adapter object
-      def initialize(model, &block)
-        super(model)
+      def initialize(model, database_id = nil, &block)
+        super
 
         instance_eval(&block) if block_given?
 
