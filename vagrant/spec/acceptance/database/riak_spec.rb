@@ -19,7 +19,7 @@ describe 'Database::Riak' do
 
     expect( job.package.exist? ).to be_true
     expect( job.package ).to match_manifest(%q[
-      156200..156300 my_backup/databases/Riak-riak@127.0.0.1
+      156000..157000 my_backup/databases/Riak-riak@127.0.0.1
     ])
   end
 
