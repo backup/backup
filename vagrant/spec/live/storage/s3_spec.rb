@@ -45,27 +45,14 @@ describe Storage::S3,
   # Minimum chunk_size for multipart upload is 5 MiB.
   # The first package file will use multipart, the second won't.
   it 'stores multiple package files', :live do
-    create_model :my_backup, <<-EOS
+    create_model :my_backup, %q{
       Backup::Model.new(:my_backup, 'a description') do
         split_into_chunks_of 6 # MiB
 
-        archive :archive_a do |archive|
-          archive.add '~/test_data'
-        end
-        archive :archive_b do |archive|
-          archive.add '~/test_data'
-        end
-        archive :archive_c do |archive|
-          archive.add '~/test_data'
-        end
-        archive :archive_d do |archive|
-          archive.add '~/test_data'
-        end
-        archive :archive_e do |archive|
-          archive.add '~/test_data'
-        end
-        archive :archive_f do |archive|
-          archive.add '~/test_data'
+        6.times do |n|
+          archive "archive_#{ n }" do |archive|
+            archive.add '~/test_data'
+          end
         end
 
         store_with S3 do |s3|
@@ -76,7 +63,7 @@ describe Storage::S3,
           s3.path               = BackupSpec::LIVE['storage']['s3']['path']
         end
       end
-    EOS
+    }
 
     job = backup_perform :my_backup
     package = BackupSpec::S3Package.new(job.model)
@@ -130,6 +117,42 @@ describe Storage::S3,
     expect( package_a.files_on_remote ).to be_empty
 
     package_c.clean_remote!
+  end
+
+  # tests both multipart and put_object
+  it 'uses server-side encryption and reduced redundancy', :live do
+    create_model :my_backup, %q{
+      Backup::Model.new(:my_backup, 'a description') do
+        split_into_chunks_of 6 # MiB
+
+        6.times do |n|
+          archive "archive_#{ n }" do |archive|
+            archive.add '~/test_data'
+          end
+        end
+
+        store_with S3 do |s3|
+          s3.access_key_id      = BackupSpec::LIVE['storage']['s3']['access_key_id']
+          s3.secret_access_key  = BackupSpec::LIVE['storage']['s3']['secret_access_key']
+          s3.region             = BackupSpec::LIVE['storage']['s3']['region']
+          s3.bucket             = BackupSpec::LIVE['storage']['s3']['bucket']
+          s3.path               = BackupSpec::LIVE['storage']['s3']['path']
+          s3.encryption = :aes256
+          s3.storage_class = :reduced_redundancy
+        end
+      end
+    }
+
+    job = backup_perform :my_backup
+    package = BackupSpec::S3Package.new(job.model)
+
+    expect( package.files_sent.count ).to be(2)
+    expect( package.files_on_remote ).to eq package.files_sent
+
+    expect( package.stored_with_reduced_redundancy? ).to be_true
+    expect( package.stored_with_encryption? ).to be_true
+
+    package.clean_remote!
   end
 
 end

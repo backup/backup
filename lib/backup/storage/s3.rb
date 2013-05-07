@@ -55,6 +55,31 @@ module Backup
       # Default: 30
       attr_accessor :retry_waitsec
 
+      ##
+      # Encryption algorithm to use for Amazon Server-Side Encryption
+      #
+      # Supported values:
+      #
+      # - :aes256
+      #
+      # @see http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html
+      #
+      # Default: nil
+      attr_accessor :encryption
+
+      ##
+      # Storage class to use for the S3 objects uploaded
+      #
+      # Supported values:
+      #
+      # - :standard (default)
+      # - :reduced_redundancy
+      #
+      # @see http://docs.aws.amazon.com/AmazonS3/latest/dev/SetStoClsOfObjUploaded.html
+      #
+      # Default: :standard
+      attr_accessor :storage_class
+
       def initialize(model, storage_id = nil, &block)
         super
         instance_eval(&block) if block_given?
@@ -63,6 +88,7 @@ module Backup
         @max_retries    ||= 10
         @retry_waitsec  ||= 30
         @path           ||= 'backups'
+        @storage_class  ||= :standard
         path.sub!(/^\//, '')
       end
 
@@ -86,8 +112,7 @@ module Backup
           src = File.join(Config.tmp_path, filename)
           dest = File.join(remote_path, filename)
           Logger.info "Storing '#{ bucket }/#{ dest }'..."
-          Uploader.new(connection, bucket, src, dest,
-                       chunk_size, max_retries, retry_waitsec).run
+          Uploader.new(self, connection, src, dest).run
         end
       end
 
@@ -107,20 +132,21 @@ module Backup
       end
 
       class Uploader
-        attr_reader :connection, :bucket, :src, :dest
-        attr_reader :chunk_size, :max_retries, :retry_waitsec
-        attr_reader :upload_id, :parts
+        attr_reader :connection, :bucket, :chunk_size, :max_retries,
+                    :retry_waitsec, :storage_class, :encryption,
+                    :src, :dest, :upload_id, :parts
 
-        def initialize(connection, bucket, src, dest,
-                       chunk_size, max_retries, retry_waitsec)
-          @connection = connection
-          @bucket = bucket
-          @src = src
-          @dest = dest
-          @chunk_size = 1024**2 * chunk_size
-          @max_retries = max_retries
-          @retry_waitsec = retry_waitsec
-          @parts = []
+        def initialize(storage, connection, src, dest)
+          @connection     = connection
+          @bucket         = storage.bucket
+          @chunk_size     = storage.chunk_size * 1024**2
+          @max_retries    = storage.max_retries
+          @retry_waitsec  = storage.retry_waitsec
+          @encryption     = storage.encryption
+          @storage_class  = storage.storage_class
+          @src    = src
+          @dest   = dest
+          @parts  = []
         end
 
         def run
@@ -139,16 +165,17 @@ module Backup
 
         def upload
           md5 = Base64.encode64(Digest::MD5.file(src).digest).chomp
+          options = headers.merge('Content-MD5' => md5)
           with_retries do
             File.open(src, 'r') do |file|
-              connection.put_object(bucket, dest, file, { 'Content-MD5' => md5 })
+              connection.put_object(bucket, dest, file, options)
             end
           end
         end
 
         def initiate_multipart
           with_retries do
-            resp = connection.initiate_multipart_upload(bucket, dest)
+            resp = connection.initiate_multipart_upload(bucket, dest, headers)
             @upload_id = resp.body['UploadId']
           end
         end
@@ -168,6 +195,22 @@ module Backup
               end
             end
           end
+        end
+
+        def headers
+          headers = {}
+
+          val = encryption.to_s.upcase
+          headers.merge!(
+            { 'x-amz-server-side-encryption' => val }
+          ) unless val.empty?
+
+          val = storage_class.to_s.upcase
+          headers.merge!(
+            { 'x-amz-storage-class' => val }
+          ) unless val.empty? || val == 'STANDARD'
+
+          headers
         end
 
         def complete_multipart
