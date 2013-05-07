@@ -120,18 +120,16 @@ describe Storage::S3 do
       dest = File.join(remote_path, 'test_trigger.tar-aa')
 
       Logger.expects(:info).in_sequence(s).with("Storing 'my_bucket/#{ dest }'...")
-      Storage::S3::Uploader.expects(:new).in_sequence(s).with(
-        connection, 'my_bucket', src, dest, 5, 10, 30, nil, :standard
-      ).returns(uploader)
+      Storage::S3::Uploader.expects(:new).in_sequence(s).
+          with(storage, connection, src, dest).returns(uploader)
       uploader.expects(:run).in_sequence(s)
 
       src = File.join(Config.tmp_path, 'test_trigger.tar-ab')
       dest = File.join(remote_path, 'test_trigger.tar-ab')
 
       Logger.expects(:info).in_sequence(s).with("Storing 'my_bucket/#{ dest }'...")
-      Storage::S3::Uploader.expects(:new).in_sequence(s).with(
-        connection, 'my_bucket', src, dest, 5, 10, 30, nil, :standard
-      ).returns(uploader)
+      Storage::S3::Uploader.expects(:new).in_sequence(s).
+          with(storage, connection, src, dest).returns(uploader)
       uploader.expects(:run).in_sequence(s)
 
       storage.send(:transfer!)
@@ -201,20 +199,20 @@ describe Storage::S3 do
   describe Storage::S3::Uploader do
     let(:connection) { mock }
     let(:uploader) {
-      Storage::S3::Uploader.new(
-          connection, 'my_bucket', 'src/file', 'dest/file', 5, 10, 30, nil, :standard)
+      Storage::S3::Uploader.new(storage, connection, 'src/file', 'dest/file')
     }
     let(:s) { sequence '' }
 
     before do
+      storage.bucket = 'my_bucket'
       uploader.stubs(:sleep)
     end
 
     describe '#run' do
       context 'when chunk_size is 0' do
         let(:uploader) {
-          Storage::S3::Uploader.new(
-              connection, 'my_bucket', 'src/file', 'dest/file', 0, 10, 30, nil, :standard)
+          storage.chunk_size = 0
+          Storage::S3::Uploader.new(storage, connection, 'src/file', 'dest/file')
         }
 
         it 'uploads file using put_object' do
@@ -288,12 +286,14 @@ describe Storage::S3 do
             returns('md5_digest')
         Base64.expects(:encode64).in_sequence(s).
             with('md5_digest').returns("encoded_digest\n")
+        uploader.stubs(:headers).returns({ 'some' => 'headers'})
       end
 
       it 'uploads file using put_object' do
         File.expects(:open).in_sequence(s).with('src/file', 'r').yields(file)
         connection.expects(:put_object).in_sequence(s).with(
-          'my_bucket', 'dest/file', file, { 'Content-MD5' => 'encoded_digest' }
+          'my_bucket', 'dest/file', file,
+          { 'some' => 'headers', 'Content-MD5' => 'encoded_digest' }
         )
 
         uploader.send(:upload)
@@ -302,12 +302,14 @@ describe Storage::S3 do
       it 'retries on errors' do
         File.expects(:open).in_sequence(s).with('src/file', 'r').yields(file)
         connection.expects(:put_object).in_sequence(s).with(
-          'my_bucket', 'dest/file', file, { 'Content-MD5' => 'encoded_digest' }
+          'my_bucket', 'dest/file', file,
+          { 'some' => 'headers', 'Content-MD5' => 'encoded_digest' }
         ).raises('error message')
 
         File.expects(:open).in_sequence(s).with('src/file', 'r').yields(file)
         connection.expects(:put_object).in_sequence(s).with(
-          'my_bucket', 'dest/file', file, { 'Content-MD5' => 'encoded_digest' }
+          'my_bucket', 'dest/file', file,
+          { 'some' => 'headers', 'Content-MD5' => 'encoded_digest' }
         )
 
         uploader.send(:upload)
@@ -319,22 +321,26 @@ describe Storage::S3 do
 
       before do
         response.stubs(:body).returns({ 'UploadId' => 123 })
+        uploader.stubs(:headers).returns({ 'some' => 'headers'})
       end
 
       it 'initiates the multipart upload' do
-        connection.expects(:initiate_multipart_upload).
-            with('my_bucket', 'dest/file', {}).returns(response)
+        connection.expects(:initiate_multipart_upload).with(
+          'my_bucket', 'dest/file', { 'some' => 'headers' }
+        ).returns(response)
 
         uploader.send(:initiate_multipart)
         expect( uploader.upload_id ).to be 123
       end
 
       it 'retries on errors' do
-        connection.expects(:initiate_multipart_upload).in_sequence(s).
-            with('my_bucket', 'dest/file', {}).raises('error message')
+        connection.expects(:initiate_multipart_upload).in_sequence(s).with(
+          'my_bucket', 'dest/file', { 'some' => 'headers' }
+        ).raises('error message')
 
-        connection.expects(:initiate_multipart_upload).in_sequence(s).
-            with('my_bucket', 'dest/file', {}).returns(response)
+        connection.expects(:initiate_multipart_upload).in_sequence(s).with(
+          'my_bucket', 'dest/file', { 'some' => 'headers' }
+        ).returns(response)
 
         uploader.send(:initiate_multipart)
         expect( uploader.upload_id ).to be 123
@@ -348,6 +354,7 @@ describe Storage::S3 do
 
       before do
         uploader.stubs(:upload_id).returns(123)
+        uploader.expects(:headers).never
       end
 
       it 'uploads the file in chunks' do
@@ -419,29 +426,47 @@ describe Storage::S3 do
 
     end # describe '#upload_parts'
 
-    describe '#request_headers' do
-      it 'returns a hash with the S3 server side encryption header when the encryption attr_reader is set' do
-        encryption = 'aes256'
-        uploader.stubs(:encryption).returns(encryption)
+    describe '#headers' do
+      it 'returns empty headers by default' do
+        # defaults for the storage
+        expect( uploader.encryption ).to be_nil
+        expect( uploader.storage_class ).to eq :standard
 
-        uploader.send(:request_headers).should == {'x-amz-server-side-encryption' => encryption.upcase}
+        uploader.send(:headers).should == {}
       end
 
-      it 'returns a hash with the S3 storage class header when the storage_class attr_reader is set' do
-        storage_class = 'reduced_redundancy'
-        uploader.stubs(:storage_class).returns(storage_class)
+      it 'returns headers for server-side encryption' do
+        ['aes256', :aes256].each do |arg|
+          uploader.stubs(:encryption).returns(arg)
 
-        uploader.send(:request_headers).should == {'x-amz-storage-class' => storage_class.upcase}
+          uploader.send(:headers).should ==
+              { 'x-amz-server-side-encryption' => 'AES256' }
+        end
       end
-    end # describe '#request_headers
 
-    describe '#md5_request_header' do
-      it 'returns a hash with the Content-MD5 key set to the md5 string passed into the method' do
-        md5 = 'encoded_digest'
+      it 'returns headers for reduced redundancy storage' do
+        ['reduced_redundancy', :reduced_redundancy].each do |arg|
+          uploader.stubs(:storage_class).returns(arg)
 
-        uploader.send(:md5_request_header, md5).should == {'Content-MD5' => md5}
+          uploader.send(:headers).should ==
+              { 'x-amz-storage-class' => 'REDUCED_REDUNDANCY' }
+        end
       end
-    end # describe '#md5_request_header'
+
+      it 'returns headers for both' do
+        uploader.stubs(:encryption).returns(:aes256)
+        uploader.stubs(:storage_class).returns(:reduced_redundancy)
+        uploader.send(:headers).should ==
+            { 'x-amz-server-side-encryption' => 'AES256',
+              'x-amz-storage-class' => 'REDUCED_REDUNDANCY' }
+      end
+
+      it 'returns empty headers for empty values' do
+        uploader.stubs(:encryption).returns('')
+        uploader.stubs(:storage_class).returns('')
+        uploader.send(:headers).should == {}
+      end
+    end # describe '#headers
 
     describe '#complete_multipart' do
       before do
