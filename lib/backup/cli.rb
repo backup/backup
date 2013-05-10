@@ -384,7 +384,7 @@ module Backup
         end
 
         def exec!(cmd)
-          puts "Lauching: #{ cmd }"
+          puts "Launching: #{ cmd }"
           exec(cmd)
         end
 
