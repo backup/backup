@@ -34,9 +34,9 @@ module Backup
 
     def before!
       begin
-        Logger.message "Performing Before Hook"
+        Logger.info "Performing Before Hook"
         @before_proc.call(model)
-        Logger.message "Before Hook Completed Successfully"
+        Logger.info "Before Hook Completed Successfully"
       rescue => err
         raise Errors::Hooks::BeforeHookError.wrap(
           err, "Before Hook Failed!"
@@ -46,9 +46,9 @@ module Backup
 
     def after!
       begin
-        Logger.message "Performing After Hook"
+        Logger.info "Performing After Hook"
         @after_proc.call(model)
-        Logger.message "After Hook Completed Successfully"
+        Logger.info "After Hook Completed Successfully"
       rescue => err
         raise Errors::Hooks::AfterHookError.wrap(
           err, "After Hook Failed!"
