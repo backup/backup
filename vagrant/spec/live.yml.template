@@ -23,3 +23,15 @@ storage:
     servicenet: false
     container: <your container>
     path: backup_testing
+notifier:
+  mail:
+    specs_enabled: false
+    from: <from email>
+    to: <to email>
+    address: <your address>
+    port: <your port>
+    user_name: <your user_name>
+    password: <your password>
+    authentication: :plain
+    encryption: :starttls
+    openssl_verify_mode:

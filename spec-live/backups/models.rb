@@ -1,27 +1,6 @@
 ##
 # Models
 
-Backup::Model.new(:archive_local, 'test_label') do
-  archive :test_archive, &SpecLive::ARCHIVE_JOB
-  store_with Local
-end
-
-Backup::Model.new(:archive_scp, 'test_label') do
-  archive :test_archive, &SpecLive::ARCHIVE_JOB
-  store_with SCP
-end
-
-Backup::Model.new(:notifier_mail, 'test_label') do
-  notify_by Mail
-end
-
-Backup::Model.new(:notifier_mail_file, 'test_label') do
-  notify_by Mail do |mail|
-    mail.to = 'test@backup'
-    mail.delivery_method = :file
-  end
-end
-
 Backup::Model.new(:syncer_cloud_s3, 'test_label') do
   sync_with Cloud::S3 do |s3|
     s3.directories do

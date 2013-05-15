@@ -5,28 +5,6 @@
 #   spec-live/backups/config.rb
 ##
 ---
-storage:
-  scp:
-    specs_enabled: false
-    username: <current user name>
-    password: <password>
-    ip: localhost
-    port: 22
-    path: /absolute/path/to/spec-live/.tmp
-notifier:
-  mail:
-    specs_enabled: false
-    delivery_method: smtp
-    from: <from email>
-    to: <to email>
-    address: smtp.gmail.com
-    port: 587
-    user_name: <user name>
-    password: <password>
-    authentication: plain
-    encryption: :starttls
-    sendmail:
-    sendmail_args:
 syncer:
   cloud:
     s3:
