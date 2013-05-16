@@ -45,7 +45,6 @@ module Backup
                  end
 
         if status
-          @template = Backup::Template.new({:model => model})
           Logger.info "Sending notification using #{ notifier_name }..."
           notify!(status)
         end

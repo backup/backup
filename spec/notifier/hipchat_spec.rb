@@ -2,210 +2,145 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Notifier::Hipchat do
-  let(:model) { Backup::Model.new(:test_trigger, 'test label') }
-  let(:notifier) do
-    Backup::Notifier::Hipchat.new(model) do |notifier|
-      notifier.token = 'token'
-      notifier.from = 'application'
-      notifier.rooms_notified = ['room1', 'room2']
-    end
-  end
+module Backup
+describe Notifier::Hipchat do
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:notifier) { Notifier::Hipchat.new(model) }
+  let(:s) { sequence '' }
 
-  it 'should be a subclass of Notifier::Base' do
-    Backup::Notifier::Hipchat.
-      superclass.should == Backup::Notifier::Base
-  end
+  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a subclass of Notifier::Base'
 
   describe '#initialize' do
-    after { Backup::Notifier::Hipchat.clear_defaults! }
+    it 'provides default values' do
+      expect( notifier.token          ).to be_nil
+      expect( notifier.from           ).to be_nil
+      expect( notifier.rooms_notified ).to eq []
+      expect( notifier.notify_users   ).to be(false)
+      expect( notifier.success_color  ).to eq 'yellow'
+      expect( notifier.warning_color  ).to eq 'yellow'
+      expect( notifier.failure_color  ).to eq 'yellow'
 
-    it 'should load pre-configured defaults through Base' do
-      Backup::Notifier::Hipchat.any_instance.expects(:load_defaults!)
-      notifier
+      expect( notifier.on_success ).to be(true)
+      expect( notifier.on_warning ).to be(true)
+      expect( notifier.on_failure ).to be(true)
     end
 
-    it 'should pass the model reference to Base' do
-      notifier.instance_variable_get(:@model).should == model
+    it 'configures the notifier' do
+      notifier = Notifier::Hipchat.new(model) do |hipchat|
+        hipchat.token           = 'my_token'
+        hipchat.from            = 'my_from'
+        hipchat.rooms_notified  = ['room_a', 'room_b']
+        hipchat.notify_users    = true
+        hipchat.success_color   = :success_color
+        hipchat.warning_color   = :warning_color
+        hipchat.failure_color   = :failure_color
+
+        hipchat.on_success = false
+        hipchat.on_warning = false
+        hipchat.on_failure = false
+      end
+
+      expect( notifier.token          ).to eq 'my_token'
+      expect( notifier.from           ).to eq 'my_from'
+      expect( notifier.rooms_notified ).to eq ['room_a', 'room_b']
+      expect( notifier.notify_users   ).to be(true)
+      expect( notifier.success_color  ).to eq :success_color
+      expect( notifier.warning_color  ).to eq :warning_color
+      expect( notifier.failure_color  ).to eq :failure_color
+
+      expect( notifier.on_success ).to be(false)
+      expect( notifier.on_warning ).to be(false)
+      expect( notifier.on_failure ).to be(false)
     end
-
-    context 'when no pre-configured defaults have been set' do
-      it 'should use the values given' do
-        notifier.token.should           == 'token'
-        notifier.from.should            == 'application'
-        notifier.rooms_notified.should  == ['room1', 'room2']
-        notifier.notify_users.should    == false
-        notifier.success_color.should   == 'yellow'
-        notifier.warning_color.should   == 'yellow'
-        notifier.failure_color.should   == 'yellow'
-
-        notifier.on_success.should == true
-        notifier.on_warning.should == true
-        notifier.on_failure.should == true
-      end
-
-      it 'should use default values if none are given' do
-        notifier = Backup::Notifier::Hipchat.new(model)
-        notifier.token.should           be_nil
-        notifier.from.should            be_nil
-        notifier.rooms_notified.should  == []
-        notifier.notify_users.should    == false
-        notifier.success_color.should   == 'yellow'
-        notifier.warning_color.should   == 'yellow'
-        notifier.failure_color.should   == 'yellow'
-
-        notifier.on_success.should == true
-        notifier.on_warning.should == true
-        notifier.on_failure.should == true
-      end
-    end # context 'when no pre-configured defaults have been set'
-
-    context 'when pre-configured defaults have been set' do
-      before do
-        Backup::Notifier::Hipchat.defaults do |n|
-          n.token          = 'old'
-          n.from           = 'before'
-          n.success_color  = 'green'
-          n.on_failure     = false
-        end
-      end
-
-      it 'should use pre-configured defaults' do
-        notifier = Backup::Notifier::Hipchat.new(model)
-
-        notifier.token.should           == 'old'
-        notifier.from.should            == 'before'
-        notifier.rooms_notified.should  == []
-        notifier.notify_users.should    == false
-        notifier.success_color.should   == 'green'
-        notifier.warning_color.should   == 'yellow'
-        notifier.failure_color.should   == 'yellow'
-
-        notifier.on_success.should == true
-        notifier.on_warning.should == true
-        notifier.on_failure.should == false
-      end
-
-      it 'should override pre-configured defaults' do
-        notifier = Backup::Notifier::Hipchat.new(model) do |n|
-          n.token          = 'new'
-          n.from           = 'after'
-          n.failure_color  = 'red'
-          n.on_success     = false
-          n.on_failure     = true
-        end
-
-        notifier.token.should          == 'new'
-        notifier.from.should           == 'after'
-        notifier.success_color.should  == 'green'
-        notifier.warning_color.should  == 'yellow'
-        notifier.failure_color.should  == 'red'
-
-        notifier.on_success.should     == false
-        notifier.on_warning.should     == true
-        notifier.on_failure.should     == true
-      end
-    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#notify!' do
-    before do
-      notifier.success_color = 'green'
-      notifier.warning_color = 'yellow'
-      notifier.failure_color = 'red'
-    end
+    let(:notifier) {
+      Notifier::Hipchat.new(model) do |hipchat|
+        hipchat.token           = 'my_token'
+        hipchat.from            = 'my_from'
+        hipchat.rooms_notified  = ['room_a', 'room_b']
+        hipchat.notify_users    = true
+        hipchat.success_color   = :success_color
+        hipchat.warning_color   = :warning_color
+        hipchat.failure_color   = :failure_color
+      end
+    }
+    let(:client) { mock }
+    let(:room) { mock }
+    let(:message) { '[Backup::%s] test label (test_trigger)' }
 
     context 'when status is :success' do
-      it 'should send Success message' do
-        notifier.expects(:send_message).with(
-          '[Backup::Success] test label (test_trigger)', 'green'
-        )
+      it 'sends a success message' do
+        HipChat::Client.expects(:new).in_sequence(s).
+            with('my_token').returns(client)
+        client.expects(:[]).in_sequence(s).
+            with('room_a').returns(room)
+        room.expects(:send).in_sequence(s).
+            with('my_from', message % 'Success',
+                :color => :success_color, :notify => true)
+        client.expects(:[]).in_sequence(s).
+            with('room_b').returns(room)
+        room.expects(:send).in_sequence(s).
+            with('my_from', message % 'Success',
+                :color => :success_color, :notify => true)
+
         notifier.send(:notify!, :success)
       end
     end
 
     context 'when status is :warning' do
-      it 'should send Warning message' do
-        notifier.expects(:send_message).with(
-          '[Backup::Warning] test label (test_trigger)', 'yellow'
-        )
+      it 'sends a warning message' do
+        HipChat::Client.expects(:new).in_sequence(s).
+            with('my_token').returns(client)
+        client.expects(:[]).in_sequence(s).
+            with('room_a').returns(room)
+        room.expects(:send).in_sequence(s).
+            with('my_from', message % 'Warning',
+                :color => :warning_color, :notify => true)
+        client.expects(:[]).in_sequence(s).
+            with('room_b').returns(room)
+        room.expects(:send).in_sequence(s).
+            with('my_from', message % 'Warning',
+                :color => :warning_color, :notify => true)
+
         notifier.send(:notify!, :warning)
       end
     end
 
     context 'when status is :failure' do
-      it 'should send Failure message' do
-        notifier.expects(:send_message).with(
-          '[Backup::Failure] test label (test_trigger)', 'red'
-        )
+      it 'sends a failure message' do
+        HipChat::Client.expects(:new).in_sequence(s).
+            with('my_token').returns(client)
+        client.expects(:[]).in_sequence(s).
+            with('room_a').returns(room)
+        room.expects(:send).in_sequence(s).
+            with('my_from', message % 'Failure',
+                :color => :failure_color, :notify => true)
+        client.expects(:[]).in_sequence(s).
+            with('room_b').returns(room)
+        room.expects(:send).in_sequence(s).
+            with('my_from', message % 'Failure',
+                :color => :failure_color, :notify => true)
+
         notifier.send(:notify!, :failure)
       end
     end
+
   end # describe '#notify!'
 
-  describe '#send_message' do
-    let(:client)  { mock }
-    let(:room)    { mock }
-
-    it 'should handle rooms_notified being set as a single room string' do
-      notifier.rooms_notified = 'a_room'
-      HipChat::Client.expects(:new).with('token').returns(client)
-      client.expects(:[]).with('a_room').returns(room)
-      room.expects(:send).with(
-        'application',
-        'a message',
-        {:color => 'a color', :notify => false}
-      )
-
-      notifier.send(:send_message, 'a message', 'a color')
+  describe '#rooms_to_notify' do
+    it 'returns an array of rooms from a string with a single room name' do
+      notifier.rooms_notified = 'my_room'
+      expect( notifier.send(:rooms_to_notify) ).to eq ['my_room']
     end
 
-    it 'should handle rooms_notified being set as a comma-delimited string' do
-      notifier.rooms_notified = 'a_room, another room'
-      HipChat::Client.expects(:new).with('token').returns(client)
-      client.expects(:[]).with('a_room').returns(room)
-      client.expects(:[]).with('another room').returns(room)
-      room.expects(:send).with(
-        'application',
-        'a message',
-        {:color => 'a color', :notify => false}
-      ).twice
-
-      notifier.send(:send_message, 'a message', 'a color')
+    it 'returns an array of rooms from a comma-delimited string' do
+      notifier.rooms_notified = 'room_a, room_b'
+      expect( notifier.send(:rooms_to_notify) ).to eq ['room_a', 'room_b']
     end
+  end # describe '#rooms_to_notify'
 
-    context 'when notify_users is set to true' do
-      before { notifier.notify_users = true }
-
-      it 'should notify rooms with :notify => true' do
-        HipChat::Client.expects(:new).with('token').returns(client)
-        client.expects(:[]).with('room1').returns(room)
-        client.expects(:[]).with('room2').returns(room)
-        room.expects(:send).with(
-          'application',
-          'a message',
-          {:color => 'a color', :notify => true}
-        ).twice
-
-        notifier.send(:send_message, 'a message', 'a color')
-      end
-    end
-
-    context 'when notify_users is set to false' do
-      before { notifier.notify_users = false }
-
-      it 'should notify rooms with :notify => false' do
-        HipChat::Client.expects(:new).with('token').returns(client)
-        client.expects(:[]).with('room1').returns(room)
-        client.expects(:[]).with('room2').returns(room)
-        room.expects(:send).with(
-          'application',
-          'a message',
-          {:color => 'a color', :notify => false}
-        ).twice
-
-        notifier.send(:send_message, 'a message', 'a color')
-      end
-    end
-  end
+end
 end

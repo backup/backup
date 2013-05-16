@@ -16,8 +16,7 @@ module Backup
       attr_accessor :api_key
 
       def initialize(model, &block)
-        super(model)
-
+        super
         instance_eval(&block) if block_given?
       end
 

@@ -37,15 +37,14 @@ module Backup
       attr_accessor :failure_color
 
       def initialize(model, &block)
-        super(model)
+        super
+        instance_eval(&block) if block_given?
 
         @notify_users   ||= false
         @rooms_notified ||= []
         @success_color  ||= 'yellow'
         @warning_color  ||= 'yellow'
         @failure_color  ||= 'yellow'
-
-        instance_eval(&block) if block_given?
       end
 
       private
@@ -81,9 +80,13 @@ module Backup
 
       def send_message(msg, color)
         client = HipChat::Client.new(token)
-        Array(rooms_notified).map {|r| r.split(',').map(&:strip) }.flatten.each do |room|
+        rooms_to_notify.each do |room|
           client[room].send(from, msg, :color => color, :notify => notify_users)
         end
+      end
+
+      def rooms_to_notify
+        Array(rooms_notified).map {|r| r.split(',').map(&:strip) }.flatten
       end
 
     end

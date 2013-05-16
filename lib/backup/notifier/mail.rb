@@ -76,13 +76,6 @@ module Backup
       #   Use a +SSL/TLS+ connection.
       attr_accessor :encryption
 
-      attr_deprecate :enable_starttls_auto, :version => '3.2.0',
-                     :message => "Use #encryption instead.\n" +
-                        'e.g. mail.encryption = :starttls',
-                     :action => lambda {|klass, val|
-                       klass.encryption = val ? :starttls : :none
-                     }
-
       ##
       # OpenSSL Verify Mode
       #
@@ -135,8 +128,7 @@ module Backup
       attr_accessor :mail_folder
 
       def initialize(model, &block)
-        super(model)
-
+        super
         instance_eval(&block) if block_given?
       end
 
@@ -172,7 +164,8 @@ module Backup
 
         email = new_email
         email.subject = "[Backup::%s] #{@model.label} (#{@model.trigger})" % name
-        email.body    = @template.result('notifier/mail/%s.erb' % status.to_s)
+        template = Backup::Template.new({:model => model})
+        email.body = template.result('notifier/mail/%s.erb' % status.to_s)
 
         if send_log
           email.convert_to_multipart
@@ -231,6 +224,13 @@ module Backup
         email.from = @from
         email
       end
+
+      attr_deprecate :enable_starttls_auto, :version => '3.2.0',
+                     :message => "Use #encryption instead.\n" +
+                        'e.g. mail.encryption = :starttls',
+                     :action => lambda {|klass, val|
+                       klass.encryption = val ? :starttls : :none
+                     }
 
     end
   end

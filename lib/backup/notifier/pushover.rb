@@ -27,8 +27,7 @@ module Backup
       attr_accessor :priority
 
       def initialize(model, &block)
-        super(model)
-
+        super
         instance_eval(&block) if block_given?
       end
 

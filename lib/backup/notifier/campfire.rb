@@ -18,8 +18,7 @@ module Backup
       attr_accessor :room_id
 
       def initialize(model, &block)
-        super(model)
-
+        super
         instance_eval(&block) if block_given?
       end
 

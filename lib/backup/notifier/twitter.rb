@@ -14,8 +14,7 @@ module Backup
       attr_accessor :oauth_token, :oauth_token_secret
 
       def initialize(model, &block)
-        super(model)
-
+        super
         instance_eval(&block) if block_given?
       end
 
