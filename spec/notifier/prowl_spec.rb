@@ -15,9 +15,11 @@ describe Notifier::Prowl do
       expect( notifier.application  ).to be_nil
       expect( notifier.api_key      ).to be_nil
 
-      expect( notifier.on_success ).to be(true)
-      expect( notifier.on_warning ).to be(true)
-      expect( notifier.on_failure ).to be(true)
+      expect( notifier.on_success     ).to be(true)
+      expect( notifier.on_warning     ).to be(true)
+      expect( notifier.on_failure     ).to be(true)
+      expect( notifier.max_retries    ).to be(10)
+      expect( notifier.retry_waitsec  ).to be(30)
     end
 
     it 'configures the notifier' do
@@ -25,17 +27,21 @@ describe Notifier::Prowl do
         prowl.application = 'my_app'
         prowl.api_key     = 'my_api_key'
 
-        prowl.on_success = false
-        prowl.on_warning = false
-        prowl.on_failure = false
+        prowl.on_success    = false
+        prowl.on_warning    = false
+        prowl.on_failure    = false
+        prowl.max_retries   = 5
+        prowl.retry_waitsec = 10
       end
 
       expect( notifier.application  ).to eq 'my_app'
       expect( notifier.api_key      ).to eq 'my_api_key'
 
-      expect( notifier.on_success ).to be(false)
-      expect( notifier.on_warning ).to be(false)
-      expect( notifier.on_failure ).to be(false)
+      expect( notifier.on_success     ).to be(false)
+      expect( notifier.on_warning     ).to be(false)
+      expect( notifier.on_failure     ).to be(false)
+      expect( notifier.max_retries    ).to be(5)
+      expect( notifier.retry_waitsec  ).to be(10)
     end
   end # describe '#initialize'
 

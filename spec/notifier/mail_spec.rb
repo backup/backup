@@ -29,9 +29,11 @@ describe Notifier::Mail do
       expect( notifier.exim_args            ).to be_nil
       expect( notifier.mail_folder          ).to be_nil
 
-      expect( notifier.on_success           ).to be(true)
-      expect( notifier.on_warning           ).to be(true)
-      expect( notifier.on_failure           ).to be(true)
+      expect( notifier.on_success     ).to be(true)
+      expect( notifier.on_warning     ).to be(true)
+      expect( notifier.on_failure     ).to be(true)
+      expect( notifier.max_retries    ).to be(10)
+      expect( notifier.retry_waitsec  ).to be(30)
     end
 
     it 'configures the notifier' do
@@ -53,9 +55,11 @@ describe Notifier::Mail do
         mail.exim_args            = '-i -t -X/tmp/traffic.log'
         mail.mail_folder          = '/path/to/backup/mails'
 
-        mail.on_success = false
-        mail.on_warning = false
-        mail.on_failure = false
+        mail.on_success     = false
+        mail.on_warning     = false
+        mail.on_failure     = false
+        mail.max_retries    = 5
+        mail.retry_waitsec  = 10
       end
 
       expect( notifier.delivery_method      ).to eq :smtp
@@ -75,9 +79,11 @@ describe Notifier::Mail do
       expect( notifier.exim_args            ).to eq '-i -t -X/tmp/traffic.log'
       expect( notifier.mail_folder          ).to eq '/path/to/backup/mails'
 
-      expect( notifier.on_success           ).to be(false)
-      expect( notifier.on_warning           ).to be(false)
-      expect( notifier.on_failure           ).to be(false)
+      expect( notifier.on_success     ).to be(false)
+      expect( notifier.on_warning     ).to be(false)
+      expect( notifier.on_failure     ).to be(false)
+      expect( notifier.max_retries    ).to be(5)
+      expect( notifier.retry_waitsec  ).to be(10)
     end
   end # describe '#initialize'
 

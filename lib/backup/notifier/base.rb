@@ -23,6 +23,16 @@ module Backup
       attr_accessor :on_failure
       alias :notify_on_failure? :on_failure
 
+      ##
+      # Number of times to retry failed attempts to send notification.
+      # Default: 10
+      attr_accessor :max_retries
+
+      ##
+      # Time in seconds to pause before each retry.
+      # Default: 30
+      attr_accessor :retry_waitsec
+
       attr_reader :model
 
       def initialize(model)
@@ -32,8 +42,13 @@ module Backup
         @on_success = true if on_success.nil?
         @on_warning = true if on_warning.nil?
         @on_failure = true if on_failure.nil?
+        @max_retries    ||= 10
+        @retry_waitsec  ||= 30
       end
 
+      # This method is called from an ensure block in Model#perform! and must
+      # not raise any exceptions. However, each Notifier's #notify! method
+      # should raise an exception if the request fails so it may be retried.
       def perform!
         status = case model.exit_status
                  when 0
@@ -46,15 +61,29 @@ module Backup
 
         if status
           Logger.info "Sending notification using #{ notifier_name }..."
-          notify!(status)
+          with_retries { notify!(status) }
         end
 
       rescue Exception => err
-        # Notifiers cannot raise any exceptions.
         Logger.error Errors::NotifierError.wrap(err, "#{ notifier_name } Failed!")
       end
 
       private
+
+      def with_retries
+        retries = 0
+        begin
+          yield
+        rescue StandardError, Timeout::Error => err
+          retries += 1
+          raise if retries > max_retries
+
+          Logger.info Errors::NotifierError.
+              wrap(err, "Retry ##{ retries } of #{ max_retries }.")
+          sleep(retry_waitsec)
+          retry
+        end
+      end
 
       ##
       # Return the notifier name, with Backup namespace removed

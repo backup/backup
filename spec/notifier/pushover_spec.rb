@@ -18,9 +18,11 @@ describe Notifier::Pushover do
       expect( notifier.title    ).to be_nil
       expect( notifier.priority ).to be_nil
 
-      expect( notifier.on_success ).to be(true)
-      expect( notifier.on_warning ).to be(true)
-      expect( notifier.on_failure ).to be(true)
+      expect( notifier.on_success     ).to be(true)
+      expect( notifier.on_warning     ).to be(true)
+      expect( notifier.on_failure     ).to be(true)
+      expect( notifier.max_retries    ).to be(10)
+      expect( notifier.retry_waitsec  ).to be(30)
     end
 
     it 'configures the notifier' do
@@ -31,9 +33,11 @@ describe Notifier::Pushover do
         pushover.title    = 'my_title'
         pushover.priority = 'my_priority'
 
-        pushover.on_success = false
-        pushover.on_warning = false
-        pushover.on_failure = false
+        pushover.on_success     = false
+        pushover.on_warning     = false
+        pushover.on_failure     = false
+        pushover.max_retries    = 5
+        pushover.retry_waitsec  = 10
       end
 
       expect( notifier.user     ).to eq 'my_user'
@@ -42,9 +46,11 @@ describe Notifier::Pushover do
       expect( notifier.title    ).to eq 'my_title'
       expect( notifier.priority ).to eq 'my_priority'
 
-      expect( notifier.on_success ).to be(false)
-      expect( notifier.on_warning ).to be(false)
-      expect( notifier.on_failure ).to be(false)
+      expect( notifier.on_success     ).to be(false)
+      expect( notifier.on_warning     ).to be(false)
+      expect( notifier.on_failure     ).to be(false)
+      expect( notifier.max_retries    ).to be(5)
+      expect( notifier.retry_waitsec  ).to be(10)
     end
   end # describe '#initialize'
 

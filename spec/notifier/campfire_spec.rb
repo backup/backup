@@ -16,9 +16,11 @@ describe Notifier::Campfire do
       expect( notifier.subdomain  ).to be_nil
       expect( notifier.room_id    ).to be_nil
 
-      expect( notifier.on_success ).to be(true)
-      expect( notifier.on_warning ).to be(true)
-      expect( notifier.on_failure ).to be(true)
+      expect( notifier.on_success     ).to be(true)
+      expect( notifier.on_warning     ).to be(true)
+      expect( notifier.on_failure     ).to be(true)
+      expect( notifier.max_retries    ).to be(10)
+      expect( notifier.retry_waitsec  ).to be(30)
     end
 
     it 'configures the notifier' do
@@ -27,18 +29,22 @@ describe Notifier::Campfire do
         campfire.subdomain = 'subdomain'
         campfire.room_id   = 'room_id'
 
-        campfire.on_success = false
-        campfire.on_warning = false
-        campfire.on_failure = false
+        campfire.on_success     = false
+        campfire.on_warning     = false
+        campfire.on_failure     = false
+        campfire.max_retries    = 5
+        campfire.retry_waitsec  = 10
       end
 
       expect( notifier.api_token  ).to eq 'token'
       expect( notifier.subdomain  ).to eq 'subdomain'
       expect( notifier.room_id    ).to eq 'room_id'
 
-      expect( notifier.on_success ).to be(false)
-      expect( notifier.on_warning ).to be(false)
-      expect( notifier.on_failure ).to be(false)
+      expect( notifier.on_success     ).to be(false)
+      expect( notifier.on_warning     ).to be(false)
+      expect( notifier.on_failure     ).to be(false)
+      expect( notifier.max_retries    ).to be(5)
+      expect( notifier.retry_waitsec  ).to be(10)
     end
   end # describe '#initialize'
 

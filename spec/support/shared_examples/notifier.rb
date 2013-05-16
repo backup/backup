@@ -159,7 +159,7 @@ shared_examples 'a subclass of Notifier::Base' do
       end
     end
 
-    specify 'notifiers only log exceptions' do
+    specify 'only logs exceptions' do
       model.stubs(:exit_status).returns(0)
       notifier.expects(:notify!).with(:success).raises(Exception.new 'error message')
 
@@ -171,6 +171,44 @@ shared_examples 'a subclass of Notifier::Base' do
 
       notifier.perform!
     end
+
+    specify 'retries failed attempts' do
+      model.stubs(:exit_status).returns(0)
+      notifier.max_retries = 2
+
+      logger_calls = 0
+      Logger.expects(:info).times(3).with do |arg|
+        logger_calls += 1
+        case logger_calls
+        when 1
+          expect( arg ).to eq "Sending notification using #{ notifier_name }..."
+        when 2
+          expect( arg ).to be_an_instance_of Errors::NotifierError
+          expect( arg.message ).to match('Reason: RuntimeError')
+          expect( arg.message ).to match('Retry #1 of 2.')
+        when 3
+          expect( arg ).to be_an_instance_of Errors::NotifierError
+          expect( arg.message ).to match('Reason: Timeout::Error')
+          expect( arg.message ).to match('Retry #2 of 2.')
+        end
+      end
+
+      notifier.expects(:sleep).with(30).twice
+
+      s = sequence ''
+      notifier.expects(:notify!).in_sequence(s).raises('standard error')
+      notifier.expects(:notify!).in_sequence(s).raises(Timeout::Error.new)
+      notifier.expects(:notify!).in_sequence(s).raises('final error')
+
+      Logger.expects(:error).in_sequence(s).with do |err|
+        expect( err ).to be_an_instance_of Errors::NotifierError
+        expect( err.message ).to match(/#{ notifier_name } Failed!/)
+        expect( err.message ).to match(/final error/)
+      end
+
+      notifier.perform!
+    end
+
   end # describe '#perform'
 
 end

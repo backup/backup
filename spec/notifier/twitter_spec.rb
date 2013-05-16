@@ -17,9 +17,11 @@ describe Notifier::Twitter do
       expect( notifier.oauth_token        ).to be_nil
       expect( notifier.oauth_token_secret ).to be_nil
 
-      expect( notifier.on_success ).to be(true)
-      expect( notifier.on_warning ).to be(true)
-      expect( notifier.on_failure ).to be(true)
+      expect( notifier.on_success     ).to be(true)
+      expect( notifier.on_warning     ).to be(true)
+      expect( notifier.on_failure     ).to be(true)
+      expect( notifier.max_retries    ).to be(10)
+      expect( notifier.retry_waitsec  ).to be(30)
     end
 
     it 'configures the notifier' do
@@ -29,9 +31,11 @@ describe Notifier::Twitter do
         twitter.oauth_token        = 'my_oauth_token'
         twitter.oauth_token_secret = 'my_oauth_token_secret'
 
-        twitter.on_success = false
-        twitter.on_warning = false
-        twitter.on_failure = false
+        twitter.on_success    = false
+        twitter.on_warning    = false
+        twitter.on_failure    = false
+        twitter.max_retries   = 5
+        twitter.retry_waitsec = 10
       end
 
       expect( notifier.consumer_key       ).to eq 'my_consumer_key'
@@ -39,9 +43,11 @@ describe Notifier::Twitter do
       expect( notifier.oauth_token        ).to eq 'my_oauth_token'
       expect( notifier.oauth_token_secret ).to eq 'my_oauth_token_secret'
 
-      expect( notifier.on_success ).to be(false)
-      expect( notifier.on_warning ).to be(false)
-      expect( notifier.on_failure ).to be(false)
+      expect( notifier.on_success     ).to be(false)
+      expect( notifier.on_warning     ).to be(false)
+      expect( notifier.on_failure     ).to be(false)
+      expect( notifier.max_retries    ).to be(5)
+      expect( notifier.retry_waitsec  ).to be(10)
     end
   end # describe '#initialize'
 

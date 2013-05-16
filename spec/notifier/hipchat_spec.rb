@@ -21,9 +21,11 @@ describe Notifier::Hipchat do
       expect( notifier.warning_color  ).to eq 'yellow'
       expect( notifier.failure_color  ).to eq 'yellow'
 
-      expect( notifier.on_success ).to be(true)
-      expect( notifier.on_warning ).to be(true)
-      expect( notifier.on_failure ).to be(true)
+      expect( notifier.on_success     ).to be(true)
+      expect( notifier.on_warning     ).to be(true)
+      expect( notifier.on_failure     ).to be(true)
+      expect( notifier.max_retries    ).to be(10)
+      expect( notifier.retry_waitsec  ).to be(30)
     end
 
     it 'configures the notifier' do
@@ -36,9 +38,11 @@ describe Notifier::Hipchat do
         hipchat.warning_color   = :warning_color
         hipchat.failure_color   = :failure_color
 
-        hipchat.on_success = false
-        hipchat.on_warning = false
-        hipchat.on_failure = false
+        hipchat.on_success    = false
+        hipchat.on_warning    = false
+        hipchat.on_failure    = false
+        hipchat.max_retries   = 5
+        hipchat.retry_waitsec = 10
       end
 
       expect( notifier.token          ).to eq 'my_token'
@@ -49,9 +53,11 @@ describe Notifier::Hipchat do
       expect( notifier.warning_color  ).to eq :warning_color
       expect( notifier.failure_color  ).to eq :failure_color
 
-      expect( notifier.on_success ).to be(false)
-      expect( notifier.on_warning ).to be(false)
-      expect( notifier.on_failure ).to be(false)
+      expect( notifier.on_success     ).to be(false)
+      expect( notifier.on_warning     ).to be(false)
+      expect( notifier.on_failure     ).to be(false)
+      expect( notifier.max_retries    ).to be(5)
+      expect( notifier.retry_waitsec  ).to be(10)
     end
   end # describe '#initialize'
 
