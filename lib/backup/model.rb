@@ -74,6 +74,19 @@ module Backup
     attr_reader :time
 
     ##
+    # Result of this model's backup process.
+    #
+    # 0 = Job was successful
+    # 1 = Job was successful, but issued warnings
+    # 2 = Job failed, additional triggers may be performed
+    # 3 = Job failed, additional triggers will not be performed
+    attr_reader :exit_status
+
+    ##
+    # When #exit_status is 2 or 3, this is the Exception that caused the failure.
+    attr_reader :exception
+
+    ##
     # Takes a trigger, label and the configuration block.
     # After the instance has evaluated the configuration block
     # to configure the model, it will be appended to Model.all
@@ -82,9 +95,11 @@ module Backup
       @label   = label.to_s
       @package = Package.new(self)
 
-      procedure_instance_variables.each do |variable|
-        instance_variable_set(variable, Array.new)
-      end
+      @databases  = []
+      @archives   = []
+      @storages   = []
+      @notifiers  = []
+      @syncers    = []
 
       instance_eval(&block) if block_given?
 
@@ -234,26 +249,31 @@ module Backup
       @time = package.time = @started_at.strftime("%Y.%m.%d.%H.%M.%S")
       log!(:started)
 
-      prepare!
-
-      if databases.any? or archives.any?
-        procedures.each do |procedure|
-          (procedure.call; next) if procedure.is_a?(Proc)
-          procedure.each(&:perform!)
-        end
+      procedures.each do |procedure|
+        (procedure.call; next) if procedure.is_a?(Proc)
+        procedure.each(&:perform!)
       end
 
       syncers.each(&:perform!)
-      notifiers.each(&:perform!)
-      log!(:finished)
 
     rescue Exception => err
-      log!(:failure, err)
-      send_failure_notifications
-      exit(3) unless err.is_a?(StandardError)
+      @exception = err
+
+    ensure
+      set_exit_status
+      log!(:finished)
     end
 
     private
+
+    ##
+    # Returns an array of procedures
+    def procedures
+      return [] unless databases.any? || archives.any?
+
+      [lambda { prepare! }, databases, archives,
+       lambda { package! }, storages, lambda { clean! }]
+    end
 
     ##
     # Clean any temporary files and/or package files left over
@@ -278,18 +298,6 @@ module Backup
     # Removes the final package file(s) once all configured Storages have run.
     def clean!
       Cleaner.remove_package(package)
-    end
-
-    ##
-    # Returns an array of procedures
-    def procedures
-      [databases, archives, lambda { package! }, storages, lambda { clean! }]
-    end
-
-    ##
-    # Returns an Array of the names (String) of the procedure instance variables
-    def procedure_instance_variables
-      [:@databases, :@archives, :@storages, :@notifiers, :@syncers]
     end
 
     ##
@@ -318,44 +326,40 @@ module Backup
       klass
     end
 
+    def set_exit_status
+      @exit_status = if exception
+        exception.is_a?(StandardError) ? 2 : 3
+      else
+        Logger.has_warnings? ? 1 : 0
+      end
+    end
+
     ##
     # Logs messages when the backup starts, finishes or fails
-    def log!(action, exception = nil)
+    def log!(action)
       case action
       when :started
         Logger.info "Performing Backup for '#{label} (#{trigger})'!\n" +
             "[ backup #{ VERSION } : #{ RUBY_DESCRIPTION } ]"
 
       when :finished
-        msg = "Backup for '#{ label } (#{ trigger })' " +
-              "Completed %s in #{ elapsed_time }"
-        if Logger.has_warnings?
-          Logger.warn msg % 'Successfully (with Warnings)'
-        else
-          Logger.info msg % 'Successfully'
-        end
-
-      when :failure
-        err = Errors::ModelError.wrap(exception, <<-EOS)
-          Backup for #{label} (#{trigger}) Failed!
-          An Error occured which has caused this Backup to abort before completion.
-        EOS
-        Logger.error err
-        Logger.error "\nBacktrace:\n\s\s" + err.backtrace.join("\n\s\s") + "\n\n"
-
-        Cleaner.warnings(self)
-
-        if exception.is_a?(StandardError)
-          Logger.info Errors::ModelError.new(<<-EOS)
-            If you have other Backup jobs (triggers) configured to run,
-            Backup will now attempt to continue...
+        if exit_status > 1
+          err = Errors::ModelError.wrap(exception, <<-EOS)
+            Backup for #{label} (#{trigger}) Failed!
+            An Error occured which has caused this Backup to abort before completion.
           EOS
+          Logger.error err
+          Logger.error "\nBacktrace:\n\s\s" + err.backtrace.join("\n\s\s") + "\n\n"
+
+          Cleaner.warnings(self)
         else
-          Logger.error Errors::ModelError.new(<<-EOS)
-            This Error was Fatal and Backup will now exit.
-            If you have other Backup jobs (triggers) configured to run,
-            they will not be processed.
-          EOS
+          msg = "Backup for '#{ label } (#{ trigger })' " +
+                "Completed %s in #{ elapsed_time }"
+          if exit_status == 1
+            Logger.warn msg % 'Successfully (with Warnings)'
+          else
+            Logger.info msg % 'Successfully'
+          end
         end
       end
     end
@@ -369,22 +373,6 @@ module Backup
       minutes   = remainder / 60
       seconds   = remainder - (minutes * 60)
       '%02d:%02d:%02d' % [hours, minutes, seconds]
-    end
-
-    ##
-    # Sends notifications when a backup fails.
-    # Errors are logged and rescued, since the error that caused the
-    # backup to fail could have been an error with a notifier.
-    def send_failure_notifications
-      notifiers.each do |n|
-        begin
-          n.perform!(true)
-        rescue Exception => err
-          Logger.error Errors::ModelError.wrap(err, <<-EOS)
-            #{ n.class } Failed to send notification of backup failure.
-          EOS
-        end
-      end
     end
 
   end

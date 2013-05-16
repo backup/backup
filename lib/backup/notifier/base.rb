@@ -23,8 +23,8 @@ module Backup
       attr_accessor :on_failure
       alias :notify_on_failure? :on_failure
 
-      ##
-      # Called with super(model) from subclasses
+      attr_reader :model
+
       def initialize(model)
         @model = model
         load_defaults!
@@ -34,31 +34,25 @@ module Backup
         @on_failure = true if on_failure.nil?
       end
 
-      ##
-      # Performs the notification
-      # Takes a flag to indicate that a failure has occured.
-      # (this is only set from Model#perform! in the event of an error)
-      # If this is the case it will set the 'action' to :failure.
-      # Otherwise, it will set the 'action' to either :success or :warning,
-      # depending on whether or not any warnings were sent to the Logger.
-      # It will then invoke the notify! method with the 'action',
-      # but only if the proper on_success, on_warning or on_failure flag is true.
-      def perform!(failure = false)
-        @template  = Backup::Template.new({:model => @model})
+      def perform!
+        status = case model.exit_status
+                 when 0
+                   :success if notify_on_success?
+                 when 1
+                   :warning if notify_on_success? || notify_on_warning?
+                 else
+                   :failure if notify_on_failure?
+                 end
 
-        action = false
-        if failure
-          action = :failure if notify_on_failure?
-        else
-          if notify_on_success? || (notify_on_warning? && Logger.has_warnings?)
-            action = Logger.has_warnings? ? :warning : :success
-          end
+        if status
+          @template = Backup::Template.new({:model => model})
+          Logger.info "Sending notification using #{ notifier_name }..."
+          notify!(status)
         end
 
-        if action
-          log!
-          notify!(action)
-        end
+      rescue Exception => err
+        # Notifiers cannot raise any exceptions.
+        Logger.error Errors::NotifierError.wrap(err, "#{ notifier_name } Failed!")
       end
 
       private
@@ -67,13 +61,6 @@ module Backup
       # Return the notifier name, with Backup namespace removed
       def notifier_name
         self.class.to_s.sub('Backup::', '')
-      end
-
-      ##
-      # Logs a message to the console and log file to inform
-      # the client that Backup is notifying about the process
-      def log!
-        Logger.info "#{ notifier_name } started notifying about the process."
       end
 
     end
