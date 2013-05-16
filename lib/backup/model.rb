@@ -74,6 +74,10 @@ module Backup
     attr_reader :time
 
     ##
+    # Hooks which can be run before or after the backup process
+    attr_reader :hooks
+
+    ##
     # Takes a trigger, label and the configuration block.
     # After the instance has evaluated the configuration block
     # to configure the model, it will be appended to Model.all
@@ -81,6 +85,9 @@ module Backup
       @trigger = trigger.to_s
       @label   = label.to_s
       @package = Package.new(self)
+
+      # default noop hooks
+      @hooks   = Hooks.new(self)
 
       procedure_instance_variables.each do |variable|
         instance_variable_set(variable, Array.new)
@@ -166,6 +173,18 @@ module Backup
     end
 
     ##
+    # Run a block of ruby code before the backup process
+    def before(&block)
+      @hooks.before &block
+    end
+
+    ##
+    # Run a block of ruby code after the backup process
+    def after(&block)
+      @hooks.after &block
+    end
+
+    ##
     # Adds a method that allows the user to configure this backup model
     # to use a Splitter, with the given +chunk_size+
     # The +chunk_size+ (in megabytes) will later determine
@@ -236,6 +255,8 @@ module Backup
 
       prepare!
 
+      @hooks.perform!(:before)
+
       if databases.any? or archives.any?
         procedures.each do |procedure|
           (procedure.call; next) if procedure.is_a?(Proc)
@@ -245,6 +266,9 @@ module Backup
 
       syncers.each(&:perform!)
       notifiers.each(&:perform!)
+
+      @hooks.perform!(:after)
+
       log!(:finished)
 
     rescue Exception => err

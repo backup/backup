@@ -112,6 +112,7 @@ module Backup
     cli
     configuration
     errors
+    hooks
     logger
     model
     package
