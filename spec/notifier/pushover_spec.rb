@@ -55,28 +55,92 @@ describe Notifier::Pushover do
   end # describe '#initialize'
 
   describe '#notify!' do
-    let(:message) { '[Backup::%s] test label (test_trigger)' }
+    let(:notifier) {
+      Notifier::Pushover.new(model) do |pushover|
+        pushover.user     = 'my_user'
+        pushover.token    = 'my_token'
+      end
+    }
+    let(:form_data) {
+      'user=my_user&token=my_token&message=%5BBackup%3A%3A' + 'STATUS' +
+      '%5D+test+label+%28test_trigger%29'
+    }
 
     context 'when status is :success' do
       it 'sends a success message' do
-        notifier.expects(:send_message).with(message % 'Success')
+        Excon.expects(:post).with(
+          'https://api.pushover.net/1/messages.json',
+          {
+            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+            :body     => form_data.sub('STATUS', 'Success'),
+            :expects  => 200
+          }
+        )
+
         notifier.send(:notify!, :success)
       end
     end
 
     context 'when status is :warning' do
       it 'sends a warning message' do
-        notifier.expects(:send_message).with(message % 'Warning')
+        Excon.expects(:post).with(
+          'https://api.pushover.net/1/messages.json',
+          {
+            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+            :body     => form_data.sub('STATUS', 'Warning'),
+            :expects  => 200
+          }
+        )
+
         notifier.send(:notify!, :warning)
       end
     end
 
     context 'when status is :failure' do
       it 'sends a failure message' do
-        notifier.expects(:send_message).with(message % 'Failure')
+        Excon.expects(:post).with(
+          'https://api.pushover.net/1/messages.json',
+          {
+            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+            :body     => form_data.sub('STATUS', 'Failure'),
+            :expects  => 200
+          }
+        )
+
         notifier.send(:notify!, :failure)
       end
     end
+
+    context 'when optional parameters are provided' do
+      let(:notifier) {
+        Notifier::Pushover.new(model) do |pushover|
+          pushover.user     = 'my_user'
+          pushover.token    = 'my_token'
+          pushover.device   = 'my_device'
+          pushover.title    = 'my_title'
+          pushover.priority = 'my_priority'
+        end
+      }
+      let(:form_data) {
+        'user=my_user&token=my_token&message=%5BBackup%3A%3ASuccess' +
+        '%5D+test+label+%28test_trigger%29&device=my_device&title=my_title' +
+        '&priority=my_priority'
+      }
+
+      it 'sends message with optional parameters' do
+        Excon.expects(:post).with(
+          'https://api.pushover.net/1/messages.json',
+          {
+            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+            :body     => form_data,
+            :expects  => 200
+          }
+        )
+
+        notifier.send(:notify!, :success)
+      end
+    end
+
   end # describe '#notify!'
 
 end
