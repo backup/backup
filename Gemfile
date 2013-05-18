@@ -19,6 +19,7 @@ group :production do
   gem 'thor'
   gem 'open4'
   gem 'fog'
+  gem 'excon'
   gem 'dropbox-sdk', '= 1.5.1' # patched
   gem 'net-ssh'
   gem 'net-scp'
@@ -26,9 +27,9 @@ group :production do
   gem 'parallel'
   gem 'mail'
   gem 'twitter'
-  gem 'httparty'
   gem 'prowler'
   gem 'hipchat'
+  gem 'json'
 end
 
 gem 'rspec'

@@ -56,25 +56,23 @@ describe Notifier::Campfire do
         campfire.room_id   = 'my_room_id'
       end
     }
-    let(:interface) { Notifier::Campfire::Interface }
-    let(:message) { '[Backup::%s] test label (test_trigger)' }
+    let(:json_body) {
+      '{"message":{"body":"[Backup::%s] test label (test_trigger)",' +
+      '"type":"Textmessage"}}'
+    }
 
     context 'when status is :success' do
       it 'sends a success message' do
-        interface.expects(:base_uri).with('https://my_subdomain.campfirenow.com')
-        interface.expects(:basic_auth).with('my_token', 'x')
-        interface.expects(:post).with(
-          '/room/my_room_id/speak.json',
-          { :body =>
-            MultiJson.encode(
-              { :message =>
-                { :body => message % 'Success', :type => 'Textmessage' }
-              }
-            )
+        Excon.expects(:post).with(
+          'https://my_subdomain.campfirenow.com/room/my_room_id/speak.json',
+          {
+            :headers  => { 'Content-Type' => 'application/json' },
+            :body     => json_body % 'Success',
+            :user     => 'my_token',
+            :password => 'x',
+            :expects  => 201
           }
         )
-
-        expect( interface.headers['Content-Type'] ).to eq 'application/json'
 
         notifier.send(:notify!, :success)
       end
@@ -82,20 +80,16 @@ describe Notifier::Campfire do
 
     context 'when status is :warning' do
       it 'sends a warning message' do
-        interface.expects(:base_uri).with('https://my_subdomain.campfirenow.com')
-        interface.expects(:basic_auth).with('my_token', 'x')
-        interface.expects(:post).with(
-          '/room/my_room_id/speak.json',
-          { :body =>
-            MultiJson.encode(
-              { :message =>
-                { :body => message % 'Warning', :type => 'Textmessage' }
-              }
-            )
+        Excon.expects(:post).with(
+          'https://my_subdomain.campfirenow.com/room/my_room_id/speak.json',
+          {
+            :headers  => { 'Content-Type' => 'application/json' },
+            :body     => json_body % 'Warning',
+            :user     => 'my_token',
+            :password => 'x',
+            :expects  => 201
           }
         )
-
-        expect( interface.headers['Content-Type'] ).to eq 'application/json'
 
         notifier.send(:notify!, :warning)
       end
@@ -103,20 +97,16 @@ describe Notifier::Campfire do
 
     context 'when status is :failure' do
       it 'sends a failure message' do
-        interface.expects(:base_uri).with('https://my_subdomain.campfirenow.com')
-        interface.expects(:basic_auth).with('my_token', 'x')
-        interface.expects(:post).with(
-          '/room/my_room_id/speak.json',
-          { :body =>
-            MultiJson.encode(
-              { :message =>
-                { :body => message % 'Failure', :type => 'Textmessage' }
-              }
-            )
+        Excon.expects(:post).with(
+          'https://my_subdomain.campfirenow.com/room/my_room_id/speak.json',
+          {
+            :headers  => { 'Content-Type' => 'application/json' },
+            :body     => json_body % 'Failure',
+            :user     => 'my_token',
+            :password => 'x',
+            :expects  => 201
           }
         )
-
-        expect( interface.headers['Content-Type'] ).to eq 'application/json'
 
         notifier.send(:notify!, :failure)
       end

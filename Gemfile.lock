@@ -106,12 +106,13 @@ PLATFORMS
 
 DEPENDENCIES
   dropbox-sdk (= 1.5.1)
+  excon
   fog
   fuubar
   guard
   guard-rspec
   hipchat
-  httparty
+  json
   mail
   mocha
   net-scp
