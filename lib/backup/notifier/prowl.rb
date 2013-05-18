@@ -60,7 +60,7 @@ module Backup
         }
         options = {
           :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
-          :body     => URI.encode_www_form(data)
+          :body     => encode_www_form(data)
         }
         options.merge!(:expects => 200) # raise error if unsuccessful
         Excon.post(uri, options)

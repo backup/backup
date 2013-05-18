@@ -57,8 +57,12 @@ describe Notifier::Campfire do
       end
     }
     let(:json_body) {
-      '{"message":{"body":"[Backup::%s] test label (test_trigger)",' +
-      '"type":"Textmessage"}}'
+      JSON.dump(
+        :message => {
+          :body => '[Backup::STATUS] test label (test_trigger)',
+          :type => 'Textmessage'
+        }
+      )
     }
 
     context 'when status is :success' do
@@ -67,7 +71,7 @@ describe Notifier::Campfire do
           'https://my_subdomain.campfirenow.com/room/my_room_id/speak.json',
           {
             :headers  => { 'Content-Type' => 'application/json' },
-            :body     => json_body % 'Success',
+            :body     => json_body.sub('STATUS', 'Success'),
             :user     => 'my_token',
             :password => 'x',
             :expects  => 201
@@ -84,7 +88,7 @@ describe Notifier::Campfire do
           'https://my_subdomain.campfirenow.com/room/my_room_id/speak.json',
           {
             :headers  => { 'Content-Type' => 'application/json' },
-            :body     => json_body % 'Warning',
+            :body     => json_body.sub('STATUS', 'Warning'),
             :user     => 'my_token',
             :password => 'x',
             :expects  => 201
@@ -101,7 +105,7 @@ describe Notifier::Campfire do
           'https://my_subdomain.campfirenow.com/room/my_room_id/speak.json',
           {
             :headers  => { 'Content-Type' => 'application/json' },
-            :body     => json_body % 'Failure',
+            :body     => json_body.sub('STATUS', 'Failure'),
             :user     => 'my_token',
             :password => 'x',
             :expects  => 201
