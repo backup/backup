@@ -1,5 +1,6 @@
 # encoding: utf-8
-require 'prowler'
+require 'excon'
+require 'uri'
 
 module Backup
   module Notifier
@@ -24,22 +25,20 @@ module Backup
 
       ##
       # Notify the user of the backup operation results.
+      #
       # `status` indicates one of the following:
       #
       # `:success`
       # : The backup completed successfully.
-      # : Notification will be sent if `on_success` was set to `true`
+      # : Notification will be sent if `on_success` is `true`.
       #
       # `:warning`
-      # : The backup completed successfully, but warnings were logged
-      # : Notification will be sent, including a copy of the current
-      # : backup log, if `on_warning` was set to `true`
+      # : The backup completed successfully, but warnings were logged.
+      # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       # `:failure`
       # : The backup operation failed.
-      # : Notification will be sent, including the Exception which caused
-      # : the failure, the Exception's backtrace, a copy of the current
-      # : backup log and other information if `on_failure` was set to `true`
+      # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
         name = case status
@@ -52,8 +51,19 @@ module Backup
       end
 
       def send_message(message)
-        client = Prowler.new(:application => application, :api_key => api_key)
-        client.notify(message, "#{@model.label} (#{@model.trigger})")
+        uri = 'https://api.prowlapp.com/publicapi/add'
+        data = {
+          :application  => application,
+          :apikey       => api_key,
+          :event        => message,
+          :description  => "#{ model.label } (#{ model.trigger })"
+        }
+        options = {
+          :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+          :body     => URI.encode_www_form(data)
+        }
+        options.merge!(:expects => 200) # raise error if unsuccessful
+        Excon.post(uri, options)
       end
 
     end

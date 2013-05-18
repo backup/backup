@@ -52,16 +52,21 @@ describe Notifier::Prowl do
         prowl.api_key = 'my_api_key'
       end
     }
-    let(:client) { mock }
-    let(:message) { '[Backup::%s]' }
+    let(:form_data) {
+      'application=my_app&apikey=my_api_key&event=%5BBackup%3A%3A' + 'STATUS' +
+      '%5D&description=test+label+%28test_trigger%29'
+    }
 
     context 'when status is :success' do
       it 'sends a success message' do
-        Prowler.expects(:new).
-            with(:application => 'my_app', :api_key => 'my_api_key').
-            returns(client)
-        client.expects(:notify).
-            with(message % 'Success', 'test label (test_trigger)')
+        Excon.expects(:post).with(
+          'https://api.prowlapp.com/publicapi/add',
+          {
+            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+            :body     => form_data.sub('STATUS', 'Success'),
+            :expects  => 200
+          }
+        )
 
         notifier.send(:notify!, :success)
       end
@@ -69,11 +74,14 @@ describe Notifier::Prowl do
 
     context 'when status is :warning' do
       it 'sends a warning message' do
-        Prowler.expects(:new).
-            with(:application => 'my_app', :api_key => 'my_api_key').
-            returns(client)
-        client.expects(:notify).
-            with(message % 'Warning', 'test label (test_trigger)')
+        Excon.expects(:post).with(
+          'https://api.prowlapp.com/publicapi/add',
+          {
+            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+            :body     => form_data.sub('STATUS', 'Warning'),
+            :expects  => 200
+          }
+        )
 
         notifier.send(:notify!, :warning)
       end
@@ -81,11 +89,14 @@ describe Notifier::Prowl do
 
     context 'when status is :failure' do
       it 'sends a failure message' do
-        Prowler.expects(:new).
-            with(:application => 'my_app', :api_key => 'my_api_key').
-            returns(client)
-        client.expects(:notify).
-            with(message % 'Failure', 'test label (test_trigger)')
+        Excon.expects(:post).with(
+          'https://api.prowlapp.com/publicapi/add',
+          {
+            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+            :body     => form_data.sub('STATUS', 'Failure'),
+            :expects  => 200
+          }
+        )
 
         notifier.send(:notify!, :failure)
       end

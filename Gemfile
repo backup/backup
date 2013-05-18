@@ -27,7 +27,6 @@ group :production do
   gem 'parallel'
   gem 'mail'
   gem 'twitter'
-  gem 'prowler'
   gem 'hipchat'
   gem 'json'
 end

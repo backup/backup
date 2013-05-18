@@ -66,7 +66,6 @@ GEM
     open4 (1.3.0)
     parallel (0.6.4)
     polyglot (0.3.3)
-    prowler (1.3.1)
     pry (0.9.12.1)
       coderay (~> 1.0.5)
       method_source (~> 0.8)
@@ -120,7 +119,6 @@ DEPENDENCIES
   net-ssh
   open4
   parallel
-  prowler
   rb-fsevent
   rb-inotify
   redcarpet
