@@ -33,6 +33,7 @@ describe Notifier::Mail do
       expect( notifier.sendmail_args        ).to be_nil
       expect( notifier.exim_args            ).to be_nil
       expect( notifier.mail_folder          ).to be_nil
+      expect( notifier.send_log_on          ).to eq [:warning, :failure]
 
       expect( notifier.on_success     ).to be(true)
       expect( notifier.on_warning     ).to be(true)
@@ -57,6 +58,7 @@ describe Notifier::Mail do
         mail.sendmail_args        = '-i -t -X/tmp/traffic.log'
         mail.exim_args            = '-i -t -X/tmp/traffic.log'
         mail.mail_folder          = '/path/to/backup/mails'
+        mail.send_log_on          = [:success, :warning, :failure]
 
         mail.on_success     = false
         mail.on_warning     = false
@@ -79,6 +81,7 @@ describe Notifier::Mail do
       expect( notifier.sendmail_args        ).to eq '-i -t -X/tmp/traffic.log'
       expect( notifier.exim_args            ).to eq '-i -t -X/tmp/traffic.log'
       expect( notifier.mail_folder          ).to eq '/path/to/backup/mails'
+      expect( notifier.send_log_on          ).to eq [:success, :warning, :failure]
 
       expect( notifier.on_success     ).to be(false)
       expect( notifier.on_warning     ).to be(false)
@@ -105,90 +108,181 @@ describe Notifier::Mail do
     end
 
     context 'when status is :success' do
-      it 'sends a Success email with no attachments' do
-        notifier.send(:notify!, :success)
+      context 'when send_log_on includes :success' do
+        before { notifier.send_log_on = [:success, :warning, :failure] }
 
-        sent_message = ::Mail::TestMailer.deliveries.first
-        expect( sent_message.subject          ).to eq message % 'Success'
-        expect( sent_message.multipart?       ).to be_false
-        expect( sent_message.has_attachments? ).to be_false
-        expect( sent_message.body ).to be_an_instance_of ::Mail::Body
-        expect( sent_message.body.decoded ).to eq <<-EOS.gsub(/^ +/, '')
+        it 'sends a Success email with an attached log' do
+          model.stubs(:time).returns(Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
 
-          Backup test label (test_trigger) finished without any errors!
+          notifier.send(:notify!, :success)
 
-          #{ '=' * 75 }
-          Backup v#{ VERSION }
-          Ruby: #{ RUBY_DESCRIPTION }
+          sent_message = ::Mail::TestMailer.deliveries.first
+          filename = "#{ model.time }.#{ model.trigger }.log"
 
-          Project Home:  https://github.com/meskyanichi/backup
-          Documentation: https://github.com/meskyanichi/backup/wiki
-          Issue Tracker: https://github.com/meskyanichi/backup/issues
-        EOS
+          expect( sent_message.subject          ).to eq message % 'Success'
+          expect( sent_message.body.multipart?  ).to be_true
+          expect( sent_message.attachments[filename].read ).
+              to eq "line 1\nline 2\nline 3"
+          expect( sent_message.text_part ).to be_an_instance_of ::Mail::Part
+          expect( sent_message.text_part.decoded ).to eq <<-EOS.gsub(/^ +/, '')
+
+            Backup test label (test_trigger) finished without any errors!
+
+            See the attached backup log for details.
+
+            #{ '=' * 75 }
+            Backup v#{ VERSION }
+            Ruby: #{ RUBY_DESCRIPTION }
+
+            Project Home:  https://github.com/meskyanichi/backup
+            Documentation: https://github.com/meskyanichi/backup/wiki
+            Issue Tracker: https://github.com/meskyanichi/backup/issues
+          EOS
+        end
       end
-    end
+
+      context 'when send_log_on does not include :success' do
+        it 'sends a Success email with no log attached' do
+          notifier.send(:notify!, :success)
+
+          sent_message = ::Mail::TestMailer.deliveries.first
+          expect( sent_message.subject          ).to eq message % 'Success'
+          expect( sent_message.multipart?       ).to be_false
+          expect( sent_message.has_attachments? ).to be_false
+          expect( sent_message.body ).to be_an_instance_of ::Mail::Body
+          expect( sent_message.body.decoded ).to eq <<-EOS.gsub(/^ +/, '')
+
+            Backup test label (test_trigger) finished without any errors!
+
+            #{ '=' * 75 }
+            Backup v#{ VERSION }
+            Ruby: #{ RUBY_DESCRIPTION }
+
+            Project Home:  https://github.com/meskyanichi/backup
+            Documentation: https://github.com/meskyanichi/backup/wiki
+            Issue Tracker: https://github.com/meskyanichi/backup/issues
+          EOS
+        end
+      end
+    end # context 'when status is :success'
 
     context 'when status is :warning' do
-      it 'sends a Warning email with an attached log' do
-        model.stubs(:time).returns(Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
+      context 'when send_log_on includes :warning' do
+        it 'sends a Warning email with an attached log' do
+          model.stubs(:time).returns(Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
 
-        notifier.send(:notify!, :warning)
+          notifier.send(:notify!, :warning)
 
-        sent_message = ::Mail::TestMailer.deliveries.first
-        filename = "#{ model.time }.#{ model.trigger }.log"
+          sent_message = ::Mail::TestMailer.deliveries.first
+          filename = "#{ model.time }.#{ model.trigger }.log"
 
-        expect( sent_message.subject          ).to eq message % 'Warning'
-        expect( sent_message.body.multipart?  ).to be_true
-        expect( sent_message.attachments[filename].read ).
-            to eq "line 1\nline 2\nline 3"
-        expect( sent_message.text_part ).to be_an_instance_of ::Mail::Part
-        expect( sent_message.text_part.decoded ).to eq <<-EOS.gsub(/^ +/, '')
+          expect( sent_message.subject          ).to eq message % 'Warning'
+          expect( sent_message.body.multipart?  ).to be_true
+          expect( sent_message.attachments[filename].read ).
+              to eq "line 1\nline 2\nline 3"
+          expect( sent_message.text_part ).to be_an_instance_of ::Mail::Part
+          expect( sent_message.text_part.decoded ).to eq <<-EOS.gsub(/^ +/, '')
 
-          Backup test label (test_trigger) finished with warnings.
+            Backup test label (test_trigger) finished with warnings.
 
-          See the attached backup log for details.
+            See the attached backup log for details.
 
-          #{ '=' * 75 }
-          Backup v#{ VERSION }
-          Ruby: #{ RUBY_DESCRIPTION }
+            #{ '=' * 75 }
+            Backup v#{ VERSION }
+            Ruby: #{ RUBY_DESCRIPTION }
 
-          Project Home:  https://github.com/meskyanichi/backup
-          Documentation: https://github.com/meskyanichi/backup/wiki
-          Issue Tracker: https://github.com/meskyanichi/backup/issues
-        EOS
+            Project Home:  https://github.com/meskyanichi/backup
+            Documentation: https://github.com/meskyanichi/backup/wiki
+            Issue Tracker: https://github.com/meskyanichi/backup/issues
+          EOS
+        end
       end
-    end
+
+      context 'when send_log_on does not include :warning' do
+        before { notifier.send_log_on = [:success, :failure] }
+
+        it 'sends a Warning email with no log attached' do
+          notifier.send(:notify!, :warning)
+
+          sent_message = ::Mail::TestMailer.deliveries.first
+          expect( sent_message.subject          ).to eq message % 'Warning'
+          expect( sent_message.multipart?       ).to be_false
+          expect( sent_message.has_attachments? ).to be_false
+          expect( sent_message.body ).to be_an_instance_of ::Mail::Body
+          expect( sent_message.body.decoded ).to eq <<-EOS.gsub(/^ +/, '')
+
+            Backup test label (test_trigger) finished with warnings.
+
+            #{ '=' * 75 }
+            Backup v#{ VERSION }
+            Ruby: #{ RUBY_DESCRIPTION }
+
+            Project Home:  https://github.com/meskyanichi/backup
+            Documentation: https://github.com/meskyanichi/backup/wiki
+            Issue Tracker: https://github.com/meskyanichi/backup/issues
+          EOS
+        end
+      end
+    end # context 'when status is :warning'
 
     context 'when status is :failure' do
-      it 'sends a Warning email with an attached log' do
-        model.stubs(:time).returns(Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
+      context 'when send_log_on includes :failure' do
+        it 'sends a Failure email with an attached log' do
+          model.stubs(:time).returns(Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
 
-        notifier.send(:notify!, :failure)
+          notifier.send(:notify!, :failure)
 
-        sent_message = ::Mail::TestMailer.deliveries.first
-        filename = "#{ model.time }.#{ model.trigger }.log"
+          sent_message = ::Mail::TestMailer.deliveries.first
+          filename = "#{ model.time }.#{ model.trigger }.log"
 
-        expect( sent_message.subject          ).to eq message % 'Failure'
-        expect( sent_message.body.multipart?  ).to be_true
-        expect( sent_message.attachments[filename].read ).
-            to eq "line 1\nline 2\nline 3"
-        expect( sent_message.text_part ).to be_an_instance_of ::Mail::Part
-        expect( sent_message.text_part.decoded ).to eq <<-EOS.gsub(/^ +/, '')
+          expect( sent_message.subject          ).to eq message % 'Failure'
+          expect( sent_message.body.multipart?  ).to be_true
+          expect( sent_message.attachments[filename].read ).
+              to eq "line 1\nline 2\nline 3"
+          expect( sent_message.text_part ).to be_an_instance_of ::Mail::Part
+          expect( sent_message.text_part.decoded ).to eq <<-EOS.gsub(/^ +/, '')
 
-          Backup test label (test_trigger) Failed!
+            Backup test label (test_trigger) Failed!
 
-          See the attached backup log for details.
+            See the attached backup log for details.
 
-          #{ '=' * 75 }
-          Backup v#{ VERSION }
-          Ruby: #{ RUBY_DESCRIPTION }
+            #{ '=' * 75 }
+            Backup v#{ VERSION }
+            Ruby: #{ RUBY_DESCRIPTION }
 
-          Project Home:  https://github.com/meskyanichi/backup
-          Documentation: https://github.com/meskyanichi/backup/wiki
-          Issue Tracker: https://github.com/meskyanichi/backup/issues
-        EOS
+            Project Home:  https://github.com/meskyanichi/backup
+            Documentation: https://github.com/meskyanichi/backup/wiki
+            Issue Tracker: https://github.com/meskyanichi/backup/issues
+          EOS
+        end
       end
-    end
+
+      context 'when send_log_on does not include :failure' do
+        before { notifier.send_log_on = [:success, :warning] }
+
+        it 'sends a Warning email with no log attached' do
+          notifier.send(:notify!, :failure)
+
+          sent_message = ::Mail::TestMailer.deliveries.first
+          expect( sent_message.subject          ).to eq message % 'Failure'
+          expect( sent_message.multipart?       ).to be_false
+          expect( sent_message.has_attachments? ).to be_false
+          expect( sent_message.body ).to be_an_instance_of ::Mail::Body
+          expect( sent_message.body.decoded ).to eq <<-EOS.gsub(/^ +/, '')
+
+            Backup test label (test_trigger) Failed!
+
+            #{ '=' * 75 }
+            Backup v#{ VERSION }
+            Ruby: #{ RUBY_DESCRIPTION }
+
+            Project Home:  https://github.com/meskyanichi/backup
+            Documentation: https://github.com/meskyanichi/backup/wiki
+            Issue Tracker: https://github.com/meskyanichi/backup/issues
+          EOS
+        end
+      end
+    end # context 'when status is :failure'
 
   end # describe '#notify!'
 

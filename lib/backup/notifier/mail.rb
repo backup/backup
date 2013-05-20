@@ -106,14 +106,23 @@ module Backup
       attr_accessor :exim_args
 
       ##
-      # Folder where mail will be kept when using the `:file` `delivery_method` option.
+      # Folder where mail will be kept when using the `:file` `delivery_method`.
       #
       # Default location is '$HOME/Backup/emails'
       attr_accessor :mail_folder
 
+      ##
+      # Array of statuses for which the log file should be attached.
+      #
+      # Available statuses are: `:success`, `:warning` and `:failure`.
+      # Default: [:warning, :failure]
+      attr_accessor :send_log_on
+
       def initialize(model, &block)
         super
         instance_eval(&block) if block_given?
+
+        @send_log_on ||= [:warning, :failure]
       end
 
       private
@@ -138,21 +147,22 @@ module Backup
       # : backup log, if `on_failure` is `true`.
       #
       def notify!(status)
-        name, send_log =
-            case status
-            when :success then [ 'Success', false ]
-            when :warning then [ 'Warning', true  ]
-            when :failure then [ 'Failure', true  ]
-            end
+        name = case status
+               when :success then 'Success'
+               when :warning then 'Warning'
+               when :failure then 'Failure'
+               end
 
         email = new_email
-        email.subject = "[Backup::%s] #{@model.label} (#{@model.trigger})" % name
-        template = Backup::Template.new({:model => model})
+        email.subject = "[Backup::%s] #{ model.label } (#{ model.trigger })" % name
+
+        send_log = send_log_on.include?(status)
+        template = Backup::Template.new({ :model => model, :send_log => send_log })
         email.body = template.result('notifier/mail/%s.erb' % status.to_s)
 
         if send_log
           email.convert_to_multipart
-          email.attachments["#{@model.time}.#{@model.trigger}.log"] = {
+          email.attachments["#{ model.time }.#{ model.trigger }.log"] = {
             :mime_type => 'text/plain;',
             :content   => Logger.messages.map(&:formatted_lines).flatten.join("\n")
           }
