@@ -9,6 +9,7 @@ module Backup
       mongo mongodump mysqldump pg_dump pg_dumpall redis-cli riak-admin
       gpg openssl
       rsync ssh
+      sendmail exim
     }
 
     module DSL
@@ -88,6 +89,10 @@ module Backup
       #     # Syncer and Storage
       #     rsync   '/path/to/rsync'
       #     ssh     '/path/to/ssh'
+      #
+      #     # Notifiers
+      #     sendmail  '/path/to/sendmail'
+      #     exim      '/path/to/exim'
       #   end
       #
       # These paths may be set using absolute paths, or relative to the

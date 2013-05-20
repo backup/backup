@@ -47,6 +47,10 @@ describe Backup::Utilities do
         # Syncer and Storage
         rsync   '/path/to/rsync'
         ssh     '/path/to/ssh'
+
+        # Notifiers
+        sendmail  '/path/to/sendmail'
+        exim      '/path/to/exim'
       end
     end
 

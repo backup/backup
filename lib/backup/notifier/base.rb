@@ -3,6 +3,7 @@
 module Backup
   module Notifier
     class Base
+      include Backup::Utilities::Helpers
       include Backup::Configuration::Helpers
 
       ##

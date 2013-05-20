@@ -17,11 +17,11 @@ module Backup
       #
       # [:sendmail - ::Mail::Sendmail]
       #   Settings used by this method:
-      #   {#sendmail}, {#sendmail_args}
+      #   {#sendmail_args}
       #
       # [:exim - ::Mail::Exim]
       #   Settings used by this method:
-      #   {#exim}, {#exim_args}
+      #   {#exim_args}
       #
       # [:file - ::Mail::FileDelivery]
       #   Settings used by this method:
@@ -86,37 +86,21 @@ module Backup
       attr_accessor :openssl_verify_mode
 
       ##
-      # Path to `sendmail` (if needed)
-      #
-      # When using the `:sendmail` `delivery_method` option,
-      # this may be used to specify the absolute path to `sendmail`
-      #
-      # Example: '/usr/sbin/sendmail'
-      attr_accessor :sendmail
-
-      ##
       # Optional arguments to pass to `sendmail`
       #
-      # Note that this will override the defaults set by the Mail gem (currently: '-i -t')
-      # So, if set here, be sure to set all the arguments you require.
+      # Note that this will override the defaults set by the Mail gem
+      # (currently: '-i'). So, if set here, be sure to set all the arguments
+      # you require.
       #
-      # Example: '-i -t -X/tmp/traffic.log'
+      # Example: '-i -X/tmp/traffic.log'
       attr_accessor :sendmail_args
-
-      ##
-      # Path to `exim` (if needed)
-      #
-      # When using the `:exim` `delivery_method` option,
-      # this may be used to specify the absolute path to `exim`
-      #
-      # Example: '/usr/sbin/exim'
-      attr_accessor :exim
 
       ##
       # Optional arguments to pass to `exim`
       #
-      # Note that this will override the defaults set by the Mail gem (currently: '-i -t')
-      # So, if set here, be sure to set all the arguments you require.
+      # Note that this will override the defaults set by the Mail gem
+      # (currently: '-i -t') So, if set here, be sure to set all the arguments
+      # you require.
       #
       # Example: '-i -t -X/tmp/traffic.log'
       attr_accessor :exim_args
@@ -200,12 +184,12 @@ module Backup
               }
             when 'sendmail'
               opts = {}
-              opts.merge!(:location  => File.expand_path(@sendmail)) if @sendmail
+              opts.merge!(:location  => utility(:sendmail))
               opts.merge!(:arguments => @sendmail_args) if @sendmail_args
               opts
             when 'exim'
               opts = {}
-              opts.merge!(:location  => File.expand_path(@exim)) if @exim
+              opts.merge!(:location  => utility(:exim))
               opts.merge!(:arguments => @exim_args) if @exim_args
               opts
             when 'file'
@@ -230,6 +214,18 @@ module Backup
                      :action => lambda {|klass, val|
                        klass.encryption = val ? :starttls : :none
                      }
+
+      attr_deprecate :sendmail, :version => '3.6.0',
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { sendmail val }
+          }
+
+      attr_deprecate :exim, :version => '3.6.0',
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { exim val }
+          }
 
     end
   end

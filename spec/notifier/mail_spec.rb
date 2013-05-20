@@ -7,6 +7,13 @@ describe Notifier::Mail do
   let(:model) { Model.new(:test_trigger, 'test label') }
   let(:notifier) { Notifier::Mail.new(model) }
 
+  before do
+    Notifier::Mail.any_instance.stubs(:utility).
+        with(:sendmail).returns('/path/to/sendmail')
+    Notifier::Mail.any_instance.stubs(:utility).
+        with(:exim).returns('/path/to/exim')
+  end
+
   it_behaves_like 'a class that includes Configuration::Helpers'
   it_behaves_like 'a subclass of Notifier::Base'
 
@@ -23,9 +30,7 @@ describe Notifier::Mail do
       expect( notifier.authentication       ).to be_nil
       expect( notifier.encryption           ).to be_nil
       expect( notifier.openssl_verify_mode  ).to be_nil
-      expect( notifier.sendmail             ).to be_nil
       expect( notifier.sendmail_args        ).to be_nil
-      expect( notifier.exim                 ).to be_nil
       expect( notifier.exim_args            ).to be_nil
       expect( notifier.mail_folder          ).to be_nil
 
@@ -49,9 +54,7 @@ describe Notifier::Mail do
         mail.authentication       = 'plain'
         mail.encryption           = :starttls
         mail.openssl_verify_mode  = :none
-        mail.sendmail             = '/path/to/sendmail'
         mail.sendmail_args        = '-i -t -X/tmp/traffic.log'
-        mail.exim                 = '/path/to/exim'
         mail.exim_args            = '-i -t -X/tmp/traffic.log'
         mail.mail_folder          = '/path/to/backup/mails'
 
@@ -73,9 +76,7 @@ describe Notifier::Mail do
       expect( notifier.authentication       ).to eq 'plain'
       expect( notifier.encryption           ).to eq :starttls
       expect( notifier.openssl_verify_mode  ).to eq :none
-      expect( notifier.sendmail             ).to eq '/path/to/sendmail'
       expect( notifier.sendmail_args        ).to eq '-i -t -X/tmp/traffic.log'
-      expect( notifier.exim                 ).to eq '/path/to/exim'
       expect( notifier.exim_args            ).to eq '-i -t -X/tmp/traffic.log'
       expect( notifier.mail_folder          ).to eq '/path/to/backup/mails'
 
@@ -268,7 +269,6 @@ describe Notifier::Mail do
           mail.delivery_method      = :sendmail
           mail.to                   = 'my.receiver.email@gmail.com'
           mail.from                 = 'my.sender.email@gmail.com'
-          mail.sendmail             = '/path/to/sendmail'
           mail.sendmail_args        = '-i -t -X/tmp/traffic.log'
         end
       }
@@ -296,7 +296,6 @@ describe Notifier::Mail do
           mail.delivery_method      = :exim
           mail.to                   = 'my.receiver.email@gmail.com'
           mail.from                 = 'my.sender.email@gmail.com'
-          mail.exim                 = '/path/to/exim'
           mail.exim_args            = '-i -t -X/tmp/traffic.log'
         end
       }
@@ -392,6 +391,80 @@ describe Notifier::Mail do
         end
       end
     end # describe '#enable_starttls_auto'
+
+    describe '#sendmail' do
+      before do
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
+        Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err.message ).to match(
+            /Use Backup::Utilities\.configure instead/
+          )
+        }
+      end
+      after do
+        Notifier::Mail.clear_defaults!
+      end
+
+      context 'when set directly' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Notifier::Mail.new(model) do |mail|
+            mail.sendmail = '/foo'
+          end
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['sendmail'] ).to eq '/foo'
+        end
+      end
+
+      context 'when set as a default' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Notifier::Mail.defaults do |mail|
+            mail.sendmail = '/foo'
+          end
+          Notifier::Mail.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['sendmail'] ).to eq '/foo'
+        end
+      end
+    end # describe '#sendmail'
+
+    describe '#exim' do
+      before do
+        # to satisfy Utilities.configure
+        File.stubs(:executable?).with('/foo').returns(true)
+        Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err.message ).to match(
+            /Use Backup::Utilities\.configure instead/
+          )
+        }
+      end
+      after do
+        Notifier::Mail.clear_defaults!
+      end
+
+      context 'when set directly' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Notifier::Mail.new(model) do |mail|
+            mail.exim = '/foo'
+          end
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['exim'] ).to eq '/foo'
+        end
+      end
+
+      context 'when set as a default' do
+        it 'should issue a deprecation warning and set the replacement value' do
+          Notifier::Mail.defaults do |mail|
+            mail.exim = '/foo'
+          end
+          Notifier::Mail.new(model)
+          # must check directly, since utility() calls are stubbed
+          expect( Utilities::UTILITY['exim'] ).to eq '/foo'
+        end
+      end
+    end # describe '#exim'
 
   end # describe 'deprecations'
 end
