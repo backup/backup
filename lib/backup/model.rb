@@ -353,12 +353,13 @@ module Backup
 
           Cleaner.warnings(self)
         else
-          msg = "Backup for '#{ label } (#{ trigger })' " +
-                "Completed %s in #{ elapsed_time }"
+          msg = "Backup for '#{ label } (#{ trigger })' "
           if exit_status == 1
-            Logger.warn msg % 'Successfully (with Warnings)'
+            msg << "Completed Successfully (with Warnings) in #{ elapsed_time }"
+            Logger.warn msg
           else
-            Logger.info msg % 'Successfully'
+            msg << "Completed Successfully in #{ elapsed_time }"
+            Logger.info msg
           end
         end
       end

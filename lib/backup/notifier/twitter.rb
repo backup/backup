@@ -38,12 +38,12 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        name = case status
-               when :success then 'Success'
-               when :warning then 'Warning'
-               when :failure then 'Failure'
-               end
-        message = "[Backup::%s] #{@model.label} (#{@model.trigger}) (@ #{@model.time})" % name
+        tag = case status
+              when :success then '[Backup::Success]'
+              when :warning then '[Backup::Warning]'
+              when :failure then '[Backup::Failure]'
+              end
+        message = "#{ tag } #{ model.label } (#{ model.trigger }) (@ #{ model.time })"
         send_message(message)
       end
 
