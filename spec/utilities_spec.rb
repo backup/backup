@@ -414,12 +414,12 @@ describe Backup::Utilities::Helpers do
       it 'should raise an error wrapping the system error raised' do
         expect do
           helpers.send(:run, command)
-        end.to raise_error {|err|
-          err.message.should == "Utilities::SystemCallError: " +
+        end.to raise_error(Backup::Errors::Utilities::SystemCallError) {|err|
+          err.message.should match(
             "Failed to execute system command on #{ RUBY_PLATFORM }\n" +
-            "  Command was: /path/to/cmd_name arg1 arg2\n" +
-            "  Reason: RuntimeError\n" +
-            "  exec call failed"
+            "  Command was: /path/to/cmd_name arg1 arg2"
+          )
+          err.message.should match('RuntimeError: exec call failed')
         }
       end
     end # context 'when the system fails to execute the command'

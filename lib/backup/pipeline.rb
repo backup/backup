@@ -75,12 +75,10 @@ module Backup
     # Returns a multi-line String, reporting all STDERR messages received
     # from the commands in the pipeline (if any), along with the SystemCallError
     # (Errno) message for each command which had a non-zero exit status.
-    #
-    # Each error is wrapped by Backup::Errors to provide formatting.
     def error_messages
       @error_messages ||= (stderr_messages || '') +
           "The following system errors were returned:\n" +
-          @errors.map {|err| Errors::Error.wrap(err).message }.join("\n")
+          @errors.map {|err| "#{ err.class }: #{ err.message }" }.join("\n")
     end
 
     private

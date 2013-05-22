@@ -77,20 +77,18 @@ describe 'Backup::Storage::Cycler' do
         storage.expects(:remove!).in_sequence(s).with(pkg_b).raises('error message')
         Backup::Logger.expects(:warn).with do |err|
           err.should be_an_instance_of Backup::Errors::Storage::CyclerError
-          err.message.should == 'Storage::CyclerError: ' +
-              "There was a problem removing the following package:\n" +
-              "  Trigger: pkg_trigger :: Dated: pkg_time\n" +
-              "  Package included the following 2 file(s):\n" +
-              "  file1\n" +
-              "  file2\n" +
-              "  Reason: RuntimeError\n" +
-              "  error message"
+          err.message.should include(
+            "There was a problem removing the following package:\n" +
+            "  Trigger: pkg_trigger :: Dated: pkg_time\n" +
+            "  Package included the following 2 file(s):\n" +
+            "  file1\n" +
+            "  file2"
+          )
+          err.message.should match('RuntimeError: error message')
         end
         storage.expects(:remove!).in_sequence(s).with(pkg_c)
 
-        expect do
-          cycler.send(:remove_packages!)
-        end.not_to raise_error
+        cycler.send(:remove_packages!)
       end
     end
 

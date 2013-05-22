@@ -184,11 +184,11 @@ shared_examples 'a subclass of Notifier::Base' do
           expect( arg ).to eq "Sending notification using #{ notifier_name }..."
         when 2
           expect( arg ).to be_an_instance_of Errors::NotifierError
-          expect( arg.message ).to match('Reason: RuntimeError')
+          expect( arg.message ).to match('RuntimeError: standard error')
           expect( arg.message ).to match('Retry #1 of 2.')
         when 3
           expect( arg ).to be_an_instance_of Errors::NotifierError
-          expect( arg.message ).to match('Reason: Timeout::Error')
+          expect( arg.message ).to match('Timeout::Error')
           expect( arg.message ).to match('Retry #2 of 2.')
         end
       end
