@@ -358,14 +358,6 @@ describe 'Backup::Model' do
 
   end # describe 'DSL Methods'
 
-  describe '#prepare!' do
-    it 'should prepare for the backup' do
-      Backup::Cleaner.expects(:prepare).with(model)
-
-      model.send(:prepare!)
-    end
-  end
-
   describe '#perform!' do
     let(:procedure_a)   { lambda {} }
     let(:procedure_b)   { mock }
@@ -445,24 +437,140 @@ describe 'Backup::Model' do
       end
     end # context 'when errors occur'
 
+    describe 'before/after hooks' do
+
+      specify 'both are called' do
+        before_called, procedure_called, after_called_with = nil, nil, nil
+        model.before { before_called = true }
+        model.stubs(:procedures).returns([lambda { procedure_called = true }])
+        model.after {|status| after_called_with = status }
+
+        model.perform!
+
+        before_called.should be_true
+        procedure_called.should be_true
+        after_called_with.should be 0
+      end
+
+      specify 'before hook may log warnings' do
+        procedure_called, after_called_with = nil, nil
+        model.before { Backup::Logger.warn 'foo' }
+        model.stubs(:procedures).returns([lambda { procedure_called = true }])
+        model.after {|status| after_called_with = status }
+
+        model.perform!
+
+        model.exit_status.should be 1
+        procedure_called.should be_true
+        after_called_with.should be 1
+      end
+
+      specify 'before hook may abort model with non-fatal exception' do
+        procedure_called, after_called = nil, nil
+        model.before { raise StandardError }
+        model.stubs(:procedures).returns([lambda { procedure_called = true }])
+        model.after { after_called = true }
+
+        model.perform!
+
+        model.exit_status.should be 2
+        procedure_called.should be_false
+        after_called.should be_false
+      end
+
+      specify 'before hook may abort backup with fatal exception' do
+        procedure_called, after_called = nil, nil
+        model.before { raise Exception }
+        model.stubs(:procedures).returns([lambda { procedure_called = true }])
+        model.after { after_called = true }
+
+        model.perform!
+
+        model.exit_status.should be 3
+        procedure_called.should be_false
+        after_called.should be_false
+      end
+
+      specify 'after hook is called when procedure raises non-fatal exception' do
+        after_called_with = nil
+        model.stubs(:procedures).returns([lambda { raise StandardError }])
+        model.after {|status| after_called_with = status }
+
+        model.perform!
+
+        model.exit_status.should be 2
+        after_called_with.should be 2
+      end
+
+      specify 'after hook is called when procedure raises fatal exception' do
+        after_called_with = nil
+        model.stubs(:procedures).returns([lambda { raise Exception }])
+        model.after {|status| after_called_with = status }
+
+        model.perform!
+
+        model.exit_status.should be 3
+        after_called_with.should be 3
+      end
+
+      specify 'after hook may log warnings' do
+        after_called_with = nil
+        model.after {|status| after_called_with = status; Backup::Logger.warn 'foo' }
+
+        model.perform!
+
+        model.exit_status.should be 1
+        after_called_with.should be 0
+      end
+
+      specify 'after hook warnings will not decrease exit_status' do
+        after_called_with = nil
+        model.stubs(:procedures).returns([lambda { raise StandardError }])
+        model.after {|status| after_called_with = status; Backup::Logger.warn 'foo' }
+
+        model.perform!
+
+        model.exit_status.should be 2
+        after_called_with.should be 2
+        Backup::Logger.has_warnings?.should be_true
+      end
+
+      specify 'after hook may fail model with non-fatal exceptions' do
+        after_called_with = nil
+        model.stubs(:procedures).returns([lambda { Backup::Logger.warn 'foo' }])
+        model.after {|status| after_called_with = status; raise StandardError }
+
+        model.perform!
+
+        model.exit_status.should be 2
+        after_called_with.should be 1
+      end
+
+      specify 'after hook exception will not decrease exit_status' do
+        after_called_with = nil
+        model.stubs(:procedures).returns([lambda { raise Exception }])
+        model.after {|status| after_called_with = status; raise StandardError }
+
+        model.perform!
+
+        model.exit_status.should be 3
+        after_called_with.should be 3
+      end
+
+      specify 'after hook may abort backup with fatal exceptions' do
+        after_called_with = nil
+        model.stubs(:procedures).returns([lambda { raise StandardError }])
+        model.after {|status| after_called_with = status; raise Exception }
+
+        model.perform!
+
+        model.exit_status.should be 3
+        after_called_with.should be 2
+      end
+
+    end # describe 'hooks'
+
   end # describe '#perform!'
-
-  describe '#package!' do
-    it 'should package the backup' do
-      Backup::Packager.expects(:package!).in_sequence(s).with(model)
-      Backup::Cleaner.expects(:remove_packaging).in_sequence(s).with(model)
-
-      model.send(:package!)
-    end
-  end
-
-  describe '#clean!' do
-    it 'should remove the final packaged files' do
-      Backup::Cleaner.expects(:remove_package).with(model.package)
-
-      model.send(:clean!)
-    end
-  end
 
   describe '#procedures' do
     before do
@@ -508,6 +616,31 @@ describe 'Backup::Model' do
         five.should == [:storage]
         six.call.should == :clean
       end
+    end
+  end # describe '#procedures'
+
+  describe '#prepare!' do
+    it 'should prepare for the backup' do
+      Backup::Cleaner.expects(:prepare).with(model)
+
+      model.send(:prepare!)
+    end
+  end
+
+  describe '#package!' do
+    it 'should package the backup' do
+      Backup::Packager.expects(:package!).in_sequence(s).with(model)
+      Backup::Cleaner.expects(:remove_packaging).in_sequence(s).with(model)
+
+      model.send(:package!)
+    end
+  end
+
+  describe '#clean!' do
+    it 'should remove the final packaged files' do
+      Backup::Cleaner.expects(:remove_package).with(model.package)
+
+      model.send(:clean!)
     end
   end
 
@@ -697,7 +830,7 @@ describe 'Backup::Model' do
         end
 
         it 'logs that the backup failed with a fatal exception' do
-          Backup::Errors::ModelError.expects(:wrap).in_sequence(s).with do |err, msg|
+          Backup::Errors::ModelFatalError.expects(:wrap).in_sequence(s).with do |err, msg|
             err.message.should == 'fatal error'
             msg.should match(/Backup for test label \(test_trigger\) Failed!/)
           end.returns(error_a)
