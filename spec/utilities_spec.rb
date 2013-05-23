@@ -237,6 +237,11 @@ describe Backup::Utilities::Helpers do
       expect( helpers.send(:command_name, cmd) ).
           to eq 'sudo -n -u username command args'
     end
+
+    it 'strips environment variables' do
+      cmd = "FOO='bar' BAR=foo /path/to/a/command with_args"
+      expect( helpers.send(:command_name, cmd) ).to eq 'command'
+    end
   end # describe '#command_name'
 
   describe '#run' do
@@ -315,10 +320,7 @@ describe Backup::Utilities::Helpers do
     context 'when the command is not successful' do
       let(:process_success) { false }
       let(:message_head) do
-        "Utilities::SystemCallError: 'cmd_name' Failed on #{ RUBY_PLATFORM }\n" +
-        "  The following information should help to determine the problem:\n" +
-        "  Command was: /path/to/cmd_name arg1 arg2\n" +
-        "  Exit Status: 1\n"
+        "Utilities::SystemCallError: 'cmd_name' failed with exit status: 1\n"
       end
 
       before do
@@ -415,10 +417,7 @@ describe Backup::Utilities::Helpers do
         expect do
           helpers.send(:run, command)
         end.to raise_error(Backup::Errors::Utilities::SystemCallError) {|err|
-          err.message.should match(
-            "Failed to execute system command on #{ RUBY_PLATFORM }\n" +
-            "  Command was: /path/to/cmd_name arg1 arg2"
-          )
+          err.message.should match("Failed to execute 'cmd_name'")
           err.message.should match('RuntimeError: exec call failed')
         }
       end

@@ -149,6 +149,7 @@ module Backup
       def command_name(command)
         parts = []
         command = command.split(' ')
+        command.shift while command[0].to_s.include?('=')
         parts << command.shift.split('/')[-1]
         if parts[0] == 'sudo'
           until command.empty?
@@ -189,10 +190,8 @@ module Backup
             out, err = stdout.read.strip, stderr.read.strip
           end
         rescue Exception => e
-          raise Errors::Utilities::SystemCallError.wrap(e, <<-EOS)
-            Failed to execute system command on #{ RUBY_PLATFORM }
-            Command was: #{ command }
-          EOS
+          raise Errors::Utilities::SystemCallError.wrap(
+              e, "Failed to execute '#{ name }'")
         ensure
           GC.enable if RUBY_VERSION < '1.9'
         end
@@ -213,10 +212,7 @@ module Backup
           return out
         else
           raise Errors::Utilities::SystemCallError, <<-EOS
-            '#{ name }' Failed on #{ RUBY_PLATFORM }
-            The following information should help to determine the problem:
-            Command was: #{ command }
-            Exit Status: #{ ps.exitstatus }
+            '#{ name }' failed with exit status: #{ ps.exitstatus }
             STDOUT Messages: #{ out.empty? ? 'None' : "\n#{ out }" }
             STDERR Messages: #{ err.empty? ? 'None' : "\n#{ err }" }
           EOS
