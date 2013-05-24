@@ -20,26 +20,26 @@ sync_gem_cache() {
 cd /vagrant/utils
 
 echo -n "==> Checking Spec Utils Environment... "
-bundle check >/dev/null 2>&1
+chruby-exec 2.0 -- bundle check >/dev/null 2>&1
 if [[ $? == "0" ]]; then
   echo "OK"
 else
   echo "Installing Gems..."
-  bundle install
+  chruby-exec 2.0 -- bundle install
   echo "Preparing VM Environment..."
-  rake all
+  chruby-exec 2.0 -- rake all
 fi
 
 cd /vagrant
 
 echo -n "==> Checking Ruby 2.0 Test Environment... "
-bundle check >/dev/null 2>&1
+chruby-exec 2.0 -- bundle check >/dev/null 2>&1
 if [[ $? == "0" ]]; then
   echo "OK"
 else
   echo "Installing Gems..."
   sync_gem_cache
-  bundle install
+  chruby-exec 2.0 -- bundle install
 fi
 
 echo -n "==> Checking Ruby 1.9.3 Test Environment... "
