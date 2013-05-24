@@ -108,6 +108,7 @@ module Backup
     autoload :Hipchat,   File.join(NOTIFIER_PATH, 'hipchat')
     autoload :Pushover,  File.join(NOTIFIER_PATH, 'pushover')
     autoload :HttpPost,  File.join(NOTIFIER_PATH, 'http_post')
+    autoload :Nagios,    File.join(NOTIFIER_PATH, 'nagios')
   end
 
   ##
