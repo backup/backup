@@ -244,24 +244,39 @@ describe 'Backup::Model' do
       end
 
       it 'should warn user of change from RSync to RSync::Push' do
-        Backup::Logger.expects(:warn)
+        Backup::Logger.expects(:warn).with do |err|
+          err.message.should match(
+            "'sync_with RSync' is now 'sync_with RSync::Push'"
+          )
+        end
+        model.expects(:get_class_from_scope).
+            with(Backup::Syncer, 'RSync::Push').
+            returns(stub(:new))
         model.sync_with('Backup::Config::RSync')
-        model.syncers.first.should
-            be_an_instance_of Backup::Syncer::RSync::Push
       end
 
       it 'should warn user of change from S3 to Cloud::S3' do
-        Backup::Logger.expects(:warn)
+        Backup::Logger.expects(:warn).with do |err|
+          err.message.should match(
+            "'sync_with S3' is now 'sync_with Cloud::S3'"
+          )
+        end
+        model.expects(:get_class_from_scope).
+            with(Backup::Syncer, 'Cloud::S3').
+            returns(stub(:new))
         model.sync_with('Backup::Config::S3')
-        model.syncers.first.should
-            be_an_instance_of Backup::Syncer::Cloud::S3
       end
 
       it 'should warn user of change from CloudFiles to Cloud::CloudFiles' do
-        Backup::Logger.expects(:warn)
+        Backup::Logger.expects(:warn).with do |err|
+          err.message.should match(
+            "'sync_with CloudFiles' is now 'sync_with Cloud::CloudFiles'"
+          )
+        end
+        model.expects(:get_class_from_scope).
+            with(Backup::Syncer, 'Cloud::CloudFiles').
+            returns(stub(:new))
         model.sync_with('Backup::Config::CloudFiles')
-        model.syncers.first.should
-            be_an_instance_of Backup::Syncer::Cloud::CloudFiles
       end
     end
 
