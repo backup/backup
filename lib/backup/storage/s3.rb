@@ -233,9 +233,6 @@ module Backup
           end
         end
 
-        # Avoid wrapping Excon::Errors::HTTPStatusError since it's message
-        # includes `request.inspect`. For multipart uploads, this includes
-        # the String#inspect output of `file.read(chunk_size)`.
         def error_with(err, msg)
           if err.is_a? Excon::Errors::HTTPStatusError
             Errors::Storage::S3::UploaderError.new(<<-EOS)
