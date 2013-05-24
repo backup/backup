@@ -4,11 +4,12 @@ module Backup
   module Utilities
     UTILITY = {}
     NAMES = %w{
-      tar cat split find xargs sudo chown
+      tar cat split find xargs sudo chown hostname
       gzip bzip2 lzma pbzip2
       mongo mongodump mysqldump pg_dump pg_dumpall redis-cli riak-admin
       gpg openssl
       rsync ssh
+      send_nsca
     }
 
     module DSL
@@ -57,14 +58,15 @@ module Backup
       #
       #   Backup::Utilities.configure do
       #     # General Utilites
-      #     tar   '/path/to/tar'
+      #     tar      '/path/to/tar'
       #     tar_dist :gnu   # or :bsd
-      #     cat   '/path/to/cat'
-      #     split '/path/to/split'
-      #     find  '/path/to/find'
-      #     xargs '/path/to/xargs'
-      #     sudo  '/path/to/sudo'
-      #     chown '/path/to/chown'
+      #     cat      '/path/to/cat'
+      #     split    '/path/to/split'
+      #     find     '/path/to/find'
+      #     xargs    '/path/to/xargs'
+      #     sudo     '/path/to/sudo'
+      #     chown    '/path/to/chown'
+      #     hostname '/path/to/hostname'
       #
       #     # Compressors
       #     gzip    '/path/to/gzip'
@@ -88,6 +90,9 @@ module Backup
       #     # Syncer and Storage
       #     rsync   '/path/to/rsync'
       #     ssh     '/path/to/ssh'
+      #
+      #     # Notifiers
+      #     send_nsca '/path/to/send_nsca'
       #   end
       #
       # These paths may be set using absolute paths, or relative to the
