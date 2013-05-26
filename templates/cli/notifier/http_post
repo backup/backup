@@ -1,0 +1,35 @@
+  ##
+  # HttpPost [Notifier]
+  #
+  # For details, see:
+  # https://github.com/meskyanichi/backup/wiki/Notifiers
+  #
+  notify_by HttpPost do |post|
+    post.on_success = true
+    post.on_warning = true
+    post.on_failure = true
+
+    # URI to post the notification to.
+    # Port may be specified if needed.
+    # If Basic Authentication is required, supply user:pass.
+    post.uri = 'https://user:pass@your.domain.com:8443/path'
+
+    ##
+    # Optional
+    #
+    # Additional headers to send.
+    # post.headers = { 'Authentication' => 'my_auth_info' }
+    #
+    # Additional form params to post.
+    # post.params = { 'auth_token' => 'my_token' }
+    #
+    # Successful response codes. Default: 200
+    # post.success_codes = [200, 201, 204]
+    #
+    # Defaults to true on most systems.
+    # Force with +true+, disable with +false+
+    # post.ssl_verify_peer = false
+    #
+    # Supplied by default. Override with a custom 'cacert.pem' file.
+    # post.ssl_ca_file = '/my/cacert.pem'
+  end
