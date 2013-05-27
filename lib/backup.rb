@@ -68,6 +68,7 @@ module Backup
     autoload :MongoDB,    File.join(DATABASE_PATH, 'mongodb')
     autoload :Redis,      File.join(DATABASE_PATH, 'redis')
     autoload :Riak,       File.join(DATABASE_PATH, 'riak')
+    autoload :SQLite,     File.join(DATABASE_PATH, 'sqlite')
   end
 
   ##
