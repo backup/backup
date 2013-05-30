@@ -18,8 +18,7 @@ Gem::Specification.new do |gem|
     and notifiers which you can mix and match. It was built with modularity, extensibility and simplicity in mind.
   EOS
 
-  gem.files = %x[git ls-files -- {lib,bin,templates}].split("\n") +
-              %w[README.md LICENSE.md]
+  gem.files = %x[git ls-files -- lib bin templates README.md LICENSE.md].split("\n")
   gem.require_path  = 'lib'
   gem.executables   = ['backup']
 
