@@ -117,7 +117,7 @@ module Backup
             ],
             # Notifiers
             ['Mail', 'Twitter', 'Campfire', 'Prowl',
-             'Hipchat', 'Pushover', 'HttpPost']
+             'Hipchat', 'Pushover', 'HttpPost', 'Nagios']
           ]
         )
       end
