@@ -120,7 +120,7 @@ describe Backup::Notifier::Nagios do
     context 'when status is :success' do
       it 'should send Success message' do
         notifier.expects(:send_service_check).with(
-          :success, "[Backup::Success] #{model.time}"
+          :success, "Backup completed, elapsed time: #{model.elapsed_time}"
         )
         notifier.send(:notify!, :success)
       end
@@ -129,7 +129,7 @@ describe Backup::Notifier::Nagios do
     context 'when status is :warning' do
       it 'should send Warning message' do
         notifier.expects(:send_service_check).with(
-          :warning, "[Backup::Warning] #{model.time}"
+          :warning, "Backup completed with warnings, elapsed time: #{model.elapsed_time}"
         )
         notifier.send(:notify!, :warning)
       end
@@ -138,7 +138,7 @@ describe Backup::Notifier::Nagios do
     context 'when status is :failure' do
       it 'should send Failure message' do
         notifier.expects(:send_service_check).with(
-          :failure, "[Backup::Failure] #{model.time}"
+          :failure, "Backup failed, elapsed time: #{model.elapsed_time}"
         )
         notifier.send(:notify!, :failure)
       end

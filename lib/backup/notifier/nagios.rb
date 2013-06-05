@@ -55,12 +55,12 @@ module Backup
       # : backup log and other information if `on_failure` was set to `true`
       #
       def notify!(status)
-        name = case status
-               when :success then 'Success'
-               when :warning then 'Warning'
-               when :failure then 'Failure'
+        message = case status
+               when :success then 'Backup completed'
+               when :warning then 'Backup completed with warnings'
+               when :failure then 'Backup failed'
                end
-        message = "[Backup::#{name}] #{@model.time}"
+        message += ", elapsed time: #{@model.elapsed_time}"
         send_service_check(status, message)
       end
 
