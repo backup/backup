@@ -17,11 +17,11 @@ module Backup
       #
       # [:sendmail - ::Mail::Sendmail]
       #   Settings used by this method:
-      #   {#sendmail}, {#sendmail_args}
+      #   {#sendmail_args}
       #
       # [:exim - ::Mail::Exim]
       #   Settings used by this method:
-      #   {#exim}, {#exim_args}
+      #   {#exim_args}
       #
       # [:file - ::Mail::FileDelivery]
       #   Settings used by this method:
@@ -76,13 +76,6 @@ module Backup
       #   Use a +SSL/TLS+ connection.
       attr_accessor :encryption
 
-      attr_deprecate :enable_starttls_auto, :version => '3.2.0',
-                     :message => "Use #encryption instead.\n" +
-                        'e.g. mail.encryption = :starttls',
-                     :action => lambda {|klass, val|
-                       klass.encryption = val ? :starttls : :none
-                     }
-
       ##
       # OpenSSL Verify Mode
       #
@@ -93,51 +86,43 @@ module Backup
       attr_accessor :openssl_verify_mode
 
       ##
-      # Path to `sendmail` (if needed)
-      #
-      # When using the `:sendmail` `delivery_method` option,
-      # this may be used to specify the absolute path to `sendmail`
-      #
-      # Example: '/usr/sbin/sendmail'
-      attr_accessor :sendmail
-
-      ##
       # Optional arguments to pass to `sendmail`
       #
-      # Note that this will override the defaults set by the Mail gem (currently: '-i -t')
-      # So, if set here, be sure to set all the arguments you require.
+      # Note that this will override the defaults set by the Mail gem
+      # (currently: '-i'). So, if set here, be sure to set all the arguments
+      # you require.
       #
-      # Example: '-i -t -X/tmp/traffic.log'
+      # Example: '-i -X/tmp/traffic.log'
       attr_accessor :sendmail_args
-
-      ##
-      # Path to `exim` (if needed)
-      #
-      # When using the `:exim` `delivery_method` option,
-      # this may be used to specify the absolute path to `exim`
-      #
-      # Example: '/usr/sbin/exim'
-      attr_accessor :exim
 
       ##
       # Optional arguments to pass to `exim`
       #
-      # Note that this will override the defaults set by the Mail gem (currently: '-i -t')
-      # So, if set here, be sure to set all the arguments you require.
+      # Note that this will override the defaults set by the Mail gem
+      # (currently: '-i -t') So, if set here, be sure to set all the arguments
+      # you require.
       #
       # Example: '-i -t -X/tmp/traffic.log'
       attr_accessor :exim_args
 
       ##
-      # Folder where mail will be kept when using the `:file` `delivery_method` option.
+      # Folder where mail will be kept when using the `:file` `delivery_method`.
       #
       # Default location is '$HOME/Backup/emails'
       attr_accessor :mail_folder
 
-      def initialize(model, &block)
-        super(model)
+      ##
+      # Array of statuses for which the log file should be attached.
+      #
+      # Available statuses are: `:success`, `:warning` and `:failure`.
+      # Default: [:warning, :failure]
+      attr_accessor :send_log_on
 
+      def initialize(model, &block)
+        super
         instance_eval(&block) if block_given?
+
+        @send_log_on ||= [:warning, :failure]
       end
 
       private
@@ -147,42 +132,43 @@ module Backup
       #
       # `status` indicates one of the following:
       #
-      # [:success]
-      #   The backup completed successfully.
-      #   Notification will be sent if `on_success` was set to `true`
+      # `:success`
+      # : The backup completed successfully.
+      # : Notification will be sent if `on_success` is `true`.
       #
-      # [:warning]
-      #   The backup completed successfully, but warnings were logged
-      #   Notification will be sent, including a copy of the current
-      #   backup log, if `on_warning` was set to `true`
+      # `:warning`
+      # : The backup completed successfully, but warnings were logged.
+      # : Notification will be sent, including a copy of the current
+      # : backup log, if `on_warning` or `on_success` is `true`.
       #
-      # [:failure]
-      #   The backup operation failed.
-      #   Notification will be sent, including the Exception which caused
-      #   the failure, the Exception's backtrace, a copy of the current
-      #   backup log and other information if `on_failure` was set to `true`
+      # `:failure`
+      # : The backup operation failed.
+      # : Notification will be sent, including a copy of the current
+      # : backup log, if `on_failure` is `true`.
       #
       def notify!(status)
-        name, send_log =
-            case status
-            when :success then [ 'Success', false ]
-            when :warning then [ 'Warning', true  ]
-            when :failure then [ 'Failure', true  ]
-            end
+        tag = case status
+              when :success then '[Backup::Success]'
+              when :warning then '[Backup::Warning]'
+              when :failure then '[Backup::Failure]'
+              end
 
         email = new_email
-        email.subject = "[Backup::%s] #{@model.label} (#{@model.trigger})" % name
-        email.body    = @template.result('notifier/mail/%s.erb' % status.to_s)
+        email.subject = "#{ tag } #{ model.label } (#{ model.trigger })"
+
+        send_log = send_log_on.include?(status)
+        template = Backup::Template.new({ :model => model, :send_log => send_log })
+        email.body = template.result('notifier/mail/%s.erb' % status.to_s)
 
         if send_log
           email.convert_to_multipart
-          email.attachments["#{@model.time}.#{@model.trigger}.log"] = {
+          email.attachments["#{ model.time }.#{ model.trigger }.log"] = {
             :mime_type => 'text/plain;',
             :content   => Logger.messages.map(&:formatted_lines).flatten.join("\n")
           }
         end
 
-        email.deliver!
+        email.deliver! # raise error if unsuccessful
       end
 
       ##
@@ -208,12 +194,12 @@ module Backup
               }
             when 'sendmail'
               opts = {}
-              opts.merge!(:location  => File.expand_path(@sendmail)) if @sendmail
+              opts.merge!(:location  => utility(:sendmail))
               opts.merge!(:arguments => @sendmail_args) if @sendmail_args
               opts
             when 'exim'
               opts = {}
-              opts.merge!(:location  => File.expand_path(@exim)) if @exim
+              opts.merge!(:location  => utility(:exim))
               opts.merge!(:arguments => @exim_args) if @exim_args
               opts
             when 'file'
@@ -231,6 +217,25 @@ module Backup
         email.from = @from
         email
       end
+
+      attr_deprecate :enable_starttls_auto, :version => '3.2.0',
+                     :message => "Use #encryption instead.\n" +
+                        'e.g. mail.encryption = :starttls',
+                     :action => lambda {|klass, val|
+                       klass.encryption = val ? :starttls : :none
+                     }
+
+      attr_deprecate :sendmail, :version => '3.6.0',
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { sendmail val }
+          }
+
+      attr_deprecate :exim, :version => '3.6.0',
+          :message => 'Use Backup::Utilities.configure instead.',
+          :action => lambda {|klass, val|
+            Utilities.configure { exim val }
+          }
 
     end
   end

@@ -156,15 +156,38 @@ module Backup
         exit(3)
       end
 
-      # Model#perform! handles all exceptions from this point,
-      # as each model may fail and return here to allow others to run.
-      warnings = errors = false
-      models.each do |model|
+      until models.empty?
+        model = models.shift
         model.perform!
-        warnings ||= Logger.has_warnings?
-        errors   ||= Logger.has_errors?
+
+        case model.exit_status
+        when 1
+          warnings = true
+        when 2
+          errors = true
+          unless models.empty?
+            Logger.info Errors::ModelError.new(<<-EOS)
+              Backup will now continue...
+              The following triggers will now be processed:
+              (#{ models.map {|m| m.trigger }.join(', ') })
+            EOS
+          end
+        when 3
+          fatal = true
+          unless models.empty?
+            Logger.error Errors::ModelFatalError.new(<<-EOS)
+              Backup will now exit.
+              The following triggers will not be processed:
+              (#{ models.map {|m| m.trigger }.join(', ') })
+            EOS
+          end
+        end
+
+        model.notifiers.each(&:perform!)
+        exit(3) if fatal
         Logger.clear!
       end
+
       exit(errors ? 2 : 1) if errors || warnings
     end
 

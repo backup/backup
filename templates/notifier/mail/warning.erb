@@ -1,7 +1,9 @@
 
 Backup <%= @model.label %> (<%= @model.trigger %>) finished with warnings.
+<% if @send_log %>
 
 See the attached backup log for details.
+<% end %>
 
 ===========================================================================
 <%= Backup::Template.new.result("general/version.erb") %>

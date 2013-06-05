@@ -258,19 +258,51 @@ describe 'Backup::CLI' do
       end
     end # describe 'failure to prepare for backups'
 
-    describe 'exit codes when backups have errors or warnings' do
+    describe 'exit codes and notifications' do
+      let(:notifier_a) { mock }
+      let(:notifier_b) { mock }
+      let(:notifier_c) { mock }
+      let(:notifier_d) { mock }
+
       before do
         Backup::Config.stubs(:load_config!)
         Backup::Logger.stubs(:start!)
+        model_a.stubs(:notifiers).returns([notifier_a, notifier_c])
+        model_b.stubs(:notifiers).returns([notifier_b, notifier_d])
+      end
+
+      specify 'when jobs are all successful' do
+        model_a.stubs(:exit_status).returns(0)
+        model_b.stubs(:exit_status).returns(0)
+
+        model_a.expects(:perform!).in_sequence(s)
+        notifier_a.expects(:perform!).in_sequence(s)
+        notifier_c.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        model_b.expects(:perform!).in_sequence(s)
+        notifier_b.expects(:perform!).in_sequence(s)
+        notifier_d.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        ARGV.replace(
+          ['perform', '-t', 'test_trigger_a,test_trigger_b']
+        )
+        cli.start
       end
 
       specify 'when a job has warnings' do
+        model_a.stubs(:exit_status).returns(1)
+        model_b.stubs(:exit_status).returns(0)
+
         model_a.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:has_warnings?).in_sequence(s).returns(true)
-        Backup::Logger.expects(:has_errors?).in_sequence(s).returns(false)
+        notifier_a.expects(:perform!).in_sequence(s)
+        notifier_c.expects(:perform!).in_sequence(s)
         Backup::Logger.expects(:clear!).in_sequence(s)
+
         model_b.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:has_errors?).in_sequence(s).returns(false)
+        notifier_b.expects(:perform!).in_sequence(s)
+        notifier_d.expects(:perform!).in_sequence(s)
         Backup::Logger.expects(:clear!).in_sequence(s)
 
         expect do
@@ -281,13 +313,18 @@ describe 'Backup::CLI' do
         end.to raise_error(SystemExit) {|err| err.status.should be(1) }
       end
 
-      specify 'when a job has errors' do
+      specify 'when a job has non-fatal errors' do
+        model_a.stubs(:exit_status).returns(2)
+        model_b.stubs(:exit_status).returns(0)
+
         model_a.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:has_warnings?).in_sequence(s).returns(false)
-        Backup::Logger.expects(:has_errors?).in_sequence(s).returns(true)
+        notifier_a.expects(:perform!).in_sequence(s)
+        notifier_c.expects(:perform!).in_sequence(s)
         Backup::Logger.expects(:clear!).in_sequence(s)
+
         model_b.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:has_warnings?).in_sequence(s).returns(false)
+        notifier_b.expects(:perform!).in_sequence(s)
+        notifier_d.expects(:perform!).in_sequence(s)
         Backup::Logger.expects(:clear!).in_sequence(s)
 
         expect do
@@ -298,13 +335,37 @@ describe 'Backup::CLI' do
         end.to raise_error(SystemExit) {|err| err.status.should be(2) }
       end
 
-      specify 'when a jobs have errors and warnings' do
+      specify 'when a job has fatal errors' do
+        model_a.stubs(:exit_status).returns(3)
+        model_b.stubs(:exit_status).returns(0)
+
         model_a.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:has_warnings?).in_sequence(s).returns(false)
-        Backup::Logger.expects(:has_errors?).in_sequence(s).returns(true)
+        notifier_a.expects(:perform!).in_sequence(s)
+        notifier_c.expects(:perform!).in_sequence(s)
+
+        Backup::Logger.expects(:clear!).never
+        model_b.expects(:perform!).never
+
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_a,test_trigger_b']
+          )
+          cli.start
+        end.to raise_error(SystemExit) {|err| err.status.should be(3) }
+      end
+
+      specify 'when jobs have errors and warnings' do
+        model_a.stubs(:exit_status).returns(2)
+        model_b.stubs(:exit_status).returns(1)
+
+        model_a.expects(:perform!).in_sequence(s)
+        notifier_a.expects(:perform!).in_sequence(s)
+        notifier_c.expects(:perform!).in_sequence(s)
         Backup::Logger.expects(:clear!).in_sequence(s)
+
         model_b.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:has_warnings?).in_sequence(s).returns(true)
+        notifier_b.expects(:perform!).in_sequence(s)
+        notifier_d.expects(:perform!).in_sequence(s)
         Backup::Logger.expects(:clear!).in_sequence(s)
 
         expect do
@@ -314,7 +375,7 @@ describe 'Backup::CLI' do
           cli.start
         end.to raise_error(SystemExit) {|err| err.status.should be(2) }
       end
-    end # describe 'exit codes when backups have errors or warnings'
+    end # describe 'exit codes and notifications'
 
     describe '--check' do
       it 'runs the check command' do

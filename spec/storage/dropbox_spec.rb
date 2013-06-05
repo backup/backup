@@ -3,7 +3,7 @@
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
 module Backup
-describe Storage::S3 do
+describe Storage::Dropbox do
   let(:model) { Model.new(:test_trigger, 'test label') }
   let(:storage) { Storage::Dropbox.new(model) }
   let(:s) { sequence '' }
@@ -101,13 +101,8 @@ describe Storage::S3 do
 
         expect do
           storage.send(:connection)
-        end.to raise_error {|err|
-          expect( err ).to be_an_instance_of(
-            Errors::Storage::Dropbox::ConnectionError
-          )
-          expect( err.message ).to eq(
-            'Storage::Dropbox::ConnectionError: RuntimeError: error'
-          )
+        end.to raise_error(Errors::Storage::Dropbox::ConnectionError) {|err|
+          expect( err.message ).to match('RuntimeError: error')
         }
       end
     end
@@ -145,11 +140,11 @@ describe Storage::S3 do
             raises('error message')
         Logger.expects(:warn).with do |err|
           expect( err ).to be_an_instance_of(Errors::Storage::Dropbox::CacheError)
-          expect( err.message ).to eq 'Storage::Dropbox::CacheError: ' +
-              "Could not read session data from cache.\n" +
-              "  Cache data might be corrupt.\n" +
-              "  Reason: RuntimeError\n" +
-              "  error message"
+          expect( err.message ).to match(
+            "Could not read session data from cache.\n" +
+            "  Cache data might be corrupt."
+          )
+          expect( err.message ).to match('RuntimeError: error message')
         end
 
         expect do
@@ -227,18 +222,16 @@ describe Storage::S3 do
           expect( arg ).to eq "Storing '#{ dest }'..."
         when 2
           expect( arg ).to be_an_instance_of Errors::Storage::Dropbox::TransferError
-          expect( arg.message ).to eq(
-            "Storage::Dropbox::TransferError: Retry #1 of 1.\n" +
-            "  Reason: RuntimeError\n" +
-            "  chunk failed"
+          expect( arg.message ).to match(
+            "Storage::Dropbox::TransferError: Retry #1 of 1."
           )
+          expect( arg.message ).to match('RuntimeError: chunk failed')
         when 3
           expect( arg ).to be_an_instance_of Errors::Storage::Dropbox::TransferError
-          expect( arg.message ).to eq(
-            "Storage::Dropbox::TransferError: Retry #1 of 1.\n" +
-            "  Reason: RuntimeError\n" +
-            "  finish failed"
+          expect( arg.message ).to match(
+            "Storage::Dropbox::TransferError: Retry #1 of 1."
           )
+          expect( arg.message ).to match('RuntimeError: finish failed')
         end
       end
 
@@ -276,18 +269,16 @@ describe Storage::S3 do
           expect( arg ).to eq "Storing '#{ dest }'..."
         when 2
           expect( arg ).to be_an_instance_of Errors::Storage::Dropbox::TransferError
-          expect( arg.message ).to eq(
-            "Storage::Dropbox::TransferError: Retry #1 of 2.\n" +
-            "  Reason: RuntimeError\n" +
-            "  chunk failed"
+          expect( arg.message ).to match(
+            "Storage::Dropbox::TransferError: Retry #1 of 2."
           )
+          expect( arg.message ).to match('RuntimeError: chunk failed')
         when 3
           expect( arg ).to be_an_instance_of Errors::Storage::Dropbox::TransferError
-          expect( arg.message ).to eq(
-            "Storage::Dropbox::TransferError: Retry #2 of 2.\n" +
-            "  Reason: RuntimeError\n" +
-            "  chunk failed again"
+          expect( arg.message ).to match(
+            "Storage::Dropbox::TransferError: Retry #2 of 2."
           )
+          expect( arg.message ).to match('RuntimeError: chunk failed again')
         end
       end
 
@@ -309,11 +300,10 @@ describe Storage::S3 do
 
       expect do
         storage.send(:transfer!)
-      end.to raise_error(Errors::Storage::Dropbox::TransferError,
-        "Storage::Dropbox::TransferError: Upload Failed!\n" +
-        "  Reason: RuntimeError\n" +
-        "  strike three"
-      )
+      end.to raise_error(Errors::Storage::Dropbox::TransferError) {|err|
+        expect( err.message ).to match('Upload Failed!')
+        expect( err.message ).to match('RuntimeError: strike three')
+      }
     end
 
   end # describe '#transfer!'
@@ -421,16 +411,11 @@ describe Storage::S3 do
 
         expect do
           storage.send(:create_write_and_return_new_session!)
-        end.to raise_error {|err|
-          expect( err ).to be_an_instance_of(
-            Errors::Storage::Dropbox::AuthenticationError
+        end.to raise_error(Errors::Storage::Dropbox::AuthenticationError) {|err|
+          expect( err.message ).to match(
+            "Could not create or authenticate a new session"
           )
-          expect( err.message ).to eq(
-            'Storage::Dropbox::AuthenticationError: ' +
-            "Could not create or authenticate a new session\n" +
-            "  Reason: RuntimeError\n" +
-            "  error message"
-          )
+          expect( err.message ).to match('RuntimeError: error message')
         }
       end
     end

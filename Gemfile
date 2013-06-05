@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-source 'http://rubygems.org'
+source 'https://rubygems.org'
 
 ##
 # Gemfile.lock controls the dependencies used when running the specs in `spec/`.
@@ -18,7 +18,11 @@ source 'http://rubygems.org'
 group :production do
   gem 'thor'
   gem 'open4'
-  gem 'fog'
+  # waiting until this is resolved:
+  # https://github.com/fog/fog/commit/f6d361b2e2e#L46R201
+  # https://github.com/fog/fog/pull/1815
+  gem 'fog', '= 1.10.1'
+  gem 'excon'
   gem 'dropbox-sdk', '= 1.5.1' # patched
   gem 'net-ssh'
   gem 'net-scp'
@@ -26,9 +30,8 @@ group :production do
   gem 'parallel'
   gem 'mail'
   gem 'twitter'
-  gem 'httparty'
-  gem 'prowler'
   gem 'hipchat'
+  gem 'json'
 end
 
 gem 'rspec'

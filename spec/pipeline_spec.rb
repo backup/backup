@@ -173,10 +173,9 @@ describe 'Backup::Pipeline' do
       it 'should raise an error' do
         expect do
           pipeline.run
-        end.to raise_error(
-          Backup::Errors::Pipeline::ExecutionError,
-          "Pipeline::ExecutionError: RuntimeError: exec failed"
-        )
+        end.to raise_error(Backup::Errors::Pipeline::ExecutionError) {|err|
+          err.message.should match('RuntimeError: exec failed')
+        }
       end
     end # context 'when pipeline command fails to execute'
 
@@ -194,11 +193,14 @@ describe 'Backup::Pipeline' do
   end # describe '#success?'
 
   describe '#error_messages' do
+    let(:sys_err) { RUBY_VERSION < '1.9' ? 'SystemCallError' : 'Errno::NOERROR' }
+
     before do
+      # use 0 since others may be platform-dependent
       pipeline.instance_variable_set(
         :@errors, [
-          StandardError.new('standard error'),
-          RuntimeError.new('runtime error')
+          SystemCallError.new('first error', 0),
+          SystemCallError.new('second error', 0)
         ]
       )
     end
@@ -211,8 +213,8 @@ describe 'Backup::Pipeline' do
       it 'should output #stderr_messages and formatted system error messages' do
         pipeline.error_messages.should == 'stderr messages' +
           "The following system errors were returned:\n" +
-          "Error: StandardError: standard error\n" +
-          "Error: RuntimeError: runtime error"
+          "#{ sys_err }: Success - first error\n" +
+          "#{ sys_err }: Success - second error"
       end
     end
 
@@ -224,8 +226,8 @@ describe 'Backup::Pipeline' do
       it 'should only output the formatted system error messages' do
         pipeline.error_messages.should ==
           "The following system errors were returned:\n" +
-          "Error: StandardError: standard error\n" +
-          "Error: RuntimeError: runtime error"
+          "#{ sys_err }: Success - first error\n" +
+          "#{ sys_err }: Success - second error"
       end
     end
   end # describe '#error_messages'

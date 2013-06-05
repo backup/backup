@@ -59,23 +59,32 @@ describe 'Backup::Model' do
 
   describe '#initialize' do
 
+    it 'sets default values' do
+      model.trigger.should == 'test_trigger'
+      model.label.should == 'test label'
+      model.package.should be_an_instance_of Backup::Package
+      model.time.should be_nil
+
+      model.databases.should == []
+      model.archives.should == []
+      model.storages.should == []
+      model.notifiers.should == []
+      model.syncers.should == []
+
+      model.compressor.should be_nil
+      model.encryptor.should be_nil
+      model.splitter.should be_nil
+
+      model.exit_status.should be_nil
+      model.exception.should be_nil
+    end
+
     it 'should convert trigger to a string' do
       Backup::Model.new(:foo, :bar).trigger.should == 'foo'
     end
 
     it 'should convert label to a string' do
       Backup::Model.new(:foo, :bar).label.should == 'bar'
-    end
-
-    it 'should instantiate a package for the model' do
-      Backup::Model.new(:foo, :bar).package.
-          should be_an_instance_of Backup::Package
-    end
-
-    it 'should set all procedure variables to an empty array' do
-      model.send(:procedure_instance_variables).each do |var|
-        model.instance_variable_get(var).should == []
-      end
     end
 
     it 'should accept and instance_eval a block' do
@@ -235,24 +244,39 @@ describe 'Backup::Model' do
       end
 
       it 'should warn user of change from RSync to RSync::Push' do
-        Backup::Logger.expects(:warn)
+        Backup::Logger.expects(:warn).with do |err|
+          err.message.should match(
+            "'sync_with RSync' is now 'sync_with RSync::Push'"
+          )
+        end
+        model.expects(:get_class_from_scope).
+            with(Backup::Syncer, 'RSync::Push').
+            returns(stub(:new))
         model.sync_with('Backup::Config::RSync')
-        model.syncers.first.should
-            be_an_instance_of Backup::Syncer::RSync::Push
       end
 
       it 'should warn user of change from S3 to Cloud::S3' do
-        Backup::Logger.expects(:warn)
+        Backup::Logger.expects(:warn).with do |err|
+          err.message.should match(
+            "'sync_with S3' is now 'sync_with Cloud::S3'"
+          )
+        end
+        model.expects(:get_class_from_scope).
+            with(Backup::Syncer, 'Cloud::S3').
+            returns(stub(:new))
         model.sync_with('Backup::Config::S3')
-        model.syncers.first.should
-            be_an_instance_of Backup::Syncer::Cloud::S3
       end
 
       it 'should warn user of change from CloudFiles to Cloud::CloudFiles' do
-        Backup::Logger.expects(:warn)
+        Backup::Logger.expects(:warn).with do |err|
+          err.message.should match(
+            "'sync_with CloudFiles' is now 'sync_with Cloud::CloudFiles'"
+          )
+        end
+        model.expects(:get_class_from_scope).
+            with(Backup::Syncer, 'Cloud::CloudFiles').
+            returns(stub(:new))
         model.sync_with('Backup::Config::CloudFiles')
-        model.syncers.first.should
-            be_an_instance_of Backup::Syncer::Cloud::CloudFiles
       end
     end
 
@@ -334,37 +358,14 @@ describe 'Backup::Model' do
 
   end # describe 'DSL Methods'
 
-  describe '#prepare!' do
-    it 'should prepare for the backup' do
-      Backup::Cleaner.expects(:prepare).with(model)
-
-      model.send(:prepare!)
-    end
-  end
-
   describe '#perform!' do
     let(:procedure_a)   { lambda {} }
     let(:procedure_b)   { mock }
     let(:procedure_c)   { mock }
-    let(:procedure_d)   { lambda {} }
-    let(:procedure_e)   { lambda {} }
-    let(:procedure_f)   { mock }
-    let(:procedures) do
-      [ procedure_a, [procedure_b, procedure_c],
-        procedure_d, procedure_e, [procedure_f] ]
-    end
     let(:syncer_a)      { mock }
     let(:syncer_b)      { mock }
-    let(:syncers)       { [syncer_a, syncer_b] }
-    let(:notifier_a)    { mock }
-    let(:notifier_b)    { mock }
-    let(:notifiers)     { [notifier_a, notifier_b] }
 
-    it 'should set @started_at, @time and @package.time' do
-      model.expects(:log!).with(:started)
-      model.expects(:prepare!)
-      model.expects(:log!).with(:finished)
-
+    it 'sets @started_at, @time and @package.time' do
       started_at, time = nil, nil
       Timecop.freeze do
         started_at = Time.now
@@ -377,103 +378,254 @@ describe 'Backup::Model' do
       model.instance_variable_get(:@started_at).should == started_at
     end
 
-    context 'when no errors occur' do
-      before do
-        model.expects(:procedures).returns(procedures)
-        model.expects(:syncers).returns(syncers)
-        model.expects(:notifiers).returns(notifiers)
+    it 'performs all procedures' do
+      model.stubs(:procedures).returns([ procedure_a, [procedure_b, procedure_c]])
+      model.stubs(:syncers).returns([syncer_a, syncer_b])
+
+      model.expects(:log!).in_sequence(s).with(:started)
+
+      procedure_a.expects(:call).in_sequence(s)
+      procedure_b.expects(:perform!).in_sequence(s)
+      procedure_c.expects(:perform!).in_sequence(s)
+
+      syncer_a.expects(:perform!).in_sequence(s)
+      syncer_b.expects(:perform!).in_sequence(s)
+
+      model.expects(:log!).in_sequence(s).with(:finished)
+
+      model.perform!
+
+      model.exception.should be_nil
+      model.exit_status.should be 0
+    end
+
+    describe 'exit status' do
+      it 'sets exit_status to 0 when successful' do
+        model.perform!
+
+        model.exception.should be_nil
+        model.exit_status.should be 0
       end
 
-      context 'when databases are configured' do
-        before do
-          model.instance_variable_set(:@databases, [true])
-        end
+      it 'sets exit_status to 1 when warnings are logged' do
+        model.stubs(:procedures).returns([lambda { Backup::Logger.warn 'foo' }])
 
-        it 'should perform all procedures' do
-          model.expects(:log!).in_sequence(s).with(:started)
+        model.perform!
 
-          model.expects(:prepare!).in_sequence(s)
-
-          procedure_a.expects(:call).in_sequence(s)
-          procedure_b.expects(:perform!).in_sequence(s)
-          procedure_c.expects(:perform!).in_sequence(s)
-          procedure_d.expects(:call).in_sequence(s)
-          procedure_e.expects(:call).in_sequence(s)
-          procedure_f.expects(:perform!).in_sequence(s)
-
-          syncer_a.expects(:perform!).in_sequence(s)
-          syncer_b.expects(:perform!).in_sequence(s)
-
-          notifier_a.expects(:perform!).in_sequence(s)
-          notifier_b.expects(:perform!).in_sequence(s)
-
-          model.expects(:log!).in_sequence(s).with(:finished)
-
-          model.perform!
-        end
+        model.exception.should be_nil
+        model.exit_status.should be 1
       end
 
-      context 'when archives are configured' do
-        before do
-          model.instance_variable_set(:@archives, [true])
-        end
-
-        it 'should perform all procedures' do
-          model.expects(:log!).in_sequence(s).with(:started)
-
-          model.expects(:prepare!).in_sequence(s)
-
-          procedure_a.expects(:call).in_sequence(s)
-          procedure_b.expects(:perform!).in_sequence(s)
-          procedure_c.expects(:perform!).in_sequence(s)
-          procedure_d.expects(:call).in_sequence(s)
-          procedure_e.expects(:call).in_sequence(s)
-          procedure_f.expects(:perform!).in_sequence(s)
-
-          syncer_a.expects(:perform!).in_sequence(s)
-          syncer_b.expects(:perform!).in_sequence(s)
-
-          notifier_a.expects(:perform!).in_sequence(s)
-          notifier_b.expects(:perform!).in_sequence(s)
-
-          model.expects(:log!).in_sequence(s).with(:finished)
-
-          model.perform!
-        end
-      end
-
-    end # context 'when no errors occur'
-
-    # for the purposes of testing the error handling, we're just going to
-    # stub the first thing this method calls and raise an error
-    context 'when errors occur' do
-
-      it 'logs, notifies and continues if a StandardError is rescued' do
+      it 'sets exit_status 2 for a StandardError' do
         err = StandardError.new 'non-fatal error'
-        Time.stubs(:now).raises(err)
+        model.stubs(:procedures).returns([lambda { raise err }])
 
-        model.expects(:log!).with(:failure, err)
-        model.expects(:send_failure_notifications)
+        model.perform!
 
-        # returns to allow next trigger to run
-        expect { model.perform! }.not_to raise_error
+        model.exception.should == err
+        model.exit_status.should be 2
       end
 
-      it 'logs, notifies and exits with status code 3 if an Exception is rescued' do
+      it 'sets exit_status 3 for an Exception' do
         err = Exception.new 'fatal error'
-        Time.stubs(:now).raises(err)
+        model.stubs(:procedures).returns([lambda { raise err }])
 
-        model.expects(:log!).with(:failure, err)
-        model.expects(:send_failure_notifications)
+        model.perform!
 
-        expect do
-          model.perform!
-        end.to raise_error(SystemExit) {|exit| exit.status.should be(3) }
+        model.exception.should == err
+        model.exit_status.should be 3
       end
-
     end # context 'when errors occur'
 
+    describe 'before/after hooks' do
+
+      specify 'both are called' do
+        before_called, procedure_called, after_called_with = nil, nil, nil
+        model.before { before_called = true }
+        model.stubs(:procedures).returns([lambda { procedure_called = true }])
+        model.after {|status| after_called_with = status }
+
+        model.perform!
+
+        before_called.should be_true
+        procedure_called.should be_true
+        after_called_with.should be 0
+      end
+
+      specify 'before hook may log warnings' do
+        procedure_called, after_called_with = nil, nil
+        model.before { Backup::Logger.warn 'foo' }
+        model.stubs(:procedures).returns([lambda { procedure_called = true }])
+        model.after {|status| after_called_with = status }
+
+        model.perform!
+
+        model.exit_status.should be 1
+        procedure_called.should be_true
+        after_called_with.should be 1
+      end
+
+      specify 'before hook may abort model with non-fatal exception' do
+        procedure_called, after_called = nil, nil
+        model.before { raise StandardError }
+        model.stubs(:procedures).returns([lambda { procedure_called = true }])
+        model.after { after_called = true }
+
+        model.perform!
+
+        model.exit_status.should be 2
+        procedure_called.should be_false
+        after_called.should be_false
+      end
+
+      specify 'before hook may abort backup with fatal exception' do
+        procedure_called, after_called = nil, nil
+        model.before { raise Exception }
+        model.stubs(:procedures).returns([lambda { procedure_called = true }])
+        model.after { after_called = true }
+
+        model.perform!
+
+        model.exit_status.should be 3
+        procedure_called.should be_false
+        after_called.should be_false
+      end
+
+      specify 'after hook is called when procedure raises non-fatal exception' do
+        after_called_with = nil
+        model.stubs(:procedures).returns([lambda { raise StandardError }])
+        model.after {|status| after_called_with = status }
+
+        model.perform!
+
+        model.exit_status.should be 2
+        after_called_with.should be 2
+      end
+
+      specify 'after hook is called when procedure raises fatal exception' do
+        after_called_with = nil
+        model.stubs(:procedures).returns([lambda { raise Exception }])
+        model.after {|status| after_called_with = status }
+
+        model.perform!
+
+        model.exit_status.should be 3
+        after_called_with.should be 3
+      end
+
+      specify 'after hook may log warnings' do
+        after_called_with = nil
+        model.after {|status| after_called_with = status; Backup::Logger.warn 'foo' }
+
+        model.perform!
+
+        model.exit_status.should be 1
+        after_called_with.should be 0
+      end
+
+      specify 'after hook warnings will not decrease exit_status' do
+        after_called_with = nil
+        model.stubs(:procedures).returns([lambda { raise StandardError }])
+        model.after {|status| after_called_with = status; Backup::Logger.warn 'foo' }
+
+        model.perform!
+
+        model.exit_status.should be 2
+        after_called_with.should be 2
+        Backup::Logger.has_warnings?.should be_true
+      end
+
+      specify 'after hook may fail model with non-fatal exceptions' do
+        after_called_with = nil
+        model.stubs(:procedures).returns([lambda { Backup::Logger.warn 'foo' }])
+        model.after {|status| after_called_with = status; raise StandardError }
+
+        model.perform!
+
+        model.exit_status.should be 2
+        after_called_with.should be 1
+      end
+
+      specify 'after hook exception will not decrease exit_status' do
+        after_called_with = nil
+        model.stubs(:procedures).returns([lambda { raise Exception }])
+        model.after {|status| after_called_with = status; raise StandardError }
+
+        model.perform!
+
+        model.exit_status.should be 3
+        after_called_with.should be 3
+      end
+
+      specify 'after hook may abort backup with fatal exceptions' do
+        after_called_with = nil
+        model.stubs(:procedures).returns([lambda { raise StandardError }])
+        model.after {|status| after_called_with = status; raise Exception }
+
+        model.perform!
+
+        model.exit_status.should be 3
+        after_called_with.should be 2
+      end
+
+    end # describe 'hooks'
+
   end # describe '#perform!'
+
+  describe '#procedures' do
+    before do
+      model.stubs(:prepare!).returns(:prepare)
+      model.stubs(:package!).returns(:package)
+      model.stubs(:storages).returns([:storage])
+      model.stubs(:clean!).returns(:clean)
+    end
+
+    context 'when no databases or archives are configured' do
+      it 'returns an empty array' do
+        model.send(:procedures).should == []
+      end
+    end
+
+    context 'when databases are configured' do
+      before do
+        model.stubs(:databases).returns([:database])
+      end
+
+      it 'returns all procedures' do
+        one, two, three, four, five, six = model.send(:procedures)
+        one.call.should == :prepare
+        two.should == [:database]
+        three.should == []
+        four.call.should == :package
+        five.should == [:storage]
+        six.call.should == :clean
+      end
+    end
+
+    context 'when archives are configured' do
+      before do
+        model.stubs(:archives).returns([:archive])
+      end
+
+      it 'returns all procedures' do
+        one, two, three, four, five, six = model.send(:procedures)
+        one.call.should == :prepare
+        two.should == []
+        three.should == [:archive]
+        four.call.should == :package
+        five.should == [:storage]
+        six.call.should == :clean
+      end
+    end
+  end # describe '#procedures'
+
+  describe '#prepare!' do
+    it 'should prepare for the backup' do
+      Backup::Cleaner.expects(:prepare).with(model)
+
+      model.send(:prepare!)
+    end
+  end
 
   describe '#package!' do
     it 'should package the backup' do
@@ -489,31 +641,6 @@ describe 'Backup::Model' do
       Backup::Cleaner.expects(:remove_package).with(model.package)
 
       model.send(:clean!)
-    end
-  end
-
-  describe '#procedures' do
-    it 'should return an array of specific, ordered procedures' do
-      model.stubs(:databases).returns(:databases)
-      model.stubs(:archives).returns(:archives)
-      model.stubs(:package!).returns(:package)
-      model.stubs(:storages).returns(:storages)
-      model.stubs(:clean!).returns(:clean)
-
-      one, two, three, four, five = model.send(:procedures)
-      one.should == :databases
-      two.should == :archives
-      three.call.should == :package
-      four.should == :storages
-      five.call.should == :clean
-    end
-  end
-
-  describe '#procedure_instance_variables' do
-    # these are all set to an empty Array in #initialize
-    it 'should return an array of Array holding instance variables' do
-      model.send(:procedure_instance_variables).should ==
-          [:@databases, :@archives, :@storages, :@notifiers, :@syncers]
     end
   end
 
@@ -594,9 +721,45 @@ describe 'Backup::Model' do
 
   end # describe '#get_class_from_scope'
 
+  describe '#set_exit_status' do
+    context 'when the model completed successfully without warnings' do
+      it 'sets exit status to 0' do
+        model.send(:set_exit_status)
+        model.exit_status.should be(0)
+      end
+    end
+
+    context 'when the model completed successfully with warnings' do
+      before { Backup::Logger.stubs(:has_warnings?).returns(true) }
+
+      it 'sets exit status to 1' do
+        model.send(:set_exit_status)
+        model.exit_status.should be(1)
+      end
+    end
+
+    context 'when the model failed with a non-fatal exception' do
+      before { model.stubs(:exception).returns(StandardError.new 'non-fatal') }
+
+      it 'sets exit status to 2' do
+        model.send(:set_exit_status)
+        model.exit_status.should be(2)
+      end
+    end
+
+    context 'when the model failed with a fatal exception' do
+      before { model.stubs(:exception).returns(Exception.new 'fatal') }
+
+      it 'sets exit status to 3' do
+        model.send(:set_exit_status)
+        model.exit_status.should be(3)
+      end
+    end
+  end # describe '#set_exit_status'
+
   describe '#log!' do
     context 'when action is :started' do
-      it 'should log that the backup has started with the version' do
+      it 'logs that the backup has started' do
         Backup::Logger.expects(:info).with(
           "Performing Backup for 'test label (test_trigger)'!\n" +
           "[ backup #{ Backup::VERSION } : #{ RUBY_DESCRIPTION } ]"
@@ -606,10 +769,24 @@ describe 'Backup::Model' do
     end
 
     context 'when action is :finished' do
-      before { model.expects(:elapsed_time).returns('01:02:03') }
-      context 'when warnings were issued' do
-        before { Backup::Logger.expects(:has_warnings?).returns(true) }
-        it 'should log a warning that the backup has finished with warnings' do
+      before { model.stubs(:elapsed_time).returns('01:02:03') }
+
+      context 'when #exit_status is 0' do
+        before { model.stubs(:exit_status).returns(0) }
+
+        it 'logs that the backup completed successfully' do
+          Backup::Logger.expects(:info).with(
+            "Backup for 'test label (test_trigger)' " +
+            "Completed Successfully in 01:02:03"
+          )
+          model.send(:log!, :finished)
+        end
+      end
+
+      context 'when #exit_status is 1' do
+        before { model.stubs(:exit_status).returns(1) }
+
+        it 'logs that the backup completed successfully with warnings' do
           Backup::Logger.expects(:warn).with(
             "Backup for 'test label (test_trigger)' " +
             "Completed Successfully (with Warnings) in 01:02:03"
@@ -618,27 +795,16 @@ describe 'Backup::Model' do
         end
       end
 
-      context 'when no warnings were issued' do
-        it 'should log that the backup has finished with the elapsed time' do
-          Backup::Logger.expects(:info).with(
-            "Backup for 'test label (test_trigger)' " +
-            "Completed Successfully in 01:02:03"
-          )
-          model.send(:log!, :finished)
+      context 'when #exit_status is 2' do
+        let(:error_a)   { mock }
+
+        before do
+          model.stubs(:exit_status).returns(2)
+          model.stubs(:exception).returns(StandardError.new 'non-fatal error')
+          error_a.stubs(:backtrace).returns(['many', 'backtrace', 'lines'])
         end
-      end
-    end
 
-    context 'when action is :failure' do
-      let(:error_a)   { mock }
-      let(:error_b)   { mock }
-
-      before do
-        error_a.stubs(:backtrace).returns(['many', 'backtrace', 'lines'])
-      end
-
-      context 'when Exception is a StandardError' do
-        it 'logs non-fatal error messages' do
+        it 'logs that the backup failed with a non-fatal exception' do
           Backup::Errors::ModelError.expects(:wrap).in_sequence(s).with do |err, msg|
             err.message.should == 'non-fatal error'
             msg.should match(/Backup for test label \(test_trigger\) Failed!/)
@@ -650,19 +816,21 @@ describe 'Backup::Model' do
 
           Backup::Cleaner.expects(:warnings).in_sequence(s).with(model)
 
-          Backup::Errors::ModelError.expects(:new).in_sequence(s).with do |msg|
-            msg.should match(/Backup will now attempt to continue/)
-          end.returns(error_b)
-          Backup::Logger.expects(:info).in_sequence(s).with(error_b)
-
-          exception = StandardError.new 'non-fatal error'
-          model.send(:log!, :failure, exception)
+          model.send(:log!, :finished)
         end
       end
 
-      context 'when Exception is not a StandardError' do
-        it 'logs fatal error messages' do
-          Backup::Errors::ModelError.expects(:wrap).in_sequence(s).with do |err, msg|
+      context 'when #exit_status is 3' do
+        let(:error_a)   { mock }
+
+        before do
+          model.stubs(:exit_status).returns(3)
+          model.stubs(:exception).returns(Exception.new 'fatal error')
+          error_a.stubs(:backtrace).returns(['many', 'backtrace', 'lines'])
+        end
+
+        it 'logs that the backup failed with a fatal exception' do
+          Backup::Errors::ModelFatalError.expects(:wrap).in_sequence(s).with do |err, msg|
             err.message.should == 'fatal error'
             msg.should match(/Backup for test label \(test_trigger\) Failed!/)
           end.returns(error_a)
@@ -673,13 +841,7 @@ describe 'Backup::Model' do
 
           Backup::Cleaner.expects(:warnings).in_sequence(s).with(model)
 
-          Backup::Errors::ModelError.expects(:new).in_sequence(s).with do |msg|
-            msg.should match(/Backup will now exit/)
-          end.returns(error_b)
-          Backup::Logger.expects(:error).in_sequence(s).with(error_b)
-
-          exception = Exception.new 'fatal error'
-          model.send(:log!, :failure, exception)
+          model.send(:log!, :finished)
         end
       end
     end
@@ -702,36 +864,6 @@ describe 'Backup::Model' do
           model.send(:elapsed_time).should == expected
         end
       end
-    end
-  end
-
-  describe '#send_failure_notifications' do
-    let(:notifier_a) { mock }
-    let(:notifier_b) { mock }
-    let(:notifiers) { [notifier_a, notifier_b] }
-
-    before do
-      model.expects(:notifiers).returns(notifiers)
-    end
-
-    it 'calls all notifiers to perform failure notification' do
-      notifier_a.expects(:perform!).with(true)
-      notifier_b.expects(:perform!).with(true)
-      model.send(:send_failure_notifications)
-    end
-
-    it 'logs and ignores exceptions' do
-      notifier_a.expects(:perform!).with(true).raises('failed to notify')
-      notifier_a.expects(:class).returns('Notifier::Name')
-      notifier_b.expects(:perform!).with(true)
-      Backup::Logger.expects(:error).with do |ex|
-        ex.message.should match(/Notifier::Name Failed to send notification/)
-        ex.message.should match(/failed to notify/)
-      end
-
-      expect do
-        model.send(:send_failure_notifications)
-      end.not_to raise_error
     end
   end
 

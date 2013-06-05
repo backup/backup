@@ -270,8 +270,8 @@ describe Backup::Encryptor::GPG do
           end.to raise_error {|err|
             err.should
               be_an_instance_of Backup::Errors::Encryptor::GPG::HomedirError
-            err.message.should
-              match(/Reason: RuntimeError\n  error message/)
+            err.message.should match('Failed to create or set permissions')
+            err.message.should match('RuntimeError: error message')
           }
         end
       end
@@ -355,12 +355,8 @@ describe Backup::Encryptor::GPG do
             err.should be_an_instance_of(
               Backup::Errors::Encryptor::GPG::GPGConfigError
             )
-            err.message.should match(
-              /Error creating temporary file for #gpg_config/
-            )
-            err.message.should match(
-              /Reason: RuntimeError\n  an error/
-            )
+            err.message.should match('Error creating temporary file for #gpg_config')
+            err.message.should match('RuntimeError: an error')
           }
         end
       end
@@ -544,9 +540,8 @@ describe Backup::Encryptor::GPG do
             err.should be_an_instance_of(
               Backup::Errors::Encryptor::GPG::PassphraseError
             )
-            err.message.should match(
-              /Reason: RuntimeError\n  an error/
-            )
+            err.message.should match('Error creating temporary passphrase file')
+            err.message.should match('RuntimeError: an error')
           end
           encryptor.send(:setup_passphrase_file).should be_false
         end
@@ -785,12 +780,8 @@ gXY+pNqaEE6cHrg+uQatVQITX8EoVJhQ9Z1mYJB+g62zqOQPe10Spb381O9y4dN/
           err.should be_an_instance_of(
             Backup::Errors::Encryptor::GPG::KeyImportError
           )
-          err.message.should match(
-            /Public key import failed for 'some_identifier'/
-          )
-          err.message.should match(
-            /Reason: RuntimeError\n  an error/
-          )
+          err.message.should match("Public key import failed for 'some_identifier'")
+          err.message.should match('RuntimeError: an error')
         }
 
         encryptor.send(:import_key, 'some_identifier', 'foo').should be_nil

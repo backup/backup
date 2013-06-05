@@ -34,35 +34,35 @@ module Backup
     attr_reader :label
 
     ##
-    # The databases attribute holds an array of database objects
+    # Array of configured Database objects.
     attr_reader :databases
 
     ##
-    # The archives attr_accessor holds an array of archive objects
+    # Array of configured Archive objects.
     attr_reader :archives
 
     ##
-    # The notifiers attr_accessor holds an array of notifier objects
+    # Array of configured Notifier objects.
     attr_reader :notifiers
 
     ##
-    # The storages attribute holds an array of storage objects
+    # Array of configured Storage objects.
     attr_reader :storages
 
     ##
-    # The syncers attribute holds an array of syncer objects
+    # Array of configured Syncer objects.
     attr_reader :syncers
 
     ##
-    # Holds the configured Compressor
+    # The configured Compressor, if any.
     attr_reader :compressor
 
     ##
-    # Holds the configured Encryptor
+    # The configured Encryptor, if any.
     attr_reader :encryptor
 
     ##
-    # Holds the configured Splitter
+    # The configured Splitter, if any.
     attr_reader :splitter
 
     ##
@@ -74,17 +74,31 @@ module Backup
     attr_reader :time
 
     ##
-    # Takes a trigger, label and the configuration block.
-    # After the instance has evaluated the configuration block
-    # to configure the model, it will be appended to Model.all
+    # Result of this model's backup process.
+    #
+    # 0 = Job was successful
+    # 1 = Job was successful, but issued warnings
+    # 2 = Job failed, additional triggers may be performed
+    # 3 = Job failed, additional triggers will not be performed
+    attr_reader :exit_status
+
+    ##
+    # Exception raised by either a +before+ hook or one of the model's
+    # procedures that caused the model to fail. An exception raised by an
+    # +after+ hook would not be stored here. Therefore, it is possible for
+    # this to be +nil+ even if #exit_status is 2 or 3.
+    attr_reader :exception
+
     def initialize(trigger, label, &block)
       @trigger = trigger.to_s
       @label   = label.to_s
       @package = Package.new(self)
 
-      procedure_instance_variables.each do |variable|
-        instance_variable_set(variable, Array.new)
-      end
+      @databases  = []
+      @archives   = []
+      @storages   = []
+      @notifiers  = []
+      @syncers    = []
 
       instance_eval(&block) if block_given?
 
@@ -96,31 +110,27 @@ module Backup
     end
 
     ##
-    # Adds an archive to the array of archives
-    # to store during the backup process
+    # Adds an Archive. Multiple Archives may be added to the model.
     def archive(name, &block)
       @archives << Archive.new(self, name, &block)
     end
 
     ##
-    # Adds a database to the array of databases
-    # to dump during the backup process
+    # Adds an Database. Multiple Databases may be added to the model.
     def database(name, database_id = nil, &block)
       @databases << get_class_from_scope(Database, name).
           new(self, database_id, &block)
     end
 
     ##
-    # Adds a storage method to the array of storage
-    # methods to use during the backup process
+    # Adds an Storage. Multiple Storages may be added to the model.
     def store_with(name, storage_id = nil, &block)
       @storages << get_class_from_scope(Storage, name).
           new(self, storage_id, &block)
     end
 
     ##
-    # Adds a syncer method to the array of syncer
-    # methods to use during the backup process
+    # Adds an Syncer. Multiple Syncers may be added to the model.
     def sync_with(name, syncer_id = nil, &block)
       ##
       # Warn user of DSL changes
@@ -147,29 +157,29 @@ module Backup
     end
 
     ##
-    # Adds a notifier to the array of notifiers
-    # to use during the backup process
+    # Adds an Notifier. Multiple Notifiers may be added to the model.
     def notify_by(name, &block)
       @notifiers << get_class_from_scope(Notifier, name).new(self, &block)
     end
 
     ##
-    # Adds an encryptor to use during the backup process
+    # Adds an Encryptor. Only one Encryptor may be added to the model.
+    # This will be used to encrypt the final backup package.
     def encrypt_with(name, &block)
       @encryptor = get_class_from_scope(Encryptor, name).new(&block)
     end
 
     ##
-    # Adds a compressor to use during the backup process
+    # Adds an Compressor. Only one Compressor may be added to the model.
+    # This will be used to compress each individual Archive and Database
+    # stored within the final backup package.
     def compress_with(name, &block)
       @compressor = get_class_from_scope(Compressor, name).new(&block)
     end
 
     ##
-    # Adds a method that allows the user to configure this backup model
-    # to use a Splitter, with the given +chunk_size+
-    # The +chunk_size+ (in megabytes) will later determine
-    # in how many chunks the backup needs to be split into
+    # Adds a Splitter with the given +chunk_size+ in MB.
+    # This will split the final backup package into multiple files.
     def split_into_chunks_of(chunk_size)
       if chunk_size.is_a?(Integer)
         @splitter = Splitter.new(self, chunk_size)
@@ -182,78 +192,96 @@ module Backup
     end
 
     ##
-    # Performs the backup process
-    ##
-    # [Databases]
-    # Runs all (if any) database objects to dump the databases
-    ##
-    # [Archives]
-    # Runs all (if any) archive objects to package all their
-    # paths in to a single tar file and places it in the backup folder
-    ##
-    # [Packaging]
-    # After all the database dumps and archives are placed inside
-    # the folder, it'll make a single .tar package (archive) out of it
-    ##
-    # [Encryption]
-    # Optionally encrypts the packaged file with the configured encryptor
-    ##
-    # [Compression]
-    # Optionally compresses the each Archive and Database dump with the configured compressor
-    ##
-    # [Splitting]
-    # Optionally splits the backup file in to multiple smaller chunks before transferring them
-    ##
-    # [Storages]
-    # Runs all (if any) storage objects to store the backups to remote locations
-    # and (if configured) it'll cycle the files on the remote location to limit the
-    # amount of backups stored on each individual location
-    ##
-    # [Syncers]
-    # Runs all (if any) sync objects to store the backups to remote locations.
-    # A Syncer does not go through the process of packaging, compressing, encrypting backups.
-    # A Syncer directly transfers data from the filesystem to the remote location
-    ##
-    # [Notifiers]
-    # Runs all (if any) notifier objects when a backup proces finished with or without
-    # any errors.
-    ##
-    # [Cleaning]
-    # Once the final Packaging is complete, the temporary folder used will be removed.
-    # Then, once all Storages have run, the final packaged files will be removed.
-    # If any errors occur during the backup process, all temporary files will be left in place.
-    # If the error occurs before Packaging, then the temporary folder (tmp_path/trigger)
-    # will remain and may contain all or some of the configured Archives and/or Database dumps.
-    # If the error occurs after Packaging, but before the Storages complete, then the final
-    # packaged files (located in the root of tmp_path) will remain.
-    # *** Important *** If an error occurs and any of the above mentioned temporary files remain,
-    # those files *** will be removed *** before the next scheduled backup for the same trigger.
+    # Defines a block of code to run before the model's procedures.
     #
+    # Warnings logged within the before hook will elevate the model's
+    # exit_status to 1 and cause warning notifications to be sent.
+    #
+    # Raising an exception will abort the model and cause failure notifications
+    # to be sent. If the exception is a StandardError, exit_status will be 2.
+    # If the exception is not a StandardError, exit_status will be 3.
+    #
+    # If any exception is raised, any defined +after+ hook will be skipped.
+    def before(&block)
+      @before ||= block
+    end
+
+    ##
+    # Defines a block of code to run after the model's procedures.
+    #
+    # This code is ensured to run, even if the model failed, **unless** a
+    # +before+ hook raised an exception and aborted the model.
+    #
+    # The code block will be passed the model's current exit_status:
+    #
+    # `0`: Success, no warnings.
+    # `1`: Success, but warnings were logged.
+    # `2`: Failure, but additional models/triggers will still be processed.
+    # `3`: Failure, no additional models/triggers will be processed.
+    #
+    # The model's exit_status may be elevated based on the after hook's
+    # actions, but will never be decreased.
+    #
+    # Warnings logged within the after hook may elevate the model's
+    # exit_status to 1 and cause warning notifications to be sent.
+    #
+    # Raising an exception may elevate the model's exit_status and cause
+    # failure notifications to be sent. If the exception is a StandardError,
+    # the exit_status will be elevated to 2. If the exception is not a
+    # StandardError, the exit_status will be elevated to 3.
+    def after(&block)
+      @after ||= block
+    end
+
+    ##
+    # Performs the backup process
+    #
+    # Once complete, #exit_status will indicate the result of this process.
+    #
+    # If any errors occur during the backup process, all temporary files will
+    # be left in place. If the error occurs before Packaging, then the
+    # temporary folder (tmp_path/trigger) will remain and may contain all or
+    # some of the configured Archives and/or Database dumps. If the error
+    # occurs after Packaging, but before the Storages complete, then the final
+    # packaged files (located in the root of tmp_path) will remain.
+    #
+    # *** Important ***
+    # If an error occurs and any of the above mentioned temporary files remain,
+    # those files *** will be removed *** before the next scheduled backup for
+    # the same trigger.
     def perform!
       @started_at = Time.now
       @time = package.time = @started_at.strftime("%Y.%m.%d.%H.%M.%S")
+
       log!(:started)
+      before_hook
 
-      prepare!
-
-      if databases.any? or archives.any?
-        procedures.each do |procedure|
-          (procedure.call; next) if procedure.is_a?(Proc)
-          procedure.each(&:perform!)
-        end
+      procedures.each do |procedure|
+        procedure.is_a?(Proc) ? procedure.call : procedure.each(&:perform!)
       end
 
       syncers.each(&:perform!)
-      notifiers.each(&:perform!)
-      log!(:finished)
 
     rescue Exception => err
-      log!(:failure, err)
-      send_failure_notifications
-      exit(3) unless err.is_a?(StandardError)
+      @exception = err
+
+    ensure
+      set_exit_status
+      log!(:finished)
+      after_hook
     end
 
     private
+
+    ##
+    # Returns an array of procedures that will be performed if any
+    # Archives or Databases are configured for the model.
+    def procedures
+      return [] unless databases.any? || archives.any?
+
+      [lambda { prepare! }, databases, archives,
+       lambda { package! }, storages, lambda { clean! }]
+    end
 
     ##
     # Clean any temporary files and/or package files left over
@@ -278,18 +306,6 @@ module Backup
     # Removes the final package file(s) once all configured Storages have run.
     def clean!
       Cleaner.remove_package(package)
-    end
-
-    ##
-    # Returns an array of procedures
-    def procedures
-      [databases, archives, lambda { package! }, storages, lambda { clean! }]
-    end
-
-    ##
-    # Returns an Array of the names (String) of the procedure instance variables
-    def procedure_instance_variables
-      [:@databases, :@archives, :@storages, :@notifiers, :@syncers]
     end
 
     ##
@@ -319,43 +335,84 @@ module Backup
     end
 
     ##
-    # Logs messages when the backup starts, finishes or fails
-    def log!(action, exception = nil)
+    # Sets or updates the model's #exit_status.
+    def set_exit_status
+      @exit_status = if exception
+        exception.is_a?(StandardError) ? 2 : 3
+      else
+        Logger.has_warnings? ? 1 : 0
+      end
+    end
+
+    ##
+    # Runs the +before+ hook.
+    # Any exception raised will be wrapped and re-raised, where it will be
+    # handled by #perform the same as an exception raised while performing
+    # the model's #procedures. Only difference is that an exception raised
+    # here will prevent any +after+ hook from being run.
+    def before_hook
+      return unless before
+
+      Logger.info 'Before Hook Starting...'
+      before.call
+      Logger.info 'Before Hook Finished.'
+
+    rescue Exception => err
+      @before_hook_failed = true
+      ex = err.is_a?(StandardError) ?
+          Errors::Model::HookError : Errors::Model::HookFatalError
+      raise ex.wrap(err, 'Before Hook Failed!')
+    end
+
+    ##
+    # Runs the +after+ hook.
+    # Any exception raised here will be logged only and the model's
+    # #exit_status will be elevated if neccessary.
+    def after_hook
+      return unless after && !@before_hook_failed
+
+      Logger.info 'After Hook Starting...'
+      after.call(exit_status)
+      Logger.info 'After Hook Finished.'
+
+      set_exit_status # in case hook logged warnings
+
+    rescue Exception => err
+      fatal = !err.is_a?(StandardError)
+      ex = fatal ? Errors::Model::HookFatalError : Errors::Model::HookError
+      Logger.error ex.wrap(err, 'After Hook Failed!')
+      # upgrade exit_status if needed
+      (@exit_status = fatal ? 3 : 2) unless exit_status == 3
+    end
+
+    ##
+    # Logs messages when the model starts and finishes.
+    #
+    # #exception will be set here if #exit_status is > 1,
+    # since log(:finished) is called before the +after+ hook.
+    def log!(action)
       case action
       when :started
-        Logger.info "Performing Backup for '#{label} (#{trigger})'!\n" +
+        Logger.info "Performing Backup for '#{ label } (#{ trigger })'!\n" +
             "[ backup #{ VERSION } : #{ RUBY_DESCRIPTION } ]"
 
       when :finished
-        msg = "Backup for '#{ label } (#{ trigger })' " +
-              "Completed %s in #{ elapsed_time }"
-        if Logger.has_warnings?
-          Logger.warn msg % 'Successfully (with Warnings)'
+        if exit_status > 1
+          ex = exit_status == 2 ? Errors::ModelError : Errors::ModelFatalError
+          err = ex.wrap(exception, "Backup for #{ label } (#{ trigger }) Failed!")
+          Logger.error err
+          Logger.error "\nBacktrace:\n\s\s" + err.backtrace.join("\n\s\s") + "\n\n"
+
+          Cleaner.warnings(self)
         else
-          Logger.info msg % 'Successfully'
-        end
-
-      when :failure
-        err = Errors::ModelError.wrap(exception, <<-EOS)
-          Backup for #{label} (#{trigger}) Failed!
-          An Error occured which has caused this Backup to abort before completion.
-        EOS
-        Logger.error err
-        Logger.error "\nBacktrace:\n\s\s" + err.backtrace.join("\n\s\s") + "\n\n"
-
-        Cleaner.warnings(self)
-
-        if exception.is_a?(StandardError)
-          Logger.info Errors::ModelError.new(<<-EOS)
-            If you have other Backup jobs (triggers) configured to run,
-            Backup will now attempt to continue...
-          EOS
-        else
-          Logger.error Errors::ModelError.new(<<-EOS)
-            This Error was Fatal and Backup will now exit.
-            If you have other Backup jobs (triggers) configured to run,
-            they will not be processed.
-          EOS
+          msg = "Backup for '#{ label } (#{ trigger })' "
+          if exit_status == 1
+            msg << "Completed Successfully (with Warnings) in #{ elapsed_time }"
+            Logger.warn msg
+          else
+            msg << "Completed Successfully in #{ elapsed_time }"
+            Logger.info msg
+          end
         end
       end
     end
@@ -369,22 +426,6 @@ module Backup
       minutes   = remainder / 60
       seconds   = remainder - (minutes * 60)
       '%02d:%02d:%02d' % [hours, minutes, seconds]
-    end
-
-    ##
-    # Sends notifications when a backup fails.
-    # Errors are logged and rescued, since the error that caused the
-    # backup to fail could have been an error with a notifier.
-    def send_failure_notifications
-      notifiers.each do |n|
-        begin
-          n.perform!(true)
-        rescue Exception => err
-          Logger.error Errors::ModelError.wrap(err, <<-EOS)
-            #{ n.class } Failed to send notification of backup failure.
-          EOS
-        end
-      end
     end
 
   end

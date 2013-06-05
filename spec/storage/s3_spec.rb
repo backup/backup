@@ -265,12 +265,10 @@ describe Storage::S3 do
 
           expect do
             uploader.run
-          end.to raise_error(
-            Errors::Storage::S3::UploaderError,
-            "Storage::S3::UploaderError: Upload Failed!\n" +
-            "  Reason: RuntimeError\n" +
-            "  error message"
-          )
+          end.to raise_error(Errors::Storage::S3::UploaderError) {|err|
+            expect( err.message ).to match('Upload Failed!')
+            expect( err.message ).to match('RuntimeError: error message')
+          }
         end
       end
     end # describe '#run'
@@ -521,9 +519,9 @@ describe Storage::S3 do
         err = uploader.send(:error_with, ex, 'my message')
 
         expect( err ).to be_an_instance_of Errors::Storage::S3::UploaderError
-        expect( err.message ).to eq(
-          "Storage::S3::UploaderError: my message\n" +
-          "  Reason: Excon::Errors::HTTPStatusError\n" +
+        expect( err.message ).to match('my message')
+        expect( err.message ).to match(
+          "Excon::Errors::HTTPStatusError\n" +
           "  response => \"excon_response\""
         )
       end
@@ -533,11 +531,8 @@ describe Storage::S3 do
         err = uploader.send(:error_with, ex, 'my message')
 
         expect( err ).to be_an_instance_of Errors::Storage::S3::UploaderError
-        expect( err.message ).to eq(
-          "Storage::S3::UploaderError: my message\n" +
-          "  Reason: StandardError\n" +
-          "  error message"
-        )
+        expect( err.message ).to match('my message')
+        expect( err.message ).to match('StandardError: error message')
       end
     end # describe '#error_with'
 

@@ -2,122 +2,146 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Notifier::Pushover do
-  let(:model) { Backup::Model.new(:test_trigger, 'test label') }
-  let(:notifier) do
-    Backup::Notifier::Pushover.new(model) do |notifier|
-      notifier.user = 'user_token'
-      notifier.token = 'app_token'
-      notifier.title = 'title'
-    end
-  end
+module Backup
+describe Notifier::Pushover do
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:notifier) { Notifier::Pushover.new(model) }
 
-  it 'should be a subclass of Notifier::Base' do
-    Backup::Notifier::Pushover.
-      superclass.should == Backup::Notifier::Base
-  end
+  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a subclass of Notifier::Base'
 
   describe '#initialize' do
-    after { Backup::Notifier::Pushover.clear_defaults! }
+    it 'provides default values' do
+      expect( notifier.user     ).to be_nil
+      expect( notifier.token    ).to be_nil
+      expect( notifier.device   ).to be_nil
+      expect( notifier.title    ).to be_nil
+      expect( notifier.priority ).to be_nil
 
-    it 'should load pre-configured defaults through Base' do
-      Backup::Notifier::Pushover.any_instance.expects(:load_defaults!)
-      notifier
+      expect( notifier.on_success     ).to be(true)
+      expect( notifier.on_warning     ).to be(true)
+      expect( notifier.on_failure     ).to be(true)
+      expect( notifier.max_retries    ).to be(10)
+      expect( notifier.retry_waitsec  ).to be(30)
     end
 
-    it 'should pass the model reference to Base' do
-      notifier.instance_variable_get(:@model).should == model
+    it 'configures the notifier' do
+      notifier = Notifier::Pushover.new(model) do |pushover|
+        pushover.user     = 'my_user'
+        pushover.token    = 'my_token'
+        pushover.device   = 'my_device'
+        pushover.title    = 'my_title'
+        pushover.priority = 'my_priority'
+
+        pushover.on_success     = false
+        pushover.on_warning     = false
+        pushover.on_failure     = false
+        pushover.max_retries    = 5
+        pushover.retry_waitsec  = 10
+      end
+
+      expect( notifier.user     ).to eq 'my_user'
+      expect( notifier.token    ).to eq 'my_token'
+      expect( notifier.device   ).to eq 'my_device'
+      expect( notifier.title    ).to eq 'my_title'
+      expect( notifier.priority ).to eq 'my_priority'
+
+      expect( notifier.on_success     ).to be(false)
+      expect( notifier.on_warning     ).to be(false)
+      expect( notifier.on_failure     ).to be(false)
+      expect( notifier.max_retries    ).to be(5)
+      expect( notifier.retry_waitsec  ).to be(10)
     end
-
-    context 'when no pre-configured defaults have been set' do
-      it 'should use the values given' do
-        notifier.user.should       == 'user_token'
-        notifier.token.should      == 'app_token'
-        notifier.device.should     be_nil
-        notifier.priority.should   be_nil
-
-        notifier.on_success.should == true
-        notifier.on_warning.should == true
-        notifier.on_failure.should == true
-      end
-
-      it 'should use default values if none are given' do
-        notifier = Backup::Notifier::Pushover.new(model)
-        notifier.token.should      be_nil
-        notifier.user.should       be_nil
-        notifier.device.should     be_nil
-        notifier.priority.should   be_nil
-
-        notifier.on_success.should == true
-        notifier.on_warning.should == true
-        notifier.on_failure.should == true
-      end
-    end # context 'when no pre-configured defaults have been set'
-
-    context 'when pre-configured defaults have been set' do
-      before do
-        Backup::Notifier::Pushover.defaults do |n|
-          n.token          = 'the_token'
-          n.user           = 'the_user'
-          n.on_failure     = false
-        end
-      end
-
-      it 'should use pre-configured defaults' do
-        notifier = Backup::Notifier::Pushover.new(model)
-
-        notifier.token.should      == 'the_token'
-        notifier.user.should       == 'the_user'
-
-        notifier.on_success.should == true
-        notifier.on_warning.should == true
-        notifier.on_failure.should == false
-      end
-
-      it 'should override pre-configured defaults' do
-        notifier = Backup::Notifier::Pushover.new(model) do |n|
-          n.token          = 'new_token'
-          n.user           = 'new_user'
-          n.on_success     = false
-          n.on_failure     = true
-        end
-
-        notifier.token.should          == 'new_token'
-        notifier.user.should           == 'new_user'
-
-        notifier.on_success.should     == false
-        notifier.on_warning.should     == true
-        notifier.on_failure.should     == true
-      end
-    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#notify!' do
+    let(:notifier) {
+      Notifier::Pushover.new(model) do |pushover|
+        pushover.user     = 'my_user'
+        pushover.token    = 'my_token'
+      end
+    }
+    let(:form_data) {
+      'message=%5BBackup%3A%3A' + 'STATUS' +
+      '%5D+test+label+%28test_trigger%29&token=my_token&user=my_user'
+    }
+
     context 'when status is :success' do
-      it 'should send Success message' do
-        notifier.expects(:send_message).with(
-          '[Backup::Success] test label (test_trigger)'
+      it 'sends a success message' do
+        Excon.expects(:post).with(
+          'https://api.pushover.net/1/messages.json',
+          {
+            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+            :body     => form_data.sub('STATUS', 'Success'),
+            :expects  => 200
+          }
         )
+
         notifier.send(:notify!, :success)
       end
     end
 
     context 'when status is :warning' do
-      it 'should send Warning message' do
-        notifier.expects(:send_message).with(
-          '[Backup::Warning] test label (test_trigger)'
+      it 'sends a warning message' do
+        Excon.expects(:post).with(
+          'https://api.pushover.net/1/messages.json',
+          {
+            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+            :body     => form_data.sub('STATUS', 'Warning'),
+            :expects  => 200
+          }
         )
+
         notifier.send(:notify!, :warning)
       end
     end
 
     context 'when status is :failure' do
-      it 'should send Failure message' do
-        notifier.expects(:send_message).with(
-          '[Backup::Failure] test label (test_trigger)'
+      it 'sends a failure message' do
+        Excon.expects(:post).with(
+          'https://api.pushover.net/1/messages.json',
+          {
+            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+            :body     => form_data.sub('STATUS', 'Failure'),
+            :expects  => 200
+          }
         )
+
         notifier.send(:notify!, :failure)
       end
     end
+
+    context 'when optional parameters are provided' do
+      let(:notifier) {
+        Notifier::Pushover.new(model) do |pushover|
+          pushover.user     = 'my_user'
+          pushover.token    = 'my_token'
+          pushover.device   = 'my_device'
+          pushover.title    = 'my_title'
+          pushover.priority = 'my_priority'
+        end
+      }
+      let(:form_data) {
+        'device=my_device&message=%5BBackup%3A%3ASuccess' +
+        '%5D+test+label+%28test_trigger%29&priority=my_priority' +
+        '&title=my_title&token=my_token&user=my_user'
+      }
+
+      it 'sends message with optional parameters' do
+        Excon.expects(:post).with(
+          'https://api.pushover.net/1/messages.json',
+          {
+            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+            :body     => form_data,
+            :expects  => 200
+          }
+        )
+
+        notifier.send(:notify!, :success)
+      end
+    end
+
   end # describe '#notify!'
+
+end
 end
