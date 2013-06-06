@@ -271,6 +271,17 @@ module Backup
       after_hook
     end
 
+    ##
+    # Returns a string representing the elapsed time since the backup started.
+    def elapsed_time
+      duration  = Time.now.to_i - @started_at.to_i
+      hours     = duration / 3600
+      remainder = duration - (hours * 3600)
+      minutes   = remainder / 60
+      seconds   = remainder - (minutes * 60)
+      '%02d:%02d:%02d' % [hours, minutes, seconds]
+    end
+
     private
 
     ##
@@ -415,17 +426,6 @@ module Backup
           end
         end
       end
-    end
-
-    ##
-    # Returns a string representing the elapsed time since the backup started.
-    def elapsed_time
-      duration  = Time.now.to_i - @started_at.to_i
-      hours     = duration / 3600
-      remainder = duration - (hours * 3600)
-      minutes   = remainder / 60
-      seconds   = remainder - (minutes * 60)
-      '%02d:%02d:%02d' % [hours, minutes, seconds]
     end
 
   end

@@ -125,6 +125,7 @@ Supported notification services include:
 - Prowl
 - Hipchat
 - Pushover
+- Nagios
 
 
 ## Generators
@@ -210,6 +211,13 @@ Backup::Model.new(:my_backup, 'Description for my_backup') do
     tweet.consumer_secret    = "my_consumer_secret"
     tweet.oauth_token        = "my_oauth_token"
     tweet.oauth_token_secret = "my_oauth_token_secret"
+  end
+  
+  notify_by Nagios do |nagios|
+    nagios.nagios_host  = 'monitor.example.com'
+    nagios.nagios_port  = 1234  # defaults to 5667
+    nagios.service_name = 'My DB Backup'
+    nagios.service_host = 'db.example.com'
   end
 end
 ```
