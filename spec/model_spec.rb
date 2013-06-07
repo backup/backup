@@ -365,17 +365,19 @@ describe 'Backup::Model' do
     let(:syncer_a)      { mock }
     let(:syncer_b)      { mock }
 
-    it 'sets @started_at, @time and @package.time' do
-      started_at, time = nil, nil
-      Timecop.freeze do
-        started_at = Time.now
-        time = started_at.strftime("%Y.%m.%d.%H.%M.%S")
-        model.perform!
-      end
+    it 'sets started_at, time, package.time and finished_at' do
+      Timecop.freeze
+      started_at = Time.now
+      time = started_at.strftime("%Y.%m.%d.%H.%M.%S")
+      finished_at = started_at + 5
+      model.before { Timecop.freeze(finished_at) }
+      model.perform!
+      Timecop.return
 
+      model.started_at.should == started_at
       model.time.should == time
       model.package.time.should == time
-      model.instance_variable_get(:@started_at).should == started_at
+      model.finished_at.should == finished_at
     end
 
     it 'performs all procedures' do
@@ -571,6 +573,32 @@ describe 'Backup::Model' do
     end # describe 'hooks'
 
   end # describe '#perform!'
+
+  describe '#duration' do
+    it 'returns a string representing the elapsed time' do
+      Timecop.freeze do
+        model.stubs(:finished_at).returns(Time.now)
+        { 0       => '00:00:00', 1       => '00:00:01', 59      => '00:00:59',
+          60      => '00:01:00', 61      => '00:01:01', 119     => '00:01:59',
+          3540    => '00:59:00', 3541    => '00:59:01', 3599    => '00:59:59',
+          3600    => '01:00:00', 3601    => '01:00:01', 3659    => '01:00:59',
+          3660    => '01:01:00', 3661    => '01:01:01', 3719    => '01:01:59',
+          7140    => '01:59:00', 7141    => '01:59:01', 7199    => '01:59:59',
+          212400  => '59:00:00', 212401  => '59:00:01', 212459  => '59:00:59',
+          212460  => '59:01:00', 212461  => '59:01:01', 212519  => '59:01:59',
+          215940  => '59:59:00', 215941  => '59:59:01', 215999  => '59:59:59'
+        }.each do |duration, expected|
+          model.stubs(:started_at).returns(Time.now - duration)
+          model.duration.should == expected
+        end
+      end
+    end
+
+    it 'returns nil if job has not finished' do
+      model.stubs(:started_at).returns(Time.now)
+      model.duration.should be_nil
+    end
+  end # describe '#duration'
 
   describe '#procedures' do
     before do
@@ -769,7 +797,7 @@ describe 'Backup::Model' do
     end
 
     context 'when action is :finished' do
-      before { model.stubs(:elapsed_time).returns('01:02:03') }
+      before { model.stubs(:duration).returns('01:02:03') }
 
       context 'when #exit_status is 0' do
         before { model.stubs(:exit_status).returns(0) }
@@ -846,25 +874,5 @@ describe 'Backup::Model' do
       end
     end
   end # describe '#log!'
-
-  describe '#elapsed_time' do
-    it 'should return a string representing the elapsed time' do
-      Timecop.freeze do
-        { 0       => '00:00:00', 1       => '00:00:01', 59      => '00:00:59',
-          60      => '00:01:00', 61      => '00:01:01', 119     => '00:01:59',
-          3540    => '00:59:00', 3541    => '00:59:01', 3599    => '00:59:59',
-          3600    => '01:00:00', 3601    => '01:00:01', 3659    => '01:00:59',
-          3660    => '01:01:00', 3661    => '01:01:01', 3719    => '01:01:59',
-          7140    => '01:59:00', 7141    => '01:59:01', 7199    => '01:59:59',
-          212400  => '59:00:00', 212401  => '59:00:01', 212459  => '59:00:59',
-          212460  => '59:01:00', 212461  => '59:01:01', 212519  => '59:01:59',
-          215940  => '59:59:00', 215941  => '59:59:01', 215999  => '59:59:59'
-        }.each do |duration, expected|
-          model.instance_variable_set(:@started_at, Time.now - duration)
-          model.send(:elapsed_time).should == expected
-        end
-      end
-    end
-  end
 
 end
