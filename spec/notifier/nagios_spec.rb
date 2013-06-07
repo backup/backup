@@ -119,70 +119,35 @@ describe Backup::Notifier::Nagios do
 
     context 'when status is :success' do
       it 'should send Success message' do
-        notifier.expects(:send_service_check).with(
-          :success, "[Backup::Success] #{model.time}"
-        )
+        notifier.expects(:send_message).with("Completed successfully")
         notifier.send(:notify!, :success)
       end
     end
 
     context 'when status is :warning' do
       it 'should send Warning message' do
-        notifier.expects(:send_service_check).with(
-          :warning, "[Backup::Warning] #{model.time}"
-        )
+        notifier.expects(:send_message).with("Completed successfully with warnings")
         notifier.send(:notify!, :warning)
       end
     end
 
     context 'when status is :failure' do
       it 'should send Failure message' do
-        notifier.expects(:send_service_check).with(
-          :failure, "[Backup::Failure] #{model.time}"
-        )
+        notifier.expects(:send_message).with("Failed")
         notifier.send(:notify!, :failure)
       end
     end
   end # describe '#notify!'
 
-  describe '#send_service_check' do
-    it "doesn't include the port in the command" do
+  describe '#send_message' do
+    it 'sends the check to the given port' do
       notifier.expects(:run).in_sequence(s).with(
-        "echo 'db.box\tDatabase Backup\t0\tA message!' | send_nsca -H monitor.box"
+        "echo 'db.box\tDatabase Backup\t1\tNot sure this worked...' | send_nsca -H 'monitor.box' -p '5555'"
       )
 
-      notifier.nagios_port = Backup::Notifier::Nagios::DEFAULT_NAGIOS_PORT
-      notifier.send(:send_service_check, :success, 'A message!')
-    end
-
-    context 'when the nagios port is set to a non-default' do
-      it 'sends the check to the given port' do
-        notifier.expects(:run).in_sequence(s).with(
-          "echo 'db.box\tDatabase Backup\t1\tNot sure this worked...' | send_nsca -H monitor.box -p 5555"
-        )
-
-        notifier.nagios_port = 5555
-        notifier.send(:send_service_check, :warning, 'Not sure this worked...')
-      end
-    end
-  end
-
-  describe '#service_check_data' do
-    before(:each) do
-      notifier.service_host = 'blablah'
-      notifier.service_name = 'Blah Backup'
-    end
-
-    it 'outputs return code 0 for success' do
-      notifier.send(:service_check_data, :success, 'The message').should == "blablah\tBlah Backup\t0\tThe message"
-    end
-
-    it 'outputs return code 1 for warning' do
-      notifier.send(:service_check_data, :warning, 'The message').should == "blablah\tBlah Backup\t1\tThe message"
-    end
-
-    it 'outputs return code 2 for failure' do
-      notifier.send(:service_check_data, :failure, 'The message').should == "blablah\tBlah Backup\t2\tThe message"
+      model.instance_variable_set(:@exit_status, 1)
+      notifier.nagios_port = 5555
+      notifier.send(:send_message, 'Not sure this worked...')
     end
   end
 
