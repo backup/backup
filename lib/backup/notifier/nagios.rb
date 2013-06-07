@@ -3,9 +3,6 @@
 module Backup
   module Notifier
     class Nagios < Base
-      include Backup::Utilities::Helpers
-
-      DEFAULT_NAGIOS_PORT = 5667
 
       ##
       # Host of Nagios server to notify on backup completion.
@@ -24,59 +21,47 @@ module Backup
       attr_accessor :service_host
 
       def initialize(model, &block)
-        @nagios_host  = 'localhost'
-        @nagios_port  = DEFAULT_NAGIOS_PORT
-        @service_name = 'Backup'
-        @service_host = run(utility(:hostname)).chomp
-
-        super(model)
+        super
         instance_eval(&block) if block_given?
+
+        @nagios_host  ||= 'localhost'
+        @nagios_port  ||= 5667
+        @service_name ||= 'Backup'
+        @service_host ||= run(utility(:hostname)).chomp
       end
 
       private
 
       ##
       # Notify the user of the backup operation results.
+      #
       # `status` indicates one of the following:
       #
       # `:success`
       # : The backup completed successfully.
-      # : Notification will be sent if `on_success` was set to `true`
+      # : Notification will be sent if `on_success` is `true`.
       #
       # `:warning`
-      # : The backup completed successfully, but warnings were logged
-      # : Notification will be sent, including a copy of the current
-      # : backup log, if `on_warning` was set to `true`
+      # : The backup completed successfully, but warnings were logged.
+      # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       # `:failure`
       # : The backup operation failed.
-      # : Notification will be sent, including the Exception which caused
-      # : the failure, the Exception's backtrace, a copy of the current
-      # : backup log and other information if `on_failure` was set to `true`
+      # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        name = case status
-               when :success then 'Success'
-               when :warning then 'Warning'
-               when :failure then 'Failure'
-               end
-        message = "[Backup::#{name}] #{@model.time}"
-        send_service_check(status, message)
+        message = case status
+              when :success then 'Completed successfully'
+              when :warning then 'Completed successfully with warnings'
+              when :failure then 'Failed'
+              end
+        send_message(message)
       end
 
-      def service_check_data(status, message)
-        code = case status
-               when :success then 0
-               when :warning then 1
-               when :failure then 2
-               end
-        [service_host, service_name, code, message].join("\t")
-      end
-
-      def send_service_check(status, message)
-        send_nsca_cmd = "#{utility(:send_nsca)} -H #{nagios_host}"
-        send_nsca_cmd += " -p #{nagios_port}" unless nagios_port == DEFAULT_NAGIOS_PORT
-        run("echo '#{service_check_data(status, message)}' | #{send_nsca_cmd}")
+      def send_message(message)
+        cmd = "#{ utility(:send_nsca) } -H '#{ nagios_host }' -p '#{ nagios_port }'"
+        msg = [service_host, service_name, model.exit_status, message].join("\t")
+        run("echo '#{ msg }' | #{ cmd }")
       end
 
     end
