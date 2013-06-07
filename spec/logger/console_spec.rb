@@ -4,7 +4,7 @@ require File.expand_path('../../spec_helper.rb', __FILE__)
 
 module Backup
 describe Logger::Console do
-  let(:timestamp) { Time.now.strftime("%Y/%m/%d %H:%M:%S") }
+  let(:timestamp) { Time.now.utc.strftime("%Y/%m/%d %H:%M:%S") }
 
   before do
     Logger::Logfile.any_instance.expects(:log).never

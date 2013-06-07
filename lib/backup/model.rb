@@ -258,7 +258,7 @@ module Backup
     # those files *** will be removed *** before the next scheduled backup for
     # the same trigger.
     def perform!
-      @started_at = Time.now
+      @started_at = Time.now.utc
       @time = package.time = started_at.strftime("%Y.%m.%d.%H.%M.%S")
 
       log!(:started)
@@ -275,7 +275,7 @@ module Backup
 
     ensure
       set_exit_status
-      @finished_at = Time.now
+      @finished_at = Time.now.utc
       log!(:finished)
       after_hook
     end

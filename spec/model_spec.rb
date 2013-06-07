@@ -367,7 +367,7 @@ describe 'Backup::Model' do
 
     it 'sets started_at, time, package.time and finished_at' do
       Timecop.freeze
-      started_at = Time.now
+      started_at = Time.now.utc
       time = started_at.strftime("%Y.%m.%d.%H.%M.%S")
       finished_at = started_at + 5
       model.before { Timecop.freeze(finished_at) }
