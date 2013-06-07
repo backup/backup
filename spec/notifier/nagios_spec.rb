@@ -2,56 +2,35 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Notifier::Nagios do
+module Backup
+describe Notifier::Nagios do
   before do
-    Backup::Notifier::Nagios.any_instance.stubs(:utility).with(:send_nsca).returns('send_nsca')
-    Backup::Notifier::Nagios.any_instance.stubs(:utility).with(:hostname).returns('hostname')
-    Backup::Notifier::Nagios.any_instance.stubs(:run).with('hostname').returns("foobar.baz\n")
+    Notifier::Nagios.any_instance.stubs(:utility).with(:send_nsca).returns('send_nsca')
+    Notifier::Nagios.any_instance.stubs(:utility).with(:hostname).returns('hostname')
+    Notifier::Nagios.any_instance.stubs(:run).with('hostname').returns("foobar.baz\n")
   end
 
-  let(:model) { Backup::Model.new(:test_trigger, 'test label') }
-  let(:notifier) do
-    Backup::Notifier::Nagios.new(model) do |nagios|
-      nagios.nagios_host  = 'monitor.box'
-      nagios.nagios_port  = 1234
-      nagios.service_name = 'Database Backup'
-      nagios.service_host = 'db.box'
-    end
-  end
-  let(:s) { sequence '' }
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:notifier) { Notifier::Nagios.new(model) }
 
-  it 'should be a subclass of Notifier::Base' do
-    Backup::Notifier::Nagios.
-      superclass.should == Backup::Notifier::Base
-  end
+  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a subclass of Notifier::Base'
 
   describe '#initialize' do
-    after { Backup::Notifier::Nagios.clear_defaults! }
+    after { Notifier::Nagios.clear_defaults! }
 
-    it 'should load pre-configured defaults through Base' do
-      Backup::Notifier::Nagios.any_instance.expects(:load_defaults!)
+    it 'loads pre-configured defaults through Base' do
+      Notifier::Nagios.any_instance.expects(:load_defaults!)
       notifier
     end
 
-    it 'should pass the model reference to Base' do
+    it 'passes the model reference to Base' do
       notifier.instance_variable_get(:@model).should == model
     end
 
     context 'when no pre-configured defaults have been set' do
-      it 'should use the values given' do
-        notifier.nagios_host.should  == 'monitor.box'
-        notifier.nagios_port.should  == 1234
-        notifier.service_name.should == 'Database Backup'
-        notifier.service_host.should == 'db.box'
-
-        notifier.on_success.should == true
-        notifier.on_warning.should == true
-        notifier.on_failure.should == true
-      end
-
-      it 'should use default values if none are given' do
-        notifier = Backup::Notifier::Nagios.new(model)
-        notifier.nagios_host.should  == 'localhost'
+      it 'uses the default values' do
+        notifier.nagios_host.should  == 'foobar.baz'
         notifier.nagios_port.should  == 5667
         notifier.service_name.should == 'Backup'
         notifier.service_host.should == 'foobar.baz'
@@ -64,7 +43,7 @@ describe Backup::Notifier::Nagios do
 
     context 'when pre-configured defaults have been set' do
       before do
-        Backup::Notifier::Nagios.defaults do |n|
+        Notifier::Nagios.defaults do |n|
           n.nagios_host  = 'somehost'
           n.nagios_port  = 9876
           n.service_name = 'Awesome Backup'
@@ -76,8 +55,8 @@ describe Backup::Notifier::Nagios do
         end
       end
 
-      it 'should use pre-configured defaults' do
-        notifier = Backup::Notifier::Nagios.new(model)
+      it 'uses the pre-configured defaults' do
+        notifier = Notifier::Nagios.new(model)
         notifier.nagios_host.should == 'somehost'
         notifier.nagios_port.should == 9876
         notifier.service_name.should == 'Awesome Backup'
@@ -88,8 +67,8 @@ describe Backup::Notifier::Nagios do
         notifier.on_failure.should == false
       end
 
-      it 'should override pre-configured defaults' do
-        notifier = Backup::Notifier::Nagios.new(model) do |n|
+      it 'overrides the pre-configured defaults' do
+        notifier = Notifier::Nagios.new(model) do |n|
           n.nagios_host  = 'nagios2'
           n.nagios_port  = 7788
           n.service_name = 'New Backup'
@@ -118,21 +97,21 @@ describe Backup::Notifier::Nagios do
     end
 
     context 'when status is :success' do
-      it 'should send Success message' do
+      it 'sends a Success message' do
         notifier.expects(:send_message).with("Completed successfully")
         notifier.send(:notify!, :success)
       end
     end
 
     context 'when status is :warning' do
-      it 'should send Warning message' do
+      it 'sends a Warning message' do
         notifier.expects(:send_message).with("Completed successfully with warnings")
         notifier.send(:notify!, :warning)
       end
     end
 
     context 'when status is :failure' do
-      it 'should send Failure message' do
+      it 'sends a Failure message' do
         notifier.expects(:send_message).with("Failed")
         notifier.send(:notify!, :failure)
       end
@@ -141,8 +120,8 @@ describe Backup::Notifier::Nagios do
 
   describe '#send_message' do
     it 'sends the check to the given port' do
-      notifier.expects(:run).in_sequence(s).with(
-        "echo 'db.box\tDatabase Backup\t1\tNot sure this worked...' | send_nsca -H 'monitor.box' -p '5555'"
+      notifier.expects(:run).with(
+        "echo 'foobar.baz\tBackup\t1\tNot sure this worked...' | send_nsca -H 'foobar.baz' -p '5555'"
       )
 
       model.instance_variable_set(:@exit_status, 1)
@@ -151,4 +130,5 @@ describe Backup::Notifier::Nagios do
     end
   end
 
+end
 end

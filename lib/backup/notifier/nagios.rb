@@ -24,7 +24,7 @@ module Backup
         super
         instance_eval(&block) if block_given?
 
-        @nagios_host  ||= 'localhost'
+        @nagios_host  ||= run(utility(:hostname)).chomp
         @nagios_port  ||= 5667
         @service_name ||= 'Backup'
         @service_host ||= run(utility(:hostname)).chomp
