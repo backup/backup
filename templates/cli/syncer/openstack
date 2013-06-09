@@ -1,0 +1,44 @@
+  ##
+  # OpenStack Storage [Syncer]
+  #
+  # Example Auth URLs
+  # SoftLayer:
+  #   Dallas Public Network: https://dal05.objectstorage.softlayer.net/auth/v1.0
+  #   Dallas Private Network: https://dal05.objectstorage.service.networklayer.com/auth/v1.0
+  #   Amsterdam Public Network: https://ams01.objectstorage.softlayer.net/auth/v1.0
+  #   Amsterdam Private Network: https://ams01.objectstorage.service.networklayer.com/auth/v1.0
+  #   Singapore Public Network: https://sng01.objectstorage.softlayer.net/auth/v1.0
+  #   Singapore Private Network: https://sng01.objectstorage.service.networklayer.com/auth/v1.0
+  #
+  # Mirroring:
+  #
+  #   When enabled it will keep an exact mirror of your filesystem.
+  #   This means that when you remove a file from the filesystem,
+  #   it will also remove it from Cloud Files.
+  #
+  # Concurrency:
+  #
+  #   `concurrency_type` may be set to:
+  #
+  #     - false (default)
+  #     - :threads
+  #     - :processes
+  #
+  #   Set `concurrency_level` to the number of threads/processes to use.
+  #   Defaults to 2.
+  #
+  sync_with Cloud::OpenStack do |os|
+    os.username          = "my_username"
+    os.api_key           = "my_api_key"
+    os.container         = "my_container"
+    os.auth_url          = "https://dal05.objectstorage.softlayer.net/auth/v1.0"
+    os.path              = "/backups"
+    os.mirror            = true
+    os.concurrency_type  = false
+    os.concurrency_level = 2
+
+    os.directories do |directory|
+      directory.add "/path/to/directory/to/sync"
+      directory.add "/path/to/other/directory/to/sync"
+    end
+  end
