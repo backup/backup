@@ -26,7 +26,7 @@ module Backup
 
         @nagios_host  ||= run(utility(:hostname)).chomp
         @nagios_port  ||= 5667
-        @service_name ||= 'Backup'
+        @service_name ||= "Backup #{ model.trigger }"
         @service_host ||= run(utility(:hostname)).chomp
       end
 

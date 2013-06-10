@@ -32,7 +32,7 @@ describe Notifier::Nagios do
       it 'uses the default values' do
         notifier.nagios_host.should  == 'foobar.baz'
         notifier.nagios_port.should  == 5667
-        notifier.service_name.should == 'Backup'
+        notifier.service_name.should == 'Backup test_trigger'
         notifier.service_host.should == 'foobar.baz'
 
         notifier.on_success.should == true
@@ -121,7 +121,7 @@ describe Notifier::Nagios do
   describe '#send_message' do
     it 'sends the check to the given port' do
       notifier.expects(:run).with(
-        "echo 'foobar.baz\tBackup\t1\tNot sure this worked...' | send_nsca -H 'foobar.baz' -p '5555'"
+        "echo 'foobar.baz\tBackup test_trigger\t1\tNot sure this worked...' | send_nsca -H 'foobar.baz' -p '5555'"
       )
 
       model.instance_variable_set(:@exit_status, 1)
