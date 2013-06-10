@@ -1,0 +1,13 @@
+##
+# Nagios [Notifier]
+#
+notify_by Nagios do |nagios|
+  nagios.on_success = true
+  nagios.on_warning = true
+  nagios.on_failure = true
+
+  nagios.nagios_host  = 'nagioshost'
+  nagios.nagios_port  = 5667
+  nagios.service_name = 'My Backup'
+  nagios.service_host = 'backuphost'
+end
