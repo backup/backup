@@ -74,6 +74,14 @@ module Backup
     attr_reader :time
 
     ##
+    # The time when the backup initiated (as a Time object)
+    attr_reader :started_at
+
+    ##
+    # The time when the backup finished (as a Time object)
+    attr_reader :finished_at
+
+    ##
     # Result of this model's backup process.
     #
     # 0 = Job was successful
@@ -250,8 +258,8 @@ module Backup
     # those files *** will be removed *** before the next scheduled backup for
     # the same trigger.
     def perform!
-      @started_at = Time.now
-      @time = package.time = @started_at.strftime("%Y.%m.%d.%H.%M.%S")
+      @started_at = Time.now.utc
+      @time = package.time = started_at.strftime("%Y.%m.%d.%H.%M.%S")
 
       log!(:started)
       before_hook
@@ -267,8 +275,16 @@ module Backup
 
     ensure
       set_exit_status
+      @finished_at = Time.now.utc
       log!(:finished)
       after_hook
+    end
+
+    ##
+    # The duration of the backup process (in format: HH:MM:SS)
+    def duration
+      return unless finished_at
+      elapsed_time(started_at, finished_at)
     end
 
     private
@@ -407,10 +423,10 @@ module Backup
         else
           msg = "Backup for '#{ label } (#{ trigger })' "
           if exit_status == 1
-            msg << "Completed Successfully (with Warnings) in #{ elapsed_time }"
+            msg << "Completed Successfully (with Warnings) in #{ duration }"
             Logger.warn msg
           else
-            msg << "Completed Successfully in #{ elapsed_time }"
+            msg << "Completed Successfully in #{ duration }"
             Logger.info msg
           end
         end
@@ -418,9 +434,9 @@ module Backup
     end
 
     ##
-    # Returns a string representing the elapsed time since the backup started.
-    def elapsed_time
-      duration  = Time.now.to_i - @started_at.to_i
+    # Returns a string representing the elapsed time in HH:MM:SS.
+    def elapsed_time(start_time, finish_time)
+      duration  = finish_time.to_i - start_time.to_i
       hours     = duration / 3600
       remainder = duration - (hours * 3600)
       minutes   = remainder / 60

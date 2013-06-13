@@ -309,6 +309,12 @@ describe Logger do
       msg.level.should == :info
       msg.lines.should == ['line one', '', 'line two']
     end
+
+    it 'logs messages with UTC time' do
+      Logger.info 'message'
+      msg = Logger.messages.last
+      msg.time.should be_utc
+    end
   end # describe 'log messaging methods'
 
   describe '.has_warnings?' do

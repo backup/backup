@@ -105,6 +105,11 @@ describe Notifier::Mail do
         stub(:formatted_lines => ['line 1', 'line 2']),
         stub(:formatted_lines => ['line 3'])
       ])
+
+      time = Time.now
+      model.stubs(:time).returns(time.strftime("%Y.%m.%d.%H.%M.%S"))
+      model.stubs(:started_at).returns(time)
+      model.stubs(:finished_at).returns(time + 5)
     end
 
     context 'when status is :success' do
@@ -112,8 +117,6 @@ describe Notifier::Mail do
         before { notifier.send_log_on = [:success, :warning, :failure] }
 
         it 'sends a Success email with an attached log' do
-          model.stubs(:time).returns(Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
-
           notifier.send(:notify!, :success)
 
           sent_message = ::Mail::TestMailer.deliveries.first
@@ -126,7 +129,12 @@ describe Notifier::Mail do
           expect( sent_message.text_part ).to be_an_instance_of ::Mail::Part
           expect( sent_message.text_part.decoded ).to eq <<-EOS.gsub(/^ +/, '')
 
-            Backup test label (test_trigger) finished without any errors!
+            Backup Completed Successfully!
+
+            Job: test label (test_trigger)
+            Started:  #{ model.started_at }
+            Finished: #{ model.finished_at }
+            Duration: 00:00:05
 
             See the attached backup log for details.
 
@@ -152,7 +160,12 @@ describe Notifier::Mail do
           expect( sent_message.body ).to be_an_instance_of ::Mail::Body
           expect( sent_message.body.decoded ).to eq <<-EOS.gsub(/^ +/, '')
 
-            Backup test label (test_trigger) finished without any errors!
+            Backup Completed Successfully!
+
+            Job: test label (test_trigger)
+            Started:  #{ model.started_at }
+            Finished: #{ model.finished_at }
+            Duration: 00:00:05
 
             #{ '=' * 75 }
             Backup v#{ VERSION }
@@ -169,8 +182,6 @@ describe Notifier::Mail do
     context 'when status is :warning' do
       context 'when send_log_on includes :warning' do
         it 'sends a Warning email with an attached log' do
-          model.stubs(:time).returns(Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
-
           notifier.send(:notify!, :warning)
 
           sent_message = ::Mail::TestMailer.deliveries.first
@@ -183,7 +194,12 @@ describe Notifier::Mail do
           expect( sent_message.text_part ).to be_an_instance_of ::Mail::Part
           expect( sent_message.text_part.decoded ).to eq <<-EOS.gsub(/^ +/, '')
 
-            Backup test label (test_trigger) finished with warnings.
+            Backup Completed Successfully (with Warnings)!
+
+            Job: test label (test_trigger)
+            Started:  #{ model.started_at }
+            Finished: #{ model.finished_at }
+            Duration: 00:00:05
 
             See the attached backup log for details.
 
@@ -211,7 +227,12 @@ describe Notifier::Mail do
           expect( sent_message.body ).to be_an_instance_of ::Mail::Body
           expect( sent_message.body.decoded ).to eq <<-EOS.gsub(/^ +/, '')
 
-            Backup test label (test_trigger) finished with warnings.
+            Backup Completed Successfully (with Warnings)!
+
+            Job: test label (test_trigger)
+            Started:  #{ model.started_at }
+            Finished: #{ model.finished_at }
+            Duration: 00:00:05
 
             #{ '=' * 75 }
             Backup v#{ VERSION }
@@ -228,8 +249,6 @@ describe Notifier::Mail do
     context 'when status is :failure' do
       context 'when send_log_on includes :failure' do
         it 'sends a Failure email with an attached log' do
-          model.stubs(:time).returns(Time.now.strftime("%Y.%m.%d.%H.%M.%S"))
-
           notifier.send(:notify!, :failure)
 
           sent_message = ::Mail::TestMailer.deliveries.first
@@ -242,7 +261,12 @@ describe Notifier::Mail do
           expect( sent_message.text_part ).to be_an_instance_of ::Mail::Part
           expect( sent_message.text_part.decoded ).to eq <<-EOS.gsub(/^ +/, '')
 
-            Backup test label (test_trigger) Failed!
+            Backup Failed!
+
+            Job: test label (test_trigger)
+            Started:  #{ model.started_at }
+            Finished: #{ model.finished_at }
+            Duration: 00:00:05
 
             See the attached backup log for details.
 
@@ -270,7 +294,12 @@ describe Notifier::Mail do
           expect( sent_message.body ).to be_an_instance_of ::Mail::Body
           expect( sent_message.body.decoded ).to eq <<-EOS.gsub(/^ +/, '')
 
-            Backup test label (test_trigger) Failed!
+            Backup Failed!
+
+            Job: test label (test_trigger)
+            Started:  #{ model.started_at }
+            Finished: #{ model.finished_at }
+            Duration: 00:00:05
 
             #{ '=' * 75 }
             Backup v#{ VERSION }

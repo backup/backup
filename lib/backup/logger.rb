@@ -180,7 +180,7 @@ module Backup
     private
 
     def log(obj, level)
-      message = Message.new(Time.now, level, obj.to_s.split("\n"))
+      message = Message.new(Time.now.utc, level, obj.to_s.split("\n"))
 
       message.level = :info if message.level == :warn &&
           message.matches?(@config.ignores)
