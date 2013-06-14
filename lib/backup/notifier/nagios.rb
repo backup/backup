@@ -55,7 +55,7 @@ module Backup
               when :warning then 'Completed successfully with warnings'
               when :failure then 'Failed'
               end
-        send_message(message)
+        send_message("#{message} in #{model.duration} seconds")
       end
 
       def send_message(message)
