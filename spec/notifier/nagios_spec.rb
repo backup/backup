@@ -98,21 +98,21 @@ describe Notifier::Nagios do
 
     context 'when status is :success' do
       it 'sends a Success message' do
-        notifier.expects(:send_message).with("Completed successfully in #{model.duration} seconds")
+        notifier.expects(:send_message).with("Completed successfully in #{model.duration}")
         notifier.send(:notify!, :success)
       end
     end
 
     context 'when status is :warning' do
       it 'sends a Warning message' do
-        notifier.expects(:send_message).with("Completed successfully with warnings in #{model.duration} seconds")
+        notifier.expects(:send_message).with("Completed successfully with warnings in #{model.duration}")
         notifier.send(:notify!, :warning)
       end
     end
 
     context 'when status is :failure' do
       it 'sends a Failure message' do
-        notifier.expects(:send_message).with("Failed in #{model.duration} seconds")
+        notifier.expects(:send_message).with("Failed in #{model.duration}")
         notifier.send(:notify!, :failure)
       end
     end
