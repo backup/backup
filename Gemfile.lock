@@ -2,6 +2,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     builder (3.2.0)
+    cinch (2.0.4)
     coderay (1.0.9)
     diff-lcs (1.2.4)
     dropbox-sdk (1.5.1)
@@ -104,6 +105,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  cinch
   dropbox-sdk (= 1.5.1)
   excon
   fog (= 1.10.1)
