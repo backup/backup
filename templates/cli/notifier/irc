@@ -1,0 +1,14 @@
+  ##
+  # IRC [Notifier]
+  #
+  notify_by IRC do |irc|
+    irc.on_success = true
+    irc.on_warning = true
+    irc.on_failure = true
+
+	irc.nick = "mynickname"
+    irc.channel = "#mychannel"
+    irc.server = "irc.example.com"
+    irc.port = 6667
+    irc.ssl = 0
+  end
