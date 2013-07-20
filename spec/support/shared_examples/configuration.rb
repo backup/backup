@@ -11,10 +11,12 @@ shared_examples 'a class that includes Configuration::Helpers' do
     }
 
     before do
+      overrides = respond_to?(:default_overrides) ? default_overrides : {}
       names = accessor_names
       described_class.defaults do |klass|
         names.each do |name|
-          klass.send("#{ name }=", "default_#{ name }")
+          val = overrides[name] || "default_#{ name }"
+          klass.send("#{ name }=", val)
         end
       end
     end
@@ -22,21 +24,29 @@ shared_examples 'a class that includes Configuration::Helpers' do
     after { described_class.clear_defaults! }
 
     it 'allows accessors to be configured with default values' do
-      db = described_class.new(model)
+      overrides = respond_to?(:default_overrides) ? default_overrides : {}
+      klass = respond_to?(:model) ?
+          described_class.new(model) : described_class.new
       accessor_names.each do |name|
-        expect( db.send(name) ).to eq "default_#{ name }"
+        expected = overrides[name] || "default_#{ name }"
+        expect( klass.send(name) ).to eq expected
       end
     end
 
     it 'allows defaults to be overridden' do
+      overrides = respond_to?(:new_overrides) ? new_overrides : {}
       names = accessor_names
-      db = described_class.new(model) do |klass|
+      block = Proc.new do |klass|
         names.each do |name|
-          klass.send("#{ name }=", "new_#{ name }")
+          val = overrides[name] || "new_#{ name }"
+          klass.send("#{ name }=", val)
         end
       end
+      klass = respond_to?(:model) ?
+          described_class.new(model, &block) : described_class.new(&block)
       names.each do |name|
-        expect( db.send(name) ).to eq "new_#{ name }"
+        expected = overrides[name] || "new_#{ name }"
+        expect( klass.send(name) ).to eq expected
       end
     end
 
