@@ -16,10 +16,12 @@ shared_examples 'a subclass of Storage::Base' do
     end
 
     it 'cleans storage_id for filename use' do
-      storage = described_class.new(model, :my_id)
+      block = respond_to?(:required_config) ? required_config : Proc.new {}
+
+      storage = described_class.new(model, :my_id, &block)
       expect( storage.storage_id ).to eq 'my_id'
 
-      storage = described_class.new(model, 'My #1 ID')
+      storage = described_class.new(model, 'My #1 ID', &block)
       expect( storage.storage_id ).to eq 'My__1_ID'
     end
 
@@ -60,9 +62,10 @@ shared_examples 'a subclass of Storage::Base' do
     end
 
     context 'when a storage_id is given' do
-      let(:storage) { described_class.new(model, :my_id) }
-
       specify 'it is used in the log messages' do
+        block = respond_to?(:required_config) ? required_config : Proc.new {}
+        storage = described_class.new(model, :my_id, &block)
+
         Logger.expects(:info).in_sequence(s).
             with("#{ storage_name } (my_id) Started...")
         storage.expects(:transfer!).in_sequence(s)
