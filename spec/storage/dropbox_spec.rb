@@ -18,7 +18,7 @@ describe Storage::Dropbox do
       expect( storage.api_key       ).to be_nil
       expect( storage.api_secret    ).to be_nil
       expect( storage.chunk_size    ).to be 4
-      expect( storage.chunk_retries ).to be 10
+      expect( storage.max_retries   ).to be 10
       expect( storage.retry_waitsec ).to be 30
       expect( storage.path          ).to eq 'backups'
     end
@@ -29,7 +29,7 @@ describe Storage::Dropbox do
         db.api_key        = 'my_api_key'
         db.api_secret     = 'my_api_secret'
         db.chunk_size     = 10
-        db.chunk_retries  = 15
+        db.max_retries    = 15
         db.retry_waitsec  = 45
         db.path           = 'my/path'
       end
@@ -39,7 +39,7 @@ describe Storage::Dropbox do
       expect( storage.api_key       ).to eq 'my_api_key'
       expect( storage.api_secret    ).to eq 'my_api_secret'
       expect( storage.chunk_size    ).to eq 10
-      expect( storage.chunk_retries ).to eq 15
+      expect( storage.max_retries   ).to eq 15
       expect( storage.retry_waitsec ).to eq 45
       expect( storage.path          ).to eq 'my/path'
     end
@@ -210,7 +210,7 @@ describe Storage::Dropbox do
     end
 
     it 'retries on errors' do
-      storage.chunk_retries = 1
+      storage.max_retries = 1
       storage.package.stubs(:filenames).returns(['test_trigger.tar'])
 
       src = File.join(Config.tmp_path, 'test_trigger.tar')
@@ -257,7 +257,7 @@ describe Storage::Dropbox do
     end
 
     it 'fails when retries are exceeded' do
-      storage.chunk_retries = 2
+      storage.max_retries = 2
       storage.package.stubs(:filenames).returns(['test_trigger.tar'])
 
       src = File.join(Config.tmp_path, 'test_trigger.tar')
@@ -506,6 +506,30 @@ describe Storage::Dropbox do
           end
           Storage::Dropbox.new(model)
         end
+      end
+    end
+
+    describe '#chunk_retries' do
+      before do
+        Backup::Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Backup::Configuration::Error
+          expect( err.message ).to match(/Use #max_retries instead/)
+        }
+      end
+
+      specify 'set as a default' do
+        Storage::Dropbox.defaults do |db|
+          db.chunk_retries = 15
+        end
+        storage = Storage::Dropbox.new(model)
+        expect( storage.max_retries ).to be 15
+      end
+
+      specify 'set directly' do
+        storage = Storage::Dropbox.new(model) do |db|
+          db.chunk_retries = 15
+        end
+        expect( storage.max_retries ).to be 15
       end
     end
   end # describe 'deprecations'

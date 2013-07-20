@@ -12,42 +12,16 @@ module Backup
 describe Storage::Dropbox,
     :if => BackupSpec::LIVE['storage']['dropbox']['specs_enabled'] == true do
 
-  # Each archive is 1.09 MB (1,090,000).
-  # With a chunk_size of 1 MiB this will perform 3 PUT requests.
-  it 'stores package file', :live do
+  # Note that the remote will only be cleaned after successful tests,
+  # but it will clean files uploaded by all previous failed tests.
+
+  before do
+    # Each archive is 1.09 MB (1,090,000).
+    # With Splitter set to 2 MiB, package files will be 2,097,152 and 1,172,848.
+    # With #chunk_size set to 1, the chunked uploader will upload 1 MiB per request.
     create_model :my_backup, <<-EOS
       Backup::Model.new(:my_backup, 'a description') do
-        archive :archive_a do |archive|
-          archive.add '~/test_data'
-        end
-        archive :archive_b do |archive|
-          archive.add '~/test_data'
-        end
-
-        store_with Dropbox do |db|
-          db.api_key     = BackupSpec::LIVE['storage']['dropbox']['api_key']
-          db.api_secret  = BackupSpec::LIVE['storage']['dropbox']['api_secret']
-          db.access_type = BackupSpec::LIVE['storage']['dropbox']['access_type']
-          db.path        = BackupSpec::LIVE['storage']['dropbox']['path']
-          db.chunk_size  = 1
-        end
-      end
-    EOS
-
-    job = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
-    package = BackupSpec::DropboxPackage.new(job.model)
-
-    expect( package.files_sent.count ).to be(1)
-    expect( package.files_on_remote ).to eq package.files_sent
-
-    package.clean_remote!
-  end
-
-  # With Splitter set a 1 MiB, this will create 3 package files.
-  it 'stores multiple package files', :live do
-    create_model :my_backup, <<-EOS
-      Backup::Model.new(:my_backup, 'a description') do
-        split_into_chunks_of 1
+        split_into_chunks_of 2 # MiB
 
         archive :archive_a do |archive|
           archive.add '~/test_data'
@@ -55,67 +29,93 @@ describe Storage::Dropbox,
         archive :archive_b do |archive|
           archive.add '~/test_data'
         end
-
-        store_with Dropbox do |db|
-          db.api_key     = BackupSpec::LIVE['storage']['dropbox']['api_key']
-          db.api_secret  = BackupSpec::LIVE['storage']['dropbox']['api_secret']
-          db.access_type = BackupSpec::LIVE['storage']['dropbox']['access_type']
-          db.path        = BackupSpec::LIVE['storage']['dropbox']['path']
-        end
-      end
-    EOS
-
-    job = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
-    package = BackupSpec::DropboxPackage.new(job.model)
-
-    expect( package.files_sent.count ).to be(3)
-    expect( package.files_on_remote ).to eq package.files_sent
-
-    package.clean_remote!
-  end
-
-  it 'cycles stored packages', :live do
-    create_model :my_backup, <<-EOS
-      Backup::Model.new(:my_backup, 'a description') do
-        archive :archive_a do |archive|
-          archive.add '~/test_data/dir_a/file_a'
+        archive :archive_c do |archive|
+          archive.add '~/test_data'
         end
 
+        config = BackupSpec::LIVE['storage']['dropbox']
         store_with Dropbox do |db|
-          db.api_key     = BackupSpec::LIVE['storage']['dropbox']['api_key']
-          db.api_secret  = BackupSpec::LIVE['storage']['dropbox']['api_secret']
-          db.access_type = BackupSpec::LIVE['storage']['dropbox']['access_type']
-          db.path        = BackupSpec::LIVE['storage']['dropbox']['path']
+          db.api_key     = config['api_key']
+          db.api_secret  = config['api_secret']
+          db.access_type = config['access_type']
+          db.path        = config['path']
+          db.chunk_size  = 1 # MiB
           db.keep = 2
         end
       end
     EOS
+  end
 
+  it 'stores package files', :live do
     job = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
-    package_a = BackupSpec::DropboxPackage.new(job.model)
 
-    job = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
-    package_b = BackupSpec::DropboxPackage.new(job.model)
+    files_sent = files_sent_for(job)
+    expect( files_sent.count ).to be(2)
+    expect( files_on_remote_for(job) ).to eq files_sent
 
-    # a and b should be on the remote
-    expect( package_a.files_sent.count ).to be(1)
-    expect( package_a.files_on_remote ).to eq package_a.files_sent
-    expect( package_b.files_sent.count ).to be(1)
-    expect( package_b.files_on_remote ).to eq package_b.files_sent
+    clean_remote(job)
+  end
 
-    job = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
-    package_c = BackupSpec::DropboxPackage.new(job.model)
+  it 'cycles stored packages', :live do
+    job_a = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
+    job_b = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
 
-    # b and c should be on the remote
-    expect( package_b.files_sent.count ).to be(1)
-    expect( package_b.files_on_remote ).to eq package_b.files_sent
-    expect( package_c.files_sent.count ).to be(1)
-    expect( package_c.files_on_remote ).to eq package_c.files_sent
+    # package files for job_a should be on the remote
+    files_sent = files_sent_for(job_a)
+    expect( files_sent.count ).to be(2)
+    expect( files_on_remote_for(job_a) ).to eq files_sent
 
-    # a should be gone
-    expect( package_a.files_on_remote ).to be_empty
+    # package files for job_b should be on the remote
+    files_sent = files_sent_for(job_b)
+    expect( files_sent.count ).to be(2)
+    expect( files_on_remote_for(job_b) ).to eq files_sent
 
-    package_c.clean_remote!
+    job_c = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
+
+    # package files for job_b should still be on the remote
+    files_sent = files_sent_for(job_b)
+    expect( files_sent.count ).to be(2)
+    expect( files_on_remote_for(job_b) ).to eq files_sent
+
+    # package files for job_c should be on the remote
+    files_sent = files_sent_for(job_c)
+    expect( files_sent.count ).to be(2)
+    expect( files_on_remote_for(job_c) ).to eq files_sent
+
+    # package files for job_a should be gone
+    expect( files_on_remote_for(job_a) ).to be_empty
+
+    clean_remote(job_a) # will clean up after all jobs
+  end
+
+  private
+
+  def files_sent_for(job)
+    job.model.package.filenames.map {|name|
+      File.join('/', remote_path_for(job), name)
+    }.sort
+  end
+
+  def remote_path_for(job)
+    path = BackupSpec::LIVE['storage']['dropbox']['path']
+    package = job.model.package
+    File.join(path, package.trigger, package.time)
+  end
+
+  # files_on_remote_for(job) should match #files_sent_for(job).
+  # If the files do not exist, or were removed by cycling, this will return [].
+  def files_on_remote_for(job)
+    storage = job.model.storages.first
+    # search(dir_to_search, query) => metadata for each entry
+    # entry['path'] will start with '/'
+    storage.send(:connection).search(remote_path_for(job), job.model.trigger).
+        map {|entry| entry['path'] }.sort
+  end
+
+  def clean_remote(job)
+    storage = job.model.storages.first
+    path = BackupSpec::LIVE['storage']['dropbox']['path']
+    storage.send(:connection).file_delete(path)
   end
 end
 end

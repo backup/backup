@@ -22,11 +22,15 @@ module Backup
       attr_accessor :chunk_size
 
       ##
-      # Number of times to retry a failed chunk.
-      attr_accessor :chunk_retries
+      # Number of times to retry failed operations.
+      #
+      # Default: 10
+      attr_accessor :max_retries
 
       ##
-      # Seconds to wait between chunk retries.
+      # Time in seconds to pause before each retry.
+      #
+      # Default: 30
       attr_accessor :retry_waitsec
 
       ##
@@ -37,7 +41,7 @@ module Backup
         @path           ||= 'backups'
         @access_type    ||= :app_folder
         @chunk_size     ||= 4 # MiB
-        @chunk_retries  ||= 10
+        @max_retries    ||= 10
         @retry_waitsec  ||= 30
         path.sub!(/^\//, '')
       end
@@ -124,9 +128,9 @@ module Backup
           yield
         rescue StandardError, Timeout::Error => err
           retries += 1
-          raise if retries > chunk_retries
+          raise if retries > max_retries
 
-          Logger.info Error.wrap(err, "Retry ##{ retries } of #{ chunk_retries }.")
+          Logger.info Error.wrap(err, "Retry ##{ retries } of #{ max_retries }.")
           sleep(retry_waitsec)
           retry
         end
@@ -193,6 +197,9 @@ module Backup
       attr_deprecate :password, :version => '3.0.17'
       attr_deprecate :timeout,  :version => '3.0.21'
 
+      attr_deprecate :chunk_retries, :version => '3.7.0',
+                     :message => 'Use #max_retries instead.',
+                     :action => lambda {|klass, val| klass.max_retries = val }
     end
   end
 end
