@@ -10,10 +10,6 @@ describe 'Backup::Syncer::Cloud::Base' do
       superclass.should == Backup::Syncer::Base
   end
 
-  it 'should establish a class constant for a Mutex' do
-    Backup::Syncer::Cloud::Base::MUTEX.should be_an_instance_of Mutex
-  end
-
   describe '#initialize' do
     after { Backup::Syncer::Cloud::Base.clear_defaults! }
 
@@ -361,7 +357,6 @@ describe 'Backup::Syncer::Cloud::Base' do
 
           it 'should skip the file' do
             File.expects(:open).never
-            Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
             Backup::Logger.expects(:info).with(
               "\s\s[skipping] 'backups/sync/sync.file'"
             )
@@ -379,7 +374,6 @@ describe 'Backup::Syncer::Cloud::Base' do
           end
 
           it 'should upload the file' do
-            Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
             Backup::Logger.expects(:info).with(
               "\s\s[transferring] 'backups/sync/sync.file'"
             )
@@ -400,7 +394,6 @@ describe 'Backup::Syncer::Cloud::Base' do
           end
 
           it 'should upload the file' do
-            Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
             Backup::Logger.expects(:info).with(
               "\s\s[transferring] 'backups/sync/sync.file'"
             )
@@ -426,7 +419,6 @@ describe 'Backup::Syncer::Cloud::Base' do
 
         context 'when the `mirror` option is set to true' do
           it 'should remove the file from the remote' do
-            Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
             Backup::Logger.expects(:info).with(
               "\s\s[removing] 'backups/sync/sync.file'"
             )
@@ -439,7 +431,6 @@ describe 'Backup::Syncer::Cloud::Base' do
 
         context 'when the `mirror` option is set to false' do
           it 'should leave the file on the remote' do
-            Backup::Syncer::Cloud::Base::MUTEX.expects(:synchronize).yields
             Backup::Logger.expects(:info).with(
               "\s\s[leaving] 'backups/sync/sync.file'"
             )

@@ -1,10 +1,5 @@
 # encoding: utf-8
 
-##
-# Only load the Fog gem, along with the Parallel gem, when the
-# Backup::Syncer::Cloud class is loaded
-# Backup::Dependency.load('fog')
-# Backup::Dependency.load('parallel')
 require 'fog'
 require 'parallel'
 
@@ -12,11 +7,6 @@ module Backup
   module Syncer
     module Cloud
       class Base < Syncer::Base
-
-        ##
-        # Create a Mutex to synchronize certain parts of the code
-        # in order to prevent race conditions or broken STDOUT.
-        MUTEX = Mutex.new
 
         ##
         # Concurrency setting - defaults to false, but can be set to:
@@ -169,9 +159,7 @@ module Backup
 
             if local_file && File.exist?(local_file.path)
               unless remote_file && remote_file.etag == local_file.md5
-                MUTEX.synchronize {
-                  Logger.info("\s\s[transferring] '#{ remote_path }'")
-                }
+                Logger.info("\s\s[transferring] '#{ remote_path }'")
                 File.open(local_file.path, 'r') do |file|
                   @bucket.files.create(
                     :key  => remote_path,
@@ -179,20 +167,14 @@ module Backup
                   )
                 end
               else
-                MUTEX.synchronize {
-                  Logger.info("\s\s[skipping] '#{ remote_path }'")
-                }
+                Logger.info("\s\s[skipping] '#{ remote_path }'")
               end
             elsif remote_file
               if mirror
-                MUTEX.synchronize {
-                  Logger.info("\s\s[removing] '#{ remote_path }'")
-                }
+                Logger.info("\s\s[removing] '#{ remote_path }'")
                 remote_file.destroy
               else
-                MUTEX.synchronize {
-                  Logger.info("\s\s[leaving] '#{ remote_path }'")
-                }
+                Logger.info("\s\s[leaving] '#{ remote_path }'")
               end
             end
           end

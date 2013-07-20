@@ -118,6 +118,8 @@ module Backup
       end
     end
 
+    MUTEX = Mutex.new
+
     ##
     # Returns an Array of Message objects for all logged messages received.
     # These are used to attach log files to Mail notifications.
@@ -134,7 +136,9 @@ module Backup
     # Sends a message to the Logger using the specified log level.
     # +obj+ may be any Object that responds to #to_s (i.e. an Exception)
     [:info, :warn, :error].each do |level|
-      define_method level, lambda {|obj| log(obj, level) }
+      define_method level, lambda {|obj|
+        MUTEX.synchronize { log(obj, level) }
+      }
     end
 
     ##

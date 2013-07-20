@@ -260,6 +260,10 @@ describe Logger do
   end # describe '.start!'
 
   describe 'log messaging methods' do
+    before do
+      Logger::MUTEX.expects(:synchronize).yields
+    end
+
     describe '.info' do
       it 'sends messages with log level :info' do
         Logger.info 'info message'

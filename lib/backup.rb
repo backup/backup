@@ -7,6 +7,7 @@ require 'syslog'
 require 'yaml'
 require 'etc'
 require 'forwardable'
+require 'thread'
 
 require 'open4'
 require 'thor'
