@@ -218,7 +218,7 @@ describe 'Backup::CLI' do
         it 'aborts with status code 3 and logs messages to the console only' do
 
           Backup::Logger.expects(:error).in_sequence(s).with do |err|
-            err.should be_a(Backup::Errors::CLIError)
+            err.should be_a(Backup::CLI::Error)
             err.message.should match(/config load error/)
           end
 
@@ -240,7 +240,7 @@ describe 'Backup::CLI' do
 
         it 'aborts and logs messages to the console only' do
           Backup::Logger.expects(:error).in_sequence(s).with do |err|
-            err.should be_a(Backup::Errors::CLIError)
+            err.should be_a(Backup::CLI::Error)
             err.message.should match(
               /No Models found for trigger\(s\) 'test_trigger_foo'/
             )

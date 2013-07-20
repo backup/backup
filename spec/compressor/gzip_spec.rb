@@ -119,7 +119,7 @@ describe Backup::Compressor::Gzip do
       Backup::Compressor::Gzip.instance_variable_set(:@has_rsyncable, false)
 
       Backup::Logger.expects(:warn).with() do |err|
-        err.should be_a(Backup::Errors::Compressor::Gzip::RsyncableError)
+        err.should be_a(Backup::Compressor::Gzip::Error)
         err.message.should match(/'rsyncable' option ignored/)
       end
 
@@ -142,7 +142,7 @@ describe Backup::Compressor::Gzip do
       context 'when only the fast option is used' do
         before do
           Backup::Logger.expects(:warn).with {|err|
-            err.should be_an_instance_of Backup::Errors::ConfigurationError
+            err.should be_an_instance_of Backup::Configuration::Error
             err.message.should match(
               /Use Gzip#level instead/
             )
@@ -171,7 +171,7 @@ describe Backup::Compressor::Gzip do
       context 'when only the best option is used' do
         before do
           Backup::Logger.expects(:warn).with {|err|
-            err.should be_an_instance_of Backup::Errors::ConfigurationError
+            err.should be_an_instance_of Backup::Configuration::Error
             err.message.should match(
               /Use Gzip#level instead/
             )
@@ -201,7 +201,7 @@ describe Backup::Compressor::Gzip do
       context 'when both fast and best options are used' do
         before do
           Backup::Logger.expects(:warn).twice.with {|err|
-            err.should be_an_instance_of Backup::Errors::ConfigurationError
+            err.should be_an_instance_of Backup::Configuration::Error
             err.message.should match(
               /Use Gzip#level instead/
             )

@@ -2,6 +2,8 @@
 
 module Backup
   module Database
+    class Error < Backup::Error; end
+
     class Base
       include Backup::Utilities::Helpers
       include Backup::Configuration::Helpers
@@ -47,7 +49,7 @@ module Backup
           unless database_id
             if model.databases.select {|d| d.class == self.class }.count > 1
               sleep 1; @database_id = Time.now.to_i.to_s[-5, 5]
-              Logger.warn Errors::Database::ConfigurationError.new(<<-EOS)
+              Logger.warn Error.new(<<-EOS)
                 Database Identifier Missing
                 When multiple Databases are configured in a single Backup Model
                 that have the same class (MySQL, PostgreSQL, etc.), the optional

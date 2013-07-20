@@ -173,8 +173,12 @@ describe 'Backup::Pipeline' do
       it 'should raise an error' do
         expect do
           pipeline.run
-        end.to raise_error(Backup::Errors::Pipeline::ExecutionError) {|err|
-          err.message.should match('RuntimeError: exec failed')
+        end.to raise_error(Backup::Pipeline::Error) {|err|
+          err.message.should eq(
+            "Pipeline::Error: Pipeline failed to execute\n" +
+            "--- Wrapped Exception ---\n" +
+            "RuntimeError: exec failed"
+          )
         }
       end
     end # context 'when pipeline command fails to execute'

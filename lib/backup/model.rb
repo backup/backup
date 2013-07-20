@@ -2,6 +2,9 @@
 
 module Backup
   class Model
+    class Error < Backup::Error; end
+    class FatalError < Backup::FatalError; end
+
     class << self
       ##
       # The Backup::Model.all class method keeps track of all the models
@@ -144,7 +147,7 @@ module Backup
       # Warn user of DSL changes
       case name.to_s
       when 'Backup::Config::RSync'
-        Logger.warn Errors::ConfigError.new(<<-EOS)
+        Logger.warn Error.new(<<-EOS)
           Configuration Update Needed for Syncer::RSync
           The RSync Syncer has been split into three separate modules:
           RSync::Local, RSync::Push and RSync::Pull
@@ -154,7 +157,7 @@ module Backup
         name = 'RSync::Push'
       when /(Backup::Config::S3|Backup::Config::CloudFiles)/
         syncer = $1.split('::')[2]
-        Logger.warn Errors::ConfigError.new(<<-EOS)
+        Logger.warn Error.new(<<-EOS)
           Configuration Update Needed for '#{ syncer }' Syncer.
           This Syncer is now referenced as Cloud::#{ syncer }
           i.e. 'sync_with #{ syncer }' is now 'sync_with Cloud::#{ syncer }'
@@ -192,7 +195,7 @@ module Backup
       if chunk_size.is_a?(Integer)
         @splitter = Splitter.new(self, chunk_size)
       else
-        raise Errors::Model::ConfigurationError, <<-EOS
+        raise Error, <<-EOS
           Invalid Chunk Size for Splitter
           Argument to #split_into_chunks_of() must be an Integer
         EOS
@@ -375,8 +378,7 @@ module Backup
 
     rescue Exception => err
       @before_hook_failed = true
-      ex = err.is_a?(StandardError) ?
-          Errors::Model::HookError : Errors::Model::HookFatalError
+      ex = err.is_a?(StandardError) ? Error : FatalError
       raise ex.wrap(err, 'Before Hook Failed!')
     end
 
@@ -395,7 +397,7 @@ module Backup
 
     rescue Exception => err
       fatal = !err.is_a?(StandardError)
-      ex = fatal ? Errors::Model::HookFatalError : Errors::Model::HookError
+      ex = fatal ? FatalError : Error
       Logger.error ex.wrap(err, 'After Hook Failed!')
       # upgrade exit_status if needed
       (@exit_status = fatal ? 3 : 2) unless exit_status == 3
@@ -414,7 +416,7 @@ module Backup
 
       when :finished
         if exit_status > 1
-          ex = exit_status == 2 ? Errors::ModelError : Errors::ModelFatalError
+          ex = exit_status == 2 ? Error : FatalError
           err = ex.wrap(exception, "Backup for #{ label } (#{ trigger }) Failed!")
           Logger.error err
           Logger.error "\nBacktrace:\n\s\s" + err.backtrace.join("\n\s\s") + "\n\n"

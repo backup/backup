@@ -96,7 +96,7 @@ describe Database::Redis do
       db.expects(:run).with('redis_save_cmd').returns('No OK Returned')
       expect do
         db.send(:invoke_save!)
-      end.to raise_error(Errors::Database::Redis::CommandError) {|err|
+      end.to raise_error(Database::Redis::Error) {|err|
         expect( err.message ).to match(/Command was: redis_save_cmd/)
         expect( err.message ).to match(/Response was: No OK Returned/)
       }
@@ -156,7 +156,7 @@ describe Database::Redis do
 
         expect do
           db.send(:copy!)
-        end.to raise_error(Errors::Database::Redis::NotFoundError)
+        end.to raise_error(Database::Redis::Error)
       end
     end # context 'when the redis dump file does not exist'
 
@@ -244,7 +244,7 @@ describe Database::Redis do
         # to satisfy Utilities.configure
         File.stubs(:executable?).with('/foo').returns(true)
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use Backup::Utilities\.configure instead/
           )
@@ -281,7 +281,7 @@ describe Database::Redis do
         # to satisfy Utilities.configure
         File.stubs(:executable?).with('/foo').returns(true)
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use Backup::Utilities\.configure instead/
           )

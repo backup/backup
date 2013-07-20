@@ -533,7 +533,7 @@ describe Storage::RSync do
     describe '#local' do
       before do
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /If 'host' is not set, the operation will be local/
           )
@@ -563,7 +563,7 @@ describe Storage::RSync do
     describe '#username' do
       before do
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use #ssh_user instead/
           )
@@ -595,7 +595,7 @@ describe Storage::RSync do
     describe '#password' do
       before do
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use #rsync_password instead/
           )
@@ -627,7 +627,7 @@ describe Storage::RSync do
     describe '#ip' do
       before do
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use #host instead/
           )

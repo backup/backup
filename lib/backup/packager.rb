@@ -2,6 +2,8 @@
 
 module Backup
   module Packager
+    class Error < Backup::Error; end
+
     class << self
       include Backup::Utilities::Helpers
 
@@ -19,8 +21,7 @@ module Backup
         if @pipeline.success?
           Logger.info "Packaging Complete!"
         else
-          raise Errors::Packager::PipelineError,
-              "Failed to Create Backup Package\n" +
+          raise Error, "Failed to Create Backup Package\n" +
               @pipeline.error_messages
         end
       end

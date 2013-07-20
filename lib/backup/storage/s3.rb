@@ -4,7 +4,7 @@ require 'backup/cloud_io/s3'
 module Backup
   module Storage
     class S3 < Base
-      Error = Errors::Storage::S3::Error
+      class Error < Backup::Error; end
 
       ##
       # Amazon Simple Storage Service (S3) Credentials

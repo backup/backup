@@ -2,6 +2,8 @@
 
 module Backup
   class Archive
+    class Error < Backup::Error; end
+
     include Backup::Utilities::Helpers
     attr_reader :name, :options
 
@@ -88,8 +90,7 @@ module Backup
       if pipeline.success?
         Logger.info "Archive '#{ name }' Complete!"
       else
-        raise Errors::Archive::PipelineError,
-            "Failed to Create Archive '#{ name }'\n" +
+        raise Error, "Failed to Create Archive '#{ name }'\n" +
             pipeline.error_messages
       end
     end

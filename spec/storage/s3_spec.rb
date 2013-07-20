@@ -276,7 +276,7 @@ describe Storage::S3 do
       expect do
         storage.send(:remove!, package)
       end.to raise_error(
-        Errors::Storage::S3::Error,
+        Storage::S3::Error,
         "Storage::S3::Error: Package at '#{ remote_path }' not found"
       )
     end

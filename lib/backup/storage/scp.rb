@@ -4,6 +4,7 @@ require 'net/scp'
 module Backup
   module Storage
     class SCP < Base
+      class Error < Backup::Error; end
 
       ##
       # Server credentials
@@ -54,8 +55,7 @@ module Backup
           end
         end
         unless errors.empty?
-          raise Errors::Storage::SCP::SSHError,
-              "Net::SSH reported the following errors:\n" +
+          raise Error, "Net::SSH reported the following errors:\n" +
               errors.join("\n")
         end
       end

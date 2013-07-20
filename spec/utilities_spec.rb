@@ -91,7 +91,7 @@ describe Backup::Utilities do
         utilities.configure do
           tar 'not_found'
         end
-      end.to raise_error(Backup::Errors::Utilities::NotFoundError)
+      end.to raise_error(Backup::Utilities::Error)
     end
   end # describe '.configure'
 
@@ -179,7 +179,7 @@ describe Backup::Utilities::Helpers do
 
       expect do
         helpers.send(:utility, :unknown)
-      end.to raise_error(Backup::Errors::Utilities::NotFoundError) {|err|
+      end.to raise_error(Backup::Utilities::Error) {|err|
         err.message.should match(/Could not locate 'unknown'/)
       }
     end
@@ -189,8 +189,7 @@ describe Backup::Utilities::Helpers do
       expect do
         helpers.send(:utility, nil)
       end.to raise_error(
-        Backup::Errors::Utilities::NotFoundError,
-          'Utilities::NotFoundError: Utility Name Empty'
+        Backup::Utilities::Error, 'Utilities::Error: Utility Name Empty'
       )
     end
 
@@ -199,8 +198,7 @@ describe Backup::Utilities::Helpers do
       expect do
         helpers.send(:utility, ' ')
       end.to raise_error(
-        Backup::Errors::Utilities::NotFoundError,
-          'Utilities::NotFoundError: Utility Name Empty'
+        Backup::Utilities::Error, 'Utilities::Error: Utility Name Empty'
       )
     end
   end # describe '#utility'
@@ -320,7 +318,7 @@ describe Backup::Utilities::Helpers do
     context 'when the command is not successful' do
       let(:process_success) { false }
       let(:message_head) do
-        "Utilities::SystemCallError: 'cmd_name' failed with exit status: 1\n"
+        "Utilities::Error: 'cmd_name' failed with exit status: 1\n"
       end
 
       before do
@@ -416,7 +414,7 @@ describe Backup::Utilities::Helpers do
       it 'should raise an error wrapping the system error raised' do
         expect do
           helpers.send(:run, command)
-        end.to raise_error(Backup::Errors::Utilities::SystemCallError) {|err|
+        end.to raise_error(Backup::Utilities::Error) {|err|
           err.message.should match("Failed to execute 'cmd_name'")
           err.message.should match('RuntimeError: exec call failed')
         }

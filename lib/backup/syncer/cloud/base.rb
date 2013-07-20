@@ -3,7 +3,7 @@
 module Backup
   module Syncer
     module Cloud
-      Error = Errors::Syncer::Cloud::Error
+      class Error < Backup::Error; end
 
       class Base < Syncer::Base
         MUTEX = Mutex.new

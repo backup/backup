@@ -4,6 +4,8 @@
 # Build the Backup Command Line Interface using Thor
 module Backup
   class CLI < Thor
+    class Error < Backup::Error; end
+    class FatalError < Backup::FatalError; end
 
     ##
     # [Perform]
@@ -142,14 +144,14 @@ module Backup
           Model.find_by_trigger(trigger)
         }.flatten.uniq
 
-        raise Errors::CLIError, "No Models found for trigger(s) " +
+        raise Error, "No Models found for trigger(s) " +
             "'#{ triggers.join(',') }'." if models.empty?
 
         # Finalize Logger and begin real-time logging.
         Logger.start!
 
       rescue Exception => err
-        Logger.error Errors::CLIError.wrap(err)
+        Logger.error Error.wrap(err)
         # Logger configuration will be ignored
         # and messages will be output to the console only.
         Logger.abort!
@@ -166,7 +168,7 @@ module Backup
         when 2
           errors = true
           unless models.empty?
-            Logger.info Errors::ModelError.new(<<-EOS)
+            Logger.info Error.new(<<-EOS)
               Backup will now continue...
               The following triggers will now be processed:
               (#{ models.map {|m| m.trigger }.join(', ') })
@@ -175,7 +177,7 @@ module Backup
         when 3
           fatal = true
           unless models.empty?
-            Logger.error Errors::ModelFatalError.new(<<-EOS)
+            Logger.error FatalError.new(<<-EOS)
               Backup will now exit.
               The following triggers will not be processed:
               (#{ models.map {|m| m.trigger }.join(', ') })
@@ -227,7 +229,7 @@ module Backup
         Config.update(options)
         Config.load_config!
       rescue Exception => err
-        Logger.error Errors::CLIError.wrap(err)
+        Logger.error Error.wrap(err)
       end
 
       if Logger.has_warnings? || Logger.has_errors?

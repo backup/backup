@@ -49,7 +49,7 @@ describe 'Backup::Configuration' do
       Backup::Foo.stubs(:defaults)
       Backup::Logger.expects(:warn).with do |err|
         err.message.should ==
-        "ConfigurationError: [DEPRECATION WARNING]\n" +
+        "Configuration::Error: [DEPRECATION WARNING]\n" +
         "  Backup::Configuration::Foo.defaults is being deprecated.\n" +
         "  To set pre-configured defaults for Backup::Foo, use:\n" +
         "  Backup::Foo.defaults"

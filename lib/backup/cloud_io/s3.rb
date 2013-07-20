@@ -8,7 +8,7 @@ require 'base64'
 module Backup
   module CloudIO
     class S3 < Base
-      Error = Errors::CloudIO::S3::Error
+      class Error < Backup::Error; end
 
       MAX_FILE_SIZE       = 1024**3 * 5   # 5 GiB
       MAX_MULTIPART_SIZE  = 1024**4 * 5   # 5 TiB

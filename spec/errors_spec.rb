@@ -3,27 +3,10 @@
 require File.expand_path('../spec_helper.rb', __FILE__)
 
 module Backup
-describe ErrorsHelper do
-
-  it 'dynamically creates namespaces and subclasses of Errors::Error' do
-    Errors::FooBarError.new.should be_a_kind_of Errors::Error
-    Errors::Foo::Bar::Error.new.should be_a_kind_of Errors::Error
-  end
-
-  it 'dynamically creates namespaces and subclasses of Errors::FatalError' do
-    Errors::FooBarFatalError.new.should be_a_kind_of Errors::FatalError
-    Errors::Foo::Bar::FatalError.new.should be_a_kind_of Errors::FatalError
-  end
-
-end # describe ErrorsHelper
-end
-
-# Note: none of these tests require the use of the ErrorsHelper
-module Backup::Errors
 describe 'Backup Errors' do
 
 shared_examples 'a nested exception' do
-  let(:class_name) { described_class.name.sub(/^Backup::Errors::/, '') }
+  let(:class_name) { described_class.name.sub(/^Backup::/, '') }
 
   context 'with stubbed constants' do
     before do
@@ -32,9 +15,9 @@ shared_examples 'a nested exception' do
       ErrorC = Class.new(described_class)
     end
     after do
-      Backup::Errors.send(:remove_const, :ErrorA)
-      Backup::Errors.send(:remove_const, :ErrorB)
-      Backup::Errors.send(:remove_const, :ErrorC)
+      Backup.send(:remove_const, :ErrorA)
+      Backup.send(:remove_const, :ErrorB)
+      Backup.send(:remove_const, :ErrorC)
     end
 
     it 'allows errors to cascade through the system' do

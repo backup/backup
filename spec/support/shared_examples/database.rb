@@ -44,7 +44,7 @@ shared_examples 'a subclass of Database::Base' do
     it 'logs warning when model is created if database_id is needed' do
       Backup::Logger.expects(:warn).with do |err|
         expect( err ).
-            to be_an_instance_of Backup::Errors::Database::ConfigurationError
+            to be_an_instance_of Backup::Database::Error
       end
 
       klass = described_class

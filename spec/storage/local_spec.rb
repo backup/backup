@@ -83,9 +83,9 @@ describe Storage::Local do
         FileUtils.expects(:mkdir_p).in_sequence(s).with(remote_path)
 
         Logger.expects(:warn).in_sequence(s).with do |err|
-          expect( err ).to be_an_instance_of Errors::Storage::Local::TransferError
+          expect( err ).to be_an_instance_of Storage::Local::Error
           expect( err.message ).to eq <<-EOS.gsub(/^ +/, '  ').strip
-            Storage::Local::TransferError: Local File Copy Warning!
+            Storage::Local::Error: Local File Copy Warning!
               The final backup file(s) for 'test label' (test_trigger)
               will be *copied* to '#{ remote_path }'
               To avoid this, when using more than one Storage, the 'Local' Storage

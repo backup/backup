@@ -2,6 +2,8 @@
 
 module Backup
   module Notifier
+    class Error < Backup::Error; end
+
     class Base
       include Backup::Utilities::Helpers
       include Backup::Configuration::Helpers
@@ -66,7 +68,7 @@ module Backup
         end
 
       rescue Exception => err
-        Logger.error Errors::NotifierError.wrap(err, "#{ notifier_name } Failed!")
+        Logger.error Error.wrap(err, "#{ notifier_name } Failed!")
       end
 
       private
@@ -79,8 +81,7 @@ module Backup
           retries += 1
           raise if retries > max_retries
 
-          Logger.info Errors::NotifierError.
-              wrap(err, "Retry ##{ retries } of #{ max_retries }.")
+          Logger.info Error.wrap(err, "Retry ##{ retries } of #{ max_retries }.")
           sleep(retry_waitsec)
           retry
         end

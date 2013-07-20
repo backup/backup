@@ -5,7 +5,7 @@ module Backup
   module Syncer
     module Cloud
       class CloudFiles < Base
-        Error = Errors::Syncer::Cloud::CloudFiles::Error
+        class Error < Backup::Error; end
 
         ##
         # Rackspace CloudFiles Credentials

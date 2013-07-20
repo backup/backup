@@ -140,7 +140,7 @@ describe Database::Riak do
         # to satisfy Utilities.configure
         File.stubs(:executable?).with('/foo').returns(true)
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use Backup::Utilities\.configure instead/
           )
@@ -174,7 +174,7 @@ describe Database::Riak do
         # to satisfy Utilities.configure
         File.stubs(:executable?).with('/foo').returns(true)
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use Backup::Utilities\.configure instead/
           )
@@ -206,7 +206,7 @@ describe Database::Riak do
     describe '#name' do
       before do
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /If you wish to add an identifier/
           )
@@ -234,7 +234,7 @@ describe Database::Riak do
     describe '#group' do
       before do
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /#group has been deprecated/
           )

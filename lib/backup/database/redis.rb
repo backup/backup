@@ -3,6 +3,7 @@
 module Backup
   module Database
     class Redis < Base
+      class Error < Backup::Error; end
 
       ##
       # Name of the redis dump file.
@@ -65,7 +66,7 @@ module Backup
       def invoke_save!
         resp = run(redis_save_cmd)
         unless resp =~ /OK$/
-          raise Errors::Database::Redis::CommandError, <<-EOS
+          raise Error, <<-EOS
             Could not invoke the Redis SAVE command.
             Command was: #{ redis_save_cmd }
             Response was: #{ resp }
@@ -76,7 +77,7 @@ module Backup
       def copy!
         src_path = File.join(path, name + '.rdb')
         unless File.exist?(src_path)
-          raise Errors::Database::Redis::NotFoundError, <<-EOS
+          raise Error, <<-EOS
             Redis database dump not found
             File path was #{ src_path }
           EOS

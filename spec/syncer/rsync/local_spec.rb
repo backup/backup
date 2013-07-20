@@ -144,7 +144,7 @@ describe Syncer::RSync::Local do
     describe '#additional_options' do
       before do
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use #additional_rsync_options instead/
           )

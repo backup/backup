@@ -217,9 +217,9 @@ describe Database::MongoDB do
 
         expect do
           db.send(:package!)
-        end.to raise_error(Errors::Database::PipelineError) {|err|
-          expect( err.message ).to match(
-            "Database::MongoDB Dump Failed!\n  error messages"
+        end.to raise_error(Database::MongoDB::Error) {|err|
+          expect( err.message ).to eq(
+            "Database::MongoDB::Error: Dump Failed!\n  error messages"
           )
         }
       end
@@ -385,7 +385,7 @@ describe Database::MongoDB do
         # to satisfy Utilities.configure
         File.stubs(:executable?).with('/foo').returns(true)
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use Backup::Utilities\.configure instead/
           )
@@ -422,7 +422,7 @@ describe Database::MongoDB do
         # to satisfy Utilities.configure
         File.stubs(:executable?).with('/foo').returns(true)
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use Backup::Utilities\.configure instead/
           )
@@ -459,7 +459,7 @@ describe Database::MongoDB do
         # to satisfy Utilities.configure
         File.stubs(:executable?).with('/foo').returns(true)
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use Backup::Utilities\.configure instead/
           )

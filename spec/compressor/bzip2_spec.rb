@@ -72,7 +72,7 @@ describe Backup::Compressor::Bzip2 do
       context 'when only the fast option is used' do
         before do
           Backup::Logger.expects(:warn).with {|err|
-            err.should be_an_instance_of Backup::Errors::ConfigurationError
+            err.should be_an_instance_of Backup::Configuration::Error
             err.message.should match(
               /Use Bzip2#level instead/
             )
@@ -101,7 +101,7 @@ describe Backup::Compressor::Bzip2 do
       context 'when only the best option is used' do
         before do
           Backup::Logger.expects(:warn).with {|err|
-            err.should be_an_instance_of Backup::Errors::ConfigurationError
+            err.should be_an_instance_of Backup::Configuration::Error
             err.message.should match(
               /Use Bzip2#level instead/
             )
@@ -131,7 +131,7 @@ describe Backup::Compressor::Bzip2 do
       context 'when both fast and best options are used' do
         before do
           Backup::Logger.expects(:warn).twice.with {|err|
-            err.should be_an_instance_of Backup::Errors::ConfigurationError
+            err.should be_an_instance_of Backup::Configuration::Error
             err.message.should match(
               /Use Bzip2#level instead/
             )

@@ -3,6 +3,8 @@
 module Backup
   module Storage
     module Cycler
+      class Error < Backup::Error; end
+
       class << self
 
         ##
@@ -39,7 +41,7 @@ module Backup
             begin
               @storage.send(:remove!, pkg) unless pkg.no_cycle
             rescue => err
-              Logger.warn Errors::Storage::CyclerError.wrap(err, <<-EOS)
+              Logger.warn Error.wrap(err, <<-EOS)
                 There was a problem removing the following package:
                 Trigger: #{pkg.trigger} :: Dated: #{pkg.time}
                 Package included the following #{ pkg.filenames.count } file(s):

@@ -2,6 +2,8 @@
 
 module Backup
   module Config
+    class Error < Backup::Error; end
+
     DEFAULTS = {
       :config_file  => 'config.rb',
       :data_path    => 'data',
@@ -28,8 +30,7 @@ module Backup
       # Tries to find and load the configuration file
       def load_config!
         unless File.exist?(@config_file)
-          raise Errors::Config::NotFoundError,
-              "Could not find configuration file: '#{@config_file}'."
+          raise Error, "Could not find configuration file: '#{@config_file}'."
         end
 
         module_eval(File.read(@config_file), @config_file)
@@ -48,7 +49,7 @@ module Backup
 
         path = File.expand_path(path)
         unless File.directory?(path)
-          raise Errors::Config::NotFoundError, <<-EOS
+          raise Error, <<-EOS
             Root Path Not Found
             When specifying a --root-path, the path must exist.
             Path was: #{ path }
@@ -153,7 +154,7 @@ module Backup
   class << self
     def const_missing(const)
       if const.to_s == 'CONFIG_FILE'
-        Logger.warn Errors::ConfigError.new(<<-EOS)
+        Logger.warn Error.new(<<-EOS)
           Configuration File Upgrade Needed
           Your configuration file, located at #{ Config.config_file }
           needs to be upgraded for this version of Backup.

@@ -652,7 +652,7 @@ describe Syncer::RSync::Push do
     describe '#additional_options' do
       before do
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use #additional_rsync_options instead/
           )
@@ -684,7 +684,7 @@ describe Syncer::RSync::Push do
     describe '#username' do
       before do
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use #ssh_user instead/
           )
@@ -716,7 +716,7 @@ describe Syncer::RSync::Push do
     describe '#password' do
       before do
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use #rsync_password instead/
           )
@@ -748,7 +748,7 @@ describe Syncer::RSync::Push do
     describe '#ip' do
       before do
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use #host instead/
           )

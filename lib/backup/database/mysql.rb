@@ -3,6 +3,7 @@
 module Backup
   module Database
     class MySQL < Base
+      class Error < Backup::Error; end
 
       ##
       # Name of the database that needs to get dumped
@@ -66,8 +67,7 @@ module Backup
         if pipeline.success?
           log!(:finished)
         else
-          raise Errors::Database::PipelineError,
-              "#{ database_name } Dump Failed!\n" + pipeline.error_messages
+          raise Error, "Dump Failed!\n" + pipeline.error_messages
         end
       end
 

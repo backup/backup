@@ -99,8 +99,12 @@ describe Storage::Dropbox do
 
         expect do
           storage.send(:connection)
-        end.to raise_error(Errors::Storage::Dropbox::ConnectionError) {|err|
-          expect( err.message ).to match('RuntimeError: error')
+        end.to raise_error(Storage::Dropbox::Error) {|err|
+          expect( err.message ).to eq(
+            "Storage::Dropbox::Error: Authorization Failed\n" +
+            "--- Wrapped Exception ---\n" +
+            "RuntimeError: error"
+          )
         }
       end
     end
@@ -137,7 +141,7 @@ describe Storage::Dropbox do
         DropboxSession.expects(:deserialize).with('yaml_data').
             raises('error message')
         Logger.expects(:warn).with do |err|
-          expect( err ).to be_an_instance_of(Errors::Storage::Dropbox::CacheError)
+          expect( err ).to be_an_instance_of(Storage::Dropbox::Error)
           expect( err.message ).to match(
             "Could not read session data from cache.\n" +
             "  Cache data might be corrupt."
@@ -219,15 +223,15 @@ describe Storage::Dropbox do
         when 1
           expect( arg ).to eq "Storing '#{ dest }'..."
         when 2
-          expect( arg ).to be_an_instance_of Errors::Storage::Dropbox::TransferError
+          expect( arg ).to be_an_instance_of Storage::Dropbox::Error
           expect( arg.message ).to match(
-            "Storage::Dropbox::TransferError: Retry #1 of 1."
+            "Storage::Dropbox::Error: Retry #1 of 1."
           )
           expect( arg.message ).to match('RuntimeError: chunk failed')
         when 3
-          expect( arg ).to be_an_instance_of Errors::Storage::Dropbox::TransferError
+          expect( arg ).to be_an_instance_of Storage::Dropbox::Error
           expect( arg.message ).to match(
-            "Storage::Dropbox::TransferError: Retry #1 of 1."
+            "Storage::Dropbox::Error: Retry #1 of 1."
           )
           expect( arg.message ).to match('RuntimeError: finish failed')
         end
@@ -266,15 +270,15 @@ describe Storage::Dropbox do
         when 1
           expect( arg ).to eq "Storing '#{ dest }'..."
         when 2
-          expect( arg ).to be_an_instance_of Errors::Storage::Dropbox::TransferError
+          expect( arg ).to be_an_instance_of Storage::Dropbox::Error
           expect( arg.message ).to match(
-            "Storage::Dropbox::TransferError: Retry #1 of 2."
+            "Storage::Dropbox::Error: Retry #1 of 2."
           )
           expect( arg.message ).to match('RuntimeError: chunk failed')
         when 3
-          expect( arg ).to be_an_instance_of Errors::Storage::Dropbox::TransferError
+          expect( arg ).to be_an_instance_of Storage::Dropbox::Error
           expect( arg.message ).to match(
-            "Storage::Dropbox::TransferError: Retry #2 of 2."
+            "Storage::Dropbox::Error: Retry #2 of 2."
           )
           expect( arg.message ).to match('RuntimeError: chunk failed again')
         end
@@ -298,7 +302,7 @@ describe Storage::Dropbox do
 
       expect do
         storage.send(:transfer!)
-      end.to raise_error(Errors::Storage::Dropbox::TransferError) {|err|
+      end.to raise_error(Storage::Dropbox::Error) {|err|
         expect( err.message ).to match('Upload Failed!')
         expect( err.message ).to match('RuntimeError: strike three')
       }
@@ -409,7 +413,7 @@ describe Storage::Dropbox do
 
         expect do
           storage.send(:create_write_and_return_new_session!)
-        end.to raise_error(Errors::Storage::Dropbox::AuthenticationError) {|err|
+        end.to raise_error(Storage::Dropbox::Error) {|err|
           expect( err.message ).to match(
             "Could not create or authenticate a new session"
           )

@@ -7,7 +7,7 @@ require 'digest/md5'
 module Backup
   module CloudIO
     class CloudFiles < Base
-      Error = Errors::CloudIO::CloudFiles::Error
+      class Error < Backup::Error; end
 
       MAX_FILE_SIZE   = 1024**3 * 5     # 5 GiB
       MAX_SLO_SIZE    = 1024**3 * 5000  # 1000 segments @ 5 GiB

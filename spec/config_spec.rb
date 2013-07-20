@@ -67,7 +67,7 @@ describe 'Backup::Config' do
         expect do
           config.load_config!
         end.to raise_error {|err|
-          err.should be_an_instance_of Backup::Errors::Config::NotFoundError
+          err.should be_an_instance_of Backup::Config::Error
           err.message.should match(
             /Could not find configuration file: '#{config.config_file}'/
           )
@@ -110,7 +110,7 @@ describe 'Backup::Config' do
         expect do
           config.send(:set_root_path, 'foo')
         end.to raise_error {|err|
-          err.should be_an_instance_of Backup::Errors::Config::NotFoundError
+          err.should be_an_instance_of Backup::Config::Error
           err.message.should match(/Root Path Not Found/)
           err.message.should match(/Path was: #{ path }/)
         }

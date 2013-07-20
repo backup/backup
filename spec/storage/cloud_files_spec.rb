@@ -276,7 +276,7 @@ describe Storage::CloudFiles do
       expect do
         storage.send(:remove!, package)
       end.to raise_error(
-        Errors::Storage::CloudFiles::Error,
+        Storage::CloudFiles::Error,
         "Storage::CloudFiles::Error: Package at '#{ remote_path }' not found"
       )
     end

@@ -2,6 +2,8 @@
 
 module Backup
   class Pipeline
+    class Error < Backup::Error; end
+
     include Backup::Utilities::Helpers
 
     attr_reader :stderr, :errors
@@ -63,8 +65,8 @@ module Backup
         @stderr = stderr.read.strip
       end
       Logger.warn(stderr_messages) if success? && stderr_messages
-    rescue Exception => e
-      raise Errors::Pipeline::ExecutionError.wrap(e)
+    rescue Exception => err
+      raise Error.wrap(err, 'Pipeline failed to execute')
     end
 
     def success?

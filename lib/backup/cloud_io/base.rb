@@ -2,8 +2,8 @@
 
 module Backup
   module CloudIO
-    Error = Errors::CloudIO::Error
-    FileSizeError = Errors::CloudIO::FileSizeError
+    class Error < Backup::Error; end
+    class FileSizeError < Backup::Error; end
 
     class Base
       attr_reader :max_retries, :retry_waitsec

@@ -2,6 +2,8 @@
 
 module Backup
   module Cleaner
+    class Error < Backup::Error; end
+
     class << self
 
       ##
@@ -37,7 +39,7 @@ module Backup
         end
 
         unless messages.empty?
-          Logger.warn Errors::CleanerError.new(<<-EOS)
+          Logger.warn Error.new(<<-EOS)
             Cleanup Warning
             #{ messages.join("\n") }
             Please check the log for messages and/or your notifications
@@ -93,7 +95,7 @@ module Backup
         end
 
         unless messages.empty?
-          Logger.warn Errors::CleanerError.new(<<-EOS)
+          Logger.warn Error.new(<<-EOS)
             Cleanup Warning
             #{ messages.join("\n") }
             Make sure you check these files before the next scheduled backup for

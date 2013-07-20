@@ -473,7 +473,7 @@ describe Notifier::Mail do
     describe '#enable_starttls_auto' do
       before do
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(/Use #encryption instead/)
         }
       end
@@ -520,7 +520,7 @@ describe Notifier::Mail do
         # to satisfy Utilities.configure
         File.stubs(:executable?).with('/foo').returns(true)
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use Backup::Utilities\.configure instead/
           )
@@ -557,7 +557,7 @@ describe Notifier::Mail do
         # to satisfy Utilities.configure
         File.stubs(:executable?).with('/foo').returns(true)
         Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Configuration::Error
           expect( err.message ).to match(
             /Use Backup::Utilities\.configure instead/
           )

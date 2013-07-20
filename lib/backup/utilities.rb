@@ -2,6 +2,8 @@
 
 module Backup
   module Utilities
+    class Error < Backup::Error; end
+
     UTILITY = {}
     NAMES = %w{
       tar cat split find xargs sudo chown
@@ -23,7 +25,7 @@ module Backup
           define_method name.gsub('-', '_'), lambda {|val|
             path = File.expand_path(val)
             unless File.executable?(path)
-              raise Errors::Utilities::NotFoundError, <<-EOS
+              raise Utilities::Error, <<-EOS
                 The path given for '#{ name }' was not found or not executable.
                 Path was: #{ path }
               EOS
@@ -129,11 +131,10 @@ module Backup
       # Raises an error if utility can not be found in the system's $PATH
       def utility(name)
         name = name.to_s.strip
-        raise Errors::Utilities::NotFoundError,
-            'Utility Name Empty' if name.empty?
+        raise Error, 'Utility Name Empty' if name.empty?
 
         UTILITY[name] ||= %x[which '#{ name }' 2>/dev/null].chomp
-        raise(Errors::Utilities::NotFoundError, <<-EOS) if UTILITY[name].empty?
+        raise Error, <<-EOS if UTILITY[name].empty?
           Could not locate '#{ name }'.
           Make sure the specified utility is installed
           and available in your system's $PATH, or specify it's location
@@ -190,8 +191,7 @@ module Backup
             out, err = stdout.read.strip, stderr.read.strip
           end
         rescue Exception => e
-          raise Errors::Utilities::SystemCallError.wrap(
-              e, "Failed to execute '#{ name }'")
+          raise Error.wrap(e, "Failed to execute '#{ name }'")
         ensure
           GC.enable if RUBY_VERSION < '1.9'
         end
@@ -211,7 +211,7 @@ module Backup
 
           return out
         else
-          raise Errors::Utilities::SystemCallError, <<-EOS
+          raise Error, <<-EOS
             '#{ name }' failed with exit status: #{ ps.exitstatus }
             STDOUT Messages: #{ out.empty? ? 'None' : "\n#{ out }" }
             STDERR Messages: #{ err.empty? ? 'None' : "\n#{ err }" }

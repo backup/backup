@@ -5,7 +5,7 @@ module Backup
   module Syncer
     module Cloud
       class S3 < Base
-        Error = Errors::Syncer::Cloud::S3::Error
+        class Error < Backup::Error; end
 
         ##
         # Amazon Simple Storage Service (S3) Credentials

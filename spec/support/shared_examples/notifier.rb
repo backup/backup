@@ -164,7 +164,7 @@ shared_examples 'a subclass of Notifier::Base' do
           raises(Exception.new 'error message')
 
       Backup::Logger.expects(:error).with do |err|
-        expect( err ).to be_an_instance_of Backup::Errors::NotifierError
+        expect( err ).to be_an_instance_of Backup::Notifier::Error
         expect( err.message ).to match(/#{ notifier_name } Failed!/)
         expect( err.message ).to match(/error message/)
       end
@@ -183,11 +183,11 @@ shared_examples 'a subclass of Notifier::Base' do
         when 1
           expect( arg ).to eq "Sending notification using #{ notifier_name }..."
         when 2
-          expect( arg ).to be_an_instance_of Backup::Errors::NotifierError
+          expect( arg ).to be_an_instance_of Backup::Notifier::Error
           expect( arg.message ).to match('RuntimeError: standard error')
           expect( arg.message ).to match('Retry #1 of 2.')
         when 3
-          expect( arg ).to be_an_instance_of Backup::Errors::NotifierError
+          expect( arg ).to be_an_instance_of Backup::Notifier::Error
           expect( arg.message ).to match('Timeout::Error')
           expect( arg.message ).to match('Retry #2 of 2.')
         end
@@ -201,7 +201,7 @@ shared_examples 'a subclass of Notifier::Base' do
       notifier.expects(:notify!).in_sequence(s).raises('final error')
 
       Backup::Logger.expects(:error).in_sequence(s).with do |err|
-        expect( err ).to be_an_instance_of Backup::Errors::NotifierError
+        expect( err ).to be_an_instance_of Backup::Notifier::Error
         expect( err.message ).to match(/#{ notifier_name } Failed!/)
         expect( err.message ).to match(/final error/)
       end

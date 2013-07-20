@@ -4,7 +4,7 @@ require 'backup/cloud_io/cloud_files'
 module Backup
   module Storage
     class CloudFiles < Base
-      Error = Errors::Storage::CloudFiles::Error
+      class Error < Backup::Error; end
 
       ##
       # Rackspace CloudFiles Credentials

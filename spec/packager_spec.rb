@@ -65,8 +65,8 @@ describe 'Backup::Packager' do
         expect do
           packager.package!(model)
         end.to raise_error(
-          Backup::Errors::Packager::PipelineError,
-          "Packager::PipelineError: Failed to Create Backup Package\n" +
+          Backup::Packager::Error,
+          "Packager::Error: Failed to Create Backup Package\n" +
           "  pipeline_errors"
         )
 

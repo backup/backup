@@ -350,7 +350,7 @@ describe 'Backup::Model' do
         expect do
           model.split_into_chunks_of('345')
         end.to raise_error {|err|
-          err.should be_an_instance_of Backup::Errors::Model::ConfigurationError
+          err.should be_an_instance_of Backup::Model::Error
           err.message.should match(/must be an Integer/)
         }
       end
@@ -833,7 +833,7 @@ describe 'Backup::Model' do
         end
 
         it 'logs that the backup failed with a non-fatal exception' do
-          Backup::Errors::ModelError.expects(:wrap).in_sequence(s).with do |err, msg|
+          Backup::Model::Error.expects(:wrap).in_sequence(s).with do |err, msg|
             err.message.should == 'non-fatal error'
             msg.should match(/Backup for test label \(test_trigger\) Failed!/)
           end.returns(error_a)
@@ -858,7 +858,7 @@ describe 'Backup::Model' do
         end
 
         it 'logs that the backup failed with a fatal exception' do
-          Backup::Errors::ModelFatalError.expects(:wrap).in_sequence(s).with do |err, msg|
+          Backup::Model::FatalError.expects(:wrap).in_sequence(s).with do |err, msg|
             err.message.should == 'fatal error'
             msg.should match(/Backup for test label \(test_trigger\) Failed!/)
           end.returns(error_a)

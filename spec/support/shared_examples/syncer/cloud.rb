@@ -377,7 +377,7 @@ shared_examples 'Deprecation: #concurrency_type and #concurrency_level' do
     context 'when only #concurrency_type is set' do
       before do
         Backup::Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Backup::Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Backup::Configuration::Error
           expect( err.message ).to match(/Use #thread_count instead/)
         }
       end
@@ -403,7 +403,7 @@ shared_examples 'Deprecation: #concurrency_type and #concurrency_level' do
     context 'when both #concurrency_type and #concurrency_level are set' do
       before do
         Backup::Logger.expects(:warn).twice.with {|err|
-          expect( err ).to be_an_instance_of Backup::Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Backup::Configuration::Error
           expect( err.message ).to match(/Use #thread_count instead/)
         }
       end
@@ -456,7 +456,7 @@ shared_examples 'Deprecation: #concurrency_type and #concurrency_level' do
     context 'when only #concurrency_type is set' do
       before do
         Backup::Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Backup::Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Backup::Configuration::Error
           expect( err.message ).to match(/Use #thread_count instead/)
         }
       end
@@ -482,7 +482,7 @@ shared_examples 'Deprecation: #concurrency_type and #concurrency_level' do
     context 'when both #concurrency_type and #concurrency_level are set' do
       before do
         Backup::Logger.expects(:warn).twice.with {|err|
-          expect( err ).to be_an_instance_of Backup::Errors::ConfigurationError
+          expect( err ).to be_an_instance_of Backup::Configuration::Error
           expect( err.message ).to match(/Use #thread_count instead/)
         }
       end

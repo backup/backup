@@ -71,9 +71,9 @@ describe Archive do
 
         expect do
           archive.perform!
-        end.to raise_error(Errors::Archive::PipelineError) {|err|
+        end.to raise_error(Archive::Error) {|err|
           expect( err.message ).to eq(
-            "Archive::PipelineError: Failed to Create Archive 'my_archive'\n" +
+            "Archive::Error: Failed to Create Archive 'my_archive'\n" +
             "  error messages"
           )
         }

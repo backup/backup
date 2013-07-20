@@ -221,9 +221,9 @@ describe Storage::Ninefold do
 
       expect do
         storage.send(:remove!, package)
-      end.to raise_error(Errors::Storage::Ninefold::NotFoundError) {|err|
+      end.to raise_error(Storage::Ninefold::Error) {|err|
         expect( err.message ).to eq(
-          'Storage::Ninefold::NotFoundError: ' +
+          'Storage::Ninefold::Error: ' +
           "Directory at '#{ remote_path }' not found"
         )
       }

@@ -90,7 +90,7 @@ describe 'Backup::Storage::Cycler' do
         storage.expects(:remove!).in_sequence(s).with(pkg_a)
         storage.expects(:remove!).in_sequence(s).with(pkg_b).raises('error message')
         Backup::Logger.expects(:warn).with do |err|
-          err.should be_an_instance_of Backup::Errors::Storage::CyclerError
+          err.should be_an_instance_of Backup::Storage::Cycler::Error
           err.message.should include(
             "There was a problem removing the following package:\n" +
             "  Trigger: pkg_trigger :: Dated: pkg_time\n" +

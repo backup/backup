@@ -46,9 +46,9 @@ describe Cleaner do
         FileUtils.expects(:rm_f).never
 
         Logger.expects(:warn).with do |err|
-          expect( err ).to be_an_instance_of Errors::CleanerError
+          expect( err ).to be_an_instance_of Cleaner::Error
           expect( err.message ).to eq(<<-EOS.gsub(/^ +/, '  ').strip)
-            CleanerError: Cleanup Warning
+            Cleaner::Error: Cleanup Warning
             The temporary packaging folder still exists!
             '#{ File.join(Config.tmp_path, 'test_trigger') }'
             It will now be removed.
@@ -75,9 +75,9 @@ describe Cleaner do
         FileUtils.expects(:rm_f).with('file2')
 
         Logger.expects(:warn).with do |err|
-          expect( err ).to be_an_instance_of Errors::CleanerError
+          expect( err ).to be_an_instance_of Cleaner::Error
           expect( err.message ).to eq(<<-EOS.gsub(/^ +/, '  ').strip)
-            CleanerError: Cleanup Warning
+            Cleaner::Error: Cleanup Warning
             The temporary backup folder '#{ Config.tmp_path }'
             appears to contain the package files from the previous backup!
             file1
@@ -108,9 +108,9 @@ describe Cleaner do
         FileUtils.expects(:rm_f).with('file2')
 
         Logger.expects(:warn).with do |err|
-          expect( err ).to be_an_instance_of Errors::CleanerError
+          expect( err ).to be_an_instance_of Cleaner::Error
           expect( err.message ).to eq(<<-EOS.gsub(/^ +/, '  ').strip)
-            CleanerError: Cleanup Warning
+            Cleaner::Error: Cleanup Warning
             The temporary packaging folder still exists!
             '#{ File.join(Config.tmp_path, 'test_trigger') }'
             It will now be removed.
@@ -186,9 +186,9 @@ describe Cleaner do
         Cleaner.expects(:package_files_for).with('test_trigger').returns([])
 
         Logger.expects(:warn).with do |err|
-          expect( err ).to be_an_instance_of Errors::CleanerError
+          expect( err ).to be_an_instance_of Cleaner::Error
           expect( err.message ).to eq(<<-EOS.gsub(/^ +/, '  ').strip)
-            CleanerError: Cleanup Warning
+            Cleaner::Error: Cleanup Warning
             The temporary packaging folder still exists!
             '#{ File.join(Config.tmp_path, 'test_trigger') }'
             This folder may contain completed Archives and/or Database backups.
@@ -210,9 +210,9 @@ describe Cleaner do
             returns(['file1', 'file2'])
 
         Logger.expects(:warn).with do |err|
-          expect( err ).to be_an_instance_of Errors::CleanerError
+          expect( err ).to be_an_instance_of Cleaner::Error
           expect( err.message ).to eq(<<-EOS.gsub(/^ +/, '  ').strip)
-            CleanerError: Cleanup Warning
+            Cleaner::Error: Cleanup Warning
             The temporary backup folder '#{ Config.tmp_path }'
             appears to contain the backup files which were to be stored:
             file1
@@ -235,9 +235,9 @@ describe Cleaner do
             returns(['file1', 'file2'])
 
         Logger.expects(:warn).with do |err|
-          expect( err ).to be_an_instance_of Errors::CleanerError
+          expect( err ).to be_an_instance_of Cleaner::Error
           expect( err.message ).to eq(<<-EOS.gsub(/^ +/, '  ').strip)
-            CleanerError: Cleanup Warning
+            Cleaner::Error: Cleanup Warning
             The temporary packaging folder still exists!
             '#{ File.join(Config.tmp_path, 'test_trigger') }'
             This folder may contain completed Archives and/or Database backups.

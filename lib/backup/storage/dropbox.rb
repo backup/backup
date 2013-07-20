@@ -4,6 +4,7 @@ require 'dropbox_sdk'
 module Backup
   module Storage
     class Dropbox < Base
+      class Error < Backup::Error; end
 
       ##
       # Dropbox API credentials
@@ -65,7 +66,7 @@ module Backup
         @connection = DropboxClient.new(session, access_type)
 
       rescue => err
-        raise Errors::Storage::Dropbox::ConnectionError.wrap(err)
+        raise Error.wrap(err, 'Authorization Failed')
       end
 
       ##
@@ -78,7 +79,7 @@ module Backup
             Logger.info "Session data loaded from cache!"
 
           rescue => err
-            Logger.warn Errors::Storage::Dropbox::CacheError.wrap(err, <<-EOS)
+            Logger.warn Error.wrap(err, <<-EOS)
               Could not read session data from cache.
               Cache data might be corrupt.
             EOS
@@ -113,7 +114,7 @@ module Backup
         end
 
       rescue => err
-        raise Errors::Storage::Dropbox::TransferError.wrap(err, 'Upload Failed!')
+        raise Error.wrap(err, 'Upload Failed!')
       end
 
       # Timeout::Error is not a StandardError under ruby-1.8.7
@@ -125,8 +126,7 @@ module Backup
           retries += 1
           raise if retries > chunk_retries
 
-          Logger.info Errors::Storage::Dropbox::TransferError.
-              wrap(err, "Retry ##{ retries } of #{ chunk_retries }.")
+          Logger.info Error.wrap(err, "Retry ##{ retries } of #{ chunk_retries }.")
           sleep(retry_waitsec)
           retry
         end
@@ -185,10 +185,8 @@ module Backup
 
         session
 
-        rescue => err
-          raise Errors::Storage::Dropbox::AuthenticationError.wrap(
-            err, 'Could not create or authenticate a new session'
-          )
+      rescue => err
+        raise Error.wrap(err, 'Could not create or authenticate a new session')
       end
 
       attr_deprecate :email,    :version => '3.0.17'
