@@ -37,7 +37,7 @@ module Backup
         def remove_packages!
           @packages_to_remove.each do |pkg|
             begin
-              @storage.send(:remove!, pkg)
+              @storage.send(:remove!, pkg) unless pkg.no_cycle
             rescue => err
               Logger.warn Errors::Storage::CyclerError.wrap(err, <<-EOS)
                 There was a problem removing the following package:

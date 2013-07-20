@@ -20,6 +20,10 @@ module Backup
     attr_accessor :chunk_suffixes
 
     ##
+    # If true, the Cycler will not attempt to remove the package when Cycling.
+    attr_accessor :no_cycle
+
+    ##
     # The version of Backup used to create the package
     attr_reader :version
 
@@ -27,6 +31,7 @@ module Backup
       @trigger = model.trigger
       @extension = 'tar'
       @chunk_suffixes = Array.new
+      @no_cycle = false
       @version = VERSION
     end
 

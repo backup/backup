@@ -56,12 +56,26 @@ describe 'Backup::Storage::Cycler' do
     before do
       cycler.instance_variable_set(:@storage, storage)
       cycler.instance_variable_set(:@packages_to_remove, [pkg_a, pkg_b, pkg_c])
+      pkg_a.stubs(:no_cycle)
+      pkg_b.stubs(:no_cycle)
+      pkg_c.stubs(:no_cycle)
     end
 
     it 'should call the @storage to remove the old packages' do
       storage.expects(:remove!).in_sequence(s).with(pkg_a)
       storage.expects(:remove!).in_sequence(s).with(pkg_b)
       storage.expects(:remove!).in_sequence(s).with(pkg_c)
+      cycler.send(:remove_packages!)
+    end
+
+    it 'should skip packages marked as no_cycle' do
+      pkg_a.stubs(:no_cycle).returns(nil)
+      pkg_b.stubs(:no_cycle).returns(true)
+      pkg_c.stubs(:no_cycle).returns(false)
+
+      storage.expects(:remove!).with(pkg_a)
+      storage.expects(:remove!).with(pkg_b).never
+      storage.expects(:remove!).with(pkg_c)
       cycler.send(:remove_packages!)
     end
 

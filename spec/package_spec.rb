@@ -13,6 +13,7 @@ describe Package do
       expect( package.trigger         ).to eq 'test_trigger'
       expect( package.extension       ).to eq 'tar'
       expect( package.chunk_suffixes  ).to eq []
+      expect( package.no_cycle        ).to be(false)
       expect( package.version         ).to eq VERSION
     end
   end
@@ -33,6 +34,11 @@ describe Package do
 
     package.extension = 'foo'
     expect( package.extension ).to eq 'foo'
+  end
+
+  it 'allows no_cycle to be set' do
+    package.no_cycle = true
+    expect( package.no_cycle ).to be(true)
   end
 
   describe '#filenames' do
