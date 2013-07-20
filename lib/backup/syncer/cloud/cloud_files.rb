@@ -26,21 +26,10 @@ module Backup
         # This only works if Backup runs on a Rackspace server
         attr_accessor :servicenet
 
-        ##
-        # Instantiates a new Cloud::CloudFiles Syncer.
-        #
-        # Pre-configured defaults specified in
-        # Configuration::Syncer::Cloud::CloudFiles
-        # are set via a super() call to Cloud::Base,
-        # which in turn will invoke Syncer::Base.
-        #
-        # Once pre-configured defaults and Cloud specific defaults are set,
-        # the block from the user's configuration file is evaluated.
-        def initialize(syncer_id = nil, &block)
+        def initialize(syncer_id = nil)
           super
 
-          instance_eval(&block) if block_given?
-          @path = path.sub(/^\//, '')
+          @servicenet ||= false
         end
 
         private

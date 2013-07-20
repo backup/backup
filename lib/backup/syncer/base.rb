@@ -25,7 +25,6 @@ module Backup
 
         load_defaults!
 
-        @path   ||= '~/backups'
         @mirror ||= false
         @directories = Array.new
       end

@@ -5,11 +5,6 @@ module Backup
     module RSync
       class Local < Base
 
-        def initialize(syncer_id = nil, &block)
-          super
-          instance_eval(&block) if block_given?
-        end
-
         def perform!
           log!(:started)
 

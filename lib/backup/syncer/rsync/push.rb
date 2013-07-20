@@ -101,9 +101,8 @@ module Backup
         # Flag for compressing (only compresses for the transfer)
         attr_accessor :compress
 
-        def initialize(syncer_id = nil, &block)
+        def initialize(syncer_id = nil)
           super
-          instance_eval(&block) if block_given?
 
           @mode ||= :ssh
           @port ||= mode == :rsync_daemon ? 873 : 22

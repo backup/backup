@@ -57,7 +57,7 @@ describe 'Backup::Syncer::Cloud::CloudFiles' do
         syncer.username.should    == nil
         syncer.container.should   == nil
         syncer.auth_url.should    == nil
-        syncer.servicenet.should  == nil
+        syncer.servicenet.should  == false
       end
     end # context 'when no pre-configured defaults have been set'
 
