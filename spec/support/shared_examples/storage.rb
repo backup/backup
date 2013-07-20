@@ -2,9 +2,6 @@
 
 module Backup
 shared_examples 'a subclass of Storage::Base' do
-  # call should set :cycling_supported true/false
-  let(:model) { Model.new(:test_trigger, 'test label') }
-  let(:storage) { described_class.new(model) }
   let(:storage_name) { described_class.name.sub('Backup::', '') }
   let(:s) { sequence '' }
 
@@ -34,9 +31,12 @@ shared_examples 'a subclass of Storage::Base' do
       before { storage.keep = 1 }
 
       specify 'storage cycles if supported' do
+        supported = respond_to?(:no_cycler) ? false : true
+
         Logger.expects(:info).in_sequence(s).with("#{ storage_name } Started...")
         storage.expects(:transfer!).in_sequence(s)
-        if cycling_supported
+
+        if supported
           Logger.expects(:info).in_sequence(s).with("Cycling Started...")
           Storage::Cycler.expects(:cycle!).in_sequence(s).with(storage)
         else
