@@ -132,9 +132,8 @@ module Backup
       # will also store the files directly in the +path+ given.
       attr_accessor :path
 
-      def initialize(model, storage_id = nil, &block)
+      def initialize(model, storage_id = nil)
         super
-        instance_eval(&block) if block_given?
 
         @mode ||= :ssh
         @port ||= mode == :rsync_daemon ? 873 : 22

@@ -30,9 +30,8 @@ module Backup
 
       ##
       # Creates a new instance of the storage object
-      def initialize(model, storage_id = nil, &block)
+      def initialize(model, storage_id = nil)
         super
-        instance_eval(&block) if block_given?
 
         @path           ||= 'backups'
         @access_type    ||= :app_folder

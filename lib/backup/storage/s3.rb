@@ -80,9 +80,8 @@ module Backup
       # Default: :standard
       attr_accessor :storage_class
 
-      def initialize(model, storage_id = nil, &block)
+      def initialize(model, storage_id = nil)
         super
-        instance_eval(&block) if block_given?
 
         @chunk_size     ||= 5 # MiB
         @max_retries    ||= 10

@@ -18,9 +18,8 @@ module Backup
       # Rackspace Cloud Files container name
       attr_accessor :container
 
-      def initialize(model, storage_id = nil, &block)
+      def initialize(model, storage_id = nil)
         super
-        instance_eval(&block) if block_given?
 
         @servicenet ||= false
         @path       ||= 'backups'

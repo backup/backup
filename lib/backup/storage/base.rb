@@ -21,12 +21,13 @@ module Backup
       # multiple storages of the same type. If multiple storages of the same
       # type are added to a single backup model, this identifier must be set.
       # This will be appended to the YAML storage file used for cycling backups.
-      def initialize(model, storage_id = nil)
+      def initialize(model, storage_id = nil, &block)
         @model = model
         @package = model.package
         @storage_id = storage_id.to_s.gsub(/\W/, '_') if storage_id
 
         load_defaults!
+        instance_eval(&block) if block_given?
       end
 
       def perform!

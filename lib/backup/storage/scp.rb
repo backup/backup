@@ -13,9 +13,8 @@ module Backup
       # Server IP Address and SCP port
       attr_accessor :ip, :port
 
-      def initialize(model, storage_id = nil, &block)
+      def initialize(model, storage_id = nil)
         super
-        instance_eval(&block) if block_given?
 
         @port ||= 22
         @path ||= 'backups'

@@ -9,9 +9,8 @@ module Backup
       # Ninefold Credentials
       attr_accessor :storage_token, :storage_secret
 
-      def initialize(model, storage_id = nil, &block)
+      def initialize(model, storage_id = nil)
         super
-        instance_eval(&block) if block_given?
 
         @path ||= 'backups'
         path.sub!(/^\//, '')

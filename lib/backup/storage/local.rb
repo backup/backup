@@ -4,9 +4,8 @@ module Backup
   module Storage
     class Local < Base
 
-      def initialize(model, storage_id = nil, &block)
+      def initialize(model, storage_id = nil)
         super
-        instance_eval(&block) if block_given?
 
         @path ||= '~/backups'
       end
