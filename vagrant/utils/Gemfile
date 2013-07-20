@@ -4,7 +4,8 @@ gem 'rake'
 
 # MySQL, PostgreSQL
 gem 'activerecord'
-gem 'mysql2'
+gem 'activerecord-mysql2-adapter'
+gem 'iconv'
 gem 'pg'
 
 # MongoDB
