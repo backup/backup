@@ -15,17 +15,18 @@ describe Notifier::Mail,
     it 'sends a success email', :live do
       create_model :my_backup, <<-EOS
         Backup::Model.new(:my_backup, 'a description') do
+          config = BackupSpec::LIVE['notifier']['mail']
           notify_by Mail do |mail|
             mail.delivery_method      = :smtp
-            mail.from                 = BackupSpec::LIVE['notifier']['mail']['from']
-            mail.to                   = BackupSpec::LIVE['notifier']['mail']['to']
-            mail.address              = BackupSpec::LIVE['notifier']['mail']['address']
-            mail.port                 = BackupSpec::LIVE['notifier']['mail']['port']
-            mail.user_name            = BackupSpec::LIVE['notifier']['mail']['user_name']
-            mail.password             = BackupSpec::LIVE['notifier']['mail']['password']
-            mail.authentication       = BackupSpec::LIVE['notifier']['mail']['authentication']
-            mail.encryption           = BackupSpec::LIVE['notifier']['mail']['encryption']
-            mail.openssl_verify_mode  = BackupSpec::LIVE['notifier']['mail']['openssl_verify_mode']
+            mail.from                 = config['from']
+            mail.to                   = config['to']
+            mail.address              = config['address']
+            mail.port                 = config['port']
+            mail.user_name            = config['user_name']
+            mail.password             = config['password']
+            mail.authentication       = config['authentication']
+            mail.encryption           = config['encryption']
+            mail.openssl_verify_mode  = config['openssl_verify_mode']
           end
         end
       EOS
@@ -36,17 +37,18 @@ describe Notifier::Mail,
     it 'sends a warning email', :live do
       create_model :my_backup, <<-EOS
         Backup::Model.new(:my_backup, 'a description') do
+          config = BackupSpec::LIVE['notifier']['mail']
           notify_by Mail do |mail|
             mail.delivery_method      = :smtp
-            mail.from                 = BackupSpec::LIVE['notifier']['mail']['from']
-            mail.to                   = BackupSpec::LIVE['notifier']['mail']['to']
-            mail.address              = BackupSpec::LIVE['notifier']['mail']['address']
-            mail.port                 = BackupSpec::LIVE['notifier']['mail']['port']
-            mail.user_name            = BackupSpec::LIVE['notifier']['mail']['user_name']
-            mail.password             = BackupSpec::LIVE['notifier']['mail']['password']
-            mail.authentication       = BackupSpec::LIVE['notifier']['mail']['authentication']
-            mail.encryption           = BackupSpec::LIVE['notifier']['mail']['encryption']
-            mail.openssl_verify_mode  = BackupSpec::LIVE['notifier']['mail']['openssl_verify_mode']
+            mail.from                 = config['from']
+            mail.to                   = config['to']
+            mail.address              = config['address']
+            mail.port                 = config['port']
+            mail.user_name            = config['user_name']
+            mail.password             = config['password']
+            mail.authentication       = config['authentication']
+            mail.encryption           = config['encryption']
+            mail.openssl_verify_mode  = config['openssl_verify_mode']
           end
 
           # log a warning
@@ -54,25 +56,24 @@ describe Notifier::Mail,
         end
       EOS
 
-      expect do
-        backup_perform :my_backup
-      end.to raise_error(SystemExit) {|exit| expect( exit.status ).to be(1) }
+      backup_perform :my_backup, :exit_status => 1
     end
 
     it 'sends a failure email (non-fatal)', :live do
       create_model :my_backup, <<-EOS
         Backup::Model.new(:my_backup, 'a description') do
+          config = BackupSpec::LIVE['notifier']['mail']
           notify_by Mail do |mail|
             mail.delivery_method      = :smtp
-            mail.from                 = BackupSpec::LIVE['notifier']['mail']['from']
-            mail.to                   = BackupSpec::LIVE['notifier']['mail']['to']
-            mail.address              = BackupSpec::LIVE['notifier']['mail']['address']
-            mail.port                 = BackupSpec::LIVE['notifier']['mail']['port']
-            mail.user_name            = BackupSpec::LIVE['notifier']['mail']['user_name']
-            mail.password             = BackupSpec::LIVE['notifier']['mail']['password']
-            mail.authentication       = BackupSpec::LIVE['notifier']['mail']['authentication']
-            mail.encryption           = BackupSpec::LIVE['notifier']['mail']['encryption']
-            mail.openssl_verify_mode  = BackupSpec::LIVE['notifier']['mail']['openssl_verify_mode']
+            mail.from                 = config['from']
+            mail.to                   = config['to']
+            mail.address              = config['address']
+            mail.port                 = config['port']
+            mail.user_name            = config['user_name']
+            mail.password             = config['password']
+            mail.authentication       = config['authentication']
+            mail.encryption           = config['encryption']
+            mail.openssl_verify_mode  = config['openssl_verify_mode']
           end
 
           archive :my_archive do |archive|
@@ -84,25 +85,24 @@ describe Notifier::Mail,
       Archive.any_instance.should_receive(:perform!).
           and_raise('a non-fatal error')
 
-      expect do
-        backup_perform :my_backup
-      end.to raise_error(SystemExit) {|exit| expect( exit.status ).to be(2) }
+      backup_perform :my_backup, :exit_status => 2
     end
 
     it 'sends a failure email (fatal)', :live do
       create_model :my_backup, <<-EOS
         Backup::Model.new(:my_backup, 'a description') do
+          config = BackupSpec::LIVE['notifier']['mail']
           notify_by Mail do |mail|
             mail.delivery_method      = :smtp
-            mail.from                 = BackupSpec::LIVE['notifier']['mail']['from']
-            mail.to                   = BackupSpec::LIVE['notifier']['mail']['to']
-            mail.address              = BackupSpec::LIVE['notifier']['mail']['address']
-            mail.port                 = BackupSpec::LIVE['notifier']['mail']['port']
-            mail.user_name            = BackupSpec::LIVE['notifier']['mail']['user_name']
-            mail.password             = BackupSpec::LIVE['notifier']['mail']['password']
-            mail.authentication       = BackupSpec::LIVE['notifier']['mail']['authentication']
-            mail.encryption           = BackupSpec::LIVE['notifier']['mail']['encryption']
-            mail.openssl_verify_mode  = BackupSpec::LIVE['notifier']['mail']['openssl_verify_mode']
+            mail.from                 = config['from']
+            mail.to                   = config['to']
+            mail.address              = config['address']
+            mail.port                 = config['port']
+            mail.user_name            = config['user_name']
+            mail.password             = config['password']
+            mail.authentication       = config['authentication']
+            mail.encryption           = config['encryption']
+            mail.openssl_verify_mode  = config['openssl_verify_mode']
           end
 
           archive :my_archive do |archive|
@@ -114,9 +114,7 @@ describe Notifier::Mail,
       Archive.any_instance.should_receive(:perform!).
           and_raise(Exception.new('a fatal error'))
 
-      expect do
-        backup_perform :my_backup
-      end.to raise_error(SystemExit) {|exit| expect( exit.status ).to be(3) }
+      backup_perform :my_backup, :exit_status => 3
     end
 
   end # context 'when using :smtp delivery method'

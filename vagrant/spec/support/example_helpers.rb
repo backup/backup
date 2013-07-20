@@ -91,18 +91,22 @@ module BackupSpec
     # Runs the given trigger(s).
     #
     # Any +options+ given are passed as command line options to the
-    # `backup perform` command.
+    # `backup perform` command. These should be given as String arguments.
+    # e.g. job = backup_perform :my_backup, '--tmp-path=/tmp'
+    #
+    # The last argument given for +options+ may be a Hash, which is used
+    # as options for this method. If { :exit_status => Integer } is set,
+    # this method will rescue SystemExit and assert that the exit status
+    # is correct. This allows jobs that log warnings to continue and return
+    # the performed job(s).
     #
     # When :focus is added to an example, '--no-quiet' will be appended to
     # +options+ so you can see the log output as the backup is performed.
-    #
-    # Note that since `backup perform` will now `exit()` if any jobs have
-    # warnings or errors, it's not neccessary to check the logger for the
-    # returned jobs for errors/warnings. i.e. if `job.logger.has_warnings?`
-    # is true, the spec example will fail due to SystemExit being raised.
     def backup_perform(triggers, *options)
       triggers = Array(triggers).map(&:to_s)
-      options << '--no-quiet' if example.metadata[:focus]
+      opts = options.last.is_a?(Hash) ? options.pop : {}
+      exit_status = opts.delete(:exit_status)
+      options << '--no-quiet' if example.metadata[:focus] || ENV['VERBOSE']
       argv = ['perform', '-t', triggers.join(',')] + options
 
       # Reset config paths, utility paths and the logger.
@@ -115,7 +119,16 @@ module BackupSpec
       Backup::Model.all.clear
 
       ARGV.replace(argv)
-      Backup::CLI.start
+
+      if exit_status
+        expect do
+          Backup::CLI.start
+        end.to raise_error(SystemExit) {|exit|
+          expect( exit.status ).to be(exit_status)
+        }
+      else
+        Backup::CLI.start
+      end
 
       models = triggers.map {|t| Backup::Model.find_by_trigger(t).first }
       jobs = models.map {|m| BackupSpec::PerformedJob.new(m) }
