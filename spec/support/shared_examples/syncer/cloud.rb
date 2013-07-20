@@ -1,6 +1,5 @@
 # encoding: utf-8
 
-module Backup
 shared_examples 'a subclass of Syncer::Cloud::Base' do
   let(:syncer_name) { described_class.name.sub('Backup::', '') }
   let(:s) { sequence '' }
@@ -50,7 +49,7 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
       before do
         syncer.stubs(:get_remote_files).
             with('my_backups/sync_dir').returns({})
-        Syncer::Cloud::LocalFile.expects(:find_md5).
+        Backup::Syncer::Cloud::LocalFile.expects(:find_md5).
             with('/local/path/sync_dir').returns([])
       end
 
@@ -70,9 +69,9 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
 
         syncer.perform!
 
-        expect( Logger.has_warnings? ).to be(false)
+        expect( Backup::Logger.has_warnings? ).to be(false)
         expect(
-          Logger.messages.map(&:lines).flatten.map(&:strip).join("\n")
+          Backup::Logger.messages.map(&:lines).flatten.map(&:strip).join("\n")
         ).to eq expected_messages
       end
     end
@@ -81,7 +80,7 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
       before do
         syncer.stubs(:get_remote_files).
             with('my_backups/sync_dir').returns(remote_files_data)
-        Syncer::Cloud::LocalFile.expects(:find_md5).
+        Backup::Syncer::Cloud::LocalFile.expects(:find_md5).
             with('/local/path/sync_dir').returns(find_md5_data)
       end
 
@@ -108,9 +107,9 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
 
           syncer.perform!
 
-          expect( Logger.has_warnings? ).to be(false)
+          expect( Backup::Logger.has_warnings? ).to be(false)
           expect(
-            Logger.messages.map(&:lines).flatten.map(&:strip).join("\n")
+            Backup::Logger.messages.map(&:lines).flatten.map(&:strip).join("\n")
           ).to eq expected_messages
         end
 
@@ -140,9 +139,9 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
 
           syncer.perform!
 
-          expect( Logger.has_warnings? ).to be(false)
+          expect( Backup::Logger.has_warnings? ).to be(false)
           expect(
-            Logger.messages.map(&:lines).flatten.map(&:strip).join("\n")
+            Backup::Logger.messages.map(&:lines).flatten.map(&:strip).join("\n")
           ).to eq expected_messages
         end
 
@@ -172,9 +171,9 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
 
           syncer.perform!
 
-          expect( Logger.has_warnings? ).to be(true)
+          expect( Backup::Logger.has_warnings? ).to be(true)
           expect(
-            Logger.messages.map(&:lines).flatten.map(&:strip).join("\n")
+            Backup::Logger.messages.map(&:lines).flatten.map(&:strip).join("\n")
           ).to eq expected_messages
         end
 
@@ -183,7 +182,7 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
       it 'skips files that are too large' do
         cloud_io.stubs(:upload).with(
           '/local/path/sync_dir/changed_01', 'my_backups/sync_dir/changed_01'
-        ).raises(CloudIO::FileSizeError)
+        ).raises(Backup::CloudIO::FileSizeError)
 
         expected_messages = <<-EOS.gsub(/^ +/, '').chomp
           #{ syncer_name } Started...
@@ -209,20 +208,20 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
 
         syncer.perform!
 
-        expect( Logger.has_warnings? ).to be(true)
+        expect( Backup::Logger.has_warnings? ).to be(true)
         expect(
-          Logger.messages.map(&:lines).flatten.map(&:strip).join("\n")
+          Backup::Logger.messages.map(&:lines).flatten.map(&:strip).join("\n")
         ).to eq expected_messages
       end
 
       it 'logs and raises error on upload failure' do
         cloud_io.stubs(:upload).raises('upload failure')
-        Logger.expects(:error).with do |err|
+        Backup::Logger.expects(:error).with do |err|
           expect( err.message ).to eq 'upload failure'
         end
         expect do
           syncer.perform!
-        end.to raise_error(Syncer::Cloud::Error)
+        end.to raise_error(Backup::Syncer::Cloud::Error)
       end
 
     end # context 'without threads'
@@ -231,7 +230,7 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
       before do
         syncer.stubs(:get_remote_files).
             with('my_backups/sync_dir').returns(remote_files_data)
-        Syncer::Cloud::LocalFile.expects(:find_md5).
+        Backup::Syncer::Cloud::LocalFile.expects(:find_md5).
             with('/local/path/sync_dir').returns(find_md5_data)
 
         syncer.thread_count = 20
@@ -262,8 +261,9 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
           syncer.mirror = false
           syncer.perform!
 
-          expect( Logger.has_warnings? ).to be(false)
-          messages = Logger.messages.map(&:lines).flatten.map(&:strip).join("\n")
+          expect( Backup::Logger.has_warnings? ).to be(false)
+          messages = Backup::Logger.messages.
+              map(&:lines).flatten.map(&:strip).join("\n")
           expect( messages ).to start_with expected_head
           expect( messages ).to end_with expected_tail
         end
@@ -294,8 +294,9 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
 
           syncer.perform!
 
-          expect( Logger.has_warnings? ).to be(false)
-          messages = Logger.messages.map(&:lines).flatten.map(&:strip).join("\n")
+          expect( Backup::Logger.has_warnings? ).to be(false)
+          messages = Backup::Logger.messages.
+              map(&:lines).flatten.map(&:strip).join("\n")
           expect( messages ).to start_with expected_head
           expect( messages ).to end_with expected_tail
         end
@@ -313,8 +314,9 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
 
           syncer.perform!
 
-          expect( Logger.has_warnings? ).to be(true)
-          messages = Logger.messages.map(&:lines).flatten.map(&:strip).join("\n")
+          expect( Backup::Logger.has_warnings? ).to be(true)
+          messages = Backup::Logger.messages.
+              map(&:lines).flatten.map(&:strip).join("\n")
           expect( messages ).to end_with expected_tail
           expect( messages ).to include(<<-EOS.gsub(/^ +/, ''))
             Syncer::Cloud::Error: Delete Operation Failed
@@ -328,7 +330,7 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
       it 'skips files that are too large' do
         cloud_io.stubs(:upload).with(
           '/local/path/sync_dir/changed_01', 'my_backups/sync_dir/changed_01'
-        ).raises(CloudIO::FileSizeError)
+        ).raises(Backup::CloudIO::FileSizeError)
 
         expected_tail = <<-EOS.gsub(/^ +/, '').chomp
           Summary:
@@ -341,8 +343,9 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
 
         syncer.perform!
 
-        expect( Logger.has_warnings? ).to be(true)
-        messages = Logger.messages.map(&:lines).flatten.map(&:strip).join("\n")
+        expect( Backup::Logger.has_warnings? ).to be(true)
+        messages = Backup::Logger.messages.
+            map(&:lines).flatten.map(&:strip).join("\n")
         expect( messages ).to end_with expected_tail
         expect( messages ).to include(<<-EOS.gsub(/^ +/, ''))
           Syncer::Cloud::Error: Skipping 'my_backups/sync_dir/changed_01'
@@ -353,12 +356,12 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
 
       it 'logs and raises error on upload failure' do
         cloud_io.stubs(:upload).raises('upload failure')
-        Logger.expects(:error).at_least_once.with do |err|
+        Backup::Logger.expects(:error).at_least_once.with do |err|
           expect( err.message ).to eq 'upload failure'
         end
         expect do
           syncer.perform!
-        end.to raise_error(Syncer::Cloud::Error)
+        end.to raise_error(Backup::Syncer::Cloud::Error)
       end
 
     end # context 'with threads'
@@ -373,8 +376,8 @@ shared_examples 'Deprecation: #concurrency_type and #concurrency_level' do
   context 'when desired #concurrency_type is :threads' do
     context 'when only #concurrency_type is set' do
       before do
-        Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+        Backup::Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Backup::Errors::ConfigurationError
           expect( err.message ).to match(/Use #thread_count instead/)
         }
       end
@@ -399,8 +402,8 @@ shared_examples 'Deprecation: #concurrency_type and #concurrency_level' do
 
     context 'when both #concurrency_type and #concurrency_level are set' do
       before do
-        Logger.expects(:warn).twice.with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+        Backup::Logger.expects(:warn).twice.with {|err|
+          expect( err ).to be_an_instance_of Backup::Errors::ConfigurationError
           expect( err.message ).to match(/Use #thread_count instead/)
         }
       end
@@ -452,8 +455,8 @@ shared_examples 'Deprecation: #concurrency_type and #concurrency_level' do
   context 'when desired #concurrency_type is :processes' do
     context 'when only #concurrency_type is set' do
       before do
-        Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+        Backup::Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Backup::Errors::ConfigurationError
           expect( err.message ).to match(/Use #thread_count instead/)
         }
       end
@@ -478,8 +481,8 @@ shared_examples 'Deprecation: #concurrency_type and #concurrency_level' do
 
     context 'when both #concurrency_type and #concurrency_level are set' do
       before do
-        Logger.expects(:warn).twice.with {|err|
-          expect( err ).to be_an_instance_of Errors::ConfigurationError
+        Backup::Logger.expects(:warn).twice.with {|err|
+          expect( err ).to be_an_instance_of Backup::Errors::ConfigurationError
           expect( err.message ).to match(/Use #thread_count instead/)
         }
       end
@@ -528,5 +531,3 @@ shared_examples 'Deprecation: #concurrency_type and #concurrency_level' do
     end
   end
 end # shared_examples 'deprecation: #concurrency_type and #concurrency_level'
-
-end

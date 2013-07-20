@@ -1,6 +1,5 @@
 # encoding: utf-8
 
-module Backup
 shared_examples 'a subclass of Storage::Base' do
   let(:storage_name) { described_class.name.sub('Backup::', '') }
   let(:s) { sequence '' }
@@ -35,16 +34,18 @@ shared_examples 'a subclass of Storage::Base' do
       specify 'storage cycles if supported' do
         supported = respond_to?(:no_cycler) ? false : true
 
-        Logger.expects(:info).in_sequence(s).with("#{ storage_name } Started...")
+        Backup::Logger.expects(:info).in_sequence(s).
+            with("#{ storage_name } Started...")
         storage.expects(:transfer!).in_sequence(s)
 
         if supported
-          Logger.expects(:info).in_sequence(s).with("Cycling Started...")
-          Storage::Cycler.expects(:cycle!).in_sequence(s).with(storage)
+          Backup::Logger.expects(:info).in_sequence(s).with("Cycling Started...")
+          Backup::Storage::Cycler.expects(:cycle!).in_sequence(s).with(storage)
         else
-          Storage::Cycler.expects(:cycle!).never
+          Backup::Storage::Cycler.expects(:cycle!).never
         end
-        Logger.expects(:info).in_sequence(s).with("#{ storage_name } Finished!")
+        Backup::Logger.expects(:info).in_sequence(s).
+            with("#{ storage_name } Finished!")
 
         storage.perform!
       end
@@ -52,10 +53,12 @@ shared_examples 'a subclass of Storage::Base' do
 
     context 'when keep is not set' do
       specify 'storage does not cycle' do
-        Logger.expects(:info).in_sequence(s).with("#{ storage_name } Started...")
+        Backup::Logger.expects(:info).in_sequence(s).
+            with("#{ storage_name } Started...")
         storage.expects(:transfer!).in_sequence(s)
-        Storage::Cycler.expects(:cycle!).never
-        Logger.expects(:info).in_sequence(s).with("#{ storage_name } Finished!")
+        Backup::Storage::Cycler.expects(:cycle!).never
+        Backup::Logger.expects(:info).in_sequence(s).
+            with("#{ storage_name } Finished!")
 
         storage.perform!
       end
@@ -66,10 +69,10 @@ shared_examples 'a subclass of Storage::Base' do
         block = respond_to?(:required_config) ? required_config : Proc.new {}
         storage = described_class.new(model, :my_id, &block)
 
-        Logger.expects(:info).in_sequence(s).
+        Backup::Logger.expects(:info).in_sequence(s).
             with("#{ storage_name } (my_id) Started...")
         storage.expects(:transfer!).in_sequence(s)
-        Logger.expects(:info).in_sequence(s).
+        Backup::Logger.expects(:info).in_sequence(s).
             with("#{ storage_name } (my_id) Finished!")
 
         storage.perform!
@@ -78,5 +81,4 @@ shared_examples 'a subclass of Storage::Base' do
 
   end # describe '#perform!'
 
-end
 end

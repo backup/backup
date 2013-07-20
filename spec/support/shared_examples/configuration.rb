@@ -1,6 +1,5 @@
 # encoding: utf-8
 
-module Backup
 shared_examples 'a class that includes Configuration::Helpers' do
 
   describe 'setting defaults' do
@@ -52,5 +51,4 @@ shared_examples 'a class that includes Configuration::Helpers' do
 
   end # describe 'setting defaults'
 
-end
 end

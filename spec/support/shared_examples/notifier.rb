@@ -1,6 +1,5 @@
 # encoding: utf-8
 
-module Backup
 shared_examples 'a subclass of Notifier::Base' do
   let(:notifier) { described_class.new(model) }
   let(:notifier_name) { described_class.name.sub('Backup::', '') }
@@ -18,7 +17,7 @@ shared_examples 'a subclass of Notifier::Base' do
         end
 
         it 'sends a notification' do
-          Logger.expects(:info).with(
+          Backup::Logger.expects(:info).with(
             "Sending notification using #{ notifier_name }..."
           )
           notifier.expects(:notify!).with(:success)
@@ -34,7 +33,7 @@ shared_examples 'a subclass of Notifier::Base' do
         end
 
         it 'does nothing' do
-          Logger.expects(:info).never
+          Backup::Logger.expects(:info).never
           notifier.expects(:notify!).never
           notifier.perform!
         end
@@ -52,7 +51,7 @@ shared_examples 'a subclass of Notifier::Base' do
         end
 
         it 'sends a notification' do
-          Logger.expects(:info).with(
+          Backup::Logger.expects(:info).with(
             "Sending notification using #{ notifier_name }..."
           )
           notifier.expects(:notify!).with(:warning)
@@ -68,7 +67,7 @@ shared_examples 'a subclass of Notifier::Base' do
         end
 
         it 'sends a notification' do
-          Logger.expects(:info).with(
+          Backup::Logger.expects(:info).with(
             "Sending notification using #{ notifier_name }..."
           )
           notifier.expects(:notify!).with(:warning)
@@ -84,7 +83,7 @@ shared_examples 'a subclass of Notifier::Base' do
         end
 
         it 'does nothing' do
-          Logger.expects(:info).never
+          Backup::Logger.expects(:info).never
           notifier.expects(:notify!).never
           notifier.perform!
         end
@@ -102,7 +101,7 @@ shared_examples 'a subclass of Notifier::Base' do
         end
 
         it 'sends a notification' do
-          Logger.expects(:info).with(
+          Backup::Logger.expects(:info).with(
             "Sending notification using #{ notifier_name }..."
           )
           notifier.expects(:notify!).with(:failure)
@@ -118,7 +117,7 @@ shared_examples 'a subclass of Notifier::Base' do
         end
 
         it 'does nothing' do
-          Logger.expects(:info).never
+          Backup::Logger.expects(:info).never
           notifier.expects(:notify!).never
           notifier.perform!
         end
@@ -136,7 +135,7 @@ shared_examples 'a subclass of Notifier::Base' do
         end
 
         it 'sends a notification' do
-          Logger.expects(:info).with(
+          Backup::Logger.expects(:info).with(
             "Sending notification using #{ notifier_name }..."
           )
           notifier.expects(:notify!).with(:failure)
@@ -152,7 +151,7 @@ shared_examples 'a subclass of Notifier::Base' do
         end
 
         it 'does nothing' do
-          Logger.expects(:info).never
+          Backup::Logger.expects(:info).never
           notifier.expects(:notify!).never
           notifier.perform!
         end
@@ -161,10 +160,11 @@ shared_examples 'a subclass of Notifier::Base' do
 
     specify 'only logs exceptions' do
       model.stubs(:exit_status).returns(0)
-      notifier.expects(:notify!).with(:success).raises(Exception.new 'error message')
+      notifier.expects(:notify!).with(:success).
+          raises(Exception.new 'error message')
 
-      Logger.expects(:error).with do |err|
-        expect( err ).to be_an_instance_of Errors::NotifierError
+      Backup::Logger.expects(:error).with do |err|
+        expect( err ).to be_an_instance_of Backup::Errors::NotifierError
         expect( err.message ).to match(/#{ notifier_name } Failed!/)
         expect( err.message ).to match(/error message/)
       end
@@ -177,17 +177,17 @@ shared_examples 'a subclass of Notifier::Base' do
       notifier.max_retries = 2
 
       logger_calls = 0
-      Logger.expects(:info).times(3).with do |arg|
+      Backup::Logger.expects(:info).times(3).with do |arg|
         logger_calls += 1
         case logger_calls
         when 1
           expect( arg ).to eq "Sending notification using #{ notifier_name }..."
         when 2
-          expect( arg ).to be_an_instance_of Errors::NotifierError
+          expect( arg ).to be_an_instance_of Backup::Errors::NotifierError
           expect( arg.message ).to match('RuntimeError: standard error')
           expect( arg.message ).to match('Retry #1 of 2.')
         when 3
-          expect( arg ).to be_an_instance_of Errors::NotifierError
+          expect( arg ).to be_an_instance_of Backup::Errors::NotifierError
           expect( arg.message ).to match('Timeout::Error')
           expect( arg.message ).to match('Retry #2 of 2.')
         end
@@ -200,8 +200,8 @@ shared_examples 'a subclass of Notifier::Base' do
       notifier.expects(:notify!).in_sequence(s).raises(Timeout::Error.new)
       notifier.expects(:notify!).in_sequence(s).raises('final error')
 
-      Logger.expects(:error).in_sequence(s).with do |err|
-        expect( err ).to be_an_instance_of Errors::NotifierError
+      Backup::Logger.expects(:error).in_sequence(s).with do |err|
+        expect( err ).to be_an_instance_of Backup::Errors::NotifierError
         expect( err.message ).to match(/#{ notifier_name } Failed!/)
         expect( err.message ).to match(/final error/)
       end
@@ -211,5 +211,4 @@ shared_examples 'a subclass of Notifier::Base' do
 
   end # describe '#perform'
 
-end
 end

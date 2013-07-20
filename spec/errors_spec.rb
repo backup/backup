@@ -20,6 +20,8 @@ end
 
 # Note: none of these tests require the use of the ErrorsHelper
 module Backup::Errors
+describe 'Backup Errors' do
+
 shared_examples 'a nested exception' do
   let(:class_name) { described_class.name.sub(/^Backup::Errors::/, '') }
 
@@ -487,4 +489,5 @@ describe FatalError do
   it_behaves_like 'a nested exception'
 end
 
+end # describe 'Backup Errors'
 end
