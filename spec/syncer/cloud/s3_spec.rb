@@ -1,174 +1,206 @@
 # encoding: utf-8
 require File.expand_path('../../../spec_helper.rb', __FILE__)
 
-describe 'Backup::Syncer::Cloud::S3' do
-  let(:syncer) do
-    Backup::Syncer::Cloud::S3.new do |s3|
+module Backup
+describe Syncer::Cloud::S3 do
+  let(:required_config) {
+    Proc.new do |s3|
       s3.access_key_id      = 'my_access_key_id'
       s3.secret_access_key  = 'my_secret_access_key'
       s3.bucket             = 'my_bucket'
-      s3.region             = 'my_region'
     end
+  }
+  let(:syncer) { Syncer::Cloud::S3.new(&required_config) }
+
+  it_behaves_like 'a class that includes Configuration::Helpers' do
+    let(:default_overrides) {
+      { 'encryption' => :aes256,
+        'storage_class' => :reduced_redundancy }
+    }
+    let(:new_overrides) {
+      { 'encryption' => 'aes256',
+        'storage_class' => 'standard' }
+    }
   end
 
-  it 'should be a subclass of Syncer::Cloud::Base' do
-    Backup::Syncer::Cloud::S3.
-      superclass.should == Backup::Syncer::Cloud::Base
-  end
+  it_behaves_like 'a subclass of Syncer::Cloud::Base'
 
   describe '#initialize' do
-    after { Backup::Syncer::Cloud::S3.clear_defaults! }
+    it 'provides default values' do
+      # required
+      expect( syncer.access_key_id      ).to eq 'my_access_key_id'
+      expect( syncer.secret_access_key  ).to eq 'my_secret_access_key'
+      expect( syncer.bucket             ).to eq 'my_bucket'
 
-    it 'should load pre-configured defaults through Syncer::Cloud::Base' do
-      Backup::Syncer::Cloud::S3.any_instance.expects(:load_defaults!)
-      syncer
+      # defaults
+      expect( syncer.region         ).to be_nil
+      expect( syncer.encryption     ).to be_nil
+      expect( syncer.storage_class  ).to eq :standard
+
+      # from Syncer::Cloud::Base
+      expect( syncer.thread_count   ).to be 0
+      expect( syncer.max_retries    ).to be 10
+      expect( syncer.retry_waitsec  ).to be 30
+      expect( syncer.path           ).to eq 'backups'
+
+      # from Syncer::Base
+      expect( syncer.syncer_id      ).to be_nil
+      expect( syncer.mirror         ).to be(false)
+      expect( syncer.directories    ).to eq []
     end
 
-    it 'should strip any leading slash in path' do
-      syncer = Backup::Syncer::Cloud::S3.new do |cloud|
-        cloud.path = '/cleaned/path'
-      end
-      syncer.path.should == 'cleaned/path'
-    end
+    it 'configures the syncer' do
+      syncer = Syncer::Cloud::S3.new(:my_id) do |s3|
+        s3.access_key_id      = 'my_access_key_id'
+        s3.secret_access_key  = 'my_secret_access_key'
+        s3.bucket             = 'my_bucket'
+        s3.region             = 'my_region'
+        s3.encryption         = :aes256
+        s3.storage_class      = :reduced_redundancy
+        s3.thread_count       = 5
+        s3.max_retries        = 15
+        s3.retry_waitsec      = 45
+        s3.path               = 'my_backups'
+        s3.mirror             = true
 
-    context 'when no pre-configured defaults have been set' do
-      it 'should use the values given' do
-        syncer.access_key_id.should     == 'my_access_key_id'
-        syncer.secret_access_key.should == 'my_secret_access_key'
-        syncer.bucket.should            == 'my_bucket'
-        syncer.region.should            == 'my_region'
-      end
-
-      it 'should use default values if none are given' do
-        syncer = Backup::Syncer::Cloud::S3.new
-
-        # from Syncer::Base
-        syncer.path.should    == 'backups'
-        syncer.mirror.should  == false
-        syncer.directories.should == []
-
-        # from Syncer::Cloud::Base
-        syncer.concurrency_type.should  == false
-        syncer.concurrency_level.should == 2
-
-        syncer.access_key_id.should     be_nil
-        syncer.secret_access_key.should be_nil
-        syncer.bucket.should            be_nil
-        syncer.region.should            be_nil
-      end
-    end # context 'when no pre-configured defaults have been set'
-
-    context 'when pre-configured defaults have been set' do
-      before do
-        Backup::Syncer::Cloud::S3.defaults do |cloud|
-          cloud.access_key_id      = 'default_access_key_id'
-          cloud.secret_access_key  = 'default_secret_access_key'
-          cloud.bucket             = 'default_bucket'
-          cloud.region             = 'default_region'
+        s3.directories do
+          add '/this/path'
+          add 'that/path'
         end
       end
 
-      it 'should use pre-configured defaults' do
-        syncer = Backup::Syncer::Cloud::S3.new
+      expect( syncer.access_key_id      ).to eq 'my_access_key_id'
+      expect( syncer.secret_access_key  ).to eq 'my_secret_access_key'
+      expect( syncer.bucket             ).to eq 'my_bucket'
+      expect( syncer.region             ).to eq 'my_region'
+      expect( syncer.encryption         ).to eq :aes256
+      expect( syncer.storage_class      ).to eq :reduced_redundancy
+      expect( syncer.thread_count       ).to be 5
+      expect( syncer.max_retries        ).to be 15
+      expect( syncer.retry_waitsec      ).to be 45
+      expect( syncer.path               ).to eq 'my_backups'
+      expect( syncer.syncer_id          ).to eq :my_id
+      expect( syncer.mirror             ).to be(true)
+      expect( syncer.directories        ).to eq ['/this/path', 'that/path']
+    end
 
-        # from Syncer::Base
-        syncer.path.should    == 'backups'
-        syncer.mirror.should  == false
-        syncer.directories.should == []
-
-        # from Syncer::Cloud::Base
-        syncer.concurrency_type.should  == false
-        syncer.concurrency_level.should == 2
-
-        syncer.access_key_id.should     == 'default_access_key_id'
-        syncer.secret_access_key.should == 'default_secret_access_key'
-        syncer.bucket.should            == 'default_bucket'
-        syncer.region.should            == 'default_region'
-      end
-
-      it 'should override pre-configured defaults' do
-        syncer = Backup::Syncer::Cloud::S3.new do |cloud|
-          cloud.path    = 'new_path'
-          cloud.mirror  = 'new_mirror'
-          cloud.concurrency_type    = 'new_concurrency_type'
-          cloud.concurrency_level   = 'new_concurrency_level'
-
-          cloud.access_key_id       = 'new_access_key_id'
-          cloud.secret_access_key   = 'new_secret_access_key'
-          cloud.bucket              = 'new_bucket'
-          cloud.region              = 'new_region'
+    it 'requires access_key_id' do
+      pre_config = required_config
+      expect do
+        Syncer::Cloud::S3.new do |s3|
+          pre_config.call(s3)
+          s3.access_key_id = nil
         end
+      end.to raise_error {|err|
+        expect( err.message ).to match(/are all required/)
+      }
+    end
 
-        syncer.path.should    == 'new_path'
-        syncer.mirror.should  == 'new_mirror'
-        syncer.directories.should == []
-        syncer.concurrency_type.should  == 'new_concurrency_type'
-        syncer.concurrency_level.should == 'new_concurrency_level'
+    it 'requires secret_access_key' do
+      pre_config = required_config
+      expect do
+        Syncer::Cloud::S3.new do |s3|
+          pre_config.call(s3)
+          s3.secret_access_key = nil
+        end
+      end.to raise_error {|err|
+        expect( err.message ).to match(/are all required/)
+      }
+    end
 
-        syncer.access_key_id.should     == 'new_access_key_id'
-        syncer.secret_access_key.should == 'new_secret_access_key'
-        syncer.bucket.should            == 'new_bucket'
-        syncer.region.should            == 'new_region'
-      end
-    end # context 'when pre-configured defaults have been set'
+    it 'requires bucket' do
+      pre_config = required_config
+      expect do
+        Syncer::Cloud::S3.new do |s3|
+          pre_config.call(s3)
+          s3.bucket = nil
+        end
+      end.to raise_error {|err|
+        expect( err.message ).to match(/are all required/)
+      }
+    end
+
+    it 'validates encryption' do
+      pre_config = required_config
+      expect do
+        Syncer::Cloud::S3.new do |s3|
+          pre_config.call(s3)
+          s3.encryption = :aes512
+        end
+      end.to raise_error {|err|
+        expect( err.message ).to match(/must be :aes256 or nil/)
+      }
+    end
+
+    it 'validates storage_class' do
+      pre_config = required_config
+      expect do
+        Syncer::Cloud::S3.new do |s3|
+          pre_config.call(s3)
+          s3.storage_class = :glacier
+        end
+      end.to raise_error {|err|
+        expect( err.message ).to match(/must be :standard or :reduced_redundancy/)
+      }
+    end
+
   end # describe '#initialize'
 
-  describe '#connection' do
-    let(:connection) { mock }
+  describe '#cloud_io' do
+    it 'caches a new CloudIO instance' do
+      CloudIO::S3.expects(:new).once.with(
+          :access_key_id      => 'my_access_key_id',
+          :secret_access_key  => 'my_secret_access_key',
+          :bucket             => 'my_bucket',
+          :region             => nil,
+          :encryption         => nil,
+          :storage_class      => :standard,
+          :max_retries        => 10,
+          :retry_waitsec      => 30,
+          :chunk_size       => 0
+      ).returns(:cloud_io)
 
-    before do
-      Fog::Storage.expects(:new).once.with(
-        :provider               => 'AWS',
-        :aws_access_key_id      => 'my_access_key_id',
-        :aws_secret_access_key  => 'my_secret_access_key',
-        :region                 => 'my_region'
-      ).returns(connection)
+      expect( syncer.send(:cloud_io) ).to eq :cloud_io
+      expect( syncer.send(:cloud_io) ).to eq :cloud_io
+    end
+  end # describe '#cloud_io'
+
+  describe '#get_remote_files' do
+    let(:cloud_io) { mock }
+    let(:object_a) {
+      stub(
+        :key => 'my/path/dir_to_sync/some_dir/object_a',
+        :etag => '12345'
+      )
+    }
+    let(:object_b) {
+      stub(
+        :key => 'my/path/dir_to_sync/another_dir/object_b',
+        :etag => '67890'
+      )
+    }
+    before { syncer.stubs(:cloud_io).returns(cloud_io) }
+
+    it 'returns a hash of relative paths and checksums for remote objects' do
+      cloud_io.expects(:objects).with('my/path/dir_to_sync').
+          returns([object_a, object_b])
+
+      expect(
+        syncer.send(:get_remote_files, 'my/path/dir_to_sync')
+      ).to eq(
+        { 'some_dir/object_a' => '12345', 'another_dir/object_b' => '67890' }
+      )
     end
 
-    it 'should establish and re-use the connection' do
-      syncer.send(:connection).should == connection
-      syncer.instance_variable_get(:@connection).should == connection
-      syncer.send(:connection).should == connection
+    it 'returns an empty hash if no remote objects are found' do
+      cloud_io.expects(:objects).returns([])
+      expect( syncer.send(:get_remote_files, 'foo') ).to eq({})
     end
+  end # describe '#get_remote_files'
+
+  describe 'Deprecations' do
+    include_examples 'Deprecation: #concurrency_type and #concurrency_level'
   end
 
-  describe '#repository_object' do
-    let(:connection)  { mock }
-    let(:directories) { mock }
-    let(:bucket)      { mock }
-
-    before do
-      syncer.stubs(:connection).returns(connection)
-      connection.stubs(:directories).returns(directories)
-    end
-
-    context 'when the @bucket does not exist' do
-      before do
-        directories.expects(:get).once.with('my_bucket').returns(nil)
-        directories.expects(:create).once.with(
-          :key      => 'my_bucket',
-          :location => 'my_region'
-        ).returns(bucket)
-      end
-
-      it 'should create and re-use the bucket' do
-        syncer.send(:repository_object).should == bucket
-        syncer.instance_variable_get(:@repository_object).should == bucket
-        syncer.send(:repository_object).should == bucket
-      end
-    end
-
-    context 'when the @bucket does exist' do
-      before do
-        directories.expects(:get).once.with('my_bucket').returns(bucket)
-        directories.expects(:create).never
-      end
-
-      it 'should retrieve and re-use the bucket' do
-        syncer.send(:repository_object).should == bucket
-        syncer.instance_variable_get(:@repository_object).should == bucket
-        syncer.send(:repository_object).should == bucket
-      end
-    end
-  end
+end
 end

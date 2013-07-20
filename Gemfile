@@ -27,7 +27,6 @@ group :production do
   gem 'net-ssh'
   gem 'net-scp'
   gem 'net-sftp'
-  gem 'parallel'
   gem 'mail'
   gem 'twitter'
   gem 'hipchat'

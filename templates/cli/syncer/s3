@@ -1,31 +1,8 @@
   ##
   # Amazon S3 [Syncer]
   #
-  # Available Regions:
-  #
-  #   - ap-northeast-1
-  #   - ap-southeast-1
-  #   - eu-west-1
-  #   - us-east-1
-  #   - us-west-1
-  #
-  # Mirroring:
-  #
-  #   When enabled it will keep an exact mirror of your filesystem on S3.
-  #   This means that when you remove a file from the filesystem,
-  #   it will also remote it from S3.
-  #
-  # Concurrency:
-  #
-  #   `concurrency_type` may be set to:
-  #
-  #     - false (default)
-  #     - :threads
-  #     - :processes
-  #
-  #   Set `concurrency_level` to the number of threads/processes to use.
-  #   Defaults to 2.
-  #
+  # See the documentation on the Wiki for details.
+  # https://github.com/meskyanichi/backup/wiki/Syncers
   sync_with Cloud::S3 do |s3|
     s3.access_key_id     = "my_access_key_id"
     s3.secret_access_key = "my_secret_access_key"
@@ -33,8 +10,7 @@
     s3.region            = "us-east-1"
     s3.path              = "/backups"
     s3.mirror            = true
-    s3.concurrency_type  = false
-    s3.concurrency_level = 2
+    s3.thread_count      = 10
 
     s3.directories do |directory|
       directory.add "/path/to/directory/to/sync"

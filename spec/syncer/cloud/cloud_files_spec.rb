@@ -1,181 +1,174 @@
 # encoding: utf-8
 require File.expand_path('../../../spec_helper.rb', __FILE__)
 
-describe 'Backup::Syncer::Cloud::CloudFiles' do
-  let(:syncer) do
-    Backup::Syncer::Cloud::CloudFiles.new do |cf|
-      cf.api_key      = 'my_api_key'
-      cf.username     = 'my_username'
-      cf.container    = 'my_container'
-      cf.auth_url     = 'my_auth_url'
-      cf.servicenet   = true
+module Backup
+describe Syncer::Cloud::CloudFiles do
+  let(:required_config) {
+    Proc.new do |cf|
+      cf.username   = 'my_username'
+      cf.api_key    = 'my_api_key'
+      cf.container  = 'my_container'
     end
-  end
+  }
+  let(:syncer) { Syncer::Cloud::CloudFiles.new(&required_config) }
 
-  it 'should be a subclass of Syncer::Cloud::Base' do
-    Backup::Syncer::Cloud::CloudFiles.
-      superclass.should == Backup::Syncer::Cloud::Base
-  end
+  it_behaves_like 'a class that includes Configuration::Helpers'
+
+  it_behaves_like 'a subclass of Syncer::Cloud::Base'
 
   describe '#initialize' do
-    after { Backup::Syncer::Cloud::CloudFiles.clear_defaults! }
+    it 'provides default values' do
+      # required
+      expect( syncer.username       ).to eq 'my_username'
+      expect( syncer.api_key        ).to eq 'my_api_key'
+      expect( syncer.container      ).to eq 'my_container'
 
-    it 'should load pre-configured defaults through Syncer::Cloud::Base' do
-      Backup::Syncer::Cloud::CloudFiles.any_instance.expects(:load_defaults!)
-      syncer
+      # defaults
+      expect( syncer.auth_url       ).to be_nil
+      expect( syncer.region         ).to be_nil
+      expect( syncer.servicenet     ).to be(false)
+
+      # from Syncer::Cloud::Base
+      expect( syncer.thread_count   ).to be 0
+      expect( syncer.max_retries    ).to be 10
+      expect( syncer.retry_waitsec  ).to be 30
+      expect( syncer.path           ).to eq 'backups'
+
+      # from Syncer::Base
+      expect( syncer.syncer_id      ).to be_nil
+      expect( syncer.mirror         ).to be(false)
+      expect( syncer.directories    ).to eq []
     end
 
-    it 'should strip any leading slash in path' do
-      syncer = Backup::Syncer::Cloud::CloudFiles.new do |cloud|
-        cloud.path = '/cleaned/path'
-      end
-      syncer.path.should == 'cleaned/path'
-    end
+    it 'configures the syncer' do
+      syncer = Syncer::Cloud::CloudFiles.new(:my_id) do |cf|
+        cf.username       = 'my_username'
+        cf.api_key        = 'my_api_key'
+        cf.container      = 'my_container'
+        cf.auth_url       = 'my_auth_url'
+        cf.region         = 'my_region'
+        cf.servicenet     = true
+        cf.thread_count   = 5
+        cf.max_retries    = 15
+        cf.retry_waitsec  = 45
+        cf.path           = 'my_backups'
+        cf.mirror         = true
 
-    context 'when no pre-configured defaults have been set' do
-      it 'should use the values given' do
-        syncer.api_key.should     == 'my_api_key'
-        syncer.username.should    == 'my_username'
-        syncer.container.should   == 'my_container'
-        syncer.auth_url.should    == 'my_auth_url'
-        syncer.servicenet.should  == true
-      end
-
-      it 'should use default values if none are given' do
-        syncer = Backup::Syncer::Cloud::CloudFiles.new
-
-        # from Syncer::Base
-        syncer.path.should    == 'backups'
-        syncer.mirror.should  == false
-        syncer.directories.should == []
-
-        # from Syncer::Cloud::Base
-        syncer.concurrency_type.should  == false
-        syncer.concurrency_level.should == 2
-
-        syncer.api_key.should     == nil
-        syncer.username.should    == nil
-        syncer.container.should   == nil
-        syncer.auth_url.should    == nil
-        syncer.servicenet.should  == false
-      end
-    end # context 'when no pre-configured defaults have been set'
-
-    context 'when pre-configured defaults have been set' do
-      before do
-        Backup::Syncer::Cloud::CloudFiles.defaults do |cloud|
-          cloud.api_key      = 'default_api_key'
-          cloud.username     = 'default_username'
-          cloud.container    = 'default_container'
-          cloud.auth_url     = 'default_auth_url'
-          cloud.servicenet   = 'default_servicenet'
+        cf.directories do
+          add '/this/path'
+          add 'that/path'
         end
       end
 
-      it 'should use pre-configured defaults' do
-        syncer = Backup::Syncer::Cloud::CloudFiles.new
+      expect( syncer.username       ).to eq 'my_username'
+      expect( syncer.api_key        ).to eq 'my_api_key'
+      expect( syncer.container      ).to eq 'my_container'
+      expect( syncer.auth_url       ).to eq 'my_auth_url'
+      expect( syncer.region         ).to eq 'my_region'
+      expect( syncer.servicenet     ).to be(true)
+      expect( syncer.thread_count   ).to be 5
+      expect( syncer.max_retries    ).to be 15
+      expect( syncer.retry_waitsec  ).to be 45
+      expect( syncer.path           ).to eq 'my_backups'
+      expect( syncer.syncer_id      ).to eq :my_id
+      expect( syncer.mirror         ).to be(true)
+      expect( syncer.directories    ).to eq ['/this/path', 'that/path']
+    end
 
-        # from Syncer::Base
-        syncer.path.should    == 'backups'
-        syncer.mirror.should  == false
-        syncer.directories.should == []
-
-        # from Syncer::Cloud::Base
-        syncer.concurrency_type.should  == false
-        syncer.concurrency_level.should == 2
-
-        syncer.api_key.should      == 'default_api_key'
-        syncer.username.should     == 'default_username'
-        syncer.container.should    == 'default_container'
-        syncer.auth_url.should     == 'default_auth_url'
-        syncer.servicenet.should   == 'default_servicenet'
-      end
-
-      it 'should override pre-configured defaults' do
-        syncer = Backup::Syncer::Cloud::CloudFiles.new do |cloud|
-          cloud.path    = 'new_path'
-          cloud.mirror  = 'new_mirror'
-          cloud.concurrency_type    = 'new_concurrency_type'
-          cloud.concurrency_level   = 'new_concurrency_level'
-
-          cloud.api_key      = 'new_api_key'
-          cloud.username     = 'new_username'
-          cloud.container    = 'new_container'
-          cloud.auth_url     = 'new_auth_url'
-          cloud.servicenet   = 'new_servicenet'
+    it 'requires username' do
+      pre_config = required_config
+      expect do
+        Syncer::Cloud::CloudFiles.new do |cf|
+          pre_config.call(cf)
+          cf.username = nil
         end
+      end.to raise_error {|err|
+        expect( err.message ).to match(/are all required/)
+      }
+    end
 
-        syncer.path.should    == 'new_path'
-        syncer.mirror.should  == 'new_mirror'
-        syncer.directories.should == []
-        syncer.concurrency_type.should  == 'new_concurrency_type'
-        syncer.concurrency_level.should == 'new_concurrency_level'
+    it 'requires api_key' do
+      pre_config = required_config
+      expect do
+        Syncer::Cloud::CloudFiles.new do |cf|
+          pre_config.call(cf)
+          cf.api_key = nil
+        end
+      end.to raise_error {|err|
+        expect( err.message ).to match(/are all required/)
+      }
+    end
 
-        syncer.api_key.should      == 'new_api_key'
-        syncer.username.should     == 'new_username'
-        syncer.container.should    == 'new_container'
-        syncer.auth_url.should     == 'new_auth_url'
-        syncer.servicenet.should   == 'new_servicenet'
-      end
-    end # context 'when pre-configured defaults have been set'
+    it 'requires container' do
+      pre_config = required_config
+      expect do
+        Syncer::Cloud::CloudFiles.new do |cf|
+          pre_config.call(cf)
+          cf.container = nil
+        end
+      end.to raise_error {|err|
+        expect( err.message ).to match(/are all required/)
+      }
+    end
+
   end # describe '#initialize'
 
-  describe '#connection' do
-    let(:connection) { mock }
+  describe '#cloud_io' do
+    it 'caches a new CloudIO instance' do
+      CloudIO::CloudFiles.expects(:new).once.with(
+          :username           => 'my_username',
+          :api_key            => 'my_api_key',
+          :auth_url           => nil,
+          :region             => nil,
+          :servicenet         => false,
+          :container          => 'my_container',
+          :max_retries        => 10,
+          :retry_waitsec      => 30,
+          :segments_container => nil,
+          :segment_size       => 0
+      ).returns(:cloud_io)
 
-    before do
-      Fog::Storage.expects(:new).once.with(
-        :provider             => 'Rackspace',
-        :rackspace_username   => 'my_username',
-        :rackspace_api_key    => 'my_api_key',
-        :rackspace_auth_url   => 'my_auth_url',
-        :rackspace_servicenet => true
-      ).returns(connection)
+      expect( syncer.send(:cloud_io) ).to eq :cloud_io
+      expect( syncer.send(:cloud_io) ).to eq :cloud_io
+    end
+  end # describe '#cloud_io'
+
+  describe '#get_remote_files' do
+    let(:cloud_io) { mock }
+    let(:object_a) {
+      stub(
+        :name => 'my/path/dir_to_sync/some_dir/object_a',
+        :hash => '12345'
+      )
+    }
+    let(:object_b) {
+      stub(
+        :name => 'my/path/dir_to_sync/another_dir/object_b',
+        :hash => '67890'
+      )
+    }
+    before { syncer.stubs(:cloud_io).returns(cloud_io) }
+
+    it 'returns a hash of relative paths and checksums for remote objects' do
+      cloud_io.expects(:objects).with('my/path/dir_to_sync').
+          returns([object_a, object_b])
+
+      expect(
+        syncer.send(:get_remote_files, 'my/path/dir_to_sync')
+      ).to eq(
+        { 'some_dir/object_a' => '12345', 'another_dir/object_b' => '67890' }
+      )
     end
 
-    it 'should establish and re-use the connection' do
-      syncer.send(:connection).should == connection
-      syncer.instance_variable_get(:@connection).should == connection
-      syncer.send(:connection).should == connection
+    it 'returns an empty hash if no remote objects are found' do
+      cloud_io.expects(:objects).returns([])
+      expect( syncer.send(:get_remote_files, 'foo') ).to eq({})
     end
+  end # describe '#get_remote_files'
+
+  describe 'Deprecations' do
+    include_examples 'Deprecation: #concurrency_type and #concurrency_level'
   end
 
-  describe '#repository_object' do
-    let(:connection)  { mock }
-    let(:directories) { mock }
-    let(:container)   { mock }
-
-    before do
-      syncer.stubs(:connection).returns(connection)
-      connection.stubs(:directories).returns(directories)
-    end
-
-    context 'when the @container does not exist' do
-      before do
-        directories.expects(:get).once.with('my_container').returns(nil)
-        directories.expects(:create).once.with(
-          :key => 'my_container'
-        ).returns(container)
-      end
-
-      it 'should create and re-use the container' do
-        syncer.send(:repository_object).should == container
-        syncer.instance_variable_get(:@repository_object).should == container
-        syncer.send(:repository_object).should == container
-      end
-    end
-
-    context 'when the @container does exist' do
-      before do
-        directories.expects(:get).once.with('my_container').returns(container)
-        directories.expects(:create).never
-      end
-
-      it 'should retrieve and re-use the container' do
-        syncer.send(:repository_object).should == container
-        syncer.instance_variable_get(:@repository_object).should == container
-        syncer.send(:repository_object).should == container
-      end
-    end
-  end
+end
 end

@@ -5,6 +5,7 @@ module BackupSpec
   CONFIG_TEMPLATE = File.readlines(File.join(PROJECT_ROOT, 'templates/cli/config'))
   LOCAL_STORAGE_PATH = '/home/vagrant/Storage'
   ALT_CONFIG_PATH = '/home/vagrant/Backup_alt'
+  LOCAL_SYNC_PATH = '/home/vagrant/sync_root'
 
   module ExampleHelpers
 
@@ -141,6 +142,59 @@ module BackupSpec
     def dir_contents(path)
       path = File.expand_path(path)
       Dir["#{ path }/**/*"].map {|e| e.sub(/^#{ path }/, '') }.sort
+    end
+
+    # Initial Files are MD5: d3b07384d113edec49eaa6238ad5ff00
+    #
+    # ├── dir_a
+    # │   └── one.file
+    # └── dir_b
+    #     ├── dir_c
+    #     │   └── three.file
+    #     ├── bad\xFFfile
+    #     └── two.file
+    #
+    def prepare_local_sync_files
+      FileUtils.rm_rf LOCAL_SYNC_PATH
+
+      %w{ dir_a
+          dir_b/dir_c }.each do |path|
+        FileUtils.mkdir_p File.join(LOCAL_SYNC_PATH, path)
+      end
+
+      %W{ dir_a/one.file
+          dir_b/two.file
+          dir_b/bad\xFFfile
+          dir_b/dir_c/three.file }.each do |path|
+        File.open(File.join(LOCAL_SYNC_PATH, path), 'w') do |file|
+          file.puts 'foo'
+        end
+      end
+    end
+
+    # Added/Updated Files are MD5: 14758f1afd44c09b7992073ccf00b43d
+    #
+    # ├── dir_a
+    # │   ├── dir_d           (add)
+    # │   │   └── two.new     (add)
+    # │   └── one.file        (update)
+    # └── dir_b
+    #     ├── dir_c
+    #     │   └── three.file
+    #     ├── bad\377file
+    #     ├── one.new         (add)
+    #     └── two.file        (remove)
+    #
+    def update_local_sync_files
+      FileUtils.mkdir_p File.join(LOCAL_SYNC_PATH, 'dir_a/dir_d')
+      %w{ dir_a/one.file
+          dir_b/one.new
+          dir_a/dir_d/two.new }.each do |path|
+        File.open(File.join(LOCAL_SYNC_PATH, path), 'w') do |file|
+          file.puts 'foobar'
+        end
+      end
+      FileUtils.rm File.join(LOCAL_SYNC_PATH, 'dir_b/two.file')
     end
 
   end
