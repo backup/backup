@@ -20,8 +20,10 @@ storage:
     username: <your username>
     api_key: <your key>
     auth_url: # if needed
+    region: # if needed
     servicenet: false
     container: <your container>
+    segments_container: <another container>
     path: backup_testing
 notifier:
   mail:
