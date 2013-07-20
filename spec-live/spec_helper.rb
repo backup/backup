@@ -17,20 +17,10 @@ module Backup
   module SpecLive
     PATH = File.expand_path('..', __FILE__)
     TMP_PATH = PATH + '/.tmp'
-    SYNC_PATH = PATH + '/.sync'
 
     ARCHIVE_JOB = lambda do |archive|
       archive.add     File.expand_path('../../lib/backup', __FILE__)
       archive.exclude File.expand_path('../../lib/backup/storage', __FILE__)
-    end
-
-    config = PATH + '/backups/config.yml'
-    if File.exist?(config)
-      CONFIG = YAML.load_file(config)
-    else
-      puts "The 'spec-live/backups/config.yml' file is required."
-      puts "Use 'spec-live/backups/config.yml.template' to create one"
-      exit!
     end
 
     class << self
@@ -90,7 +80,7 @@ module Backup
         # keep cache_path and log_path
         paths = [:data_path, :tmp_path ].map do |name|
           Backup::Config.send(name)
-        end + [Backup::SpecLive::TMP_PATH, Backup::SpecLive::SYNC_PATH]
+        end + [Backup::SpecLive::TMP_PATH]
         paths.each do |path|
           h_safety_check(path)
           FileUtils.rm_rf(path)
@@ -146,19 +136,3 @@ RSpec.configure do |config|
 end
 
 puts "\nRuby version: #{ RUBY_DESCRIPTION }\n\n"
-
-unless ENV['VERBOSE']
-  puts <<-EOS
-
-    Some of these tests can be slow, so be patient.
-    It's recommended you run these with:
-      $ VERBOSE=1 rspec spec-live/
-    so you can view the log messages as the tests run.
-    Log messages are also available in ./backups/log/backup.log
-
-    For some tests, [error] and [warning] messages are normal.
-    Some could pass, but still have problems.
-    So, pay attention to the messages :)
-
-  EOS
-end

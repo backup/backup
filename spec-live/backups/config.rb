@@ -6,16 +6,6 @@ Backup::Storage::Local.defaults do |storage|
   storage.keep = 2
 end
 
-Backup::Syncer::Cloud::S3.defaults do |s3|
-  opts = SpecLive::CONFIG['syncer']['cloud']['s3']
-
-  s3.access_key_id     = opts['access_key_id']
-  s3.secret_access_key = opts['secret_access_key']
-  s3.bucket            = opts['bucket']
-  s3.region            = opts['region']
-  s3.mirror            = true
-end
-
 Backup::Encryptor::GPG.defaults do |enc|
   enc.gpg_homedir = File.join(SpecLive::TMP_PATH, 'gpg_home_tmp')
 end

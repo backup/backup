@@ -1,15 +1,6 @@
 ##
 # Models
 
-Backup::Model.new(:syncer_cloud_s3, 'test_label') do
-  sync_with Cloud::S3 do |s3|
-    s3.directories do
-      add File.join(SpecLive::SYNC_PATH, 'dir_a')
-      add File.join(SpecLive::SYNC_PATH, 'dir_b')
-    end
-  end
-end
-
 Backup::Model.new(:encryptor_gpg_asymmetric, 'test_label') do
   archive :test_archive, &SpecLive::ARCHIVE_JOB
   encrypt_with GPG do |e|

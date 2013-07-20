@@ -2,8 +2,7 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe 'Encryptor::GPG',
-    :if => Backup::SpecLive::CONFIG['encryptor']['gpg']['specs_enabled'] do
+describe 'Encryptor::GPG' do
 
   def archive_file_for(model)
     File.join(
@@ -132,19 +131,7 @@ describe 'Encryptor::GPG',
       # Since there are no other options for encryption,
       # the backup failes with an error.
       Backup::Logger.messages.map(&:formatted_lines).flatten.any? {|msg|
-        msg =~ /\[error\]\s+ModelError/
-      }.should be_true
-      Backup::Logger.messages.map(&:formatted_lines).flatten.any? {|msg|
-        msg =~ /\[error\]\s+Reason: Encryptor::GPG::EncryptionError/
-      }.should be_true
-      Backup::Logger.messages.map(&:formatted_lines).flatten.any? {|msg|
-        msg =~ /\[error\]\s+Encryption could not be performed for mode 'asymmetric'/
-      }.should be_true
-
-      # Although, any further backup models would be run, as this error
-      # is rescued in Backup::Model#perform
-      Backup::Logger.messages.map(&:lines).flatten.any? {|msg|
-        msg =~ /Backup will now attempt to continue/
+        msg =~ /\[error\].*Encryption could not be performed for mode 'asymmetric'/
       }.should be_true
 
       File.exist?(archive_file_for(model)).should be_false
