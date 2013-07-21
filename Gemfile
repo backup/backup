@@ -31,6 +31,7 @@ group :production do
 end
 
 gem 'rspec'
+gem 'fuubar'
 gem 'mocha'
 gem 'timecop', '= 0.6.1' # ruby-1.8.7 support was removed in 0.6.2
 
@@ -38,7 +39,6 @@ gem 'timecop', '= 0.6.1' # ruby-1.8.7 support was removed in 0.6.2
 group :no_ci do
   gem 'guard'
   gem 'guard-rspec'
-  gem 'fuubar'
 
   gem 'rb-fsevent' # Mac OS X
   gem 'rb-inotify' # Linux
