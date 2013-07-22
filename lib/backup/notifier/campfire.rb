@@ -1,5 +1,4 @@
 # encoding: utf-8
-require 'excon'
 require 'json'
 
 module Backup

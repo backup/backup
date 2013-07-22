@@ -1,7 +1,6 @@
 # encoding: utf-8
 require 'backup/cloud_io/base'
 require 'fog'
-Excon.defaults[:debug_response] = true
 require 'digest/md5'
 
 module Backup
