@@ -241,6 +241,20 @@ module Backup
   end
 end
 
+# Patch mail v2.5.4 Exim delivery method
+# https://github.com/meskyanichi/backup/issues/446
+# https://github.com/mikel/mail/pull/546
+module Mail
+  class Exim
+    def self.call(path, arguments, destinations, encoded_message)
+      popen "#{path} #{arguments}" do |io|
+        io.puts encoded_message.to_lf
+        io.flush
+      end
+    end
+  end
+end
+
 # Patch mail v2.5.4 for ruby-1.8.7
 # https://github.com/mikel/mail/issues/548
 # https://github.com/mikel/mail/commit/c7318a6c03c1ecb3f574ccd2e3f06778687d1d15
