@@ -24,10 +24,10 @@ module Backup
         super
         instance_eval(&block) if block_given?
 
-        @nagios_host  ||= run(utility(:hostname)).chomp
+        @nagios_host  ||= Config.hostname
         @nagios_port  ||= 5667
         @service_name ||= "Backup #{ model.trigger }"
-        @service_host ||= run(utility(:hostname)).chomp
+        @service_host ||= Config.hostname
       end
 
       private
@@ -51,11 +51,11 @@ module Backup
       #
       def notify!(status)
         message = case status
-              when :success then 'Completed successfully'
-              when :warning then 'Completed successfully with warnings'
+              when :success then 'Completed Successfully'
+              when :warning then 'Completed Successfully (with Warnings)'
               when :failure then 'Failed'
               end
-        send_message("#{message} in #{model.duration}")
+        send_message("#{ message } in #{ model.duration }")
       end
 
       def send_message(message)

@@ -126,6 +126,7 @@ Supported notification services include:
 - Hipchat
 - Pushover
 - POST Request
+- Nagios
 
 
 ## Generators
