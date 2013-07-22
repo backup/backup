@@ -564,20 +564,24 @@ describe CloudIO::S3 do
 
     it 'uploads chunks with Content-MD5' do
       File.expects(:open).with('/src/file', 'r').yields(file)
+      StringIO.stubs(:new).with(chunk_a).returns(:stringio_a)
+      StringIO.stubs(:new).with(chunk_b).returns(:stringio_b)
 
       cloud_io.expects(:with_retries).with(
         "PUT 'my_bucket/dest/file' Part #1"
       ).yields
+
       connection.expects(:upload_part).with(
-        'my_bucket', 'dest/file', 1234, 1, chunk_a,
+        'my_bucket', 'dest/file', 1234, 1, :stringio_a,
         { 'Content-MD5' => encoded_digest_a }
       ).returns(chunk_a_resp)
 
       cloud_io.expects(:with_retries).with(
         "PUT 'my_bucket/dest/file' Part #2"
       ).yields
+
       connection.expects(:upload_part).with(
-        'my_bucket', 'dest/file', 1234, 2, chunk_b,
+        'my_bucket', 'dest/file', 1234, 2, :stringio_b,
         { 'Content-MD5' => encoded_digest_b }
       ).returns(chunk_b_resp)
 

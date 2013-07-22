@@ -3,6 +3,7 @@ require 'backup/cloud_io/base'
 require 'fog'
 require 'digest/md5'
 require 'base64'
+require 'stringio'
 
 module Backup
   module CloudIO
@@ -167,7 +168,7 @@ module Backup
 
             with_retries("PUT '#{ bucket }/#{ dest }' Part ##{ part_number }") do
               resp = connection.upload_part(
-                bucket, dest, upload_id, part_number, data,
+                bucket, dest, upload_id, part_number, StringIO.new(data),
                 { 'Content-MD5' => md5 }
               )
               parts << resp.headers['ETag']
