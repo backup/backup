@@ -115,6 +115,7 @@ module Backup
   # Require Backup base files
   %w{
     errors
+    logger
     utilities
     archive
     binder
@@ -122,7 +123,6 @@ module Backup
     config
     cli
     configuration
-    logger
     model
     package
     packager

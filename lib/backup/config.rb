@@ -12,7 +12,9 @@ module Backup
     }
 
     class << self
-      attr_reader :user, :root_path, :config_file,
+      include Backup::Utilities::Helpers
+
+      attr_reader :user, :hostname, :root_path, :config_file,
                   :data_path, :cache_path, :tmp_path
 
       ##
@@ -78,6 +80,7 @@ module Backup
       # Set default values for accessors
       def reset!
         @user      = ENV['USER'] || Etc.getpwuid.name
+        @hostname  = run(utility(:hostname))
         @root_path = File.join(File.expand_path(ENV['HOME'] || ''), 'Backup')
         update(:root_path => @root_path)
       end
