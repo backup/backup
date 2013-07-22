@@ -110,7 +110,7 @@ DEPENDENCIES
   guard-rspec
   hipchat
   json
-  mail
+  mail (= 2.5.4)
   mocha
   net-scp
   net-sftp

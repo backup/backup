@@ -18,13 +18,13 @@ source 'https://rubygems.org'
 group :production do
   gem 'thor'
   gem 'open4'
-  gem 'fog', '=1.13.0' # see https://github.com/fog/fog/pull/1905
+  gem 'fog', '= 1.13.0' # see https://github.com/fog/fog/pull/1905
   gem 'excon'
   gem 'dropbox-sdk', '= 1.5.1' # patched
   gem 'net-ssh'
   gem 'net-scp'
   gem 'net-sftp'
-  gem 'mail'
+  gem 'mail', '= 2.5.4' # patched
   gem 'twitter'
   gem 'hipchat'
   gem 'json'
