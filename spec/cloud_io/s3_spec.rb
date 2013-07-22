@@ -597,6 +597,8 @@ describe CloudIO::S3 do
       file_size = chunk_bytes * 100
       file = StringIO.new('x' * file_size)
       File.expects(:open).with('/src/file', 'r').yields(file)
+      Digest::MD5.stubs(:digest)
+      Base64.stubs(:encode64).returns('')
       connection.stubs(:upload_part).returns(stub(:headers => {}))
 
       cloud_io.send(:upload_parts,

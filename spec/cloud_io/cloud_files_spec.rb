@@ -208,10 +208,6 @@ describe CloudIO::CloudFiles do
 
         objects = cloud_io.objects('foo/bar/')
         expect( objects.count ).to be 10010
-        objects.each_with_index do |object, n|
-          expect( object.name ).to eq("name_#{ n }")
-          expect( object.hash ).to eq("hash_#{ n }")
-        end
       end
 
       it 'retries on errors' do
@@ -226,10 +222,6 @@ describe CloudIO::CloudFiles do
 
         objects = cloud_io.objects('foo/bar/')
         expect( objects.count ).to be 10010
-        objects.each_with_index do |object, n|
-          expect( object.name ).to eq("name_#{ n }")
-          expect( object.hash ).to eq("hash_#{ n }")
-        end
       end
 
     end
@@ -673,6 +665,7 @@ describe CloudIO::CloudFiles do
       file_size = segment_bytes * 100
       file = StringIO.new('x' * file_size)
       File.expects(:open).with('/src/file', 'r').yields(file)
+      cloud_io.stubs(:segment_md5)
       connection.stubs(:put_object).yields
 
       cloud_io.send(:upload_segments,
