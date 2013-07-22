@@ -108,12 +108,14 @@ module Backup
     autoload :Hipchat,   File.join(NOTIFIER_PATH, 'hipchat')
     autoload :Pushover,  File.join(NOTIFIER_PATH, 'pushover')
     autoload :HttpPost,  File.join(NOTIFIER_PATH, 'http_post')
+    autoload :Nagios,    File.join(NOTIFIER_PATH, 'nagios')
   end
 
   ##
   # Require Backup base files
   %w{
     errors
+    logger
     utilities
     archive
     binder
@@ -121,7 +123,6 @@ module Backup
     config
     cli
     configuration
-    logger
     model
     package
     packager

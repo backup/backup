@@ -16,14 +16,15 @@ describe Backup::Utilities do
 
       utilities.configure do
         # General Utilites
-        tar   '/path/to/tar'
+        tar      '/path/to/tar'
         tar_dist :gnu   # or :bsd
-        cat   '/path/to/cat'
-        split '/path/to/split'
-        find  '/path/to/find'
-        xargs '/path/to/xargs'
-        sudo  '/path/to/sudo'
-        chown '/path/to/chown'
+        cat      '/path/to/cat'
+        split    '/path/to/split'
+        find     '/path/to/find'
+        xargs    '/path/to/xargs'
+        sudo     '/path/to/sudo'
+        chown    '/path/to/chown'
+        hostname '/path/to/hostname'
 
         # Compressors
         gzip    '/path/to/gzip'
@@ -51,6 +52,7 @@ describe Backup::Utilities do
         # Notifiers
         sendmail  '/path/to/sendmail'
         exim      '/path/to/exim'
+        send_nsca '/path/to/send_nsca'
       end
     end
 

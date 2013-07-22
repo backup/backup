@@ -199,6 +199,13 @@ describe 'Backup::Config' do
       config.instance_variables.sort.map(&:to_sym).should == expected
     end
 
+    it 'should set @hostname' do
+      Backup::Utilities.stubs(:utility).with(:hostname).returns('/path/to/hostname')
+      Backup::Utilities.stubs(:run).with('/path/to/hostname').returns('my_hostname')
+      config.send(:reset!)
+      config.hostname.should == 'my_hostname'
+    end
+
     context 'when setting @user' do
       context 'when ENV["USER"] is set' do
         before { ENV['USER'] = 'test' }
