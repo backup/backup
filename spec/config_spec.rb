@@ -76,6 +76,21 @@ describe 'Backup::Config' do
     end
   end # describe '#load_config!'
 
+  describe '#hostname' do
+    before do
+      config.instance_variable_set(:@hostname, nil)
+      Backup::Utilities.stubs(:utility).with(:hostname).returns('/path/to/hostname')
+    end
+
+    it 'caches the hostname' do
+      Backup::Utilities.expects(:run).once.
+          with('/path/to/hostname').returns('my_hostname')
+      config.hostname.should == 'my_hostname'
+      config.hostname.should == 'my_hostname'
+    end
+  end
+
+
   describe '#set_root_path' do
 
     context 'when the given path == @root_path' do
@@ -189,7 +204,7 @@ describe 'Backup::Config' do
       # just to avoid 'already initialized constant' warnings
       config.constants.each {|const| config.send(:remove_const, const) }
 
-      expected = config.instance_variables.sort.map(&:to_sym) - [:@mocha]
+      expected = config.instance_variables.sort.map(&:to_sym) - [:@hostname, :@mocha]
       config.instance_variables.each do |var|
         config.send(:remove_instance_variable, var)
       end
@@ -197,13 +212,6 @@ describe 'Backup::Config' do
 
       load File.expand_path('../../lib/backup/config.rb', __FILE__)
       config.instance_variables.sort.map(&:to_sym).should == expected
-    end
-
-    it 'should set @hostname' do
-      Backup::Utilities.stubs(:utility).with(:hostname).returns('/path/to/hostname')
-      Backup::Utilities.stubs(:run).with('/path/to/hostname').returns('my_hostname')
-      config.send(:reset!)
-      config.hostname.should == 'my_hostname'
     end
 
     context 'when setting @user' do
