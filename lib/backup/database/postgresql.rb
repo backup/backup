@@ -17,8 +17,8 @@ module Backup
 
       ##
       # If set the pg_dump(all) command is executed as the given user
-      attr_accessor :sudo
-        
+      attr_accessor :sudo_user
+
       ##
       # Connectivity options
       attr_accessor :host, :port, :socket
@@ -92,9 +92,9 @@ module Backup
       end
 
       def sudo_option
-        "sudo -i -u #{ sudo } " if sudo
+        "#{ utility(:sudo) } -n -u #{ sudo_user } " if sudo_user
       end
-      
+
       def username_option
         "--username='#{ username }'" if username
       end
