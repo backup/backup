@@ -16,6 +16,10 @@ module Backup
       attr_accessor :username, :password
 
       ##
+      # If set the pg_dump(all) command is executed as the given user
+      attr_accessor :sudo_user
+
+      ##
       # Connectivity options
       attr_accessor :host, :port, :socket
 
@@ -71,18 +75,24 @@ module Backup
 
       def pgdump
         "#{ password_option }" +
+        "#{ sudo_option }" +
         "#{ utility(:pg_dump) } #{ username_option } #{ connectivity_options } " +
         "#{ user_options } #{ tables_to_dump } #{ tables_to_skip } #{ name }"
       end
 
       def pgdumpall
         "#{ password_option }" +
+        "#{ sudo_option }" +
         "#{ utility(:pg_dumpall) } #{ username_option } " +
         "#{ connectivity_options } #{ user_options }"
       end
 
       def password_option
         "PGPASSWORD='#{ password }' " if password
+      end
+
+      def sudo_option
+        "#{ utility(:sudo) } -n -u #{ sudo_user } " if sudo_user
       end
 
       def username_option

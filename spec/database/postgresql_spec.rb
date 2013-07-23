@@ -9,12 +9,10 @@ describe Database::PostgreSQL do
   let(:s) { sequence '' }
 
   before do
-    Database::PostgreSQL.any_instance.stubs(:utility).
-        with(:pg_dump).returns('pg_dump')
-    Database::PostgreSQL.any_instance.stubs(:utility).
-        with(:pg_dumpall).returns('pg_dumpall')
-    Database::PostgreSQL.any_instance.stubs(:utility).
-        with(:cat).returns('cat')
+    Utilities.stubs(:utility).with(:pg_dump).returns('pg_dump')
+    Utilities.stubs(:utility).with(:pg_dumpall).returns('pg_dumpall')
+    Utilities.stubs(:utility).with(:cat).returns('cat')
+    Utilities.stubs(:utility).with(:sudo).returns('sudo')
   end
 
   it_behaves_like 'a class that includes Configuration::Helpers'
@@ -26,6 +24,7 @@ describe Database::PostgreSQL do
       expect( db.name               ).to eq :all
       expect( db.username           ).to be_nil
       expect( db.password           ).to be_nil
+      expect( db.sudo_user          ).to be_nil
       expect( db.host               ).to be_nil
       expect( db.port               ).to be_nil
       expect( db.socket             ).to be_nil
@@ -39,6 +38,7 @@ describe Database::PostgreSQL do
         pgsql.name               = 'my_name'
         pgsql.username           = 'my_username'
         pgsql.password           = 'my_password'
+        pgsql.sudo_user          = 'my_sudo_user'
         pgsql.host               = 'my_host'
         pgsql.port               = 'my_port'
         pgsql.socket             = 'my_socket'
@@ -51,6 +51,7 @@ describe Database::PostgreSQL do
       expect( db.name               ).to eq 'my_name'
       expect( db.username           ).to eq 'my_username'
       expect( db.password           ).to eq 'my_password'
+      expect( db.sudo_user          ).to eq 'my_sudo_user'
       expect( db.host               ).to eq 'my_host'
       expect( db.port               ).to eq 'my_port'
       expect( db.socket             ).to eq 'my_socket'
@@ -165,19 +166,21 @@ describe Database::PostgreSQL do
       username_option connectivity_options
       user_options tables_to_dump tables_to_skip name
     ]}
-    # password_option leaves no leading space if it's not used
+    # password_option and sudo_option leave no leading space if it's not used
 
     it 'returns full pg_dump command built from all options' do
       option_methods.each {|name| db.stubs(name).returns(name) }
       db.stubs(:password_option).returns('password_option')
+      db.stubs(:sudo_option).returns('sudo_option')
       expect( db.send(:pgdump) ).to eq(
-        "password_optionpg_dump #{ option_methods.join(' ') }"
+        "password_optionsudo_optionpg_dump #{ option_methods.join(' ') }"
       )
     end
 
     it 'handles nil values from option methods' do
       option_methods.each {|name| db.stubs(name).returns(nil) }
       db.stubs(:password_option).returns(nil)
+      db.stubs(:sudo_option).returns(nil)
       expect( db.send(:pgdump) ).to eq(
         "pg_dump #{ ' ' * (option_methods.count - 1) }"
       )
@@ -188,19 +191,21 @@ describe Database::PostgreSQL do
     let(:option_methods) {%w[
       username_option connectivity_options user_options
     ]}
-    # password_option leaves no leading space if it's not used
+    # password_option and sudo_option leave no leading space if it's not used
 
     it 'returns full pg_dump command built from all options' do
       option_methods.each {|name| db.stubs(name).returns(name) }
       db.stubs(:password_option).returns('password_option')
+      db.stubs(:sudo_option).returns('sudo_option')
       expect( db.send(:pgdumpall) ).to eq(
-        "password_optionpg_dumpall #{ option_methods.join(' ') }"
+        "password_optionsudo_optionpg_dumpall #{ option_methods.join(' ') }"
       )
     end
 
     it 'handles nil values from option methods' do
       option_methods.each {|name| db.stubs(name).returns(nil) }
       db.stubs(:password_option).returns(nil)
+      db.stubs(:sudo_option).returns(nil)
       expect( db.send(:pgdumpall) ).to eq(
         "pg_dumpall #{ ' ' * (option_methods.count - 1) }"
       )
@@ -217,6 +222,15 @@ describe Database::PostgreSQL do
         expect( db.send(:password_option) ).to eq "PGPASSWORD='my_password' "
       end
     end # describe '#password_option'
+
+    describe '#sudo_option' do
+      it 'returns argument if specified' do
+        expect( db.send(:sudo_option) ).to be_nil
+
+        db.sudo_user = 'my_sudo_user'
+        expect( db.send(:sudo_option) ).to eq 'sudo -n -u my_sudo_user '
+      end
+    end # describe '#sudo_option'
 
     describe '#username_option' do
       it 'returns argument if specified' do
