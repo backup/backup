@@ -194,6 +194,11 @@ Backup::Model.new(:my_backup, 'Description for my_backup') do
     s3.keep              = 10
   end
 
+  store_with HttpPost do |post|
+    post.uri = "http://voupe-backup.dev/api/backups"
+    post.headers = { "X-Backup-Token" => "123", "X-Backup-Key" => "123" }
+  end
+
   notify_by Mail do |mail|
     mail.on_success           = false
 
