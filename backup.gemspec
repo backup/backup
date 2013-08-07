@@ -49,4 +49,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'thor', '= 0.18.1'
   gem.add_dependency 'treetop', '= 1.4.14'
   gem.add_dependency 'twitter', '= 4.8.1'
+  gem.add_dependency 'rest-client'
 end
