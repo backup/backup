@@ -1,6 +1,0 @@
-== spec-live ==
-
-This folder contains "Live" specs which test various features against
-the actual filesystem and/or real storage service accounts.
-
-These are being replaced with specs in vagrant/spec/

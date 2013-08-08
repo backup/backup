@@ -6,10 +6,6 @@ module BackupSpec
     extend Forwardable
     def_delegators :tarfile, :manifest, :contents, :[]
 
-    # Type of encryption used.
-    # Returns :gpg, :openssl or nil
-    attr_reader :encryption
-
     attr_reader :model
 
     def initialize(model)
@@ -18,6 +14,10 @@ module BackupSpec
 
     def exist?
       !files.empty? && files.all? {|f| File.exist?(f) }
+    end
+
+    def path
+      @path ||= unsplit
     end
 
     # Note that once the package is inspected with the match_manifest matcher,
@@ -57,11 +57,7 @@ module BackupSpec
     private
 
     def tarfile
-      @tarfile ||= begin
-        path = unsplit
-        path = decrypt(path)
-        TarFile.new(path)
-      end
+      @tarfile ||= TarFile.new(path)
     end
 
     def unsplit
@@ -77,20 +73,5 @@ module BackupSpec
       File.join(base_dir, outfile)
     end
 
-    def decrypt(path)
-      return path unless encrypted?(path)
-
-      # TODO: decrypt and return path
-    end
-
-    def encrypted?(path)
-      path.to_s =~ /([.]gpg|[.]enc)$/
-      @encryption =
-          case $1
-          when '.gpg' then :gpg
-          when '.enc' then :openssl
-          else; false
-          end
-    end
   end
 end

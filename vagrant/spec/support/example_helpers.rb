@@ -6,6 +6,7 @@ module BackupSpec
   LOCAL_STORAGE_PATH = '/home/vagrant/Storage'
   ALT_CONFIG_PATH = '/home/vagrant/Backup_alt'
   LOCAL_SYNC_PATH = '/home/vagrant/sync_root'
+  GPG_HOME_DIR = '/home/vagrant/gpg_home' # default would be ~/.gnupg
 
   module ExampleHelpers
 
