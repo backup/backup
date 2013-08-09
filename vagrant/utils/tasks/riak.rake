@@ -3,9 +3,9 @@ require 'riak'
 namespace :db do
   desc 'Rebuild Riak Test Databases'
   task :riak do
+    puts "\n=> Preparing Riak..."
+    RiakTask.recreate_node
     begin
-      puts "\n=> Preparing Riak..."
-      RiakTask.recreate_node
       RiakTask.load_data
     rescue Exception => err
       $stderr.puts "#{ err.class }: #{ err.message }"

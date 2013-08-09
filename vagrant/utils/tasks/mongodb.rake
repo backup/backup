@@ -3,8 +3,9 @@ require 'mongo'
 namespace :db do
   desc 'Rebuild MongoDB Test Databases'
   task :mongodb do
+    puts "\n=> Preparing MongoDB..."
+    MongoDBTask.mongod_start
     begin
-      puts "\n=> Preparing MongoDB..."
       MongoDBTask.drop_all
       MongoDBTask.create_all
     rescue Exception => err
@@ -29,6 +30,26 @@ module MongoDBTask
         threes: 425
       }
     }
+
+    def mongod_running?
+      %x[systemctl status mongod.service >/dev/null 2>&1; echo $?].chomp == '0'
+    end
+
+    # in case VM fails to exit cleanly
+    def mongod_start
+      return if mongod_running?
+
+      puts 'Starting mongod.service...'
+      %x[sudo rm -f /var/lib/mongodb/mongod.lock]
+      %x[sudo systemctl start mongod.service]
+      ready = false
+      10.times do
+        ready = mongod_running?
+        break if ready
+        sleep 1
+      end
+      abort 'Failed to start mongod.service' unless ready
+    end
 
     def drop_all
       puts 'Dropping Databases...'
