@@ -273,14 +273,20 @@ module Backup
 
       syncers.each(&:perform!)
 
+    rescue Interrupt
+      @interrupted = true
+      raise
+
     rescue Exception => err
       @exception = err
 
     ensure
-      set_exit_status
-      @finished_at = Time.now.utc
-      log!(:finished)
-      after_hook
+      unless @interrupted
+        set_exit_status
+        @finished_at = Time.now.utc
+        log!(:finished)
+        after_hook
+      end
     end
 
     ##
