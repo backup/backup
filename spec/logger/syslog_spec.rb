@@ -62,10 +62,10 @@ describe Logger::Syslog do
     context 'when sending an :info message' do
       it 'sends info messages to syslog' do
         syslog_logger.expects(:log).in_sequence(s).with(
-          ::Syslog::LOG_INFO, 'message line one'
+          ::Syslog::LOG_INFO, '%s', 'message line one'
         )
         syslog_logger.expects(:log).in_sequence(s).with(
-          ::Syslog::LOG_INFO, 'message line two'
+          ::Syslog::LOG_INFO, '%s', 'message line two'
         )
         Logger.info "message line one\nmessage line two"
       end
@@ -74,10 +74,10 @@ describe Logger::Syslog do
     context 'when sending an :warn message' do
       it 'sends warn messages to syslog' do
         syslog_logger.expects(:log).in_sequence(s).with(
-          ::Syslog::LOG_WARNING, 'message line one'
+          ::Syslog::LOG_WARNING, '%s', 'message line one'
         )
         syslog_logger.expects(:log).in_sequence(s).with(
-          ::Syslog::LOG_WARNING, 'message line two'
+          ::Syslog::LOG_WARNING, '%s', 'message line two'
         )
         Logger.warn "message line one\nmessage line two"
       end
@@ -86,10 +86,10 @@ describe Logger::Syslog do
     context 'when sending an :error message' do
       it 'sends error messages to syslog' do
         syslog_logger.expects(:log).in_sequence(s).with(
-          ::Syslog::LOG_ERR, 'message line one'
+          ::Syslog::LOG_ERR, '%s', 'message line one'
         )
         syslog_logger.expects(:log).in_sequence(s).with(
-          ::Syslog::LOG_ERR, 'message line two'
+          ::Syslog::LOG_ERR, '%s', 'message line two'
         )
         Logger.error "message line one\nmessage line two"
       end
