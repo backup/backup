@@ -8,7 +8,7 @@ module Backup
 
       ##
       # Server credentials
-      attr_accessor :username, :password
+      attr_accessor :username, :password, :ssh_options
 
       ##
       # Server IP Address and SCP port
@@ -19,6 +19,7 @@ module Backup
 
         @port ||= 22
         @path ||= 'backups'
+        @ssh_options ||= {}
         path.sub!(/^~\//, '')
       end
 
@@ -26,7 +27,7 @@ module Backup
 
       def connection
         Net::SSH.start(
-          ip, username, :password => password, :port => port
+          ip, username, { :password => password, :port => port }.merge(ssh_options)
         ) {|ssh| yield ssh }
       end
 
