@@ -18,6 +18,7 @@ describe Storage::SCP do
       expect( storage.keep        ).to be_nil
       expect( storage.username    ).to be_nil
       expect( storage.password    ).to be_nil
+      expect( storage.ssh_options ).to eq({})
       expect( storage.ip          ).to be_nil
       expect( storage.port        ).to be 22
       expect( storage.path        ).to eq 'backups'
@@ -28,6 +29,7 @@ describe Storage::SCP do
         scp.keep = 2
         scp.username = 'my_username'
         scp.password = 'my_password'
+        scp.ssh_options = {:keys => ['my/key']}
         scp.ip       = 'my_host'
         scp.port     = 123
         scp.path     = 'my/path'
@@ -37,6 +39,7 @@ describe Storage::SCP do
       expect( storage.keep        ).to be 2
       expect( storage.username    ).to eq 'my_username'
       expect( storage.password    ).to eq 'my_password'
+      expect( storage.ssh_options ).to eq :keys => ['my/key']
       expect( storage.ip          ).to eq 'my_host'
       expect( storage.port        ).to be 123
       expect( storage.path        ).to eq 'my/path'
@@ -65,11 +68,13 @@ describe Storage::SCP do
       storage.ip = '123.45.678.90'
       storage.username = 'my_user'
       storage.password = 'my_pass'
+      storage.ssh_options = {:keys => ['my/key']}
     end
 
     it 'yields a connection to the remote server' do
       Net::SSH.expects(:start).with(
-        '123.45.678.90', 'my_user', :password => 'my_pass', :port => 22
+        '123.45.678.90', 'my_user', :password => 'my_pass', :port => 22,
+        :keys => ['my/key']
       ).yields(connection)
 
       storage.send(:connection) do |scp|
