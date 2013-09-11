@@ -167,6 +167,19 @@ describe 'Backup::Configuration::Helpers' do
       klass.accessor.should == 'foo'
     end
 
+    it 'should protect default values' do
+      default_value = 'foo'
+      Backup::Foo.defaults do |config|
+        config.accessor = default_value
+        config.accessor_two = 5
+      end
+
+      klass.send(:load_defaults!)
+      klass.accessor.should == 'foo'
+      klass.accessor.should_not be(default_value)
+      klass.accessor_two.should be(5)
+    end
+
     it 'should raise an error if defaults are set for attribute readers' do
       Backup::Foo.defaults do |config|
         config.reader = 'foo'
