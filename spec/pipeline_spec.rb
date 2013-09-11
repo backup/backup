@@ -211,27 +211,31 @@ describe 'Backup::Pipeline' do
 
     context 'when #stderr_messages has messages' do
       before do
-        pipeline.expects(:stderr_messages).returns('stderr messages')
+        pipeline.expects(:stderr_messages).returns("stderr messages\n")
       end
 
       it 'should output #stderr_messages and formatted system error messages' do
-        pipeline.error_messages.should == 'stderr messages' +
-          "The following system errors were returned:\n" +
-          "#{ sys_err }: Success - first error\n" +
-          "#{ sys_err }: Success - second error"
+        pipeline.error_messages.should match(/
+          stderr\smessages\n
+          The\sfollowing\ssystem\serrors\swere\sreturned:\n
+          #{ sys_err }:\s(.*?)\sfirst\serror\n
+          #{ sys_err }:\s(.*?)\ssecond\serror
+        /x)
       end
     end
 
     context 'when #stderr_messages has no messages' do
       before do
-        pipeline.expects(:stderr_messages).returns(false)
+        pipeline.expects(:stderr_messages).returns("stderr messages\n")
       end
 
       it 'should only output the formatted system error messages' do
-        pipeline.error_messages.should ==
-          "The following system errors were returned:\n" +
-          "#{ sys_err }: Success - first error\n" +
-          "#{ sys_err }: Success - second error"
+        pipeline.error_messages.should match(/
+          stderr\smessages\n
+          The\sfollowing\ssystem\serrors\swere\sreturned:\n
+          #{ sys_err }:\s(.*?)\sfirst\serror\n
+          #{ sys_err }:\s(.*?)\ssecond\serror
+        /x)
       end
     end
   end # describe '#error_messages'
