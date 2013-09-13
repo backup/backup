@@ -177,7 +177,7 @@ describe Logger::Logfile do
   end # describe '#initialize'
 
   describe '#log' do
-    let(:timestamp) { Time.now.strftime("%Y/%m/%d %H:%M:%S") }
+    let(:timestamp) { Time.now.utc.strftime("%Y/%m/%d %H:%M:%S") }
 
     before do
       Logger.start!

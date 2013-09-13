@@ -1,76 +1,91 @@
 # encoding: utf-8
+require 'backup/cloud_io/cloud_files'
 
 module Backup
   module Syncer
     module Cloud
       class CloudFiles < Base
+        class Error < Backup::Error; end
 
         ##
         # Rackspace CloudFiles Credentials
-        attr_accessor :api_key, :username
+        attr_accessor :username, :api_key
 
         ##
         # Rackspace CloudFiles Container
         attr_accessor :container
 
         ##
-        # Rackspace AuthURL allows you to connect
-        # to a different Rackspace datacenter
-        # - https://auth.api.rackspacecloud.com     (Default: US)
-        # - https://lon.auth.api.rackspacecloud.com (UK)
+        # Rackspace AuthURL (optional)
         attr_accessor :auth_url
 
         ##
-        # Improve performance and avoid data transfer costs
-        # by setting @servicenet to `true`
-        # This only works if Backup runs on a Rackspace server
-        attr_accessor :servicenet
+        # Rackspace Region (optional)
+        attr_accessor :region
 
         ##
-        # Instantiates a new Cloud::CloudFiles Syncer.
-        #
-        # Pre-configured defaults specified in
-        # Configuration::Syncer::Cloud::CloudFiles
-        # are set via a super() call to Cloud::Base,
-        # which in turn will invoke Syncer::Base.
-        #
-        # Once pre-configured defaults and Cloud specific defaults are set,
-        # the block from the user's configuration file is evaluated.
-        def initialize(&block)
+        # Rackspace Service Net
+        # (LAN-based transfers to avoid charges and improve performance)
+        attr_accessor :servicenet
+
+        def initialize(syncer_id = nil)
           super
 
-          instance_eval(&block) if block_given?
-          @path = path.sub(/^\//, '')
+          @servicenet ||= false
+
+          check_configuration
         end
 
         private
 
-        ##
-        # Established and creates a new Fog storage object for CloudFiles.
-        def connection
-          @connection ||= Fog::Storage.new(
-            :provider             => provider,
-            :rackspace_username   => username,
-            :rackspace_api_key    => api_key,
-            :rackspace_auth_url   => auth_url,
-            :rackspace_servicenet => servicenet
+        def cloud_io
+          @cloud_io ||= CloudIO::CloudFiles.new(
+            :username           => username,
+            :api_key            => api_key,
+            :auth_url           => auth_url,
+            :region             => region,
+            :servicenet         => servicenet,
+            :container          => container,
+            :max_retries        => max_retries,
+            :retry_waitsec      => retry_waitsec,
+            # Syncer can not use SLOs.
+            :segments_container => nil,
+            :segment_size       => 0
           )
         end
 
-        ##
-        # Creates a new @repository_object (container).
-        # Fetches it from Cloud Files if it already exists,
-        # otherwise it will create it first and fetch use that instead.
-        def repository_object
-          @repository_object ||= connection.directories.get(container) ||
-            connection.directories.create(:key => container)
+        def get_remote_files(remote_base)
+          hash = {}
+          cloud_io.objects(remote_base).each do |object|
+            relative_path = object.name.sub(remote_base + '/', '')
+            hash[relative_path] = object.hash
+          end
+          hash
         end
 
-        ##
-        # This is the provider that Fog uses for the Cloud Files
-        def provider
-          "Rackspace"
+        def check_configuration
+          required = %w{ username api_key container }
+          raise Error, <<-EOS if required.map {|name| send(name) }.any?(&:nil?)
+            Configuration Error
+            #{ required.map {|name| "##{ name }"}.join(', ') } are all required
+          EOS
         end
+
+        attr_deprecate :concurrency_type, :version => '3.7.0',
+                       :message => 'Use #thread_count instead.',
+                       :action => lambda {|klass, val|
+                         if val == :threads
+                           klass.thread_count = 2 unless klass.thread_count
+                         else
+                           klass.thread_count = 0
+                         end
+                       }
+
+        attr_deprecate :concurrency_level, :version => '3.7.0',
+                       :message => 'Use #thread_count instead.',
+                       :action => lambda {|klass, val|
+                         klass.thread_count = val unless klass.thread_count == 0
+                       }
 
       end # class Cloudfiles < Base
     end # module Cloud

@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 module Backup
-  module Logger
+  class Logger
     class Logfile
       class Options
         ##

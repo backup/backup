@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 module Backup
-  module Logger
+  class Logger
     class Syslog
       class Options
         ##
@@ -108,7 +108,7 @@ module Backup
       def log(message)
         level = @options.send(message.level)
         ::Syslog.open(@options.ident, @options.options, @options.facility) do |s|
-          message.lines.each {|line| s.log(level, line) }
+          message.lines.each {|line| s.log(level, '%s', line) }
         end
       end
     end

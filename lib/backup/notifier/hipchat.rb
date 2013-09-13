@@ -1,7 +1,5 @@
 # encoding: utf-8
-
-# Load the HipChat library from the gem
-Backup::Dependency.load('hipchat')
+require 'hipchat'
 
 module Backup
   module Notifier
@@ -39,53 +37,55 @@ module Backup
       attr_accessor :failure_color
 
       def initialize(model, &block)
-        super(model)
+        super
+        instance_eval(&block) if block_given?
 
         @notify_users   ||= false
         @rooms_notified ||= []
         @success_color  ||= 'yellow'
         @warning_color  ||= 'yellow'
         @failure_color  ||= 'yellow'
-
-        instance_eval(&block) if block_given?
       end
 
       private
 
       ##
       # Notify the user of the backup operation results.
+      #
       # `status` indicates one of the following:
       #
       # `:success`
       # : The backup completed successfully.
-      # : Notification will be sent if `on_success` was set to `true`
+      # : Notification will be sent if `on_success` is `true`.
       #
       # `:warning`
-      # : The backup completed successfully, but warnings were logged
-      # : Notification will be sent, including a copy of the current
-      # : backup log, if `on_warning` was set to `true`
+      # : The backup completed successfully, but warnings were logged.
+      # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       # `:failure`
       # : The backup operation failed.
-      # : Notification will be sent, including the Exception which caused
-      # : the failure, the Exception's backtrace, a copy of the current
-      # : backup log and other information if `on_failure` was set to `true`
+      # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        name, color = case status
-                      when :success then ['Success', success_color]
-                      when :warning then ['Warning', warning_color]
-                      when :failure then ['Failure', failure_color]
-                      end
-        message = "[Backup::%s] #{@model.label} (#{@model.trigger})" % name
+        tag, color = case status
+                     when :success then ['[Backup::Success]', success_color]
+                     when :warning then ['[Backup::Warning]', warning_color]
+                     when :failure then ['[Backup::Failure]', failure_color]
+                     end
+        message = "#{ tag } #{ model.label } (#{ model.trigger })"
         send_message(message, color)
       end
 
+      # Hipchat::Client will raise an error if unsuccessful.
       def send_message(msg, color)
         client = HipChat::Client.new(token)
-        Array(rooms_notified).map {|r| r.split(',').map(&:strip) }.flatten.each do |room|
+        rooms_to_notify.each do |room|
           client[room].send(from, msg, :color => color, :notify => notify_users)
         end
+      end
+
+      def rooms_to_notify
+        Array(rooms_notified).map {|r| r.split(',').map(&:strip) }.flatten
       end
 
     end

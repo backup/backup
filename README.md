@@ -8,12 +8,16 @@ was built with modularity, extensibility and simplicity in mind.
 
 ## Installation
 
-To get the latest stable version:
+To install the latest version, run:
 
-    gem install backup
+    $ [sudo] gem install backup
 
-See [Release Notes](https://github.com/meskyanichi/backup/wiki/Release-Notes) in the wiki for changes in the latest
-version.
+_Do not add `gem backup` to an application's `Gemfile`_
+
+See [Installation](https://github.com/meskyanichi/backup/wiki/Installation) for more information about installing and
+updating your installation of Backup.
+
+See [Release Notes](https://github.com/meskyanichi/backup/wiki/Release-Notes) for changes in the latest version.
 
 Backup supports Ruby versions 1.8.7, 1.9.2, 1.9.3 and 2.0.0.
 
@@ -68,10 +72,8 @@ $ tar -tvf my_backup.tar
   my_backup/archives/user_avatars.tar.gz
   my_backup/archives/log_files.tar.gz
   my_backup/databases/
-  my_backup/databases/PostgreSQL/
-  my_backup/databases/PostgreSQL/pg_db_name.sql.gz
-  my_backup/databases/Redis/
-  my_backup/databases/Redis/redis_db_name.rdb.gz
+  my_backup/databases/PostgreSQL.sql.gz
+  my_backup/databases/Redis.rdb.gz
 ```
 
 ### Storages
@@ -124,6 +126,8 @@ Supported notification services include:
 - Prowl
 - Hipchat
 - Pushover
+- POST Request
+- Nagios
 
 
 ## Generators
@@ -201,7 +205,7 @@ Backup::Model.new(:my_backup, 'Description for my_backup') do
     mail.user_name            = "sender@email.com"
     mail.password             = "my_password"
     mail.authentication       = "plain"
-    mail.enable_starttls_auto = true
+    mail.encryption           = :starttls
   end
 
   notify_by Twitter do |tweet|

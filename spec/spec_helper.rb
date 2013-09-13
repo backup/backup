@@ -6,7 +6,7 @@ require 'backup'
 
 require 'timecop'
 
-require File.expand_path('../support/sandbox_file_utils.rb', __FILE__)
+Dir[File.expand_path('../support/**/*.rb', __FILE__)].each {|f| require f }
 
 module Backup::ExampleHelpers
   # ripped from MiniTest :)
@@ -51,12 +51,16 @@ RSpec.configure do |config|
     # ::FileUtils will always be either SandboxFileUtils or FileUtils::NoWrite.
     SandboxFileUtils.deactivate!(:noop)
 
-    Open4.stubs(:popen4).raises('Unexpected call to Open4::popen4()')
+    # prevent system calls
+    Backup::Utilities.stubs(:gnu_tar?).returns(true)
+    Backup::Utilities.stubs(:utility)
+    Backup::Utilities.stubs(:run)
+    Backup::Pipeline.any_instance.stubs(:run)
 
     Backup::Utilities.send(:reset!)
     Backup::Config.send(:reset!)
     # Logger only queues messages received until Logger.start! is called.
-    Backup::Logger.send(:initialize!)
+    Backup::Logger.send(:reset!)
   end
 end
 

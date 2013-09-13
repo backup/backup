@@ -2,7 +2,7 @@
   # RSync::Local [Syncer]
   #
   sync_with RSync::Local do |rsync|
-    rsync.path     = "~/backups/"
+    rsync.path     = "~/backups"
     rsync.mirror   = true
 
     rsync.directories do |directory|

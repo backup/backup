@@ -9,7 +9,7 @@ describe Logger do
   let(:syslog_logger)  { mock('Syslog Logger') }
   let(:default_loggers) { [console_logger, logfile_logger] }
 
-  # Note: spec_helper initializes Logger before each example
+  # Note: spec_helper calls Logger.reset! before each example
   before do
     Logger::Console.stubs(:new).
         with(kind_of(Logger::Console::Options)).
@@ -58,17 +58,34 @@ describe Logger do
         end
       end
     end
+
+    describe '#matches?' do
+      let(:message) {
+        Logger::Message.new(
+          :foo, :foo, ['line one of message', 'line two of message']
+        )
+      }
+
+      it 'returns true if message lines match the given matchers' do
+        expect( message.matches?(['not', 'one of']) ).to be(true)
+        expect( message.matches?(['not', "message\nline two"]) ).to be(true)
+        expect( message.matches?(['not', /^line one/]) ).to be(true)
+        expect( message.matches?(['not', /two \w+ message$/]) ).to be(true)
+      end
+
+      it 'returns false if no match is found' do
+        expect( message.matches?(['not', 'three']) ).to be(false)
+        expect( message.matches?(['not', /three/]) ).to be(false)
+      end
+    end
   end # describe Logger::Message
 
   describe '.configure' do
-    before do
-      Logger.info "line 1\nline 2"
-    end
-
     context 'when the console and logfile loggers are enabled' do
       before do
         Logger::Syslog.expects(:new).never
-        subject.configure do
+        Logger.info "line 1\nline 2"
+        Logger.configure do
           console.quiet   = false
           logfile.enabled = true
           syslog.enabled  = false
@@ -93,7 +110,8 @@ describe Logger do
     context 'when the logfile and syslog loggers are enabled' do
       before do
         Logger::Console.expects(:new).never
-        subject.configure do
+        Logger.info "line 1\nline 2"
+        Logger.configure do
           console.quiet   = true
           logfile.enabled = true
           syslog.enabled  = true
@@ -118,7 +136,8 @@ describe Logger do
     context 'when the console and syslog loggers are enabled' do
       before do
         Logger::Logfile.expects(:new).never
-        subject.configure do
+        Logger.info "line 1\nline 2"
+        Logger.configure do
           console.quiet   = false
           logfile.enabled = false
           syslog.enabled  = true
@@ -139,6 +158,40 @@ describe Logger do
         Logger.start!
       end
     end
+
+    # Note that this will only work for :warn messages
+    # sent *after* the Logger has been configured.
+    context 'when warnings are ignored' do
+      before do
+        Logger.configure do
+          ignore_warning "one\nline two"
+          ignore_warning(/line\nline two/)
+        end
+      end
+
+      it 'converts ignored :warn messages to :info messages' do
+        Logger.warn "message line one\nline two"
+        Logger.warn "first line\nline two of message"
+        Logger.warn "first line\nsecond line"
+        Logger.error 'one of'
+        m1, m2, m3, m4 = Logger.messages
+
+        expect( m1.level ).to be(:info)
+        expect( m2.level ).to be(:info)
+        expect( m3.level ).to be(:warn)
+        expect( m4.level ).to be(:error)
+
+        expect( Logger.has_warnings? ).to be(true)
+        expect( Logger.has_errors? ).to be(true)
+      end
+
+      it 'does not flag logger as having warnings' do
+        Logger.warn "message line one\nline two"
+        Logger.warn "first line\nline two of message"
+
+        expect( Logger.has_warnings? ).to be(false)
+      end
+    end
   end # describe '.configure'
 
   describe '.start!' do
@@ -156,7 +209,7 @@ describe Logger do
         Logger::Syslog.expects(:new).never
 
         Logger.info 'a message'
-        Logger.instance_variable_get(:@loggers).should be_empty
+        Logger.send(:logger).instance_variable_get(:@loggers).should be_empty
       end
     end
 
@@ -200,12 +253,17 @@ describe Logger do
 
       it 'instantiates all enabled loggers' do
         Logger.start!
-        Logger.instance_variable_get(:@loggers).should == default_loggers
+        Logger.send(:logger).instance_variable_get(:@loggers).
+            should == default_loggers
       end
     end
   end # describe '.start!'
 
   describe 'log messaging methods' do
+    before do
+      Logger::MUTEX.expects(:synchronize).yields
+    end
+
     describe '.info' do
       it 'sends messages with log level :info' do
         Logger.info 'info message'
@@ -255,15 +313,18 @@ describe Logger do
       msg.level.should == :info
       msg.lines.should == ['line one', '', 'line two']
     end
+
+    it 'logs messages with UTC time' do
+      Logger.info 'message'
+      msg = Logger.messages.last
+      msg.time.should be_utc
+    end
   end # describe 'log messaging methods'
 
   describe '.has_warnings?' do
     context 'when messages with :warn log level are sent' do
       it 'returns true' do
-        Logger.info 'info message'
         Logger.warn 'warn message'
-        Logger.error 'error message'
-
         Logger.has_warnings?.should be_true
       end
     end
@@ -272,10 +333,24 @@ describe Logger do
       it 'returns false' do
         Logger.info 'info message'
         Logger.error 'error message'
-        Logger.info 'info message'
-
         Logger.has_warnings?.should be_false
+      end
+    end
+  end
 
+  describe '.has_errors?' do
+    context 'when messages with :error log level are sent' do
+      it 'returns true' do
+        Logger.error 'error message'
+        Logger.has_errors?.should be_true
+      end
+    end
+
+    context 'when no messages with :warn log level are sent' do
+      it 'returns false' do
+        Logger.info 'info message'
+        Logger.warn 'warn message'
+        Logger.has_errors?.should be_false
       end
     end
   end
@@ -288,8 +363,11 @@ describe Logger do
 
       Logger.messages.count.should be(3)
       Logger.has_warnings?.should be_true
+      Logger.has_errors?.should be_true
 
+      @initial_logger = Logger.instance_variable_get(:@logger)
       Logger.clear!
+      @current_logger = Logger.instance_variable_get(:@logger)
     end
 
     it 'clears all stored messages' do
@@ -298,6 +376,19 @@ describe Logger do
 
     it 'resets has_warnings? to false' do
       Logger.has_warnings?.should be_false
+    end
+
+    it 'resets has_errors? to false' do
+      Logger.has_errors?.should be_false
+    end
+
+    it 'replaces the logger' do
+      @current_logger.should be_a(Backup::Logger)
+      @current_logger.should_not be(@initial_logger)
+    end
+
+    it 'starts the new logger' do
+      @current_logger.instance_variable_get(:@loggers).should == default_loggers
     end
   end
 

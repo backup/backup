@@ -12,12 +12,16 @@ describe 'Backup::Storage::Cycler' do
   let(:pkg_c)         { mock }
   let(:s)             { sequence '' }
 
+  before do
+    storage.stubs(:package).returns(package)
+  end
+
   describe '#cycle!' do
     it 'should setup variables and initiate cycling' do
       cycler.expects(:storage_file).in_sequence(s).returns(storage_file)
       cycler.expects(:update_storage_file!).in_sequence(s)
       cycler.expects(:remove_packages!).in_sequence(s)
-      cycler.cycle!(storage, package)
+      cycler.cycle!(storage)
       cycler.instance_variable_get(:@storage).should be(storage)
       cycler.instance_variable_get(:@package).should be(package)
       cycler.instance_variable_get(:@storage_file).should be(storage_file)
@@ -52,12 +56,26 @@ describe 'Backup::Storage::Cycler' do
     before do
       cycler.instance_variable_set(:@storage, storage)
       cycler.instance_variable_set(:@packages_to_remove, [pkg_a, pkg_b, pkg_c])
+      pkg_a.stubs(:no_cycle)
+      pkg_b.stubs(:no_cycle)
+      pkg_c.stubs(:no_cycle)
     end
 
     it 'should call the @storage to remove the old packages' do
       storage.expects(:remove!).in_sequence(s).with(pkg_a)
       storage.expects(:remove!).in_sequence(s).with(pkg_b)
       storage.expects(:remove!).in_sequence(s).with(pkg_c)
+      cycler.send(:remove_packages!)
+    end
+
+    it 'should skip packages marked as no_cycle' do
+      pkg_a.stubs(:no_cycle).returns(nil)
+      pkg_b.stubs(:no_cycle).returns(true)
+      pkg_c.stubs(:no_cycle).returns(false)
+
+      storage.expects(:remove!).with(pkg_a)
+      storage.expects(:remove!).with(pkg_b).never
+      storage.expects(:remove!).with(pkg_c)
       cycler.send(:remove_packages!)
     end
 
@@ -72,21 +90,19 @@ describe 'Backup::Storage::Cycler' do
         storage.expects(:remove!).in_sequence(s).with(pkg_a)
         storage.expects(:remove!).in_sequence(s).with(pkg_b).raises('error message')
         Backup::Logger.expects(:warn).with do |err|
-          err.should be_an_instance_of Backup::Errors::Storage::CyclerError
-          err.message.should == 'Storage::CyclerError: ' +
-              "There was a problem removing the following package:\n" +
-              "  Trigger: pkg_trigger :: Dated: pkg_time\n" +
-              "  Package included the following 2 file(s):\n" +
-              "  file1\n" +
-              "  file2\n" +
-              "  Reason: RuntimeError\n" +
-              "  error message"
+          err.should be_an_instance_of Backup::Storage::Cycler::Error
+          err.message.should include(
+            "There was a problem removing the following package:\n" +
+            "  Trigger: pkg_trigger :: Dated: pkg_time\n" +
+            "  Package included the following 2 file(s):\n" +
+            "  file1\n" +
+            "  file2"
+          )
+          err.message.should match('RuntimeError: error message')
         end
         storage.expects(:remove!).in_sequence(s).with(pkg_c)
 
-        expect do
-          cycler.send(:remove_packages!)
-        end.not_to raise_error
+        cycler.send(:remove_packages!)
       end
     end
 
@@ -102,17 +118,17 @@ describe 'Backup::Storage::Cycler' do
 
     context 'when the @storage.storage_id is not set' do
       before { storage.stubs(:storage_id).returns(nil) }
-      it 'should return the path to the YAML storage file with no suffix' do
+      it 'returns the path to the YAML storage file with no suffix' do
         cycler.send(:storage_file).should ==
             File.join(Backup::Config.data_path, 'pkg_trigger', 'S3.yml')
       end
     end
 
     context 'when the @storage.storage_id is set' do
-      before { storage.stubs(:storage_id).returns('Storage #1') }
-      it 'should sanitize the storage_id to use as a filename suffix' do
+      before { storage.stubs(:storage_id).returns('my_id') }
+      it 'appends the storage_id to the filename' do
         cycler.send(:storage_file).should ==
-            File.join(Backup::Config.data_path, 'pkg_trigger', 'S3-Storage__1.yml')
+            File.join(Backup::Config.data_path, 'pkg_trigger', 'S3-my_id.yml')
       end
     end
 
@@ -162,9 +178,12 @@ describe 'Backup::Storage::Cycler' do
     let(:file) { mock }
     let(:pkgs) { [ [1, 2, 3], [4, 5, 6] ] }
     let(:pkgs_to_yaml) { pkgs.to_yaml }
+    let(:storage_file) { '/path/to/data_path/trigger/file.yml' }
 
     it 'should save the given packages to the storage file in YAML format' do
       cycler.instance_variable_set(:@storage_file, storage_file)
+
+      FileUtils.expects(:mkdir_p).with('/path/to/data_path/trigger')
       File.expects(:open).with(storage_file, 'w').yields(file)
       file.expects(:write).with(pkgs_to_yaml)
       cycler.send(:yaml_save, pkgs)

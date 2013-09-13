@@ -1,0 +1,58 @@
+---
+storage:
+  dropbox:
+    specs_enabled: false
+    api_key: <your key>
+    api_secret: <your secret>
+    # these may be changed if needed
+    access_type: :app_folder
+    path: backup_testing
+  s3:
+    specs_enabled: false
+    access_key_id: <your key>
+    secret_access_key: <your secret>
+    region: <your region>
+    bucket: <your bucket>
+    # change if needed
+    path: backup_testing
+  cloudfiles:
+    specs_enabled: false
+    username: <your username>
+    api_key: <your key>
+    auth_url: # if needed
+    region: # if needed
+    servicenet: false
+    container: <your container>
+    segments_container: <another container>
+    path: backup_testing
+syncer:
+  cloud:
+    s3:
+      specs_enabled: false
+      access_key_id: <your key>
+      secret_access_key: <your secret>
+      region: <your region>
+      bucket: <your bucket>
+      # change if needed
+      path: backup_testing
+    cloudfiles:
+      specs_enabled: false
+      username: <your username>
+      api_key: <your key>
+      auth_url: # if needed
+      region: # if needed
+      servicenet: false
+      container: <your container>
+      path: backup_testing
+notifier:
+  mail:
+    specs_enabled: false
+    from: <from email>
+    to: <to email>
+    address: <your address>
+    port: <your port>
+    user_name: <your user_name>
+    password: <your password>
+    authentication: :plain
+    encryption: :starttls
+    openssl_verify_mode:

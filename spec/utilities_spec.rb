@@ -8,23 +8,23 @@ describe Backup::Utilities do
 
   # Note: spec_helper resets Utilities before each example
 
-  it 'includes Utilities::Helpers' do
-    utilities.instance_eval('class << self; self; end').
-        include?(Backup::Utilities::Helpers).should be_true
-  end
-
   describe '.configure' do
     before do
       File.stubs(:executable?).returns(true)
+      utilities.unstub(:gnu_tar?)
+      utilities.unstub(:utility)
 
       utilities.configure do
         # General Utilites
-        tar   '/path/to/tar'
+        tar      '/path/to/tar'
         tar_dist :gnu   # or :bsd
-        cat   '/path/to/cat'
-        split '/path/to/split'
-        find  '/path/to/find'
-        xargs '/path/to/xargs'
+        cat      '/path/to/cat'
+        split    '/path/to/split'
+        find     '/path/to/find'
+        xargs    '/path/to/xargs'
+        sudo     '/path/to/sudo'
+        chown    '/path/to/chown'
+        hostname '/path/to/hostname'
 
         # Compressors
         gzip    '/path/to/gzip'
@@ -37,6 +37,7 @@ describe Backup::Utilities do
         mongodump   '/path/to/mongodump'
         mysqldump   '/path/to/mysqldump'
         pg_dump     '/path/to/pg_dump'
+        pg_dumpall  '/path/to/pg_dumpall'
         redis_cli   '/path/to/redis-cli'
         riak_admin  '/path/to/riak-admin'
 
@@ -46,6 +47,12 @@ describe Backup::Utilities do
 
         # Syncer and Storage
         rsync   '/path/to/rsync'
+        ssh     '/path/to/ssh'
+
+        # Notifiers
+        sendmail  '/path/to/sendmail'
+        exim      '/path/to/exim'
+        send_nsca '/path/to/send_nsca'
       end
     end
 
@@ -86,11 +93,15 @@ describe Backup::Utilities do
         utilities.configure do
           tar 'not_found'
         end
-      end.to raise_error(Backup::Errors::Utilities::NotFoundError)
+      end.to raise_error(Backup::Utilities::Error)
     end
   end # describe '.configure'
 
   describe '.gnu_tar?' do
+    before do
+      utilities.unstub(:gnu_tar?)
+    end
+
     it 'determines when tar is GNU tar' do
       utilities.expects(:utility).with(:tar).returns('tar')
       utilities.expects(:run).with('tar --version').returns(
@@ -126,24 +137,37 @@ end # describe Backup::Utilities
 
 describe Backup::Utilities::Helpers do
   let(:helpers) { Module.new.extend(Backup::Utilities::Helpers) }
+  let(:utilities) { Backup::Utilities }
 
   describe '#utility' do
+    before do
+      utilities.unstub(:utility)
+    end
+
     context 'when a system path for the utility is available' do
       it 'should return the system path with newline removed' do
-        helpers.expects(:`).with("which 'foo' 2>/dev/null").returns("system_path\n")
+        utilities.expects(:`).with("which 'foo' 2>/dev/null").returns("system_path\n")
         helpers.send(:utility, :foo).should == 'system_path'
       end
 
       it 'should cache the returned path' do
-        helpers.expects(:`).once.with("which 'cache_me' 2>/dev/null").
+        utilities.expects(:`).once.with("which 'cache_me' 2>/dev/null").
             returns("cached_path\n")
 
         helpers.send(:utility, :cache_me).should == 'cached_path'
         helpers.send(:utility, :cache_me).should == 'cached_path'
       end
 
+      it 'should return a mutable copy of the path' do
+        utilities.expects(:`).once.with("which 'cache_me' 2>/dev/null").
+            returns("cached_path\n")
+
+        helpers.send(:utility, :cache_me) << 'foo'
+        helpers.send(:utility, :cache_me).should == 'cached_path'
+      end
+
       it 'should cache the value for all extended objects' do
-        helpers.expects(:`).once.with("which 'once_only' 2>/dev/null").
+        utilities.expects(:`).once.with("which 'once_only' 2>/dev/null").
             returns("cached_path\n")
 
         helpers.send(:utility, :once_only).should == 'cached_path'
@@ -152,89 +176,71 @@ describe Backup::Utilities::Helpers do
       end
     end
 
-    context 'when a system path for the utility is not available' do
-      it 'should raise an error' do
-        helpers.expects(:`).with("which 'unknown' 2>/dev/null").returns("\n")
+    it 'should raise an error if the utiilty is not found' do
+      utilities.expects(:`).with("which 'unknown' 2>/dev/null").returns("\n")
 
-        expect do
-          helpers.send(:utility, :unknown)
-        end.to raise_error(Backup::Errors::Utilities::NotFoundError) {|err|
-          err.message.should match(/Could not locate 'unknown'/)
-        }
-      end
-
-      it 'should not cache any value for the utility' do
-        helpers.expects(:`).with("which 'not_cached' 2>/dev/null").twice.returns("\n")
-
-        expect do
-          helpers.send(:utility, :not_cached)
-        end.to raise_error(Backup::Errors::Utilities::NotFoundError) {|err|
-          err.message.should match(/Could not locate 'not_cached'/)
-        }
-
-        expect do
-          helpers.send(:utility, :not_cached)
-        end.to raise_error(Backup::Errors::Utilities::NotFoundError) {|err|
-          err.message.should match(/Could not locate 'not_cached'/)
-        }
-      end
+      expect do
+        helpers.send(:utility, :unknown)
+      end.to raise_error(Backup::Utilities::Error) {|err|
+        err.message.should match(/Could not locate 'unknown'/)
+      }
     end
 
     it 'should raise an error if name is nil' do
-      helpers.expects(:`).never
+      utilities.expects(:`).never
       expect do
         helpers.send(:utility, nil)
       end.to raise_error(
-        Backup::Errors::Utilities::NotFoundError,
-          'Utilities::NotFoundError: Utility Name Empty'
+        Backup::Utilities::Error, 'Utilities::Error: Utility Name Empty'
       )
     end
 
     it 'should raise an error if name is empty' do
-      helpers.expects(:`).never
+      utilities.expects(:`).never
       expect do
         helpers.send(:utility, ' ')
       end.to raise_error(
-        Backup::Errors::Utilities::NotFoundError,
-          'Utilities::NotFoundError: Utility Name Empty'
+        Backup::Utilities::Error, 'Utilities::Error: Utility Name Empty'
       )
     end
   end # describe '#utility'
 
   describe '#command_name' do
-    context 'given a command line path with no arguments' do
-      it 'should return the base command name' do
-        cmd = '/path/to/a/command'
-        helpers.send(:command_name, cmd).should == 'command'
-      end
+    it 'returns the base command name' do
+      cmd = '/path/to/a/command'
+      expect( helpers.send(:command_name, cmd) ).to eq 'command'
+
+      cmd = '/path/to/a/command with_args'
+      expect( helpers.send(:command_name, cmd) ).to eq 'command'
+
+      cmd = '/path/to/a/command with multiple args'
+      expect( helpers.send(:command_name, cmd) ).to eq 'command'
+
+      # should not happen, but should handle it
+      cmd = 'command args'
+      expect( helpers.send(:command_name, cmd) ).to eq 'command'
+      cmd = 'command'
+      expect( helpers.send(:command_name, cmd) ).to eq 'command'
     end
 
-    context 'given a command line path with a single argument' do
-      it 'should return the base command name' do
-        cmd = '/path/to/a/command with_args'
-        helpers.send(:command_name, cmd).should == 'command'
-      end
+    it 'returns command name run with sudo' do
+      cmd = '/path/to/sudo -n /path/to/command args'
+      expect( helpers.send(:command_name, cmd) ).
+          to eq 'sudo -n command'
+
+      cmd = '/path/to/sudo -n -u username /path/to/command args'
+      expect( helpers.send(:command_name, cmd) ).
+          to eq 'sudo -n -u username command'
+
+      # should not happen, but should handle it
+      cmd = '/path/to/sudo -n -u username command args'
+      expect( helpers.send(:command_name, cmd) ).
+          to eq 'sudo -n -u username command args'
     end
 
-    context 'given a command line path with multiple arguments' do
-      it 'should return the base command name' do
-        cmd = '/path/to/a/command with multiple args'
-        helpers.send(:command_name, cmd).should == 'command'
-      end
-    end
-
-    context 'given a command with no path and arguments' do
-      it 'should return the base command name' do
-        cmd = 'command args'
-        helpers.send(:command_name, cmd).should == 'command'
-      end
-    end
-
-    context 'given a command with no path and no arguments' do
-      it 'should return the base command name' do
-        cmd = 'command'
-        helpers.send(:command_name, cmd).should == 'command'
-      end
+    it 'strips environment variables' do
+      cmd = "FOO='bar' BAR=foo /path/to/a/command with_args"
+      expect( helpers.send(:command_name, cmd) ).to eq 'command'
     end
   end # describe '#command_name'
 
@@ -244,6 +250,10 @@ describe Backup::Utilities::Helpers do
     let(:stdin_io)  { stub(:close) }
     let(:process_status) { stub(:success? => process_success) }
     let(:command) { '/path/to/cmd_name arg1 arg2' }
+
+    before do
+      utilities.unstub(:run)
+    end
 
     context 'when the command is successful' do
       let(:process_success) { true }
@@ -310,10 +320,7 @@ describe Backup::Utilities::Helpers do
     context 'when the command is not successful' do
       let(:process_success) { false }
       let(:message_head) do
-        "Utilities::SystemCallError: 'cmd_name' Failed on #{ RUBY_PLATFORM }\n" +
-        "  The following information should help to determine the problem:\n" +
-        "  Command was: /path/to/cmd_name arg1 arg2\n" +
-        "  Exit Status: 1\n"
+        "Utilities::Error: 'cmd_name' failed with exit status: 1\n"
       end
 
       before do
@@ -409,12 +416,9 @@ describe Backup::Utilities::Helpers do
       it 'should raise an error wrapping the system error raised' do
         expect do
           helpers.send(:run, command)
-        end.to raise_error {|err|
-          err.message.should == "Utilities::SystemCallError: " +
-            "Failed to execute system command on #{ RUBY_PLATFORM }\n" +
-            "  Command was: /path/to/cmd_name arg1 arg2\n" +
-            "  Reason: RuntimeError\n" +
-            "  exec call failed"
+        end.to raise_error(Backup::Utilities::Error) {|err|
+          err.message.should match("Failed to execute 'cmd_name'")
+          err.message.should match('RuntimeError: exec call failed')
         }
       end
     end # context 'when the system fails to execute the command'

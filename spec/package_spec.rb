@@ -2,60 +2,85 @@
 
 require File.expand_path('../spec_helper.rb', __FILE__)
 
-describe Backup::Package do
-  let(:model)   { Backup::Model.new(:test_trigger, 'test label') }
-  let(:package) { Backup::Package.new(model) }
-
-  before do
-    model.instance_variable_set(:@time, 'model_time')
-  end
+module Backup
+describe Package do
+  let(:model)   { Model.new(:test_trigger, 'test label') }
+  let(:package) { Package.new(model) }
 
   describe '#initialize' do
-    it 'should set all variables' do
-      package.time.should           == 'model_time'
-      package.trigger.should        == 'test_trigger'
-      package.extension.should      == 'tar'
-      package.chunk_suffixes.should == []
-      package.version.should        == Backup::Version.current
+    it 'sets defaults' do
+      expect( package.time            ).to be_nil
+      expect( package.trigger         ).to eq 'test_trigger'
+      expect( package.extension       ).to eq 'tar'
+      expect( package.chunk_suffixes  ).to eq []
+      expect( package.no_cycle        ).to be(false)
+      expect( package.version         ).to eq VERSION
     end
+  end
+
+  it 'allows time to be set' do
+    package.time = 'foo'
+    expect( package.time ).to eq 'foo'
+  end
+
+  it 'allows chunk_suffixes to be set' do
+    package.chunk_suffixes = 'foo'
+    expect( package.chunk_suffixes ).to eq 'foo'
+  end
+
+  it 'allows extension to be updated' do
+    package.extension << '.foo'
+    expect( package.extension ).to eq 'tar.foo'
+
+    package.extension = 'foo'
+    expect( package.extension ).to eq 'foo'
+  end
+
+  it 'allows no_cycle to be set' do
+    package.no_cycle = true
+    expect( package.no_cycle ).to be(true)
   end
 
   describe '#filenames' do
     context 'when the package files were not split' do
-      it 'should return an array with the single package filename' do
-        package.filenames.should == ['model_time.test_trigger.tar']
+      it 'returns an array with the single package filename' do
+        expect( package.filenames ).to eq ['test_trigger.tar']
       end
 
-      it 'should reflect changes in the extension' do
+      it 'reflects changes in the extension' do
         package.extension << '.enc'
-        package.filenames.should == ['model_time.test_trigger.tar.enc']
+        expect( package.filenames ).to eq ['test_trigger.tar.enc']
       end
     end
 
     context 'when the package files were split' do
       before { package.chunk_suffixes = ['aa', 'ab'] }
-      it 'should return an array of the package filenames' do
-        package.filenames.should == ['model_time.test_trigger.tar-aa',
-                                     'model_time.test_trigger.tar-ab']
+
+      it 'returns an array of the package filenames' do
+        expect( package.filenames ).to eq(
+          ['test_trigger.tar-aa', 'test_trigger.tar-ab']
+        )
       end
 
-      it 'should reflect changes in the extension' do
+      it 'reflects changes in the extension' do
         package.extension << '.enc'
-        package.filenames.should == ['model_time.test_trigger.tar.enc-aa',
-                                     'model_time.test_trigger.tar.enc-ab']
+        expect( package.filenames ).to eq(
+          ['test_trigger.tar.enc-aa', 'test_trigger.tar.enc-ab']
+        )
       end
     end
   end
 
   describe '#basename' do
-    it 'should return the base filename for the package' do
-      package.basename.should == 'model_time.test_trigger.tar'
+    it 'returns the base filename for the package' do
+      expect( package.basename ).to eq 'test_trigger.tar'
     end
 
-    it 'should reflect changes in the extension' do
+    it 'reflects changes in the extension' do
       package.extension << '.enc'
-      package.basename.should == 'model_time.test_trigger.tar.enc'
+      expect( package.basename ).to eq 'test_trigger.tar.enc'
     end
   end
 
+end
 end

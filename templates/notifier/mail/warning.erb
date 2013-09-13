@@ -1,7 +1,14 @@
 
-Backup <%= @model.label %> (<%= @model.trigger %>) finished with warnings.
+Backup Completed Successfully (with Warnings)!
+
+Job: <%= @model.label %> (<%= @model.trigger %>)
+Started:  <%= @model.started_at %>
+Finished: <%= @model.finished_at %>
+Duration: <%= @model.duration %>
+<% if @send_log %>
 
 See the attached backup log for details.
+<% end %>
 
 ===========================================================================
 <%= Backup::Template.new.result("general/version.erb") %>

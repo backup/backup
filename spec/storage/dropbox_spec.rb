@@ -2,122 +2,73 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Storage::Dropbox do
-  let(:model)   { Backup::Model.new(:test_trigger, 'test label') }
-  let(:storage) do
-    Backup::Storage::Dropbox.new(model) do |db|
-      db.api_key      = 'my_api_key'
-      db.api_secret   = 'my_api_secret'
-      db.keep         = 5
-    end
-  end
+module Backup
+describe Storage::Dropbox do
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:storage) { Storage::Dropbox.new(model) }
+  let(:s) { sequence '' }
 
-  it 'should be a subclass of Storage::Base' do
-    Backup::Storage::Dropbox.
-      superclass.should == Backup::Storage::Base
-  end
+  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a subclass of Storage::Base'
 
   describe '#initialize' do
-    after { Backup::Storage::Dropbox.clear_defaults! }
-
-    it 'should load pre-configured defaults through Base' do
-      Backup::Storage::Dropbox.any_instance.expects(:load_defaults!)
-      storage
+    it 'provides default values' do
+      expect( storage.storage_id    ).to be_nil
+      expect( storage.keep          ).to be_nil
+      expect( storage.api_key       ).to be_nil
+      expect( storage.api_secret    ).to be_nil
+      expect( storage.chunk_size    ).to be 4
+      expect( storage.max_retries   ).to be 10
+      expect( storage.retry_waitsec ).to be 30
+      expect( storage.path          ).to eq 'backups'
     end
 
-    it 'should pass the model reference to Base' do
-      storage.instance_variable_get(:@model).should == model
+    it 'configures the storage' do
+      storage = Storage::Dropbox.new(model, :my_id) do |db|
+        db.keep           = 2
+        db.api_key        = 'my_api_key'
+        db.api_secret     = 'my_api_secret'
+        db.chunk_size     = 10
+        db.max_retries    = 15
+        db.retry_waitsec  = 45
+        db.path           = 'my/path'
+      end
+
+      expect( storage.storage_id    ).to eq 'my_id'
+      expect( storage.keep          ).to be 2
+      expect( storage.api_key       ).to eq 'my_api_key'
+      expect( storage.api_secret    ).to eq 'my_api_secret'
+      expect( storage.chunk_size    ).to eq 10
+      expect( storage.max_retries   ).to eq 15
+      expect( storage.retry_waitsec ).to eq 45
+      expect( storage.path          ).to eq 'my/path'
     end
 
-    it 'should pass the storage_id to Base' do
-      storage = Backup::Storage::Dropbox.new(model, 'my_storage_id')
-      storage.storage_id.should == 'my_storage_id'
+    it 'strips leading path separator' do
+      storage = Storage::Dropbox.new(model) do |s3|
+        s3.path = '/this/path'
+      end
+      expect( storage.path ).to eq 'this/path'
     end
 
-    context 'when no pre-configured defaults have been set' do
-      it 'should use the values given' do
-        storage.api_key.should      == 'my_api_key'
-        storage.api_secret.should   == 'my_api_secret'
-        storage.access_type.should  == :app_folder
-        storage.path.should         == 'backups'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 5
-      end
-
-      it 'should use default values if none are given' do
-        storage = Backup::Storage::Dropbox.new(model)
-        storage.api_key.should      be_nil
-        storage.api_secret.should   be_nil
-        storage.access_type.should  == :app_folder
-        storage.path.should         == 'backups'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       be_nil
-      end
-    end # context 'when no pre-configured defaults have been set'
-
-    context 'when pre-configured defaults have been set' do
-      before do
-        Backup::Storage::Dropbox.defaults do |s|
-          s.api_key      = 'some_api_key'
-          s.api_secret   = 'some_api_secret'
-          s.access_type  = 'some_access_type'
-          s.path         = 'some_path'
-          s.keep         = 15
-        end
-      end
-
-      it 'should use pre-configured defaults' do
-        storage = Backup::Storage::Dropbox.new(model)
-
-        storage.api_key.should      == 'some_api_key'
-        storage.api_secret.should   == 'some_api_secret'
-        storage.access_type.should  == 'some_access_type'
-        storage.path.should         == 'some_path'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 15
-      end
-
-      it 'should override pre-configured defaults' do
-        storage = Backup::Storage::Dropbox.new(model) do |s|
-          s.api_key      = 'new_api_key'
-          s.api_secret   = 'new_api_secret'
-          s.access_type  = 'new_access_type'
-          s.path         = 'new_path'
-          s.keep         = 10
-        end
-
-        storage.api_key.should      == 'new_api_key'
-        storage.api_secret.should   == 'new_api_secret'
-        storage.access_type.should  == 'new_access_type'
-        storage.path.should         == 'new_path'
-
-        storage.storage_id.should be_nil
-        storage.keep.should       == 10
-      end
-    end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
 
   describe '#connection' do
-    let(:session)     { mock }
-    let(:client)      { mock }
-    let(:s)           { sequence '' }
+    let(:session) { mock }
+    let(:client)  { mock }
 
     context 'when a cached session exists' do
       before do
-        storage.expects(:cached_session).in_sequence(s).returns(session)
+        storage.stubs(:cached_session).returns(session)
         storage.expects(:create_write_and_return_new_session!).never
-        DropboxClient.expects(:new).in_sequence(s).
-            with(session, :app_folder).returns(client)
+        DropboxClient.expects(:new).once.with(session, :app_folder).returns(client)
       end
 
-      it 'should use the cached session to create the client' do
+      it 'uses the cached session to create the client' do
         storage.send(:connection).should be(client)
       end
 
-      it 'should return an already existing client' do
+      it 'returns an already existing client' do
         storage.send(:connection).should be(client)
         storage.send(:connection).should be(client)
       end
@@ -125,39 +76,35 @@ describe Backup::Storage::Dropbox do
 
     context 'when a cached session does not exist' do
       before do
-        storage.expects(:cached_session).in_sequence(s).returns(false)
-        Backup::Logger.expects(:info).in_sequence(s).with(
-          'Creating a new session!'
-        )
-        storage.expects(:create_write_and_return_new_session!).in_sequence(s).
-            returns(session)
-        DropboxClient.expects(:new).in_sequence(s).
-            with(session, :app_folder).returns(client)
+        storage.stubs(:cached_session).returns(false)
+        Logger.expects(:info).with('Creating a new session!')
+        storage.expects(:create_write_and_return_new_session!).returns(session)
+        DropboxClient.expects(:new).once.with(session, :app_folder).returns(client)
       end
 
-      it 'should create a new session and return the client' do
+      it 'creates a new session and returns the client' do
         storage.send(:connection).should be(client)
       end
 
-      it 'should return an already existing client' do
+      it 'returns an already existing client' do
         storage.send(:connection).should be(client)
         storage.send(:connection).should be(client)
       end
     end
 
     context 'when an error is raised creating a client for the session' do
-      it 'should wrap and raise the error' do
+      it 'raises an error' do
         storage.stubs(:cached_session).returns(true)
         DropboxClient.expects(:new).raises('error')
 
         expect do
           storage.send(:connection)
-        end.to raise_error {|err|
-          err.should be_an_instance_of(
-            Backup::Errors::Storage::Dropbox::ConnectionError
+        end.to raise_error(Storage::Dropbox::Error) {|err|
+          expect( err.message ).to eq(
+            "Storage::Dropbox::Error: Authorization Failed\n" +
+            "--- Wrapped Exception ---\n" +
+            "RuntimeError: error"
           )
-          err.message.should ==
-              'Storage::Dropbox::ConnectionError: RuntimeError: error'
         }
       end
     end
@@ -166,179 +113,268 @@ describe Backup::Storage::Dropbox do
 
   describe '#cached_session' do
     let(:session) { mock }
+    let(:cached_file) { File.join(Config.cache_path, 'my_api_keymy_api_secret') }
 
-    context 'when a cached session file exists' do
-      before do
-        storage.expects(:cache_exists?).returns(true)
-        storage.expects(:cached_file).returns('cached_file')
-        File.expects(:read).with('cached_file').returns('yaml_data')
-      end
+    before do
+      storage.api_key = 'my_api_key'
+      storage.api_secret = 'my_api_secret'
+    end
 
-      context 'when the cached session is successfully loaded' do
-        it 'should return the sesssion' do
-          DropboxSession.expects(:deserialize).with('yaml_data').
-              returns(session)
-          Backup::Logger.expects(:info).with(
-            'Session data loaded from cache!'
+    it 'returns the cached session if one exists' do
+      File.expects(:exist?).with(cached_file).returns(true)
+      File.expects(:read).with(cached_file).returns('yaml_data')
+      DropboxSession.expects(:deserialize).with('yaml_data').returns(session)
+      Backup::Logger.expects(:info).with('Session data loaded from cache!')
+
+      storage.send(:cached_session).should be(session)
+    end
+
+    it 'returns false when no cached session file exists' do
+      File.expects(:exist?).with(cached_file).returns(false)
+      expect( storage.send(:cached_session) ).to be false
+    end
+
+    context 'when errors occur loading the session' do
+      it 'logs a warning and return false' do
+        File.expects(:exist?).with(cached_file).returns(true)
+        File.expects(:read).with(cached_file).returns('yaml_data')
+        DropboxSession.expects(:deserialize).with('yaml_data').
+            raises('error message')
+        Logger.expects(:warn).with do |err|
+          expect( err ).to be_an_instance_of(Storage::Dropbox::Error)
+          expect( err.message ).to match(
+            "Could not read session data from cache.\n" +
+            "  Cache data might be corrupt."
           )
-
-          storage.send(:cached_session).should be(session)
+          expect( err.message ).to match('RuntimeError: error message')
         end
-      end
 
-      context 'when errors occur loading the session' do
-        it 'should log a warning and return false' do
-          DropboxSession.expects(:deserialize).with('yaml_data').
-              raises('error message')
-          Backup::Logger.expects(:warn).with do |err|
-            err.should be_an_instance_of(
-              Backup::Errors::Storage::Dropbox::CacheError
-            )
-            err.message.should == 'Storage::Dropbox::CacheError: ' +
-                "Could not read session data from cache.\n" +
-                "  Cache data might be corrupt.\n" +
-                "  Reason: RuntimeError\n" +
-                "  error message"
-          end
-
-          expect do
-            storage.send(:cached_session).should be_false
-          end.not_to raise_error
-        end
+        expect do
+          expect( storage.send(:cached_session) ).to be false
+        end.not_to raise_error
       end
     end
-
-    context 'when a cached session file does not exist' do
-      before { storage.stubs(:cache_exists?).returns(false) }
-      it 'should return false' do
-        storage.send(:cached_session).should be_false
-      end
-    end
-  end
+  end # describe '#cached_session'
 
   describe '#transfer!' do
     let(:connection) { mock }
-    let(:package) { mock }
+    let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
+    let(:remote_path) { File.join('my/path/test_trigger', timestamp) }
     let(:file) { mock }
-    let(:s) { sequence '' }
+    let(:uploader) { mock }
 
     before do
-      storage.instance_variable_set(:@package, package)
-      storage.stubs(:storage_name).returns('Storage::Dropbox')
-      storage.stubs(:local_path).returns('/local/path')
+      Timecop.freeze
+      storage.package.time = timestamp
       storage.stubs(:connection).returns(connection)
+      file.stubs(:stat).returns(stub(:size => 6_291_456))
+      uploader.stubs(:total_size).returns(6_291_456)
+      uploader.stubs(:offset).returns(
+        0, 2_097_152, 4_194_304, 6_291_456,
+        0, 2_097_152, 4_194_304, 6_291_456
+      )
+      storage.path = 'my/path'
+      storage.chunk_size = 2
     end
 
-    it 'should transfer the package files' do
-      storage.expects(:remote_path_for).in_sequence(s).with(package).
-          returns('remote/path')
-      storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
-        multiple_yields(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
+    after { Timecop.return }
+
+    it 'transfers the package files' do
+      storage.package.stubs(:filenames).returns(
+        ['test_trigger.tar-aa', 'test_trigger.tar-ab']
       )
-      # first yield
-      Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::Dropbox started transferring " +
-        "'2011.12.31.11.00.02.backup.tar.enc-aa'."
-      )
-      File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'), 'r'
-      ).yields(file)
-      connection.expects(:put_file).in_sequence(s).with(
-        File.join('remote/path', 'backup.tar.enc-aa'), file
-      )
-      # second yield
-      Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::Dropbox started transferring " +
-        "'2011.12.31.11.00.02.backup.tar.enc-ab'."
-      )
-      File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'), 'r'
-      ).yields(file)
-      connection.expects(:put_file).in_sequence(s).with(
-        File.join('remote/path', 'backup.tar.enc-ab'), file
-      )
+
+      # first file
+      src = File.join(Config.tmp_path, 'test_trigger.tar-aa')
+      dest = File.join(remote_path, 'test_trigger.tar-aa')
+
+      Logger.expects(:info).in_sequence(s).with("Storing '#{ dest }'...")
+      File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
+      connection.expects(:get_chunked_uploader).in_sequence(s).
+          with(file, 6_291_456).returns(uploader)
+      uploader.expects(:upload).in_sequence(s).times(3).with(2_097_152)
+      uploader.expects(:finish).in_sequence(s).with(dest)
+
+      # second file
+      src = File.join(Config.tmp_path, 'test_trigger.tar-ab')
+      dest = File.join(remote_path, 'test_trigger.tar-ab')
+
+      Logger.expects(:info).in_sequence(s).with("Storing '#{ dest }'...")
+      File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
+      connection.expects(:get_chunked_uploader).in_sequence(s).
+          with(file, 6_291_456).returns(uploader)
+      uploader.expects(:upload).in_sequence(s).times(3).with(2_097_152)
+      uploader.expects(:finish).in_sequence(s).with(dest)
 
       storage.send(:transfer!)
     end
+
+    it 'retries on errors' do
+      storage.max_retries = 1
+      storage.package.stubs(:filenames).returns(['test_trigger.tar'])
+
+      src = File.join(Config.tmp_path, 'test_trigger.tar')
+      dest = File.join(remote_path, 'test_trigger.tar')
+
+      @logger_calls = 0
+      Logger.expects(:info).times(3).with do |arg|
+        @logger_calls += 1
+        case @logger_calls
+        when 1
+          expect( arg ).to eq "Storing '#{ dest }'..."
+        when 2
+          expect( arg ).to be_an_instance_of Storage::Dropbox::Error
+          expect( arg.message ).to match(
+            "Storage::Dropbox::Error: Retry #1 of 1."
+          )
+          expect( arg.message ).to match('RuntimeError: chunk failed')
+        when 3
+          expect( arg ).to be_an_instance_of Storage::Dropbox::Error
+          expect( arg.message ).to match(
+            "Storage::Dropbox::Error: Retry #1 of 1."
+          )
+          expect( arg.message ).to match('RuntimeError: finish failed')
+        end
+      end
+
+      File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
+      connection.expects(:get_chunked_uploader).in_sequence(s).
+          with(file, 6_291_456).returns(uploader)
+
+      uploader.expects(:upload).in_sequence(s).raises('chunk failed')
+
+      storage.expects(:sleep).in_sequence(s).with(30)
+
+      uploader.expects(:upload).in_sequence(s).times(3).with(2_097_152)
+
+      uploader.expects(:finish).in_sequence(s).with(dest).raises('finish failed')
+
+      storage.expects(:sleep).in_sequence(s).with(30)
+
+      uploader.expects(:finish).in_sequence(s).with(dest)
+
+      storage.send(:transfer!)
+    end
+
+    it 'fails when retries are exceeded' do
+      storage.max_retries = 2
+      storage.package.stubs(:filenames).returns(['test_trigger.tar'])
+
+      src = File.join(Config.tmp_path, 'test_trigger.tar')
+      dest = File.join(remote_path, 'test_trigger.tar')
+
+      @logger_calls = 0
+      Logger.expects(:info).times(3).with do |arg|
+        @logger_calls += 1
+        case @logger_calls
+        when 1
+          expect( arg ).to eq "Storing '#{ dest }'..."
+        when 2
+          expect( arg ).to be_an_instance_of Storage::Dropbox::Error
+          expect( arg.message ).to match(
+            "Storage::Dropbox::Error: Retry #1 of 2."
+          )
+          expect( arg.message ).to match('RuntimeError: chunk failed')
+        when 3
+          expect( arg ).to be_an_instance_of Storage::Dropbox::Error
+          expect( arg.message ).to match(
+            "Storage::Dropbox::Error: Retry #2 of 2."
+          )
+          expect( arg.message ).to match('RuntimeError: chunk failed again')
+        end
+      end
+
+      File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
+      connection.expects(:get_chunked_uploader).in_sequence(s).
+          with(file, 6_291_456).returns(uploader)
+
+      uploader.expects(:upload).in_sequence(s).raises('chunk failed')
+
+      storage.expects(:sleep).in_sequence(s).with(30)
+
+      uploader.expects(:upload).in_sequence(s).raises('chunk failed again')
+
+      storage.expects(:sleep).in_sequence(s).with(30)
+
+      uploader.expects(:upload).in_sequence(s).raises('strike three')
+
+      uploader.expects(:finish).never
+
+      expect do
+        storage.send(:transfer!)
+      end.to raise_error(Storage::Dropbox::Error) {|err|
+        expect( err.message ).to match('Upload Failed!')
+        expect( err.message ).to match('RuntimeError: strike three')
+      }
+    end
+
   end # describe '#transfer!'
 
   describe '#remove!' do
-    let(:package) { mock }
     let(:connection) { mock }
-    let(:s) { sequence '' }
+    let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
+    let(:remote_path) { File.join('my/path/test_trigger', timestamp) }
+    let(:package) {
+      stub( # loaded from YAML storage file
+        :trigger    => 'test_trigger',
+        :time       => timestamp
+      )
+    }
 
     before do
-      storage.stubs(:storage_name).returns('Storage::Dropbox')
+      Timecop.freeze
       storage.stubs(:connection).returns(connection)
+      storage.path = 'my/path'
     end
 
-    it 'should remove the package files' do
-      storage.expects(:remote_path_for).in_sequence(s).with(package).
-          returns('remote/path')
-      storage.expects(:transferred_files_for).in_sequence(s).with(package).
-        multiple_yields(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
-      )
-      # after both yields
-      Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::Dropbox started removing " +
-        "'2011.12.31.11.00.02.backup.tar.enc-aa' from Dropbox.\n" +
-        "Storage::Dropbox started removing " +
-        "'2011.12.31.11.00.02.backup.tar.enc-ab' from Dropbox."
-      )
-      connection.expects(:file_delete).in_sequence(s).with('remote/path')
+    after { Timecop.return }
+
+    it 'removes the given package from the remote' do
+      Logger.expects(:info).in_sequence(s).
+          with("Removing backup package dated #{ timestamp }...")
+
+      connection.expects(:file_delete).with(remote_path)
 
       storage.send(:remove!, package)
     end
+
   end # describe '#remove!'
 
-  describe '#cached_file' do
-    it 'should return the path to the cache file' do
-      storage.send(:cached_file).should ==
-          File.join(Backup::Config.cache_path, 'my_api_keymy_api_secret')
-    end
-  end
-
-  describe '#cache_exists?' do
-    it 'should check if #cached_file exists' do
-      storage.expects(:cached_file).returns('/path/to/cache_file')
-      File.expects(:exist?).with('/path/to/cache_file')
-
-      storage.send(:cache_exists?)
-    end
-  end
-
   describe '#write_cache!' do
-    let(:session)     { mock }
-    let(:cache_file)  { mock }
+    let(:session) { mock }
+    let(:cached_file) { File.join(Config.cache_path, 'my_api_keymy_api_secret') }
+    let(:file) { mock }
+
+    before do
+      storage.api_key = 'my_api_key'
+      storage.api_secret = 'my_api_secret'
+      session.stubs(:serialize).returns('serialized_data')
+    end
 
     it 'should write a serialized session to file' do
-      storage.expects(:cached_file).returns('/path/to/cache_file')
-      session.expects(:serialize).returns('serialized_data')
+      FileUtils.expects(:mkdir_p).with(Config.cache_path)
 
-      File.expects(:open).with('/path/to/cache_file', 'w').yields(cache_file)
-      cache_file.expects(:write).with('serialized_data')
+      File.expects(:open).with(cached_file, 'w').yields(file)
+      file.expects(:write).with('serialized_data')
 
       storage.send(:write_cache!, session)
     end
-  end
+  end # describe '#write_cache!'
 
   describe '#create_write_and_return_new_session!' do
     let(:session)   { mock }
     let(:template)  { mock }
-    let(:s)         { sequence '' }
+    let(:cached_file) { File.join(Config.cache_path, 'my_api_keymy_api_secret') }
 
     before do
-      storage.stubs(:cached_file).returns('/path/to/cache_file')
+      storage.api_key = 'my_api_key'
+      storage.api_secret = 'my_api_secret'
 
       DropboxSession.expects(:new).in_sequence(s).
           with('my_api_key', 'my_api_secret').returns(session)
       session.expects(:get_request_token).in_sequence(s)
-      Backup::Template.expects(:new).in_sequence(s).with(
-        {:session => session, :cached_file => '/path/to/cache_file'}
+      Template.expects(:new).in_sequence(s).with(
+        { :session => session, :cached_file => cached_file }
       ).returns(template)
       template.expects(:render).in_sequence(s).with(
         'storage/dropbox/authorization_url.erb'
@@ -352,7 +388,7 @@ describe Backup::Storage::Dropbox do
         session.expects(:get_access_token).in_sequence(s)
       end
 
-      it 'should cache and return the new session' do
+      it 'caches and returns the new session' do
         template.expects(:render).in_sequence(s).with(
           'storage/dropbox/authorized.erb'
         )
@@ -370,35 +406,32 @@ describe Backup::Storage::Dropbox do
         session.expects(:get_access_token).in_sequence(s).raises('error message')
       end
 
-      it 'should wrap and re-raise the error' do
+      it 'raises an error' do
         template.expects(:render).with('storage/dropbox/authorized.erb').never
         storage.expects(:write_cache!).never
         template.expects(:render).with('storage/dropbox/cache_file_written.erb').never
 
         expect do
           storage.send(:create_write_and_return_new_session!)
-        end.to raise_error {|err|
-          err.should be_an_instance_of(
-            Backup::Errors::Storage::Dropbox::AuthenticationError
+        end.to raise_error(Storage::Dropbox::Error) {|err|
+          expect( err.message ).to match(
+            "Could not create or authenticate a new session"
           )
-          err.message.should == 'Storage::Dropbox::AuthenticationError: ' +
-              "Could not create or authenticate a new session\n" +
-              "  Reason: RuntimeError\n" +
-              "  error message"
+          expect( err.message ).to match('RuntimeError: error message')
         }
       end
     end
-  end
+  end # describe '#create_write_and_return_new_session!' do
 
   describe 'deprecations' do
     after do
-      Backup::Storage::Dropbox.clear_defaults!
+      Storage::Dropbox.clear_defaults!
     end
 
     describe '#email' do
       before do
-        Backup::Logger.expects(:warn).with do |err|
-          err.message.should match(
+        Logger.expects(:warn).with do |err|
+          expect( err.message ).to match(
             "Dropbox#email has been deprecated as of backup v.3.0.17"
           )
         end
@@ -406,7 +439,7 @@ describe Backup::Storage::Dropbox do
 
       context 'when set directly' do
         it 'should issue a deprecation warning' do
-          Backup::Storage::Dropbox.new(model) do |storage|
+          Storage::Dropbox.new(model) do |storage|
             storage.email = 'foo'
           end
         end
@@ -414,18 +447,18 @@ describe Backup::Storage::Dropbox do
 
       context 'when set as a default' do
         it 'should issue a deprecation warning' do
-          Backup::Storage::Dropbox.defaults do |storage|
+          Storage::Dropbox.defaults do |storage|
             storage.email = 'foo'
           end
-          Backup::Storage::Dropbox.new(model)
+          Storage::Dropbox.new(model)
         end
       end
     end
 
     describe '#password' do
       before do
-        Backup::Logger.expects(:warn).with do |err|
-          err.message.should match(
+        Logger.expects(:warn).with do |err|
+          expect( err.message ).to match(
             "Dropbox#password has been deprecated as of backup v.3.0.17"
           )
         end
@@ -433,7 +466,7 @@ describe Backup::Storage::Dropbox do
 
       context 'when set directly' do
         it 'should issue a deprecation warning' do
-          Backup::Storage::Dropbox.new(model) do |storage|
+          Storage::Dropbox.new(model) do |storage|
             storage.password = 'foo'
           end
         end
@@ -441,18 +474,18 @@ describe Backup::Storage::Dropbox do
 
       context 'when set as a default' do
         it 'should issue a deprecation warning' do
-          Backup::Storage::Dropbox.defaults do |storage|
+          Storage::Dropbox.defaults do |storage|
             storage.password = 'foo'
           end
-          Backup::Storage::Dropbox.new(model)
+          Storage::Dropbox.new(model)
         end
       end
     end
 
     describe '#timeout' do
       before do
-        Backup::Logger.expects(:warn).with do |err|
-          err.message.should match(
+        Logger.expects(:warn).with do |err|
+          expect( err.message ).to match(
             "Dropbox#timeout has been deprecated as of backup v.3.0.21"
           )
         end
@@ -460,7 +493,7 @@ describe Backup::Storage::Dropbox do
 
       context 'when set directly' do
         it 'should issue a deprecation warning' do
-          Backup::Storage::Dropbox.new(model) do |storage|
+          Storage::Dropbox.new(model) do |storage|
             storage.timeout = 'foo'
           end
         end
@@ -468,13 +501,38 @@ describe Backup::Storage::Dropbox do
 
       context 'when set as a default' do
         it 'should issue a deprecation warning' do
-          Backup::Storage::Dropbox.defaults do |storage|
+          Storage::Dropbox.defaults do |storage|
             storage.timeout = 'foo'
           end
-          Backup::Storage::Dropbox.new(model)
+          Storage::Dropbox.new(model)
         end
       end
     end
-  end
 
+    describe '#chunk_retries' do
+      before do
+        Backup::Logger.expects(:warn).with {|err|
+          expect( err ).to be_an_instance_of Backup::Configuration::Error
+          expect( err.message ).to match(/Use #max_retries instead/)
+        }
+      end
+
+      specify 'set as a default' do
+        Storage::Dropbox.defaults do |db|
+          db.chunk_retries = 15
+        end
+        storage = Storage::Dropbox.new(model)
+        expect( storage.max_retries ).to be 15
+      end
+
+      specify 'set directly' do
+        storage = Storage::Dropbox.new(model) do |db|
+          db.chunk_retries = 15
+        end
+        expect( storage.max_retries ).to be 15
+      end
+    end
+  end # describe 'deprecations'
+
+end
 end

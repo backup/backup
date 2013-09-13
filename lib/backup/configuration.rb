@@ -14,7 +14,7 @@ module Backup
     # Pass calls on to the proper class and log a warning
     def defaults(&block)
       klass = eval(self.to_s.sub('Configuration::', ''))
-      Logger.warn Errors::ConfigurationError.new <<-EOS
+      Logger.warn Error.new(<<-EOS)
         [DEPRECATION WARNING]
         #{ self }.defaults is being deprecated.
         To set pre-configured defaults for #{ klass }, use:

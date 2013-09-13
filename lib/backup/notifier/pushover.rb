@@ -1,5 +1,5 @@
 # encoding: utf-8
-require 'net/https'
+require 'uri'
 
 module Backup
   module Notifier
@@ -27,8 +27,7 @@ module Backup
       attr_accessor :priority
 
       def initialize(model, &block)
-        super(model)
-
+        super
         instance_eval(&block) if block_given?
       end
 
@@ -36,56 +35,46 @@ module Backup
 
       ##
       # Notify the user of the backup operation results.
+      #
       # `status` indicates one of the following:
       #
       # `:success`
       # : The backup completed successfully.
-      # : Notification will be sent if `on_success` was set to `true`
+      # : Notification will be sent if `on_success` is `true`.
       #
       # `:warning`
-      # : The backup completed successfully, but warnings were logged
-      # : Notification will be sent, including a copy of the current
-      # : backup log, if `on_warning` was set to `true`
+      # : The backup completed successfully, but warnings were logged.
+      # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       # `:failure`
       # : The backup operation failed.
-      # : Notification will be sent, including the Exception which caused
-      # : the failure, the Exception's backtrace, a copy of the current
-      # : backup log and other information if `on_failure` was set to `true`
+      # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        name = case status
-               when :success then 'Success'
-               when :failure then 'Failure'
-               when :warning then 'Warning'
-               end
-        message = "[Backup::%s] #{@model.label} (#{@model.trigger})" % name
-
+        tag = case status
+              when :success then '[Backup::Success]'
+              when :failure then '[Backup::Failure]'
+              when :warning then '[Backup::Warning]'
+              end
+        message = "#{ tag } #{ model.label } (#{ model.trigger })"
         send_message(message)
       end
 
-      # Push a message via the Pushover API
       def send_message(message)
-        url = URI.parse("https://api.pushover.net/1/messages.json")
-
-        request = Net::HTTP::Post.new(url.path)
-        request.set_form_data(parameters.merge({:message => message}))
-        response = Net::HTTP.new(url.host, url.port)
-
-        response.use_ssl = true
-        response.verify_mode = OpenSSL::SSL::VERIFY_PEER
-
-        response.start {|http| http.request(request) }
-      end
-
-      # List available parameters
-      def parameters
-        @values = {}
-        [:token, :user, :message, :title, :priority, :device].each do |k|
-          @values.merge! k => self.instance_variable_get("@#{k}")
+        uri = 'https://api.pushover.net/1/messages.json'
+        data = { :user => user, :token => token, :message => message }
+        [:device, :title, :priority].each do |param|
+          val = send(param)
+          data.merge!(param => val) if val
         end
-        @values
+        options = {
+          :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+          :body     => encode_www_form(data)
+        }
+        options.merge!(:expects => 200) # raise error if unsuccessful
+        Excon.post(uri, options)
       end
+
     end
   end
 end

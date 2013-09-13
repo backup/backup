@@ -129,7 +129,7 @@ describe 'Backup::Configuration::Helpers' do
       it 'should log a warning that the attribute has been removed' do
         Backup::Logger.expects(:warn).with do |err|
           err.message.should ==
-              "ConfigurationError: [DEPRECATION WARNING]\n" +
+              "Configuration::Error: [DEPRECATION WARNING]\n" +
               "  Backup::Foo#removed has been deprecated as of backup v.1.1"
         end
 
@@ -142,7 +142,7 @@ describe 'Backup::Configuration::Helpers' do
       it 'should log warning with the message' do
         Backup::Logger.expects(:warn).with do |err|
           err.message.should ==
-              "ConfigurationError: [DEPRECATION WARNING]\n" +
+              "Configuration::Error: [DEPRECATION WARNING]\n" +
               "  Backup::Foo#removed_with_message has been deprecated " +
               "as of backup v.1.2\n" +
               "  This has no replacement."
@@ -165,6 +165,19 @@ describe 'Backup::Configuration::Helpers' do
 
       klass.send(:load_defaults!)
       klass.accessor.should == 'foo'
+    end
+
+    it 'should protect default values' do
+      default_value = 'foo'
+      Backup::Foo.defaults do |config|
+        config.accessor = default_value
+        config.accessor_two = 5
+      end
+
+      klass.send(:load_defaults!)
+      klass.accessor.should == 'foo'
+      klass.accessor.should_not be(default_value)
+      klass.accessor_two.should be(5)
     end
 
     it 'should raise an error if defaults are set for attribute readers' do
@@ -192,7 +205,7 @@ describe 'Backup::Configuration::Helpers' do
     context 'when the method is a deprecated method' do
       before do
         Backup::Logger.expects(:warn).with(
-          instance_of(Backup::Errors::ConfigurationError)
+          instance_of(Backup::Configuration::Error)
         )
       end
 

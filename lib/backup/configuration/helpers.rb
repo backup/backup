@@ -2,6 +2,8 @@
 
 module Backup
   module Configuration
+    class Error < Backup::Error; end
+
     module Helpers
 
       def self.included(klass)
@@ -37,7 +39,7 @@ module Backup
           msg = "#{ self }##{ name } has been deprecated as of " +
               "backup v.#{ deprecation[:version] }"
           msg << "\n#{ deprecation[:message] }" if deprecation[:message]
-          Logger.warn Backup::Errors::ConfigurationError.new <<-EOS
+          Logger.warn Error.new(<<-EOS)
             [DEPRECATION WARNING]
             #{ msg }
           EOS
@@ -85,7 +87,9 @@ module Backup
       def load_defaults!
         configuration = self.class.defaults
         configuration._attributes.each do |name|
-          send(:"#{ name }=", configuration.send(name))
+          val = configuration.send(name)
+          val = val.dup rescue val
+          send(:"#{ name }=", val)
         end
       end
 

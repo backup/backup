@@ -11,8 +11,5 @@
     db.only_collections   = ["only", "these", "collections"]
     db.additional_options = []
     db.lock               = false
-    # Optional: Use to set the location of these utilities
-    #   if they cannot be found by their name in your $PATH
-    # db.mongodump_utility = "/opt/local/bin/mongodump"
-    # db.mongo_utility     = "/opt/local/bin/mongo"
+    db.oplog              = false
   end

@@ -67,7 +67,7 @@ describe 'Backup::Config' do
         expect do
           config.load_config!
         end.to raise_error {|err|
-          err.should be_an_instance_of Backup::Errors::Config::NotFoundError
+          err.should be_an_instance_of Backup::Config::Error
           err.message.should match(
             /Could not find configuration file: '#{config.config_file}'/
           )
@@ -75,6 +75,21 @@ describe 'Backup::Config' do
       end
     end
   end # describe '#load_config!'
+
+  describe '#hostname' do
+    before do
+      config.instance_variable_set(:@hostname, nil)
+      Backup::Utilities.stubs(:utility).with(:hostname).returns('/path/to/hostname')
+    end
+
+    it 'caches the hostname' do
+      Backup::Utilities.expects(:run).once.
+          with('/path/to/hostname').returns('my_hostname')
+      config.hostname.should == 'my_hostname'
+      config.hostname.should == 'my_hostname'
+    end
+  end
+
 
   describe '#set_root_path' do
 
@@ -110,7 +125,7 @@ describe 'Backup::Config' do
         expect do
           config.send(:set_root_path, 'foo')
         end.to raise_error {|err|
-          err.should be_an_instance_of Backup::Errors::Config::NotFoundError
+          err.should be_an_instance_of Backup::Config::Error
           err.message.should match(/Root Path Not Found/)
           err.message.should match(/Path was: #{ path }/)
         }
@@ -189,7 +204,7 @@ describe 'Backup::Config' do
       # just to avoid 'already initialized constant' warnings
       config.constants.each {|const| config.send(:remove_const, const) }
 
-      expected = config.instance_variables.sort.map(&:to_sym) - [:@mocha]
+      expected = config.instance_variables.sort.map(&:to_sym) - [:@hostname, :@mocha]
       config.instance_variables.each do |var|
         config.send(:remove_instance_variable, var)
       end

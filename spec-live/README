@@ -1,7 +1,0 @@
-== spec-live ==
-
-This folder contains "Live" specs which test various features against
-the actual filesystem and/or real storage service accounts.
-
-These are only intended to be used by developers.
-Use at your own risk :)

@@ -2,7 +2,10 @@
 
 module Backup
   module Notifier
+    class Error < Backup::Error; end
+
     class Base
+      include Backup::Utilities::Helpers
       include Backup::Configuration::Helpers
 
       ##
@@ -24,7 +27,17 @@ module Backup
       alias :notify_on_failure? :on_failure
 
       ##
-      # Called with super(model) from subclasses
+      # Number of times to retry failed attempts to send notification.
+      # Default: 10
+      attr_accessor :max_retries
+
+      ##
+      # Time in seconds to pause before each retry.
+      # Default: 30
+      attr_accessor :retry_waitsec
+
+      attr_reader :model
+
       def initialize(model)
         @model = model
         load_defaults!
@@ -32,36 +45,47 @@ module Backup
         @on_success = true if on_success.nil?
         @on_warning = true if on_warning.nil?
         @on_failure = true if on_failure.nil?
+        @max_retries    ||= 10
+        @retry_waitsec  ||= 30
       end
 
-      ##
-      # Performs the notification
-      # Takes a flag to indicate that a failure has occured.
-      # (this is only set from Model#perform! in the event of an error)
-      # If this is the case it will set the 'action' to :failure.
-      # Otherwise, it will set the 'action' to either :success or :warning,
-      # depending on whether or not any warnings were sent to the Logger.
-      # It will then invoke the notify! method with the 'action',
-      # but only if the proper on_success, on_warning or on_failure flag is true.
-      def perform!(failure = false)
-        @template  = Backup::Template.new({:model => @model})
+      # This method is called from an ensure block in Model#perform! and must
+      # not raise any exceptions. However, each Notifier's #notify! method
+      # should raise an exception if the request fails so it may be retried.
+      def perform!
+        status = case model.exit_status
+                 when 0
+                   :success if notify_on_success?
+                 when 1
+                   :warning if notify_on_success? || notify_on_warning?
+                 else
+                   :failure if notify_on_failure?
+                 end
 
-        action = false
-        if failure
-          action = :failure if notify_on_failure?
-        else
-          if notify_on_success? || (notify_on_warning? && Logger.has_warnings?)
-            action = Logger.has_warnings? ? :warning : :success
-          end
+        if status
+          Logger.info "Sending notification using #{ notifier_name }..."
+          with_retries { notify!(status) }
         end
 
-        if action
-          log!
-          notify!(action)
-        end
+      rescue Exception => err
+        Logger.error Error.wrap(err, "#{ notifier_name } Failed!")
       end
 
       private
+
+      def with_retries
+        retries = 0
+        begin
+          yield
+        rescue StandardError, Timeout::Error => err
+          retries += 1
+          raise if retries > max_retries
+
+          Logger.info Error.wrap(err, "Retry ##{ retries } of #{ max_retries }.")
+          sleep(retry_waitsec)
+          retry
+        end
+      end
 
       ##
       # Return the notifier name, with Backup namespace removed
@@ -69,11 +93,19 @@ module Backup
         self.class.to_s.sub('Backup::', '')
       end
 
-      ##
-      # Logs a message to the console and log file to inform
-      # the client that Backup is notifying about the process
-      def log!
-        Logger.info "#{ notifier_name } started notifying about the process."
+      # For ruby-1.8.7. Both sorted so specs will match.
+      def encode_www_form(enum)
+        if RUBY_VERSION < '1.9'
+          require 'cgi'
+          str = ''
+          enum.to_a.map {|k,v| [k.to_s, v] }.sort.each do |k,v|
+            str << '&' unless str.empty?
+            str << CGI.escape(k) << '=' << CGI.escape(v)
+          end
+          str
+        else
+          URI.encode_www_form(enum.sort)
+        end
       end
 
     end

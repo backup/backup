@@ -3,6 +3,7 @@
 module Backup
   module Compressor
     class Gzip < Base
+      class Error < Backup::Error; end
       extend Utilities::Helpers
 
       ##
@@ -71,7 +72,7 @@ module Backup
         if self.class.has_rsyncable?
           opts << ' --rsyncable'
         else
-          Logger.warn Errors::Compressor::Gzip::RsyncableError.new(<<-EOS)
+          Logger.warn Error.new(<<-EOS)
             'rsyncable' option ignored.
             Your system's 'gzip' does not support the `--rsyncable` option.
           EOS

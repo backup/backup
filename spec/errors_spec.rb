@@ -2,305 +2,475 @@
 
 require File.expand_path('../spec_helper.rb', __FILE__)
 
-# Note: none of these tests require the use of the ErrorsHelper
-describe 'Errors::Error' do
-  let(:klass) { Backup::Errors::Error }
+module Backup
+describe 'Backup Errors' do
 
-  it 'allow errors to cascade through the system' do
-    class ErrorA < klass; end
-    class ErrorB < klass; end
-    class ErrorC < klass; end
-    class ErrorD < klass; end
+shared_examples 'a nested exception' do
+  let(:class_name) { described_class.name.sub(/^Backup::/, '') }
 
-    expect do
-      begin
-        begin
-          begin
-            raise ErrorA, 'an error occurred in Zone A'
-          rescue => err
-            raise ErrorB.wrap(err, <<-EOS)
-              an error occurred in Zone B
-
-              the following error should give a reason
-            EOS
-          end
-        rescue => err
-          raise ErrorC.wrap(err)
-        end
-      rescue => err
-        raise ErrorD.wrap(err, 'an error occurred in Zone D')
-      end
-    end.to raise_error(ErrorD,
-      "ErrorD: an error occurred in Zone D\n" +
-      "  Reason: ErrorC\n" +
-      "  ErrorB: an error occurred in Zone B\n" +
-      "  \n" +
-      "  the following error should give a reason\n" +
-      "  Reason: ErrorA\n" +
-      "  an error occurred in Zone A"
-    )
-  end
-
-  describe '#initialize' do
-
-    it 'creates a StandardError' do
-      klass.new.should be_a_kind_of StandardError
+  context 'with stubbed constants' do
+    before do
+      ErrorA = Class.new(described_class)
+      ErrorB = Class.new(described_class)
+      ErrorC = Class.new(described_class)
+    end
+    after do
+      Backup.send(:remove_const, :ErrorA)
+      Backup.send(:remove_const, :ErrorB)
+      Backup.send(:remove_const, :ErrorC)
     end
 
-    context 'when given a message' do
-
-      it 'formats a simple message' do
-        err = klass.new('error message')
-        err.message.should == 'Error: error message'
-      end
-
-      it 'formats a multi-line message' do
-        err = klass.new("   error message\n" +
-          "     This is a multi-line error message.\n" +
-          "It should be properly indented.   ")
-
-        err.message.should == "Error: error message\n" +
-            "  This is a multi-line error message.\n" +
-            "  It should be properly indented."
-      end
-
-      context 'when given an original error' do
-
-        it 'includes the original error' do
-          orig_err = StandardError.new('original message')
-          err = klass.new('error message', orig_err)
-          err.message.should == "Error: error message\n" +
-              "  Reason: StandardError\n" +
-              "  original message"
-        end
-
-        it 'formats all messages' do
-          orig_err = StandardError.new(" original message\n" +
-            "     This is a multi-line error message.\n" +
-            "It should be properly indented.")
-          err = klass.new("   error message\n" +
-            "     This is a multi-line error message.\n" +
-            "It should be properly indented.   ", orig_err)
-
-          err.message.should == "Error: error message\n" +
-              "  This is a multi-line error message.\n" +
-              "  It should be properly indented.\n" +
-              "  Reason: StandardError\n" +
-              "  original message\n" +
-              "  This is a multi-line error message.\n" +
-              "  It should be properly indented."
-        end
-
-        it 'uses the original error backtrace' do
+    it 'allows errors to cascade through the system' do
+      expect do
+        begin
           begin
-            raise StandardError.new
-          rescue => err
-            klass.new(nil, err).backtrace.
-                should == err.backtrace
+            begin
+              raise StandardError, 'error message'
+            rescue => err
+              raise ErrorA.wrap(err), <<-EOS
+                an error occurred in Zone A
+
+                the following error should give a reason
+              EOS
+            end
+          rescue Exception => err
+            raise ErrorB.wrap(err)
           end
+        rescue Exception => err
+          raise ErrorC.wrap(err), 'an error occurred in Zone C'
         end
+      end.to raise_error {|err|
+        expect( err.message ).to eq(
+          "ErrorC: an error occurred in Zone C\n" +
+          "--- Wrapped Exception ---\n" +
+          "ErrorB\n" +
+          "--- Wrapped Exception ---\n" +
+          "ErrorA: an error occurred in Zone A\n" +
+          "  \n" +
+          "  the following error should give a reason\n" +
+          "--- Wrapped Exception ---\n" +
+          "StandardError: error message"
+        )
+      }
+    end
+  end
 
-        it 'reports if original error had no message' do
-          orig_err = StandardError.new
-          err = klass.new('error message', orig_err)
-          err.message.should == "Error: error message\n" +
-              "  Reason: StandardError (no message given)"
-        end
+  context 'with no wrapped exception' do
 
-      end # context 'when given an original error'
+    describe '#initialize' do
 
-      context 'when given an original Errors::Error' do
-        let(:subklass) do
-          class SubKlass < klass; end
-          SubKlass
-        end
-
-        it 'includes the original error' do
-          orig_err = subklass.new('original message')
-          err = klass.new('error message', orig_err)
-          err.message.should == "Error: error message\n" +
-              "  Reason: SubKlass\n" +
-              "  original message"
-        end
-
-        it 'formats all messages' do
-          orig_err = subklass.new(" original message\n" +
-            "     This is a multi-line error message.\n" +
-            "It should be properly indented.")
-          err = klass.new("   error message\n" +
-            "     This is a multi-line error message.\n" +
-            "It should be properly indented.   ", orig_err)
-
-          err.message.should == "Error: error message\n" +
-              "  This is a multi-line error message.\n" +
-              "  It should be properly indented.\n" +
-              "  Reason: SubKlass\n" +
-              "  original message\n" +
-              "  This is a multi-line error message.\n" +
-              "  It should be properly indented."
-        end
-
-        it 'uses the original error backtrace' do
-          begin
-            raise subklass.new
-          rescue => err
-            klass.new(nil, err).backtrace.
-                should == err.backtrace
-          end
-        end
-
-        it 'reports if original error had no message' do
-          orig_err = subklass.new
-          err = klass.new('error message', orig_err)
-          err.message.should == "Error: error message\n" +
-              "  Reason: SubKlass (no message given)"
-        end
-
-      end # context 'when given an original Errors::Error'
-
-    end # context 'when given a message'
-
-    context 'when given no message' do
-
-      it 'strips the module namespace from the default message' do
-        err = klass.new
-        err.message.should == 'Error'
+      it 'sets message to class name when not given' do
+        err = described_class.new
+        expect( err.message ).to eq class_name
       end
 
-      context 'when given an original error' do
+      it 'prefixes given message with class name' do
+        err = described_class.new('a message')
+        expect( err.message ).to eq class_name + ': a message'
+      end
 
-        it 'uses the original error message' do
-          orig_err = StandardError.new
-          err = klass.new(nil, orig_err)
-          err.message.should == 'Error: StandardError'
+      it 'formats message' do
+        err = described_class.new(<<-EOS)
+          error message
+          this is a multi-line message
 
-          orig_err = StandardError.new('original message')
-          err = klass.new(nil, orig_err)
-          err.message.should == 'Error: StandardError: original message'
+          the above blank line will remain
+          the blank line below will not
 
-          orig_err = StandardError.new(" original message\n" +
-            "     This is a multi-line error message.\n" +
-            "It should be properly indented.")
-          err = klass.new(nil, orig_err)
-          err.message.should == "Error: StandardError: original message\n" +
-              "  This is a multi-line error message.\n" +
-              "  It should be properly indented."
-        end
-
-      end # context 'when given an original error'
-
-      context 'when given an original Errors::Error' do
-        let(:subklass) do
-          class SubKlass < klass; end
-          SubKlass
-        end
-
-        it 'uses the original error message' do
-          orig_err = subklass.new
-          err = klass.new(nil, orig_err)
-          err.message.should == 'Error: SubKlass'
-
-          orig_err = subklass.new('original message')
-          err = klass.new(nil, orig_err)
-          err.message.should == 'Error: SubKlass: original message'
-
-          orig_err = subklass.new(" original message\n" +
-            "     This is a multi-line error message.\n" +
-            "It should be properly indented.")
-          err = klass.new(nil, orig_err)
-          err.message.should == "Error: SubKlass: original message\n" +
-              "  This is a multi-line error message.\n" +
-              "  It should be properly indented."
-        end
-
-      end # context 'when given an original Errors::Error'
-
-    end # context 'when given no message'
-
-  end # describe '#initialize'
-
-  describe '#wrap' do
-    describe 'swaps the parameters to provide a cleaner way to' do
-
-      it 'raise a wrapped error with a message' do
-        orig_err = StandardError.new <<-EOS
-          original message
-          This is a multi-line error message.
-          It should be properly indented.
         EOS
-
-        expect do
-          raise klass.wrap(orig_err), <<-EOS
-            error message
-            This is a multi-line error message.
-            It should be properly indented.
-          EOS
-        end.to raise_error(klass,
-          "Error: error message\n" +
-          "  This is a multi-line error message.\n" +
-          "  It should be properly indented.\n" +
-          "  Reason: StandardError\n" +
-          "  original message\n" +
-          "  This is a multi-line error message.\n" +
-          "  It should be properly indented."
+        expect( err.message ).to eq(
+          "#{ class_name }: error message\n" +
+          "  this is a multi-line message\n" +
+          "  \n" +
+          "  the above blank line will remain\n" +
+          "  the blank line below will not"
         )
       end
 
-      it 'return a wrapped error with a message' do
-        orig_err = StandardError.new <<-EOS
-          original message
-          This is a multi-line error message.
-          It should be properly indented.
-        EOS
-
-        err = klass.wrap(orig_err, <<-EOS)
-          error message
-          This will wrap the original error
-          and it's message will be given below
-        EOS
-
-        err.message.should ==
-          "Error: error message\n" +
-          "  This will wrap the original error\n" +
-          "  and it's message will be given below\n" +
-          "  Reason: StandardError\n" +
-          "  original message\n" +
-          "  This is a multi-line error message.\n" +
-          "  It should be properly indented."
+      # This usage wouldn't be expected if using this Error class,
+      # since you would typically use .wrap, but this is the default
+      # behavior for Ruby if you want to raise an exception that takes
+      # it's message from another exception.
+      #
+      #     begin
+      #       ...code...
+      #     rescue => other_error
+      #       raise MyError, other_error
+      #     end
+      #
+      # Under 1.8.7/1.9.2, the message is the result of other_err.inspect,
+      # but under 1.9.3 you get other_err.message.
+      # This Error class uses other_error.message under all versions.
+      # Note that this will format the message.
+      it 'accepts message from another error' do
+        other_err = StandardError.new " error\nmessage "
+        err = described_class.new(other_err)
+        expect( err.message ).to eq class_name + ": error\n  message"
       end
 
-    end # describe 'swaps the parameters to provide a cleaner way to'
-  end # describe '#wrap'
+    end # describe '#initialize'
 
-end # describe 'Errors::Error'
+    # i.e. use of raise with Error class
+    describe '.exception' do
 
-describe 'ErrorHelper' do
-  let(:base) { Backup::Errors }
+      it 'sets message to class name when not given' do
+        expect do
+          raise described_class
+        end.to raise_error {|err|
+          expect( err.message ).to eq class_name
+        }
+      end
 
-  it 'dynamically creates namespaces and subclasses of Errors::Error' do
-    Backup::Errors::FooBarError.new.
-        should be_a_kind_of base::Error
-    Backup::Errors::Foo::Bar::Error.new.
-        should be_a_kind_of base::Error
-  end
+      it 'prefixes given message with class name' do
+        expect do
+          raise described_class, 'a message'
+        end.to raise_error {|err|
+          expect( err.message ).to eq class_name + ': a message'
+        }
+      end
 
-  context 'new error classes created within new namespaces' do
-    it 'retain the added portion of namespace in their messages' do
-      orig_err = StandardError.new('original message')
-      err = base::FooMod::FooError.new('error message', orig_err)
-      err.message.should ==
-          "FooMod::FooError: error message\n" +
-          "  Reason: StandardError\n" +
-          "  original message"
+      it 'formats message' do
+        expect do
+          raise described_class, <<-EOS
+            error message
+            this is a multi-line message
 
-      err2 = base::Foo::Bar::Mod::FooBarError.wrap(err, 'foobar message')
-      err2.message.should ==
-          "Foo::Bar::Mod::FooBarError: foobar message\n" +
-          "  Reason: FooMod::FooError\n" +
-          "  error message\n" +
-          "  Reason: StandardError\n" +
-          "  original message"
-    end
-  end
+            the above blank line will remain
+            the blank line below will not
 
-end # describe ErrorHelper
+          EOS
+        end.to raise_error {|err|
+          expect( err.message ).to eq(
+            "#{ class_name }: error message\n" +
+            "  this is a multi-line message\n" +
+            "  \n" +
+            "  the above blank line will remain\n" +
+            "  the blank line below will not"
+          )
+        }
+      end
+
+      # see note under '#initialize'
+      it 'accepts message from another error' do
+        expect do
+          begin
+            raise StandardError, " wrapped error\nmessage "
+          rescue => err
+            raise described_class, err
+          end
+        end.to raise_error {|err|
+          expect( err.message ).to eq(
+            "#{ class_name }: wrapped error\n" +
+            "  message"
+          )
+        }
+      end
+
+      it 'allows backtrace to be set (with message)' do
+        expect do
+          raise described_class, 'error message', ['bt']
+        end.to raise_error {|err|
+          expect( err.message   ).to eq class_name + ': error message'
+          expect( err.backtrace ).to eq ['bt']
+        }
+      end
+
+      it 'allows backtrace to be set (without message)' do
+        expect do
+          raise described_class, nil, ['bt']
+        end.to raise_error {|err|
+          expect( err.message   ).to eq class_name
+          expect( err.backtrace ).to eq ['bt']
+        }
+      end
+    end # describe '.exception'
+
+    # i.e. use of raise with an instance of Error
+    describe '#exception' do
+
+      it 'sets message to class name when not given' do
+        expect do
+          err = described_class.new
+          raise err
+        end.to raise_error {|err|
+          expect( err.message ).to eq class_name
+        }
+      end
+
+      it 'prefixes given message with class name' do
+        expect do
+          err = described_class.new 'a message'
+          raise err
+        end.to raise_error {|err|
+          expect( err.message ).to eq class_name + ': a message'
+        }
+      end
+
+      it 'formats message' do
+        expect do
+          err = described_class.new(<<-EOS)
+            error message
+            this is a multi-line message
+
+            the above blank line will remain
+            the blank line below will not
+
+          EOS
+          raise err
+        end.to raise_error {|err|
+          expect( err.message ).to eq(
+            "#{ class_name }: error message\n" +
+            "  this is a multi-line message\n" +
+            "  \n" +
+            "  the above blank line will remain\n" +
+            "  the blank line below will not"
+          )
+        }
+      end
+
+      it 'allows message to be overridden' do
+        expect do
+          err = described_class.new 'error message'
+          raise err, 'new message'
+        end.to raise_error {|err|
+          expect( err.message ).to eq class_name + ': new message'
+        }
+      end
+
+      # see note under '#initialize'
+      it 'accepts message from another error' do
+        expect do
+          begin
+            raise StandardError, " wrapped error\nmessage "
+          rescue => err
+            err2 = described_class.new 'message to be replaced'
+            raise err2, err
+          end
+        end.to raise_error {|err|
+          expect( err.message ).to eq(
+            "#{ class_name }: wrapped error\n" +
+            "  message"
+          )
+        }
+      end
+
+      it 'allows backtrace to be set (with new message)' do
+        initial_error = nil
+        expect do
+          err = described_class.new 'error message'
+          initial_error = err
+          raise err, 'new message', ['bt']
+        end.to raise_error {|err|
+          expect( err.message   ).to eq class_name + ': new message'
+          expect( err.backtrace ).to eq ['bt']
+          # when a message is given, a new error is returned
+          expect( err ).not_to be initial_error
+        }
+      end
+
+      it 'allows backtrace to be set (without new message)' do
+        initial_error = nil
+        expect do
+          err = described_class.new 'error message'
+          initial_error = err
+          raise err, nil, ['bt']
+        end.to raise_error {|err|
+          expect( err.backtrace ).to eq ['bt']
+          expect( err.message   ).to eq class_name + ': error message'
+          # when no message is given, returns self
+          expect( err ).to be initial_error
+        }
+      end
+
+      it 'retains backtrace (with message given)' do
+        initial_error = nil
+        expect do
+          begin
+            raise described_class, 'foo', ['bt']
+          rescue Exception => err
+            initial_error = err
+            raise err, 'bar'
+          end
+        end.to raise_error {|err|
+          expect( err.backtrace ).to eq ['bt']
+          expect( err.message   ).to eq class_name + ': bar'
+          # when a message is given, a new error is returned
+          expect( err ).not_to be initial_error
+        }
+      end
+
+      it 'retains backtrace (without message given)' do
+        initial_error = nil
+        expect do
+          begin
+            raise described_class, 'foo', ['bt']
+          rescue Exception => err
+            initial_error = err
+            raise err
+          end
+        end.to raise_error {|err|
+          expect( err.backtrace ).to eq ['bt']
+          # when no message is given, returns self
+          expect( err ).to be initial_error
+        }
+      end
+    end # describe '#exception'
+
+  end # context 'with no wrapped exception'
+
+  context 'with a wrapped exception' do
+
+    describe '.wrap' do
+
+      it 'wraps #initialize to reverse parameters' do
+        ex = mock
+        described_class.expects(:new).with(nil, ex)
+        described_class.expects(:new).with('error message', ex)
+
+        described_class.wrap(ex)
+        described_class.wrap(ex, 'error message')
+      end
+
+      it 'appends wrapped error message' do
+        orig_err = StandardError.new 'wrapped error message'
+        err = described_class.wrap(orig_err, 'error message')
+        expect( err.message ).to eq(
+          "#{ class_name }: error message\n" +
+          "--- Wrapped Exception ---\n" +
+          "StandardError: wrapped error message"
+        )
+      end
+
+      it 'leaves wrapped error message formatting as-is' do
+        orig_err = StandardError.new " wrapped error\nmessage "
+        err = described_class.wrap(orig_err, <<-EOS)
+          error message
+
+          this error is wrapping another error
+        EOS
+        expect( err.message ).to eq(
+          "#{ class_name }: error message\n" +
+          "  \n" +
+          "  this error is wrapping another error\n" +
+          "--- Wrapped Exception ---\n" +
+          "StandardError:  wrapped error\n" +
+          "message "
+        )
+      end
+
+    end # describe '.wrap'
+
+    # i.e. use of raise with an instance of Error
+    describe '#exception' do
+
+      it 'appends wrapped error message' do
+        expect do
+          begin
+            raise StandardError, " wrapped error\nmessage "
+          rescue => err
+            raise described_class.wrap(err), <<-EOS
+              error message
+
+              this error is wrapping another error
+            EOS
+          end
+        end.to raise_error {|err|
+          expect( err.message ).to eq(
+            "#{ class_name }: error message\n" +
+            "  \n" +
+            "  this error is wrapping another error\n" +
+            "--- Wrapped Exception ---\n" +
+            "StandardError:  wrapped error\n" +
+            "message "
+          )
+        }
+      end
+
+      # see note under '#initialize'
+      it 'accepts message from another error' do
+        expect do
+          begin
+            raise StandardError, " wrapped error\nmessage "
+          rescue => err
+            raise described_class.wrap(err), err
+          end
+        end.to raise_error {|err|
+          expect( err.message ).to eq(
+            "#{ class_name }: wrapped error\n" +
+            "  message\n" +
+            "--- Wrapped Exception ---\n" +
+            "StandardError:  wrapped error\n" +
+            "message "
+          )
+        }
+      end
+
+      it 'uses backtrace from wrapped exception' do
+        expect do
+          begin
+            raise StandardError, 'wrapped error message', ['bt']
+          rescue => err
+            raise described_class.wrap(err), 'error message'
+          end
+        end.to raise_error {|err|
+          expect( err.message ).to eq(
+            "#{ class_name }: error message\n" +
+            "--- Wrapped Exception ---\n" +
+            "StandardError: wrapped error message"
+          )
+          expect( err.backtrace ).to eq ['bt']
+        }
+      end
+
+      it 'allows wrapped error backtrace to be overridden' do
+        expect do
+          begin
+            raise StandardError, 'wrapped error message', ['bt']
+          rescue => err
+            raise described_class.wrap(err), 'error message', ['new bt']
+          end
+        end.to raise_error {|err|
+          expect( err.message ).to eq(
+            "#{ class_name }: error message\n" +
+            "--- Wrapped Exception ---\n" +
+            "StandardError: wrapped error message"
+          )
+          expect( err.backtrace ).to eq ['new bt']
+        }
+      end
+
+      # Since a new message is given, a new error will be created
+      # which would take the bt from the wrapped exception (nil).
+      # So, the existing bt is set on the new error in this case.
+      # With no message given (a simple re-raise), #exception would simply
+      # return self, in which case the bt set by raise would remain.
+      # It would be rare for a wrapped exception not to have a bt.
+      it 'retains backtrace if wrapped error has none' do
+        expect do
+          begin
+            err = StandardError.new 'foo'
+            raise described_class.wrap(err), nil, ['bt']
+          rescue Exception => err2
+            raise err2, 'bar'
+          end
+        end.to raise_error {|err|
+          expect( err.backtrace ).to eq ['bt']
+        }
+      end
+
+    end # describe '#exception'
+
+  end # context 'with a wrapped exception'
+
+end # shared_examples 'a nested exception'
+
+describe Error do
+  it_behaves_like 'a nested exception'
+end
+
+describe FatalError do
+  it_behaves_like 'a nested exception'
+end
+
+end # describe 'Backup Errors'
+end

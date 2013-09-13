@@ -1,0 +1,19 @@
+source "https://rubygems.org"
+
+gem 'rake'
+
+# MySQL, PostgreSQL
+gem 'activerecord'
+gem 'activerecord-mysql2-adapter'
+gem 'iconv'
+gem 'pg'
+
+# MongoDB
+gem 'mongo'
+gem 'bson_ext'
+
+# Redis
+gem 'redis'
+
+# Riak
+gem 'riak-client'

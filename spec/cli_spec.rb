@@ -5,7 +5,6 @@ require 'rubygems/dependency_installer'
 
 describe 'Backup::CLI' do
   let(:cli)     { Backup::CLI }
-  let(:utility) { Backup::CLI.new }
   let(:s)       { sequence '' }
 
   before  { @argv_save = ARGV }
@@ -23,9 +22,6 @@ describe 'Backup::CLI' do
 
       before do
         Backup::Config.expects(:update).in_sequence(s)
-
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
 
         Backup::Config.expects(:load_config!).in_sequence(s)
 
@@ -117,9 +113,6 @@ describe 'Backup::CLI' do
 
         Backup::Config.expects(:update).in_sequence(s)
 
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
-
         Backup::Config.expects(:load_config!).in_sequence(s)
 
         Backup::Logger.expects(:start!).in_sequence(s)
@@ -209,13 +202,10 @@ describe 'Backup::CLI' do
 
         Backup::Config.expects(:update).in_sequence(s)
 
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
-
         Backup::Logger.expects(:start!).never
 
-        model_a.expects(:preform!).never
-        model_b.expects(:preform!).never
+        model_a.expects(:perform!).never
+        model_b.expects(:perform!).never
         Backup::Logger.expects(:clear!).never
       end
 
@@ -225,10 +215,10 @@ describe 'Backup::CLI' do
               raises('config load error')
         end
 
-        it 'aborts and logs messages to the console only' do
+        it 'aborts with status code 3 and logs messages to the console only' do
 
           Backup::Logger.expects(:error).in_sequence(s).with do |err|
-            err.should be_a(Backup::Errors::CLIError)
+            err.should be_a(Backup::CLI::Error)
             err.message.should match(/config load error/)
           end
 
@@ -239,7 +229,7 @@ describe 'Backup::CLI' do
               ['perform', '-t', 'test_trigger_a']
             )
             cli.start
-          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
+          end.to raise_error(SystemExit) {|exit| exit.status.should be(3) }
         end
       end
 
@@ -250,7 +240,7 @@ describe 'Backup::CLI' do
 
         it 'aborts and logs messages to the console only' do
           Backup::Logger.expects(:error).in_sequence(s).with do |err|
-            err.should be_a(Backup::Errors::CLIError)
+            err.should be_a(Backup::CLI::Error)
             err.message.should match(
               /No Models found for trigger\(s\) 'test_trigger_foo'/
             )
@@ -263,99 +253,203 @@ describe 'Backup::CLI' do
               ['perform', '-t', 'test_trigger_foo']
             )
             cli.start
-          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
+          end.to raise_error(SystemExit) {|exit| exit.status.should be(3) }
         end
       end
     end # describe 'failure to prepare for backups'
 
-    describe '--check' do
+    describe 'exit codes and notifications' do
+      let(:notifier_a) { mock }
+      let(:notifier_b) { mock }
+      let(:notifier_c) { mock }
+      let(:notifier_d) { mock }
+
       before do
-        # performs no jobs
-        Backup::Logger.expects(:configure).in_sequence(s)
-
-        Backup::Config.expects(:update).in_sequence(s)
-
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.cache_path)
-        FileUtils.expects(:mkdir_p).in_sequence(s).with(Backup::Config.tmp_path)
-
-        Backup::Config.expects(:load_config!).in_sequence(s)
-
-        model_a.expects(:preform!).never
-        model_b.expects(:preform!).never
-        Backup::Logger.expects(:clear!).never
+        Backup::Config.stubs(:load_config!)
+        Backup::Logger.stubs(:start!)
+        model_a.stubs(:notifiers).returns([notifier_a, notifier_c])
+        model_b.stubs(:notifiers).returns([notifier_b, notifier_d])
       end
 
-      context 'when errors are raised' do
-        it 'fails the check' do
-          Backup::Logger.expects(:start!).never
+      specify 'when jobs are all successful' do
+        model_a.stubs(:exit_status).returns(0)
+        model_b.stubs(:exit_status).returns(0)
 
-          Backup::Logger.expects(:error).twice.in_sequence(s).with {|err|
-            # this is aggrevating. is there no way to expect the same method
-            # twice with different arguments in a sequence?
-            if err.is_a?(Exception)
-              err.message.should match(
-                /No Models found for trigger/
-              )
-            else
-              err.should == 'Configuration Check Failed.'
-            end
-          }
-          Backup::Logger.expects(:abort!).in_sequence(s)
+        model_a.expects(:perform!).in_sequence(s)
+        notifier_a.expects(:perform!).in_sequence(s)
+        notifier_c.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
 
-          expect do
-            ARGV.replace(
-              ['perform', '-t', 'test_trigger_foo', '--check']
-            )
-            cli.start
-          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
-        end
+        model_b.expects(:perform!).in_sequence(s)
+        notifier_b.expects(:perform!).in_sequence(s)
+        notifier_d.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        ARGV.replace(
+          ['perform', '-t', 'test_trigger_a,test_trigger_b']
+        )
+        cli.start
       end
 
-      context 'when warnings are issued' do
-        it 'fails the check' do
-          Backup::Logger.stubs(:has_warnings?).returns(true)
-          Backup::Logger.expects(:start!).never
+      specify 'when a job has warnings' do
+        model_a.stubs(:exit_status).returns(1)
+        model_b.stubs(:exit_status).returns(0)
 
-          Backup::Logger.expects(:error).twice.in_sequence(s).with {|err|
-            if err.is_a?(Exception)
-              err.message.should match(
-                /Configuration Check has warnings/
-              )
-            else
-              err.should == 'Configuration Check Failed.'
-            end
-          }
-          Backup::Logger.expects(:abort!).in_sequence(s)
+        model_a.expects(:perform!).in_sequence(s)
+        notifier_a.expects(:perform!).in_sequence(s)
+        notifier_c.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
 
-          expect do
-            ARGV.replace(
-              ['perform', '-t', 'test_trigger_a', '--check']
-            )
-            cli.start
-          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
-        end
-      end
+        model_b.expects(:perform!).in_sequence(s)
+        notifier_b.expects(:perform!).in_sequence(s)
+        notifier_d.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
 
-      context 'when no errors or warnings are issued' do
-        it 'passes the check' do
-          Backup::Logger.expects(:start!).in_sequence(s)
-          Backup::Logger.expects(:abort!).never
-
-          Backup::Logger.expects(:info).in_sequence(s).with(
-            'Configuration Check Succeeded.'
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_a,test_trigger_b']
           )
-
-          expect do
-            ARGV.replace(
-              ['perform', '-t', 'test_trigger_a', '--check']
-            )
-            cli.start
-          end.not_to raise_error
-        end
+          cli.start
+        end.to raise_error(SystemExit) {|err| err.status.should be(1) }
       end
-    end
+
+      specify 'when a job has non-fatal errors' do
+        model_a.stubs(:exit_status).returns(2)
+        model_b.stubs(:exit_status).returns(0)
+
+        model_a.expects(:perform!).in_sequence(s)
+        notifier_a.expects(:perform!).in_sequence(s)
+        notifier_c.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        model_b.expects(:perform!).in_sequence(s)
+        notifier_b.expects(:perform!).in_sequence(s)
+        notifier_d.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_a,test_trigger_b']
+          )
+          cli.start
+        end.to raise_error(SystemExit) {|err| err.status.should be(2) }
+      end
+
+      specify 'when a job has fatal errors' do
+        model_a.stubs(:exit_status).returns(3)
+        model_b.stubs(:exit_status).returns(0)
+
+        model_a.expects(:perform!).in_sequence(s)
+        notifier_a.expects(:perform!).in_sequence(s)
+        notifier_c.expects(:perform!).in_sequence(s)
+
+        Backup::Logger.expects(:clear!).never
+        model_b.expects(:perform!).never
+
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_a,test_trigger_b']
+          )
+          cli.start
+        end.to raise_error(SystemExit) {|err| err.status.should be(3) }
+      end
+
+      specify 'when jobs have errors and warnings' do
+        model_a.stubs(:exit_status).returns(2)
+        model_b.stubs(:exit_status).returns(1)
+
+        model_a.expects(:perform!).in_sequence(s)
+        notifier_a.expects(:perform!).in_sequence(s)
+        notifier_c.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        model_b.expects(:perform!).in_sequence(s)
+        notifier_b.expects(:perform!).in_sequence(s)
+        notifier_d.expects(:perform!).in_sequence(s)
+        Backup::Logger.expects(:clear!).in_sequence(s)
+
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_a,test_trigger_b']
+          )
+          cli.start
+        end.to raise_error(SystemExit) {|err| err.status.should be(2) }
+      end
+    end # describe 'exit codes and notifications'
+
+    describe '--check' do
+      it 'runs the check command' do
+        cli.any_instance.expects(:check).raises(SystemExit)
+        expect do
+          ARGV.replace(
+            ['perform', '-t', 'test_trigger_foo', '--check']
+          )
+          cli.start
+        end.to raise_error(SystemExit)
+      end
+    end # describe '--check'
 
   end # describe '#perform'
+
+  describe '#check' do
+    it 'fails if errors are raised' do
+      Backup::Config.stubs(:load_config!).raises('an error')
+
+      out, err = capture_io do
+        ARGV.replace(['check'])
+        expect do
+          cli.start
+        end.to raise_error(SystemExit) {|exit| expect( exit.status ).to be(1) }
+      end
+
+      expect( err ).to match(/RuntimeError: an error/)
+      expect( err ).to match(/\[error\] Configuration Check Failed/)
+      expect( out ).to be_empty
+    end
+
+    it 'fails if warnings are issued' do
+      Backup::Config.stubs(:load_config!).with do
+        Backup::Logger.warn 'warning message'
+      end
+
+      out, err = capture_io do
+        ARGV.replace(['check'])
+        expect do
+          cli.start
+        end.to raise_error(SystemExit) {|exit| expect( exit.status ).to be(1) }
+      end
+
+      expect( err ).to match(/\[warn\] warning message/)
+      expect( err ).to match(/\[error\] Configuration Check Failed/)
+      expect( out ).to be_empty
+    end
+
+    it 'succeeds if there are no errors or warnings' do
+      Backup::Config.stubs(:load_config!)
+
+      out, err = capture_io do
+        ARGV.replace(['check'])
+        expect do
+          cli.start
+        end.to raise_error(SystemExit) {|exit| expect( exit.status ).to be(0) }
+      end
+
+      expect( err ).to be_empty
+      expect( out ).to match(/\[info\] Configuration Check Succeeded/)
+    end
+
+    it 'updates path to config.rb if given' do
+      Backup::Config.stubs(:load_config!)
+      Backup::Logger.stubs(:abort!) # suppress output
+
+      ARGV.replace(['check', '--config-file', '/my/config.rb'])
+      expect do
+        cli.start
+      end.to raise_error(SystemExit) {|exit| expect( exit.status ).to be(0) }
+
+      expect( Backup::Config.config_file ).to eq '/my/config.rb'
+    end
+  end # describe '#check'
 
   describe '#generate:model' do
     before do
@@ -365,7 +459,6 @@ describe 'Backup::CLI' do
 
     after do
       FileUtils.rm_r(@tmpdir, :force => true, :secure => true)
-      Backup::Config.send(:reset!)
     end
 
     context 'when given a config_path' do
@@ -383,6 +476,7 @@ describe 'Backup::CLI' do
               cli.start
             end
 
+            err.should be_empty
             out.should == "Generated model file: '#{ model_file }'.\n" +
                 "Generated configuration file: '#{ config_file }'.\n"
             File.exist?(model_file).should be_true
@@ -407,36 +501,58 @@ describe 'Backup::CLI' do
               cli.start
             end
 
+            err.should be_empty
             out.should == "Generated model file: '#{ model_file }'.\n"
             File.exist?(model_file).should be_true
           end
         end
+
+        it 'should abort if --config-path is the path to config.rb itself' do
+          Dir.chdir(@tmpdir) do |path|
+            config_file = File.join(path, 'custom', 'config.rb')
+            FileUtils.mkdir_p(File.join(path, 'custom'))
+            FileUtils.touch(config_file)
+
+            out, err = capture_io do
+              ARGV.replace(['generate:model',
+                 '--config-path', config_file,
+                 '--trigger', 'foo'
+              ])
+              expect do
+                cli.start
+              end.to raise_error(SystemExit)
+            end
+
+            err.should == "--config-path should be a directory, not a file.\n"
+            out.should be_empty
+          end
+
+        end
       end
 
-# These pass, but generate Thor warnings...
-#
-#      context 'when a model file already exists' do
-#        it 'should prompt to overwrite the model under the given path' do
-#          Dir.chdir(@tmpdir) do |path|
-#            model_file  = File.join(path, 'models', 'test_trigger.rb')
-#            config_file = File.join(path, 'config.rb')
-#
-#            cli.any_instance.expects(:overwrite?).with(model_file).returns(false)
-#
-#            out, err = capture_io do
-#              ARGV.replace(['generate:model',
-#                 '--config-path', path,
-#                 '--trigger', 'test_trigger'
-#              ])
-#              cli.start
-#            end
-#
-#            out.should == "Generated configuration file: '#{ config_file }'.\n"
-#            File.exist?(config_file).should be_true
-#            File.exist?(model_file).should be_false
-#          end
-#        end
-#      end
+      context 'when a model file already exists' do
+        it 'should prompt to overwrite the model under the given path' do
+          Dir.chdir(@tmpdir) do |path|
+            model_file  = File.join(path, 'models', 'test_trigger.rb')
+            config_file = File.join(path, 'config.rb')
+
+            cli::Helpers.expects(:overwrite?).with(model_file).returns(false)
+
+            out, err = capture_io do
+              ARGV.replace(['generate:model',
+                  '--config-path', path,
+                  '--trigger', 'test_trigger'
+              ])
+              cli.start
+            end
+
+            err.should be_empty
+            out.should == "Generated configuration file: '#{ config_file }'.\n"
+            File.exist?(config_file).should be_true
+            File.exist?(model_file).should be_false
+          end
+        end
+      end
 
     end # context 'when given a config_path'
 
@@ -452,6 +568,7 @@ describe 'Backup::CLI' do
             cli.start
           end
 
+          err.should be_empty
           out.should == "Generated model file: '#{ model_file }'.\n" +
               "Generated configuration file: '#{ config_file }'.\n"
           File.exist?(model_file).should be_true
@@ -460,6 +577,7 @@ describe 'Backup::CLI' do
       end
     end
 
+<<<<<<< HEAD
     it 'should generate the proper help output' do
 
       expected_usage = "#{ File.basename($0) } generate:model -t, --trigger=TRIGGER"
@@ -484,6 +602,16 @@ describe 'Backup::CLI' do
         The model file will be created as '<config_path>/models/<trigger>.rb'
 
         Default: #{ Backup::Config.root_path }
+=======
+    it 'should include the correct option values' do
+      options = <<-EOS.lines.to_a.map(&:strip).map {|l| l.partition(' ') }
+        databases (mongodb, mysql, postgresql, redis, riak)
+        storages (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
+        syncers (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
+        encryptors (gpg, openssl)
+        compressors (bzip2, custom, gzip, lzma, pbzip2)
+        notifiers (campfire, hipchat, http_post, mail, nagios, prowl, pushover, twitter)
+>>>>>>> meskyanichi/master
       EOS
 
       out, err = capture_io do
@@ -491,29 +619,12 @@ describe 'Backup::CLI' do
         cli.start
       end
 
-      output_usage, output_options, output_description =
-          out.split(/Usage:|Options:|Description:/, 4)[1..3]
-
-      output_usage.strip.should == expected_usage
-
-      # Thor's output for 'Options:' is ordered differently under 1.8.7
-      # Thor does not auto-wrap lines in this output.
-      output_options =
-          output_options.split("\n").map(&:strip).select {|e| !e.empty? }
-      expected_options =
-          expected_options.split("\n").map(&:strip).select {|e| !e.empty? }
-
-      output_options.sort.should == expected_options.sort
-
-      # Thor will auto-wrap lines in the 'Description:' output
-      # based on the columns in the terminal.
-      output_description =
-          output_description.strip.gsub(/\n/, ' ').gsub(/ +/, ' ')
-      expected_description =
-          expected_description.strip.gsub(/\n/, ' ').gsub(/ +/, ' ')
-
-      output_description.should == expected_description
+      expect( err ).to be_empty
+      options.each do |option|
+        expect( out ).to match(/#{ option[0] }.*#{ option[2] }/)
+      end
     end
+
   end # describe '#generate:model'
 
   describe '#generate:config' do
@@ -524,7 +635,6 @@ describe 'Backup::CLI' do
 
     after do
       FileUtils.rm_r(@tmpdir, :force => true, :secure => true)
-      Backup::Config.send(:reset!)
     end
 
     context 'when given a config_path' do
@@ -539,6 +649,7 @@ describe 'Backup::CLI' do
             cli.start
           end
 
+          err.should be_empty
           out.should == "Generated configuration file: '#{ config_file }'.\n"
           File.exist?(config_file).should be_true
         end
@@ -556,76 +667,74 @@ describe 'Backup::CLI' do
             cli.start
           end
 
+          err.should be_empty
           out.should == "Generated configuration file: '#{ config_file }'.\n"
           File.exist?(config_file).should be_true
         end
       end
     end
 
-# These pass, but generate Thor warnings...
-#
-#    context 'when a config file already exists' do
-#      it 'should prompt to overwrite the config file' do
-#        Dir.chdir(@tmpdir) do |path|
-#          Backup::Config.update(:root_path => path)
-#          config_file = File.join(path, 'config.rb')
-#
-#          cli.any_instance.expects(:overwrite?).with(config_file).returns(false)
-#
-#          out, err = capture_io do
-#            ARGV.replace(['generate:config'])
-#            cli.start
-#          end
-#
-#          out.should be_empty
-#          File.exist?(config_file).should be_false
-#        end
-#      end
-#    end
+    context 'when a config file already exists' do
+      it 'should prompt to overwrite the config file' do
+        Dir.chdir(@tmpdir) do |path|
+          Backup::Config.update(:root_path => path)
+          config_file = File.join(path, 'config.rb')
+
+          cli::Helpers.expects(:overwrite?).with(config_file).returns(false)
+
+          out, err = capture_io do
+            ARGV.replace(['generate:config'])
+            cli.start
+          end
+
+          err.should be_empty
+          out.should be_empty
+          File.exist?(config_file).should be_false
+        end
+      end
+    end
 
   end # describe '#generate:config'
 
   describe '#decrypt' do
 
-# These pass, but generate Thor warnings...
-#
-#    it 'should perform OpenSSL decryption' do
-#      ARGV.replace(['decrypt', '--encryptor', 'openssl',
-#                    '--in', 'in_file',
-#                    '--out', 'out_file',
-#                    '--base64', '--salt',
-#                    '--password-file', 'pwd_file'])
-#
-#      cli.any_instance.expects(:`).with(
-#        "openssl aes-256-cbc -d -base64 -pass file:pwd_file -salt " +
-#        "-in 'in_file' -out 'out_file'"
-#      )
-#      cli.start
-#    end
-#
-#    it 'should omit -pass option if no --password-file given' do
-#      ARGV.replace(['decrypt', '--encryptor', 'openssl',
-#                    '--in', 'in_file',
-#                    '--out', 'out_file',
-#                    '--base64', '--salt'])
-#
-#      cli.any_instance.expects(:`).with(
-#        "openssl aes-256-cbc -d -base64  -salt " +
-#        "-in 'in_file' -out 'out_file'"
-#      )
-#      cli.start
-#    end
-#
-#    it 'should perform GnuPG decryption' do
-#      ARGV.replace(['decrypt', '--encryptor', 'gpg',
-#                    '--in', 'in_file',
-#                    '--out', 'out_file'])
-#
-#      cli.any_instance.expects(:`).with(
-#        "gpg -o 'out_file' -d 'in_file'"
-#      )
-#      cli.start
-#    end
+    it 'should perform OpenSSL decryption' do
+      ARGV.replace(['decrypt', '--encryptor', 'openssl',
+                    '--in', 'in_file',
+                    '--out', 'out_file',
+                    '--base64', '--salt',
+                    '--password-file', 'pwd_file'])
+
+      cli::Helpers.expects(:exec!).with(
+        "openssl aes-256-cbc -d -base64 -pass file:pwd_file -salt " +
+        "-in 'in_file' -out 'out_file'"
+      )
+      cli.start
+    end
+
+    it 'should omit -pass option if no --password-file given' do
+      ARGV.replace(['decrypt', '--encryptor', 'openssl',
+                    '--in', 'in_file',
+                    '--out', 'out_file',
+                    '--base64', '--salt'])
+
+      cli::Helpers.expects(:exec!).with(
+        "openssl aes-256-cbc -d -base64  -salt " +
+        "-in 'in_file' -out 'out_file'"
+      )
+      cli.start
+    end
+
+    it 'should perform GnuPG decryption' do
+      ARGV.replace(['decrypt', '--encryptor', 'gpg',
+                    '--in', 'in_file',
+                    '--out', 'out_file'])
+
+      cli::Helpers.expects(:exec!).with(
+        "gpg -o 'out_file' -d 'in_file'"
+      )
+      cli.start
+    end
 
     it 'should show a message if given an invalid encryptor' do
       ARGV.replace(['decrypt', '--encryptor', 'foo',
@@ -638,245 +747,60 @@ describe 'Backup::CLI' do
       out.should == "Unknown encryptor: foo\n" +
           "Use either 'openssl' or 'gpg'.\n"
     end
-  end
-
-  describe '#dependencies' do
-    let(:dep_a) {
-      stub('dep_a',
-        :name         => 'dep-a',
-        :requirements => ['~> 1.2.3'],
-        :used_for     => 'Provides A'
-      )
-    }
-    let(:dep_b) {
-      stub('dep_b',
-        :name         => 'dep-b',
-        :requirements => ['>= 2.1.0', '<= 2.5.0'],
-        :used_for     => 'Provides B'
-      )
-    }
-    let(:dep_c) {
-      stub('dep_c',
-        :name         => 'dep-c',
-        :requirements => ['~> 3.4.5'],
-        :used_for     => 'Provides C',
-        :dependencies => [dep_a]
-      )
-    }
-
-    before do
-      Backup::Dependency.stubs(:all).returns([dep_a, dep_b, dep_c])
-      Backup::Dependency.stubs(:find).with('dep-a').returns(dep_a)
-      Backup::Dependency.stubs(:find).with('dep-b').returns(dep_b)
-      Backup::Dependency.stubs(:find).with('dep-c').returns(dep_c)
-      Backup::Dependency.stubs(:find).with('foo').returns(nil)
-    end
-
-    it 'shows help and exits when no arguments are given' do
-      ARGV.replace(['dependencies'])
-      out, err = capture_io do
-        expect do
-          cli.start
-        end.to raise_error(SystemExit) {|exit| exit.status.should be(0) }
-      end
-      err.should == ''
-      out.should match(/To display a list of available dependencies/)
-    end
-
-    describe '#dependencies --list' do
-      it 'lists all dependencies and exits' do
-        ARGV.replace(['dependencies', '--list'])
-        out, err = capture_io do
-          expect do
-            cli.start
-          end.to raise_error(SystemExit) {|exit| exit.status.should be(0) }
-        end
-        err.should == ''
-        out.should == <<-EOS.gsub(/^ +/, '')
-
-          Gem Name:      dep-a
-          Version:       ~> 1.2.3
-          Used for:      Provides A
-          -------------------------
-
-          Gem Name:      dep-b
-          Version:       >= 2.1.0, <= 2.5.0
-          Used for:      Provides B
-          -------------------------
-
-          Gem Name:      dep-c
-          Version:       ~> 3.4.5
-          Used for:      Provides C
-          -------------------------
-        EOS
-      end
-    end
-
-    describe '#dependencies --install' do
-      before do
-        cli::Helpers.stubs(:bundler_loaded?).returns(false)
-      end
-
-      it 'aborts with message if Bundler is loaded' do
-        cli::Helpers.expects(:bundler_loaded?).returns(true)
-
-        ARGV.replace(['dependencies', '--install', 'dep-b'])
-        out, err = capture_io do
-          expect do
-            cli.start
-          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
-        end
-        err.should match(/Bundler Detected/)
-        out.should be_empty
-      end
-
-      it 'aborts with message if gem name is invalid' do
-        ARGV.replace(['dependencies', '--install', 'foo'])
-        out, err = capture_io do
-          expect do
-            cli.start
-          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
-        end
-        err.should == "'foo' is not a Backup dependency.\n"
-        out.should be_empty
-      end
-
-      it 'aborts with message if dependencies are not installed' do
-        dep_a.expects(:installed?).returns(false)
-
-        ARGV.replace(['dependencies', '--install', 'dep-c'])
-        out, err = capture_io do
-          expect do
-            cli.start
-          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
-        end
-        err.should == <<-EOS.gsub(/^ +/, '')
-          The 'dep-c' gem requires 'dep-a'
-          Please install this first using the following command:
-          > backup dependencies --install dep-a
-        EOS
-        out.should be_empty
-      end
-
-      it 'installs the gem if dependencies are met' do
-        dep_a.expects(:installed?).returns(true)
-        dep_c.expects(:install!)
-
-        ARGV.replace(['dependencies', '--install', 'dep-c'])
-        out, err = capture_io do
-          cli.start
-        end
-        err.should be_empty
-        out.should be_empty
-      end
-    end # describe '#dependencies --install'
-
-    describe '#dependencies --installed' do
-      it 'aborts with message if gem name is invalid' do
-        ARGV.replace(['dependencies', '--installed', 'foo'])
-        out, err = capture_io do
-          expect do
-            cli.start
-          end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
-        end
-        err.should == "'foo' is not a Backup dependency.\n"
-        out.should be_empty
-      end
-
-      context 'when dependencies are met' do
-        before do
-          dep_a.expects(:installed?).returns(true)
-        end
-
-        it 'returns message if gem is installed' do
-          dep_c.expects(:installed?).returns(true)
-
-          ARGV.replace(['dependencies', '--installed', 'dep-c'])
-          out, err = capture_io do
-            cli.start
-          end
-          err.should be_empty
-          out.should == "'dep-c' is installed.\n"
-        end
-
-        it 'returns error message if gem is not installed' do
-          dep_c.expects(:installed?).returns(false)
-
-          ARGV.replace(['dependencies', '--installed', 'dep-c'])
-          out, err = capture_io do
-            expect do
-              cli.start
-            end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
-          end
-          err.should == <<-EOS.gsub(/^ +/, '')
-            'dep-c' is not installed.
-            To install the gem, issue the following command:
-            > backup dependencies --install dep-c
-            Please try again after installing the missing dependency.
-          EOS
-          out.should be_empty
-        end
-      end # context 'when dependencies are met'
-
-      context 'when dependencies are not met' do
-        before do
-          dep_a.expects(:installed?).returns(false)
-          dep_c.expects(:installed?).never
-        end
-
-        it 'returns error message that the dependency is not installed' do
-          ARGV.replace(['dependencies', '--installed', 'dep-c'])
-          out, err = capture_io do
-            expect do
-              cli.start
-            end.to raise_error(SystemExit) {|exit| exit.status.should be(1) }
-          end
-          err.should == <<-EOS.gsub(/^ +/, '')
-            'dep-c' requires the 'dep-a' gem.
-            To install the gem, issue the following command:
-            > backup dependencies --install dep-a
-            Please try again after installing the missing dependency.
-          EOS
-          out.should be_empty
-        end
-      end # context 'when dependencies are met'
-    end # describe '#dependencies --installed'
-  end # describe '#dependencies'
+  end # describe '#decrypt'
 
   describe '#version' do
-    it 'should output the current version' do
-      utility.expects(:puts).with("Backup #{ Backup::Version.current }")
-      utility.version
+    specify 'using `backup version`' do
+      ARGV.replace ['version']
+      out, err = capture_io do
+        cli.start
+      end
+      err.should be_empty
+      out.should == "Backup #{ Backup::VERSION }\n"
     end
 
-    it 'should output the current version for "-v"' do
+    specify 'using `backup -v`' do
       ARGV.replace ['-v']
       out, err = capture_io do
         cli.start
       end
-      out.should == "Backup #{ Backup::Version.current }\n"
+      err.should be_empty
+      out.should == "Backup #{ Backup::VERSION }\n"
     end
   end
 
-  describe '#overwrite?' do
-    context 'when the path exists' do
-      before { File.expects(:exist?).returns(true) }
+  describe 'Helpers' do
+    let(:helpers) { Backup::CLI::Helpers }
 
-      it 'should prompt user' do
-        utility.expects(:yes?).with(
-          "A file already exists at 'a/path'. Do you want to overwrite? [y/n]"
-        ).returns(:response)
-        utility.send(:overwrite?, 'a/path').should == :response
+    describe '#overwrite?' do
+
+      it 'prompts user and accepts confirmation' do
+        File.expects(:exist?).with('a/path').returns(true)
+        $stderr.expects(:print).with(
+          "A file already exists at 'a/path'.\nDo you want to overwrite? [y/n] "
+        )
+        $stdin.expects(:gets).returns("yes\n")
+
+        expect( helpers.overwrite?('a/path') ).to be_true
+      end
+
+      it 'prompts user and accepts cancelation' do
+        File.expects(:exist?).with('a/path').returns(true)
+        $stderr.expects(:print).with(
+          "A file already exists at 'a/path'.\nDo you want to overwrite? [y/n] "
+        )
+        $stdin.expects(:gets).returns("no\n")
+
+        expect( helpers.overwrite?('a/path') ).to be_false
+      end
+
+      it 'returns true if path does not exist' do
+        File.expects(:exist?).with('a/path').returns(false)
+        $stderr.expects(:print).never
+        expect( helpers.overwrite?('a/path') ).to be_true
       end
     end
 
-    context 'when the path does not exist' do
-      before { File.expects(:exist?).returns(false) }
-      it 'should return true' do
-        utility.expects(:yes?).never
-        utility.send(:overwrite?, 'a/path').should be_true
-      end
-    end
-  end
+  end # describe 'Helpers'
 
 end
