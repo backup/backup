@@ -577,32 +577,6 @@ describe 'Backup::CLI' do
       end
     end
 
-<<<<<<< HEAD
-    it 'should generate the proper help output' do
-
-      expected_usage = "#{ File.basename($0) } generate:model -t, --trigger=TRIGGER"
-      expected_options = <<-EOS
-        -t, --trigger=TRIGGER
-            [--config-path=CONFIG_PATH]  # Path to your Backup configuration directory
-            [--databases=DATABASES]      # (mongodb, mysql, postgresql, redis, riak)
-            [--storages=STORAGES]        # (aliyun, cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
-            [--syncers=SYNCERS]          # (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
-            [--encryptors=ENCRYPTORS]    # (gpg, openssl)
-            [--compressors=COMPRESSORS]  # (bzip2, custom, gzip, lzma, pbzip2)
-            [--notifiers=NOTIFIERS]      # (campfire, hipchat, mail, prowl, pushover, twitter)
-            [--archives]
-            [--splitter]                 # use `--no-splitter` to disable
-                                         # Default: true
-      EOS
-      expected_description = <<-EOS
-        Generates a Backup model file.
-
-        Note: '--config-path' is the path to the directory where 'config.rb' is located.
-
-        The model file will be created as '<config_path>/models/<trigger>.rb'
-
-        Default: #{ Backup::Config.root_path }
-=======
     it 'should include the correct option values' do
       options = <<-EOS.lines.to_a.map(&:strip).map {|l| l.partition(' ') }
         databases (mongodb, mysql, postgresql, redis, riak)
@@ -611,7 +585,6 @@ describe 'Backup::CLI' do
         encryptors (gpg, openssl)
         compressors (bzip2, custom, gzip, lzma, pbzip2)
         notifiers (campfire, hipchat, http_post, mail, nagios, prowl, pushover, twitter)
->>>>>>> meskyanichi/master
       EOS
 
       out, err = capture_io do

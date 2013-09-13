@@ -110,37 +110,32 @@ describe Backup::Storage::Aliyun do
     before do
       storage.instance_variable_set(:@package, package)
       storage.stubs(:storage_name).returns('Storage::Aliyun')
-      storage.stubs(:local_path).returns('/local/path')
+      Backup::Config.stubs(:tmp_path).returns('/local/path')
       storage.stubs(:connection).returns(connection)
       file.stubs(:read).returns("foo")
     end
 
     it 'should transfer the package files' do
+      
       storage.expects(:remote_path_for).in_sequence(s).with(package).
           returns('remote/path')
-      storage.expects(:files_to_transfer_for).in_sequence(s).with(package).
-        multiple_yields(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
-      )
+      package.stubs(:filenames).returns(["backup.tar.enc-aa","backup.tar.enc-ab"])
       # first yield
       Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::Aliyun started transferring " +
-        "'2011.12.31.11.00.02.backup.tar.enc-aa'."
+        "Storage::Aliyun uploading 'remote/path/backup.tar.enc-aa'..."
       )
       File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-aa'), 'r'
+        File.join('/local/path', 'backup.tar.enc-aa'), 'r'
       ).yields(file)
       connection.expects(:put).in_sequence(s).with(
         File.join('remote/path', 'backup.tar.enc-aa'), file.read
       )
       # second yield
       Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::Aliyun started transferring " +
-        "'2011.12.31.11.00.02.backup.tar.enc-ab'."
+        "Storage::Aliyun uploading 'remote/path/backup.tar.enc-ab'..."
       )
       File.expects(:open).in_sequence(s).with(
-        File.join('/local/path', '2011.12.31.11.00.02.backup.tar.enc-ab'), 'r'
+        File.join('/local/path', 'backup.tar.enc-ab'), 'r'
       ).yields(file)
       connection.expects(:put).in_sequence(s).with(
         File.join('remote/path', 'backup.tar.enc-ab'), file.read
@@ -163,17 +158,9 @@ describe Backup::Storage::Aliyun do
     it 'should remove the package files' do
       storage.expects(:remote_path_for).in_sequence(s).with(package).
           returns('remote/path')
-      storage.expects(:transferred_files_for).in_sequence(s).with(package).
-        multiple_yields(
-        ['2011.12.31.11.00.02.backup.tar.enc-aa', 'backup.tar.enc-aa'],
-        ['2011.12.31.11.00.02.backup.tar.enc-ab', 'backup.tar.enc-ab']
-      )
       # after both yields
       Backup::Logger.expects(:info).in_sequence(s).with(
-        "Storage::Aliyun started removing " +
-        "'2011.12.31.11.00.02.backup.tar.enc-aa' from Aliyun OSS.\n" +
-        "Storage::Aliyun started removing " +
-        "'2011.12.31.11.00.02.backup.tar.enc-ab' from Aliyun OSS."
+        "Storage::Aliyun removing 'remote/path'..."
       )
       connection.expects(:delete).in_sequence(s).with('remote/path')
 
