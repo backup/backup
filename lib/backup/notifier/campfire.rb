@@ -52,7 +52,6 @@ module Backup
       end
 
       def send_message(message)
-        uri = "https://#{ subdomain }.campfirenow.com/room/#{ room_id }/speak.json"
         options = {
           :headers  => { 'Content-Type' => 'application/json' },
           :body     => JSON.dump(
@@ -61,7 +60,11 @@ module Backup
         }
         options.merge!(:user => api_token, :password => 'x') # Basic Auth
         options.merge!(:expects => 201) # raise error if unsuccessful
-        Excon.post(uri, options)
+
+        [room_id].flatten.each do |room_id|
+          uri = "https://#{ subdomain }.campfirenow.com/room/#{ room_id }/speak.json"
+          Excon.post(uri, options)
+        end
       end
 
     end
