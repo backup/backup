@@ -1,4 +1,5 @@
 # encoding: utf-8
+require 'digest/md5'
 
 module Backup
   module Syncer
@@ -11,10 +12,11 @@ module Backup
 
           # Returns a Hash of LocalFile objects for each file within +dir+.
           # Hash keys are the file's path relative to +dir+.
-          def find(dir)
+          def find(dir, exclude_patterns = [])
+            exclude_patterns = [exclude_patterns] if exclude_patterns.class == String
             dir = File.expand_path(dir)
             hash = {}
-            find_md5(dir).each do |path, md5|
+            find_md5(dir, exclude_patterns).each do |path, md5|
               file = new(path, md5)
               hash[path.sub(dir + '/', '')] = file if file
             end
@@ -36,28 +38,13 @@ module Backup
           private
 
           # Returns an Array of file paths and their md5 hashes.
-          #
-          # Lines output from `cmd` are formatted like:
-          #   MD5(/dir/subdir/file)= 7eaabd1f53024270347800d0fdb34357
-          # However, if +dir+ is empty, the following is returned:
-          #   (stdin)= d41d8cd98f00b204e9800998ecf8427e
-          # Which extracts as: ['in', 'd41d8cd98f00b204e9800998ecf8427e']
-          # I'm not sure I can rely on the fact this doesn't begin with 'MD5',
-          # so I'll reject entries with a path that doesn't start with +dir+.
-          #
-          # String#slice avoids `invalid byte sequence in UTF-8` errors
-          # that String#split would raise.
-          #
-          # Utilities#run is not used here because this would produce too much
-          # log output, and Pipeline does not support capturing output.
-          def find_md5(dir)
-            cmd = "#{ utility(:find) } -L '#{ dir }' -type f -print0 | " +
-                  "#{ utility(:xargs) } -0 #{ utility(:openssl) } md5 2> /dev/null"
-            %x[#{ cmd }].lines.map do |line|
-              line.chomp!
-              entry = [line.slice(4..-36), line.slice(-32..-1)]
-              entry[0].to_s.start_with?(dir) ? entry : nil
-            end.compact
+          def find_md5(dir, exclude_patterns = [])
+            exclude_patterns = [exclude_patterns] if exclude_patterns.class == String
+            Dir.glob(File.join(dir, "**", "*")).reject do |f|
+              File.directory?(f) || exclude_patterns.detect { |p| File.fnmatch?(p, f) }
+            end.map do |f|
+              [f, Digest::MD5.file(f).hexdigest]
+            end
           end
         end
 
