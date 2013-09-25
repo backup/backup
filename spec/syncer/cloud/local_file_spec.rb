@@ -21,7 +21,8 @@ describe Syncer::Cloud::LocalFile do
       test_files = {
         'sync_dir/one.file'           => 'c9f90c31589526ef50cc974a614038d5',
         'sync_dir/two.file'           => '1d26903171cef8b1d7eb035ca049f492',
-        'sync_dir/sub_dir/three.file' => '4ccdba38597e718ed00e3344dc78b6a1'
+        'sync_dir/sub_dir/three.file' => '4ccdba38597e718ed00e3344dc78b6a1',
+        'sync_dir/sub_dir/four.excl'  => '5adae9086b7842e3bdc8e58d6d4799c1',
       }
 
       Dir.chdir(@tmpdir) do
@@ -37,7 +38,7 @@ describe Syncer::Cloud::LocalFile do
           "\s\sPath Contains Invalid UTF-8 byte sequences"
         )
 
-        local_files = described_class.find('sync_dir')
+        local_files = described_class.find('sync_dir', '*.excl')
         expect( local_files.keys.count ).to be 3
         local_files.each do |relative_path, local_file|
           expect( local_file.path ).to eq(

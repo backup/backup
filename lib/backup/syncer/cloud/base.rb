@@ -69,7 +69,7 @@ module Backup
           remote_files = get_remote_files(remote_base)
 
           Logger.info("Gathering local data for '#{ File.expand_path(dir) }'...")
-          local_files = LocalFile.find(dir)
+          local_files = LocalFile.find(dir, @excludes || [])
 
           relative_paths = (local_files.keys | remote_files.keys).sort
           if relative_paths.empty?
@@ -122,7 +122,7 @@ module Backup
         # handled. So all exceptions are logged first with their details,
         # then a generic exception is raised.
         def sync_file(local_file, remote_path, remote_md5)
-          if local_file && File.exist?(local_file.path) && !is_excluded?(local_file)
+          if local_file && File.exist?(local_file.path)
             if local_file.md5 == remote_md5
               MUTEX.synchronize { @unchanged_count += 1 }
             else
@@ -177,14 +177,6 @@ module Backup
           end
         end
 
-        def is_excluded?(file)
-          return false if @excludes.nil?
-          @excludes.each do |ex|
-            return true unless file.path.index(ex).nil?
-          end
-          false
-        end
-        
       end
     end
   end
