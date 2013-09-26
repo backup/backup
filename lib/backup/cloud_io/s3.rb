@@ -120,12 +120,20 @@ module Backup
 
       def connection
         @connection ||= begin
-          conn = Fog::Storage.new(
-            :provider               => 'AWS',
-            :aws_access_key_id      => access_key_id,
-            :aws_secret_access_key  => secret_access_key,
-            :region                 => region
-          )
+          if use_iam_profile
+            conn = Fog::Storage.new( 
+              :provider         => 'AWS',
+              :use_iam_profile  => use_iam_profile,
+              :region           => region
+            )
+          else
+            conn = Fog::Storage.new(
+              :provider               => 'AWS',
+              :aws_access_key_id      => access_key_id,
+              :aws_secret_access_key  => secret_access_key,
+              :region                 => region
+            )
+          end
           conn.sync_clock
           conn
         end
