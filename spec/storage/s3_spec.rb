@@ -188,6 +188,7 @@ describe Storage::S3 do
       CloudIO::S3.expects(:new).once.with(
         :access_key_id      => 'my_access_key_id',
         :secret_access_key  => 'my_secret_access_key',
+        :use_iam_profile    => nil,
         :region             => nil,
         :bucket             => 'my_bucket',
         :encryption         => nil,
