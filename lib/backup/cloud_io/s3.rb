@@ -124,7 +124,7 @@ module Backup
           if use_iam_profile
             conn = Fog::Storage.new( 
               :provider         => 'AWS',
-              :use_iam_profile  => use_iam_profile,
+              :use_iam_profile  => true,
               :region           => region
             )
           else
