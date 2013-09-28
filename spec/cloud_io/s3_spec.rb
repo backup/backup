@@ -137,14 +137,14 @@ describe CloudIO::S3 do
 
     it 'ensures prefix ends with /' do
       connection.expects(:get_bucket).
-          with('my_bucket', { :prefix => 'foo/bar/' }).
+          with('my_bucket', { 'prefix' => 'foo/bar/' }).
           returns(stub(:body => { 'Contents' => [] }))
       expect( cloud_io.objects('foo/bar') ).to eq []
     end
 
     it 'returns an empty array when no objects are found' do
       connection.expects(:get_bucket).
-          with('my_bucket', { :prefix => 'foo/bar/' }).
+          with('my_bucket', { 'prefix' => 'foo/bar/' }).
           returns(stub(:body => { 'Contents' => [] }))
       expect( cloud_io.objects('foo/bar/') ).to eq []
     end
@@ -164,7 +164,7 @@ describe CloudIO::S3 do
         cloud_io.expects(:with_retries).
             with("GET 'my_bucket/foo/bar/*'").yields
         connection.expects(:get_bucket).
-            with('my_bucket', { :prefix => 'foo/bar/' }).
+            with('my_bucket', { 'prefix' => 'foo/bar/' }).
             returns(stub(:body => resp_body))
 
         objects = cloud_io.objects('foo/bar/')
@@ -201,10 +201,10 @@ describe CloudIO::S3 do
         cloud_io.expects(:with_retries).twice.
             with("GET 'my_bucket/foo/bar/*'").yields
         connection.expects(:get_bucket).
-            with('my_bucket', { :prefix => 'foo/bar/' }).
+            with('my_bucket', { 'prefix' => 'foo/bar/' }).
             returns(stub(:body => resp_body_a))
         connection.expects(:get_bucket).
-            with('my_bucket', { :prefix => 'foo/bar/', :marker => 'key_6' }).
+            with('my_bucket', { 'prefix' => 'foo/bar/', 'marker' => 'key_6' }).
             returns(stub(:body => resp_body_b))
 
         objects = cloud_io.objects('foo/bar/')
@@ -218,11 +218,11 @@ describe CloudIO::S3 do
 
       it 'retries on errors' do
         connection.expects(:get_bucket).twice.
-            with('my_bucket', { :prefix => 'foo/bar/' }).
+            with('my_bucket', { 'prefix' => 'foo/bar/' }).
             raises('error').then.
             returns(stub(:body => resp_body_a))
         connection.expects(:get_bucket).twice.
-            with('my_bucket', { :prefix => 'foo/bar/', :marker => 'key_6' }).
+            with('my_bucket', { 'prefix' => 'foo/bar/', 'marker' => 'key_6' }).
             raises('error').then.
             returns(stub(:body => resp_body_b))
 

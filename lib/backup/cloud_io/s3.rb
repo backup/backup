@@ -66,10 +66,10 @@ module Backup
         objects = []
         resp = nil
         prefix = prefix.chomp('/')
-        opts = { :prefix => prefix + '/' }
+        opts = { 'prefix' => prefix + '/' }
 
         while resp.nil? || resp.body['IsTruncated']
-          opts.merge!(:marker => objects.last.key) unless objects.empty?
+          opts.merge!('marker' => objects.last.key) unless objects.empty?
           with_retries("GET '#{ bucket }/#{ prefix }/*'") do
             resp = connection.get_bucket(bucket, opts)
           end
