@@ -10,13 +10,15 @@ module Backup
         class << self
           include Utilities::Helpers
 
-          # Returns a Hash of LocalFile objects for each file within +dir+.
+          # Returns a Hash of LocalFile objects for each file within +dir+,
+          # excep those matching any of the +excludes+, which can be strings
+          # with wildcards or regex patterns.
           # Hash keys are the file's path relative to +dir+.
-          def find(dir, exclude_patterns = [])
-            exclude_patterns = [exclude_patterns] if exclude_patterns.class == String
+          def find(dir, excludes = [])
+            excludes = [excludes] if excludes.class == String
             dir = File.expand_path(dir)
             hash = {}
-            find_md5(dir, exclude_patterns).each do |path, md5|
+            find_md5(dir, excludes).each do |path, md5|
               file = new(path, md5)
               hash[path.sub(dir + '/', '')] = file if file
             end
@@ -38,13 +40,24 @@ module Backup
           private
 
           # Returns an Array of file paths and their md5 hashes.
-          def find_md5(dir, exclude_patterns = [])
-            exclude_patterns = [exclude_patterns] if exclude_patterns.class == String
-            Dir.glob(File.join(dir, "**", "*")).reject do |f|
-              File.directory?(f) || exclude_patterns.detect { |p| File.fnmatch?(p, f) }
-            end.map do |f|
-              [f, Digest::MD5.file(f).hexdigest]
+          def find_md5(dir, excludes = [])
+            found = []
+            (Dir.entries(dir) - %w{. ..}).map {|e| File.join(dir, e) }.each do |path|
+              next if excludes.any? do |ex|
+                if ex.is_a?(String)
+                  File.fnmatch?(ex, path)
+                elsif ex.is_a?(Regexp)
+                  ex.match(path)
+                end
+              end
+
+              if File.directory?(path)
+                found += find_md5(path, excludes)
+              elsif File.file?(path)
+                found << [path, Digest::MD5.file(path).hexdigest]
+              end
             end
+            found
           end
         end
 
