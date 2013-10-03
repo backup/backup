@@ -17,7 +17,8 @@ describe Syncer::Cloud::LocalFile do
       @test_files = {
         'sync_dir/one.file'           => 'c9f90c31589526ef50cc974a614038d5',
         'sync_dir/two.file'           => '1d26903171cef8b1d7eb035ca049f492',
-        'sync_dir/sub_dir/three.file' => '4ccdba38597e718ed00e3344dc78b6a1'
+        'sync_dir/sub_dir/three.file' => '4ccdba38597e718ed00e3344dc78b6a1',
+        'base_dir.file'               => 'a6cfa67bfa0e16402b76d4560c0baa3d'
       }
       @test_files.keys.each do |path|
         File.open(path, 'w') {|file| file.write path }
@@ -56,16 +57,16 @@ describe Syncer::Cloud::LocalFile do
     it 'ignores excluded files' do
       Dir.chdir(@tmpdir) do
         create_test_files
-        expect( described_class.find(@tmpdir, ['**/two.*', /sub/]).keys ).to eq(['sync_dir/one.file'])
+        expect( described_class.find(@tmpdir, ['**/two.*', /sub|base_dir/]).keys ).to eq(['sync_dir/one.file'])
       end
     end
 
-    it 'ignores symlinks' do
+    it 'follows symlinks' do
       Dir.chdir(@tmpdir) do
         create_test_files
-        File.symlink 'sync_dir/one.file', 'sync_dir/link'
+        File.symlink 'base_dir.file', 'sync_dir/link'
         
-        expect( described_class.find(@tmpdir).keys ).not_to include('sync_dir/link')
+        expect( described_class.find(File.join(@tmpdir, 'sync_dir')).keys ).to include(File.expand_path('base_dir.file'))
       end
     end
 
