@@ -66,7 +66,9 @@ describe Syncer::Cloud::LocalFile do
         create_test_files
         File.symlink 'base_dir.file', 'sync_dir/link'
         
-        expect( described_class.find(File.join(@tmpdir, 'sync_dir')).keys ).to include(File.expand_path('base_dir.file'))
+        found = described_class.find(File.join(@tmpdir, 'sync_dir'))
+        expect( found.keys ).to include('sync_dir/link')
+        expect( found['sync_dir/link'].md5 ).to eq(@test_files['base_dir.file'])
       end
     end
 

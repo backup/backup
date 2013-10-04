@@ -37,10 +37,12 @@ module Backup
           @path ||= 'backups'
           @path = path.sub(/^\//, '')
         end
-
-        def exclude(path)
+        
+        # +pattern+ can be a string (with shell-style wildcards) or a regex.
+        # Files matching the pattern will be excluded from the sync.
+        def exclude(pattern)
           @excludes ||= []
-          @excludes << path
+          @excludes << pattern
         end
 
         def perform!
