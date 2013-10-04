@@ -44,8 +44,6 @@ module Backup
             found = []
             (Dir.entries(dir) - %w{. ..}).map {|e| File.join(dir, e) }.each do |path|
               next if exclude?(excludes, path)
-              path = resolve_symlink(path)
-              next if path.nil? || exclude?(excludes, path)
 
               if File.directory?(path)
                 found += find_md5(path, excludes)
@@ -64,16 +62,6 @@ module Backup
               elsif ex.is_a?(Regexp)
                 ex.match(path)
               end
-            end
-          end
-          
-          # Returns the target +path+ points to, +path+ itself if it is not a symlink,
-          # or +nil+ if the target does not exist
-          def resolve_symlink(path)
-            if File.symlink?(path) && File.exist?(File.readlink(path))
-              resolve_symlink(File.readlink(path))
-            else
-              File.exist?(path) ? File.expand_path(path) : nil
             end
           end
         end
