@@ -7,7 +7,7 @@ module Backup
 
       ##
       # Server credentials
-      attr_accessor :username, :password
+      attr_accessor :username, :password, :ssh_options
 
       ##
       # Server IP Address and SFTP port
@@ -16,8 +16,9 @@ module Backup
       def initialize(model, storage_id = nil)
         super
 
-        @port ||= 22
-        @path ||= 'backups'
+        @ssh_options ||= {}
+        @port        ||= 22
+        @path        ||= 'backups'
         path.sub!(/^~\//, '')
       end
 
@@ -25,9 +26,7 @@ module Backup
 
       def connection
         Net::SFTP.start(
-          ip, username,
-          :password => password,
-          :port     => port
+          ip, username, { :password => password, :port => port }.merge(ssh_options)
         ) {|sftp| yield sftp }
       end
 
