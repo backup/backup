@@ -96,7 +96,7 @@ module Backup
         return unless File.exist?(@logfile)
 
         if File.stat(@logfile).size > @options.max_bytes
-          FileUtils.mv(@logfile, @logfile + '~')
+          FileUtils.cp(@logfile, @logfile + '~')
           File.open(@logfile + '~', 'r') do |io_in|
             File.open(@logfile, 'w') do |io_out|
               io_in.seek(-@options.max_bytes, IO::SEEK_END) && io_in.gets
