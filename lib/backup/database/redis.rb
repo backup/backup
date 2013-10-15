@@ -72,25 +72,25 @@ module Backup
 
       private
 
+      def error_massage(action, command, response)
+        <<-EOS
+          Could not #{ action }
+          Command was: #{ command }
+          Response was: #{ response }
+        EOS
+      end
+
       def invoke_save!
         resp = run(redis_save_cmd)
         unless resp =~ /OK$/
-          raise Error, <<-EOS
-            Could not invoke the Redis SAVE command.
-            Command was: #{ redis_save_cmd }
-            Response was: #{ resp }
-          EOS
+          raise Error, error_massage("invoke_save", redis_save_cmd, resp)
         end
       end
 
       def sync_remote!
         resp = run(redis_rdb_cmd)
         unless resp =~ /Transfer finished with success\.$/
-          raise Error, <<-EOS
-            Could not sync to remote Redis.
-            Command was: #{ redis_rdb_cmd }
-            Response was: #{ resp }
-          EOS
+          raise Error, error_massage("sync_remote", redis_rdb_cmd, resp)
         end
       end
 
@@ -113,15 +113,17 @@ module Backup
         end
       end
 
-      def redis_save_cmd
+      def basic_redis_cmd
         "#{ utility('redis-cli') } #{ password_option } " +
-        "#{ connectivity_options } #{ user_options } SAVE"
+        "#{ connectivity_options } #{ user_options }"
+      end
+
+      def redis_save_cmd
+        "#{ basic_redis_cmd } SAVE"
       end
 
       def redis_rdb_cmd
-        "#{ utility('redis-cli') }  #{ password_option } " +
-        "#{ connectivity_options } #{ user_options } " +
-        "--rdb #{ File.join(path, name) }"
+        "#{ basic_redis_cmd } --rdb #{ File.join(path, name) }"
       end
 
       def password_option
