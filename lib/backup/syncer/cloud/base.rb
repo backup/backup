@@ -37,6 +37,13 @@ module Backup
           @path ||= 'backups'
           @path = path.sub(/^\//, '')
         end
+        
+        # +pattern+ can be a string (with shell-style wildcards) or a regex.
+        # Files matching the pattern will be excluded from the sync.
+        def exclude(pattern)
+          @excludes ||= []
+          @excludes << pattern
+        end
 
         def perform!
           log!(:started)
@@ -64,7 +71,7 @@ module Backup
           remote_files = get_remote_files(remote_base)
 
           Logger.info("Gathering local data for '#{ File.expand_path(dir) }'...")
-          local_files = LocalFile.find(dir)
+          local_files = LocalFile.find(dir, @excludes || [])
 
           relative_paths = (local_files.keys | remote_files.keys).sort
           if relative_paths.empty?
