@@ -71,21 +71,23 @@ module Backup
       FileUtils.mkdir_p(path)
 
       pipeline = Pipeline.new
-      pipeline.add(
-        "#{ tar_command } #{ tar_options } -cPf -#{ tar_root } " +
-        "#{ paths_to_exclude } #{ paths_to_package }",
-        tar_success_codes
-      )
+      with_files_from(paths_to_package) do |files_from|
+        pipeline.add(
+          "#{ tar_command } #{ tar_options } -cPf -#{ tar_root } " +
+          "#{ paths_to_exclude } #{ files_from }",
+          tar_success_codes
+        )
 
-      extension = 'tar'
-      @model.compressor.compress_with do |command, ext|
-        pipeline << command
-        extension << ext
-      end if @model.compressor
+        extension = 'tar'
+        @model.compressor.compress_with do |command, ext|
+          pipeline << command
+          extension << ext
+        end if @model.compressor
 
-      pipeline << "#{ utility(:cat) } > " +
-          "'#{ File.join(path, "#{ name }.#{ extension }") }'"
-      pipeline.run
+        pipeline << "#{ utility(:cat) } > " +
+            "'#{ File.join(path, "#{ name }.#{ extension }") }'"
+        pipeline.run
+      end
 
       if pipeline.success?
         Logger.info "Archive '#{ name }' Complete!"
@@ -107,9 +109,16 @@ module Backup
     end
 
     def paths_to_package
-      options[:paths].map {|path|
-        "'#{ prepare_path(path) }'"
-      }.join(' ')
+      options[:paths].map {|path| prepare_path(path) }
+    end
+
+    def with_files_from(paths)
+      tmpfile = Tempfile.new('backup-archive-paths')
+      paths.each {|path| tmpfile.puts path }
+      tmpfile.close
+      yield "-T '#{ tmpfile.path }'"
+    ensure
+      tmpfile.delete
     end
 
     def paths_to_exclude

@@ -48,6 +48,7 @@ describe Archive do
       Archive.any_instance.stubs(:utility).with(:tar).returns('tar')
       Archive.any_instance.stubs(:utility).with(:cat).returns('cat')
       Archive.any_instance.stubs(:utility).with(:sudo).returns('sudo')
+      Archive.any_instance.stubs(:with_files_from).yields
       Config.stubs(:tmp_path).returns('/tmp/path')
       Pipeline.any_instance.stubs(:success?).returns(true)
     end
@@ -144,11 +145,15 @@ describe Archive do
             a.exclude '/another/path'
           end
 
+          archive.expects(:with_files_from).with(
+            ['this/path', '/that/path']
+          ).yields("-T '/path/to/tmpfile'")
+
           Pipeline.any_instance.expects(:add).with(
             "tar --ignore-failed-read -cPf - " +
             "-C '#{ File.expand_path('root/path') }' " +
             "--exclude='other/path' --exclude='/another/path' " +
-            "'this/path' '/that/path'",
+            "-T '/path/to/tmpfile'",
             [0, 1]
           )
           Pipeline.any_instance.expects(:<<).with(
@@ -168,12 +173,15 @@ describe Archive do
             a.exclude '/another/path'
           end
 
+          archive.expects(:with_files_from).with(
+            [File.expand_path('this/path'), '/that/path']
+          ).yields("-T '/path/to/tmpfile'")
+
           Pipeline.any_instance.expects(:add).with(
             "tar --ignore-failed-read -cPf - " +
             "--exclude='#{ File.expand_path('other/path') }' " +
             "--exclude='/another/path' " +
-            "'#{ File.expand_path('this/path') }' " +
-            "'/that/path'",
+            "-T '/path/to/tmpfile'",
             [0, 1]
           )
           Pipeline.any_instance.expects(:<<).with(
@@ -224,6 +232,44 @@ describe Archive do
     end
 
   end # describe '#perform!'
+
+  describe '#with_files_from' do
+    let(:archive) { Archive.new(model, :test_archive) {} }
+    let(:s) { sequence '' }
+    let(:tmpfile) { stub(:path => '/path/to/tmpfile') }
+    let(:paths) { ['this/path', '/that/path'] }
+
+    # -T is used for BSD compatibility
+    it 'yields the tar --files-from option' do
+      Tempfile.expects(:new).in_sequence(s).returns(tmpfile)
+      tmpfile.expects(:puts).in_sequence(s).with('this/path')
+      tmpfile.expects(:puts).in_sequence(s).with('/that/path')
+      tmpfile.expects(:close).in_sequence(s)
+      tmpfile.expects(:delete).in_sequence(s)
+
+      archive.send(:with_files_from, paths) do |files_from|
+        expect( files_from ).to eq "-T '/path/to/tmpfile'"
+      end
+    end
+
+    it 'ensures the tmpfile is removed' do
+      Tempfile.expects(:new).returns(tmpfile)
+      tmpfile.expects(:close)
+      tmpfile.expects(:delete)
+      expect do
+        archive.send(:with_files_from, []) do |files_from|
+          raise 'foo'
+        end
+      end.to raise_error('foo')
+    end
+
+    it 'writes the given paths to a tempfile' do
+      archive.send(:with_files_from, paths) do |files_from|
+        path = files_from.match(/-T '(.*)'/)[1]
+        expect( File.read(path) ).to eq "this/path\n/that/path\n"
+      end
+    end
+  end
 
 end
 end
