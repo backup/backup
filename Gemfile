@@ -39,6 +39,7 @@ gem 'timecop', '= 0.6.1' # ruby-1.8.7 support was removed in 0.6.2
 group :no_ci do
   gem 'guard'
   gem 'guard-rspec'
+  gem 'listen', '~> 1.0' # for ruby-1.8.7 and 1.9.2
 
   gem 'rb-fsevent' # Mac OS X
   gem 'rb-inotify' # Linux
