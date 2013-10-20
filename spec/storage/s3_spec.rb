@@ -12,6 +12,12 @@ describe Storage::S3 do
       s3.bucket             = 'my_bucket'
     end
   }
+  let(:required_iam_config) {
+    Proc.new do |s3|
+      s3.use_iam_profile  = true
+      s3.bucket           = 'my_bucket'
+    end
+  }
   let(:storage) { Storage::S3.new(model, &required_config) }
   let(:s) { sequence '' }
 
@@ -33,11 +39,13 @@ describe Storage::S3 do
   describe '#initialize' do
     it 'provides default values' do
       # required
+      expect( storage.bucket            ).to eq 'my_bucket'
+      # required unless using IAM profile
       expect( storage.access_key_id     ).to eq 'my_access_key_id'
       expect( storage.secret_access_key ).to eq 'my_secret_access_key'
-      expect( storage.bucket            ).to eq 'my_bucket'
 
       # defaults
+      expect( storage.use_iam_profile   ).to be_nil
       expect( storage.storage_id        ).to be_nil
       expect( storage.keep              ).to be_nil
       expect( storage.region            ).to be_nil
@@ -68,6 +76,7 @@ describe Storage::S3 do
       expect( storage.keep              ).to be 2
       expect( storage.access_key_id     ).to eq 'my_access_key_id'
       expect( storage.secret_access_key ).to eq 'my_secret_access_key'
+      expect( storage.use_iam_profile   ).to be_nil
       expect( storage.bucket            ).to eq 'my_bucket'
       expect( storage.region            ).to eq 'my_region'
       expect( storage.path              ).to eq 'my/path'
@@ -76,39 +85,6 @@ describe Storage::S3 do
       expect( storage.retry_waitsec     ).to be 60
       expect( storage.encryption        ).to eq 'aes256'
       expect( storage.storage_class     ).to eq :reduced_redundancy
-    end
-
-    it 'strips leading path separator' do
-      pre_config = required_config
-      storage = Storage::S3.new(model) do |s3|
-        pre_config.call(s3)
-        s3.path = '/this/path'
-      end
-      expect( storage.path ).to eq 'this/path'
-    end
-
-    it 'requires access_key_id' do
-      pre_config = required_config
-      expect do
-        Storage::S3.new(model) do |s3|
-          pre_config.call(s3)
-          s3.access_key_id = nil
-        end
-      end.to raise_error {|err|
-        expect( err.message ).to match(/are all required/)
-      }
-    end
-
-    it 'requires secret_access_key' do
-      pre_config = required_config
-      expect do
-        Storage::S3.new(model) do |s3|
-          pre_config.call(s3)
-          s3.secret_access_key = nil
-        end
-      end.to raise_error {|err|
-        expect( err.message ).to match(/are all required/)
-      }
     end
 
     it 'requires bucket' do
@@ -121,6 +97,52 @@ describe Storage::S3 do
       end.to raise_error {|err|
         expect( err.message ).to match(/are all required/)
       }
+    end
+
+    context 'when using AWS IAM profile' do
+      it 'does not require access_key_id or secret_access_key' do
+        pre_config = required_iam_config
+        expect do
+          Storage::S3.new(model) do |s3|
+            pre_config.call(s3)
+          end
+        end.not_to raise_error
+      end
+    end
+
+    context 'when using AWS access keys' do
+      it 'requires access_key_id' do
+        pre_config = required_config
+        expect do
+          Storage::S3.new(model) do |s3|
+            pre_config.call(s3)
+            s3.access_key_id = nil
+          end
+        end.to raise_error {|err|
+          expect( err.message ).to match(/are all required/)
+        }
+      end
+
+      it 'requires secret_access_key' do
+        pre_config = required_config
+        expect do
+          Storage::S3.new(model) do |s3|
+            pre_config.call(s3)
+            s3.secret_access_key = nil
+          end
+        end.to raise_error {|err|
+          expect( err.message ).to match(/are all required/)
+        }
+      end
+    end
+
+    it 'strips leading path separator' do
+      pre_config = required_config
+      storage = Storage::S3.new(model) do |s3|
+        pre_config.call(s3)
+        s3.path = '/this/path'
+      end
+      expect( storage.path ).to eq 'this/path'
     end
 
     it 'allows chunk_size 0' do
@@ -184,10 +206,11 @@ describe Storage::S3 do
   end # describe '#initialize'
 
   describe '#cloud_io' do
-    it 'caches a new CloudIO instance' do
+    specify 'when using AWS access keys' do
       CloudIO::S3.expects(:new).once.with(
         :access_key_id      => 'my_access_key_id',
         :secret_access_key  => 'my_secret_access_key',
+        :use_iam_profile    => nil,
         :region             => nil,
         :bucket             => 'my_bucket',
         :encryption         => nil,
@@ -196,6 +219,28 @@ describe Storage::S3 do
         :retry_waitsec      => 30,
         :chunk_size         => 5
       ).returns(:cloud_io)
+
+      storage = Storage::S3.new(model, &required_config)
+
+      expect( storage.send(:cloud_io) ).to eq :cloud_io
+      expect( storage.send(:cloud_io) ).to eq :cloud_io
+    end
+
+    specify 'when using AWS IAM profile' do
+      CloudIO::S3.expects(:new).once.with(
+        :access_key_id      => nil,
+        :secret_access_key  => nil,
+        :use_iam_profile    => true,
+        :region             => nil,
+        :bucket             => 'my_bucket',
+        :encryption         => nil,
+        :storage_class      => :standard,
+        :max_retries        => 10,
+        :retry_waitsec      => 30,
+        :chunk_size         => 5
+      ).returns(:cloud_io)
+
+      storage = Storage::S3.new(model, &required_iam_config)
 
       expect( storage.send(:cloud_io) ).to eq :cloud_io
       expect( storage.send(:cloud_io) ).to eq :cloud_io

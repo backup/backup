@@ -8,7 +8,7 @@ module Backup
 
       ##
       # Amazon Simple Storage Service (S3) Credentials
-      attr_accessor :access_key_id, :secret_access_key
+      attr_accessor :access_key_id, :secret_access_key, :use_iam_profile
 
       ##
       # Amazon S3 bucket name
@@ -81,6 +81,7 @@ module Backup
         @cloud_io ||= CloudIO::S3.new(
           :access_key_id      => access_key_id,
           :secret_access_key  => secret_access_key,
+          :use_iam_profile    => use_iam_profile,
           :region             => region,
           :bucket             => bucket,
           :encryption         => encryption,
@@ -114,7 +115,11 @@ module Backup
       end
 
       def check_configuration
-        required = %w{ access_key_id secret_access_key bucket }
+        if use_iam_profile
+          required = %w{ bucket }
+        else
+          required = %w{ access_key_id secret_access_key bucket }
+        end
         raise Error, <<-EOS if required.map {|name| send(name) }.any?(&:nil?)
           Configuration Error
           #{ required.map {|name| "##{ name }"}.join(', ') } are all required

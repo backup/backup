@@ -13,14 +13,15 @@ module Backup
       MAX_FILE_SIZE       = 1024**3 * 5   # 5 GiB
       MAX_MULTIPART_SIZE  = 1024**4 * 5   # 5 TiB
 
-      attr_reader :access_key_id, :secret_access_key, :region, :bucket,
-                  :chunk_size, :encryption, :storage_class
+      attr_reader :access_key_id, :secret_access_key, :use_iam_profile,
+                  :region, :bucket, :chunk_size, :encryption, :storage_class
 
       def initialize(options = {})
         super
 
         @access_key_id      = options[:access_key_id]
         @secret_access_key  = options[:secret_access_key]
+        @use_iam_profile    = options[:use_iam_profile]
         @region             = options[:region]
         @bucket             = options[:bucket]
         @chunk_size         = options[:chunk_size]
@@ -120,12 +121,16 @@ module Backup
 
       def connection
         @connection ||= begin
-          conn = Fog::Storage.new(
-            :provider               => 'AWS',
-            :aws_access_key_id      => access_key_id,
-            :aws_secret_access_key  => secret_access_key,
-            :region                 => region
-          )
+          opts = { :provider => 'AWS', :region => region }
+          if use_iam_profile
+            opts.merge!(:use_iam_profile => true)
+          else
+            opts.merge!(
+              :aws_access_key_id      => access_key_id,
+              :aws_secret_access_key  => secret_access_key,
+            )
+          end
+          conn = Fog::Storage.new(opts)
           conn.sync_clock
           conn
         end
