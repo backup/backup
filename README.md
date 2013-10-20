@@ -194,6 +194,14 @@ Backup::Model.new(:my_backup, 'Description for my_backup') do
     s3.keep              = 10
   end
 
+  store_with S3 do |s3|
+    s3.use_iam_profile   = true
+    s3.region            = "us-west-2"
+    s3.bucket            = "bucket-name2"
+    s3.path              = "/path/to/my/backups"
+    s3.keep              = 15
+  end
+
   notify_by Mail do |mail|
     mail.on_success           = false
 
