@@ -5,7 +5,8 @@ module Backup
   module Syncer
     module Cloud
       class LocalFile
-        attr_reader :path, :md5
+        attr_reader :path
+        attr_accessor :md5
 
         class << self
 
@@ -15,9 +16,8 @@ module Backup
           def find(dir, excludes = [])
             dir = File.expand_path(dir)
             hash = {}
-            find_md5(dir, excludes).each do |path, md5|
-              file = new(path, md5)
-              hash[path.sub(dir + '/', '')] = file if file
+            find_md5(dir, excludes).each do |file|
+              hash[file.path.sub(dir + '/', '')] = file
             end
             hash
           end
@@ -40,18 +40,24 @@ module Backup
           def find_md5(dir, excludes)
             found = []
             (Dir.entries(dir) - %w{. ..}).map {|e| File.join(dir, e) }.each do |path|
-              next if exclude?(excludes, path)
-
               if File.directory?(path)
-                found += find_md5(path, excludes)
+                unless exclude?(excludes, path)
+                  found += find_md5(path, excludes)
+                end
               elsif File.file?(path)
-                found << [path, Digest::MD5.file(path).hexdigest]
+                if file = new(path)
+                  unless exclude?(excludes, file.path)
+                    file.md5 = Digest::MD5.file(file.path).hexdigest
+                    found << file
+                  end
+                end
               end
             end
             found
           end
 
-          # Returns true if +path+ matches any of the +excludes+
+          # Returns true if +path+ matches any of the +excludes+.
+          # Note this can not be called if +path+ includes invalid UTF-8.
           def exclude?(excludes, path)
             excludes.any? do |ex|
               if ex.is_a?(String)
@@ -66,9 +72,8 @@ module Backup
         # If +path+ contains invalid UTF-8, it will be sanitized
         # and the LocalFile object will be flagged as invalid.
         # This is done so @file.path may be logged.
-        def initialize(path, md5)
+        def initialize(path)
           @path = sanitize(path)
-          @md5 = md5
         end
 
         def invalid?

@@ -25,7 +25,12 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
        ['/local/path/sync_dir/sub_dir/unchanged_02',  'unchanged_02_md5'],
        ['/local/path/sync_dir/changed_01',            'changed_01_md5'],
        ['/local/path/sync_dir/sub_dir/changed_02',    'changed_02_md5'],
-       ['/local/path/sync_dir/missing_01',            'missing_01_md5']]
+       ['/local/path/sync_dir/missing_01',            'missing_01_md5']
+      ].map do |path, md5|
+        file = Backup::Syncer::Cloud::LocalFile.new(path)
+        file.md5 = md5
+        file
+      end
     }
     let(:remote_files_data) {
       { 'unchanged_01'          => 'unchanged_01_md5',
