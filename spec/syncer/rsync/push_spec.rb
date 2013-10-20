@@ -30,8 +30,10 @@ describe Syncer::RSync::Push do
         rsync.additional_rsync_options = 'rsync options'
 
         rsync.directories do |directory|
-          directory.add "/some/directory/"
-          directory.add "~/home/directory"
+          directory.add '/some/directory/'
+          directory.add '~/home/directory'
+          directory.exclude '*~'
+          directory.exclude 'tmp/'
         end
       end
 
@@ -49,6 +51,7 @@ describe Syncer::RSync::Push do
       expect( syncer.additional_ssh_options   ).to eq 'ssh options'
       expect( syncer.additional_rsync_options ).to eq 'rsync options'
       expect( syncer.directories ).to eq ['/some/directory/', '~/home/directory']
+      expect( syncer.excludes    ).to eq ['*~', 'tmp/']
     end
 
     it 'should use default values if none are given' do
@@ -68,6 +71,7 @@ describe Syncer::RSync::Push do
       expect( syncer.additional_ssh_options   ).to be_nil
       expect( syncer.additional_rsync_options ).to be_nil
       expect( syncer.directories ).to eq []
+      expect( syncer.excludes    ).to eq []
     end
 
     it 'should use default port 22 for :ssh_daemon mode' do
@@ -297,6 +301,30 @@ describe Syncer::RSync::Push do
         syncer.expects(:create_dest_path!)
         syncer.expects(:run).with(
           "rsync --archive --opt-a --opt-b " +
+          "-e \"ssh -p 22\" " +
+          "'/this/dir' '#{ File.expand_path('that/dir') }' " +
+          "my_host:'path/on/remote'"
+        )
+        syncer.perform!
+      end
+
+      specify 'with excludes' do
+        syncer = Syncer::RSync::Push.new do |s|
+          s.mode = :ssh
+          s.host = 'my_host'
+          s.additional_rsync_options = '--opt-a --opt-b'
+          s.path = 'path/on/remote/'
+          s.directories do |dirs|
+            dirs.add '/this/dir/'
+            dirs.add 'that/dir'
+            dirs.exclude '*~'
+            dirs.exclude 'tmp/'
+          end
+        end
+
+        syncer.expects(:create_dest_path!)
+        syncer.expects(:run).with(
+          "rsync --archive --exclude='*~' --exclude='tmp/' --opt-a --opt-b " +
           "-e \"ssh -p 22\" " +
           "'/this/dir' '#{ File.expand_path('that/dir') }' " +
           "my_host:'path/on/remote'"

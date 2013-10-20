@@ -6,7 +6,7 @@ module Backup
 
     UTILITY = {}
     NAMES = %w{
-      tar cat split find xargs sudo chown hostname
+      tar cat split sudo chown hostname
       gzip bzip2 lzma pbzip2
       mongo mongodump mysqldump pg_dump pg_dumpall redis-cli riak-admin
       gpg openssl
@@ -65,8 +65,6 @@ module Backup
       #     tar_dist :gnu   # or :bsd
       #     cat      '/path/to/cat'
       #     split    '/path/to/split'
-      #     find     '/path/to/find'
-      #     xargs    '/path/to/xargs'
       #     sudo     '/path/to/sudo'
       #     chown    '/path/to/chown'
       #     hostname '/path/to/hostname'

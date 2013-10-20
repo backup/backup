@@ -20,8 +20,6 @@ describe Backup::Utilities do
         tar_dist :gnu   # or :bsd
         cat      '/path/to/cat'
         split    '/path/to/split'
-        find     '/path/to/find'
-        xargs    '/path/to/xargs'
         sudo     '/path/to/sudo'
         chown    '/path/to/chown'
         hostname '/path/to/hostname'

@@ -21,12 +21,16 @@ module Backup
         ##
         # Common base command for Local/Push/Pull
         def rsync_command
-          utility(:rsync) << ' --archive' << mirror_option <<
+          utility(:rsync) << ' --archive' << mirror_option << exclude_option <<
               " #{ Array(additional_rsync_options).join(' ') }".rstrip
         end
 
         def mirror_option
           mirror ? ' --delete' : ''
+        end
+
+        def exclude_option
+          excludes.map {|pattern| " --exclude='#{ pattern }'" }.join
         end
 
         ##

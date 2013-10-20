@@ -135,6 +135,36 @@ describe Syncer::Cloud::S3,
     ).to be_true
   end
 
+  it 'excludes files', :live do
+    create_model :my_backup, <<-EOS
+      Backup::Model.new(:my_backup, 'a description') do
+        config = BackupSpec::LIVE['syncer']['cloud']['s3']
+        sync_with Cloud::S3 do |s3|
+          s3.access_key_id      = config['access_key_id']
+          s3.secret_access_key  = config['secret_access_key']
+          s3.region             = config['region']
+          s3.bucket             = config['bucket']
+          s3.path               = config['path']
+
+          s3.directories do
+            add File.join(BackupSpec::LOCAL_SYNC_PATH, 'dir_a')
+            add File.join(BackupSpec::LOCAL_SYNC_PATH, 'dir_b')
+            exclude '**/two.*'
+            exclude /three\.file$/
+          end
+        end
+      end
+    EOS
+
+    backup_perform :my_backup, :exit_status => 1
+
+    expect(
+      objects_on_remote.map {|obj| [obj.key, obj.etag] }
+    ).to eq([
+      [File.join(remote_path, 'dir_a/one.file'), 'd3b07384d113edec49eaa6238ad5ff00']
+    ])
+  end
+
   private
 
   def cloud_io

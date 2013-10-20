@@ -8,14 +8,11 @@ module Backup
         attr_reader :path, :md5
 
         class << self
-          include Utilities::Helpers
 
           # Returns a Hash of LocalFile objects for each file within +dir+,
-          # excep those matching any of the +excludes+, which can be strings
-          # with wildcards or regex patterns.
+          # except those matching any of the +excludes+.
           # Hash keys are the file's path relative to +dir+.
           def find(dir, excludes = [])
-            excludes = [excludes] if excludes.class == String
             dir = File.expand_path(dir)
             hash = {}
             find_md5(dir, excludes).each do |path, md5|
@@ -40,7 +37,7 @@ module Backup
           private
 
           # Returns an Array of file paths and their md5 hashes.
-          def find_md5(dir, excludes = [])
+          def find_md5(dir, excludes)
             found = []
             (Dir.entries(dir) - %w{. ..}).map {|e| File.join(dir, e) }.each do |path|
               next if exclude?(excludes, path)
@@ -53,7 +50,7 @@ module Backup
             end
             found
           end
-          
+
           # Returns true if +path+ matches any of the +excludes+
           def exclude?(excludes, path)
             excludes.any? do |ex|

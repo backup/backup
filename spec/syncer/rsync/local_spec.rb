@@ -14,19 +14,22 @@ describe Syncer::RSync::Local do
 
     it 'should use the values given' do
       syncer = Syncer::RSync::Local.new do |rsync|
-        rsync.path    = "~/my_backups"
+        rsync.path    = '~/my_backups'
         rsync.mirror  = true
         rsync.additional_rsync_options = ['--opt-a', '--opt-b']
 
         rsync.directories do |directory|
-          directory.add "/some/directory"
-          directory.add "~/home/directory"
+          directory.add '/some/directory'
+          directory.add '~/home/directory'
+          directory.exclude '*~'
+          directory.exclude 'tmp/'
         end
       end
 
       expect( syncer.path         ).to eq '~/my_backups'
       expect( syncer.mirror       ).to be(true)
       expect( syncer.directories  ).to eq ['/some/directory', '~/home/directory']
+      expect( syncer.excludes     ).to eq ['*~', 'tmp/']
       expect( syncer.additional_rsync_options ).to eq ['--opt-a', '--opt-b']
     end
 
@@ -36,6 +39,7 @@ describe Syncer::RSync::Local do
       expect( syncer.path         ).to eq '~/backups'
       expect( syncer.mirror       ).to be(false)
       expect( syncer.directories  ).to eq []
+      expect( syncer.excludes     ).to eq []
       expect( syncer.additional_rsync_options ).to be_nil
     end
 
@@ -54,6 +58,7 @@ describe Syncer::RSync::Local do
         expect( syncer.path         ).to eq 'some_path'
         expect( syncer.mirror       ).to eq 'some_mirror'
         expect( syncer.directories  ).to eq []
+        expect( syncer.excludes     ).to eq []
         expect( syncer.additional_rsync_options ).to eq 'rsync_options'
       end
 
@@ -67,6 +72,7 @@ describe Syncer::RSync::Local do
         expect( syncer.path         ).to eq 'new_path'
         expect( syncer.mirror       ).to eq 'new_mirror'
         expect( syncer.directories  ).to eq []
+        expect( syncer.excludes     ).to eq []
         expect( syncer.additional_rsync_options ).to eq 'new_rsync_options'
       end
     end # context 'when pre-configured defaults have been set'
@@ -76,13 +82,13 @@ describe Syncer::RSync::Local do
 
     specify 'with mirror option and Array of additional_rsync_options' do
       syncer = Syncer::RSync::Local.new do |rsync|
-        rsync.path    = "~/my_backups"
+        rsync.path    = '~/my_backups'
         rsync.mirror  = true
         rsync.additional_rsync_options = ['--opt-a', '--opt-b']
 
         rsync.directories do |directory|
-          directory.add "/some/directory/"
-          directory.add "~/home/directory"
+          directory.add '/some/directory/'
+          directory.add '~/home/directory'
         end
       end
 
@@ -99,12 +105,12 @@ describe Syncer::RSync::Local do
 
     specify 'without mirror option and String of additional_rsync_options' do
       syncer = Syncer::RSync::Local.new do |rsync|
-        rsync.path    = "~/my_backups"
+        rsync.path    = '~/my_backups'
         rsync.additional_rsync_options = '--opt-a --opt-b'
 
         rsync.directories do |directory|
-          directory.add "/some/directory/"
-          directory.add "~/home/directory"
+          directory.add '/some/directory/'
+          directory.add '~/home/directory'
         end
       end
 
@@ -112,6 +118,32 @@ describe Syncer::RSync::Local do
 
       syncer.expects(:run).with(
         "rsync --archive --opt-a --opt-b " +
+        "'/some/directory' '#{ File.expand_path('~/home/directory') }' " +
+        "'#{ File.expand_path('~/my_backups') }'"
+      )
+
+      syncer.perform!
+    end
+
+    specify 'with mirror, excludes and additional_rsync_options' do
+      syncer = Syncer::RSync::Local.new do |rsync|
+        rsync.path    = '~/my_backups'
+        rsync.mirror  = true
+        rsync.additional_rsync_options = ['--opt-a', '--opt-b']
+
+        rsync.directories do |directory|
+          directory.add '/some/directory/'
+          directory.add '~/home/directory'
+          directory.exclude '*~'
+          directory.exclude 'tmp/'
+        end
+      end
+
+      FileUtils.expects(:mkdir_p).with(File.expand_path('~/my_backups/'))
+
+      syncer.expects(:run).with(
+        "rsync --archive --delete --exclude='*~' --exclude='tmp/' " +
+        "--opt-a --opt-b " +
         "'/some/directory' '#{ File.expand_path('~/home/directory') }' " +
         "'#{ File.expand_path('~/my_backups') }'"
       )
