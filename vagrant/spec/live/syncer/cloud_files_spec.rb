@@ -92,6 +92,38 @@ describe Syncer::Cloud::CloudFiles,
     end
   end
 
+  it 'excludes files', :live do
+    create_model :my_backup, <<-EOS
+      Backup::Model.new(:my_backup, 'a description') do
+        config = BackupSpec::LIVE['syncer']['cloud']['cloudfiles']
+        sync_with Cloud::CloudFiles do |cf|
+          cf.username     = config['username']
+          cf.api_key      = config['api_key']
+          cf.auth_url     = config['auth_url']
+          cf.region       = config['region']
+          cf.servicenet   = config['servicenet']
+          cf.container    = config['container']
+          cf.path         = config['path']
+
+          cf.directories do
+            add File.join(BackupSpec::LOCAL_SYNC_PATH, 'dir_a')
+            add File.join(BackupSpec::LOCAL_SYNC_PATH, 'dir_b')
+            exclude '**/two.*'
+            exclude /three\.file$/
+          end
+        end
+      end
+    EOS
+
+    backup_perform :my_backup, :exit_status => 1
+
+    expect(
+      objects_on_remote.map {|obj| [obj.name, obj.hash] }
+    ).to eq([
+      [File.join(remote_path, 'dir_a/one.file'), 'd3b07384d113edec49eaa6238ad5ff00']
+    ])
+  end
+
   private
 
   def cloud_io

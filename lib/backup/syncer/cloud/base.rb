@@ -64,7 +64,7 @@ module Backup
           remote_files = get_remote_files(remote_base)
 
           Logger.info("Gathering local data for '#{ File.expand_path(dir) }'...")
-          local_files = LocalFile.find(dir)
+          local_files = LocalFile.find(dir, excludes)
 
           relative_paths = (local_files.keys | remote_files.keys).sort
           if relative_paths.empty?

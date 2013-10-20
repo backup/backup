@@ -1,22 +1,23 @@
 # encoding: utf-8
+require 'digest/md5'
 
 module Backup
   module Syncer
     module Cloud
       class LocalFile
-        attr_reader :path, :md5
+        attr_reader :path
+        attr_accessor :md5
 
         class << self
-          include Utilities::Helpers
 
-          # Returns a Hash of LocalFile objects for each file within +dir+.
+          # Returns a Hash of LocalFile objects for each file within +dir+,
+          # except those matching any of the +excludes+.
           # Hash keys are the file's path relative to +dir+.
-          def find(dir)
+          def find(dir, excludes = [])
             dir = File.expand_path(dir)
             hash = {}
-            find_md5(dir).each do |path, md5|
-              file = new(path, md5)
-              hash[path.sub(dir + '/', '')] = file if file
+            find_md5(dir, excludes).each do |file|
+              hash[file.path.sub(dir + '/', '')] = file
             end
             hash
           end
@@ -36,37 +37,43 @@ module Backup
           private
 
           # Returns an Array of file paths and their md5 hashes.
-          #
-          # Lines output from `cmd` are formatted like:
-          #   MD5(/dir/subdir/file)= 7eaabd1f53024270347800d0fdb34357
-          # However, if +dir+ is empty, the following is returned:
-          #   (stdin)= d41d8cd98f00b204e9800998ecf8427e
-          # Which extracts as: ['in', 'd41d8cd98f00b204e9800998ecf8427e']
-          # I'm not sure I can rely on the fact this doesn't begin with 'MD5',
-          # so I'll reject entries with a path that doesn't start with +dir+.
-          #
-          # String#slice avoids `invalid byte sequence in UTF-8` errors
-          # that String#split would raise.
-          #
-          # Utilities#run is not used here because this would produce too much
-          # log output, and Pipeline does not support capturing output.
-          def find_md5(dir)
-            cmd = "#{ utility(:find) } -L '#{ dir }' -type f -print0 | " +
-                  "#{ utility(:xargs) } -0 #{ utility(:openssl) } md5 2> /dev/null"
-            %x[#{ cmd }].lines.map do |line|
-              line.chomp!
-              entry = [line.slice(4..-36), line.slice(-32..-1)]
-              entry[0].to_s.start_with?(dir) ? entry : nil
-            end.compact
+          def find_md5(dir, excludes)
+            found = []
+            (Dir.entries(dir) - %w{. ..}).map {|e| File.join(dir, e) }.each do |path|
+              if File.directory?(path)
+                unless exclude?(excludes, path)
+                  found += find_md5(path, excludes)
+                end
+              elsif File.file?(path)
+                if file = new(path)
+                  unless exclude?(excludes, file.path)
+                    file.md5 = Digest::MD5.file(file.path).hexdigest
+                    found << file
+                  end
+                end
+              end
+            end
+            found
+          end
+
+          # Returns true if +path+ matches any of the +excludes+.
+          # Note this can not be called if +path+ includes invalid UTF-8.
+          def exclude?(excludes, path)
+            excludes.any? do |ex|
+              if ex.is_a?(String)
+                File.fnmatch?(ex, path)
+              elsif ex.is_a?(Regexp)
+                ex.match(path)
+              end
+            end
           end
         end
 
         # If +path+ contains invalid UTF-8, it will be sanitized
         # and the LocalFile object will be flagged as invalid.
         # This is done so @file.path may be logged.
-        def initialize(path, md5)
+        def initialize(path)
           @path = sanitize(path)
-          @md5 = md5
         end
 
         def invalid?

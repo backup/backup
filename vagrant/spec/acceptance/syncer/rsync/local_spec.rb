@@ -47,5 +47,33 @@ describe Syncer::RSync::Local do
         to eq( dir_contents('~/test_data/dir_c') )
   end
 
+  specify 'multiple directories with excludes' do
+    create_model :my_backup, <<-EOS
+      Backup::Model.new(:my_backup, 'a description') do
+        sync_with RSync::Local do |rsync|
+          rsync.path = '~/Storage'
+          rsync.directories do |dirs|
+            dirs.add '~/test_data/dir_a'
+            dirs.add '~/test_data/dir_b'
+            dirs.add '~/test_data/dir_c'
+            dirs.exclude 'file_b'
+          end
+        end
+      end
+    EOS
+
+    backup_perform :my_backup
+
+    expect( dir_contents('~/Storage/dir_a') ).to eq(
+      dir_contents('~/test_data/dir_a') - ['/file_b']
+    )
+    expect( dir_contents('~/Storage/dir_b') ).to eq(
+      dir_contents('~/test_data/dir_b') - ['/file_b']
+    )
+    expect( dir_contents('~/Storage/dir_c') ).to eq(
+      dir_contents('~/test_data/dir_c') - ['/file_b']
+    )
+  end
+
 end
 end

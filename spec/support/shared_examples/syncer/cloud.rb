@@ -25,7 +25,12 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
        ['/local/path/sync_dir/sub_dir/unchanged_02',  'unchanged_02_md5'],
        ['/local/path/sync_dir/changed_01',            'changed_01_md5'],
        ['/local/path/sync_dir/sub_dir/changed_02',    'changed_02_md5'],
-       ['/local/path/sync_dir/missing_01',            'missing_01_md5']]
+       ['/local/path/sync_dir/missing_01',            'missing_01_md5']
+      ].map do |path, md5|
+        file = Backup::Syncer::Cloud::LocalFile.new(path)
+        file.md5 = md5
+        file
+      end
     }
     let(:remote_files_data) {
       { 'unchanged_01'          => 'unchanged_01_md5',
@@ -50,7 +55,7 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
         syncer.stubs(:get_remote_files).
             with('my_backups/sync_dir').returns({})
         Backup::Syncer::Cloud::LocalFile.expects(:find_md5).
-            with('/local/path/sync_dir').returns([])
+            with('/local/path/sync_dir', []).returns([])
       end
 
       it 'does not attempt to sync' do
@@ -81,7 +86,7 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
         syncer.stubs(:get_remote_files).
             with('my_backups/sync_dir').returns(remote_files_data)
         Backup::Syncer::Cloud::LocalFile.expects(:find_md5).
-            with('/local/path/sync_dir').returns(find_md5_data)
+            with('/local/path/sync_dir', []).returns(find_md5_data)
       end
 
       context 'without mirror' do
@@ -231,7 +236,7 @@ shared_examples 'a subclass of Syncer::Cloud::Base' do
         syncer.stubs(:get_remote_files).
             with('my_backups/sync_dir').returns(remote_files_data)
         Backup::Syncer::Cloud::LocalFile.expects(:find_md5).
-            with('/local/path/sync_dir').returns(find_md5_data)
+            with('/local/path/sync_dir', []).returns(find_md5_data)
 
         syncer.thread_count = 20
         syncer.stubs(:sleep) # quicker tests

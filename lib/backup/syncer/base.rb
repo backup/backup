@@ -20,13 +20,16 @@ module Backup
       # in the log messages.
       attr_reader :syncer_id
 
+      attr_reader :excludes
+
       def initialize(syncer_id = nil)
         @syncer_id = syncer_id
 
         load_defaults!
 
         @mirror ||= false
-        @directories = Array.new
+        @directories = []
+        @excludes = []
       end
 
       ##
@@ -38,6 +41,13 @@ module Backup
 
       def add(path)
         directories << path
+      end
+
+      # For Cloud Syncers, +pattern+ can be a string (with shell-style
+      # wildcards) or a regex.
+      # For RSync, each +pattern+ will be passed to rsync's --exclude option.
+      def exclude(pattern)
+        excludes << pattern
       end
 
       private
