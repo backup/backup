@@ -14,5 +14,11 @@
     cf.directories do |directory|
       directory.add "/path/to/directory/to/sync"
       directory.add "/path/to/other/directory/to/sync"
+
+      # Exclude files/folders from the sync.
+      # The pattern may be a shell glob pattern (see `File.fnmatch`) or a Regexp.
+      # All patterns will be applied when traversing each added directory.
+      directory.exclude '**/*~'
+      directory.exclude /\/tmp$/
     end
   end

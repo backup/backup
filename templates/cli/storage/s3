@@ -4,8 +4,12 @@
   # See the documentation on the Wiki for details.
   # https://github.com/meskyanichi/backup/wiki/Storages
   store_with S3 do |s3|
+    # AWS Credentials
     s3.access_key_id     = "my_access_key_id"
     s3.secret_access_key = "my_secret_access_key"
+    # Or, to use a IAM Profile:
+    # s3.use_iam_profile = true
+
     s3.region            = "us-east-1"
     s3.bucket            = "bucket-name"
     s3.path              = "path/to/backups"
