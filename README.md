@@ -8,11 +8,11 @@ was built with modularity, extensibility and simplicity in mind.
 
 ## Installation
 
+**_Do not add `gem backup` to an application's `Gemfile`_**
+
 To install the latest version, run:
 
     $ [sudo] gem install backup
-
-_Do not add `gem backup` to an application's `Gemfile`_
 
 See [Installation](https://github.com/meskyanichi/backup/wiki/Installation) for more information about installing and
 updating your installation of Backup.
