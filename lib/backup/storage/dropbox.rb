@@ -121,12 +121,11 @@ module Backup
         raise Error.wrap(err, 'Upload Failed!')
       end
 
-      # Timeout::Error is not a StandardError under ruby-1.8.7
       def with_retries
         retries = 0
         begin
           yield
-        rescue StandardError, Timeout::Error => err
+        rescue StandardError => err
           retries += 1
           raise if retries > max_retries
 

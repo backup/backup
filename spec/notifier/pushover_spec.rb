@@ -62,8 +62,8 @@ describe Notifier::Pushover do
       end
     }
     let(:form_data) {
-      'message=%5BBackup%3A%3A' + 'STATUS' +
-      '%5D+test+label+%28test_trigger%29&token=my_token&user=my_user'
+      'user=my_user&token=my_token&' +
+      'message=%5BBackup%3A%3A' + 'STATUS' + '%5D+test+label+%28test_trigger%29'
     }
 
     context 'when status is :success' do
@@ -122,9 +122,9 @@ describe Notifier::Pushover do
         end
       }
       let(:form_data) {
-        'device=my_device&message=%5BBackup%3A%3ASuccess' +
-        '%5D+test+label+%28test_trigger%29&priority=my_priority' +
-        '&title=my_title&token=my_token&user=my_user'
+        'user=my_user&token=my_token&' +
+        'message=%5BBackup%3A%3ASuccess%5D+test+label+%28test_trigger%29&' +
+        'device=my_device&title=my_title&priority=my_priority'
       }
 
       it 'sends message with optional parameters' do

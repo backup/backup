@@ -19,7 +19,7 @@ updating your installation of Backup.
 
 See [Release Notes](https://github.com/meskyanichi/backup/wiki/Release-Notes) for changes in the latest version.
 
-Backup supports Ruby versions 1.8.7, 1.9.2, 1.9.3 and 2.0.0.
+Backup supports Ruby versions 1.9.2, 1.9.3 and 2.0.0. (For ruby-1.8.7, use Backup v3.x)
 
 ## Overview
 

@@ -183,18 +183,12 @@ module Backup
 
         begin
           out, err = '', ''
-          # popen4 doesn't work in 1.8.7 with stock versions of ruby shipped
-          # with major OSs. Hack to make it stop segfaulting.
-          # See: https://github.com/engineyard/engineyard/issues/115
-          GC.disable if RUBY_VERSION < '1.9'
           ps = Open4.popen4(command) do |pid, stdin, stdout, stderr|
             stdin.close
             out, err = stdout.read.strip, stderr.read.strip
           end
         rescue Exception => e
           raise Error.wrap(e, "Failed to execute '#{ name }'")
-        ensure
-          GC.enable if RUBY_VERSION < '1.9'
         end
 
         if ps.success?

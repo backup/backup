@@ -106,7 +106,7 @@ module Backup
           :headers => { 'User-Agent' => "Backup/#{ VERSION }" }.
               merge(headers).reject {|k,v| v.nil? }.
               merge('Content-Type' => 'application/x-www-form-urlencoded'),
-          :body => encode_www_form({ 'message' => message }.
+          :body => URI.encode_www_form({ 'message' => message }.
               merge(params).reject {|k,v| v.nil? }.
               merge('status' => status.to_s)),
           :expects => success_codes # raise error if unsuccessful

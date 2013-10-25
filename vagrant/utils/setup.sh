@@ -10,11 +10,7 @@ fi
 
 sync_gem_cache() {
   cp -n ~/.gem/ruby/2.0.0/cache/*.gem ~/.gem/ruby/1.9.3/cache/
-  cp -n ~/.gem/ruby/2.0.0/cache/*.gem ~/.gem/ruby/1.9.2/cache/
   cp -n ~/.gem/ruby/1.9.3/cache/*.gem ~/.gem/ruby/2.0.0/cache/
-  cp -n ~/.gem/ruby/1.9.3/cache/*.gem ~/.gem/ruby/1.9.2/cache/
-  cp -n ~/.gem/ruby/1.9.2/cache/*.gem ~/.gem/ruby/2.0.0/cache/
-  cp -n ~/.gem/ruby/1.9.2/cache/*.gem ~/.gem/ruby/1.9.3/cache/
 }
 
 cd /vagrant/utils
@@ -50,16 +46,6 @@ else
   echo "Installing Gems..."
   sync_gem_cache
   chruby-exec 1.9.3 -- bundle install
-fi
-
-echo -n "==> Checking Ruby 1.9.2 Test Environment... "
-chruby-exec 1.9.2 -- bundle check >/dev/null 2>&1
-if [[ $? == "0" ]]; then
-  echo "OK"
-else
-  echo "Installing Gems..."
-  sync_gem_cache
-  chruby-exec 1.9.2 -- bundle install
 fi
 
 echo -e "\n== System Ready! =="

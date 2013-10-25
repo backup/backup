@@ -93,21 +93,6 @@ module Backup
         self.class.to_s.sub('Backup::', '')
       end
 
-      # For ruby-1.8.7. Both sorted so specs will match.
-      def encode_www_form(enum)
-        if RUBY_VERSION < '1.9'
-          require 'cgi'
-          str = ''
-          enum.to_a.map {|k,v| [k.to_s, v] }.sort.each do |k,v|
-            str << '&' unless str.empty?
-            str << CGI.escape(k) << '=' << CGI.escape(v)
-          end
-          str
-        else
-          URI.encode_www_form(enum.sort)
-        end
-      end
-
     end
   end
 end

@@ -53,9 +53,9 @@ describe Notifier::Prowl do
       end
     }
     let(:form_data) {
-      'apikey=my_api_key&application=my_app&' +
-      'description=test+label+%28test_trigger%29&' +
-      'event=%5BBackup%3A%3A' + 'STATUS' + '%5D'
+      'application=my_app&apikey=my_api_key&' +
+      'event=%5BBackup%3A%3A' + 'STATUS' + '%5D&' +
+      'description=test+label+%28test_trigger%29'
     }
 
     context 'when status is :success' do

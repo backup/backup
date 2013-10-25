@@ -18,7 +18,7 @@ source 'https://rubygems.org'
 group :production do
   gem 'thor'
   gem 'open4'
-  gem 'fog', '= 1.13.0' # see https://github.com/fog/fog/pull/1905
+  gem 'fog'
   gem 'excon'
   gem 'dropbox-sdk', '= 1.5.1' # patched
   gem 'net-ssh'
@@ -33,17 +33,16 @@ end
 gem 'rspec'
 gem 'fuubar'
 gem 'mocha'
-gem 'timecop', '= 0.6.1' # ruby-1.8.7 support was removed in 0.6.2
+gem 'timecop'
 
 # Omitted from Travis CI Environment
 group :no_ci do
   gem 'guard'
   gem 'guard-rspec'
-  gem 'listen', '~> 1.0' # for ruby-1.8.7 and 1.9.2
 
   gem 'rb-fsevent' # Mac OS X
   gem 'rb-inotify' # Linux
 
   gem 'yard'
-  gem 'redcarpet', '< 3.0' # < 3.0 for ruby-1.8.7
+  gem 'redcarpet'
 end
