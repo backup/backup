@@ -123,7 +123,7 @@ module Backup
 
     ##
     # Allow setting defaults with the same interface that a model definition
-    # looks like uses
+    # looks like
     def setup_default_config!
     end
 
