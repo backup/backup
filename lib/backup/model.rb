@@ -118,6 +118,7 @@ module Backup
       @notifiers  = []
       @syncers    = []
 
+      self.setup_default_config!
       instance_eval(&block) if block_given?
 
       # trigger all defined databases to generate their #dump_filename
@@ -125,6 +126,12 @@ module Backup
       databases.each {|db| db.send(:dump_filename) }
 
       Model.all << self
+    end
+
+    ##
+    # Allow setting defaults with the same interface that a model definition
+    # looks like
+    def setup_default_config!
     end
 
     ##
