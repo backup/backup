@@ -39,6 +39,35 @@ Backup's _components_ are added to the backup _model_ to define the actions to b
 All of Backup's components are fully documented in the [Backup Wiki](https://github.com/meskyanichi/backup/wiki).  
 The following is brief overview of the components Backup provides:
 
+## Setting defaults
+
+You can create different subclasses of the ```Backup::Model``` which share their same defaults. Just put them directly inside of your config.rb file like this:
+
+```rb
+class Backup::MyCustomModel < Backup::Model
+  def setup_default_config!
+    notify_by Mail do |mail|
+      mail.from                 = "sender@email.com"
+      mail.to                   = "receiver@email.com"
+      mail.address              = "smtp.gmail.com"
+      mail.port                 = 587
+      mail.user_name            = "sender@email.com"
+      mail.password             = "my_password"
+      mail.authentication       = "plain"
+      mail.encryption           = :starttls
+    end
+  end
+end
+
+You can use the same methods you would use inside of a real Model declaration. Declare your Models like this:
+
+```rb
+Backup::MyCustomModel.new(:my_backup, 'Description for my_backup') do
+  # your default configuration will be used
+  # ... components here ...
+end
+```
+
 ### Archives and Databases
 
 [Archives](https://github.com/meskyanichi/backup/wiki/Archives) create basic `tar` archives. Both **GNU** and **BSD**
