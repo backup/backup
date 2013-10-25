@@ -181,24 +181,6 @@ module Backup
         cmd
       end
 
-      attr_deprecate :utility_path, :version => '3.0.21',
-          :message => 'Use Backup::Utilities.configure instead.',
-          :action => lambda {|klass, val|
-            Utilities.configure { mongodump val }
-          }
-
-      attr_deprecate :mongodump_utility, :version => '3.3.0',
-          :message => 'Use Backup::Utilities.configure instead.',
-          :action => lambda {|klass, val|
-            Utilities.configure { mongodump val }
-          }
-
-      attr_deprecate :mongo_utility, :version => '3.3.0',
-          :message => 'Use Backup::Utilities.configure instead.',
-          :action => lambda {|klass, val|
-            Utilities.configure { mongo val }
-          }
-
     end
   end
 end

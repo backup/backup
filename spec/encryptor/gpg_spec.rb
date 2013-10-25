@@ -869,26 +869,4 @@ gXY+pNqaEE6cHrg+uQatVQITX8EoVJhQ9Z1mYJB+g62zqOQPe10Spb381O9y4dN/
     end
   end # describe '#system_identifiers'
 
-  describe 'deprecations' do
-    describe '#key' do
-      it 'should import #key, use identifier for #recipients and log a warning' do
-        encryptor.expects(:import_key).
-            with('deprecated :key', 'a public key').
-            returns('an_identifier')
-
-        Backup::Logger.expects(:warn).with {|err|
-          err.should be_an_instance_of Backup::Configuration::Error
-          err.message.should match(
-            "GPG#key has been deprecated as of backup v.3.0.26"
-          )
-          err.message.should match(
-            "replaced with #keys and #recipients"
-          )
-        }
-
-        encryptor.key = 'a public key'
-        encryptor.recipients.should == 'an_identifier'
-      end
-    end # describe '#key'
-  end # describe 'deprecations'
 end

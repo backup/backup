@@ -15,17 +15,6 @@ module Backup
       # The default `level` is 9.
       attr_accessor :level
 
-      attr_deprecate :fast, :version => '3.0.24',
-                     :message => 'Use Bzip2#level instead.',
-                     :action => lambda {|klass, val|
-                       klass.level = 1 if val
-                     }
-      attr_deprecate :best, :version => '3.0.24',
-                     :message => 'Use Bzip2#level instead.',
-                     :action => lambda {|klass, val|
-                       klass.level = 9 if val
-                     }
-
       ##
       # Creates a new instance of Backup::Compressor::Bzip2
       def initialize(&block)

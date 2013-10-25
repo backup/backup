@@ -125,6 +125,5 @@ describe Syncer::RSync::Pull do
     end
   end # describe '#perform!'
 
-  # same deprecations as RSync::Push
 end
 end

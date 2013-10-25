@@ -77,25 +77,6 @@ module Backup
         "#{ utility(:sudo) } -n -u #{ user } #{ utility('riak-admin') }"
       end
 
-      attr_deprecate :utility_path, :version => '3.0.21',
-          :message => 'Use Backup::Utilities.configure instead.',
-          :action => lambda {|klass, val|
-            Utilities.configure { riak_admin val }
-          }
-
-      attr_deprecate :riak_admin_utility, :version => '3.3.0',
-          :message => 'Use Backup::Utilities.configure instead.',
-          :action => lambda {|klass, val|
-            Utilities.configure { riak_admin val }
-          }
-
-      attr_deprecate :name, :version => '3.3.0',
-          :message => "If you wish to add an identifier to the dump filename,\n" +
-          "use a +database_id+ when defining the database in your Model.\n" +
-          "e.g. database Riak, :my_id do |db|"
-
-      attr_deprecate :group, :version => '3.3.0'
-
     end
   end
 end

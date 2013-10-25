@@ -171,41 +171,5 @@ describe Syncer::RSync::Local do
 
   end # describe '#perform!'
 
-  describe 'deprecations' do
-
-    describe '#additional_options' do
-      before do
-        Logger.expects(:warn).with {|err|
-          expect( err ).to be_an_instance_of Configuration::Error
-          expect( err.message ).to match(
-            /Use #additional_rsync_options instead/
-          )
-        }
-      end
-
-      context 'when set directly' do
-        it 'warns and transfers option value' do
-          syncer = Syncer::RSync::Local.new do |s|
-            s.additional_options = ['some', 'options']
-          end
-          expect( syncer.additional_rsync_options ).to eq ['some', 'options']
-        end
-      end
-
-      context 'when set using defaults' do
-        after { Syncer::RSync::Local.clear_defaults! }
-
-        it 'warns and transfers option value' do
-          Syncer::RSync::Local.defaults do |s|
-            s.additional_options = ['some', 'defaults']
-          end
-          syncer = Syncer::RSync::Local.new
-          expect( syncer.additional_rsync_options ).to eq ['some', 'defaults']
-        end
-      end
-
-    end # describe '#additional_options'
-
-  end # describe 'deprecations'
 end
 end

@@ -583,7 +583,7 @@ describe 'Backup::CLI' do
         storages (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
         syncers (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
         encryptors (gpg, openssl)
-        compressors (bzip2, custom, gzip, lzma, pbzip2)
+        compressors (bzip2, custom, gzip)
         notifiers (campfire, hipchat, http_post, mail, nagios, prowl, pushover, twitter)
       EOS
 

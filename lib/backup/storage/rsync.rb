@@ -259,24 +259,6 @@ module Backup
         @password_file.delete if @password_file
       end
 
-      attr_deprecate :local, :version => '3.2.0',
-                     :message => "If 'host' is not set, the operation will be local."
-
-      attr_deprecate :username, :version => '3.2.0',
-                     :message => 'Use #ssh_user instead.',
-                     :action => lambda {|klass, val|
-                       klass.ssh_user = val
-                     }
-      attr_deprecate :password, :version => '3.2.0',
-                     :message => 'Use #rsync_password instead.',
-                     :action => lambda {|klass, val|
-                       klass.rsync_password = val
-                     }
-      attr_deprecate :ip, :version => '3.2.0',
-                     :message => 'Use #host instead.',
-                     :action => lambda {|klass, val|
-                       klass.host = val
-                     }
     end
   end
 end

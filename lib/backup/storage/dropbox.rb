@@ -192,13 +192,6 @@ module Backup
         raise Error.wrap(err, 'Could not create or authenticate a new session')
       end
 
-      attr_deprecate :email,    :version => '3.0.17'
-      attr_deprecate :password, :version => '3.0.17'
-      attr_deprecate :timeout,  :version => '3.0.21'
-
-      attr_deprecate :chunk_retries, :version => '3.7.0',
-                     :message => 'Use #max_retries instead.',
-                     :action => lambda {|klass, val| klass.max_retries = val }
     end
   end
 end

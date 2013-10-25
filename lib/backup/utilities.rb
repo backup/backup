@@ -7,7 +7,7 @@ module Backup
     UTILITY = {}
     NAMES = %w{
       tar cat split sudo chown hostname
-      gzip bzip2 lzma pbzip2
+      gzip bzip2
       mongo mongodump mysqldump pg_dump pg_dumpall redis-cli riak-admin
       gpg openssl
       rsync ssh
@@ -72,8 +72,6 @@ module Backup
       #     # Compressors
       #     gzip    '/path/to/gzip'
       #     bzip2   '/path/to/bzip2'
-      #     lzma    '/path/to/lzma'   # deprecated. use a Custom Compressor
-      #     pbzip2  '/path/to/pbzip2' # deprecated. use a Custom Compressor
       #
       #     # Database Utilities
       #     mongo       '/path/to/mongo'
@@ -100,17 +98,6 @@ module Backup
       #
       # These paths may be set using absolute paths, or relative to the
       # working directory when Backup is run.
-      #
-      # Note that many of Backup's components currently have their own
-      # configuration settings for utility paths. For instance, when configuring
-      # a +MySQL+ database backup, +mysqldump_utility+ may be used:
-      #
-      #   database MySQL do |db|
-      #     db.mysqldump_utility = '/path/to/mysqldump'
-      #   end
-      #
-      # Use of these configuration settings will override the path set here.
-      # (The use of these may be deprecated in the future)
       def configure(&block)
         DSL.instance_eval(&block)
       end

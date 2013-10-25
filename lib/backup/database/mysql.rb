@@ -118,18 +118,6 @@ module Backup
         name == :all
       end
 
-      attr_deprecate :utility_path, :version => '3.0.21',
-          :message => 'Use Backup::Utilities.configure instead.',
-          :action => lambda {|klass, val|
-            Utilities.configure { mysqldump val }
-          }
-
-      attr_deprecate :mysqldump_utility, :version => '3.3.0',
-          :message => 'Use Backup::Utilities.configure instead.',
-          :action => lambda {|klass, val|
-            Utilities.configure { mysqldump val }
-          }
-
     end
   end
 end

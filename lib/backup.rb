@@ -85,8 +85,6 @@ module Backup
     autoload :Gzip,   File.join(COMPRESSOR_PATH, 'gzip')
     autoload :Bzip2,  File.join(COMPRESSOR_PATH, 'bzip2')
     autoload :Custom, File.join(COMPRESSOR_PATH, 'custom')
-    autoload :Pbzip2, File.join(COMPRESSOR_PATH, 'pbzip2')
-    autoload :Lzma,   File.join(COMPRESSOR_PATH, 'lzma')
   end
 
   ##

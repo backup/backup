@@ -170,9 +170,5 @@ describe Syncer::Cloud::CloudFiles do
     end
   end # describe '#get_remote_files'
 
-  describe 'Deprecations' do
-    include_examples 'Deprecation: #concurrency_type and #concurrency_level'
-  end
-
 end
 end

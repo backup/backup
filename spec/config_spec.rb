@@ -355,18 +355,4 @@ describe 'Backup::Config' do
     end
   end
 
-  describe 'Backup.const_missing' do
-    it 'should warn if Backup::CONFIG_FILE is referenced from an older config.rb' do
-      Backup::Logger.expects(:warn)
-      expect do
-        Backup.const_get('CONFIG_FILE').should == Backup::Config.config_file
-      end.not_to raise_error
-    end
-
-    it 'should still handle other missing constants' do
-      expect do
-        Backup.const_get('FOO')
-      end.to raise_error(NameError, 'uninitialized constant Backup::FOO')
-    end
-  end
 end

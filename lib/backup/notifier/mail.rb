@@ -218,25 +218,6 @@ module Backup
         email
       end
 
-      attr_deprecate :enable_starttls_auto, :version => '3.2.0',
-                     :message => "Use #encryption instead.\n" +
-                        'e.g. mail.encryption = :starttls',
-                     :action => lambda {|klass, val|
-                       klass.encryption = val ? :starttls : :none
-                     }
-
-      attr_deprecate :sendmail, :version => '3.6.0',
-          :message => 'Use Backup::Utilities.configure instead.',
-          :action => lambda {|klass, val|
-            Utilities.configure { sendmail val }
-          }
-
-      attr_deprecate :exim, :version => '3.6.0',
-          :message => 'Use Backup::Utilities.configure instead.',
-          :action => lambda {|klass, val|
-            Utilities.configure { exim val }
-          }
-
     end
   end
 end

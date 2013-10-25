@@ -128,18 +128,6 @@ module Backup
         name == :all
       end
 
-      attr_deprecate :utility_path, :version => '3.0.21',
-          :message => 'Use Backup::Utilities.configure instead.',
-          :action => lambda {|klass, val|
-            Utilities.configure { pg_dump val }
-          }
-
-      attr_deprecate :pg_dump_utility, :version => '3.3.0',
-          :message => 'Use Backup::Utilities.configure instead.',
-          :action => lambda {|klass, val|
-            Utilities.configure { pg_dump val }
-          }
-
     end
   end
 end

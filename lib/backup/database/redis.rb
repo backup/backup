@@ -115,18 +115,6 @@ module Backup
         Array(additional_options).join(' ')
       end
 
-      attr_deprecate :utility_path, :version => '3.0.21',
-          :message => 'Use Backup::Utilities.configure instead.',
-          :action => lambda {|klass, val|
-            Utilities.configure { redis_cli val }
-          }
-
-      attr_deprecate :redis_cli_utility, :version => '3.3.0',
-          :message => 'Use Backup::Utilities.configure instead.',
-          :action => lambda {|klass, val|
-            Utilities.configure { redis_cli val }
-          }
-
     end
   end
 end

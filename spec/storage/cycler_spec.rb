@@ -143,9 +143,9 @@ describe 'Backup::Storage::Cycler' do
 
     before do
       cycler.instance_variable_set(:@storage_file, storage_file)
-      obj_a.instance_variable_set(:@time, '2012.01.01.07.00.00')
-      obj_b.instance_variable_set(:@time, '2012.01.01.08.00.00')
-      obj_c.instance_variable_set(:@time, '2012.01.01.09.00.00')
+      obj_a.stubs(:time => '2012.01.01.07.00.00')
+      obj_b.stubs(:time => '2012.01.01.08.00.00')
+      obj_c.stubs(:time => '2012.01.01.09.00.00')
     end
 
     context 'when the storage file exists' do
@@ -154,8 +154,7 @@ describe 'Backup::Storage::Cycler' do
         before { File.expects(:zero?).with(storage_file).returns(false) }
         it 'should return YAML deserialized objects in an array, sorted by time DESC' do
           YAML.expects(:load_file).with(storage_file).returns(unsorted_objects)
-          cycler.expects(:check_upgrade).with(sorted_objects).returns(sorted_objects)
-          cycler.send(:yaml_load).should be(sorted_objects)
+          cycler.send(:yaml_load).should eq(sorted_objects)
         end
       end
       context 'when the file is empty' do
@@ -189,78 +188,5 @@ describe 'Backup::Storage::Cycler' do
       cycler.send(:yaml_save, pkgs)
     end
   end # describe '#yaml_save'
-
-  describe '#check_upgrade' do
-    let(:yaml_v3_0_19) do
-      <<-EOF.gsub(/^ +/,'  ').gsub(/^  (-\W\W)/, "\\1")
-        ---
-        - !ruby/object:Backup::Storage::Local
-          time: 2011.11.01.12.01.00
-          remote_file: 2011.11.01.12.01.00.backup.tar.gz
-        - !ruby/object:Backup::Storage::Local
-          time: 2011.11.01.12.02.00
-          remote_file: 2011.11.01.12.02.00.backup.tar.gz
-        - !ruby/object:Backup::Storage::Local
-          time: 2011.11.01.12.03.00
-          remote_file: 2011.11.01.12.03.00.backup.tar.gz
-      EOF
-    end
-    let(:yaml_v3_0_20) do
-      <<-EOF.gsub(/^ +/,'  ').gsub(/^  (-\W\W)/, "\\1")
-        ---
-        - !ruby/object:Backup::Storage::Local
-          time: 2011.12.01.12.01.00
-          chunk_suffixes: []
-          filename: 2011.12.01.12.01.00.backup.tar.gz
-          version: 3.0.20
-        - !ruby/object:Backup::Storage::Local
-          time: 2011.12.01.12.02.00
-          chunk_suffixes: []
-          filename: 2011.12.01.12.02.00.backup.tar.gz
-          version: 3.0.20
-        - !ruby/object:Backup::Storage::Local
-          time: 2011.12.01.12.03.00
-          chunk_suffixes:
-          - aa
-          - ab
-          filename: 2011.12.01.12.03.00.backup.tar.gz
-          version: 3.0.20
-      EOF
-    end
-
-    before do
-      model = Backup::Model.new('foo', 'foo')
-      cycler.instance_variable_set(:@storage, storage)
-      storage.instance_variable_set(:@model, model)
-    end
-
-    it 'should upgrade v3.0.20 objects' do
-      objects = YAML.load(yaml_v3_0_20)
-      packages = cycler.send(:check_upgrade, objects)
-
-      packages.all? {|pkg| pkg.is_a? Backup::Package }.should be_true
-      packages.all? {|pkg| pkg.extension == 'tar.gz' }.should be_true
-
-      packages[0].time.should == '2011.12.01.12.01.00'
-      packages[0].chunk_suffixes.should == []
-      packages[1].time.should == '2011.12.01.12.02.00'
-      packages[1].chunk_suffixes.should == []
-      packages[2].time.should == '2011.12.01.12.03.00'
-      packages[2].chunk_suffixes.should == ['aa', 'ab']
-    end
-
-    it 'should upgrade v3.0.19 objects' do
-      objects = YAML.load(yaml_v3_0_19)
-      packages = cycler.send(:check_upgrade, objects)
-
-      packages.all? {|pkg| pkg.is_a? Backup::Package }.should be_true
-      packages.all? {|pkg| pkg.extension == 'tar.gz' }.should be_true
-      packages.all? {|pkg| pkg.chunk_suffixes == []  }.should be_true
-
-      packages[0].time.should == '2011.11.01.12.01.00'
-      packages[1].time.should == '2011.11.01.12.02.00'
-      packages[2].time.should == '2011.11.01.12.03.00'
-    end
-  end # describe '#check_upgrade'
 
 end

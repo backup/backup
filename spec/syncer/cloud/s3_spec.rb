@@ -248,9 +248,5 @@ describe Syncer::Cloud::S3 do
     end
   end # describe '#get_remote_files'
 
-  describe 'Deprecations' do
-    include_examples 'Deprecation: #concurrency_type and #concurrency_level'
-  end
-
 end
 end

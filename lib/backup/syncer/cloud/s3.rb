@@ -104,22 +104,6 @@ module Backup
           EOS
         end
 
-        attr_deprecate :concurrency_type, :version => '3.7.0',
-                       :message => 'Use #thread_count instead.',
-                       :action => lambda {|klass, val|
-                         if val == :threads
-                           klass.thread_count = 2 unless klass.thread_count
-                         else
-                           klass.thread_count = 0
-                         end
-                       }
-
-        attr_deprecate :concurrency_level, :version => '3.7.0',
-                       :message => 'Use #thread_count instead.',
-                       :action => lambda {|klass, val|
-                         klass.thread_count = val unless klass.thread_count == 0
-                       }
-
       end # Class S3 < Base
     end # module Cloud
   end

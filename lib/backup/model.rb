@@ -156,27 +156,6 @@ module Backup
     ##
     # Adds an Syncer. Multiple Syncers may be added to the model.
     def sync_with(name, syncer_id = nil, &block)
-      ##
-      # Warn user of DSL changes
-      case name.to_s
-      when 'Backup::Config::RSync'
-        Logger.warn Error.new(<<-EOS)
-          Configuration Update Needed for Syncer::RSync
-          The RSync Syncer has been split into three separate modules:
-          RSync::Local, RSync::Push and RSync::Pull
-          Please update your configuration.
-          i.e. 'sync_with RSync' is now 'sync_with RSync::Push'
-        EOS
-        name = 'RSync::Push'
-      when /(Backup::Config::S3|Backup::Config::CloudFiles)/
-        syncer = $1.split('::')[2]
-        Logger.warn Error.new(<<-EOS)
-          Configuration Update Needed for '#{ syncer }' Syncer.
-          This Syncer is now referenced as Cloud::#{ syncer }
-          i.e. 'sync_with #{ syncer }' is now 'sync_with Cloud::#{ syncer }'
-        EOS
-        name = "Cloud::#{ syncer }"
-      end
       @syncers << get_class_from_scope(Syncer, name).new(syncer_id, &block)
     end
 

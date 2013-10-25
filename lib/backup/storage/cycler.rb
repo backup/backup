@@ -67,11 +67,7 @@ module Backup
         def yaml_load
           packages = []
           if File.exist?(@storage_file) && !File.zero?(@storage_file)
-            packages = check_upgrade(
-              YAML.load_file(@storage_file).sort do |a, b|
-                b.instance_variable_get(:@time) <=> a.instance_variable_get(:@time)
-              end
-            )
+            packages = YAML.load_file(@storage_file).sort_by!(&:time).reverse!
           end
           packages
         end
@@ -83,35 +79,6 @@ module Backup
           File.open(@storage_file, 'w') do |file|
             file.write(packages.to_yaml)
           end
-        end
-
-        ##
-        # Upgrade the objects loaded from the YAML file, if needed.
-        def check_upgrade(objects)
-          if objects.any? {|obj| obj.class.to_s =~ /Backup::Storage/ }
-            # Version <= 3.0.20
-            model = @storage.instance_variable_get(:@model)
-            v3_0_20 = objects.any? {|obj| obj.instance_variable_defined?(:@version) }
-            objects.map! do |obj|
-              if v3_0_20 # Version == 3.0.20
-                filename = obj.instance_variable_get(:@filename)[20..-1]
-                chunk_suffixes = obj.instance_variable_get(:@chunk_suffixes)
-              else # Version <= 3.0.19
-                filename = obj.instance_variable_get(:@remote_file)[20..-1]
-                chunk_suffixes = []
-              end
-              time = obj.instance_variable_get(:@time)
-              extension = filename.match(/\.(tar.*)$/)[1]
-
-              package = Backup::Package.new(model)
-              package.instance_variable_set(:@time, time)
-              package.extension = extension
-              package.chunk_suffixes = chunk_suffixes
-
-              package
-            end
-          end
-          objects
         end
 
       end
