@@ -117,7 +117,7 @@ module Backup
       # so warnings may be logged if `backup perform --check` is used
       databases.each {|db| db.send(:dump_filename) }
 
-      Model.all << self
+      self.class.all << self
     end
 
     ##
