@@ -62,6 +62,33 @@
 #     mail.encryption           = :starttls
 #   end
 
+##
+# Preconfigured Models
+#
+# Create custom models with preconfigured components.
+# Components added within the model definition will
+# +add to+ the preconfigured components.
+#
+#   preconfigure 'MyModel' do
+#     archive :user_pictures do |archive|
+#       archive.add '~/pictures'
+#     end
+#
+#     notify_by Mail do |mail|
+#       mail.to = 'admin@email.com'
+#     end
+#   end
+#
+#   MyModel.new(:john_smith, 'John Smith Backup') do
+#     archive :user_music do |archive|
+#       archive.add '~/music'
+#     end
+#
+#     notify_by Mail do |mail|
+#       mail.to = 'john.smith@email.com'
+#     end
+#   end
+
 
 # * * * * * * * * * * * * * * * * * * * *
 #        Do Not Edit Below Here.

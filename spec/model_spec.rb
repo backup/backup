@@ -60,6 +60,36 @@ describe 'Backup::Model' do
 
   end # describe '.find_by_trigger'
 
+  describe '.preconfigure' do
+
+    it 'returns preconfiguration block if set' do
+      block = Proc.new {}
+      Backup::Model.preconfigure.should be_nil
+      Backup::Model.preconfigure(&block)
+      Backup::Model.preconfigure.should be(block)
+    end
+
+    it 'stores preconfiguration for each subclass' do
+      klass_a, klass_b = Class.new(Backup::Model), Class.new(Backup::Model)
+      block_a, block_b = Proc.new {}, Proc.new{}
+      klass_a.preconfigure(&block_a)
+      klass_b.preconfigure(&block_b)
+      klass_a.preconfigure.should be(block_a)
+      klass_b.preconfigure.should be(block_b)
+    end
+  end
+
+  describe 'subclassing Model' do
+    specify 'custom model triggers can be found' do
+      klass = Class.new(Backup::Model)
+      model_a = klass.new(:model_a, 'Model A')
+      model_b = Backup::Model.new(:model_b, 'Mowel B')
+      model_c = klass.new(:model_c, 'Model C')
+      Backup::Model.all.should == [model_a, model_b, model_c]
+      Backup::Model.find_by_trigger(:model_c).first.should be(model_c)
+    end
+  end
+
   describe '#initialize' do
 
     it 'sets default values' do
@@ -91,11 +121,22 @@ describe 'Backup::Model' do
     end
 
     it 'should accept and instance_eval a block' do
-      block = lambda {|model| throw(:instance, model) }
-      caught = catch(:instance) do
-        Backup::Model.new('gotcha', '', &block)
+      before_block = Proc.new {}
+      block = Proc.new do
+        before(&before_block)
       end
-      caught.trigger.should == 'gotcha'
+      model = Backup::Model.new(:foo, '', &block)
+      model.before.should be(before_block)
+    end
+
+    it 'should instance_eval the preconfiguration block' do
+      model_config_block  = lambda {|model| throw(:block_called, :model_config) }
+      pre_config_block    = lambda {|model| throw(:block_called, :pre_config) }
+      caught = catch(:block_called) do
+        Backup::Model.preconfigure(&pre_config_block)
+        Backup::Model.new('foo', '', &model_config_block)
+      end
+      caught.should == :pre_config
     end
 
     it 'should add itself to Model.all' do
@@ -571,6 +612,14 @@ describe 'Backup::Model' do
 
         model.exit_status.should be 3
         after_called_with.should be 2
+      end
+
+      specify 'hooks may be overridden' do
+        block_a, block_b = Proc.new {}, Proc.new {}
+        model.before(&block_a)
+        model.before.should be(block_a)
+        model.before(&block_b)
+        model.before.should be(block_b)
       end
 
     end # describe 'hooks'
