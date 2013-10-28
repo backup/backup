@@ -48,7 +48,7 @@ describe Archive do
       Archive.any_instance.stubs(:utility).with(:tar).returns('tar')
       Archive.any_instance.stubs(:utility).with(:cat).returns('cat')
       Archive.any_instance.stubs(:utility).with(:sudo).returns('sudo')
-      Archive.any_instance.stubs(:with_files_from).yields
+      Archive.any_instance.stubs(:with_files_from).yields('')
       Config.stubs(:tmp_path).returns('/tmp/path')
       Pipeline.any_instance.stubs(:success?).returns(true)
     end
