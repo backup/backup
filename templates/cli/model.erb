@@ -6,7 +6,7 @@
 #
 # $ backup perform -t <%= @options[:trigger] %> [-c <path_to_configuration_file>]
 #
-Backup::Model.new(:<%= @options[:trigger] %>, 'Description for <%= @options[:trigger] %>') do
+Model.new(:<%= @options[:trigger] %>, 'Description for <%= @options[:trigger] %>') do
 <% if @options[:splitter] %>
 <%= Backup::Template.new.result("cli/splitter") %>
 <% end; if @options[:archives] %>
