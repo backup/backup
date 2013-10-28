@@ -15,7 +15,7 @@ describe 'Backup::CLI' do
     let(:model_b) { Backup::Model.new(:test_trigger_b, 'test label b') }
     let(:s) { sequence '' }
 
-    after { Backup::Model.all.clear }
+    after { Backup::Model.send(:reset!) }
 
     describe 'setting logger options' do
       let(:logger_options) { Backup::Logger.instance_variable_get(:@config).dsl }

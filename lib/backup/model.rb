@@ -25,6 +25,13 @@ module Backup
           all.select {|model| trigger == model.trigger }
         end
       end
+
+      private
+
+      # used for testing
+      def reset!
+        @all = @preconfigure = nil
+      end
     end
 
     ##

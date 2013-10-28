@@ -7,7 +7,10 @@ describe 'Backup::Model' do
   let(:s)     { sequence '' }
 
   before do
-    Backup::Model.all.clear
+    Backup::Model.send(:reset!)
+  end
+  after do
+    Backup::Model.send(:reset!)
   end
 
   describe '.all' do

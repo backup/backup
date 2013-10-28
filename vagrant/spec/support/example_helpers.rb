@@ -117,8 +117,8 @@ module BackupSpec
       Backup::Logger.send(:reset!)
       # Ensure multiple runs have different timestamps
       sleep 1 unless Backup::Model.all.empty?
-      # Clear previously loaded models
-      Backup::Model.all.clear
+      # Clear previously loaded models and other class instance variables
+      Backup::Model.send(:reset!)
 
       ARGV.replace(argv)
 
