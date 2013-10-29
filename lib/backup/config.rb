@@ -38,6 +38,22 @@ module Backup
         module_eval(File.read(@config_file), @config_file)
       end
 
+      # Allows users to create preconfigured models.
+      def preconfigure(name, &block)
+        unless name.is_a?(String) && name =~ /^[A-Z]/
+          raise Error, "Preconfigured model names must be given as a string " +
+                       " and start with a capital letter."
+        end
+
+        if Backup.const_defined?(name)
+          raise Error, "'#{ name }' is already in use " +
+                        "and can not be used for a preconfigured model."
+        end
+
+        Backup.const_set(name, Class.new(Model))
+        Backup.const_get(name).preconfigure(&block)
+      end
+
       def hostname
         @hostname ||= run(utility(:hostname))
       end

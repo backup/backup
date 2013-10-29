@@ -76,6 +76,47 @@ describe 'Backup::Config' do
     end
   end # describe '#load_config!'
 
+  describe '#preconfigure' do
+    after do
+      Backup.send(:remove_const, 'MyBackup') if Backup.const_defined?('MyBackup')
+    end
+
+    specify 'name must be a String' do
+      expect do
+        config.preconfigure(:Abc)
+      end.to raise_error(Backup::Config::Error)
+    end
+
+    specify 'name must begin with a capital letter' do
+      expect do
+        config.preconfigure('myBackup')
+      end.to raise_error(Backup::Config::Error)
+    end
+
+    specify 'name must not be a constant already in use' do
+      expect do
+        config.preconfigure('Archive')
+      end.to raise_error(Backup::Config::Error)
+    end
+
+    specify 'Backup::Model may not be preconfigured' do
+      expect do
+        config.preconfigure('Model')
+      end.to raise_error(Backup::Config::Error)
+    end
+
+    specify 'preconfigured models can only be preconfigured once' do
+      block = Proc.new {}
+      config.preconfigure('MyBackup', &block)
+      klass = Backup.const_get('MyBackup')
+      klass.superclass.should == Backup::Model
+
+      expect do
+        config.preconfigure('MyBackup', &block)
+      end.to raise_error(Backup::Config::Error)
+    end
+  end
+
   describe '#hostname' do
     before do
       config.instance_variable_set(:@hostname, nil)
