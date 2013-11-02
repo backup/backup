@@ -27,6 +27,7 @@ describe Syncer::Cloud::CloudFiles do
       expect( syncer.auth_url       ).to be_nil
       expect( syncer.region         ).to be_nil
       expect( syncer.servicenet     ).to be(false)
+      expect( syncer.fog_options    ).to be_nil
 
       # from Syncer::Cloud::Base
       expect( syncer.thread_count   ).to be 0
@@ -51,6 +52,7 @@ describe Syncer::Cloud::CloudFiles do
         cf.thread_count   = 5
         cf.max_retries    = 15
         cf.retry_waitsec  = 45
+        cf.fog_options    = { :my_key => 'my_value' }
         cf.path           = 'my_backups'
         cf.mirror         = true
 
@@ -69,6 +71,7 @@ describe Syncer::Cloud::CloudFiles do
       expect( syncer.thread_count   ).to be 5
       expect( syncer.max_retries    ).to be 15
       expect( syncer.retry_waitsec  ).to be 45
+      expect( syncer.fog_options    ).to eq :my_key => 'my_value'
       expect( syncer.path           ).to eq 'my_backups'
       expect( syncer.syncer_id      ).to eq :my_id
       expect( syncer.mirror         ).to be(true)
@@ -125,7 +128,8 @@ describe Syncer::Cloud::CloudFiles do
           :max_retries        => 10,
           :retry_waitsec      => 30,
           :segments_container => nil,
-          :segment_size       => 0
+          :segment_size       => 0,
+          :fog_options        => nil
       ).returns(:cloud_io)
 
       expect( syncer.send(:cloud_io) ).to eq :cloud_io

@@ -40,6 +40,11 @@ module Backup
         # Default: :standard
         attr_accessor :storage_class
 
+        ##
+        # Additional options to pass along to fog.
+        # e.g. Fog::Storage.new({ :provider => 'AWS' }.merge(fog_options))
+        attr_accessor :fog_options
+
         def initialize(syncer_id = nil)
           super
 
@@ -62,7 +67,8 @@ module Backup
             :max_retries        => max_retries,
             :retry_waitsec      => retry_waitsec,
             # Syncer can not use multipart upload.
-            :chunk_size         => 0
+            :chunk_size         => 0,
+            :fog_options        => fog_options
           )
         end
 

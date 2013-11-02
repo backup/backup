@@ -55,6 +55,7 @@ describe Storage::S3 do
       expect( storage.retry_waitsec     ).to be 30
       expect( storage.encryption        ).to be_nil
       expect( storage.storage_class     ).to be :standard
+      expect( storage.fog_options       ).to be_nil
     end
 
     it 'configures the storage' do
@@ -70,6 +71,7 @@ describe Storage::S3 do
         s3.retry_waitsec      = 60
         s3.encryption         = 'aes256'
         s3.storage_class      = :reduced_redundancy
+        s3.fog_options        = { :my_key => 'my_value' }
       end
 
       expect( storage.storage_id        ).to eq 'my_id'
@@ -85,6 +87,7 @@ describe Storage::S3 do
       expect( storage.retry_waitsec     ).to be 60
       expect( storage.encryption        ).to eq 'aes256'
       expect( storage.storage_class     ).to eq :reduced_redundancy
+      expect( storage.fog_options       ).to eq :my_key => 'my_value'
     end
 
     it 'requires bucket' do
@@ -217,7 +220,8 @@ describe Storage::S3 do
         :storage_class      => :standard,
         :max_retries        => 10,
         :retry_waitsec      => 30,
-        :chunk_size         => 5
+        :chunk_size         => 5,
+        :fog_options        => nil
       ).returns(:cloud_io)
 
       storage = Storage::S3.new(model, &required_config)
@@ -237,7 +241,8 @@ describe Storage::S3 do
         :storage_class      => :standard,
         :max_retries        => 10,
         :retry_waitsec      => 30,
-        :chunk_size         => 5
+        :chunk_size         => 5,
+        :fog_options        => nil
       ).returns(:cloud_io)
 
       storage = Storage::S3.new(model, &required_iam_config)

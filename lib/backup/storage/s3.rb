@@ -62,6 +62,11 @@ module Backup
       # Default: :standard
       attr_accessor :storage_class
 
+      ##
+      # Additional options to pass along to fog.
+      # e.g. Fog::Storage.new({ :provider => 'AWS' }.merge(fog_options))
+      attr_accessor :fog_options
+
       def initialize(model, storage_id = nil)
         super
 
@@ -88,7 +93,8 @@ module Backup
           :storage_class      => storage_class,
           :max_retries        => max_retries,
           :retry_waitsec      => retry_waitsec,
-          :chunk_size         => chunk_size
+          :chunk_size         => chunk_size,
+          :fog_options        => fog_options
         )
       end
 

@@ -39,6 +39,7 @@ describe Storage::CloudFiles do
       expect( storage.days_to_keep        ).to be_nil
       expect( storage.max_retries         ).to be 10
       expect( storage.retry_waitsec       ).to be 30
+      expect( storage.fog_options         ).to be_nil
       expect( storage.path                ).to eq 'backups'
       expect( storage.keep                ).to be_nil
     end
@@ -56,6 +57,7 @@ describe Storage::CloudFiles do
         cf.days_to_keep       = 90
         cf.max_retries        = 15
         cf.retry_waitsec      = 45
+        cf.fog_options        = { :my_key => 'my_value' }
         cf.path               = 'my/path'
         cf.keep               = 2
       end
@@ -71,6 +73,7 @@ describe Storage::CloudFiles do
       expect( storage.segment_size        ).to be 5
       expect( storage.days_to_keep        ).to be 90
       expect( storage.max_retries         ).to be 15
+      expect( storage.fog_options         ).to eq :my_key => 'my_value'
       expect( storage.retry_waitsec       ).to be 45
       expect( storage.path                ).to eq 'my/path'
       expect( storage.keep                ).to be 2
@@ -173,7 +176,8 @@ describe Storage::CloudFiles do
           :segment_size       => 0,
           :days_to_keep       => nil,
           :max_retries        => 10,
-          :retry_waitsec      => 30
+          :retry_waitsec      => 30,
+          :fog_options        => nil
       ).returns(:cloud_io)
 
       expect( storage.send(:cloud_io) ).to eq :cloud_io

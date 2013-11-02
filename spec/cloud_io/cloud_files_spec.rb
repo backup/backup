@@ -482,6 +482,27 @@ describe CloudIO::CloudFiles do
       expect( cloud_io.send(:connection) ).to be connection
     end
 
+    it 'passes along fog_options' do
+      Fog::Storage.expects(:new).with({
+          :provider => 'Rackspace',
+          :rackspace_username   => 'my_user',
+          :rackspace_api_key    => 'my_key',
+          :rackspace_auth_url   => nil,
+          :rackspace_region     => nil,
+          :rackspace_servicenet => nil,
+          :connection_options => { :opt_key => 'opt_value' },
+          :my_key => 'my_value'
+      })
+      CloudIO::CloudFiles.new(
+        :username   => 'my_user',
+        :api_key    => 'my_key',
+        :fog_options => {
+          :connection_options => { :opt_key => 'opt_value' },
+          :my_key => 'my_value'
+        }
+      ).send(:connection)
+    end
+
   end # describe '#connection'
 
   describe '#create_containers' do

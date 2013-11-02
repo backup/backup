@@ -13,7 +13,8 @@ module Backup
       SEGMENT_BUFFER  = 1024**2         # 1 MiB
 
       attr_reader :username, :api_key, :auth_url, :region, :servicenet,
-                  :container, :segments_container, :segment_size, :days_to_keep
+                  :container, :segments_container, :segment_size, :days_to_keep,
+                  :fog_options
 
       def initialize(options = {})
         super
@@ -27,6 +28,7 @@ module Backup
         @segments_container = options[:segments_container]
         @segment_size       = options[:segment_size]
         @days_to_keep       = options[:days_to_keep]
+        @fog_options        = options[:fog_options]
       end
 
       # The Syncer may call this method in multiple threads,
@@ -139,14 +141,14 @@ module Backup
       private
 
       def connection
-        @connection ||= Fog::Storage.new(
+        @connection ||= Fog::Storage.new({
           :provider             => 'Rackspace',
           :rackspace_username   => username,
           :rackspace_api_key    => api_key,
           :rackspace_auth_url   => auth_url,
           :rackspace_region     => region,
           :rackspace_servicenet => servicenet
-        )
+        }.merge(fog_options || {}))
       end
 
       def create_containers

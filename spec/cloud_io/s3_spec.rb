@@ -432,6 +432,25 @@ describe CloudIO::S3 do
       expect( cloud_io.send(:connection) ).to be connection
       expect( cloud_io.send(:connection) ).to be connection
     end
+
+    it 'passes along fog_options' do
+      Fog::Storage.expects(:new).with({
+          :provider => 'AWS',
+          :region => nil,
+          :aws_access_key_id => 'my_key',
+          :aws_secret_access_key => 'my_secret',
+          :connection_options => { :opt_key => 'opt_value' },
+          :my_key => 'my_value'
+      }).returns(stub(:sync_clock))
+      CloudIO::S3.new(
+        :access_key_id => 'my_key',
+        :secret_access_key => 'my_secret',
+        :fog_options => {
+          :connection_options => { :opt_key => 'opt_value' },
+          :my_key => 'my_value'
+        }
+      ).send(:connection)
+    end
   end # describe '#connection'
 
   describe '#put_object' do

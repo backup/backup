@@ -65,6 +65,11 @@ module Backup
       # Default: 30
       attr_accessor :retry_waitsec
 
+      ##
+      # Additional options to pass along to fog.
+      # e.g. Fog::Storage.new({ :provider => 'Rackspace' }.merge(fog_options))
+      attr_accessor :fog_options
+
       def initialize(model, storage_id = nil)
         super
 
@@ -93,7 +98,8 @@ module Backup
           :segment_size       => segment_size,
           :days_to_keep       => days_to_keep,
           :max_retries        => max_retries,
-          :retry_waitsec      => retry_waitsec
+          :retry_waitsec      => retry_waitsec,
+          :fog_options        => fog_options
         )
       end
 

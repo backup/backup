@@ -14,7 +14,8 @@ module Backup
       MAX_MULTIPART_SIZE  = 1024**4 * 5   # 5 TiB
 
       attr_reader :access_key_id, :secret_access_key, :use_iam_profile,
-                  :region, :bucket, :chunk_size, :encryption, :storage_class
+                  :region, :bucket, :chunk_size, :encryption, :storage_class,
+                  :fog_options
 
       def initialize(options = {})
         super
@@ -27,6 +28,7 @@ module Backup
         @chunk_size         = options[:chunk_size]
         @encryption         = options[:encryption]
         @storage_class      = options[:storage_class]
+        @fog_options        = options[:fog_options]
       end
 
       # The Syncer may call this method in multiple threads.
@@ -130,6 +132,7 @@ module Backup
               :aws_secret_access_key  => secret_access_key
             )
           end
+          opts.merge!(fog_options || {})
           conn = Fog::Storage.new(opts)
           conn.sync_clock
           conn

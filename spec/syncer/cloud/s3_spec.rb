@@ -44,6 +44,7 @@ describe Syncer::Cloud::S3 do
       expect( syncer.region           ).to be_nil
       expect( syncer.encryption       ).to be_nil
       expect( syncer.storage_class    ).to eq :standard
+      expect( syncer.fog_options      ).to be_nil
 
       # from Syncer::Cloud::Base
       expect( syncer.thread_count   ).to be 0
@@ -70,6 +71,7 @@ describe Syncer::Cloud::S3 do
         s3.retry_waitsec      = 45
         s3.path               = 'my_backups'
         s3.mirror             = true
+        s3.fog_options        = { :my_key => 'my_value' }
 
         s3.directories do
           add '/this/path'
@@ -90,6 +92,7 @@ describe Syncer::Cloud::S3 do
       expect( syncer.path               ).to eq 'my_backups'
       expect( syncer.syncer_id          ).to eq :my_id
       expect( syncer.mirror             ).to be(true)
+      expect( syncer.fog_options        ).to eq :my_key => 'my_value'
       expect( syncer.directories        ).to eq ['/this/path', 'that/path']
     end
 
@@ -180,7 +183,8 @@ describe Syncer::Cloud::S3 do
           :storage_class      => :standard,
           :max_retries        => 10,
           :retry_waitsec      => 30,
-          :chunk_size       => 0
+          :chunk_size         => 0,
+          :fog_options        => nil
       ).returns(:cloud_io)
 
       syncer = Syncer::Cloud::S3.new(&required_config)
@@ -200,7 +204,8 @@ describe Syncer::Cloud::S3 do
           :storage_class      => :standard,
           :max_retries        => 10,
           :retry_waitsec      => 30,
-          :chunk_size       => 0
+          :chunk_size         => 0,
+          :fog_options        => nil
       ).returns(:cloud_io)
 
       syncer = Syncer::Cloud::S3.new(&required_iam_config)

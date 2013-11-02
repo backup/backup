@@ -28,6 +28,11 @@ module Backup
         # (LAN-based transfers to avoid charges and improve performance)
         attr_accessor :servicenet
 
+        ##
+        # Additional options to pass along to fog.
+        # e.g. Fog::Storage.new({ :provider => 'Rackspace' }.merge(fog_options))
+        attr_accessor :fog_options
+
         def initialize(syncer_id = nil)
           super
 
@@ -50,7 +55,8 @@ module Backup
             :retry_waitsec      => retry_waitsec,
             # Syncer can not use SLOs.
             :segments_container => nil,
-            :segment_size       => 0
+            :segment_size       => 0,
+            :fog_options        => fog_options
           )
         end
 
