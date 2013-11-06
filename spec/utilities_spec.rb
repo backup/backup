@@ -50,6 +50,7 @@ describe Backup::Utilities do
         sendmail  '/path/to/sendmail'
         exim      '/path/to/exim'
         send_nsca '/path/to/send_nsca'
+        zabbix_sender '/path/to/zabbix_sender'
       end
     end
 

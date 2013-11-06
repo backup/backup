@@ -14,6 +14,7 @@ module Backup
       rsync ssh
       sendmail exim
       send_nsca
+      zabbix_sender
     }
 
     module DSL
@@ -95,6 +96,7 @@ module Backup
       #     sendmail  '/path/to/sendmail'
       #     exim      '/path/to/exim'
       #     send_nsca '/path/to/send_nsca'
+      #     zabbix_sender '/path/to/zabbix_sender'
       #   end
       #
       # These paths may be set using absolute paths, or relative to the

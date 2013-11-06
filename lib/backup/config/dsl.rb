@@ -42,7 +42,8 @@ module Backup
               ],
               # Notifiers
               ['Mail', 'Twitter', 'Campfire', 'Prowl',
-              'Hipchat', 'Pushover', 'HttpPost', 'Nagios', 'Slack', 'FlowDock']
+              'Hipchat', 'Pushover', 'HttpPost', 'Nagios',
+              'Slack', 'FlowDock', 'Zabbix']
             ]
           )
         end
