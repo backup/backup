@@ -82,7 +82,7 @@ describe Splitter do
     before do
       @tmpdir = Dir.mktmpdir('backup_spec')
       SandboxFileUtils.activate!(@tmpdir)
-      Config.update(:root_path => @tmpdir)
+      Config.send(:update, :root_path => @tmpdir)
       FileUtils.mkdir_p(Config.tmp_path)
     end
 

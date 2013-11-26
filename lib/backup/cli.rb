@@ -130,13 +130,8 @@ module Backup
           syslog.enabled    = opts[:syslog]
         end
 
-        # Update Config variables
-        # (config_file, root_path, data_path, cache_path, tmp_path)
-        Config.update(options)
-
-        # Load the user's +config.rb+ file (and all their Models).
-        # May update Logger (and Config) options.
-        Config.load_config!
+        # Load the user's +config.rb+ file and all their Models
+        Config.load(options)
 
         # Identify all Models to be run for the given +triggers+.
         triggers = options[:trigger].split(',').map(&:strip)
@@ -226,8 +221,7 @@ module Backup
 
     def check
       begin
-        Config.update(options)
-        Config.load_config!
+        Config.load(options)
       rescue Exception => err
         Logger.error Error.wrap(err)
       end

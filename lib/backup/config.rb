@@ -1,4 +1,5 @@
 # encoding: utf-8
+require 'backup/config/dsl'
 
 module Backup
   module Config
@@ -17,6 +18,27 @@ module Backup
       attr_reader :user, :root_path, :config_file,
                   :data_path, :cache_path, :tmp_path
 
+      # Loads the user's +config.rb+ and all model files.
+      def load(options = {})
+        update(options)  # from the command line
+
+        unless File.exist?(config_file)
+          raise Error, "Could not find configuration file: '#{config_file}'."
+        end
+
+        dsl = DSL.new
+        dsl.instance_eval(File.read(config_file), config_file)
+        Dir[File.join(File.dirname(config_file), 'models', '*.rb')].each do |model|
+          dsl.instance_eval(File.read(model), model)
+        end
+      end
+
+      def hostname
+        @hostname ||= run(utility(:hostname))
+      end
+
+      private
+
       ##
       # Setup required paths based on the given options
       def update(options = {})
@@ -27,38 +49,6 @@ module Backup
           set_path_variable(name, options[name], ending, new_root)
         end
       end
-
-      ##
-      # Tries to find and load the configuration file
-      def load_config!
-        unless File.exist?(@config_file)
-          raise Error, "Could not find configuration file: '#{@config_file}'."
-        end
-
-        module_eval(File.read(@config_file), @config_file)
-      end
-
-      # Allows users to create preconfigured models.
-      def preconfigure(name, &block)
-        unless name.is_a?(String) && name =~ /^[A-Z]/
-          raise Error, "Preconfigured model names must be given as a string " +
-                       " and start with a capital letter."
-        end
-
-        if Backup.const_defined?(name)
-          raise Error, "'#{ name }' is already in use " +
-                        "and can not be used for a preconfigured model."
-        end
-
-        Backup.const_set(name, Class.new(Model))
-        Backup.const_get(name).preconfigure(&block)
-      end
-
-      def hostname
-        @hostname ||= run(utility(:hostname))
-      end
-
-      private
 
       ##
       # Sets the @root_path to the given +path+ and returns it.
@@ -103,72 +93,8 @@ module Backup
         @root_path = File.join(File.expand_path(ENV['HOME'] || ''), 'Backup')
         update(:root_path => @root_path)
       end
-
-      ##
-      # List the available database, storage, syncer, compressor, encryptor
-      # and notifier constants. These are used to dynamically define these
-      # constant names inside Backup::Config to provide a nicer configuration
-      # file DSL syntax to the users. Adding existing constants to the arrays
-      # below will enable the user to use a constant instead of a string.
-      # Nested namespaces are represented using Hashs. Deep nesting supported.
-      #
-      # Example, instead of:
-      #  database "MySQL" do |mysql|
-      #  sync_with "RSync::Local" do |rsync|
-      #
-      # You can do:
-      #  database MySQL do |mysql|
-      #  sync_with RSync::Local do |rsync|
-      #
-      def add_dsl_constants!
-        create_modules(
-          self,
-          [ # Databases
-            ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Riak'],
-            # Storages
-            ['S3', 'CloudFiles', 'Ninefold', 'Dropbox', 'FTP',
-            'SFTP', 'SCP', 'RSync', 'Local'],
-            # Compressors
-            ['Gzip', 'Bzip2', 'Custom', 'Pbzip2', 'Lzma'],
-            # Encryptors
-            ['OpenSSL', 'GPG'],
-            # Syncers
-            [
-              { 'Cloud' => ['CloudFiles', 'S3'] },
-              { 'RSync' => ['Push', 'Pull', 'Local'] }
-            ],
-            # Notifiers
-            ['Mail', 'Twitter', 'Campfire', 'Prowl',
-             'Hipchat', 'Pushover', 'HttpPost', 'Nagios']
-          ]
-        )
-      end
-
-      def create_modules(scope, names)
-        names.flatten.each do |name|
-          if name.is_a?(Hash)
-            name.each do |key, val|
-              create_modules(get_or_create_empty_module(scope, key), [val])
-            end
-          else
-            get_or_create_empty_module(scope, name)
-          end
-        end
-      end
-
-      def get_or_create_empty_module(scope, const)
-        if scope.const_defined?(const)
-          scope.const_get(const)
-        else
-          scope.const_set(const, Module.new)
-        end
-      end
     end
 
-    ##
-    # Add the DSL constants and set default values for accessors when loaded.
-    add_dsl_constants!
-    reset!
+    reset!  # set defaults on load
   end
-
 end

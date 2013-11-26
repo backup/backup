@@ -21,12 +21,8 @@ describe 'Backup::CLI' do
       let(:logger_options) { Backup::Logger.instance_variable_get(:@config).dsl }
 
       before do
-        Backup::Config.expects(:update).in_sequence(s)
-
-        Backup::Config.expects(:load_config!).in_sequence(s)
-
+        Backup::Config.expects(:load).in_sequence(s)
         Backup::Logger.expects(:start!).in_sequence(s)
-
         model_a.expects(:perform!).in_sequence(s)
         Backup::Logger.expects(:clear!).in_sequence(s)
         model_b.expects(:perform!).in_sequence(s)
@@ -110,11 +106,7 @@ describe 'Backup::CLI' do
 
       before do
         Backup::Logger.expects(:configure).in_sequence(s)
-
-        Backup::Config.expects(:update).in_sequence(s)
-
-        Backup::Config.expects(:load_config!).in_sequence(s)
-
+        Backup::Config.expects(:load).in_sequence(s)
         Backup::Logger.expects(:start!).in_sequence(s)
       end
 
@@ -199,11 +191,7 @@ describe 'Backup::CLI' do
     describe 'failure to prepare for backups' do
       before do
         Backup::Logger.expects(:configure).in_sequence(s)
-
-        Backup::Config.expects(:update).in_sequence(s)
-
         Backup::Logger.expects(:start!).never
-
         model_a.expects(:perform!).never
         model_b.expects(:perform!).never
         Backup::Logger.expects(:clear!).never
@@ -211,8 +199,7 @@ describe 'Backup::CLI' do
 
       describe 'when errors are raised while loading config.rb' do
         before do
-          Backup::Config.expects(:load_config!).in_sequence(s).
-              raises('config load error')
+          Backup::Config.expects(:load).in_sequence(s).raises('config load error')
         end
 
         it 'aborts with status code 3 and logs messages to the console only' do
@@ -235,7 +222,7 @@ describe 'Backup::CLI' do
 
       describe 'when no models are found for the given triggers' do
         before do
-          Backup::Config.expects(:load_config!).in_sequence(s)
+          Backup::Config.expects(:load).in_sequence(s)
         end
 
         it 'aborts and logs messages to the console only' do
@@ -265,7 +252,7 @@ describe 'Backup::CLI' do
       let(:notifier_d) { mock }
 
       before do
-        Backup::Config.stubs(:load_config!)
+        Backup::Config.stubs(:load)
         Backup::Logger.stubs(:start!)
         model_a.stubs(:notifiers).returns([notifier_a, notifier_c])
         model_b.stubs(:notifiers).returns([notifier_b, notifier_d])
@@ -393,7 +380,7 @@ describe 'Backup::CLI' do
 
   describe '#check' do
     it 'fails if errors are raised' do
-      Backup::Config.stubs(:load_config!).raises('an error')
+      Backup::Config.stubs(:load).raises('an error')
 
       out, err = capture_io do
         ARGV.replace(['check'])
@@ -408,7 +395,7 @@ describe 'Backup::CLI' do
     end
 
     it 'fails if warnings are issued' do
-      Backup::Config.stubs(:load_config!).with do
+      Backup::Config.stubs(:load).with do
         Backup::Logger.warn 'warning message'
       end
 
@@ -425,7 +412,7 @@ describe 'Backup::CLI' do
     end
 
     it 'succeeds if there are no errors or warnings' do
-      Backup::Config.stubs(:load_config!)
+      Backup::Config.stubs(:load)
 
       out, err = capture_io do
         ARGV.replace(['check'])
@@ -438,16 +425,17 @@ describe 'Backup::CLI' do
       expect( out ).to match(/\[info\] Configuration Check Succeeded/)
     end
 
-    it 'updates path to config.rb if given' do
-      Backup::Config.stubs(:load_config!)
+    it 'uses --config-file if given' do
+      # Note: Thor#options is returning a HashWithIndifferentAccess.
+      Backup::Config.expects(:load).with do |options|
+        options[:config_file] == '/my/config.rb'
+      end
       Backup::Logger.stubs(:abort!) # suppress output
 
       ARGV.replace(['check', '--config-file', '/my/config.rb'])
       expect do
         cli.start
       end.to raise_error(SystemExit) {|exit| expect( exit.status ).to be(0) }
-
-      expect( Backup::Config.config_file ).to eq '/my/config.rb'
     end
   end # describe '#check'
 
@@ -559,7 +547,7 @@ describe 'Backup::CLI' do
     context 'when not given a config_path' do
       it 'should create both a config and a model under the root path' do
         Dir.chdir(@tmpdir) do |path|
-          Backup::Config.update(:root_path => path)
+          Backup::Config.send(:update, :root_path => path)
           model_file  = File.join(path, 'models', 'test_trigger.rb')
           config_file = File.join(path, 'config.rb')
 
@@ -632,7 +620,7 @@ describe 'Backup::CLI' do
     context 'when not given a config_path' do
       it 'should create a config file in the root path' do
         Dir.chdir(@tmpdir) do |path|
-          Backup::Config.update(:root_path => path)
+          Backup::Config.send(:update, :root_path => path)
           config_file = File.join(path, 'config.rb')
 
           out, err = capture_io do
@@ -650,7 +638,7 @@ describe 'Backup::CLI' do
     context 'when a config file already exists' do
       it 'should prompt to overwrite the config file' do
         Dir.chdir(@tmpdir) do |path|
-          Backup::Config.update(:root_path => path)
+          Backup::Config.send(:update, :root_path => path)
           config_file = File.join(path, 'config.rb')
 
           cli::Helpers.expects(:overwrite?).with(config_file).returns(false)

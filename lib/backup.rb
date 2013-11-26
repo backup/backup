@@ -118,10 +118,10 @@ module Backup
     archive
     binder
     cleaner
+    model
     config
     cli
     configuration
-    model
     package
     packager
     pipeline

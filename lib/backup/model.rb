@@ -333,7 +333,7 @@ module Backup
     # +name+ may be Class/Module or String representation
     # of any namespace which exists under +scope+.
     #
-    # The 'Backup::Config::' namespace is stripped from +name+,
+    # The 'Backup::Config::DSL' namespace is stripped from +name+,
     # since this is the namespace where we define module namespaces
     # for use with Model's DSL methods.
     #
@@ -346,7 +346,7 @@ module Backup
     #
     def get_class_from_scope(scope, name)
       klass = scope
-      name = name.to_s.sub(/^Backup::Config::/, '')
+      name = name.to_s.sub(/^Backup::Config::DSL::/, '')
       name.split('::').each do |chunk|
         klass = klass.const_get(chunk)
       end

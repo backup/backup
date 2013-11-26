@@ -2,130 +2,130 @@
 
 require File.expand_path('../spec_helper.rb', __FILE__)
 
-describe 'Backup::Config' do
-  let(:config) { Backup::Config }
+module Backup
+describe Config do
+  let(:config) { Config }
 
   # Note: spec_helper resets Config before each example
 
-  describe '#update' do
-    let(:default_root_path) { config.root_path }
+  describe '#load' do
 
-    context 'when a root_path is given' do
-      it 'should use #set_root_path to set the new root_path' do
-        config.expects(:set_root_path).with('a/path')
+    it 'loads config.rb and models' do
+      File.stubs(:exist? => true, :directory? => true)
+      dsl = config::DSL.new
+      dsl.instance_variable_set(:@loaded, [])
+      config::DSL.stubs(:new => dsl)
 
-        config.update(:root_path => 'a/path')
-      end
+      File.expects(:read).with(config.config_file).returns('@loaded << :config')
 
-      it 'should set all paths using the new root_path' do
-        config.expects(:set_root_path).with('path').returns('/root/path')
-        Backup::Config::DEFAULTS.each do |key, val|
-          config.expects(:set_path_variable).with(key, nil, val, '/root/path')
-        end
+      Dir.stubs(:[] => ['model_a', 'model_b'])
+      File.expects(:read).with('model_a').returns('@loaded << :model_a')
+      File.expects(:read).with('model_b').returns('@loaded << :model_b')
 
-        config.update(:root_path => 'path')
-      end
-    end # context 'when a root_path is given'
+      config.load
 
-    context 'when a root_path is not given' do
-      it 'should set all paths without using a root_path' do
-        Backup::Config::DEFAULTS.each do |key, val|
-          config.expects(:set_path_variable).with(key, nil, val, false)
-        end
-
-        config.update
-      end
-    end # context 'when a root_path is not given'
-
-  end # describe '#update'
-
-  describe '#load_config!' do
-    context 'when @config_file exists' do
-      before do
-        File.expects(:exist?).with(config.config_file).returns(true)
-      end
-
-      it 'should load the config file' do
-        File.expects(:read).with(config.config_file).returns(:file_contents)
-        config.expects(:module_eval).with(:file_contents, config.config_file)
-
-        expect do
-          config.load_config!
-        end.not_to raise_error
-      end
+      expect( dsl.instance_variable_get(:@loaded) ).to eq(
+        [:config, :model_a, :model_b]
+      )
     end
 
-    context 'when @config_file does not exist' do
+    it 'raises an error if config_file does not exist' do
+      config_file = File.expand_path('foo')
+      expect do
+        config.load(:config_file => config_file)
+      end.to raise_error {|err|
+        expect( err ).to be_a config::Error
+        expect( err.message ).to match(
+          /Could not find configuration file: '#{ config_file }'/
+        )
+      }
+    end
+
+    describe 'setting config paths from command line options' do
+      let(:default_root_path) {
+        File.join(File.expand_path(ENV['HOME'] || ''), 'Backup')
+      }
+
       before do
-        File.expects(:exist?).returns(false)
+        File.stubs(:exist? => true, :read => '', :directory? => true)
+        Dir.stubs(:[] => [])
       end
 
-      it 'should raise an error' do
-        File.expects(:read).never
-        config.expects(:module_eval).never
+      context 'when no options are given' do
+        it 'uses defaults' do
+          config.load
 
-        expect do
-          config.load_config!
-        end.to raise_error {|err|
-          err.should be_an_instance_of Backup::Config::Error
-          err.message.should match(
-            /Could not find configuration file: '#{config.config_file}'/
+          config::DEFAULTS.each do |attr, ending|
+            expect( config.send(attr) ).to eq File.join(default_root_path, ending)
+          end
+        end
+      end
+
+      context 'when no root_path is given' do
+
+        it 'updates the given paths' do
+          options = { :data_path => '/my/data' }
+          config.load(options)
+
+          expect( config.root_path ).to eq default_root_path
+          expect( config.tmp_path  ).to eq(
+            File.join(default_root_path, config::DEFAULTS[:tmp_path])
           )
-        }
+          expect( config.data_path ).to eq '/my/data'
+        end
+
+        it 'expands relative paths using PWD' do
+          options = {
+            :tmp_path  => 'my_tmp',
+            :data_path => '/my/data'
+          }
+          config.load(options)
+
+          expect( config.root_path ).to eq default_root_path
+          expect( config.tmp_path  ).to eq File.expand_path('my_tmp')
+          expect( config.data_path ).to eq '/my/data'
+        end
+
       end
-    end
-  end # describe '#load_config!'
 
-  describe '#preconfigure' do
-    after do
-      Backup.send(:remove_const, 'MyBackup') if Backup.const_defined?('MyBackup')
-    end
+      context 'when a root_path is given' do
 
-    specify 'name must be a String' do
-      expect do
-        config.preconfigure(:Abc)
-      end.to raise_error(Backup::Config::Error)
-    end
+        it 'updates all paths' do
+          options = {
+            :root_path => '/my/root',
+            :tmp_path  => 'my_tmp',
+            :data_path => '/my/data'
+          }
+          config.load(options)
 
-    specify 'name must begin with a capital letter' do
-      expect do
-        config.preconfigure('myBackup')
-      end.to raise_error(Backup::Config::Error)
-    end
+          expect( config.root_path ).to eq '/my/root'
+          expect( config.tmp_path  ).to eq '/my/root/my_tmp'
+          expect( config.data_path ).to eq '/my/data'
+        end
 
-    specify 'name must not be a constant already in use' do
-      expect do
-        config.preconfigure('Archive')
-      end.to raise_error(Backup::Config::Error)
-    end
+        it 'uses root_path to update defaults' do
+          config.load(:root_path => '/my/root')
 
-    specify 'Backup::Model may not be preconfigured' do
-      expect do
-        config.preconfigure('Model')
-      end.to raise_error(Backup::Config::Error)
+          config::DEFAULTS.each do |attr, ending|
+            expect( config.send(attr) ).to eq File.join('/my/root', ending)
+          end
+        end
+
+      end
+
     end
 
-    specify 'preconfigured models can only be preconfigured once' do
-      block = Proc.new {}
-      config.preconfigure('MyBackup', &block)
-      klass = Backup.const_get('MyBackup')
-      klass.superclass.should == Backup::Model
 
-      expect do
-        config.preconfigure('MyBackup', &block)
-      end.to raise_error(Backup::Config::Error)
-    end
-  end
+  end # describe '#load'
 
   describe '#hostname' do
     before do
       config.instance_variable_set(:@hostname, nil)
-      Backup::Utilities.stubs(:utility).with(:hostname).returns('/path/to/hostname')
+      Utilities.stubs(:utility).with(:hostname).returns('/path/to/hostname')
     end
 
     it 'caches the hostname' do
-      Backup::Utilities.expects(:run).once.
-          with('/path/to/hostname').returns('my_hostname')
+      Utilities.expects(:run).once.with('/path/to/hostname').returns('my_hostname')
       config.hostname.should == 'my_hostname'
       config.hostname.should == 'my_hostname'
     end
@@ -166,7 +166,7 @@ describe 'Backup::Config' do
         expect do
           config.send(:set_root_path, 'foo')
         end.to raise_error {|err|
-          err.should be_an_instance_of Backup::Config::Error
+          err.should be_an_instance_of config::Error
           err.message.should match(/Root Path Not Found/)
           err.message.should match(/Path was: #{ path }/)
         }
@@ -243,7 +243,7 @@ describe 'Backup::Config' do
 
     it 'should be called to set variables when module is loaded' do
       # just to avoid 'already initialized constant' warnings
-      config.constants.each {|const| config.send(:remove_const, const) }
+      config.send(:remove_const, 'DEFAULTS')
 
       expected = config.instance_variables.sort.map(&:to_sym) - [:@hostname, :@mocha]
       config.instance_variables.each do |var|
@@ -309,50 +309,5 @@ describe 'Backup::Config' do
 
   end # describe '#reset!'
 
-  describe '#add_dsl_constants!' do
-    it 'should be called when the module is loaded' do
-      config.constants.each {|const| config.send(:remove_const, const) }
-      config.constants.should be_empty
-
-      load File.expand_path('../../lib/backup/config.rb', __FILE__)
-
-      Backup::Config.const_defined?('MySQL').should be_true
-      Backup::Config.const_defined?('RSync').should be_true
-      Backup::Config::RSync.const_defined?('Local').should be_true
-    end
-  end # describe '#add_dsl_constants!'
-
-  describe '#create_modules' do
-    module TestScope; end
-
-    context 'when given an array of constant names' do
-      it 'should create modules for the given scope' do
-        config.send(:create_modules, TestScope, ['Foo', 'Bar'])
-        TestScope.const_defined?('Foo').should be_true
-        TestScope.const_defined?('Bar').should be_true
-        TestScope::Foo.class.should == Module
-        TestScope::Bar.class.should == Module
-      end
-    end
-
-    context 'when the given array contains Hash values' do
-      it 'should create deeply nested modules' do
-        config.send(
-          :create_modules,
-          TestScope,
-          [ 'FooBar', {
-            :LevelA => [ 'NameA', {
-              :LevelB => ['NameB']
-            } ]
-          } ]
-        )
-        TestScope.const_defined?('FooBar').should be_true
-        TestScope.const_defined?('LevelA').should be_true
-        TestScope::LevelA.const_defined?('NameA').should be_true
-        TestScope::LevelA.const_defined?('LevelB').should be_true
-        TestScope::LevelA::LevelB.const_defined?('NameB').should be_true
-      end
-    end
-  end
-
+end
 end

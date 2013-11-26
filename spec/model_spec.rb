@@ -735,11 +735,11 @@ describe 'Backup::Model' do
       end
     end
 
-    context 'when name is given as a module defined under Backup::Config' do
-      # this is necessary since the specs in spec/config_spec.rb
-      # remove all the constants from Backup::Config as part of those tests.
+    context 'when name is given as a module defined under Backup::Config::DSL' do
+      # this is necessary since the specs in spec/config/dsl_spec.rb
+      # remove all the constants from Backup::Config::DSL as part of those tests.
       before(:all) do
-        module Backup::Config
+        class Backup::Config::DSL
           module TestScope
             module TestKlass; end
           end
@@ -750,7 +750,7 @@ describe 'Backup::Model' do
         model.send(
           :get_class_from_scope,
           Fake,
-          Backup::Config::TestScope
+          Backup::Config::DSL::TestScope
         ).should == Fake::TestScope
       end
 
@@ -758,7 +758,7 @@ describe 'Backup::Model' do
         model.send(
           :get_class_from_scope,
           Fake,
-          Backup::Config::TestScope::TestKlass
+          Backup::Config::DSL::TestScope::TestKlass
         ).should == Fake::TestScope::TestKlass
       end
     end
