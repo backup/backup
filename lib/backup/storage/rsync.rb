@@ -3,7 +3,7 @@
 module Backup
   module Storage
     class RSync < Base
-      include Backup::Utilities::Helpers
+      include Utilities::Helpers
 
       ##
       # Mode of operation

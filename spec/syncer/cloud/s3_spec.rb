@@ -18,7 +18,7 @@ describe Syncer::Cloud::S3 do
   }
   let(:syncer) { Syncer::Cloud::S3.new(&required_config) }
 
-  it_behaves_like 'a class that includes Configuration::Helpers' do
+  it_behaves_like 'a class that includes Config::Helpers' do
     let(:default_overrides) {
       { 'encryption' => :aes256,
         'storage_class' => :reduced_redundancy }

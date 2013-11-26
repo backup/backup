@@ -5,8 +5,8 @@ module Backup
     class Error < Backup::Error; end
 
     class Base
-      include Backup::Utilities::Helpers
-      include Backup::Configuration::Helpers
+      include Utilities::Helpers
+      include Config::Helpers
 
       ##
       # When set to true, the user will be notified by email

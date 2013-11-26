@@ -3,8 +3,8 @@
 module Backup
   module Encryptor
     class Base
-      include Backup::Utilities::Helpers
-      include Backup::Configuration::Helpers
+      include Utilities::Helpers
+      include Config::Helpers
 
       def initialize
         load_defaults!

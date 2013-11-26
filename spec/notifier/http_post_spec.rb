@@ -19,7 +19,7 @@ describe Notifier::HttpPost do
       'Content-Type' => 'application/x-www-form-urlencoded' }
   }
 
-  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a class that includes Config::Helpers'
   it_behaves_like 'a subclass of Notifier::Base'
 
   describe '#initialize' do

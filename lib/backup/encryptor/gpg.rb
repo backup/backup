@@ -359,7 +359,7 @@ module Backup
       #   end
       #
       # @!scope class
-      # @see Configuration::Helpers::ClassMethods#defaults
+      # @see Config::Helpers::ClassMethods#defaults
       # @yield [config] OpenStruct object
       # @!method defaults
 

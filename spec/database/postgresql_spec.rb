@@ -15,7 +15,7 @@ describe Database::PostgreSQL do
     Utilities.stubs(:utility).with(:sudo).returns('sudo')
   end
 
-  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a class that includes Config::Helpers'
   it_behaves_like 'a subclass of Database::Base'
 
   describe '#initialize' do

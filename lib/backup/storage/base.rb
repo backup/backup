@@ -3,7 +3,7 @@
 module Backup
   module Storage
     class Base
-      include Backup::Configuration::Helpers
+      include Config::Helpers
 
       ##
       # Base path on the remote where backup package files will be stored.

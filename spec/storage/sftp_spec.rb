@@ -8,7 +8,7 @@ describe Storage::SFTP do
   let(:storage) { Storage::SFTP.new(model) }
   let(:s) { sequence '' }
 
-  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a class that includes Config::Helpers'
   it_behaves_like 'a subclass of Storage::Base'
 
   describe '#initialize' do

@@ -3,8 +3,8 @@
 module Backup
   module Syncer
     class Base
-      include Backup::Utilities::Helpers
-      include Backup::Configuration::Helpers
+      include Utilities::Helpers
+      include Config::Helpers
 
       ##
       # Path to store the synced files/directories to

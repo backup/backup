@@ -3,8 +3,8 @@
 module Backup
   module Compressor
     class Base
-      include Backup::Utilities::Helpers
-      include Backup::Configuration::Helpers
+      include Utilities::Helpers
+      include Config::Helpers
 
       ##
       # Yields to the block the compressor command and filename extension.

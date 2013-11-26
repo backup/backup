@@ -1,5 +1,6 @@
 # encoding: utf-8
 require 'backup/config/dsl'
+require 'backup/config/helpers'
 
 module Backup
   module Config
@@ -13,7 +14,7 @@ module Backup
     }
 
     class << self
-      include Backup::Utilities::Helpers
+      include Utilities::Helpers
 
       attr_reader :user, :root_path, :config_file,
                   :data_path, :cache_path, :tmp_path

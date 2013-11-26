@@ -2,26 +2,7 @@
 require 'ostruct'
 
 module Backup
-  module Configuration
-    class Error < Backup::Error; end
-
-    class Store < OpenStruct
-
-      ##
-      # Returns an Array of all attribute method names
-      # that default values were set for.
-      def _attributes
-        @table.keys
-      end
-
-      ##
-      # Used only within the specs
-      def reset!
-        @table.clear
-      end
-
-    end
-
+  module Config
     module Helpers
 
       def self.included(klass)
@@ -30,20 +11,16 @@ module Backup
 
       module ClassMethods
 
-        ##
-        # Returns or yields the Configuration::Store
-        # for storing pre-configured defaults for the class.
         def defaults
-          @configuration ||= Configuration::Store.new
+          @defaults ||= Config::Defaults.new
 
           if block_given?
-            yield @configuration
+            yield @defaults
           else
-            @configuration
+            @defaults
           end
         end
 
-        ##
         # Used only within the specs
         def clear_defaults!
           defaults.reset!
@@ -57,7 +34,7 @@ module Backup
           msg = "#{ self }##{ name } has been deprecated as of " +
               "backup v.#{ deprecation[:version] }"
           msg << "\n#{ deprecation[:message] }" if deprecation[:message]
-          Logger.warn Error.new(<<-EOS)
+          Logger.warn Config::Error.new(<<-EOS)
             [DEPRECATION WARNING]
             #{ msg }
           EOS
@@ -103,9 +80,8 @@ module Backup
       # If a default value was set for an invalid accessor,
       # this will raise a NameError.
       def load_defaults!
-        configuration = self.class.defaults
-        configuration._attributes.each do |name|
-          val = configuration.send(name)
+        self.class.defaults._attributes.each do |name|
+          val = self.class.defaults.send(name)
           val = val.dup rescue val
           send(:"#{ name }=", val)
         end
@@ -147,6 +123,21 @@ module Backup
         end
       end
 
+    end # Helpers
+
+    # Store for pre-configured defaults.
+    class Defaults < OpenStruct
+      # Returns an Array of all attribute method names
+      # that default values were set for.
+      def _attributes
+        @table.keys
+      end
+
+      # Used only within the specs
+      def reset!
+        @table.clear
+      end
     end
+
   end
 end

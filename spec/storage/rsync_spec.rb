@@ -15,7 +15,7 @@ describe Storage::RSync do
         stubs(:utility).with(:ssh).returns('ssh')
   end
 
-  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a class that includes Config::Helpers'
   it_behaves_like 'a subclass of Storage::Base' do
     let(:no_cycler) { true }
   end

@@ -4,7 +4,7 @@ module Backup
   class Pipeline
     class Error < Backup::Error; end
 
-    include Backup::Utilities::Helpers
+    include Utilities::Helpers
 
     attr_reader :stderr, :errors
 

@@ -15,7 +15,7 @@ describe Database::MySQL do
         with(:cat).returns('cat')
   end
 
-  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a class that includes Config::Helpers'
   it_behaves_like 'a subclass of Database::Base'
 
   describe '#initialize' do

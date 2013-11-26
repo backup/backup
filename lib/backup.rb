@@ -121,7 +121,6 @@ module Backup
     model
     config
     cli
-    configuration
     package
     packager
     pipeline

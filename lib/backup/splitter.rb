@@ -2,7 +2,7 @@
 
 module Backup
   class Splitter
-    include Backup::Utilities::Helpers
+    include Utilities::Helpers
 
     attr_reader :package, :chunk_size
 

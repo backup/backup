@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-shared_examples 'a class that includes Configuration::Helpers' do
+shared_examples 'a class that includes Config::Helpers' do
 
   describe 'setting defaults' do
     let(:accessor_names) {

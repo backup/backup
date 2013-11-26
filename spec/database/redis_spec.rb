@@ -13,7 +13,7 @@ describe Database::Redis do
         with('redis-cli').returns('redis-cli')
   end
 
-  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a class that includes Config::Helpers'
   it_behaves_like 'a subclass of Database::Base'
 
   describe '#initialize' do

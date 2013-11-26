@@ -10,9 +10,9 @@ describe Backup::Compressor::Base do
         include?(Backup::Utilities::Helpers).should be_true
   end
 
-  it 'should include Configuration::Helpers' do
+  it 'should include Config::Helpers' do
     Backup::Compressor::Base.
-        include?(Backup::Configuration::Helpers).should be_true
+        include?(Backup::Config::Helpers).should be_true
   end
 
   describe '#compress_with' do

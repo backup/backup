@@ -5,7 +5,7 @@ module Backup
     class Error < Backup::Error; end
 
     class << self
-      include Backup::Utilities::Helpers
+      include Utilities::Helpers
 
       ##
       # Build the final package for the backup model.

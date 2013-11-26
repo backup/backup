@@ -12,7 +12,7 @@ describe Syncer::Cloud::CloudFiles do
   }
   let(:syncer) { Syncer::Cloud::CloudFiles.new(&required_config) }
 
-  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a class that includes Config::Helpers'
 
   it_behaves_like 'a subclass of Syncer::Cloud::Base'
 

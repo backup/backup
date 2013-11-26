@@ -21,7 +21,7 @@ describe Storage::S3 do
   let(:storage) { Storage::S3.new(model, &required_config) }
   let(:s) { sequence '' }
 
-  it_behaves_like 'a class that includes Configuration::Helpers' do
+  it_behaves_like 'a class that includes Config::Helpers' do
     let(:default_overrides) {
       { 'chunk_size' => 15,
         'encryption' => :aes256,

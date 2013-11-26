@@ -7,7 +7,7 @@ describe Notifier::Twitter do
   let(:model) { Model.new(:test_trigger, 'test label') }
   let(:notifier) { Notifier::Twitter.new(model) }
 
-  it_behaves_like 'a class that includes Configuration::Helpers'
+  it_behaves_like 'a class that includes Config::Helpers'
   it_behaves_like 'a subclass of Notifier::Base'
 
   describe '#initialize' do
