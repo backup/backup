@@ -28,6 +28,10 @@ module Backup
 
         dsl = DSL.new
         dsl.instance_eval(File.read(config_file), config_file)
+
+        update(dsl._config_options)  # from config.rb
+        update(options)              # command line takes precedence
+
         Dir[File.join(File.dirname(config_file), 'models', '*.rb')].each do |model|
           dsl.instance_eval(File.read(model), model)
         end
@@ -39,8 +43,8 @@ module Backup
 
       private
 
-      ##
-      # Setup required paths based on the given options
+      # If :root_path is set in the options, all paths will be updated.
+      # Otherwise, only the paths given will be updated.
       def update(options = {})
         root_path = options[:root_path].to_s.strip
         new_root = root_path.empty? ? false : set_root_path(root_path)
@@ -50,7 +54,6 @@ module Backup
         end
       end
 
-      ##
       # Sets the @root_path to the given +path+ and returns it.
       # Raises an error if the given +path+ does not exist.
       def set_root_path(path)
@@ -75,9 +78,15 @@ module Backup
         # an absolute path, so we can match it against File.expand_path()
         path = path.to_s.sub(/\/\s*$/, '').lstrip
         new_path = false
+        # If no path is given, the variable will not be set/updated
+        # unless a root_path was given. In which case the value will
+        # be updated with our default ending.
         if path.empty?
           new_path = File.join(root_path, ending) if root_path
         else
+          # When a path is given, the variable will be set/updated.
+          # If the path is relative, it will be joined with root_path (if given),
+          # or expanded relative to PWD.
           new_path = File.expand_path(path)
           unless path == new_path
             new_path = File.join(root_path, path) if root_path
@@ -86,8 +95,6 @@ module Backup
         instance_variable_set(:"@#{name}", new_path) if new_path
       end
 
-      ##
-      # Set default values for accessors
       def reset!
         @user      = ENV['USER'] || Etc.getpwuid.name
         @root_path = File.join(File.expand_path(ENV['HOME'] || ''), 'Backup')

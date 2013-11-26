@@ -70,6 +70,17 @@ module Backup
 
       add_dsl_constants  # add constants on load
 
+      attr_reader :_config_options
+
+      def initialize
+        @_config_options = {}
+      end
+
+      # Allow users to set command line path options in config.rb
+      [:root_path, :data_path, :tmp_path, :cache_path].each do |name|
+        define_method name, lambda {|path| _config_options[name] = path }
+      end
+
       # Allows users to create preconfigured models.
       def preconfigure(name, &block)
         unless name.is_a?(String) && name =~ /^[A-Z]/

@@ -86,6 +86,22 @@ describe Config do
           expect( config.data_path ).to eq '/my/data'
         end
 
+        it 'overrides config.rb settings only for the paths given' do
+          config::DSL.any_instance.expects(:_config_options).returns(
+            { :root_path => '/orig/root',
+              :tmp_path  => '/orig/root/my_tmp',
+              :data_path => '/orig/root/my_data' }
+          )
+          options = { :tmp_path => 'new_tmp' }
+          config.load(options)
+
+          expect( config.root_path ).to eq '/orig/root'
+          # the root_path set in config.rb will not apply
+          # to relative paths given on the command line.
+          expect( config.tmp_path  ).to eq File.expand_path('new_tmp')
+          expect( config.data_path ).to eq '/orig/root/my_data'
+        end
+
       end
 
       context 'when a root_path is given' do
@@ -111,10 +127,27 @@ describe Config do
           end
         end
 
+        it 'overrides all config.rb settings' do
+          config::DSL.any_instance.expects(:_config_options).returns(
+            { :root_path => '/orig/root',
+              :tmp_path  => '/orig/root/my_tmp',
+              :data_path => '/orig/root/my_data' }
+          )
+          options = { :root_path => '/new/root', :tmp_path => 'new_tmp' }
+          config.load(options)
+
+          expect( config.root_path ).to eq '/new/root'
+          expect( config.tmp_path  ).to eq '/new/root/new_tmp'
+          # paths not given on the command line will be updated to their
+          # default location (relative to the new root)
+          expect( config.data_path ).to eq(
+            File.join('/new/root', config::DEFAULTS[:data_path])
+          )
+        end
+
       end
 
     end
-
 
   end # describe '#load'
 

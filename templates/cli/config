@@ -11,6 +11,43 @@
 # View the issue log at https://github.com/meskyanichi/backup/issues
 
 ##
+# Config Options
+#
+# The options here may be overridden on the command line, but the result
+# will depend on the use of --root-path on the command line.
+#
+# If --root-path is used on the command line, then all paths set here
+# will be overridden. If a path (like --tmp-path) is not given along with
+# --root-path, that path will use it's default location _relative to --root-path_.
+#
+# If --root-path is not used on the command line, a path option (like --tmp-path)
+# given on the command line will override the tmp_path set here, but all other
+# paths set here will be used.
+#
+# Note that relative paths given on the command line without --root-path
+# are relative to the current directory. The root_path set here only applies
+# to relative paths set here.
+#
+# ---
+#
+# Sets the root path for all relative paths, including default paths.
+# May be an absolute path, or relative to the current working directory.
+#
+# root_path 'my/root'
+#
+# Sets the path where backups are processed until they're stored.
+# This must have enough free space to hold apx. 2 backups.
+# May be an absolute path, or relative to the current directory or +root_path+.
+#
+# tmp_path  'my/tmp'
+#
+# Sets the path where backup stores persistent information.
+# When Backup's Cycler is used, small YAML files are stored here.
+# May be an absolute path, or relative to the current directory or +root_path+.
+#
+# data_path 'my/data'
+
+##
 # Utilities
 #
 # If you need to use a utility other than the one Backup detects,

@@ -53,6 +53,17 @@ describe Config::DSL do
     end
   end
 
+  describe '#_config_options' do
+    it 'returns paths set in config.rb' do
+      [:root_path, :data_path, :tmp_path].each {|name| subject.send(name, name) }
+      expect( subject._config_options ).to eq(
+        { :root_path => :root_path,
+          :data_path => :data_path,
+          :tmp_path  => :tmp_path }
+      )
+    end
+  end
+
   describe '#preconfigure' do
     after do
       if described_class.const_defined?('MyBackup')
