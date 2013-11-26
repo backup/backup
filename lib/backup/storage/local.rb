@@ -3,6 +3,7 @@
 module Backup
   module Storage
     class Local < Base
+      include Storage::Cycler
       class Error < Backup::Error; end
 
       def initialize(model, storage_id = nil)

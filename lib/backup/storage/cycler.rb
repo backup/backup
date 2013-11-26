@@ -5,41 +5,21 @@ module Backup
     module Cycler
       class Error < Backup::Error; end
 
-      class << self
+      private
 
-        ##
-        # Adds the given +package+ to the YAML storage file corresponding
-        # to the given +storage+ and Package#trigger (Model#trigger).
-        # Then, calls the +storage+ to remove the files for any older
-        # packages that were removed from the YAML storage file.
-        def cycle!(storage)
-          @storage = storage
-          @package = storage.package
-          @storage_file = storage_file
+      # Adds the current package being stored to the YAML cycle data file
+      # and will remove any old package file(s) when the storage limit
+      # set by #keep is exceeded.
+      def cycle!
+        Logger.info 'Cycling Started...'
 
-          update_storage_file!
-          remove_packages!
-        end
+        packages = yaml_load.unshift(package)
+        excess = packages.count - keep.to_i
 
-        private
-
-        ##
-        # Updates the YAML data file according to the #keep setting
-        # for the storage and sets the @packages_to_remove
-        def update_storage_file!
-          packages = yaml_load.unshift(@package)
-          excess = packages.count - @storage.keep.to_i
-          @packages_to_remove = (excess > 0) ? packages.pop(excess) : []
-          yaml_save(packages)
-        end
-
-        ##
-        # Calls the @storage to remove any old packages
-        # which were cycled out of the storage file.
-        def remove_packages!
-          @packages_to_remove.each do |pkg|
+        if excess > 0
+          packages.pop(excess).each do |pkg|
             begin
-              @storage.send(:remove!, pkg) unless pkg.no_cycle
+              remove!(pkg) unless pkg.no_cycle
             rescue => err
               Logger.warn Error.wrap(err, <<-EOS)
                 There was a problem removing the following package:
@@ -51,37 +31,35 @@ module Backup
           end
         end
 
-        ##
-        # Return full path to the YAML data file,
-        # based on the current values of @storage and @package
-        def storage_file
-          filename = @storage.class.to_s.split('::').last
-          filename << "-#{ @storage.storage_id }" if @storage.storage_id
-          File.join(Config.data_path, @package.trigger, "#{ filename }.yml")
-        end
-
-        ##
-        # Load Package objects from YAML file.
-        # Returns an Array, sorted by @time descending.
-        # i.e. most recent is objects[0]
-        def yaml_load
-          packages = []
-          if File.exist?(@storage_file) && !File.zero?(@storage_file)
-            packages = YAML.load_file(@storage_file).sort_by!(&:time).reverse!
-          end
-          packages
-        end
-
-        ##
-        # Store the given package objects to the YAML data file.
-        def yaml_save(packages)
-          FileUtils.mkdir_p(File.dirname(@storage_file))
-          File.open(@storage_file, 'w') do |file|
-            file.write(packages.to_yaml)
-          end
-        end
-
+        yaml_save(packages)
       end
+
+      # Returns path to the YAML data file.
+      def yaml_file
+        @yaml_file ||= begin
+          filename = self.class.to_s.split('::').last
+          filename << "-#{ storage_id }" if storage_id
+          File.join(Config.data_path, package.trigger, "#{ filename }.yml")
+        end
+      end
+
+      # Returns stored Package objects, sorted by #time descending (oldest last).
+      def yaml_load
+        if File.exist?(yaml_file) && !File.zero?(yaml_file)
+          YAML.load_file(yaml_file).sort_by!(&:time).reverse!
+        else
+          []
+        end
+      end
+
+      # Stores the given package objects to the YAML data file.
+      def yaml_save(packages)
+        FileUtils.mkdir_p(File.dirname(yaml_file))
+        File.open(yaml_file, 'w') do |file|
+          file.write(packages.to_yaml)
+        end
+      end
+
     end
   end
 end

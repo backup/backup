@@ -35,6 +35,7 @@ describe Storage::S3 do
   end
 
   it_behaves_like 'a subclass of Storage::Base'
+  it_behaves_like 'a storage that cycles'
 
   describe '#initialize' do
     it 'provides default values' do

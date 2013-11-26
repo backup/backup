@@ -4,6 +4,7 @@ require 'net/sftp'
 module Backup
   module Storage
     class SFTP < Base
+      include Storage::Cycler
 
       ##
       # Server credentials

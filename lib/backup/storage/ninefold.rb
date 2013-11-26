@@ -4,6 +4,7 @@ require 'fog'
 module Backup
   module Storage
     class Ninefold < Base
+      include Storage::Cycler
       class Error < Backup::Error; end
 
       ##

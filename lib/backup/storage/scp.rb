@@ -4,6 +4,7 @@ require 'net/scp'
 module Backup
   module Storage
     class SCP < Base
+      include Storage::Cycler
       class Error < Backup::Error; end
 
       ##

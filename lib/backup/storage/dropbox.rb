@@ -4,6 +4,7 @@ require 'dropbox_sdk'
 module Backup
   module Storage
     class Dropbox < Base
+      include Storage::Cycler
       class Error < Backup::Error; end
 
       ##

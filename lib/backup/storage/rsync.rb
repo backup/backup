@@ -152,9 +152,6 @@ module Backup
         remove_password_file
       end
 
-      # Storage::RSync doesn't cycle
-      def cycle!; end
-
       ##
       # Other storages add an additional timestamp directory to this path.
       # This is not desired here, since we need to transfer the package files

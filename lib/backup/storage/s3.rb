@@ -4,6 +4,7 @@ require 'backup/cloud_io/s3'
 module Backup
   module Storage
     class S3 < Base
+      include Storage::Cycler
       class Error < Backup::Error; end
 
       ##

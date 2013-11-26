@@ -16,9 +16,7 @@ describe Storage::RSync do
   end
 
   it_behaves_like 'a class that includes Config::Helpers'
-  it_behaves_like 'a subclass of Storage::Base' do
-    let(:no_cycler) { true }
-  end
+  it_behaves_like 'a subclass of Storage::Base'
 
   describe '#initialize' do
 

@@ -4,6 +4,7 @@ require 'net/ftp'
 module Backup
   module Storage
     class FTP < Base
+      include Storage::Cycler
 
       ##
       # Server credentials
