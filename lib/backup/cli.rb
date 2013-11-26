@@ -11,8 +11,8 @@ module Backup
     # [Perform]
     #
     # The only required option is the --trigger [-t].
-    # If --config-file, --data-path, --cache-path, --tmp-path aren't specified
-    # they will fallback to defaults defined in Backup::Config.
+    # If --config-file, --data-path, --tmp-path or --log-path
+    # aren't specified they will fallback to defaults.
     # If --root-path is given, it will be used as the base path for our defaults,
     # as well as the base path for any option specified as a relative path.
     # Any option given as an absolute path will be used "as-is".
@@ -41,8 +41,8 @@ module Backup
 
       To use the current directory, use: `--root-path .`
 
-      Relative paths given for --config-file, --data-path, --log-path,
-      --cache-path and --tmp-path will be relative to --root-path.
+      Relative paths given for --config-file, --data-path, --tmp-path,
+      and --log-path will be relative to --root-path.
 
       Console log output may be forced using --no-quiet.
 
@@ -79,11 +79,6 @@ module Backup
                   :type     => :string,
                   :default  => '',
                   :desc     => "Path to store Backup's log file."
-
-    method_option :cache_path,
-                  :type     => :string,
-                  :default  => '',
-                  :desc     => "Path to store Dropbox's cached authorization."
 
     method_option :tmp_path,
                   :type     => :string,

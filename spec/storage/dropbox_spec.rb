@@ -17,6 +17,7 @@ describe Storage::Dropbox do
       expect( storage.keep          ).to be_nil
       expect( storage.api_key       ).to be_nil
       expect( storage.api_secret    ).to be_nil
+      expect( storage.cache_path    ).to eq '.cache'
       expect( storage.chunk_size    ).to be 4
       expect( storage.max_retries   ).to be 10
       expect( storage.retry_waitsec ).to be 30
@@ -28,6 +29,7 @@ describe Storage::Dropbox do
         db.keep           = 2
         db.api_key        = 'my_api_key'
         db.api_secret     = 'my_api_secret'
+        db.cache_path     = '.my_cache'
         db.chunk_size     = 10
         db.max_retries    = 15
         db.retry_waitsec  = 45
@@ -38,6 +40,7 @@ describe Storage::Dropbox do
       expect( storage.keep          ).to be 2
       expect( storage.api_key       ).to eq 'my_api_key'
       expect( storage.api_secret    ).to eq 'my_api_secret'
+      expect( storage.cache_path    ).to eq '.my_cache'
       expect( storage.chunk_size    ).to eq 10
       expect( storage.max_retries   ).to eq 15
       expect( storage.retry_waitsec ).to eq 45
@@ -113,7 +116,7 @@ describe Storage::Dropbox do
 
   describe '#cached_session' do
     let(:session) { mock }
-    let(:cached_file) { File.join(Config.cache_path, 'my_api_keymy_api_secret') }
+    let(:cached_file) { storage.send(:cached_file) }
 
     before do
       storage.api_key = 'my_api_key'
@@ -340,9 +343,71 @@ describe Storage::Dropbox do
 
   end # describe '#remove!'
 
+  describe '#cached_file' do
+
+    before do
+      storage.api_key = 'my_api_key'
+      storage.api_secret = 'my_api_secret'
+    end
+
+    context 'with default root_path' do
+
+      specify 'using default cache_path' do
+        expect( storage.send(:cached_file) ).to eq(
+          File.join(Config.root_path, '.cache', 'my_api_keymy_api_secret')
+        )
+      end
+
+      specify 'using relative cache_path' do
+        storage.cache_path = '.my_cache'
+        expect( storage.send(:cached_file) ).to eq(
+          File.join(Config.root_path, '.my_cache', 'my_api_keymy_api_secret')
+        )
+      end
+
+      specify 'using absolute cache_path' do
+        storage.cache_path = '/my/.cache'
+        expect( storage.send(:cached_file) ).to eq(
+          '/my/.cache/my_api_keymy_api_secret'
+        )
+      end
+
+    end
+
+    context 'with custom root_path' do
+
+      before do
+        File.stubs(:directory? => true)
+        Config.send(:update, :root_path => '/my_root')
+      end
+
+      specify 'using default cache_path' do
+        expect( storage.send(:cached_file) ).to eq(
+          '/my_root/.cache/my_api_keymy_api_secret'
+        )
+      end
+
+      specify 'using relative cache_path' do
+        storage.cache_path = '.my_cache'
+        expect( storage.send(:cached_file) ).to eq(
+          '/my_root/.my_cache/my_api_keymy_api_secret'
+        )
+      end
+
+      specify 'using absolute cache_path' do
+        storage.cache_path = '/my/.cache'
+        expect( storage.send(:cached_file) ).to eq(
+          '/my/.cache/my_api_keymy_api_secret'
+        )
+      end
+
+    end
+
+  end # describe '#cached_file'
+
   describe '#write_cache!' do
     let(:session) { mock }
-    let(:cached_file) { File.join(Config.cache_path, 'my_api_keymy_api_secret') }
+    let(:cached_file) { storage.send(:cached_file) }
     let(:file) { mock }
 
     before do
@@ -352,7 +417,7 @@ describe Storage::Dropbox do
     end
 
     it 'should write a serialized session to file' do
-      FileUtils.expects(:mkdir_p).with(Config.cache_path)
+      FileUtils.expects(:mkdir_p).with(File.dirname(cached_file))
 
       File.expects(:open).with(cached_file, 'w').yields(file)
       file.expects(:write).with('serialized_data')
@@ -364,7 +429,7 @@ describe Storage::Dropbox do
   describe '#create_write_and_return_new_session!' do
     let(:session)   { mock }
     let(:template)  { mock }
-    let(:cached_file) { File.join(Config.cache_path, 'my_api_keymy_api_secret') }
+    let(:cached_file) { storage.send(:cached_file) }
 
     before do
       storage.api_key = 'my_api_key'

@@ -11,6 +11,17 @@ module Backup
       attr_accessor :api_key, :api_secret
 
       ##
+      # Path to store cached authorized session.
+      #
+      # Relative paths will be expanded using Config.root_path,
+      # which by default is ~/Backup unless --root-path was used
+      # on the command line or set in config.rb.
+      #
+      # By default, +cache_path+ is '.cache', which would be
+      # '~/Backup/.cache/' if using the default root_path.
+      attr_accessor :cache_path
+
+      ##
       # Dropbox Access Type
       # Valid values are:
       #   :app_folder (default)
@@ -39,6 +50,7 @@ module Backup
         super
 
         @path           ||= 'backups'
+        @cache_path     ||= '.cache'
         @access_type    ||= :app_folder
         @chunk_size     ||= 4 # MiB
         @max_retries    ||= 10
@@ -54,7 +66,7 @@ module Backup
       # authorization successfully took place. If this is the case, then the
       # user hits 'enter' and the session will be properly established.
       # Immediately after establishing the session, the session will be
-      # serialized and written to a cache file in Backup::Config.cache_path.
+      # serialized and written to a cache file in +cache_path+.
       # The cached file will be used from that point on to re-establish a
       # connection with Dropbox at a later time. This allows the user to avoid
       # having to go to a new Dropbox URL to authorize over and over again.
@@ -144,13 +156,15 @@ module Backup
       end
 
       def cached_file
-        File.join(Config.cache_path, api_key + api_secret)
+        path = cache_path.start_with?('/') ?
+               cache_path : File.join(Config.root_path, cache_path)
+        File.join(path, api_key + api_secret)
       end
 
       ##
       # Serializes and writes the Dropbox session to a cache file
       def write_cache!(session)
-        FileUtils.mkdir_p(Config.cache_path)
+        FileUtils.mkdir_p File.dirname(cached_file)
         File.open(cached_file, "w") do |cache_file|
           cache_file.write(session.serialize)
         end

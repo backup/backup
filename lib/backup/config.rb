@@ -9,15 +9,13 @@ module Backup
     DEFAULTS = {
       :config_file  => 'config.rb',
       :data_path    => 'data',
-      :cache_path   => '.cache',
       :tmp_path     => '.tmp'
     }
 
     class << self
       include Utilities::Helpers
 
-      attr_reader :user, :root_path, :config_file,
-                  :data_path, :cache_path, :tmp_path
+      attr_reader :user, :root_path, :config_file, :data_path, :tmp_path
 
       # Loads the user's +config.rb+ and all model files.
       def load(options = {})

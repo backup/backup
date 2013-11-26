@@ -14,6 +14,7 @@
   store_with Dropbox do |db|
     db.api_key     = "my_api_key"
     db.api_secret  = "my_api_secret"
+    db.cache_path  = ".cache"
     db.access_type = :app_folder
     db.path        = "/path/to/my/backups"
     db.keep        = 25

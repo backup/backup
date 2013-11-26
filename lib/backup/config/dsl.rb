@@ -77,7 +77,7 @@ module Backup
       end
 
       # Allow users to set command line path options in config.rb
-      [:root_path, :data_path, :tmp_path, :cache_path].each do |name|
+      [:root_path, :data_path, :tmp_path].each do |name|
         define_method name, lambda {|path| _config_options[name] = path }
       end
 
