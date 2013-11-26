@@ -28,7 +28,7 @@ describe Notifier::Mail do
       expect( notifier.user_name            ).to be_nil
       expect( notifier.password             ).to be_nil
       expect( notifier.authentication       ).to be_nil
-      expect( notifier.encryption           ).to be_nil
+      expect( notifier.encryption           ).to eq :starttls
       expect( notifier.openssl_verify_mode  ).to be_nil
       expect( notifier.sendmail_args        ).to be_nil
       expect( notifier.exim_args            ).to be_nil
@@ -53,7 +53,7 @@ describe Notifier::Mail do
         mail.user_name            = 'user'
         mail.password             = 'secret'
         mail.authentication       = 'plain'
-        mail.encryption           = :starttls
+        mail.encryption           = :none
         mail.openssl_verify_mode  = :none
         mail.sendmail_args        = '-i -t -X/tmp/traffic.log'
         mail.exim_args            = '-i -t -X/tmp/traffic.log'
@@ -76,7 +76,7 @@ describe Notifier::Mail do
       expect( notifier.user_name            ).to eq 'user'
       expect( notifier.password             ).to eq 'secret'
       expect( notifier.authentication       ).to eq 'plain'
-      expect( notifier.encryption           ).to eq :starttls
+      expect( notifier.encryption           ).to eq :none
       expect( notifier.openssl_verify_mode  ).to eq :none
       expect( notifier.sendmail_args        ).to eq '-i -t -X/tmp/traffic.log'
       expect( notifier.exim_args            ).to eq '-i -t -X/tmp/traffic.log'

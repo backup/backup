@@ -66,14 +66,14 @@ module Backup
       ##
       # Set the method of encryption to be used for the +SMTP+ connection.
       #
-      # [:none (default)]
-      #   No encryption will be used.
-      #
-      # [:starttls]
+      # [:starttls (default)]
       #   Use +STARTTLS+ to upgrade the connection to a +SSL/TLS+ connection.
       #
       # [:tls or :ssl]
       #   Use a +SSL/TLS+ connection.
+      #
+      # [:none]
+      #   No encryption will be used.
       attr_accessor :encryption
 
       ##
@@ -123,6 +123,7 @@ module Backup
         instance_eval(&block) if block_given?
 
         @send_log_on ||= [:warning, :failure]
+        @encryption  ||= :starttls
       end
 
       private
