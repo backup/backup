@@ -107,14 +107,10 @@ describe Storage::RSync do
         Tempfile.expects(:new).never
 
         # create_remote_path
-        FileUtils.expects(:mkdir_p).with(
-          File.join(File.expand_path('~/backups'), 'test_trigger')
-        )
+        FileUtils.expects(:mkdir_p).with(File.expand_path('~/backups'))
 
         # First Package File
-        dest = File.join(
-          File.expand_path('~/backups'), 'test_trigger', 'test_trigger.tar-aa'
-        )
+        dest = File.join(File.expand_path('~/backups'), 'test_trigger.tar-aa')
         Logger.expects(:info).in_sequence(s).with(
           "Syncing to '#{ dest }'..."
         )
@@ -123,9 +119,7 @@ describe Storage::RSync do
         )
 
         # Second Package File
-        dest = File.join(
-          File.expand_path('~/backups'), 'test_trigger', 'test_trigger.tar-ab'
-        )
+        dest = File.join(File.expand_path('~/backups'), 'test_trigger.tar-ab')
         Logger.expects(:info).in_sequence(s).with(
           "Syncing to '#{ dest }'..."
         )
@@ -146,10 +140,10 @@ describe Storage::RSync do
         Tempfile.expects(:new).never
 
         # create_remote_path
-        FileUtils.expects(:mkdir_p).with('/my/backups/test_trigger')
+        FileUtils.expects(:mkdir_p).with('/my/backups')
 
         # First Package File
-        dest = '/my/backups/test_trigger/test_trigger.tar-aa'
+        dest = '/my/backups/test_trigger.tar-aa'
         Logger.expects(:info).in_sequence(s).with(
           "Syncing to '#{ dest }'..."
         )
@@ -158,7 +152,7 @@ describe Storage::RSync do
         )
 
         # Second Package File
-        dest = '/my/backups/test_trigger/test_trigger.tar-ab'
+        dest = '/my/backups/test_trigger.tar-ab'
         Logger.expects(:info).in_sequence(s).with(
           "Syncing to '#{ dest }'..."
         )
@@ -181,17 +175,17 @@ describe Storage::RSync do
 
         # create_remote_path
         storage.expects(:run).in_sequence(s).with(
-          %q[ssh -p 22 host.name "mkdir -p 'backups/test_trigger'"]
+          %q[ssh -p 22 host.name "mkdir -p 'backups'"]
         )
 
         # First Package File
-        dest = "host.name:'backups/test_trigger/test_trigger.tar-aa'"
+        dest = "host.name:'backups/test_trigger.tar-aa'"
         storage.expects(:run).in_sequence(s).with(
           %Q[rsync --archive -e "ssh -p 22" '#{ package_files[0] }' #{ dest }]
         )
 
         # Second Package File
-        dest = "host.name:'backups/test_trigger/test_trigger.tar-ab'"
+        dest = "host.name:'backups/test_trigger.tar-ab'"
         storage.expects(:run).in_sequence(s).with(
           %Q[rsync --archive -e "ssh -p 22" '#{ package_files[1] }' #{ dest }]
         )
@@ -215,11 +209,11 @@ describe Storage::RSync do
         # create_remote_path
         storage.expects(:run).in_sequence(s).with(
           "ssh -p 123 -l ssh_username -i '/my/id_rsa' " +
-          %q[host.name "mkdir -p 'backups/test_trigger'"]
+          %q[host.name "mkdir -p 'backups'"]
         )
 
         # First Package File
-        dest = "host.name:'backups/test_trigger/test_trigger.tar-aa'"
+        dest = "host.name:'backups/test_trigger.tar-aa'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive --opt1 --compress " +
           %Q[-e "ssh -p 123 -l ssh_username -i '/my/id_rsa'" ] +
@@ -227,7 +221,7 @@ describe Storage::RSync do
         )
 
         # Second Package File
-        dest = "host.name:'backups/test_trigger/test_trigger.tar-ab'"
+        dest = "host.name:'backups/test_trigger.tar-ab'"
         storage.expects(:run).in_sequence(s).with(
           "rsync --archive --opt1 --compress " +
           %Q[-e "ssh -p 123 -l ssh_username -i '/my/id_rsa'" ] +
