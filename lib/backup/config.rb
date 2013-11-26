@@ -8,7 +8,7 @@ module Backup
 
     DEFAULTS = {
       :config_file  => 'config.rb',
-      :data_path    => 'data',
+      :data_path    => '.data',
       :tmp_path     => '.tmp'
     }
 
