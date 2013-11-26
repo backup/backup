@@ -344,39 +344,6 @@ module Backup
     end
 
     ##
-    # [Decrypt]
-    # Shorthand for decrypting encrypted files
-    desc 'decrypt', 'Decrypts encrypted files'
-    method_option :encryptor,     :type => :string,  :required => true
-    method_option :in,            :type => :string,  :required => true
-    method_option :out,           :type => :string,  :required => true
-    method_option :base64,        :type => :boolean, :default  => false
-    method_option :password_file, :type => :string,  :default  => ''
-    method_option :salt,          :type => :boolean, :default  => false
-
-    def decrypt
-      case options[:encryptor].downcase
-      when 'openssl'
-        base64   = options[:base64] ? '-base64' : ''
-        password = options[:password_file].empty? ? '' :
-            "-pass file:#{ options[:password_file] }"
-        salt     = options[:salt] ? '-salt' : ''
-
-        Helpers.exec!(
-          "openssl aes-256-cbc -d #{ base64 } #{ password } #{ salt } " +
-          "-in '#{ options[:in] }' -out '#{ options[:out] }'"
-        )
-      when 'gpg'
-        Helpers.exec!(
-          "gpg -o '#{ options[:out] }' -d '#{ options[:in] }'"
-        )
-      else
-        puts "Unknown encryptor: #{ options[:encryptor] }"
-        puts "Use either 'openssl' or 'gpg'."
-      end
-    end
-
-    ##
     # [Version]
     # Returns the current version of the Backup gem
     map '-v' => :version

@@ -657,59 +657,6 @@ describe 'Backup::CLI' do
 
   end # describe '#generate:config'
 
-  describe '#decrypt' do
-
-    it 'should perform OpenSSL decryption' do
-      ARGV.replace(['decrypt', '--encryptor', 'openssl',
-                    '--in', 'in_file',
-                    '--out', 'out_file',
-                    '--base64', '--salt',
-                    '--password-file', 'pwd_file'])
-
-      cli::Helpers.expects(:exec!).with(
-        "openssl aes-256-cbc -d -base64 -pass file:pwd_file -salt " +
-        "-in 'in_file' -out 'out_file'"
-      )
-      cli.start
-    end
-
-    it 'should omit -pass option if no --password-file given' do
-      ARGV.replace(['decrypt', '--encryptor', 'openssl',
-                    '--in', 'in_file',
-                    '--out', 'out_file',
-                    '--base64', '--salt'])
-
-      cli::Helpers.expects(:exec!).with(
-        "openssl aes-256-cbc -d -base64  -salt " +
-        "-in 'in_file' -out 'out_file'"
-      )
-      cli.start
-    end
-
-    it 'should perform GnuPG decryption' do
-      ARGV.replace(['decrypt', '--encryptor', 'gpg',
-                    '--in', 'in_file',
-                    '--out', 'out_file'])
-
-      cli::Helpers.expects(:exec!).with(
-        "gpg -o 'out_file' -d 'in_file'"
-      )
-      cli.start
-    end
-
-    it 'should show a message if given an invalid encryptor' do
-      ARGV.replace(['decrypt', '--encryptor', 'foo',
-                    '--in', 'in_file',
-                    '--out', 'out_file'])
-      out, err = capture_io do
-        cli.start
-      end
-      err.should == ''
-      out.should == "Unknown encryptor: foo\n" +
-          "Use either 'openssl' or 'gpg'.\n"
-    end
-  end # describe '#decrypt'
-
   describe '#version' do
     specify 'using `backup version`' do
       ARGV.replace ['version']
