@@ -203,14 +203,15 @@ module Backup
 
     ##
     # Adds a Splitter with the given +chunk_size+ in MB.
+	# If specified, the splitter suffix length can be specified (ie. 1 (-a), 2 (-aa), 3 (-aaa) etc).
     # This will split the final backup package into multiple files.
-    def split_into_chunks_of(chunk_size)
-      if chunk_size.is_a?(Integer)
-        @splitter = Splitter.new(self, chunk_size)
+    def split_into_chunks_of(chunk_size, suffix_length = 2)
+      if chunk_size.is_a?(Integer) && suffix_length.is_a?(Integer) && suffix_length > 0
+        @splitter = Splitter.new(self, chunk_size, suffix_length)
       else
         raise Error, <<-EOS
           Invalid Chunk Size for Splitter
-          Argument to #split_into_chunks_of() must be an Integer
+          Argument to #split_into_chunks_of() must be one (or two) Integers for chunk_size and optionally suffix_length > 0
         EOS
       end
     end
