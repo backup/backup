@@ -45,4 +45,5 @@ group :no_ci do
 
   gem 'yard'
   gem 'redcarpet'
+  gem 'rake'
 end
