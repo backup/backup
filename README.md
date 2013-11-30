@@ -59,7 +59,7 @@ Adding a [Compressor](https://github.com/meskyanichi/backup/wiki/Compressors) to
 Archives and Database backups within your final archive package.  
 `Gzip`, `Bzip2` and other similar compressors are supported.
 
-Adding a [Encryptor](https://github.com/meskyanichi/backup/wiki/Encryptors) allows you to encrypt your final backup package.  
+Adding an [Encryptor](https://github.com/meskyanichi/backup/wiki/Encryptors) allows you to encrypt your final backup package.  
 Both `OpenSSL` and `GPG` are supported.
 
 Your final backup _package_ might look something like this:
@@ -131,7 +131,7 @@ Supported notification services include:
 
 ## Generators
 
-Backup makes it easy to setup new backup _model_ files with it's [Generator](https://github.com/meskyanichi/backup/wiki/Generator) command.  
+Backup makes it easy to setup new backup _model_ files with its [Generator](https://github.com/meskyanichi/backup/wiki/Generator) command.  
 
 ```
 $ backup generate:model -t my_backup --archives --databases=postgresql,redis --compressors=gzip \
