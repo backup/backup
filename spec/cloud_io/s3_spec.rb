@@ -269,6 +269,10 @@ describe CloudIO::S3 do
       )
     }
     let(:resp_ok) { stub(:body => { 'DeleteResult' => [] }) }
+    let(:resp_ok_with_results) {
+      ok_result = { 'Deleted' => { 'Key' => 'key/path' } }
+      stub(:body => { 'DeleteResult' => [ok_result] })
+    }
     let(:resp_bad) {
       stub(:body => {
           'DeleteResult' => [
@@ -351,6 +355,15 @@ describe CloudIO::S3 do
       expect do
         cloud_io.delete(keys_all)
       end.not_to change { keys_all }
+    end
+
+    it 'succeeds with successful results' do
+      cloud_io.expects(:with_retries).with('DELETE Multiple Objects').yields
+      connection.expects(:delete_multiple_objects).with(
+        'my_bucket', ['obj_key_a'], { :quiet => true }
+      ).returns(resp_ok_with_results)
+
+      cloud_io.delete('obj_key_a')
     end
 
     it 'retries on raised errors' do

@@ -107,8 +107,9 @@ module Backup
           _keys = keys.slice!(0, 1000)
           with_retries('DELETE Multiple Objects') do
             resp = connection.delete_multiple_objects(bucket, _keys, opts)
-            unless resp.body['DeleteResult'].empty?
-              errors = resp.body['DeleteResult'].map do |result|
+            error_results = resp.body['DeleteResult'].select { |r| r.include?('Error') }
+            unless error_results.empty?
+              errors = error_results.map do |result|
                 error = result['Error']
                 "Failed to delete: #{ error['Key'] }\n" +
                 "Reason: #{ error['Code'] }: #{ error['Message'] }"
