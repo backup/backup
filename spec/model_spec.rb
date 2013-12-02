@@ -185,18 +185,18 @@ describe 'Backup::Model' do
             instance_eval(&block) if block_given?
           end
         end
-	    end
-	    module ThreeArgs
-		    class Base
-	        attr_accessor :arg1, :arg2, :arg3, :block_arg
-		      def initialize(arg1, arg2, arg3, &block)
-		        @arg1 = arg1
-		        @arg2 = arg2
-			      @arg3 = arg3
-			      instance_eval(&block) if block_given?
-		      end
-		    end
-	    end
+      end
+      module ThreeArgs
+        class Base
+          attr_accessor :arg1, :arg2, :arg3, :block_arg
+          def initialize(arg1, arg2, arg3, &block)
+            @arg1 = arg1
+            @arg2 = arg2
+            @arg3 = arg3
+            instance_eval(&block) if block_given?
+          end
+        end
+      end
     end
 
     # Set +const+ to +replacement+ for the calling block
@@ -398,7 +398,7 @@ describe 'Backup::Model' do
           model.splitter.should be_an_instance_of Fake::ThreeArgs::Base
           model.splitter.arg1.should be(model)
           model.splitter.arg2.should == 123
-		      model.splitter.arg3.should == 2
+          model.splitter.arg3.should == 2
         end
       end
 
@@ -407,27 +407,18 @@ describe 'Backup::Model' do
           model.split_into_chunks_of('345', 2)
         end.to raise_error {|err|
           err.should be_an_instance_of Backup::Model::Error
-          err.message.should match(/must be one \(or two\) Integers/)
+          err.message.should match(/must be Integers/)
         }
       end
 
-	    it 'should raise an error if suffix_size is not greater than zero' do
-		    expect do
-		      model.split_into_chunks_of(345, 0)
-		    end.to raise_error {|err|
-		      err.should be_an_instance_of Backup::Model::Error
-		      err.message.should match(/must be one \(or two\) Integers/)
-		    }
-	    end
-
-	    it 'should raise an error if suffix_size is not an Integer' do
-		    expect do
-		      model.split_into_chunks_of(345, '2')
-		    end.to raise_error {|err|
-		      err.should be_an_instance_of Backup::Model::Error
-		      err.message.should match(/must be one \(or two\) Integers/)
-		    }
-	    end
+      it 'should raise an error if suffix_size is not an Integer' do
+        expect do
+          model.split_into_chunks_of(345, '2')
+        end.to raise_error {|err|
+          err.should be_an_instance_of Backup::Model::Error
+          err.message.should match(/must be Integers/)
+        }
+      end
     end
 
   end # describe 'DSL Methods'

@@ -50,7 +50,7 @@ module BackupSpec
           path.sub!(/(ssh|rsync)-daemon-module/, '')
           path = File.expand_path(File.join('~/', path))
         end
-        Dir[File.join(path, "#{ model.trigger }.tar*")]
+        Dir[File.join(path, "#{ model.trigger }.tar*")].sort
       end
     end
 
