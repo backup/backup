@@ -14,8 +14,7 @@ module Backup
         # supplemental messages for our own warnings.
         # These will generally occur during retry attempts.
         def write(message)
-          Logger.info message.split("\n").
-              map {|line| "[fog] #{ line }" }.join("\n")
+          Logger.info message.chomp
         end
 
         def tty?

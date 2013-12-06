@@ -17,16 +17,8 @@ describe Logger::FogAdapter do
 
   describe '#write' do
     it 'logs fog warnings as info messages' do
-      Logger.expects(:info).with('[fog] [WARNING] some message')
+      Logger.expects(:info).with('[fog][WARNING] some message')
       Fog::Logger.warning 'some message'
-    end
-
-    it 'handles multiline messages' do
-      Logger.expects(:info).with(
-        "[fog] [WARNING] some message\n" +
-        "[fog] with multiple lines"
-      )
-      Fog::Logger.warning "some message\nwith multiple lines"
     end
   end
 end
