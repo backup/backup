@@ -106,7 +106,7 @@ module Backup
         until keys.empty?
           _keys = keys.slice!(0, 1000)
           with_retries('DELETE Multiple Objects') do
-            resp = connection.delete_multiple_objects(bucket, _keys, opts)
+            resp = connection.delete_multiple_objects(bucket, _keys, opts.dup)
             unless resp.body['DeleteResult'].empty?
               errors = resp.body['DeleteResult'].map do |result|
                 error = result['Error']
