@@ -19,7 +19,7 @@ group :production do
   gem 'thor'
   gem 'open4'
   gem 'fog'
-  gem 'excon'
+  # gem 'excon' - use version specified by fog
   gem 'dropbox-sdk', '= 1.5.1' # patched
   gem 'net-ssh'
   gem 'net-scp'
@@ -45,5 +45,5 @@ group :no_ci do
 
   gem 'yard'
   gem 'redcarpet'
-  gem 'rake'
+  # gem 'rake' - this will interfere with `rake gemspec`
 end
