@@ -335,22 +335,42 @@ describe CloudIO::S3 do
       cloud_io.delete([])
     end
 
-    it 'deletes 1000 objects per request' do
-      keys_1k = 1000.times.map { 'key' }
-      keys_10 = 10.times.map { 'key' }
-      keys_all = keys_1k + keys_10
+    context 'with more than 1000 objects' do
+      let(:keys_1k) { 1000.times.map { 'key' } }
+      let(:keys_10) { 10.times.map { 'key' } }
+      let(:keys_all) { keys_1k + keys_10 }
 
-      cloud_io.expects(:with_retries).twice.with('DELETE Multiple Objects').yields
-      connection.expects(:delete_multiple_objects).with(
-        'my_bucket', keys_1k, { :quiet => true }
-      ).returns(resp_ok)
-      connection.expects(:delete_multiple_objects).with(
-        'my_bucket', keys_10, { :quiet => true }
-      ).returns(resp_ok)
+      before do
+        cloud_io.expects(:with_retries).twice.with('DELETE Multiple Objects').yields
+      end
 
-      expect do
-        cloud_io.delete(keys_all)
-      end.not_to change { keys_all }
+      it 'deletes 1000 objects per request' do
+        connection.expects(:delete_multiple_objects).with(
+          'my_bucket', keys_1k, { :quiet => true }
+        ).returns(resp_ok)
+        connection.expects(:delete_multiple_objects).with(
+          'my_bucket', keys_10, { :quiet => true }
+        ).returns(resp_ok)
+
+        expect do
+          cloud_io.delete(keys_all)
+        end.not_to change { keys_all }
+      end
+
+      it 'prevents mutation of options to delete_multiple_objects' do
+        connection.expects(:delete_multiple_objects).with do |bucket, keys, opts|
+          bucket == 'my_bucket' && keys == keys_1k && opts.delete(:quiet)
+        end.returns(resp_ok)
+        connection.expects(:delete_multiple_objects).with(
+          'my_bucket', keys_10, { :quiet => true }
+        ).returns(resp_ok)
+
+        expect do
+          cloud_io.delete(keys_all)
+        end.not_to change { keys_all }
+
+      end
+
     end
 
     it 'retries on raised errors' do
