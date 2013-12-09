@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width; initial-scale=1.0, maximum-scale=1" />
+
+    <link rel="stylesheet" href="{{ site.baseurl }}/css/docs.css" />
+    <link rel="stylesheet" href="{{ site.baseurl }}/css/syntax.css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:400,400italic,600|Poly" />
+
+    <title>
+      {% if page.title %}{{ page.title }} &middot; {% endif %}
+      {{ site.name }}
+    </title>
+  </head>
+  <body>
+
+    <header class="masthead">
+      <div class="masthead-inner">
+        {% include nav %}
+      </div>
+    </header>
+
+    <div class="content container">
+      {{ content }}
+    </div>
+
+  </body>
+</html>

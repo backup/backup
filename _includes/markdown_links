@@ -1,0 +1,14 @@
+{% assign version = page.url | remove_first: '/' | split: '/' | first %}
+{% case version %}
+  {% when 'v3' %}
+    {% assign tree = site.nav_v3 %}
+  {% when 'v4' %}
+    {% assign tree = site.nav_v4 %}
+{% endcase %}
+
+{% for node in tree %}
+  {% assign path = node[1] %}
+  {% unless path contains '|' %}
+[{{ path }}]: {{ site.baseurl }}/{{ version }}/{{ path }}
+  {% endunless %}
+{% endfor %}

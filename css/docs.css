@@ -1,0 +1,284 @@
+/*
+  Special thanks to Hyde, which was used as the starting point for this site.
+  http://andhyde.com or https://github.com/mdo/hyde.
+*/
+
+/* Body resets
+-------------------------------------------------- */
+
+* {
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Open Sans", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #454441;
+  background-color: #fff;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  margin: 16px 0 10px;
+  line-height: 1.25;
+  text-rendering: optimizeLegibility;
+}
+h1, h2 {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #aaa;
+}
+h1 {
+  font-size: 36px;
+}
+h2 {
+  font-size: 24px;
+}
+h3 {
+  font-size: 20px;
+}
+h4, h5, h6 {
+  font-size: 16px;
+}
+
+.container {
+  margin-bottom: 40px;
+}
+
+p {
+  margin: 0 0 10px;
+}
+
+.nav-title {
+  font-family: "Poly";
+  font-size: 48px;
+  line-height: 1.25;
+  margin: 0;
+  text-rendering: optimizeLegibility;
+}
+
+.nav-title a {
+  font-weight: 400;
+}
+
+.nav-title a:hover {
+  text-decoration: none;
+}
+
+.nav-version {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.nav-version .selected {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+ul, ol {
+  margin-bottom: 15px;
+}
+
+hr {
+  position: relative;
+  margin: 20px 0;
+  border: 0;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #fff;
+}
+
+strong {
+  color: #222;
+}
+
+abbr {
+  background-color: #eee;
+  display: inline-block;
+  padding: 3px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #555;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  border-radius: 3px;
+}
+
+code, pre {
+  padding: 0 3px 2px;
+  font-family: Menlo, Monaco, "Courier New", monospace;
+  font-size: 14px;
+  border-radius: 3px;
+}
+code {
+  padding: 2px 4px;
+  color: #d14;
+  background-color: #f7f7f9;
+  border: 1px solid #e1e1e8;
+}
+
+pre {
+  display: block;
+  margin: 0 0 14px;
+  padding: 5px 10px;
+  line-height: 18px;
+  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-all;
+  word-wrap: break-word;
+  background-color: #eee;
+}
+pre code {
+  padding: 0;
+  color: inherit;
+  background-color: transparent;
+  border: 0;
+}
+.highlight {
+  margin-bottom: 15px;
+  padding: 15px;
+  border-radius: 5px;
+}
+.highlight pre {
+  margin-bottom: 0;
+}
+
+.compressor-benchmarks table {
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+}
+.compressor-benchmarks tr {
+  margin: 0;
+  padding: 0;
+}
+.compressor-benchmarks th, td {
+  margin: 0;
+  padding: 5px;
+  border: 1px solid black;
+}
+
+/* Quotes */
+blockquote {
+  padding: 0 0 0 20px;
+  margin: 15px 30px 15px 0;
+  border-left: 5px solid #eee;
+}
+blockquote p {
+  margin-bottom: 0;
+  color: #7a7a7a;
+  text-indent: -0.4em;
+}
+blockquote p:before {
+  content: '\201C';
+}
+blockquote p:after {
+  content: '\201D';
+}
+
+img {
+  display: block;
+  margin: 0 0 15px;
+  border-radius: 5px;
+}
+
+.landing {
+  margin-top: 60px;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+}
+
+
+/* Links
+-------------------------------------------------- */
+
+a {
+  font-weight: 600;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+.masthead a {
+  color: #fff;
+}
+
+/* Scaffolding
+-------------------------------------------------- */
+
+/* Header */
+.masthead {
+  color: #fff;
+  background-color: #2a2a2a;
+  overflow: auto;
+}
+.masthead-inner {
+  padding: 20px;
+}
+
+.nav-tree {
+  margin-top: 10px;
+  color: #afafaf;
+  padding-left: 0;
+}
+.nav-tree ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.nav-tree-heading {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+/* Responsive
+-------------------------------------------------- */
+
+@media (min-width: 768px) {
+  .container {
+    margin-left: 10px;
+  }
+
+  .masthead-inner {
+    padding: 40px;
+  }
+}
+
+@media (min-width: 990px) {
+
+  /* Center container in available real estate */
+  .container {
+    margin-left: 30%;
+    margin-right: 10%;
+    width: 65%;
+  }
+
+  /* Fix the masthead to the side for impact and awesomeness */
+  .masthead {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 25%;
+    margin-bottom: 0;
+  }
+  .masthead-inner {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    padding: 20px;
+  }
+
+}

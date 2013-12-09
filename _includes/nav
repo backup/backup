@@ -1,0 +1,52 @@
+{% assign version = page.url | remove_first: '/' | split: '/' | first %}
+{% case version %}
+  {% when 'v3' %}
+    {% assign tree = site.nav_v3 %}
+    <p class="nav-title"><a href="{{ site.baseurl }}/v3">Backup</a></p>
+    <p class="nav-version">
+      <span class="selected">v3.x</span>
+      &middot; <a href="{{ site.baseurl }}/v4">v4.x</a>
+    </p>
+  {% when 'v4' %}
+    {% assign tree = site.nav_v4 %}
+    <p class="nav-title"><a href="{{ site.baseurl }}/v4">Backup</a></p>
+    <p class="nav-version">
+      <span class="selected">v4.x</span>
+      &middot; <a href="{{ site.baseurl }}/v3">v3.x</a>
+    </p>
+{% endcase %}
+
+<div class="nav-tree">
+  <ul>
+{% assign indent = '' %}
+{% for node in tree %}
+  {% assign name = node[0] %}
+  {% assign path = node[1] %}
+  {% assign indents = node[2] %}
+  {% if name %}
+    {% if path contains '://' %}
+      {% assign uri = path %}
+    {% else %}
+      {% capture uri %}{{ site.baseurl }}/{{ version }}/{{ path }}{% endcapture %}
+    {% endif %}
+    {% if indents %}
+      {% assign indent = indents | split: '|' | first | replace: 'x', '&nbsp;' %}
+      <li>
+        {% if path != '' %}
+          <p class="nav-tree-heading">{{ indent }}<a href="{{ uri }}">{{ name }}</a></p>
+        {% else %}
+          <p class="nav-tree-heading">{{ indent }}{{ name }}</p>
+        {% endif %}
+      </li>
+      {% assign indent = indents | split: '|' | last | replace: 'x', '&nbsp;' %}
+    {% else %}
+      <li>
+        {{ indent }}<a href="{{ uri }}">{{ name }}</a>
+      </li>
+    {% endif %}
+  {% else %}
+      <li>&nbsp;</li>
+  {% endif %}
+{% endfor %}
+  </ul>
+</div>
