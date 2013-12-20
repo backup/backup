@@ -101,6 +101,20 @@ describe Database::Redis do
         expect( err.message ).to match(/Response was: No OK Returned/)
       }
     end
+
+    specify 'retries if save already in progress' do
+      db.expects(:run).with('redis_save_cmd').times(5).
+          returns('Background save already in progress')
+      db.expects(:sleep).with(5).times(4)
+      expect do
+        db.send(:invoke_save!)
+      end.to raise_error(Database::Redis::Error) {|err|
+        expect( err.message ).to match(/Command was: redis_save_cmd/)
+        expect( err.message ).to match(
+          /Response was: Background save already in progress/
+        )
+      }
+    end
   end # describe '#invoke_save!'
 
   describe '#copy!' do

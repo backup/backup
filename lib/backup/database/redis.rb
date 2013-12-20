@@ -72,6 +72,15 @@ module Backup
             Response was: #{ resp }
           EOS
         end
+
+      rescue Error
+        if resp =~ /save already in progress/
+          unless (attempts ||= '0').next! == '5'
+            sleep 5
+            retry
+          end
+        end
+        raise
       end
 
       def copy!
