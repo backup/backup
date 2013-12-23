@@ -63,6 +63,11 @@ module Backup
         super
 
         if use_rdb
+          Logger.configure do
+            ignore_warning(/Transfer finished with success/)
+            ignore_warning(/SYNC sent to master/)
+          end
+
           pipeline = Pipeline.new
 
           pipeline << "#{ basic_redis_cmd } --rdb -"
@@ -86,7 +91,7 @@ module Backup
 
       private
 
-      def error_massage(action, command, response)
+      def error_message(action, command, response)
         <<-EOS
           Could not #{ action }
           Command was: #{ command }
@@ -97,7 +102,7 @@ module Backup
       def invoke_save!
         resp = run(redis_save_cmd)
         unless resp =~ /OK$/
-          raise Error, error_massage("invoke_save", redis_save_cmd, resp)
+          raise Error, error_message("invoke_save", redis_save_cmd, resp)
         end
       end
 
