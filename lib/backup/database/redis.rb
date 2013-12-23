@@ -35,9 +35,9 @@ module Backup
       attr_accessor :invoke_save
 
       ##
-      # Determines whether Backup should sync to remote server (via `--rdb` option) through
-      # the `redis-cli` utility to dump remote redis's data before copying.
-      attr_accessor :sync_remote
+      # Determines whether Backup should use `--rdb` through the `redis-cli` utility
+      # to dump redis's data before copying.
+      attr_accessor :use_rdb
 
       ##
       # Additional "redis-cli" options
@@ -57,17 +57,31 @@ module Backup
       #   <trigger>/databases/Redis[-<database_id>].rdb[.gz]
       #
       # If +invoke_save+ is true, `redis-cli SAVE` will be invoked.
-      # If +sync_remote+ is true, `redis-cli --rdb` will be invoked. If that is
+      # If +use_rdb+ is true, `redis-cli --rdb` will be invoked. If that is
       # the case, there is no need to invoke_save.
       def perform!
         super
 
-        sync_remote! if sync_remote
-        invoke_save! if invoke_save
+        if use_rdb
+          pipeline = Pipeline.new
 
-        copy!
+          pipeline << "#{ basic_redis_cmd } --rdb -"
 
-        log!(:finished)
+          pipeline << "#{ utility(:cat) } > " +
+            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
+
+          pipeline.run
+
+          if pipeline.success?
+            log!(:finished)
+          else
+            raise Error, "Dump Failed!\n" + pipeline.error_messages
+          end
+        else
+          invoke_save! if invoke_save
+          copy!
+          log!(:finished)
+        end
       end
 
       private
@@ -84,13 +98,6 @@ module Backup
         resp = run(redis_save_cmd)
         unless resp =~ /OK$/
           raise Error, error_massage("invoke_save", redis_save_cmd, resp)
-        end
-      end
-
-      def sync_remote!
-        resp = run(redis_rdb_cmd)
-        unless resp =~ /Transfer finished with success\.$/
-          raise Error, error_massage("sync_remote", redis_rdb_cmd, resp)
         end
       end
 
@@ -120,10 +127,6 @@ module Backup
 
       def redis_save_cmd
         "#{ basic_redis_cmd } SAVE"
-      end
-
-      def redis_rdb_cmd
-        "#{ basic_redis_cmd } --rdb #{ File.join(path, name) }"
       end
 
       def password_option
