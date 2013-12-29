@@ -244,13 +244,15 @@ module Backup
     long_desc <<-EOS.gsub(/^ +/, '')
       Generates a Backup model file.
 
-      '--config-path' is the path to the *directory* where 'config.rb' is located.
+      If your configuration file is not in the default location at
+      #{ Config.config_file }
+      you must specify it's location using '--config-file'.
+      If no configuration file exists at this location, one will be created.
 
       The model file will be created as '<config_path>/models/<trigger>.rb'
-
-      The default location would be:
-
-      #{ Config.root_path }/models/
+      Your model file will be created in a 'models/' sub-directory
+      where your config file is located. The default location would be:
+      #{ Config.root_path }/models/<trigger>.rb
     EOS
 
     method_option :trigger,
@@ -259,87 +261,73 @@ module Backup
                   :type     => :string,
                   :desc     => 'Trigger name for the Backup model'
 
-    method_option :config_path,
+    method_option :config_file,
                   :type     => :string,
-                  :desc     => 'Path to your Backup configuration directory'
+                  :desc     => 'Path to your Backup configuration file'
 
     # options with their available values
-    %w{ databases storages syncers
-        encryptors compressors notifiers }.map(&:to_sym).each do |name|
-      path = File.join(Backup::TEMPLATE_PATH, 'cli', name.to_s[0..-2])
-      method_option name, :type => :string, :desc =>
-          "(#{Dir[path + '/*'].sort.map {|p| File.basename(p) }.join(', ')})"
+    %w{ databases storages syncers encryptor compressor notifiers }.each do |name|
+      path = File.join(Backup::TEMPLATE_PATH, 'cli', name)
+      opts = Dir[path + '/*'].sort.map {|p| File.basename(p) }.join(', ')
+      method_option name, :type => :string, :desc => "(#{ opts })"
     end
 
     method_option :archives,
                   :type     => :boolean,
                   :desc     => 'Model will include tar archives.'
+
     method_option :splitter,
                   :type     => :boolean,
                   :default  => false,
                   :desc     => 'Add Splitter to the model'
 
-    define_method "generate:model" do
-      opts = options.merge(
-        :trigger      =>  options[:trigger].gsub(/\W/, '_'),
-        :config_path  =>  options[:config_path] ?
-                          File.expand_path(options[:config_path]) : nil
-      )
-      config_path    = opts[:config_path] || Config.root_path
-      models_path    = File.join(config_path, "models")
-      config         = File.join(config_path, "config.rb")
-      model          = File.join(models_path, "#{opts[:trigger]}.rb")
+    define_method 'generate:model' do
+      opts = options.merge(:trigger => options[:trigger].gsub(/\W/, '_'))
+      config_file = opts[:config_file] ?
+                    File.expand_path(opts.delete(:config_file)) : Config.config_file
+      models_path = File.join(File.dirname(config_file), 'models')
+      model_file  = File.join(models_path, "#{ opts[:trigger] }.rb")
 
-      if File.file?(config_path)
-        abort('--config-path should be a directory, not a file.')
+      unless File.exist?(config_file)
+        invoke 'generate:config', [], :config_file => config_file
       end
 
       FileUtils.mkdir_p(models_path)
-      if Helpers.overwrite?(model)
-        File.open(model, 'w') do |file|
-          file.write(
-            Backup::Template.new({:options => opts}).result("cli/model.erb")
-          )
+      if Helpers.overwrite?(model_file)
+        File.open(model_file, 'w') do |file|
+          file.write(Backup::Template.new({:options => opts}).result('cli/model'))
         end
-        puts "Generated model file: '#{ model }'."
-      end
-
-      unless File.exist?(config)
-        File.open(config, "w") do |file|
-          file.write(Backup::Template.new.result("cli/config"))
-        end
-        puts "Generated configuration file: '#{ config }'."
+        puts "Generated model file: '#{ model_file }'."
       end
     end
 
     ##
     # [Generate:Config]
     # Generates the main configuration file
-    desc 'generate:config', 'Generates the main Backup bootstrap/configuration file'
+    desc 'generate:config', 'Generates the main Backup configuration file'
 
     long_desc <<-EOS.gsub(/^ +/, '')
-      Path to your Backup configuration directory.
+      Path to the Backup configuration file to generate.
 
-      Default path would be:
+      Defaults to:
 
-      #{ Config.root_path }
+      #{ Config.config_file }
     EOS
 
-    method_option :config_path,
+    method_option :config_file,
                   :type => :string,
-                  :desc => 'Path to your Backup configuration directory.'
+                  :desc => 'Path to the Backup configuration file to generate.'
 
     define_method 'generate:config' do
-      config_path = options[:config_path] ?
-          File.expand_path(options[:config_path]) : Config.root_path
-      config = File.join(config_path, "config.rb")
+      config_file = options[:config_file] ?
+          File.expand_path(options[:config_file]) : Config.config_file
 
-      FileUtils.mkdir_p(config_path)
-      if Helpers.overwrite?(config)
-        File.open(config, "w") do |file|
-          file.write(Backup::Template.new.result("cli/config"))
+      FileUtils.mkdir_p(File.dirname(config_file))
+      if Helpers.overwrite?(config_file)
+        File.open(config_file, 'w') do |file|
+          file.write(Backup::Template.new.result('cli/config'))
         end
-        puts "Generated configuration file: '#{ config }'."
+        puts "Generated configuration file: '#{ config_file }'."
       end
     end
 

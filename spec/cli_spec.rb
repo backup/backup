@@ -449,7 +449,7 @@ describe 'Backup::CLI' do
       FileUtils.rm_r(@tmpdir, :force => true, :secure => true)
     end
 
-    context 'when given a config_path' do
+    context 'when given a --config-file' do
       context 'when no config file exists' do
         it 'should create both a config and a model under the given path' do
           Dir.chdir(@tmpdir) do |path|
@@ -458,15 +458,15 @@ describe 'Backup::CLI' do
 
             out, err = capture_io do
               ARGV.replace(['generate:model',
-                 '--config-path', File.join(path, 'custom'),
+                 '--config-file', config_file,
                  '--trigger', 'my test#trigger'
               ])
               cli.start
             end
 
             err.should be_empty
-            out.should == "Generated model file: '#{ model_file }'.\n" +
-                "Generated configuration file: '#{ config_file }'.\n"
+            out.should == "Generated configuration file: '#{ config_file }'.\n" +
+                          "Generated model file: '#{ model_file }'.\n"
             File.exist?(model_file).should be_true
             File.exist?(config_file).should be_true
           end
@@ -481,9 +481,12 @@ describe 'Backup::CLI' do
             FileUtils.mkdir_p(File.join(path, 'custom'))
             FileUtils.touch(config_file)
 
+            cli::Helpers.expects(:overwrite?).with(config_file).never
+            cli::Helpers.expects(:overwrite?).with(model_file).returns(true)
+
             out, err = capture_io do
               ARGV.replace(['generate:model',
-                 '--config-path', File.join(path, 'custom'),
+                 '--config-file', config_file,
                  '--trigger', 'my+test@trigger'
               ])
               cli.start
@@ -494,28 +497,6 @@ describe 'Backup::CLI' do
             File.exist?(model_file).should be_true
           end
         end
-
-        it 'should abort if --config-path is the path to config.rb itself' do
-          Dir.chdir(@tmpdir) do |path|
-            config_file = File.join(path, 'custom', 'config.rb')
-            FileUtils.mkdir_p(File.join(path, 'custom'))
-            FileUtils.touch(config_file)
-
-            out, err = capture_io do
-              ARGV.replace(['generate:model',
-                 '--config-path', config_file,
-                 '--trigger', 'foo'
-              ])
-              expect do
-                cli.start
-              end.to raise_error(SystemExit)
-            end
-
-            err.should == "--config-path should be a directory, not a file.\n"
-            out.should be_empty
-          end
-
-        end
       end
 
       context 'when a model file already exists' do
@@ -523,28 +504,29 @@ describe 'Backup::CLI' do
           Dir.chdir(@tmpdir) do |path|
             model_file  = File.join(path, 'models', 'test_trigger.rb')
             config_file = File.join(path, 'config.rb')
+            FileUtils.mkdir_p(File.dirname(model_file))
+            FileUtils.touch(model_file)
 
-            cli::Helpers.expects(:overwrite?).with(model_file).returns(false)
+            $stdin.expects(:gets).returns('n')
 
             out, err = capture_io do
               ARGV.replace(['generate:model',
-                  '--config-path', path,
+                  '--config-file', config_file,
                   '--trigger', 'test_trigger'
               ])
               cli.start
             end
 
-            err.should be_empty
+            err.should include('Do you want to overwrite?')
             out.should == "Generated configuration file: '#{ config_file }'.\n"
             File.exist?(config_file).should be_true
-            File.exist?(model_file).should be_false
           end
         end
       end
 
-    end # context 'when given a config_path'
+    end # context 'when given a --config-file'
 
-    context 'when not given a config_path' do
+    context 'when not given a --config-file' do
       it 'should create both a config and a model under the root path' do
         Dir.chdir(@tmpdir) do |path|
           Backup::Config.send(:update, :root_path => path)
@@ -557,8 +539,8 @@ describe 'Backup::CLI' do
           end
 
           err.should be_empty
-          out.should == "Generated model file: '#{ model_file }'.\n" +
-              "Generated configuration file: '#{ config_file }'.\n"
+          out.should == "Generated configuration file: '#{ config_file }'.\n" +
+                        "Generated model file: '#{ model_file }'.\n"
           File.exist?(model_file).should be_true
           File.exist?(config_file).should be_true
         end
@@ -570,8 +552,8 @@ describe 'Backup::CLI' do
         databases (mongodb, mysql, postgresql, redis, riak)
         storages (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
         syncers (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
-        encryptors (gpg, openssl)
-        compressors (bzip2, custom, gzip)
+        encryptor (gpg, openssl)
+        compressor (bzip2, custom, gzip)
         notifiers (campfire, hipchat, http_post, mail, nagios, prowl, pushover, twitter)
       EOS
 
@@ -598,14 +580,14 @@ describe 'Backup::CLI' do
       FileUtils.rm_r(@tmpdir, :force => true, :secure => true)
     end
 
-    context 'when given a config_path' do
+    context 'when given a --config-file' do
       it 'should create a config file in the given path' do
         Dir.chdir(@tmpdir) do |path|
-          config_file = File.join(path, 'custom', 'config.rb')
+          config_file = File.join(path, 'custom', 'my_config.rb')
 
           out, err = capture_io do
             ARGV.replace(['generate:config',
-                '--config-path', File.join(path, 'custom'),
+                '--config-file', config_file
             ])
             cli.start
           end
@@ -617,7 +599,7 @@ describe 'Backup::CLI' do
       end
     end
 
-    context 'when not given a config_path' do
+    context 'when not given a --config-file' do
       it 'should create a config file in the root path' do
         Dir.chdir(@tmpdir) do |path|
           Backup::Config.send(:update, :root_path => path)
@@ -640,17 +622,18 @@ describe 'Backup::CLI' do
         Dir.chdir(@tmpdir) do |path|
           Backup::Config.send(:update, :root_path => path)
           config_file = File.join(path, 'config.rb')
+          FileUtils.mkdir_p(File.dirname(config_file))
+          FileUtils.touch(config_file)
 
-          cli::Helpers.expects(:overwrite?).with(config_file).returns(false)
+          $stdin.expects(:gets).returns('n')
 
           out, err = capture_io do
             ARGV.replace(['generate:config'])
             cli.start
           end
 
-          err.should be_empty
+          err.should include('Do you want to overwrite?')
           out.should be_empty
-          File.exist?(config_file).should be_false
         end
       end
     end
