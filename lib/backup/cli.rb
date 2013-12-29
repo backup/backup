@@ -276,8 +276,8 @@ module Backup
                   :desc     => 'Model will include tar archives.'
     method_option :splitter,
                   :type     => :boolean,
-                  :default  => true,
-                  :desc     => "Use `--no-splitter` to disable"
+                  :default  => false,
+                  :desc     => 'Add Splitter to the model'
 
     define_method "generate:model" do
       opts = options.merge(

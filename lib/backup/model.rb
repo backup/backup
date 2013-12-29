@@ -187,7 +187,7 @@ module Backup
     # +suffix_length+ controls the number of characters used in the suffix
     # (and the maximum number of chunks possible).
     # ie. 1 (-a, -b), 2 (-aa, -ab), 3 (-aaa, -aab)
-    def split_into_chunks_of(chunk_size, suffix_length = 2)
+    def split_into_chunks_of(chunk_size, suffix_length = 3)
       if chunk_size.is_a?(Integer) && suffix_length.is_a?(Integer)
         @splitter = Splitter.new(self, chunk_size, suffix_length)
       else
