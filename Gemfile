@@ -12,6 +12,10 @@ source 'https://rubygems.org'
 # Whenever Gemfile.lock is updated, `rake gemspec` must be run to sync
 # backup.gemspec with Gemfile.lock. All gems in the :production group
 # (and their dependencies) will be added to backup.gemspec.
+#
+# Note that due to this, backup itself is not part of the bundle.
+# If you need to run backup from the project root, use:
+# $ ruby -rbundler/setup -Ilib ./bin/backup
 ##
 
 # Specify version requirements to control `bundle update` if needed.
