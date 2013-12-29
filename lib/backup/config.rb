@@ -25,8 +25,21 @@ module Backup
           raise Error, "Could not find configuration file: '#{config_file}'."
         end
 
+        config = File.read(config_file)
+        version = Backup::VERSION.split('.').first
+        unless config =~ /^# Backup v#{ version }\.x Configuration$/
+          raise Error, <<-EOS
+            Invalid Configuration File
+            The configuration file at '#{ config_file }'
+            does not appear to be a Backup v#{ version }.x configuration file.
+            If you have upgraded to v#{ version }.x from a previous version,
+            you need to upgrade your configuration file.
+            Please see the instructions for upgrading in the Backup documentation.
+          EOS
+        end
+
         dsl = DSL.new
-        dsl.instance_eval(File.read(config_file), config_file)
+        dsl.instance_eval(config, config_file)
 
         update(dsl._config_options)  # from config.rb
         update(options)              # command line takes precedence

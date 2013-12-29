@@ -11,16 +11,18 @@ describe Config do
   describe '#load' do
 
     it 'loads config.rb and models' do
-      File.stubs(:exist? => true, :directory? => true)
-      dsl = config::DSL.new
-      dsl.instance_variable_set(:@loaded, [])
-      config::DSL.stubs(:new => dsl)
-
-      File.expects(:read).with(config.config_file).returns('@loaded << :config')
-
+      File.stubs(
+        :exist? => true,
+        :read => "# Backup v4.x Configuration\n@loaded << :config",
+        :directory? => true
+      )
       Dir.stubs(:[] => ['model_a', 'model_b'])
       File.expects(:read).with('model_a').returns('@loaded << :model_a')
       File.expects(:read).with('model_b').returns('@loaded << :model_b')
+
+      dsl = config::DSL.new
+      dsl.instance_variable_set(:@loaded, [])
+      config::DSL.stubs(:new => dsl)
 
       config.load
 
@@ -41,13 +43,33 @@ describe Config do
       }
     end
 
+    it 'raises an error if config file version is invalid' do
+      File.stubs(
+        :exist? => true,
+        :read => '# Backup v3.x Configuration',
+        :directory? => true
+      )
+      Dir.stubs(:[] => [])
+
+      expect do
+        config.load(:config_file => '/foo')
+      end.to raise_error {|err|
+        expect( err ).to be_a config::Error
+        expect( err.message ).to match(/Invalid Configuration File/)
+      }
+    end
+
     describe 'setting config paths from command line options' do
       let(:default_root_path) {
         File.join(File.expand_path(ENV['HOME'] || ''), 'Backup')
       }
 
       before do
-        File.stubs(:exist? => true, :read => '', :directory? => true)
+        File.stubs(
+          :exist? => true,
+          :read => '# Backup v4.x Configuration',
+          :directory? => true
+        )
         Dir.stubs(:[] => [])
       end
 

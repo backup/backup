@@ -1,8 +1,7 @@
 # encoding: utf-8
 
 ##
-# Backup
-# Generated Main Config Template
+# Backup v<%= Backup::VERSION.split('.').first %>.x Configuration
 #
 # For more information:
 #
