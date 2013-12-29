@@ -3,11 +3,8 @@
 ##
 # Backup v<%= Backup::VERSION.split('.').first %>.x Configuration
 #
-# For more information:
-#
-# View the Git repository at https://github.com/meskyanichi/backup
-# View the Wiki/Documentation at https://github.com/meskyanichi/backup/wiki
-# View the issue log at https://github.com/meskyanichi/backup/issues
+# Documentation: http://meskyanichi.github.io/backup
+# Issue Tracker: https://github.com/meskyanichi/backup/issues
 
 ##
 # Config Options

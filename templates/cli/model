@@ -6,6 +6,9 @@
 #
 # $ backup perform -t <%= @options[:trigger] %> [-c <path_to_configuration_file>]
 #
+# For more information about Backup's components, see the documentation at:
+# http://meskyanichi.github.io/backup
+#
 Model.new(:<%= @options[:trigger] %>, 'Description for <%= @options[:trigger] %>') do
 <% if @options[:splitter] %>
 <%= Backup::Template.new.result('cli/splitter') %>

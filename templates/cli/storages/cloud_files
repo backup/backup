@@ -1,8 +1,6 @@
   ##
   # Rackspace Cloud Files [Storage]
   #
-  # See the documentation on the Wiki for details.
-  # https://github.com/meskyanichi/backup/wiki/Storages
   store_with CloudFiles do |cf|
     cf.api_key            = 'my_api_key'
     cf.username           = 'my_username'

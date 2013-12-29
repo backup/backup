@@ -1,8 +1,6 @@
   ##
   # Rackspace Cloud Files [Syncer]
   #
-  # See the documentation on the Wiki for details.
-  # https://github.com/meskyanichi/backup/wiki/Syncers
   sync_with Cloud::CloudFiles do |cf|
     cf.username          = "my_username"
     cf.api_key           = "my_api_key"

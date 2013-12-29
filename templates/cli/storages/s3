@@ -1,8 +1,6 @@
   ##
   # Amazon Simple Storage Service [Storage]
   #
-  # See the documentation on the Wiki for details.
-  # https://github.com/meskyanichi/backup/wiki/Storages
   store_with S3 do |s3|
     # AWS Credentials
     s3.access_key_id     = "my_access_key_id"

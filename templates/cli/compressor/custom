@@ -1,10 +1,6 @@
   ##
   # Custom [Compressor]
   #
-  # For information on using a Custom Compressor,
-  # please see the following Wiki page:
-  # https://github.com/meskyanichi/backup/wiki/Compressors
-  #
   compress_with Custom do |compressor|
     compressor.command   = 'gzip'
     compressor.extension = '.gz'

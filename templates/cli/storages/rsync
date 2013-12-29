@@ -9,8 +9,6 @@
   # If no `host` is specified, the transfer will be a local
   # operation. `mode` and `compress` will have no meaning.
   #
-  # See the documentation on the Wiki for details.
-  # https://github.com/meskyanichi/backup/wiki/Storages
   store_with RSync do |rsync|
     rsync.mode      = :ssh
     rsync.host      = "123.45.678.90"

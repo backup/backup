@@ -1,9 +1,6 @@
   ##
   # HttpPost [Notifier]
   #
-  # For details, see:
-  # https://github.com/meskyanichi/backup/wiki/Notifiers
-  #
   notify_by HttpPost do |post|
     post.on_success = true
     post.on_warning = true

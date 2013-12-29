@@ -2,8 +2,7 @@
   # Mail [Notifier]
   #
   # The default delivery method for Mail Notifiers is 'SMTP'.
-  # See the Wiki for other delivery options.
-  # https://github.com/meskyanichi/backup/wiki/Notifiers
+  # See the documentation for other delivery options.
   #
   notify_by Mail do |mail|
     mail.on_success           = true

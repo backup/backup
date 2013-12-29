@@ -5,8 +5,6 @@
   # of an rsync daemon on the remote. If you wish to connect
   # directly to an rsync daemon, or via SSH using daemon features,
   # :rsync_daemon and :ssh_daemon modes are also available.
-  # See the documentation on the Wiki for details.
-  # https://github.com/meskyanichi/backup/wiki/Syncers
   #
   sync_with RSync::Push do |rsync|
     rsync.mode     = :ssh

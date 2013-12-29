@@ -14,12 +14,12 @@ To install the latest version, run:
 
     $ [sudo] gem install backup
 
-See [Installation](https://github.com/meskyanichi/backup/wiki/Installation) for more information about installing and
+See [Installation](http://meskyanichi.github.io/backup/v4/installation) for more information about installing and
 updating your installation of Backup.
 
-See [Release Notes](https://github.com/meskyanichi/backup/wiki/Release-Notes) for changes in the latest version.
+See [Release Notes](http://meskyanichi.github.io/backup/v4/release-notes) for changes in the latest version.
 
-Backup supports Ruby versions 1.9.2, 1.9.3 and 2.0.0. (For ruby-1.8.7, use Backup v3.x)
+Backup supports Ruby versions 1.9.3 and 2.0.0. (For 1.8.7 and 1.9.2, use Backup v3.x)
 
 ## Overview
 
@@ -36,14 +36,14 @@ The `:my_backup` symbol is the model's `trigger` and used to perform the job:
     $ backup perform --trigger my_backup
 
 Backup's _components_ are added to the backup _model_ to define the actions to be performed.  
-All of Backup's components are fully documented in the [Backup Wiki](https://github.com/meskyanichi/backup/wiki).  
+All of Backup's components are fully documented in the [Backup Documentation](http://meskyanichi.github.io/backup/v4).  
 The following is brief overview of the components Backup provides:
 
 ### Archives and Databases
 
-[Archives](https://github.com/meskyanichi/backup/wiki/Archives) create basic `tar` archives. Both **GNU** and **BSD**
+[Archives](http://meskyanichi.github.io/backup/v4/archives) create basic `tar` archives. Both **GNU** and **BSD**
 `tar` are supported.  
-[Databases](https://github.com/meskyanichi/backup/wiki/Databases) create backups of one of the following supported databases:
+[Databases](http://meskyanichi.github.io/backup/v4/databases) create backups of one of the following supported databases:
 
 - MySQL
 - PostgreSQL
@@ -55,11 +55,11 @@ Any number of Archives and Databases may be defined within a backup _model_.
 
 ### Compressors and Encryptors
 
-Adding a [Compressor](https://github.com/meskyanichi/backup/wiki/Compressors) to your backup will compress all the
+Adding a [Compressor](http://meskyanichi.github.io/backup/v4/compressors) to your backup will compress all the
 Archives and Database backups within your final archive package.  
 `Gzip`, `Bzip2` and other similar compressors are supported.
 
-Adding an [Encryptor](https://github.com/meskyanichi/backup/wiki/Encryptors) allows you to encrypt your final backup package.  
+Adding an [Encryptor](http://meskyanichi.github.io/backup/v4/encryptors) allows you to encrypt your final backup package.  
 Both `OpenSSL` and `GPG` are supported.
 
 Your final backup _package_ might look something like this:
@@ -79,7 +79,7 @@ $ tar -tvf my_backup.tar
 ### Storages
 
 Once your final backup package is ready, you can use any number of the following
-[Storages](https://github.com/meskyanichi/backup/wiki/Storages) to store it:
+[Storages](http://meskyanichi.github.io/backup/v4/storages) to store it:
 
 - Amazon Simple Storage Service (S3)
 - Rackspace Cloud Files (Mosso)
@@ -90,10 +90,10 @@ Once your final backup package is ready, you can use any number of the following
 
 All of the above Storages _(except RSync)_ support:
 
-- [Cycling](https://github.com/meskyanichi/backup/wiki/Cycling) to keep and rotate multiple copies
+- [Cycling](http://meskyanichi.github.io/backup/v4/storages) to keep and rotate multiple copies
 of your stored backups.
 
-- [Splitter](https://github.com/meskyanichi/backup/wiki/Splitter) to break up a large
+- [Splitter](http://meskyanichi.github.io/backup/v4/splitter) to break up a large
 backup package into smaller files.
 
 When using the RSync Storage, once a full backup has been stored, subsequent backups only need to
@@ -101,7 +101,7 @@ transmit the changed portions of the final archive to bring the remote copy up-t
 
 ### Syncers
 
-[Syncers](https://github.com/meskyanichi/backup/wiki/Syncers) are processed after your final backup archive has been
+[Syncers](http://meskyanichi.github.io/backup/v4/syncers) are processed after your final backup archive has been
 stored and allow you to perform file synchronization.
 
 Backup includes two types of Syncers:
@@ -113,7 +113,7 @@ A backup _model_ may contain _only_ Syncers as well.
 
 ### Notifiers
 
-[Notifiers](https://github.com/meskyanichi/backup/wiki/Notifiers) are used to send notifications upon successful and/or
+[Notifiers](http://meskyanichi.github.io/backup/v4/notifiers) are used to send notifications upon successful and/or
 failed completion of your backup _model_.
 
 Supported notification services include:
@@ -131,7 +131,7 @@ Supported notification services include:
 
 ## Generators
 
-Backup makes it easy to setup new backup _model_ files with its [Generator](https://github.com/meskyanichi/backup/wiki/Generator) command.  
+Backup makes it easy to setup new backup _model_ files with its [Generator](http://meskyanichi.github.io/backup/v4/generator) command.  
 
 ```
 $ backup generate:model -t my_backup --archives --databases=postgresql,redis --compressors=gzip \
@@ -139,7 +139,7 @@ $ backup generate:model -t my_backup --archives --databases=postgresql,redis --c
 ```
 
 Simply generate a new _model_ using the options you need, then update the configuration for each component using the
-[Wiki](https://github.com/meskyanichi/backup/wiki) documentation.
+[Documentation](http://meskyanichi.github.io/backup/v4).
 
 The following is an example of a what this Backup _model_ might look like:
 
@@ -216,16 +216,13 @@ Backup::Model.new(:my_backup, 'Description for my_backup') do
 end
 ```
 
-The [Getting Started](https://github.com/meskyanichi/backup/wiki/Getting-Started) page provides a simple
+The [Getting Started](http://meskyanichi.github.io/backup/v4/getting-started) page provides a simple
 walk-through to familiarize you with setting up, configuring and running a backup job.
 
 ## Suggestions, Issues, etc...
 
 If you have any suggestions or problems, please submit an Issue or Pull Request using Backup's
-[Issue Log](https://github.com/meskyanichi/backup/issues).
-
-If you find any errors or omissions in Backup's documentation [Wiki](https://github.com/meskyanichi/backup/wiki),
-please feel free to edit it!
+[Issue Tracker](https://github.com/meskyanichi/backup/issues).
 
 Backup has seen many improvements over the years thanks to it's
 [Contributors](https://github.com/meskyanichi/backup/contributors), as well as those who have help discuss issues and
