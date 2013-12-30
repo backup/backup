@@ -2,7 +2,7 @@
 
 module BackupSpec
   PROJECT_ROOT = '/backup.git'
-  CONFIG_TEMPLATE = File.readlines(File.join(PROJECT_ROOT, 'templates/cli/config'))
+  CONFIG_TEMPLATE = Backup::Template.new.result('cli/config')
   LOCAL_STORAGE_PATH = '/home/vagrant/Storage'
   ALT_CONFIG_PATH = '/home/vagrant/Backup_alt'
   LOCAL_SYNC_PATH = '/home/vagrant/sync_root'
@@ -55,7 +55,7 @@ module BackupSpec
 
         #{ text }
 
-        #{ CONFIG_TEMPLATE.join }
+        #{ CONFIG_TEMPLATE }
       EOS
 
       # Create models path, since models are always relative to the config file.
