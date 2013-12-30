@@ -143,7 +143,7 @@ describe Notifier::Mail do
             Ruby: #{ RUBY_DESCRIPTION }
 
             Project Home:  https://github.com/meskyanichi/backup
-            Documentation: https://github.com/meskyanichi/backup/wiki
+            Documentation: http://meskyanichi.github.io/backup
             Issue Tracker: https://github.com/meskyanichi/backup/issues
           EOS
         end
@@ -172,7 +172,7 @@ describe Notifier::Mail do
             Ruby: #{ RUBY_DESCRIPTION }
 
             Project Home:  https://github.com/meskyanichi/backup
-            Documentation: https://github.com/meskyanichi/backup/wiki
+            Documentation: http://meskyanichi.github.io/backup
             Issue Tracker: https://github.com/meskyanichi/backup/issues
           EOS
         end
@@ -208,7 +208,7 @@ describe Notifier::Mail do
             Ruby: #{ RUBY_DESCRIPTION }
 
             Project Home:  https://github.com/meskyanichi/backup
-            Documentation: https://github.com/meskyanichi/backup/wiki
+            Documentation: http://meskyanichi.github.io/backup
             Issue Tracker: https://github.com/meskyanichi/backup/issues
           EOS
         end
@@ -239,7 +239,7 @@ describe Notifier::Mail do
             Ruby: #{ RUBY_DESCRIPTION }
 
             Project Home:  https://github.com/meskyanichi/backup
-            Documentation: https://github.com/meskyanichi/backup/wiki
+            Documentation: http://meskyanichi.github.io/backup
             Issue Tracker: https://github.com/meskyanichi/backup/issues
           EOS
         end
@@ -275,7 +275,7 @@ describe Notifier::Mail do
             Ruby: #{ RUBY_DESCRIPTION }
 
             Project Home:  https://github.com/meskyanichi/backup
-            Documentation: https://github.com/meskyanichi/backup/wiki
+            Documentation: http://meskyanichi.github.io/backup
             Issue Tracker: https://github.com/meskyanichi/backup/issues
           EOS
         end
@@ -306,7 +306,7 @@ describe Notifier::Mail do
             Ruby: #{ RUBY_DESCRIPTION }
 
             Project Home:  https://github.com/meskyanichi/backup
-            Documentation: https://github.com/meskyanichi/backup/wiki
+            Documentation: http://meskyanichi.github.io/backup
             Issue Tracker: https://github.com/meskyanichi/backup/issues
           EOS
         end
