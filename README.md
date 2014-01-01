@@ -228,5 +228,5 @@ Backup has seen many improvements over the years thanks to it's
 [Contributors](https://github.com/meskyanichi/backup/contributors), as well as those who have help discuss issues and
 improve the documentation, and looks forward to continuing to provide users with a reliable backup solution.
 
-**Copyright (c) 2009-2013 [Michael van Rooijen](http://michaelvanrooijen.com/) ( [@meskyanichi](http://twitter.com/#!/meskyanichi) )**  
+**Copyright (c) 2009-2014 [Michael van Rooijen](http://michaelvanrooijen.com/) ( [@meskyanichi](http://twitter.com/#!/meskyanichi) )**  
 Released under the **MIT** [License](LICENSE.md).
