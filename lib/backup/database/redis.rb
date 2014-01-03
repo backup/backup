@@ -25,7 +25,7 @@ module Backup
       attr_accessor :password
 
       ##
-      # Connectivity options for the +invoke_save+ option.
+      # Connectivity options for the +invoke_save+ and +sync_remote+ options.
       attr_accessor :host, :port, :socket
 
       ##
@@ -33,6 +33,11 @@ module Backup
       # the `redis-cli` utility to persist the most recent data before
       # copying the dump file specified by +path+ and +name+.
       attr_accessor :invoke_save
+
+      ##
+      # Determines whether Backup should use `--rdb` through the `redis-cli` utility
+      # to dump redis's data before copying.
+      attr_accessor :use_rdb
 
       ##
       # Additional "redis-cli" options
@@ -52,25 +57,52 @@ module Backup
       #   <trigger>/databases/Redis[-<database_id>].rdb[.gz]
       #
       # If +invoke_save+ is true, `redis-cli SAVE` will be invoked.
+      # If +use_rdb+ is true, `redis-cli --rdb` will be invoked. If that is
+      # the case, there is no need to invoke_save.
       def perform!
         super
 
-        invoke_save! if invoke_save
-        copy!
+        if use_rdb
+          Logger.configure do
+            ignore_warning(/Transfer finished with success/)
+            ignore_warning(/SYNC sent to master/)
+          end
 
-        log!(:finished)
+          pipeline = Pipeline.new
+
+          pipeline << "#{ basic_redis_cmd } --rdb -"
+
+          pipeline << "#{ utility(:cat) } > " +
+            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
+
+          pipeline.run
+
+          if pipeline.success?
+            log!(:finished)
+          else
+            raise Error, "Dump Failed!\n" + pipeline.error_messages
+          end
+        else
+          invoke_save! if invoke_save
+          copy!
+          log!(:finished)
+        end
       end
 
       private
 
+      def error_message(action, command, response)
+        <<-EOS
+          Could not #{ action }
+          Command was: #{ command }
+          Response was: #{ response }
+        EOS
+      end
+
       def invoke_save!
         resp = run(redis_save_cmd)
         unless resp =~ /OK$/
-          raise Error, <<-EOS
-            Could not invoke the Redis SAVE command.
-            Command was: #{ redis_save_cmd }
-            Response was: #{ resp }
-          EOS
+          raise Error, error_message("invoke_save", redis_save_cmd, resp)
         end
 
       rescue Error
@@ -102,9 +134,13 @@ module Backup
         end
       end
 
-      def redis_save_cmd
+      def basic_redis_cmd
         "#{ utility('redis-cli') } #{ password_option } " +
-        "#{ connectivity_options } #{ user_options } SAVE"
+        "#{ connectivity_options } #{ user_options }"
+      end
+
+      def redis_save_cmd
+        "#{ basic_redis_cmd } SAVE"
       end
 
       def password_option
