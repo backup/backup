@@ -97,4 +97,11 @@ Mail Notifier
 The default value for the `encryption` option has been changed from `:none` to `:starttls`.
 
 
+Redis Database
+--------------
+
+All users must review the [updated documentation][database-redis] and update their models. A new `mode` setting has been
+added, and the `name` and `path` settings have been replaced with a `rdb_path` setting.
+
+
 {% include markdown_links %}

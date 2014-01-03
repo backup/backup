@@ -47,5 +47,9 @@ Several changes have been made which will require your attention before you run 
 - The `--config-path` option for the [Generator][generator] commands is now `--config-file`, and `generate:config` may
   now be used to generate a configuration file using a name other than `config.rb`.
 
+- Adds a `mode` setting to the [Redis Database][database-redis] to support both copying the redis dump file (`:copy`
+  mode) and performing a local or remote dump using the `redis-cli --rdb` option (`:sync` mode). Also, the `name` and
+  `path` options have been replaced with `rdb_path`.
+
 
 {% include markdown_links %}
