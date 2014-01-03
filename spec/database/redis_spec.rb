@@ -5,51 +5,82 @@ require File.expand_path('../../spec_helper.rb', __FILE__)
 module Backup
 describe Database::Redis do
   let(:model) { Model.new(:test_trigger, 'test label') }
-  let(:db) { Database::Redis.new(model) }
+  let(:required_config) {
+    Proc.new do |redis|
+      redis.rdb_path = 'rdb_path_required_for_copy_mode'
+    end
+  }
+  let(:db) { Database::Redis.new(model, &required_config) }
   let(:s) { sequence '' }
 
   before do
     Database::Redis.any_instance.stubs(:utility).
         with('redis-cli').returns('redis-cli')
+    Database::Redis.any_instance.stubs(:utility).
+        with(:cat).returns('cat')
   end
 
-  it_behaves_like 'a class that includes Config::Helpers'
+  it_behaves_like 'a class that includes Config::Helpers' do
+    let(:default_overrides) { { 'mode' => :sync } }
+    let(:new_overrides) { { 'mode' => :copy } }
+  end
   it_behaves_like 'a subclass of Database::Base'
 
   describe '#initialize' do
+
     it 'provides default values' do
       expect( db.database_id        ).to be_nil
-      expect( db.name               ).to eq 'dump'
-      expect( db.path               ).to be_nil
-      expect( db.password           ).to be_nil
+      expect( db.mode               ).to eq :copy
+      expect( db.rdb_path           ).to eq 'rdb_path_required_for_copy_mode'
+      expect( db.invoke_save        ).to be_nil
       expect( db.host               ).to be_nil
       expect( db.port               ).to be_nil
       expect( db.socket             ).to be_nil
-      expect( db.invoke_save        ).to be_nil
+      expect( db.password           ).to be_nil
       expect( db.additional_options ).to be_nil
     end
 
     it 'configures the database' do
       db = Database::Redis.new(model, :my_id) do |redis|
-        redis.name               = 'my_name'
-        redis.path               = 'my_path'
-        redis.password           = 'my_password'
+        redis.mode               = :copy
+        redis.rdb_path           = 'my_path'
+        redis.invoke_save        = true
         redis.host               = 'my_host'
         redis.port               = 'my_port'
         redis.socket             = 'my_socket'
-        redis.invoke_save        = 'my_invoke_save'
+        redis.password           = 'my_password'
         redis.additional_options = 'my_additional_options'
       end
 
       expect( db.database_id        ).to eq 'my_id'
-      expect( db.name               ).to eq 'my_name'
-      expect( db.path               ).to eq 'my_path'
-      expect( db.password           ).to eq 'my_password'
+      expect( db.mode               ).to eq :copy
+      expect( db.rdb_path           ).to eq 'my_path'
+      expect( db.invoke_save        ).to be true
       expect( db.host               ).to eq 'my_host'
       expect( db.port               ).to eq 'my_port'
       expect( db.socket             ).to eq 'my_socket'
-      expect( db.invoke_save        ).to eq 'my_invoke_save'
+      expect( db.password           ).to eq 'my_password'
       expect( db.additional_options ).to eq 'my_additional_options'
+    end
+
+    it 'raises an error if mode is invalid' do
+      expect do
+        Database::Redis.new(model) do |redis|
+          redis.mode = 'sync' # symbol required
+        end
+      end.to raise_error(Database::Redis::Error) {|err|
+        expect( err.message ).to match(/not a valid mode/)
+      }
+    end
+
+    it 'raises an error if rdb_path is not set for :copy mode' do
+      expect do
+        Database::Redis.new(model) do |redis|
+          redis.rdb_path = nil
+        end
+      end.to raise_error(Database::Redis::Error) {|err|
+        expect( err.message ).to match(/`rdb_path` must be set/)
+      }
     end
   end # describe '#initialize'
 
@@ -59,28 +90,122 @@ describe Database::Redis do
       db.expects(:prepare!).in_sequence(s)
     end
 
-    specify 'when #invoke_save is true' do
-      db.invoke_save = true
+    context 'when mode is :sync' do
+      before do
+        db.mode = :sync
+      end
 
-      db.expects(:invoke_save!).in_sequence(s)
-      db.expects(:copy!).in_sequence(s)
-      db.expects(:log!).in_sequence(s).with(:finished)
-
-      db.perform!
+      it 'uses sync!' do
+        Logger.expects(:configure).in_sequence(s)
+        db.expects(:sync!).in_sequence(s)
+        db.expects(:log!).in_sequence(s).with(:finished)
+        db.perform!
+      end
     end
 
-    specify 'when #invoke_save is false' do
-      db.expects(:invoke_save!).never
-      db.expects(:copy!).in_sequence(s)
-      db.expects(:log!).in_sequence(s).with(:finished)
+    context 'when mode is :copy' do
+      before do
+        db.mode = :copy
+      end
 
-      db.perform!
+      context 'when :invoke_save is false' do
+        it 'calls copy! without save!' do
+          Logger.expects(:configure).never
+          db.expects(:save!).never
+          db.expects(:copy!).in_sequence(s)
+          db.expects(:log!).in_sequence(s).with(:finished)
+          db.perform!
+        end
+      end
+
+      context 'when :invoke_save is true' do
+        before do
+          db.invoke_save = true
+        end
+
+        it 'calls save! before copy!' do
+          Logger.expects(:configure).never
+          db.expects(:save!).in_sequence(s)
+          db.expects(:copy!).in_sequence(s)
+          db.expects(:log!).in_sequence(s).with(:finished)
+          db.perform!
+        end
+      end
     end
   end # describe '#perform!'
 
-  describe '#invoke_save!' do
+  describe '#sync!' do
+    let(:pipeline) { mock }
+    let(:compressor) { mock }
+
     before do
-      db.stubs(:redis_save_cmd).returns('redis_save_cmd')
+      db.stubs(:redis_cli_cmd).returns('redis_cli_cmd')
+      db.stubs(:dump_path).returns('/tmp/trigger/databases')
+    end
+
+    context 'without a compressor' do
+      it 'packages the dump without compression' do
+        Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+
+        pipeline.expects(:<<).in_sequence(s).with('redis_cli_cmd --rdb -')
+
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '/tmp/trigger/databases/Redis.rdb'"
+        )
+
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+
+        db.send(:sync!)
+      end
+    end # context 'without a compressor'
+
+    context 'with a compressor' do
+      before do
+        model.stubs(:compressor).returns(compressor)
+        compressor.stubs(:compress_with).yields('cmp_cmd', '.cmp_ext')
+      end
+
+      it 'packages the dump with compression' do
+        Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+
+        pipeline.expects(:<<).in_sequence(s).with('redis_cli_cmd --rdb -')
+
+        pipeline.expects(:<<).in_sequence(s).with('cmp_cmd')
+
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '/tmp/trigger/databases/Redis.rdb.cmp_ext'"
+        )
+
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+
+        db.send(:sync!)
+      end
+    end # context 'without a compressor'
+
+    context 'when the pipeline fails' do
+      before do
+        Pipeline.any_instance.stubs(:success?).returns(false)
+        Pipeline.any_instance.stubs(:error_messages).returns('error messages')
+      end
+
+      it 'raises an error' do
+        expect do
+          db.send(:sync!)
+        end.to raise_error(Database::Redis::Error) {|err|
+          expect( err.message ).to eq(
+            "Database::Redis::Error: Dump Failed!\n  error messages"
+          )
+        }
+      end
+    end # context 'when the pipeline fails'
+
+  end # describe '#sync!'
+
+  describe '#save!' do
+    before do
+      db.stubs(:redis_cli_cmd).returns('redis_cli_cmd')
     end
 
     # the redis docs say this returns "+OK\n", although it appears
@@ -88,39 +213,39 @@ describe Database::Redis do
     # so a successful response should =~ /OK$/
 
     specify 'when response is OK' do
-      db.expects(:run).with('redis_save_cmd').returns('+OK')
-      db.send(:invoke_save!)
+      db.expects(:run).with('redis_cli_cmd SAVE').returns('+OK')
+      db.send(:save!)
     end
 
     specify 'when response is not OK' do
-      db.expects(:run).with('redis_save_cmd').returns('No OK Returned')
+      db.expects(:run).with('redis_cli_cmd SAVE').returns('No OK Returned')
       expect do
-        db.send(:invoke_save!)
+        db.send(:save!)
       end.to raise_error(Database::Redis::Error) {|err|
-        expect( err.message ).to match(/Command was: redis_save_cmd/)
+        expect( err.message ).to match(/Failed to invoke the `SAVE` command/)
         expect( err.message ).to match(/Response was: No OK Returned/)
       }
     end
 
     specify 'retries if save already in progress' do
-      db.expects(:run).with('redis_save_cmd').times(5).
+      db.expects(:run).with('redis_cli_cmd SAVE').times(5).
           returns('Background save already in progress')
       db.expects(:sleep).with(5).times(4)
       expect do
-        db.send(:invoke_save!)
+        db.send(:save!)
       end.to raise_error(Database::Redis::Error) {|err|
-        expect( err.message ).to match(/Command was: redis_save_cmd/)
+        expect( err.message ).to match(/Failed to invoke the `SAVE` command/)
         expect( err.message ).to match(
           /Response was: Background save already in progress/
         )
       }
     end
-  end # describe '#invoke_save!'
+  end # describe '#save!'
 
   describe '#copy!' do
     before do
       db.stubs(:dump_path).returns('/tmp/trigger/databases')
-      db.path = '/var/lib/redis'
+      db.rdb_path = '/var/lib/redis/dump.rdb'
     end
 
     context 'when the redis dump file exists' do
@@ -176,27 +301,27 @@ describe Database::Redis do
 
   end # describe '#copy!'
 
-  describe '#redis_save_cmd' do
+  describe '#redis_cli_cmd' do
     let(:option_methods) {%w[
       password_option connectivity_options user_options
     ]}
 
     it 'returns full redis-cli command built from all options' do
       option_methods.each {|name| db.stubs(name).returns(name) }
-      expect( db.send(:redis_save_cmd) ).to eq(
-        "redis-cli #{ option_methods.join(' ') } SAVE"
+      expect( db.send(:redis_cli_cmd) ).to eq(
+        "redis-cli #{ option_methods.join(' ') }"
       )
     end
 
     it 'handles nil values from option methods' do
       option_methods.each {|name| db.stubs(name).returns(nil) }
-      expect( db.send(:redis_save_cmd) ).to eq(
-        "redis-cli #{ (' ' * (option_methods.count - 1)) } SAVE"
+      expect( db.send(:redis_cli_cmd) ).to eq(
+        "redis-cli #{ (' ' * (option_methods.count - 1)) }"
       )
     end
-  end # describe '#redis_save_cmd'
+  end # describe '#redis_cli_cmd'
 
-  describe 'redis_save_cmd option methods' do
+  describe 'redis_cli_cmd option methods' do
 
     describe '#password_option' do
       it 'returns argument if specified' do
@@ -249,7 +374,7 @@ describe Database::Redis do
       end
     end # describe '#user_options'
 
-  end # describe 'redis_save_cmd option methods'
+  end # describe 'redis_cli_cmd option methods'
 
 end
 end
