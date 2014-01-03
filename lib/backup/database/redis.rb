@@ -5,104 +5,123 @@ module Backup
     class Redis < Base
       class Error < Backup::Error; end
 
+      MODES = [:copy, :sync]
+
       ##
-      # Name of the redis dump file.
+      # Mode of operation.
       #
-      # This is set in `redis.conf` as `dbfilename`.
-      # This must be set to the name of that file without the `.rdb` extension.
-      # Default: 'dump'
-      attr_accessor :name
-
-      ##
-      # Path to the redis dump file.
+      # [:copy]
+      #   Copies the redis dump file specified by {#rdb_path}.
+      #   This data will be current as of the last RDB Snapshot
+      #   performed by the server (per your redis.conf settings).
+      #   You may set {#invoke_save} to +true+ to have Backup issue
+      #   a +SAVE+ command to update the dump file with the current
+      #   data before performing the copy.
       #
-      # This is set in `redis.conf` as `dir`.
-      attr_accessor :path
+      # [:sync]
+      #   Performs a dump of your redis data using +redis-cli --rdb -+.
+      #   Redis implements this internally using a +SYNC+ command.
+      #   The operation is analogous to requesting a +BGSAVE+, then having the
+      #   dump returned. This mode is capable of dumping data from a local or
+      #   remote server. Requires Redis v2.6 or better.
+      #
+      # Defaults to +:copy+.
+      attr_accessor :mode
 
       ##
-      # Password for the redis-cli utility to perform the `SAVE` command
-      # if +invoke_save+ is set `true`.
-      attr_accessor :password
+      # Full path to the redis dump file.
+      #
+      # Required when {#mode} is +:copy+.
+      attr_accessor :rdb_path
 
       ##
-      # Connectivity options for the +invoke_save+ and +sync_remote+ options.
-      attr_accessor :host, :port, :socket
-
-      ##
-      # Determines whether Backup should invoke the `SAVE` command through
-      # the `redis-cli` utility to persist the most recent data before
-      # copying the dump file specified by +path+ and +name+.
+      # Perform a +SAVE+ command using the +redis-cli+ utility
+      # before copying the dump file specified by {#rdb_path}.
+      #
+      # Only valid when {#mode} is +:copy+.
       attr_accessor :invoke_save
 
       ##
-      # Determines whether Backup should use `--rdb` through the `redis-cli` utility
-      # to dump redis's data before copying.
-      attr_accessor :use_rdb
+      # Connectivity options for the +redis-cli+ utility.
+      attr_accessor :host, :port, :socket
 
       ##
-      # Additional "redis-cli" options
+      # Password for the +redis-cli+ utility.
+      attr_accessor :password
+
+      ##
+      # Additional options for the +redis-cli+ utility.
       attr_accessor :additional_options
 
       def initialize(model, database_id = nil, &block)
         super
         instance_eval(&block) if block_given?
 
-        @name ||= 'dump'
+        @mode ||= :copy
+
+        unless MODES.include?(mode)
+          raise Error, "'#{ mode }' is not a valid mode"
+        end
+
+        if mode == :copy && rdb_path.nil?
+          raise Error, '`rdb_path` must be set when `mode` is :copy'
+        end
       end
 
       ##
-      # Copies and optionally compresses the Redis dump file to the
-      # +dump_path+ using the +dump_filename+.
+      # Performs the dump based on {#mode} and stores the Redis dump file
+      # to the +dump_path+ using the +dump_filename+.
       #
       #   <trigger>/databases/Redis[-<database_id>].rdb[.gz]
-      #
-      # If +invoke_save+ is true, `redis-cli SAVE` will be invoked.
-      # If +use_rdb+ is true, `redis-cli --rdb` will be invoked. If that is
-      # the case, there is no need to invoke_save.
       def perform!
         super
 
-        if use_rdb
+        case mode
+        when :sync
+          # messages output by `redis-cli --rdb` on $stderr
           Logger.configure do
             ignore_warning(/Transfer finished with success/)
             ignore_warning(/SYNC sent to master/)
           end
-
-          pipeline = Pipeline.new
-
-          pipeline << "#{ basic_redis_cmd } --rdb -"
-
-          pipeline << "#{ utility(:cat) } > " +
-            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
-
-          pipeline.run
-
-          if pipeline.success?
-            log!(:finished)
-          else
-            raise Error, "Dump Failed!\n" + pipeline.error_messages
-          end
-        else
-          invoke_save! if invoke_save
+          sync!
+        when :copy
+          save! if invoke_save
           copy!
-          log!(:finished)
         end
+
+        log!(:finished)
       end
 
       private
 
-      def error_message(action, command, response)
-        <<-EOS
-          Could not #{ action }
-          Command was: #{ command }
-          Response was: #{ response }
-        EOS
+      def sync!
+        pipeline = Pipeline.new
+        dump_ext = 'rdb'
+
+        pipeline << "#{ redis_cli_cmd } --rdb -"
+
+        model.compressor.compress_with do |command, ext|
+          pipeline << command
+          dump_ext << ext
+        end if model.compressor
+
+        pipeline << "#{ utility(:cat) } > " +
+            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
+
+        pipeline.run
+
+        unless pipeline.success?
+          raise Error, "Dump Failed!\n" + pipeline.error_messages
+        end
       end
 
-      def invoke_save!
-        resp = run(redis_save_cmd)
+      def save!
+        resp = run("#{ redis_cli_cmd } SAVE")
         unless resp =~ /OK$/
-          raise Error, error_message("invoke_save", redis_save_cmd, resp)
+          raise Error, <<-EOS
+            Failed to invoke the `SAVE` command
+            Response was: #{ resp }
+          EOS
         end
 
       rescue Error
@@ -116,31 +135,26 @@ module Backup
       end
 
       def copy!
-        src_path = File.join(path, name + '.rdb')
-        unless File.exist?(src_path)
+        unless File.exist?(rdb_path)
           raise Error, <<-EOS
             Redis database dump not found
-            File path was #{ src_path }
+            `rdb_path` was '#{ rdb_path }'
           EOS
         end
 
         dst_path = File.join(dump_path, dump_filename + '.rdb')
         if model.compressor
           model.compressor.compress_with do |command, ext|
-            run("#{ command } -c '#{ src_path }' > '#{ dst_path + ext }'")
+            run("#{ command } -c '#{ rdb_path }' > '#{ dst_path + ext }'")
           end
         else
-          FileUtils.cp(src_path, dst_path)
+          FileUtils.cp(rdb_path, dst_path)
         end
       end
 
-      def basic_redis_cmd
+      def redis_cli_cmd
         "#{ utility('redis-cli') } #{ password_option } " +
         "#{ connectivity_options } #{ user_options }"
-      end
-
-      def redis_save_cmd
-        "#{ basic_redis_cmd } SAVE"
       end
 
       def password_option
