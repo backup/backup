@@ -6,34 +6,35 @@ title: Installation
 Installation
 ============
 
-This page covers how to install, update and manage your Backup installation using [RubyGems](https://rubygems.org/).
+Backup v3.x is distributed using [RubyGems](https://rubygems.org) and supports [Ruby](https://www.ruby-lang.org)
+versions `1.8.7` and `1.9.2`.
 
-**Note:**
+**Note:** Ruby versions `1.9.3` and `2.0.0` are also supported, but you should use [Backup 4.x][v4-overview].
+
+To install the latest version, run:
+
+    $ gem install backup
+
+This will install Backup, along with all of it's required dependencies.
+
+See [Release Notes][release-notes] for changes in the latest version.
+
+### Using Bundler
+
+**Do not add `gem backup` to another application's Gemfile.** Backup is not a _gem library_ and should not be treated as a
+_dependency_ of another application. Bundler _can_ be used to manage an installation of Backup, but the reasons for why
+you might want to do this is beyond the scope of this document.
+
+### Using sudo
+
 The `gem` commands shown here may need to be run using `sudo`, depending on how Ruby is installed on your system. If
 you're using [RVM][], [rbenv][] or [chruby][], then you would most likely _not_ want to use `sudo`. However, if your
 installation of Ruby came with your system, or was installed using your system's package manager (yum, apt, etc...),
 then you most likely need to use `sudo`. For example, running `gem install backup` as a non-root user with a system
 installed Ruby would install Backup only for that user's use. This may or may not be what you want.
 
-
-Installing Backup
------------------
-
-To install Backup, run:
-
-    $ gem install backup
-
-This will install Backup, along with all of it's required dependencies.
-
-#### Using Bundler
-
-Do not add `gem backup` to another application's Gemfile. Backup is not a _gem library_ and should not be treated as a
-_dependency_ of another application. Bundler _can_ be used to manage an installation of Backup, but the reasons for why
-you might want to do this is beyond the scope of this document.
-
-
-Updating Backup
----------------
+Updating
+========
 
 To update Backup to the latest version, run:
 

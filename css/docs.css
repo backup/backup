@@ -144,7 +144,7 @@ pre code {
 }
 .highlight {
   margin-bottom: 15px;
-  padding: 15px;
+  padding: 5px 15px;
   border-radius: 5px;
 }
 .highlight pre {
