@@ -1,14 +1,40 @@
 ---
-redirect: v3
 ---
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <meta http-equiv="refresh" content="0; url={{ site.baseurl }}/{{ page.redirect }}" />
+    <meta name="viewport" content="width=device-width; initial-scale=1.0, maximum-scale=1" />
+
+    <link rel="stylesheet" href="{{ site.baseurl }}/css/docs.css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:400,400italic,600|Poly" />
+
+    <title>Backup</title>
   </head>
   <body>
-    <a href="{{ site.baseurl }}/{{ page.redirect }}">Redirecting...</a>
+
+  <div class="welcome-top">
+    <p class="title">Backup</p>
+    <p class="summary">
+      Provides an elegant DSL in Ruby for performing backups on UNIX-like systems.
+    </p>
+  </div>
+
+  <div class="welcome-bottom">
+    <p>
+      Backup is a system utility for Linux and Mac OS X, distributed as a
+      RubyGem, that allows you to easily perform backup operations.
+      Backup has built-in support for various databases, storage
+      protocols/services, syncers, compressors, encryptors and notifiers which
+      you can mix and match. It was built with modularity, extensibility and
+      simplicity in mind.
+    </p>
+    <p class="buttons">
+      <a href="{{ site.baseurl }}/v4">Documentation</a>
+      <a href="https://github.com/meskyanichi/backup">View on Github</a>
+    </p>
+  </div>
+
   </body>
 </html>

@@ -190,13 +190,6 @@ img {
   border-radius: 5px;
 }
 
-.landing {
-  margin-top: 60px;
-  font-size: 20px;
-  font-weight: 600;
-  text-align: center;
-}
-
 
 /* Links
 -------------------------------------------------- */
@@ -281,4 +274,48 @@ a:hover {
     padding: 20px;
   }
 
+}
+
+/* Main Index
+-------------------------------------------------- */
+
+.welcome-top {
+  color: #fff;
+  background-color: #2a2a2a;
+  padding: 40px 80px 20px;
+}
+
+.welcome-top .title {
+  font-family: "Poly";
+  font-size: 48px;
+  line-height: 1.25;
+  margin: 0;
+  text-rendering: optimizeLegibility;
+}
+
+.welcome-top .summary {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.welcome-bottom {
+  padding: 60px;
+  padding: 20px 80px;
+  font-size: 16px;
+}
+
+.welcome-bottom .buttons {
+  text-align: center;
+}
+
+.welcome-bottom .buttons a {
+  display: inline-block;
+  background: #2a2a2a;
+  color: #fff;
+  padding: 10px 40px;
+  margin: 20px 20px;
+  border-radius: 50px;
+  border: 2px solid;
+  font-weight: 600;
+  text-decoration: none;
 }
