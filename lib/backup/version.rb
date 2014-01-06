@@ -1,5 +1,5 @@
 # encoding: utf-8
 
 module Backup
-  VERSION = '4.0.beta'
+  VERSION = '4.0.0rc1'
 end
