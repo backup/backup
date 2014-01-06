@@ -6,7 +6,6 @@ rvm:
   - 1.9.2
   - 1.9.3
   - 2.0.0
-  - ree
 branches:
   only:
-    - master
+    - v3
