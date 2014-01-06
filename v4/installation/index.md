@@ -3,6 +3,19 @@ layout: main
 title: Installation
 ---
 
+Backup 4.0.0 Release Candidate
+------------------------------
+
+Only a Release Candidate for Backup v4.x is currently available. To install run:
+
+    $ gem install backup --pre
+
+We do not anticipate any changes between this and the initial `v4.0.0` release.
+
+If you encounter any issues with this release or the documentation, please [let us know](https://github.com/meskyanichi/backup/issues).
+
+---
+
 Installation
 ============
 
