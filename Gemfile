@@ -24,6 +24,7 @@ group :production do
   gem 'open4'
   gem 'fog'
   # gem 'excon' - use version specified by fog
+  gem 'unf' # for fog/AWS
   gem 'dropbox-sdk', '= 1.5.1' # patched
   gem 'net-ssh'
   gem 'net-scp'
