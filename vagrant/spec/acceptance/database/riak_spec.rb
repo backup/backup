@@ -6,6 +6,7 @@ module Backup
 describe 'Database::Riak' do
 
   specify 'No Compression' do
+    pending "Riak currently not installed"
     create_model :my_backup, <<-EOS
       Backup::Model.new(:my_backup, 'a description') do
         database Riak
@@ -24,6 +25,7 @@ describe 'Database::Riak' do
   end
 
   specify 'With Compression' do
+    pending "Riak currently not installed"
     create_model :my_backup, <<-EOS
       Backup::Model.new(:my_backup, 'a description') do
         database Riak

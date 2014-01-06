@@ -20,7 +20,7 @@ describe 'Database::PostgreSQL' do
 
       expect( job.package.exist? ).to be_true
       expect( job.package ).to match_manifest(%q[
-        3094 my_backup/databases/PostgreSQL.sql.gz
+        3118 my_backup/databases/PostgreSQL.sql.gz
       ])
     end
 
@@ -36,7 +36,7 @@ describe 'Database::PostgreSQL' do
 
       expect( job.package.exist? ).to be_true
       expect( job.package ).to match_manifest(%q[
-        21616 my_backup/databases/PostgreSQL.sql
+        21809 my_backup/databases/PostgreSQL.sql
       ])
     end
 

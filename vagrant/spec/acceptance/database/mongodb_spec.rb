@@ -34,6 +34,7 @@ describe 'Database::MongoDB' do
           101  MongoDB/backup_test_01/twos.metadata.json
         13600  MongoDB/backup_test_01/threes.bson
           103  MongoDB/backup_test_01/threes.metadata.json
+          224  MongoDB/backup_test_01/system.indexes.bson
       ])
     end
 
@@ -65,6 +66,7 @@ describe 'Database::MongoDB' do
           101   MongoDB/backup_test_01/twos.metadata.json
         13600   MongoDB/backup_test_01/threes.bson
           103   MongoDB/backup_test_01/threes.metadata.json
+          224   MongoDB/backup_test_01/system.indexes.bson
       ])
     end
 
@@ -96,6 +98,7 @@ describe 'Database::MongoDB' do
           101  MongoDB/backup_test_01/twos.metadata.json
         13600  MongoDB/backup_test_01/threes.bson
           103  MongoDB/backup_test_01/threes.metadata.json
+          224  MongoDB/backup_test_01/system.indexes.bson
       ])
     end
 
@@ -128,6 +131,7 @@ describe 'Database::MongoDB' do
           101  MongoDB/backup_test_01/twos.metadata.json
         13600  MongoDB/backup_test_01/threes.bson
           103  MongoDB/backup_test_01/threes.metadata.json
+          224  MongoDB/backup_test_01/system.indexes.bson
 
          4250  MongoDB/backup_test_02/ones.bson
           101  MongoDB/backup_test_02/ones.metadata.json
@@ -135,6 +139,7 @@ describe 'Database::MongoDB' do
           101  MongoDB/backup_test_02/twos.metadata.json
         14450  MongoDB/backup_test_02/threes.bson
           103  MongoDB/backup_test_02/threes.metadata.json
+          224  MongoDB/backup_test_02/system.indexes.bson
       ])
     end
 
@@ -165,6 +170,7 @@ describe 'Database::MongoDB' do
           101  MongoDB/backup_test_01/twos.metadata.json
         13600  MongoDB/backup_test_01/threes.bson
           103  MongoDB/backup_test_01/threes.metadata.json
+          224  MongoDB/backup_test_01/system.indexes.bson
 
          4250  MongoDB/backup_test_02/ones.bson
           101  MongoDB/backup_test_02/ones.metadata.json
@@ -172,6 +178,7 @@ describe 'Database::MongoDB' do
           101  MongoDB/backup_test_02/twos.metadata.json
         14450  MongoDB/backup_test_02/threes.bson
           103  MongoDB/backup_test_02/threes.metadata.json
+          224  MongoDB/backup_test_02/system.indexes.bson
       ])
     end
 
@@ -210,6 +217,7 @@ describe 'Database::MongoDB' do
           101  MongoDB-dump_01/backup_test_01/twos.metadata.json
         13600  MongoDB-dump_01/backup_test_01/threes.bson
           103  MongoDB-dump_01/backup_test_01/threes.metadata.json
+          224  MongoDB-dump_01/backup_test_01/system.indexes.bson
       ])
 
       expect(
@@ -221,6 +229,7 @@ describe 'Database::MongoDB' do
           101  MongoDB-Dump__2/backup_test_02/twos.metadata.json
         14450  MongoDB-Dump__2/backup_test_02/threes.bson
           103  MongoDB-Dump__2/backup_test_02/threes.metadata.json
+          224  MongoDB-Dump__2/backup_test_02/system.indexes.bson
       ])
     end
   end # describe 'Multiple Dumps'

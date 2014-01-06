@@ -25,7 +25,7 @@ describe 'Database::MySQL' do
 
       expect( job.package.exist? ).to be_true
       expect( job.package ).to match_manifest(%q[
-        530175 my_backup/databases/MySQL.sql
+        532976 my_backup/databases/MySQL.sql
       ])
     end
 
@@ -53,7 +53,7 @@ describe 'Database::MySQL' do
 
       expect( job.package.exist? ).to be_true
       expect( job.package ).to match_manifest(%q[
-        522703 my_backup/databases/MySQL.sql
+        525504 my_backup/databases/MySQL.sql
       ])
     end
 
@@ -78,7 +78,7 @@ describe 'Database::MySQL' do
 
       expect( job.package.exist? ).to be_true
       expect( job.package ).to match_manifest(%q[
-        9514 my_backup/databases/MySQL.sql
+        9532 my_backup/databases/MySQL.sql
       ])
     end
 
@@ -100,7 +100,7 @@ describe 'Database::MySQL' do
 
       expect( job.package.exist? ).to be_true
       expect( job.package ).to match_manifest(%q[
-        2668 my_backup/databases/MySQL.sql
+        2686 my_backup/databases/MySQL.sql
       ])
     end
 
@@ -122,7 +122,7 @@ describe 'Database::MySQL' do
 
       expect( job.package.exist? ).to be_true
       expect( job.package ).to match_manifest(%q[
-        8099 my_backup/databases/MySQL.sql
+        8117 my_backup/databases/MySQL.sql
       ])
     end
 
@@ -153,8 +153,8 @@ describe 'Database::MySQL' do
 
       expect( job.package.exist? ).to be_true
       expect( job.package ).to match_manifest(%q[
-        9514 my_backup/databases/MySQL-dump_01.sql
-       10264 my_backup/databases/MySQL-Dump__2.sql
+        9532 my_backup/databases/MySQL-dump_01.sql
+       10282 my_backup/databases/MySQL-Dump__2.sql
       ])
     end
   end # describe 'Multiple Dumps'

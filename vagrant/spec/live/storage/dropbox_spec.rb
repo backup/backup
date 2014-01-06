@@ -37,6 +37,7 @@ describe Storage::Dropbox,
         store_with Dropbox do |db|
           db.api_key     = config['api_key']
           db.api_secret  = config['api_secret']
+          db.cache_path  = '/vagrant/spec/live/.cache'
           db.access_type = config['access_type']
           db.path        = config['path']
           db.chunk_size  = 1 # MiB
@@ -47,7 +48,7 @@ describe Storage::Dropbox,
   end
 
   it 'stores package files', :live do
-    job = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
+    job = backup_perform :my_backup
 
     files_sent = files_sent_for(job)
     expect( files_sent.count ).to be(2)
@@ -57,8 +58,8 @@ describe Storage::Dropbox,
   end
 
   it 'cycles stored packages', :live do
-    job_a = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
-    job_b = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
+    job_a = backup_perform :my_backup
+    job_b = backup_perform :my_backup
 
     # package files for job_a should be on the remote
     files_sent = files_sent_for(job_a)
@@ -70,7 +71,7 @@ describe Storage::Dropbox,
     expect( files_sent.count ).to be(2)
     expect( files_on_remote_for(job_b) ).to eq files_sent
 
-    job_c = backup_perform :my_backup, '--cache-path=/vagrant/spec/live/.cache'
+    job_c = backup_perform :my_backup
 
     # package files for job_b should still be on the remote
     files_sent = files_sent_for(job_b)

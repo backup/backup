@@ -3,14 +3,15 @@ require 'riak'
 namespace :db do
   desc 'Rebuild Riak Test Databases'
   task :riak do
-    puts "\n=> Preparing Riak..."
-    RiakTask.recreate_node
-    begin
-      RiakTask.load_data
-    rescue Exception => err
-      $stderr.puts "#{ err.class }: #{ err.message }"
-      $stderr.puts err.backtrace
-    end
+    puts "\n=> Riak currently not installed"
+    # puts "\n=> Preparing Riak..."
+    # RiakTask.recreate_node
+    # begin
+    #   RiakTask.load_data
+    # rescue Exception => err
+    #   $stderr.puts "#{ err.class }: #{ err.message }"
+    #   $stderr.puts err.backtrace
+    # end
   end
 end
 

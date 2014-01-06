@@ -3,7 +3,7 @@
 abort "These specs should only be run on the backup-testbox VM" unless
     %x[hostname].chomp == 'backup-testbox'
 
-version = '7'
+version = '8'
 found = File.read('/home/vagrant/backup-testbox-version').strip rescue '?'
 warn(<<EOS) unless version == found
 \n  -- Warning: backup-testbox should be v.#{ version } - Found v.#{ found } --

@@ -2,11 +2,6 @@
 
 require File.expand_path('../../../spec_helper', __FILE__)
 
-# NOTE: These tests will fail on the current backup-testbox (v7).
-# They've been updated to run against redis-2.6.16.
-# http://koji.fedoraproject.org/koji/buildinfo?buildID=462509
-# The current backup-testbox is running redis-2.4.10.
-# This will be fixed in the next backup-testbox update.
 module Backup
 describe 'Database::Redis' do
 

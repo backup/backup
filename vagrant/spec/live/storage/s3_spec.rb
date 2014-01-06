@@ -6,7 +6,7 @@ require File.expand_path('../../../spec_helper', __FILE__)
 #   /vagrant/spec/live.yml
 #
 # It's recommended you use a dedicated Bucket for this, like:
-#   <aws_username>.backup.testing
+#   <aws_username>-backup-testing
 #
 # Note: The S3 Bucket you use should have read-after-write consistency.
 #       So don't use the US Standard region.

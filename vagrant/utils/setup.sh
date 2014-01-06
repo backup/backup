@@ -9,33 +9,47 @@ fi
 # to easily install/update it for the other ruby versions.
 
 sync_gem_cache() {
+  cp -n ~/.gem/ruby/2.1.0/cache/*.gem ~/.gem/ruby/2.0.0/cache/
+  cp -n ~/.gem/ruby/2.1.0/cache/*.gem ~/.gem/ruby/1.9.3/cache/
+  cp -n ~/.gem/ruby/2.0.0/cache/*.gem ~/.gem/ruby/2.1.0/cache/
   cp -n ~/.gem/ruby/2.0.0/cache/*.gem ~/.gem/ruby/1.9.3/cache/
+  cp -n ~/.gem/ruby/1.9.3/cache/*.gem ~/.gem/ruby/2.1.0/cache/
   cp -n ~/.gem/ruby/1.9.3/cache/*.gem ~/.gem/ruby/2.0.0/cache/
 }
 
 cd /vagrant/utils
 
 echo -n "==> Checking Spec Utils Environment... "
-chruby-exec 2.0 -- bundle check >/dev/null 2>&1
+chruby-exec 2.1.0 -- bundle check >/dev/null 2>&1
 if [[ $? == "0" ]]; then
   echo "OK"
 else
   echo "Installing Gems..."
-  chruby-exec 2.0 -- bundle install
+  chruby-exec 2.1.0 -- bundle install
   echo "Preparing VM Environment..."
-  chruby-exec 2.0 -- rake all
+  chruby-exec 2.1.0 -- rake all
 fi
 
 cd /vagrant
 
-echo -n "==> Checking Ruby 2.0 Test Environment... "
-chruby-exec 2.0 -- bundle check >/dev/null 2>&1
+echo -n "==> Checking Ruby 2.1.0 Test Environment... "
+chruby-exec 2.1.0 -- bundle check >/dev/null 2>&1
 if [[ $? == "0" ]]; then
   echo "OK"
 else
   echo "Installing Gems..."
   sync_gem_cache
-  chruby-exec 2.0 -- bundle install
+  chruby-exec 2.1.0 -- bundle install
+fi
+
+echo -n "==> Checking Ruby 2.0.0 Test Environment... "
+chruby-exec 2.0.0 -- bundle check >/dev/null 2>&1
+if [[ $? == "0" ]]; then
+  echo "OK"
+else
+  echo "Installing Gems..."
+  sync_gem_cache
+  chruby-exec 2.0.0 -- bundle install
 fi
 
 echo -n "==> Checking Ruby 1.9.3 Test Environment... "
