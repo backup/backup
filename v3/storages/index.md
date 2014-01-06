@@ -136,7 +136,7 @@ Model.new(:my_backup, 'My Backup') do
     sftp.password = 'my_password'
     sftp.ip       = 'server.domain.com'
     sftp.port     = 22
-    sftp.path     = '~/backups/'
+    sftp.path     = "~/backups/#{ storage_id }"
     sftp.keep     = keep
   end
 
@@ -148,8 +148,9 @@ The cycle data for these backups would be stored in 3 separate YAML files.
 `<data_path>/my_backup/SFTP-weekly.yml`  
 `<data_path>/my_backup/SFTP-daily.yml`
 
-Backups are stored in the remote `path` using timestamped folders, but you may additionally wish to alter the `path` for
-each type to more easily identify the _type_ of each backup.
+**Note:** It's not required that the `path` be updated for each unique Storage (as shown in the example), since each
+backup is stored in a timestamped folder. Using a separate `path` simply makes it easier to distinguish between each
+_type_ of backup.
 
 
 {% include markdown_links %}
