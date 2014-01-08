@@ -6,7 +6,6 @@ module Backup
 describe 'Database::Riak' do
 
   specify 'No Compression' do
-    pending "Riak currently not installed"
     create_model :my_backup, <<-EOS
       Backup::Model.new(:my_backup, 'a description') do
         database Riak
@@ -25,7 +24,6 @@ describe 'Database::Riak' do
   end
 
   specify 'With Compression' do
-    pending "Riak currently not installed"
     create_model :my_backup, <<-EOS
       Backup::Model.new(:my_backup, 'a description') do
         database Riak
@@ -40,7 +38,7 @@ describe 'Database::Riak' do
 
     expect( job.package.exist? ).to be_true
     expect( job.package ).to match_manifest(%q[
-      6500..6700 my_backup/databases/Riak-riak@127.0.0.1.gz
+      6500..6800 my_backup/databases/Riak-riak@127.0.0.1.gz
     ])
   end
 end

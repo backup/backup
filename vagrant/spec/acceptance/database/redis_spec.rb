@@ -44,7 +44,7 @@ describe 'Database::Redis' do
 
       expect( job.package.exist? ).to be_true
       expect( job.package ).to match_manifest(%q[
-        2200..2250  my_backup/databases/Redis.rdb.gz
+        2200..2300  my_backup/databases/Redis.rdb.gz
       ])
     end
 
