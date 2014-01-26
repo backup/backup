@@ -19,8 +19,8 @@ Before you upgrade to v4.x, see the [Upgrading][upgrading] page.
 Several changes have been made which will require your attention before you run your first backup using v4.x.
 
 
-4.0.0rc1
---------
+4.0.0 (and 4.0.0rc1)
+--------------------
 
 - Ruby 1.8.7 and 1.9.2 are no longer supported.
 
