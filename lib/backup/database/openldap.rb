@@ -14,6 +14,10 @@ module Backup
       attr_accessor :additional_options
 
       ##
+      # Connectivity options
+      attr_accessor :conf_file
+
+      ##
       # Creates a new instance of the OpenLDAP database object
       def initialize(model, database_id = nil, &block)
         super
@@ -52,12 +56,14 @@ module Backup
       private
 
       def slapcat
-        "#{ utility(:slapcat) } #{ user_options }"
+        "#{ utility(:slapcat) } #{ user_options } " +
+        "#{ conf_file_option }"
       end
 
-      ##
-      # Builds a slapcat compatible string for the
-      # additional options specified by the user
+      def conf_file_option
+        "-f #{ conf_file }" if conf_file
+      end
+
       def user_options
         Array(additional_options).join(' ')
       end

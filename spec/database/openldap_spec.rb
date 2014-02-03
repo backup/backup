@@ -110,12 +110,28 @@ describe Database::OpenLDAP do
     end # context 'when the pipeline fails'
   end # describe '#perform!'
   describe '#slapcat' do
-    let(:additional_options) {%w[-f /etc/openldap.conf -a "(!(entryDN:dnSubtreeMatch:=ou=People,dc=example,dc=com))"]}
+    let(:additional_options) {%w[-H ldap:///subtree-dn -a "(!(entryDN:dnSubtreeMatch:=ou=People,dc=example,dc=com))"]}
+    let(:conf_file) { "/etc/openldap.conf" }
 
-    it 'returns full slapcat command built from all options' do
+    it 'returns full slapcat command built from additional options' do
       db.stubs(:additional_options).returns(additional_options)
       expect( db.send(:slapcat) ).to eq(
-        "/real/slapcat -f /etc/openldap.conf -a \"(!(entryDN:dnSubtreeMatch:=ou=People,dc=example,dc=com))\""
+        "/real/slapcat -H ldap:///subtree-dn -a \"(!(entryDN:dnSubtreeMatch:=ou=People,dc=example,dc=com))\" "
+      )
+    end
+
+    it 'returns full slapcat command built from conf file' do
+      db.stubs(:conf_file).returns(conf_file)
+      expect( db.send(:slapcat) ).to eq(
+        "/real/slapcat  -f /etc/openldap.conf"
+      )
+    end
+
+    it 'returns full slapcat command built from additional options and conf file' do
+      db.stubs(:additional_options).returns(additional_options)
+      db.stubs(:conf_file).returns(conf_file)
+      expect( db.send(:slapcat) ).to eq(
+        "/real/slapcat -H ldap:///subtree-dn -a \"(!(entryDN:dnSubtreeMatch:=ou=People,dc=example,dc=com))\" -f /etc/openldap.conf"
       )
     end
   end  
