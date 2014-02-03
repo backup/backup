@@ -10,12 +10,16 @@ module Backup
       attr_accessor :name
 
       ##
-      # Additional "slapcat" options
-      attr_accessor :additional_options
+      # Conf file
+      attr_accessor :conf_file
 
       ##
-      # Connectivity options
-      attr_accessor :conf_file
+      # run slapcat under sudo if needed
+      attr_accessor :use_sudo
+
+      ##
+      # Additional "slapcat" options
+      attr_accessor :additional_options
 
       ##
       # Creates a new instance of the OpenLDAP database object
@@ -56,8 +60,13 @@ module Backup
       private
 
       def slapcat
+        "#{ sudo_option }" +
         "#{ utility(:slapcat) } #{ user_options } " +
         "#{ conf_file_option }"
+      end
+
+      def sudo_option
+        "#{ utility(:sudo) } -n " if use_sudo
       end
 
       def conf_file_option
