@@ -18,16 +18,16 @@ module Backup
 
       ##
       # Creates a new instance of the OpenLDAP database object
-      def initialize(model, &block)
-        super(model)
+      def initialize(model, database_id = nil, &block)
+        super
 
         @additional_options ||= Array.new
 
         instance_eval(&block) if block_given?
 
-        @name ||= 'dump'
+        @name ||= 'ldap'
 
-        @slapcat_utility ||= utility('slapcat')
+        @slapcat_utility ||= utility(:slapcat)
       end
 
       ##
