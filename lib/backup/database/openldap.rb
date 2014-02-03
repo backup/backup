@@ -3,6 +3,7 @@
 module Backup
   module Database
     class OpenLDAP < Base
+      class Error < Backup::Error; end
 
       ##
       # Name of the backup file
@@ -13,21 +14,12 @@ module Backup
       attr_accessor :additional_options
 
       ##
-      # Path to the slapcat utility (optional)
-      attr_accessor :slapcat_utility
-
-      ##
       # Creates a new instance of the OpenLDAP database object
       def initialize(model, database_id = nil, &block)
         super
-
-        @additional_options ||= Array.new
-
         instance_eval(&block) if block_given?
 
         @name ||= 'ldap'
-
-        @slapcat_utility ||= utility(:slapcat)
       end
 
       ##
@@ -36,27 +28,38 @@ module Backup
       def perform!
         super
 
+        pipeline = Pipeline.new
         dump_ext = 'ldif'
-        dump_cmd = "#{ slapcat_utility }"
 
-        if @model.compressor
-          @model.compressor.compress_with do |command, ext|
-            dump_cmd << " | #{command}"
-            dump_ext << ext
-          end
+        pipeline << slapcat
+
+        model.compressor.compress_with do |command, ext|
+          pipeline << command
+          dump_ext << ext
+        end if model.compressor
+
+        pipeline << "#{ utility(:cat) } > " +
+            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
+
+        pipeline.run
+        if pipeline.success?
+          log!(:finished)
+        else
+          raise Error, "Dump Failed!\n" + pipeline.error_messages
         end
-
-        dump_cmd << " > '#{ File.join(@dump_path, name) }.#{ dump_ext }'"
-        run(dump_cmd)
       end
 
       private
+
+      def slapcat
+        "#{ utility(:slapcat) } #{ user_options }"
+      end
 
       ##
       # Builds a slapcat compatible string for the
       # additional options specified by the user
       def user_options
-        @additional_options.join(' ')
+        Array(additional_options).join(' ')
       end
 
     end
