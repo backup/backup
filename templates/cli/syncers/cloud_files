@@ -1,0 +1,22 @@
+  ##
+  # Rackspace Cloud Files [Syncer]
+  #
+  sync_with Cloud::CloudFiles do |cf|
+    cf.username          = "my_username"
+    cf.api_key           = "my_api_key"
+    cf.container         = "my_container"
+    cf.path              = "/backups"
+    cf.mirror            = true
+    cf.thread_count      = 10
+
+    cf.directories do |directory|
+      directory.add "/path/to/directory/to/sync"
+      directory.add "/path/to/other/directory/to/sync"
+
+      # Exclude files/folders from the sync.
+      # The pattern may be a shell glob pattern (see `File.fnmatch`) or a Regexp.
+      # All patterns will be applied when traversing each added directory.
+      directory.exclude '**/*~'
+      directory.exclude /\/tmp$/
+    end
+  end

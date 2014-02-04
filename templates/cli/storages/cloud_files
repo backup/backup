@@ -1,0 +1,11 @@
+  ##
+  # Rackspace Cloud Files [Storage]
+  #
+  store_with CloudFiles do |cf|
+    cf.api_key            = 'my_api_key'
+    cf.username           = 'my_username'
+    cf.container          = 'my_container'
+    cf.segments_container = 'my_segments_container' # must be different than `container`
+    cf.segment_size       = 5 # MiB
+    cf.path               = 'path/to/backups' # path within the container
+  end

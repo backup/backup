@@ -1,0 +1,28 @@
+  ##
+  # RSync::Push [Syncer]
+  #
+  # The default `mode` is :ssh, which does not require the use
+  # of an rsync daemon on the remote. If you wish to connect
+  # directly to an rsync daemon, or via SSH using daemon features,
+  # :rsync_daemon and :ssh_daemon modes are also available.
+  #
+  sync_with RSync::Push do |rsync|
+    rsync.mode     = :ssh
+    rsync.host     = "123.45.678.90"
+    rsync.path     = "~/backups"
+    rsync.mirror   = true
+    rsync.compress = true
+
+    rsync.directories do |directory|
+      directory.add "/var/apps/my_app/public/uploads"
+      directory.add "/var/apps/my_app/logs"
+
+      # Exclude files/folders.
+      # Each pattern will be passed to rsync's `--exclude` option.
+      #
+      # Note: rsync is run using the `--archive` option,
+      #       so be sure to read the `FILTER RULES` in `man rsync`.
+      directory.exclude '*~'
+      directory.exclude 'tmp/'
+    end
+  end

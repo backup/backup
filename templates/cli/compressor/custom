@@ -1,0 +1,7 @@
+  ##
+  # Custom [Compressor]
+  #
+  compress_with Custom do |compressor|
+    compressor.command   = 'gzip'
+    compressor.extension = '.gz'
+  end

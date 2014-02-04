@@ -1,0 +1,16 @@
+  ##
+  # Redis [Database]
+  #
+  database Redis do |db|
+    db.mode               = :copy # or :sync
+    # Full path to redis dump file for :copy mode.
+    db.rdb_path           = '/var/lib/redis/dump.rdb'
+    # When :copy mode is used, perform a SAVE before
+    # copying the dump file specified by `rdb_path`.
+    db.invoke_save        = false
+    db.host               = 'localhost'
+    db.port               = 6379
+    db.socket             = '/tmp/redis.sock'
+    db.password           = 'my_password'
+    db.additional_options = []
+  end

@@ -1,16 +1,26 @@
 # encoding: utf-8
-
-##
-# Only load the Dropbox gem when the Backup::Storage::Dropbox class is loaded
-Backup::Dependency.load('dropbox-sdk')
+require 'dropbox_sdk'
 
 module Backup
   module Storage
     class Dropbox < Base
+      include Storage::Cycler
+      class Error < Backup::Error; end
 
       ##
       # Dropbox API credentials
       attr_accessor :api_key, :api_secret
+
+      ##
+      # Path to store cached authorized session.
+      #
+      # Relative paths will be expanded using Config.root_path,
+      # which by default is ~/Backup unless --root-path was used
+      # on the command line or set in config.rb.
+      #
+      # By default, +cache_path+ is '.cache', which would be
+      # '~/Backup/.cache/' if using the default root_path.
+      attr_accessor :cache_path
 
       ##
       # Dropbox Access Type
@@ -20,26 +30,33 @@ module Backup
       attr_accessor :access_type
 
       ##
-      # Path to where the backups will be stored
-      attr_accessor :path
+      # Chunk size, specified in MiB, for the ChunkedUploader.
+      attr_accessor :chunk_size
 
-      # Deprecated as of v3.0.21 - for move to official 'dropbox-sdk' gem (v1.1)
-      def timeout=(value)
-        if value
-          Logger.warn "[DEPRECATED] Backup::Storage::Dropbox.timeout=\n" +
-              "  is deprecated and will be removed at some point."
-        end
-      end
+      ##
+      # Number of times to retry failed operations.
+      #
+      # Default: 10
+      attr_accessor :max_retries
+
+      ##
+      # Time in seconds to pause before each retry.
+      #
+      # Default: 30
+      attr_accessor :retry_waitsec
 
       ##
       # Creates a new instance of the storage object
-      def initialize(model, storage_id = nil, &block)
-        super(model, storage_id)
+      def initialize(model, storage_id = nil)
+        super
 
-        @path ||= 'backups'
-        @access_type ||= :app_folder
-
-        instance_eval(&block) if block_given?
+        @path           ||= 'backups'
+        @cache_path     ||= '.cache'
+        @access_type    ||= :app_folder
+        @chunk_size     ||= 4 # MiB
+        @max_retries    ||= 10
+        @retry_waitsec  ||= 30
+        path.sub!(/^\//, '')
       end
 
       private
@@ -50,7 +67,7 @@ module Backup
       # authorization successfully took place. If this is the case, then the
       # user hits 'enter' and the session will be properly established.
       # Immediately after establishing the session, the session will be
-      # serialized and written to a cache file in Backup::Config.cache_path.
+      # serialized and written to a cache file in +cache_path+.
       # The cached file will be used from that point on to re-establish a
       # connection with Dropbox at a later time. This allows the user to avoid
       # having to go to a new Dropbox URL to authorize over and over again.
@@ -58,7 +75,7 @@ module Backup
         return @connection if @connection
 
         unless session = cached_session
-          Logger.message "Creating a new session!"
+          Logger.info "Creating a new session!"
           session = create_write_and_return_new_session!
         end
 
@@ -66,20 +83,20 @@ module Backup
         @connection = DropboxClient.new(session, access_type)
 
       rescue => err
-        raise Errors::Storage::Dropbox::ConnectionError.wrap(err)
+        raise Error.wrap(err, 'Authorization Failed')
       end
 
       ##
       # Attempt to load a cached session
       def cached_session
         session = false
-        if cache_exists?
+        if File.exist?(cached_file)
           begin
             session = DropboxSession.deserialize(File.read(cached_file))
-            Logger.message "Session data loaded from cache!"
+            Logger.info "Session data loaded from cache!"
 
           rescue => err
-            Logger.warn Errors::Storage::Dropbox::CacheError.wrap(err, <<-EOS)
+            Logger.warn Error.wrap(err, <<-EOS)
               Could not read session data from cache.
               Cache data might be corrupt.
             EOS
@@ -89,50 +106,66 @@ module Backup
       end
 
       ##
-      # Transfers the archived file to the specified Dropbox folder
+      # Transfer each of the package files to Dropbox in chunks of +chunk_size+.
+      # Each chunk will be retried +chunk_retries+ times, pausing +retry_waitsec+
+      # between retries, if errors occur.
       def transfer!
-        remote_path = remote_path_for(@package)
+        package.filenames.each do |filename|
+          src = File.join(Config.tmp_path, filename)
+          dest = File.join(remote_path, filename)
+          Logger.info "Storing '#{ dest }'..."
 
-        files_to_transfer_for(@package) do |local_file, remote_file|
-          Logger.message "#{storage_name} started transferring '#{ local_file }'."
-          File.open(File.join(local_path, local_file), 'r') do |file|
-            connection.put_file(File.join(remote_path, remote_file), file)
+          uploader = nil
+          File.open(src, 'r') do |file|
+            uploader = connection.get_chunked_uploader(file, file.stat.size)
+            while uploader.offset < uploader.total_size
+              with_retries do
+                uploader.upload(1024**2 * chunk_size)
+              end
+            end
+          end
+
+          with_retries do
+            uploader.finish(dest)
           end
         end
+
+      rescue => err
+        raise Error.wrap(err, 'Upload Failed!')
       end
 
-      ##
-      # Removes the transferred archive file(s) from the storage location.
-      # Any error raised will be rescued during Cycling
-      # and a warning will be logged, containing the error message.
-      def remove!(package)
-        remote_path = remote_path_for(package)
+      def with_retries
+        retries = 0
+        begin
+          yield
+        rescue StandardError => err
+          retries += 1
+          raise if retries > max_retries
 
-        messages = []
-        transferred_files_for(package) do |local_file, remote_file|
-          messages << "#{storage_name} started removing " +
-              "'#{ local_file }' from Dropbox."
+          Logger.info Error.wrap(err, "Retry ##{ retries } of #{ max_retries }.")
+          sleep(retry_waitsec)
+          retry
         end
-        Logger.message messages.join("\n")
-
-        connection.file_delete(remote_path)
       end
 
-      ##
-      # Returns the path to the cached file
+      # Called by the Cycler.
+      # Any error raised will be logged as a warning.
+      def remove!(package)
+        Logger.info "Removing backup package dated #{ package.time }..."
+
+        connection.file_delete(remote_path_for(package))
+      end
+
       def cached_file
-        File.join(Config.cache_path, api_key + api_secret)
-      end
-
-      ##
-      # Checks to see if the cache file exists
-      def cache_exists?
-        File.exist?(cached_file)
+        path = cache_path.start_with?('/') ?
+               cache_path : File.join(Config.root_path, cache_path)
+        File.join(path, api_key + api_secret)
       end
 
       ##
       # Serializes and writes the Dropbox session to a cache file
       def write_cache!(session)
+        FileUtils.mkdir_p File.dirname(cached_file)
         File.open(cached_file, "w") do |cache_file|
           cache_file.write(session.serialize)
         end
@@ -170,12 +203,34 @@ module Backup
 
         session
 
-        rescue => err
-          raise Errors::Storage::Dropbox::AuthenticationError.wrap(
-            err, 'Could not create or authenticate a new session'
-          )
+      rescue => err
+        raise Error.wrap(err, 'Could not create or authenticate a new session')
       end
 
+    end
+  end
+end
+
+# Patch for dropbox-ruby-sdk-1.5.1
+class DropboxClient
+  class ChunkedUploader
+    def upload(chunk_size = 1024**2 * 4)
+      while @offset < @total_size
+        @file_obj.seek(@offset) unless @file_obj.pos == @offset
+        data = @file_obj.read(chunk_size)
+
+        begin
+          resp = @client.parse_response(
+            @client.partial_chunked_upload(data, @upload_id, @offset)
+          )
+        rescue DropboxError => err
+          resp = JSON.parse(err.http_response.body) rescue {}
+          raise err unless resp['offset']
+        end
+
+        @offset = resp['offset']
+        @upload_id ||= resp['upload_id']
+      end
     end
   end
 end

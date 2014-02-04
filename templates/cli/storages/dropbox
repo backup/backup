@@ -1,0 +1,19 @@
+  ##
+  # Dropbox [Storage]
+  #
+  # Your initial backup must be performed manually to authorize
+  # this machine with your Dropbox account. This authorized session
+  # will be stored in `cache_path` and used for subsequent backups.
+  #
+  store_with Dropbox do |db|
+    db.api_key     = "my_api_key"
+    db.api_secret  = "my_api_secret"
+    # Sets the path where the cached authorized session will be stored.
+    # Relative paths will be relative to ~/Backup, unless the --root-path
+    # is set on the command line or within your configuration file.
+    db.cache_path  = ".cache"
+    # :app_folder (default) or :dropbox
+    db.access_type = :app_folder
+    db.path        = "/path/to/my/backups"
+    db.keep        = 25
+  end

@@ -2,116 +2,108 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Notifier::Prowl do
-  let(:model) { Backup::Model.new(:test_trigger, 'test label') }
-  let(:notifier) do
-    Backup::Notifier::Prowl.new(model) do |prowl|
-      prowl.application = 'application'
-      prowl.api_key     = 'api_key'
-    end
-  end
+module Backup
+describe Notifier::Prowl do
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:notifier) { Notifier::Prowl.new(model) }
+
+  it_behaves_like 'a class that includes Config::Helpers'
+  it_behaves_like 'a subclass of Notifier::Base'
 
   describe '#initialize' do
-    it 'should sets the correct values' do
-      notifier.application.should == 'application'
-      notifier.api_key.should     == 'api_key'
+    it 'provides default values' do
+      expect( notifier.application  ).to be_nil
+      expect( notifier.api_key      ).to be_nil
 
-      notifier.on_success.should == true
-      notifier.on_warning.should == true
-      notifier.on_failure.should == true
+      expect( notifier.on_success     ).to be(true)
+      expect( notifier.on_warning     ).to be(true)
+      expect( notifier.on_failure     ).to be(true)
+      expect( notifier.max_retries    ).to be(10)
+      expect( notifier.retry_waitsec  ).to be(30)
     end
 
-    context 'when using configuration defaults' do
-      after { Backup::Configuration::Notifier::Prowl.clear_defaults! }
+    it 'configures the notifier' do
+      notifier = Notifier::Prowl.new(model) do |prowl|
+        prowl.application = 'my_app'
+        prowl.api_key     = 'my_api_key'
 
-      it 'should use the configuration defaults' do
-        Backup::Configuration::Notifier::Prowl.defaults do |prowl|
-          prowl.application = 'default_app'
-          prowl.api_key     = 'default_api_key'
-
-          prowl.on_success = false
-          prowl.on_warning = false
-          prowl.on_failure = false
-        end
-        notifier = Backup::Notifier::Prowl.new(model)
-        notifier.application.should == 'default_app'
-        notifier.api_key.should     == 'default_api_key'
-
-        notifier.on_success.should == false
-        notifier.on_warning.should == false
-        notifier.on_failure.should == false
+        prowl.on_success    = false
+        prowl.on_warning    = false
+        prowl.on_failure    = false
+        prowl.max_retries   = 5
+        prowl.retry_waitsec = 10
       end
 
-      it 'should override the configuration defaults' do
-        Backup::Configuration::Notifier::Prowl.defaults do |prowl|
-          prowl.application = 'old_app'
-          prowl.api_key     = 'old_api_key'
+      expect( notifier.application  ).to eq 'my_app'
+      expect( notifier.api_key      ).to eq 'my_api_key'
 
-          prowl.on_success = true
-          prowl.on_warning = false
-          prowl.on_failure = false
-        end
-        notifier = Backup::Notifier::Prowl.new(model) do |prowl|
-          prowl.application = 'new_app'
-          prowl.api_key     = 'new_api_key'
-
-          prowl.on_success = false
-          prowl.on_warning = true
-          prowl.on_failure = true
-        end
-
-        notifier.application.should == 'new_app'
-        notifier.api_key.should     == 'new_api_key'
-
-        notifier.on_success.should == false
-        notifier.on_warning.should == true
-        notifier.on_failure.should == true
-      end
-    end # context 'when using configuration defaults'
-  end
+      expect( notifier.on_success     ).to be(false)
+      expect( notifier.on_warning     ).to be(false)
+      expect( notifier.on_failure     ).to be(false)
+      expect( notifier.max_retries    ).to be(5)
+      expect( notifier.retry_waitsec  ).to be(10)
+    end
+  end # describe '#initialize'
 
   describe '#notify!' do
+    let(:notifier) {
+      Notifier::Prowl.new(model) do |prowl|
+        prowl.application = 'my_app'
+        prowl.api_key = 'my_api_key'
+      end
+    }
+    let(:form_data) {
+      'application=my_app&apikey=my_api_key&' +
+      'event=%5BBackup%3A%3A' + 'STATUS' + '%5D&' +
+      'description=test+label+%28test_trigger%29'
+    }
+
     context 'when status is :success' do
-      it 'should send Success message' do
-        notifier.expects(:send_message).with(
-          '[Backup::Success]'
+      it 'sends a success message' do
+        Excon.expects(:post).with(
+          'https://api.prowlapp.com/publicapi/add',
+          {
+            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+            :body     => form_data.sub('STATUS', 'Success'),
+            :expects  => 200
+          }
         )
+
         notifier.send(:notify!, :success)
       end
     end
 
     context 'when status is :warning' do
-      it 'should send Warning message' do
-        notifier.expects(:send_message).with(
-          '[Backup::Warning]'
+      it 'sends a warning message' do
+        Excon.expects(:post).with(
+          'https://api.prowlapp.com/publicapi/add',
+          {
+            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+            :body     => form_data.sub('STATUS', 'Warning'),
+            :expects  => 200
+          }
         )
+
         notifier.send(:notify!, :warning)
       end
     end
 
     context 'when status is :failure' do
-      it 'should send Failure message' do
-        notifier.expects(:send_message).with(
-          '[Backup::Failure]'
+      it 'sends a failure message' do
+        Excon.expects(:post).with(
+          'https://api.prowlapp.com/publicapi/add',
+          {
+            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
+            :body     => form_data.sub('STATUS', 'Failure'),
+            :expects  => 200
+          }
         )
+
         notifier.send(:notify!, :failure)
       end
     end
+
   end # describe '#notify!'
 
-  describe '#send_message' do
-    it 'should send the given message' do
-      client = mock
-      Prowler.expects(:new).with(
-        :application => 'application', :api_key => 'api_key'
-      ).returns(client)
-      client.expects(:notify).with(
-        'a message',
-        'test label (test_trigger)'
-      )
-
-      notifier.send(:send_message, 'a message')
-    end
-  end
-
+end
 end

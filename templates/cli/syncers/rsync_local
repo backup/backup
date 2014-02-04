@@ -1,0 +1,20 @@
+  ##
+  # RSync::Local [Syncer]
+  #
+  sync_with RSync::Local do |rsync|
+    rsync.path     = "~/backups"
+    rsync.mirror   = true
+
+    rsync.directories do |directory|
+      directory.add "/var/apps/my_app/public/uploads"
+      directory.add "/var/apps/my_app/logs"
+
+      # Exclude files/folders.
+      # Each pattern will be passed to rsync's `--exclude` option.
+      #
+      # Note: rsync is run using the `--archive` option,
+      #       so be sure to read the `FILTER RULES` in `man rsync`.
+      directory.exclude '*~'
+      directory.exclude 'tmp/'
+    end
+  end

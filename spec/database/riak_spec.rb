@@ -2,107 +2,135 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Database::Riak do
-  let(:model) { Backup::Model.new('foo', 'foo') }
-  let(:db) do
-    Backup::Database::Riak.new(model) do |db|
-      db.name         = 'mydatabase'
-      db.node         = 'riak@localhost'
-      db.cookie       = 'riak'
-      db.riak_admin_utility = '/path/to/riak-admin'
-    end
+module Backup
+describe Database::Riak do
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:db) { Database::Riak.new(model) }
+  let(:s) { sequence '' }
+
+  before do
+    Database::Riak.any_instance.stubs(:utility).
+        with('riak-admin').returns('riak-admin')
+    Database::Riak.any_instance.stubs(:utility).
+        with(:sudo).returns('sudo')
+    Database::Riak.any_instance.stubs(:utility).
+        with(:chown).returns('chown')
   end
 
+  it_behaves_like 'a class that includes Config::Helpers'
+  it_behaves_like 'a subclass of Database::Base'
+
   describe '#initialize' do
-    it 'should read the adapter details correctly' do
-      db.name.should      == 'mydatabase'
-      db.node.should      == 'riak@localhost'
-      db.cookie.should    == 'riak'
-      db.riak_admin_utility.should == '/path/to/riak-admin'
+    it 'provides default values' do
+      expect( db.database_id        ).to be_nil
+      expect( db.node               ).to eq 'riak@127.0.0.1'
+      expect( db.cookie             ).to eq 'riak'
+      expect( db.user               ).to eq 'riak'
     end
 
-    context 'when options are not set' do
-      before do
-        Backup::Database::Riak.any_instance.expects(:utility).
-            with('riak-admin').returns('/real/riak-admin')
+    it 'configures the database' do
+      db = Database::Riak.new(model, :my_id) do |riak|
+        riak.node   = 'my_node'
+        riak.cookie = 'my_cookie'
+        riak.user   = 'my_user'
       end
 
-      it 'should use default values' do
-        db = Backup::Database::Riak.new(model)
-
-        db.name.should        be_nil
-        db.node.should        be_nil
-        db.cookie.should      be_nil
-        db.riak_admin_utility.should == '/real/riak-admin'
-      end
-    end
-
-    context 'when configuration defaults have been set' do
-      after { Backup::Configuration::Database::Riak.clear_defaults! }
-
-      it 'should use configuration defaults' do
-        Backup::Configuration::Database::Riak.defaults do |db|
-          db.name         = 'db_name'
-          db.node         = 'db_node'
-          db.cookie       = 'db_cookie'
-          db.riak_admin_utility = '/default/path/to/riak-admin'
-        end
-
-        db = Backup::Database::Riak.new(model)
-        db.name.should        == 'db_name'
-        db.node.should        == 'db_node'
-        db.cookie.should      == 'db_cookie'
-        db.riak_admin_utility.should == '/default/path/to/riak-admin'
-      end
+      expect( db.database_id ).to eq 'my_id'
+      expect( db.node        ).to eq 'my_node'
+      expect( db.cookie      ).to eq 'my_cookie'
+      expect( db.user        ).to eq 'my_user'
     end
   end # describe '#initialize'
 
+
   describe '#perform!' do
-    let(:compressor) { mock }
-    let(:s) { sequence '' }
     before do
-      # superclass actions
+      db.stubs(:dump_path).returns('/tmp/trigger/databases')
+      Config.stubs(:user).returns('backup_user')
+
+      db.expects(:log!).in_sequence(s).with(:started)
       db.expects(:prepare!).in_sequence(s)
-      db.expects(:log!).in_sequence(s)
-      db.instance_variable_set(:@dump_path, '/dump/path')
-
-      db.stubs(:riakadmin).returns('riakadmin_command')
     end
 
-    context 'when no compressor is configured' do
-      it 'should only perform the riak-admin backup command' do
-        FileUtils.expects(:chown_R).with('riak', 'riak', '/dump/path')
-        db.expects(:run).in_sequence(s).
-            with('riakadmin_command /dump/path/mydatabase node')
+    context 'with a compressor configured' do
+      let(:compressor) { mock }
 
-        db.perform!
-      end
-    end
-
-    context 'when a compressor is configured' do
       before do
         model.stubs(:compressor).returns(compressor)
-        compressor.expects(:compress_with).yields('compressor_command', '.gz')
+        compressor.stubs(:compress_with).yields('cmp_cmd', '.cmp_ext')
       end
 
-      it 'should compress the backup file and remove the source file' do
-        FileUtils.expects(:chown_R).with('riak', 'riak', '/dump/path')
-        db.expects(:run).in_sequence(s).
-            with('riakadmin_command /dump/path/mydatabase node')
+      it 'dumps the database with compression' do
         db.expects(:run).in_sequence(s).with(
-          "compressor_command -c /dump/path/mydatabase > /dump/path/mydatabase.gz"
+          "sudo -n chown riak '/tmp/trigger/databases'"
         )
-        FileUtils.expects(:rm_f).in_sequence(s).with('/dump/path/mydatabase')
+
+        db.expects(:run).in_sequence(s).with(
+          "sudo -n -u riak riak-admin backup riak@127.0.0.1 riak " +
+          "'/tmp/trigger/databases/Riak' node"
+        )
+
+        db.expects(:run).in_sequence(s).with(
+          "sudo -n chown -R backup_user '/tmp/trigger/databases'"
+        )
+
+        db.expects(:run).in_sequence(s).with(
+          "cmp_cmd -c '/tmp/trigger/databases/Riak-riak@127.0.0.1' " +
+          "> '/tmp/trigger/databases/Riak-riak@127.0.0.1.cmp_ext'"
+        )
+
+        FileUtils.expects(:rm_f).in_sequence(s).with(
+          '/tmp/trigger/databases/Riak-riak@127.0.0.1'
+        )
+
+        db.expects(:log!).in_sequence(s).with(:finished)
 
         db.perform!
       end
-    end
-  end
+    end # context 'with a compressor configured'
 
-  describe '#riakadmin' do
-    it 'should return the full riakadmin string' do
-      db.send(:riakadmin).should == "/path/to/riak-admin backup riak@localhost riak"
-    end
-  end
+    context 'without a compressor configured' do
+      it 'dumps the database without compression' do
+        db.expects(:run).in_sequence(s).with(
+          "sudo -n chown riak '/tmp/trigger/databases'"
+        )
 
+        db.expects(:run).in_sequence(s).with(
+          "sudo -n -u riak riak-admin backup riak@127.0.0.1 riak " +
+          "'/tmp/trigger/databases/Riak' node"
+        )
+
+        db.expects(:run).in_sequence(s).with(
+          "sudo -n chown -R backup_user '/tmp/trigger/databases'"
+        )
+
+        FileUtils.expects(:rm_f).never
+
+        db.expects(:log!).in_sequence(s).with(:finished)
+
+        db.perform!
+      end
+    end # context 'without a compressor configured'
+
+    it 'ensures dump_path ownership is reclaimed' do
+      db.expects(:run).in_sequence(s).with(
+        "sudo -n chown riak '/tmp/trigger/databases'"
+      )
+
+      db.expects(:run).in_sequence(s).with(
+        "sudo -n -u riak riak-admin backup riak@127.0.0.1 riak " +
+        "'/tmp/trigger/databases/Riak' node"
+      ).raises('an error')
+
+      db.expects(:run).in_sequence(s).with(
+        "sudo -n chown -R backup_user '/tmp/trigger/databases'"
+      )
+
+      expect do
+        db.perform!
+      end.to raise_error('an error')
+    end
+  end # describe '#perform!'
+
+end
 end

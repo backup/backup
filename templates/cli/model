@@ -1,0 +1,26 @@
+# encoding: utf-8
+
+##
+# Backup Generated: <%= @options[:trigger] %>
+# Once configured, you can run the backup with the following command:
+#
+# $ backup perform -t <%= @options[:trigger] %> [-c <path_to_configuration_file>]
+#
+# For more information about Backup's components, see the documentation at:
+# http://meskyanichi.github.io/backup
+#
+Model.new(:<%= @options[:trigger] %>, 'Description for <%= @options[:trigger] %>') do
+<% if @options[:splitter] %>
+<%= Backup::Template.new.result('cli/splitter') %>
+<% end; if @options[:archives] %>
+<%= Backup::Template.new.result('cli/archive') %>
+<% end; %w{ databases storages syncers encryptor compressor notifiers }.each do |item|
+  if @options[item]
+    @options[item].split(',').map(&:strip).uniq.each do |entry|
+      if File.exist?(File.join(Backup::TEMPLATE_PATH, 'cli', item, entry)) %>
+<%= Backup::Template.new.result("cli/#{ item }/#{ entry }") %>
+<%    end
+    end
+  end
+end %>
+end

@@ -2,6 +2,8 @@
 
 module Backup
   module Cleaner
+    class Error < Backup::Error; end
+
     class << self
 
       ##
@@ -9,22 +11,22 @@ module Backup
       # from the last time this model/trigger was run,
       # then removes the files.
       def prepare(model)
-        @model = model
-
         messages = []
-        if packaging_folder_dirty?
+
+        packaging_folder = File.join(Config.tmp_path, model.trigger)
+        if File.exist?(packaging_folder)
           messages << <<-EOS
-            The temporary backup folder still contains files!
-            '#{ File.join(Config.tmp_path, @model.trigger) }'
-            These files will now be removed.
+            The temporary packaging folder still exists!
+            '#{ packaging_folder }'
+            It will now be removed.
           EOS
-          FileUtils.rm_rf(File.join(Config.tmp_path, @model.trigger))
+          FileUtils.rm_rf(packaging_folder)
         end
 
-        package_files = tmp_path_package_files
+        package_files = package_files_for(model.trigger)
         unless package_files.empty?
-          # the chances that tmp_path would be dirty
-          # AND package files exist are practically nil
+          # the chances of the packaging folder AND
+          # the package files existing are practically nil
           messages << ('-' * 74) unless messages.empty?
 
           messages << <<-EOS
@@ -37,11 +39,11 @@ module Backup
         end
 
         unless messages.empty?
-          Logger.warn Errors::CleanerError.new(<<-EOS)
+          Logger.warn Error.new(<<-EOS)
             Cleanup Warning
             #{ messages.join("\n") }
             Please check the log for messages and/or your notifications
-            concerning this backup: '#{ @model.label } (#{ @model.trigger })'
+            concerning this backup: '#{ model.label } (#{ model.trigger })'
             The temporary files which had to be removed should not have existed.
           EOS
         end
@@ -50,7 +52,7 @@ module Backup
       ##
       # Remove the temporary folder used during packaging
       def remove_packaging(model)
-        Logger.message "Cleaning up the temporary files..."
+        Logger.info "Cleaning up the temporary files..."
         FileUtils.rm_rf(File.join(Config.tmp_path, model.trigger))
       end
 
@@ -58,7 +60,7 @@ module Backup
       # Remove the final package files from tmp_path
       # Note: 'force' is used, since a Local Storage may *move* these files.
       def remove_package(package)
-        Logger.message "Cleaning up the package files..."
+        Logger.info "Cleaning up the package files..."
         package.filenames.each do |file|
           FileUtils.rm_f(File.join(Config.tmp_path, file))
         end
@@ -68,21 +70,21 @@ module Backup
       # Logs warnings if any temporary files still exist
       # when errors occur during the backup
       def warnings(model)
-        @model = model
-
         messages = []
-        if packaging_folder_dirty?
+
+        packaging_folder = File.join(Config.tmp_path, model.trigger)
+        if File.exist?(packaging_folder)
           messages << <<-EOS
-            The temporary backup folder still contains files!
-            '#{ File.join(Config.tmp_path, @model.trigger) }'
+            The temporary packaging folder still exists!
+            '#{ packaging_folder }'
             This folder may contain completed Archives and/or Database backups.
           EOS
         end
 
-        package_files = tmp_path_package_files
+        package_files = package_files_for(model.trigger)
         unless package_files.empty?
-          # the chances that tmp_path would be dirty
-          # AND package files exist are practically nil
+          # the chances of the packaging folder AND
+          # the package files existing are practically nil
           messages << ('-' * 74) unless messages.empty?
 
           messages << <<-EOS
@@ -93,11 +95,11 @@ module Backup
         end
 
         unless messages.empty?
-          Logger.warn Errors::CleanerError.new(<<-EOS)
+          Logger.warn Error.new(<<-EOS)
             Cleanup Warning
             #{ messages.join("\n") }
             Make sure you check these files before the next scheduled backup for
-            '#{ @model.label } (#{ @model.trigger })'
+            '#{ model.label } (#{ model.trigger })'
             These files will be removed at that time!
           EOS
         end
@@ -105,15 +107,8 @@ module Backup
 
       private
 
-      def packaging_folder_dirty?
-        !Dir[File.join(Config.tmp_path, @model.trigger, '*')].empty?
-      end
-
-      def tmp_path_package_files
-        Dir[File.join(
-          Config.tmp_path,
-          "????.??.??.??.??.??.#{ @model.trigger }.tar{,[.-]*}"
-        )]
+      def package_files_for(trigger)
+        Dir[File.join(Config.tmp_path,"#{ trigger }.tar{,[.-]*}")]
       end
 
     end

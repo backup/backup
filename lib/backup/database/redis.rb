@@ -3,135 +3,175 @@
 module Backup
   module Database
     class Redis < Base
+      class Error < Backup::Error; end
+
+      MODES = [:copy, :sync]
 
       ##
-      # Name of and path to the database that needs to get dumped
-      attr_accessor :name, :path
+      # Mode of operation.
+      #
+      # [:copy]
+      #   Copies the redis dump file specified by {#rdb_path}.
+      #   This data will be current as of the last RDB Snapshot
+      #   performed by the server (per your redis.conf settings).
+      #   You may set {#invoke_save} to +true+ to have Backup issue
+      #   a +SAVE+ command to update the dump file with the current
+      #   data before performing the copy.
+      #
+      # [:sync]
+      #   Performs a dump of your redis data using +redis-cli --rdb -+.
+      #   Redis implements this internally using a +SYNC+ command.
+      #   The operation is analogous to requesting a +BGSAVE+, then having the
+      #   dump returned. This mode is capable of dumping data from a local or
+      #   remote server. Requires Redis v2.6 or better.
+      #
+      # Defaults to +:copy+.
+      attr_accessor :mode
 
       ##
-      # Credentials for the specified database
-      attr_accessor :password
+      # Full path to the redis dump file.
+      #
+      # Required when {#mode} is +:copy+.
+      attr_accessor :rdb_path
 
       ##
-      # Determines whether Backup should invoke the SAVE command through
-      # the 'redis-cli' utility to persist the most recent data before
-      # copying over the dump file
+      # Perform a +SAVE+ command using the +redis-cli+ utility
+      # before copying the dump file specified by {#rdb_path}.
+      #
+      # Only valid when {#mode} is +:copy+.
       attr_accessor :invoke_save
 
       ##
-      # Connectivity options
+      # Connectivity options for the +redis-cli+ utility.
       attr_accessor :host, :port, :socket
 
       ##
-      # Additional "redis-cli" options
+      # Password for the +redis-cli+ utility.
+      attr_accessor :password
+
+      ##
+      # Additional options for the +redis-cli+ utility.
       attr_accessor :additional_options
 
-      ##
-      # Path to the redis-cli utility (optional)
-      attr_accessor :redis_cli_utility
-
-      ##
-      # Creates a new instance of the Redis database object
-      def initialize(model, &block)
-        super(model)
-
-        @additional_options ||= Array.new
-
+      def initialize(model, database_id = nil, &block)
+        super
         instance_eval(&block) if block_given?
 
-        @name ||= 'dump'
+        @mode ||= :copy
 
-        if @utility_path
-          Logger.warn "[DEPRECATED] " +
-            "Database::Redis#utility_path has been deprecated.\n" +
-            "  Use Database::Redis#redis_cli_utility instead."
-          @redis_cli_utility ||= @utility_path
+        unless MODES.include?(mode)
+          raise Error, "'#{ mode }' is not a valid mode"
         end
-        @redis_cli_utility ||= utility('redis-cli')
+
+        if mode == :copy && rdb_path.nil?
+          raise Error, '`rdb_path` must be set when `mode` is :copy'
+        end
       end
 
       ##
-      # Performs the Redis backup by using the 'cp' unix utility
-      # to copy the persisted Redis dump file to the Backup archive.
-      # Additionally, when 'invoke_save' is set to true, it'll tell
-      # the Redis server to persist the current state to the dump file
-      # before copying the dump to get the most recent updates in to the backup
+      # Performs the dump based on {#mode} and stores the Redis dump file
+      # to the +dump_path+ using the +dump_filename+.
+      #
+      #   <trigger>/databases/Redis[-<database_id>].rdb[.gz]
       def perform!
         super
 
-        invoke_save! if invoke_save
-        copy!
+        case mode
+        when :sync
+          # messages output by `redis-cli --rdb` on $stderr
+          Logger.configure do
+            ignore_warning(/Transfer finished with success/)
+            ignore_warning(/SYNC sent to master/)
+          end
+          sync!
+        when :copy
+          save! if invoke_save
+          copy!
+        end
+
+        log!(:finished)
       end
 
       private
 
-      ##
-      # Tells Redis to persist the current state of the
-      # in-memory database to the persisted dump file
-      def invoke_save!
-        response = run("#{ redis_cli_utility } #{ credential_options } " +
-                       "#{ connectivity_options } #{ user_options } SAVE")
-        unless response =~ /OK/
-          raise Errors::Database::Redis::CommandError, <<-EOS
-            Could not invoke the Redis SAVE command.
-            The #{ database } file might not contain the most recent data.
-            Please check if the server is running, the credentials (if any) are correct,
-            and the host/port/socket are correct.
+      def sync!
+        pipeline = Pipeline.new
+        dump_ext = 'rdb'
 
-            Redis CLI response: #{ response }
-          EOS
+        pipeline << "#{ redis_cli_cmd } --rdb -"
+
+        model.compressor.compress_with do |command, ext|
+          pipeline << command
+          dump_ext << ext
+        end if model.compressor
+
+        pipeline << "#{ utility(:cat) } > " +
+            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
+
+        pipeline.run
+
+        unless pipeline.success?
+          raise Error, "Dump Failed!\n" + pipeline.error_messages
         end
       end
 
-      ##
-      # Performs the copy command to copy over the Redis dump file to the Backup archive
-      def copy!
-        src_path = File.join(path, database)
-        unless File.exist?(src_path)
-          raise Errors::Database::Redis::NotFoundError, <<-EOS
-            Redis database dump not found
-            File path was #{ src_path }
+      def save!
+        resp = run("#{ redis_cli_cmd } SAVE")
+        unless resp =~ /OK$/
+          raise Error, <<-EOS
+            Failed to invoke the `SAVE` command
+            Response was: #{ resp }
           EOS
         end
 
-        dst_path = File.join(@dump_path, database)
-        if @model.compressor
-          @model.compressor.compress_with do |command, ext|
-            run("#{ command } -c #{ src_path } > #{ dst_path + ext }")
+      rescue Error
+        if resp =~ /save already in progress/
+          unless (attempts ||= '0').next! == '5'
+            sleep 5
+            retry
+          end
+        end
+        raise
+      end
+
+      def copy!
+        unless File.exist?(rdb_path)
+          raise Error, <<-EOS
+            Redis database dump not found
+            `rdb_path` was '#{ rdb_path }'
+          EOS
+        end
+
+        dst_path = File.join(dump_path, dump_filename + '.rdb')
+        if model.compressor
+          model.compressor.compress_with do |command, ext|
+            run("#{ command } -c '#{ rdb_path }' > '#{ dst_path + ext }'")
           end
         else
-          FileUtils.cp(src_path, dst_path)
+          FileUtils.cp(rdb_path, dst_path)
         end
       end
 
-      ##
-      # Returns the Redis database file name
-      def database
-        "#{ name }.rdb"
+      def redis_cli_cmd
+        "#{ utility('redis-cli') } #{ password_option } " +
+        "#{ connectivity_options } #{ user_options }"
       end
 
-      ##
-      # Builds the Redis credentials syntax to authenticate the user
-      # to perform the database dumping process
-      def credential_options
-        password.to_s.empty? ? '' : "-a '#{password}'"
+      def password_option
+        "-a '#{ password }'" if password
       end
 
-      ##
-      # Builds the Redis connectivity options syntax to connect the user
-      # to perform the database dumping process
       def connectivity_options
-        %w[host port socket].map do |option|
-          next if send(option).to_s.empty?
-          "-#{option[0,1]} '#{send(option)}'"
-        end.compact.join(' ')
+        return "-s '#{ socket }'" if socket
+
+        opts = []
+        opts << "-h '#{ host }'" if host
+        opts << "-p '#{ port }'" if port
+        opts.join(' ')
       end
 
-      ##
-      # Builds a Redis compatible string for the
-      # additional options specified by the user
       def user_options
-        @additional_options.join(' ')
+        Array(additional_options).join(' ')
       end
 
     end

@@ -3,9 +3,12 @@
 module Backup
   module Database
     class PostgreSQL < Base
+      class Error < Backup::Error; end
 
       ##
-      # Name of the database that needs to get dumped
+      # Name of the database that needs to get dumped.
+      # To dump all databases, set this to `:all` or leave blank.
+      # +username+ must be a PostgreSQL superuser to run `pg_dumpall`.
       attr_accessor :name
 
       ##
@@ -13,124 +16,116 @@ module Backup
       attr_accessor :username, :password
 
       ##
+      # If set the pg_dump(all) command is executed as the given user
+      attr_accessor :sudo_user
+
+      ##
       # Connectivity options
       attr_accessor :host, :port, :socket
 
       ##
-      # Tables to skip while dumping the database
+      # Tables to skip while dumping the database.
+      # If `name` is set to :all (or not specified), these are ignored.
       attr_accessor :skip_tables
 
       ##
-      # Tables to dump, tables that aren't specified won't get dumped
+      # Tables to dump. This in only valid if `name` is specified.
+      # If none are given, the entire database will be dumped.
       attr_accessor :only_tables
 
       ##
-      # Additional "pg_dump" options
+      # Additional "pg_dump" or "pg_dumpall" options
       attr_accessor :additional_options
 
-      ##
-      # Path to pg_dump utility (optional)
-      attr_accessor :pg_dump_utility
-
-      ##
-      # Creates a new instance of the PostgreSQL adapter object
-      # Sets the PGPASSWORD environment variable to the password
-      # so it doesn't prompt and hang in the process
-      def initialize(model, &block)
-        super(model)
-
-        @skip_tables        ||= Array.new
-        @only_tables        ||= Array.new
-        @additional_options ||= Array.new
-
+      def initialize(model, database_id = nil, &block)
+        super
         instance_eval(&block) if block_given?
 
-        if @utility_path
-          Logger.warn "[DEPRECATED] " +
-            "Database::PostgreSQL#utility_path has been deprecated.\n" +
-            "  Use Database::PostgreSQL#pg_dump_utility instead."
-          @pg_dump_utility ||= @utility_path
-        end
-        @pg_dump_utility ||= utility(:pg_dump)
+        @name ||= :all
       end
 
       ##
-      # Performs the pgdump command and outputs the
-      # data to the specified path based on the 'trigger'
+      # Performs the mysqldump command and outputs the dump file
+      # in the +dump_path+ using +dump_filename+.
+      #
+      #   <trigger>/databases/PostgreSQL[-<database_id>].sql[.gz]
       def perform!
         super
 
+        pipeline = Pipeline.new
         dump_ext = 'sql'
-        dump_cmd = "#{ pgdump }"
 
-        if @model.compressor
-          @model.compressor.compress_with do |command, ext|
-            dump_cmd << " | #{command}"
-            dump_ext << ext
-          end
+        pipeline << (dump_all? ? pgdumpall : pgdump)
+
+        model.compressor.compress_with do |command, ext|
+          pipeline << command
+          dump_ext << ext
+        end if model.compressor
+
+        pipeline << "#{ utility(:cat) } > " +
+            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
+
+        pipeline.run
+        if pipeline.success?
+          log!(:finished)
+        else
+          raise Error, "Dump Failed!\n" + pipeline.error_messages
         end
-
-        dump_cmd << " > '#{ File.join(@dump_path, name) }.#{ dump_ext }'"
-        run(dump_cmd)
       end
 
-      ##
-      # Builds the full pgdump string based on all attributes
       def pgdump
-        "#{password_options}" +
-        "#{ pg_dump_utility } #{ username_options } #{ connectivity_options } " +
+        "#{ password_option }" +
+        "#{ sudo_option }" +
+        "#{ utility(:pg_dump) } #{ username_option } #{ connectivity_options } " +
         "#{ user_options } #{ tables_to_dump } #{ tables_to_skip } #{ name }"
       end
 
-      ##
-      # Builds the password syntax PostgreSQL uses to authenticate the user
-      # to perform database dumping
-      def password_options
-        password.to_s.empty? ? '' : "PGPASSWORD='#{password}' "
+      def pgdumpall
+        "#{ password_option }" +
+        "#{ sudo_option }" +
+        "#{ utility(:pg_dumpall) } #{ username_option } " +
+        "#{ connectivity_options } #{ user_options }"
       end
 
-      ##
-      # Builds the credentials PostgreSQL syntax to authenticate the user
-      # to perform the database dumping process
-      def username_options
-        username.to_s.empty? ? '' : "--username='#{username}'"
+      def password_option
+        "PGPASSWORD='#{ password }' " if password
       end
 
-      ##
-      # Builds the PostgreSQL connectivity options syntax to connect the user
-      # to perform the database dumping process, socket gets gsub'd to host since
-      # that's the option PostgreSQL takes for socket connections as well. In case
-      # both the host and the socket are specified, the socket will take priority over the host
+      def sudo_option
+        "#{ utility(:sudo) } -n -u #{ sudo_user } " if sudo_user
+      end
+
+      def username_option
+        "--username='#{ username }'" if username
+      end
+
       def connectivity_options
-        %w[host port socket].map do |option|
-          next if send(option).to_s.empty?
-          "--#{option}='#{send(option)}'".gsub('--socket=', '--host=')
-        end.compact.join(' ')
+        return "--host='#{ socket }'" if socket
+
+        opts = []
+        opts << "--host='#{ host }'" if host
+        opts << "--port='#{ port }'" if port
+        opts.join(' ')
       end
 
-      ##
-      # Builds a PostgreSQL compatible string for the additional options
-      # specified by the user
       def user_options
-        additional_options.join(' ')
+        Array(additional_options).join(' ')
       end
 
-      ##
-      # Builds the PostgreSQL syntax for specifying which tables to dump
-      # during the dumping of the database
       def tables_to_dump
-        only_tables.map do |table|
-          "--table='#{table}'"
+        Array(only_tables).map do |table|
+          "--table='#{ table }'"
         end.join(' ')
       end
 
-      ##
-      # Builds the PostgreSQL syntax for specifying which tables to skip
-      # during the dumping of the database
       def tables_to_skip
-        skip_tables.map do |table|
-          "--exclude-table='#{table}'"
+        Array(skip_tables).map do |table|
+          "--exclude-table='#{ table }'"
         end.join(' ')
+      end
+
+      def dump_all?
+        name == :all
       end
 
     end

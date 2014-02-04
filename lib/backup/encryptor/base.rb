@@ -3,8 +3,8 @@
 module Backup
   module Encryptor
     class Base
-      include Backup::CLI::Helpers
-      include Backup::Configuration::Helpers
+      include Utilities::Helpers
+      include Config::Helpers
 
       def initialize
         load_defaults!
@@ -22,7 +22,7 @@ module Backup
       # Logs a message to the console and log file to inform
       # the client that Backup is encrypting the archive
       def log!
-        Logger.message "Using #{ encryptor_name } to encrypt the archive."
+        Logger.info "Using #{ encryptor_name } to encrypt the archive."
       end
     end
   end

@@ -1,92 +1,152 @@
 # encoding: utf-8
-
-##
-# Only load the Fog gem when the Backup::Storage::S3 class is loaded
-Backup::Dependency.load('fog')
+require 'backup/cloud_io/s3'
 
 module Backup
   module Storage
     class S3 < Base
+      include Storage::Cycler
+      class Error < Backup::Error; end
 
       ##
       # Amazon Simple Storage Service (S3) Credentials
-      attr_accessor :access_key_id, :secret_access_key
+      attr_accessor :access_key_id, :secret_access_key, :use_iam_profile
 
       ##
-      # Amazon S3 bucket name and path
-      attr_accessor :bucket, :path
+      # Amazon S3 bucket name
+      attr_accessor :bucket
 
       ##
       # Region of the specified S3 bucket
       attr_accessor :region
 
       ##
-      # Creates a new instance of the storage object
-      def initialize(model, storage_id = nil, &block)
-        super(model, storage_id)
+      # Multipart chunk size, specified in MiB.
+      #
+      # Each package file larger than +chunk_size+
+      # will be uploaded using S3 Multipart Upload.
+      #
+      # Minimum: 5 (but may be disabled with 0)
+      # Maximum: 5120
+      # Default: 5
+      attr_accessor :chunk_size
 
-        @path ||= 'backups'
+      ##
+      # Number of times to retry failed operations.
+      #
+      # Default: 10
+      attr_accessor :max_retries
 
-        instance_eval(&block) if block_given?
+      ##
+      # Time in seconds to pause before each retry.
+      #
+      # Default: 30
+      attr_accessor :retry_waitsec
+
+      ##
+      # Encryption algorithm to use for Amazon Server-Side Encryption
+      #
+      # Supported values:
+      #
+      # - :aes256
+      #
+      # Default: nil
+      attr_accessor :encryption
+
+      ##
+      # Storage class to use for the S3 objects uploaded
+      #
+      # Supported values:
+      #
+      # - :standard (default)
+      # - :reduced_redundancy
+      #
+      # Default: :standard
+      attr_accessor :storage_class
+
+      ##
+      # Additional options to pass along to fog.
+      # e.g. Fog::Storage.new({ :provider => 'AWS' }.merge(fog_options))
+      attr_accessor :fog_options
+
+      def initialize(model, storage_id = nil)
+        super
+
+        @chunk_size     ||= 5 # MiB
+        @max_retries    ||= 10
+        @retry_waitsec  ||= 30
+        @path           ||= 'backups'
+        @storage_class  ||= :standard
+        path.sub!(/^\//, '')
+
+        check_configuration
       end
 
       private
 
-      ##
-      # This is the provider that Fog uses for the S3 Storage
-      def provider
-        'AWS'
-      end
-
-      ##
-      # Establishes a connection to Amazon S3
-      def connection
-        @connection ||= Fog::Storage.new(
-          :provider               => provider,
-          :aws_access_key_id      => access_key_id,
-          :aws_secret_access_key  => secret_access_key,
-          :region                 => region
+      def cloud_io
+        @cloud_io ||= CloudIO::S3.new(
+          :access_key_id      => access_key_id,
+          :secret_access_key  => secret_access_key,
+          :use_iam_profile    => use_iam_profile,
+          :region             => region,
+          :bucket             => bucket,
+          :encryption         => encryption,
+          :storage_class      => storage_class,
+          :max_retries        => max_retries,
+          :retry_waitsec      => retry_waitsec,
+          :chunk_size         => chunk_size,
+          :fog_options        => fog_options
         )
       end
 
-      def remote_path_for(package)
-        super(package).sub(/^\//, '')
-      end
-
-      ##
-      # Transfers the archived file to the specified Amazon S3 bucket
       def transfer!
-        remote_path = remote_path_for(@package)
-
-        connection.sync_clock
-
-        files_to_transfer_for(@package) do |local_file, remote_file|
-          Logger.message "#{storage_name} started transferring " +
-              "'#{ local_file }' to bucket '#{ bucket }'."
-
-          File.open(File.join(local_path, local_file), 'r') do |file|
-            connection.put_object(
-              bucket, File.join(remote_path, remote_file), file
-            )
-          end
+        package.filenames.each do |filename|
+          src = File.join(Config.tmp_path, filename)
+          dest = File.join(remote_path, filename)
+          Logger.info "Storing '#{ bucket }/#{ dest }'..."
+          cloud_io.upload(src, dest)
         end
       end
 
-      ##
-      # Removes the transferred archive file(s) from the storage location.
-      # Any error raised will be rescued during Cycling
-      # and a warning will be logged, containing the error message.
+      # Called by the Cycler.
+      # Any error raised will be logged as a warning.
       def remove!(package)
+        Logger.info "Removing backup package dated #{ package.time }..."
+
         remote_path = remote_path_for(package)
+        objects = cloud_io.objects(remote_path)
 
-        connection.sync_clock
+        raise Error, "Package at '#{ remote_path }' not found" if objects.empty?
 
-        transferred_files_for(package) do |local_file, remote_file|
-          Logger.message "#{storage_name} started removing " +
-              "'#{ local_file }' from bucket '#{ bucket }'."
+        cloud_io.delete(objects)
+      end
 
-          connection.delete_object(bucket, File.join(remote_path, remote_file))
+      def check_configuration
+        if use_iam_profile
+          required = %w{ bucket }
+        else
+          required = %w{ access_key_id secret_access_key bucket }
         end
+        raise Error, <<-EOS if required.map {|name| send(name) }.any?(&:nil?)
+          Configuration Error
+          #{ required.map {|name| "##{ name }"}.join(', ') } are all required
+        EOS
+
+        raise Error, <<-EOS if chunk_size > 0 && !chunk_size.between?(5, 5120)
+          Configuration Error
+          #chunk_size must be between 5 and 5120 (or 0 to disable multipart)
+        EOS
+
+        raise Error, <<-EOS if encryption && encryption.to_s.upcase != 'AES256'
+          Configuration Error
+          #encryption must be :aes256 or nil
+        EOS
+
+        classes = ['STANDARD', 'REDUCED_REDUNDANCY']
+        raise Error, <<-EOS unless classes.include?(storage_class.to_s.upcase)
+          Configuration Error
+          #storage_class must be :standard or :reduced_redundancy
+        EOS
       end
 
     end

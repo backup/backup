@@ -3,81 +3,68 @@
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
 describe Backup::Compressor::Bzip2 do
-  let(:compressor) { Backup::Compressor::Bzip2.new }
+  before do
+    Backup::Compressor::Bzip2.any_instance.stubs(:utility).returns('bzip2')
+  end
 
-  describe 'setting configuration defaults' do
-    after { Backup::Configuration::Compressor::Bzip2.clear_defaults! }
+  it 'should be a subclass of Compressor::Base' do
+    Backup::Compressor::Bzip2.
+      superclass.should == Backup::Compressor::Base
+  end
 
-    it 'uses and overrides configuration defaults' do
-      Backup::Configuration::Compressor::Bzip2.best.should be_false
-      Backup::Configuration::Compressor::Bzip2.fast.should be_false
+  describe '#initialize' do
+    let(:compressor) { Backup::Compressor::Bzip2.new }
 
-      compressor = Backup::Compressor::Bzip2.new
-      compressor.best.should be_false
-      compressor.fast.should be_false
+    after { Backup::Compressor::Bzip2.clear_defaults! }
 
-      Backup::Configuration::Compressor::Bzip2.defaults do |c|
-        c.best = true
-        c.fast = true
-      end
-      Backup::Configuration::Compressor::Bzip2.best.should be_true
-      Backup::Configuration::Compressor::Bzip2.fast.should be_true
-
-      compressor = Backup::Compressor::Bzip2.new
-      compressor.best.should be_true
-      compressor.fast.should be_true
-
-      compressor = Backup::Compressor::Bzip2.new do |c|
-        c.best = false
-      end
-      compressor.best.should be_false
-      compressor.fast.should be_true
-
-      compressor = Backup::Compressor::Bzip2.new do |c|
-        c.fast = false
-      end
-      compressor.best.should be_true
-      compressor.fast.should be_false
-    end
-  end # describe 'setting configuration defaults'
-
-  describe '#compress_with' do
-    before do
-      compressor.expects(:log!)
-      compressor.expects(:utility).with(:bzip2).returns('bzip2')
+    it 'should load pre-configured defaults' do
+      Backup::Compressor::Bzip2.any_instance.expects(:load_defaults!)
+      compressor
     end
 
-    it 'should yield with the --best option' do
-      compressor.best = true
-      compressor.compress_with do |cmd, ext|
-        cmd.should == 'bzip2 --best'
-        ext.should == '.bz2'
-      end
-    end
+    context 'when no pre-configured defaults have been set' do
+      it 'should use default values' do
+        compressor.level.should be_false
 
-    it 'should yield with the --fast option' do
-      compressor.fast = true
-      compressor.compress_with do |cmd, ext|
-        cmd.should == 'bzip2 --fast'
-        ext.should == '.bz2'
+        compressor.instance_variable_get(:@cmd).should == 'bzip2'
+        compressor.instance_variable_get(:@ext).should == '.bz2'
       end
-    end
 
-    it 'should yield with the --best and --fast options' do
-      compressor.best = true
-      compressor.fast = true
-      compressor.compress_with do |cmd, ext|
-        cmd.should == 'bzip2 --best --fast'
-        ext.should == '.bz2'
-      end
-    end
+      it 'should use the values given' do
+        compressor = Backup::Compressor::Bzip2.new do |c|
+          c.level = 5
+        end
+        compressor.level.should == 5
 
-    it 'should yield with no options' do
-      compressor.compress_with do |cmd, ext|
-        cmd.should == 'bzip2'
-        ext.should == '.bz2'
+        compressor.instance_variable_get(:@cmd).should == 'bzip2 -5'
+        compressor.instance_variable_get(:@ext).should == '.bz2'
       end
-    end
-  end # describe '#compress_with'
+    end # context 'when no pre-configured defaults have been set'
+
+    context 'when pre-configured defaults have been set' do
+      before do
+        Backup::Compressor::Bzip2.defaults do |c|
+          c.level = 7
+        end
+      end
+
+      it 'should use pre-configured defaults' do
+        compressor.level.should == 7
+
+        compressor.instance_variable_get(:@cmd).should == 'bzip2 -7'
+        compressor.instance_variable_get(:@ext).should == '.bz2'
+      end
+
+      it 'should override pre-configured defaults' do
+        compressor = Backup::Compressor::Bzip2.new do |c|
+          c.level = 6
+        end
+        compressor.level.should == 6
+
+        compressor.instance_variable_get(:@cmd).should == 'bzip2 -6'
+        compressor.instance_variable_get(:@ext).should == '.bz2'
+      end
+    end # context 'when pre-configured defaults have been set'
+  end # describe '#initialize'
 
 end

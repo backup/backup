@@ -2,385 +2,381 @@
 
 require File.expand_path('../../spec_helper.rb', __FILE__)
 
-describe Backup::Database::MongoDB do
-  let(:model) { Backup::Model.new(:test_trigger, 'test label') }
-  let(:db) do
-    Backup::Database::MongoDB.new(model) do |db|
-      db.name      = 'mydatabase'
-      db.username  = 'someuser'
-      db.password  = 'secret'
-      db.host      = 'localhost'
-      db.port      = 123
+module Backup
+describe Database::MongoDB do
+  let(:model) { Model.new(:test_trigger, 'test label') }
+  let(:db) { Database::MongoDB.new(model) }
+  let(:s) { sequence '' }
 
-      db.ipv6               = true
-      db.only_collections   = ['users', 'pirates']
-      db.additional_options = ['--query', '--foo']
-      db.mongodump_utility  = '/path/to/mongodump'
-      db.mongo_utility      = '/path/to/mongo'
-    end
+  before do
+    Database::MongoDB.any_instance.stubs(:utility).
+        with(:mongodump).returns('mongodump')
+    Database::MongoDB.any_instance.stubs(:utility).
+        with(:mongo).returns('mongo')
+    Database::MongoDB.any_instance.stubs(:utility).
+        with(:cat).returns('cat')
+    Database::MongoDB.any_instance.stubs(:utility).
+        with(:tar).returns('tar')
   end
 
+  it_behaves_like 'a class that includes Config::Helpers'
+  it_behaves_like 'a subclass of Database::Base'
+
   describe '#initialize' do
-
-    it 'should read the adapter details correctly' do
-      db.name.should      == 'mydatabase'
-      db.username.should  == 'someuser'
-      db.password.should  == 'secret'
-      db.host.should      == 'localhost'
-      db.port.should      == 123
-
-      db.ipv6.should                == true
-      db.only_collections.should    == ['users', 'pirates']
-      db.additional_options.should  == ['--query', '--foo']
-      db.mongodump_utility.should   == '/path/to/mongodump'
-      db.mongo_utility.should       == '/path/to/mongo'
-      db.lock.should                == false
+    it 'provides default values' do
+      expect( db.database_id        ).to be_nil
+      expect( db.name               ).to be_nil
+      expect( db.username           ).to be_nil
+      expect( db.password           ).to be_nil
+      expect( db.host               ).to be_nil
+      expect( db.port               ).to be_nil
+      expect( db.ipv6               ).to be_nil
+      expect( db.only_collections   ).to be_nil
+      expect( db.additional_options ).to be_nil
+      expect( db.lock               ).to be_nil
+      expect( db.oplog              ).to be_nil
     end
 
-    context 'when options are not set' do
-      before do
-        Backup::Database::MongoDB.any_instance.expects(:utility).
-            with(:mongodump).returns('/real/mongodump')
-        Backup::Database::MongoDB.any_instance.expects(:utility).
-            with(:mongo).returns('/real/mongo')
+    it 'configures the database' do
+      db = Database::MongoDB.new(model, :my_id) do |mongodb|
+        mongodb.name               = 'my_name'
+        mongodb.username           = 'my_username'
+        mongodb.password           = 'my_password'
+        mongodb.host               = 'my_host'
+        mongodb.port               = 'my_port'
+        mongodb.ipv6               = 'my_ipv6'
+        mongodb.only_collections   = 'my_only_collections'
+        mongodb.additional_options = 'my_additional_options'
+        mongodb.lock               = 'my_lock'
+        mongodb.oplog              = 'my_oplog'
       end
 
-      it 'should use default values' do
-        db = Backup::Database::MongoDB.new(model)
-
-        db.name.should      be_nil
-        db.username.should  be_nil
-        db.password.should  be_nil
-        db.host.should      be_nil
-        db.port.should      be_nil
-
-        db.ipv6.should                be_false
-        db.only_collections.should    == []
-        db.additional_options.should  == []
-        db.mongodump_utility.should   == '/real/mongodump'
-        db.mongo_utility.should       == '/real/mongo'
-        db.lock.should                be_false
-      end
-    end
-
-    context 'when configuration defaults have been set' do
-      after { Backup::Configuration::Database::MongoDB.clear_defaults! }
-
-      it 'should use configuration defaults' do
-        Backup::Configuration::Database::MongoDB.defaults do |db|
-          db.name       = 'db_name'
-          db.username   = 'db_username'
-          db.password   = 'db_password'
-          db.host       = 'db_host'
-          db.port       = 789
-
-          db.ipv6               = true
-          db.only_collections   = ['collection']
-          db.additional_options = ['--opt']
-          db.mongodump_utility  = '/default/path/to/mongodump'
-          db.mongo_utility      = '/default/path/to/mongo'
-          db.lock               = true
-        end
-
-        db = Backup::Database::MongoDB.new(model)
-        db.name.should      == 'db_name'
-        db.username.should  == 'db_username'
-        db.password.should  == 'db_password'
-        db.host.should      == 'db_host'
-        db.port.should      == 789
-
-        db.ipv6.should                be_true
-        db.only_collections.should    == ['collection']
-        db.additional_options.should  == ['--opt']
-        db.mongodump_utility.should   == '/default/path/to/mongodump'
-        db.mongo_utility.should       == '/default/path/to/mongo'
-        db.lock.should                be_true
-      end
+      expect( db.database_id        ).to eq 'my_id'
+      expect( db.name               ).to eq 'my_name'
+      expect( db.username           ).to eq 'my_username'
+      expect( db.password           ).to eq 'my_password'
+      expect( db.host               ).to eq 'my_host'
+      expect( db.port               ).to eq 'my_port'
+      expect( db.ipv6               ).to eq 'my_ipv6'
+      expect( db.only_collections   ).to eq 'my_only_collections'
+      expect( db.additional_options ).to eq 'my_additional_options'
+      expect( db.lock               ).to eq 'my_lock'
+      expect( db.oplog              ).to eq 'my_oplog'
     end
   end # describe '#initialize'
 
   describe '#perform!' do
-    let(:s) { sequence '' }
-
     before do
-      # superclass actions
+      db.expects(:log!).in_sequence(s).with(:started)
       db.expects(:prepare!).in_sequence(s)
-      db.expects(:log!).in_sequence(s)
     end
 
-    context 'when #lock is set to false' do
+    context 'with #lock set to false' do
+      it 'does not lock the database' do
+        db.expects(:lock_database).never
+        db.expects(:unlock_database).never
 
-      context 'when #only_collections has not been specified' do
-        before { db.only_collections = [] }
-        it 'should dump everything without locking' do
-          db.expects(:lock_database).never
-          db.expects(:unlock_database).never
-          db.expects(:specific_collection_dump!).never
+        db.expects(:dump!).in_sequence(s)
+        db.expects(:package!).in_sequence(s)
 
-          db.expects(:dump!).in_sequence(s)
-          db.expects(:package!).in_sequence(s)
-          db.perform!
-        end
+        db.perform!
       end
+    end
 
-      context 'when #only_collections has been specified' do
-        it 'should dump specific collections without locking' do
-          db.expects(:lock_database).never
-          db.expects(:unlock_database).never
-          db.expects(:dump!).never
-
-          db.expects(:specific_collection_dump!).in_sequence(s)
-          db.expects(:package!).in_sequence(s)
-          db.perform!
-        end
-      end
-
-    end # context 'when #lock is set to false'
-
-    context 'when #lock is set to true' do
+    context 'with #lock set to true' do
       before { db.lock = true }
 
-      context 'when #only_collections has not been specified' do
-        before { db.only_collections = [] }
-        it 'should dump everything while locking the database' do
-          db.expects(:specific_collection_dump!).never
-
-          db.expects(:lock_database).in_sequence(s)
-          db.expects(:dump!).in_sequence(s)
-          db.expects(:unlock_database).in_sequence(s)
-          db.expects(:package!).in_sequence(s)
-          db.perform!
-        end
-      end
-
-      context 'when #only_collections has been specified' do
-        it 'should dump specific collections without locking' do
-          db.expects(:lock_database).never
-          db.expects(:unlock_database).never
-          db.expects(:dump!).never
-
-          db.expects(:lock_database).in_sequence(s)
-          db.expects(:specific_collection_dump!).in_sequence(s)
-          db.expects(:unlock_database).in_sequence(s)
-          db.expects(:package!).in_sequence(s)
-          db.perform!
-        end
-      end
-
-    end # context 'when #lock is set to true'
-
-    context 'when errors occur' do
-      it 'should re-raise error and skip package!' do
-        db.expects(:specific_collection_dump!).in_sequence(s).
-            raises('Test Error Message')
-        db.expects(:package!).never
-
-        expect do
-          db.perform!
-        end.to raise_error(
-          Backup::Errors::Database::MongoDBError,
-          "Database::MongoDBError: Database Dump Failed!\n" +
-          "  Reason: RuntimeError\n" +
-          "  Test Error Message"
-        )
-      end
-
-      it 'should ensure database is unlocked' do
-        db.lock = true
-
+      it 'locks the database' do
         db.expects(:lock_database).in_sequence(s)
-        db.expects(:specific_collection_dump!).in_sequence(s).
-            raises('Test Error Message')
+        db.expects(:dump!).in_sequence(s)
+        db.expects(:package!).in_sequence(s)
         db.expects(:unlock_database).in_sequence(s)
-        db.expects(:package!).never
+
+        db.perform!
+      end
+
+      it 'ensures the database is unlocked' do
+        db.expects(:lock_database).in_sequence(s)
+        db.expects(:dump!).in_sequence(s)
+        db.expects(:package!).in_sequence(s).raises('an error')
+        db.expects(:unlock_database).in_sequence(s)
 
         expect do
           db.perform!
-        end.to raise_error(
-          Backup::Errors::Database::MongoDBError,
-          "Database::MongoDBError: Database Dump Failed!\n" +
-          "  Reason: RuntimeError\n" +
-          "  Test Error Message"
-        )
+        end.to raise_error 'an error'
       end
     end
 
   end # describe '#perform!'
 
   describe '#dump!' do
-    it 'should run the mongodb dump command' do
-      db.expects(:mongodump).returns(:dump_command)
-      db.expects(:run).with(:dump_command)
-      db.send(:dump!)
-    end
-  end
-
-  describe '#specific_collection_dump!' do
-    it 'should run the mongodb dump command for each collection' do
-      db.expects(:mongodump).twice.returns('dump_command')
-      db.expects(:run).with("dump_command --collection='users'")
-      db.expects(:run).with("dump_command --collection='pirates'")
-      db.send(:specific_collection_dump!)
-    end
-  end
-
-  describe '#mongodump' do
     before do
-      db.instance_variable_set(:@dump_path, '/path/to/dump/folder')
+      db.stubs(:mongodump).returns('mongodump_command')
+      db.stubs(:dump_path).returns('/tmp/trigger/databases')
+
+      FileUtils.expects(:mkdir_p).in_sequence(s).
+          with('/tmp/trigger/databases/MongoDB')
     end
 
-    it 'should return the mongodb dump command string' do
-      db.send(:mongodump).should == "/path/to/mongodump " +
-        "--db='mydatabase' --username='someuser' --password='secret' " +
-        "--host='localhost' --port='123' --ipv6 " +
-        "--query --foo --out='/path/to/dump/folder'"
+    context 'when #only_collections are not specified' do
+      it 'runs mongodump once' do
+        db.expects(:run).in_sequence(s).with('mongodump_command')
+        db.send(:dump!)
+      end
     end
-  end
 
-  describe '#package!' do
-    let(:compressor) { mock }
+    context 'when #only_collections are specified' do
+      it 'runs mongodump for each collection' do
+        db.only_collections = ['collection_a', 'collection_b']
 
-    context 'when a compressor is configured' do
-      before do
-        Timecop.freeze(Time.now)
-        db.instance_variable_set(:@dump_path, '/path/to/dump/folder')
-        db.expects(:utility).with(:tar).returns('tar')
-        model.expects(:compressor).twice.returns(compressor)
-        compressor.expects(:compress_with).yields('compressor_command', '.gz')
+        db.expects(:run).in_sequence(s).with(
+          "mongodump_command --collection='collection_a'"
+        )
+        db.expects(:run).in_sequence(s).with(
+          "mongodump_command --collection='collection_b'"
+        )
+
+        db.send(:dump!)
       end
 
-      it 'should package the dump directory, then remove it' do
-        timestamp = Time.now.to_i.to_s[-5, 5]
-        db.expects(:run).with(
-          "tar -cf - -C '/path/to/dump' 'folder' | compressor_command" +
-          " > /path/to/dump/folder-#{ timestamp }.tar.gz"
+      it 'allows only_collections to be a single string' do
+        db.only_collections = 'collection_a'
+
+        db.expects(:run).in_sequence(s).with(
+          "mongodump_command --collection='collection_a'"
         )
-        FileUtils.expects(:rm_rf).with('/path/to/dump/folder')
+
+        db.send(:dump!)
+      end
+    end
+  end # describe '#dump!'
+
+  describe '#package!' do
+    let(:pipeline) { mock }
+    let(:compressor) { mock }
+
+    before do
+      db.stubs(:dump_path).returns('/tmp/trigger/databases')
+    end
+
+    context 'without a compressor' do
+      it 'packages the dump without compression' do
+        Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+        pipeline.expects(:<<).in_sequence(s).with(
+          "tar -cf - -C '/tmp/trigger/databases' 'MongoDB'"
+        )
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '/tmp/trigger/databases/MongoDB.tar'"
+        )
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+        FileUtils.expects(:rm_rf).in_sequence(s).with(
+          '/tmp/trigger/databases/MongoDB'
+        )
+        db.expects(:log!).in_sequence(s).with(:finished)
 
         db.send(:package!)
       end
-    end
+    end # context 'without a compressor'
 
-    context 'when a compressor is not configured' do
+    context 'with a compressor' do
       before do
-        model.expects(:compressor).returns(nil)
+        model.stubs(:compressor).returns(compressor)
+        compressor.stubs(:compress_with).yields('cmp_cmd', '.cmp_ext')
       end
 
-      it 'should return nil' do
-        db.expects(:run).never
-        db.send(:package!).should be_nil
+      it 'packages the dump with compression' do
+        Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+        pipeline.expects(:<<).in_sequence(s).with(
+          "tar -cf - -C '/tmp/trigger/databases' 'MongoDB'"
+        )
+        pipeline.expects(:<<).in_sequence(s).with('cmp_cmd')
+        pipeline.expects(:<<).in_sequence(s).with(
+          "cat > '/tmp/trigger/databases/MongoDB.tar.cmp_ext'"
+        )
+        pipeline.expects(:run).in_sequence(s)
+        pipeline.expects(:success?).in_sequence(s).returns(true)
+        FileUtils.expects(:rm_rf).in_sequence(s).with(
+          '/tmp/trigger/databases/MongoDB'
+        )
+        db.expects(:log!).in_sequence(s).with(:finished)
+
+        db.send(:package!)
       end
-    end
-  end
+    end # context 'with a compressor'
 
-  describe '#database' do
-    context 'when a database name is given' do
-      it 'should return the command string for the database' do
-        db.send(:database).should == "--db='mydatabase'"
+    context 'when the pipeline fails' do
+      before do
+        Pipeline.any_instance.stubs(:success?).returns(false)
+        Pipeline.any_instance.stubs(:error_messages).returns('error messages')
       end
-    end
 
-    context 'when no database name is given' do
-      it 'should return nil' do
-        db.name = nil
-        db.send(:database).should be_nil
+      it 'raises an error and does not remove the packaging path' do
+        FileUtils.expects(:rm_rf).never
+        db.expects(:log!).never
+
+        expect do
+          db.send(:package!)
+        end.to raise_error(Database::MongoDB::Error) {|err|
+          expect( err.message ).to eq(
+            "Database::MongoDB::Error: Dump Failed!\n  error messages"
+          )
+        }
       end
-    end
-  end
+    end # context 'when the pipeline fails'
+  end # describe '#package!'
 
-  describe '#credential_options' do
-    it 'should return the command string for the user credentials' do
-      db.send(:credential_options).should ==
-          "--username='someuser' --password='secret'"
-    end
-  end
+  describe '#mongodump' do
+    let(:option_methods) {%w[
+      name_option credential_options connectivity_options
+      ipv6_option oplog_option user_options dump_packaging_path
+    ]}
 
-  describe '#connectivity_options' do
-    it 'should return the command string for the connectivity options' do
-      db.send(:connectivity_options).should == "--host='localhost' --port='123'"
+    it 'returns full mongodump command built from all options' do
+      option_methods.each {|name| db.stubs(name).returns(name) }
+      expect( db.send(:mongodump) ).to eq(
+        "mongodump name_option credential_options connectivity_options " +
+        "ipv6_option oplog_option user_options --out='dump_packaging_path'"
+      )
     end
-  end
 
-  describe '#ipv6_option' do
-    context 'when #ipv6 is set true' do
-      it 'should return the command string for the ipv6 option' do
-        db.send(:ipv6_option).should == '--ipv6'
+    it 'handles nil values from option methods' do
+      option_methods.each {|name| db.stubs(name).returns(nil) }
+      expect( db.send(:mongodump) ).to eq "mongodump       --out=''"
+    end
+  end # describe '#mongodump'
+
+  describe 'mongo and monogodump option methods' do
+
+    describe '#name_option' do
+      it 'returns database argument if #name is specified' do
+        expect( db.send(:name_option) ).to be_nil
+
+        db.name = 'my_database'
+        expect( db.send(:name_option) ).to eq "--db='my_database'"
       end
-    end
+    end # describe '#name_option'
 
-    context 'when #ipv6 is set false' do
-      it 'should return and empty string' do
-        db.ipv6 = false
-        db.send(:ipv6_option).should == ''
+    describe '#credential_options' do
+      it 'returns credentials arguments based on #username and #password' do
+        expect( db.send(:credential_options) ).to eq ''
+
+        db.username = 'my_user'
+        expect( db.send(:credential_options) ).to eq(
+          "--username='my_user'"
+        )
+
+        db.password = 'my_password'
+        expect( db.send(:credential_options) ).to eq(
+          "--username='my_user' --password='my_password'"
+        )
+
+        db.username = nil
+        expect( db.send(:credential_options) ).to eq(
+          "--password='my_password'"
+        )
       end
-    end
-  end
+    end # describe '#credential_options'
 
-  describe '#user_options' do
-    context 'when #additional_options are set' do
-      it 'should return the command string for the options' do
-        db.send(:user_options).should == '--query --foo'
+    describe '#connectivity_options' do
+      it 'returns connectivity arguments based on #host and #port' do
+        expect( db.send(:connectivity_options) ).to eq ''
+
+        db.host = 'my_host'
+        expect( db.send(:connectivity_options) ).to eq(
+          "--host='my_host'"
+        )
+
+        db.port = 'my_port'
+        expect( db.send(:connectivity_options) ).to eq(
+          "--host='my_host' --port='my_port'"
+        )
+
+        db.host = nil
+        expect( db.send(:connectivity_options) ).to eq(
+          "--port='my_port'"
+        )
       end
-    end
+    end # describe '#connectivity_options'
 
-    context 'when #additional_options are not set' do
-      it 'should return an empty string' do
-        db.additional_options = []
-        db.send(:user_options).should == ''
+    describe '#ipv6_option' do
+      it 'returns the ipv6 argument if #ipv6 is true' do
+        expect( db.send(:ipv6_option) ).to be_nil
+
+        db.ipv6 = true
+        expect( db.send(:ipv6_option) ).to eq '--ipv6'
       end
-    end
-  end
+    end # describe '#ipv6_option'
 
-  describe '#dump_directory' do
-    it 'should return the command string for the dump path' do
-      db.instance_variable_set(:@dump_path, '/path/to/dump/folder')
-      db.send(:dump_directory).should == "--out='/path/to/dump/folder'"
-    end
-  end
+    describe '#oplog_option' do
+      it 'returns the oplog argument if #oplog is true' do
+        expect( db.send(:oplog_option) ).to be_nil
+
+        db.oplog = true
+        expect( db.send(:oplog_option) ).to eq '--oplog'
+      end
+    end # describe '#oplog_option'
+
+    describe '#user_options' do
+      it 'returns arguments for any #additional_options specified' do
+        expect( db.send(:user_options) ).to eq ''
+
+        db.additional_options = ['--opt1', '--opt2']
+        expect( db.send(:user_options) ).to eq '--opt1 --opt2'
+
+        db.additional_options = '--opta --optb'
+        expect( db.send(:user_options) ).to eq '--opta --optb'
+      end
+    end # describe '#user_options'
+
+  end # describe 'mongo and monogodump option methods'
 
   describe '#lock_database' do
-    it 'should return the command to lock the database' do
-      db.stubs(:mongo_uri).returns(:mongo_uri_output)
+    it 'runs command to disable profiling and lock the database' do
+      db = Database::MongoDB.new(model)
+      db.stubs(:mongo_shell).returns('mongo_shell')
+
       db.expects(:run).with(
-        " echo 'use admin\n" +
-        ' db.runCommand({"fsync" : 1, "lock" : 1})\' | /path/to/mongo mongo_uri_output' +
-        "\n"
+        "echo 'use admin\n" +
+        "db.setProfilingLevel(0)\n" +
+        "db.fsyncLock()' | mongo_shell\n"
       )
       db.send(:lock_database)
     end
-  end
+  end # describe '#lock_database'
 
   describe '#unlock_database' do
-    it 'should return the command to unlock the database' do
-      db.stubs(:mongo_uri).returns(:mongo_uri_output)
+    it 'runs command to unlock the database' do
+      db = Database::MongoDB.new(model)
+      db.stubs(:mongo_shell).returns('mongo_shell')
+
       db.expects(:run).with(
-        " echo 'use admin\n" +
-        ' db.$cmd.sys.unlock.findOne()\' | /path/to/mongo mongo_uri_output' +
-        "\n"
+        "echo 'use admin\n" +
+        "db.fsyncUnlock()' | mongo_shell\n"
       )
       db.send(:unlock_database)
     end
-  end
+  end # describe '#unlock_database'
 
-  describe '#mongo_uri' do
-    before do
-      db.stubs(:credential_options).returns(:credential_options_output)
-      db.stubs(:ipv6_option).returns(:ipv6_option_output)
+  describe '#mongo_shell' do
+    specify 'with all options' do
+      db.host = 'my_host'
+      db.port = 'my_port'
+      db.username = 'my_user'
+      db.password = 'my_pwd'
+      db.ipv6 = true
+      db.name = 'my_db'
+
+      expect( db.send(:mongo_shell) ).to eq(
+        "mongo --host='my_host' --port='my_port' --username='my_user' " +
+        "--password='my_pwd' --ipv6 'my_db'"
+      )
     end
 
-    context 'when a database name is given' do
-      it 'should return the URI specifying the database' do
-        db.send(:mongo_uri).should ==
-          "localhost:123/mydatabase credential_options_output ipv6_option_output"
-      end
+    specify 'with no options' do
+      expect( db.send(:mongo_shell) ).to eq 'mongo'
     end
+  end # describe '#mongo_shell'
 
-    context 'when no database name is given' do
-      it 'should return the URI without specifying the database' do
-        db.name = nil
-        db.send(:mongo_uri).should ==
-          "localhost:123 credential_options_output ipv6_option_output"
-      end
-    end
-  end
+end
 end

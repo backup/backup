@@ -1,0 +1,27 @@
+  ##
+  # Amazon S3 [Syncer]
+  #
+  sync_with Cloud::S3 do |s3|
+    # AWS Credentials
+    s3.access_key_id     = "my_access_key_id"
+    s3.secret_access_key = "my_secret_access_key"
+    # Or, to use a IAM Profile:
+    # s3.use_iam_profile = true
+
+    s3.bucket            = "my-bucket"
+    s3.region            = "us-east-1"
+    s3.path              = "/backups"
+    s3.mirror            = true
+    s3.thread_count      = 10
+
+    s3.directories do |directory|
+      directory.add "/path/to/directory/to/sync"
+      directory.add "/path/to/other/directory/to/sync"
+
+      # Exclude files/folders from the sync.
+      # The pattern may be a shell glob pattern (see `File.fnmatch`) or a Regexp.
+      # All patterns will be applied when traversing each added directory.
+      directory.exclude '**/*~'
+      directory.exclude /\/tmp$/
+    end
+  end

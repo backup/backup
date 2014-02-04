@@ -1,0 +1,18 @@
+require 'bundler/setup'
+
+Dir['tasks/**/*.rake'].each {|f| import f }
+
+task :default => :tasklist
+
+desc 'Show Rake Tasks (`rake -T`)'
+task :tasklist do
+  exec 'rake -T'
+end
+
+desc 'Rebuild Everything'
+task :all => [:archives, 'db:all']
+
+namespace :db do
+  desc 'Rebuild All Databases'
+  task :all => [:mysql, :postgresql, :mongodb, :redis, :riak]
+end
