@@ -3,31 +3,31 @@
 module Backup
   module Database
     class OpenLDAP < Base
+      class Error < Backup::Error; end
 
       ##
       # Name of the backup file
       attr_accessor :name
 
       ##
+      # Conf file
+      attr_accessor :conf_file
+
+      ##
+      # run slapcat under sudo if needed
+      attr_accessor :use_sudo
+
+      ##
       # Additional "slapcat" options
       attr_accessor :additional_options
 
       ##
-      # Path to the slapcat utility (optional)
-      attr_accessor :slapcat_utility
-
-      ##
       # Creates a new instance of the OpenLDAP database object
-      def initialize(model, &block)
-        super(model)
-
-        @additional_options ||= Array.new
-
+      def initialize(model, database_id = nil, &block)
+        super
         instance_eval(&block) if block_given?
 
-        @name ||= 'dump'
-
-        @slapcat_utility ||= utility('slapcat')
+        @name ||= 'ldap'
       end
 
       ##
@@ -36,27 +36,45 @@ module Backup
       def perform!
         super
 
+        pipeline = Pipeline.new
         dump_ext = 'ldif'
-        dump_cmd = "#{ slapcat_utility }"
 
-        if @model.compressor
-          @model.compressor.compress_with do |command, ext|
-            dump_cmd << " | #{command}"
-            dump_ext << ext
-          end
+        pipeline << slapcat
+
+        model.compressor.compress_with do |command, ext|
+          pipeline << command
+          dump_ext << ext
+        end if model.compressor
+
+        pipeline << "#{ utility(:cat) } > " +
+            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
+
+        pipeline.run
+        if pipeline.success?
+          log!(:finished)
+        else
+          raise Error, "Dump Failed!\n" + pipeline.error_messages
         end
-
-        dump_cmd << " > '#{ File.join(@dump_path, name) }.#{ dump_ext }'"
-        run(dump_cmd)
       end
 
       private
 
-      ##
-      # Builds a slapcat compatible string for the
-      # additional options specified by the user
+      def slapcat
+        "#{ sudo_option }" +
+        "#{ utility(:slapcat) } #{ user_options } " +
+        "#{ conf_file_option }"
+      end
+
+      def sudo_option
+        "#{ utility(:sudo) } -n " if use_sudo
+      end
+
+      def conf_file_option
+        "-f #{ conf_file }" if conf_file
+      end
+
       def user_options
-        @additional_options.join(' ')
+        Array(additional_options).join(' ')
       end
 
     end
