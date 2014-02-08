@@ -59,7 +59,8 @@ module Backup
         private
 
         def sync_directory(dir)
-          remote_base = File.join(path, File.basename(dir))
+          remote_base = path.empty? ? File.basename(dir) :
+                                      File.join(path, File.basename(dir))
           Logger.info "Gathering remote data for '#{ remote_base }'..."
           remote_files = get_remote_files(remote_base)
 
