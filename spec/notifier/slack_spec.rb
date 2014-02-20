@@ -53,29 +53,49 @@ describe Notifier::Slack do
   end # describe '#initialize'
 
   describe '#notify!' do
+    def expected_excon_params(_url, options, expected_payload, send_log = false)
+      body        = Hash[URI.decode_www_form(options[:body])]
+      payload     = JSON.parse(body["payload"])
+      attachments = payload["attachments"]
+      fields      = attachments.first["fields"]
+      titles      = fields.map { |h| h["title"] }
+
+      result   = _url == url
+      result &&= options[:headers] == { 'Content-Type' => 'application/x-www-form-urlencoded' }
+      result &&= options[:expects] == 200
+      result &&= attachments.size  == 1
+      result &&= titles            == send_log ? expected_titles_with_log : expected_titles
+      expected_payload.each do |k, v|
+        result &&= payload[k.to_s] == v
+      end
+
+      result
+    end
+
+    let(:expected_titles) {
+      ["Job", "Started", "Finished", "Duration", "Version"]
+    }
+
+    let(:expected_titles_with_log) {
+      expected_titles += ["Detailed Backup Log"]
+    }
+
     let(:notifier) {
       Notifier::Slack.new(model) do |slack|
         slack.team     = 'my_team'
         slack.token    = 'my_token'
       end
     }
-    let(:form_data) {
-      'payload=%7B%22text%22%3A%22%5BBackup%3A%3A' + 'STATUS' + '%5D+test+label+%28test_trigger%29%22%7D'
-    }
+
     let(:url) {
       'https://my_team.slack.com/services/hooks/incoming-webhook?token=my_token'
     }
 
     context 'when status is :success' do
       it 'sends a success message' do
-        Excon.expects(:post).with(
-          url,
-          {
-            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
-            :body     => form_data.sub('STATUS', 'Success'),
-            :expects  => 200
-          }
-        )
+        Excon.expects(:post).with() do |_url, options|
+          expected_excon_params(_url, options, {:text => "[Backup::Success] test label (test_trigger)"})
+        end
 
         notifier.send(:notify!, :success)
       end
@@ -83,14 +103,9 @@ describe Notifier::Slack do
 
     context 'when status is :warning' do
       it 'sends a warning message' do
-        Excon.expects(:post).with(
-          url,
-          {
-            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
-            :body     => form_data.sub('STATUS', 'Warning'),
-            :expects  => 200
-          }
-        )
+        Excon.expects(:post).with() do |_url, options|
+          expected_excon_params(_url, options, {:text => "[Backup::Warning] test label (test_trigger)"}, true)
+        end
 
         notifier.send(:notify!, :warning)
       end
@@ -98,14 +113,9 @@ describe Notifier::Slack do
 
     context 'when status is :failure' do
       it 'sends a failure message' do
-        Excon.expects(:post).with(
-          url,
-          {
-            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
-            :body     => form_data.sub('STATUS', 'Failure'),
-            :expects  => 200
-          }
-        )
+        Excon.expects(:post).with() do |_url, options|
+          expected_excon_params(_url, options, {:text => "[Backup::Failure] test label (test_trigger)"}, true)
+        end
 
         notifier.send(:notify!, :failure)
       end
@@ -120,24 +130,15 @@ describe Notifier::Slack do
           slack.username = 'my_username'
         end
       }
-      let(:form_data) {
-        'payload=%7B%22' +
-        'text%22%3A%22%5BBackup%3A%3ASuccess%5D+test+label+%28test_trigger%29%22%2C%22' +
-        'channel%22%3A%22my_channel%22%2C%22username%22%3A%22my_username%22%7D'
-      }
-      let(:url) {
-        'https://my_team.slack.com/services/hooks/incoming-webhook?token=my_token'
-      }
 
       it 'sends message with optional parameters' do
-        Excon.expects(:post).with(
-          url,
-          {
-            :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
-            :body     => form_data,
-            :expects  => 200
-          }
-        )
+        Excon.expects(:post).with() do |_url, options|
+          expected_excon_params(_url, options, {
+            :text     => "[Backup::Success] test label (test_trigger)",
+            :channel  => 'my_channel',
+            :username => 'my_username'
+          })
+        end
 
         notifier.send(:notify!, :success)
       end
