@@ -9,7 +9,7 @@
     # run slapcat under sudo if needed
     db.use_sudo          = false
     # Stores the location of the slapd.conf
-    db.conf_file         = '/etc/ldap/ldap.conf'
+    db.conf_file         = '/etc/ldap/slapd.d'
     # Optional: Use to set the location of this utility
     #   if it cannot be found by name in your $PATH
     # db.slapcat_utility = "/opt/local/bin/slapcat"
