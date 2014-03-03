@@ -67,7 +67,7 @@ module Backup
         if pipeline.success?
           log!(:finished)
         else
-          raise Error, "#{ database_name } Dump Failed!\n" + pipeline.error_messages
+          raise Error, "Dump Failed!\n" + pipeline.error_messages
         end
       end
 

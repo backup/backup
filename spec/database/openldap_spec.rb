@@ -108,7 +108,7 @@ describe Database::OpenLDAP do
           db.perform!
         end.to raise_error(Database::OpenLDAP::Error) {|err|
           expect( err.message ).to eq(
-            "Database::OpenLDAP::Error: #{db.send(:database_name)} Dump Failed!\n  error messages"
+            "Database::OpenLDAP::Error: Dump Failed!\n  error messages"
           )
         }
       end
