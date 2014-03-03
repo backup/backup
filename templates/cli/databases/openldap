@@ -1,0 +1,16 @@
+  ##
+  # OpenLDAP [Database]
+  #
+  database OpenLDAP do |db|
+    # Name of the ldap backup
+    db.name              = "my_database_name"
+    # Additional "slapcat" options
+    db.slapcat_args      = []
+    # run slapcat under sudo if needed
+    db.use_sudo          = false
+    # Stores the location of the slapd.conf
+    db.conf_file         = '/etc/ldap/ldap.conf'
+    # Optional: Use to set the location of this utility
+    #   if it cannot be found by name in your $PATH
+    # db.slapcat_utility = "/opt/local/bin/slapcat"
+  end

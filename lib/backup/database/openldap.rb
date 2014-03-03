@@ -38,7 +38,6 @@ module Backup
         @use_sudo         ||= false
         @slapcat_utility  ||= utility(:slapcat)
         @conf_file        ||= '/etc/ldap/ldap.conf'
-
       end
 
       ##
