@@ -37,7 +37,7 @@ module Backup
         @name             ||= 'ldap_backup'
         @use_sudo         ||= false
         @slapcat_utility  ||= utility(:slapcat)
-        @conf_file        ||= '/etc/ldap/ldap.conf'
+        @conf_file        ||= '/etc/ldap/slapd.d'
       end
 
       ##
@@ -73,7 +73,7 @@ module Backup
       ##
       # Builds the full slapcat string based on all attributes
       def slapcat
-        command = "#{ slapcat_utility } -f #{ conf_file } #{ user_options }"
+        command = "#{ slapcat_utility } -F #{ conf_file } #{ user_options }"
         command.prepend("sudo ") if use_sudo
         command
       end

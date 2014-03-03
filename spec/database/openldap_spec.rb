@@ -26,7 +26,7 @@ describe Database::OpenLDAP do
       expect(db.slapcat_args).to be_empty
       expect(db.use_sudo).to be_false
       expect(db.slapcat_utility).to eq '/real/slapcat'
-      expect(db.conf_file).to eq '/etc/ldap/ldap.conf'
+      expect(db.conf_file).to eq '/etc/ldap/slapd.d'
     end
 
     it 'configures the database' do
@@ -117,12 +117,12 @@ describe Database::OpenLDAP do
 
   describe '#slapcat' do
     let(:slapcat_args) {%w[-H ldap:///subtree-dn -a "(!(entryDN:dnSubtreeMatch:=ou=People,dc=example,dc=com))"]}
-    let(:conf_file) { "/etc/openldap/slapd.conf" }
+    let(:conf_file) { "/etc/ldap/slapd.d" }
 
     it 'returns full slapcat command built from conf file' do
       db.stubs(:conf_file).returns(conf_file)
       expect( db.send(:slapcat) ).to eq(
-        "/real/slapcat -f /etc/openldap/slapd.conf "
+        "/real/slapcat -F /etc/ldap/slapd.d "
       )
     end
 
@@ -130,7 +130,7 @@ describe Database::OpenLDAP do
       db.stubs(:slapcat_args).returns(slapcat_args)
       db.stubs(:conf_file).returns(conf_file)
       expect( db.send(:slapcat) ).to eq(
-        "/real/slapcat -f #{conf_file} #{slapcat_args.join(' ')}"
+        "/real/slapcat -F #{conf_file} #{slapcat_args.join(' ')}"
       )
     end
 
@@ -140,7 +140,7 @@ describe Database::OpenLDAP do
       db.stubs(:conf_file).returns("conf_file")
       db.stubs(:slapcat_utility).returns("real_slapcat")
       expect( db.send(:slapcat) ).to eq(
-        "sudo real_slapcat -f conf_file "
+        "sudo real_slapcat -F conf_file "
       )
     end
 
@@ -150,7 +150,7 @@ describe Database::OpenLDAP do
       db.stubs(:conf_file).returns(conf_file)
       db.stubs(:use_sudo).returns("true")
       expect( db.send(:slapcat) ).to eq(
-        "sudo #{db.slapcat_utility} -f #{conf_file} #{slapcat_args.join(' ')}"
+        "sudo #{db.slapcat_utility} -F #{conf_file} #{slapcat_args.join(' ')}"
       )
     end
   end
