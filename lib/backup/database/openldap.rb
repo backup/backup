@@ -3,6 +3,7 @@
 module Backup
   module Database
     class OpenLDAP < Base
+      class Error < Backup::Error; end
 
       ##
       # Name of the ldap backup
@@ -28,8 +29,8 @@ module Backup
 
       ##
       # Takes the name of the archive and the configuration block
-      def initialize(model, &block)
-        super(model)
+      def initialize(model, database_id = nil, &block)
+        super
 
         @slapcat_args     ||= Array.new
 
@@ -66,7 +67,7 @@ module Backup
         if pipeline.success?
           log!(:finished)
         else
-          raise Errors, "#{ database_name } Dump Failed!\n" + pipeline.error_messages
+          raise Error, "#{ database_name } Dump Failed!\n" + pipeline.error_messages
         end
       end
 
@@ -82,12 +83,6 @@ module Backup
 
       def sudo
         use_sudo
-      end
-
-      ##
-      # Returns the filename to use for dumping the database(s)
-      def dump_filename
-        name
       end
 
       ##
