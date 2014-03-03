@@ -31,11 +31,9 @@ module Backup
       # Takes the name of the archive and the configuration block
       def initialize(model, database_id = nil, &block)
         super
-
-        @slapcat_args     ||= Array.new
-
         instance_eval(&block) if block_given?
 
+        @slapcat_args     ||= Array.new
         @name             ||= 'ldap_backup'
         @use_sudo         ||= false
         @slapcat_utility  ||= utility(:slapcat)
@@ -77,12 +75,8 @@ module Backup
       # Builds the full slapcat string based on all attributes
       def slapcat
         command = "#{ slapcat_utility } -f #{ conf_file } #{ user_options }"
-        command.prepend("sudo ") if sudo
+        command.prepend("sudo ") if use_sudo
         command
-      end
-
-      def sudo
-        use_sudo
       end
 
       ##
