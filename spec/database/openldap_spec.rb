@@ -26,7 +26,7 @@ describe Database::OpenLDAP do
       expect(db.slapcat_args).to be_empty
       expect(db.use_sudo).to be_false
       expect(db.slapcat_utility).to eq '/real/slapcat'
-      expect(db.conf_file).to eq '/etc/ldap/slapd.d'
+      expect(db.slapcat_conf).to eq '/etc/ldap/slapd.d'
     end
 
     it 'configures the database' do
@@ -117,42 +117,54 @@ describe Database::OpenLDAP do
 
   describe '#slapcat' do
     let(:slapcat_args) {%w[-H ldap:///subtree-dn -a "(!(entryDN:dnSubtreeMatch:=ou=People,dc=example,dc=com))"]}
-    let(:conf_file) { "/etc/ldap/slapd.d" }
 
-    it 'returns full slapcat command built from conf file' do
-      db.stubs(:conf_file).returns(conf_file)
+    before do
+      db.stubs(:slapcat_utility).returns("real_slapcat")
+    end
+
+    it 'returns full slapcat command built from confdir' do
       expect( db.send(:slapcat) ).to eq(
-        "/real/slapcat -F /etc/ldap/slapd.d "
+        "real_slapcat -F /etc/ldap/slapd.d "
       )
     end
 
     it 'returns full slapcat command built from additional options and conf file' do
       db.stubs(:slapcat_args).returns(slapcat_args)
-      db.stubs(:conf_file).returns(conf_file)
       expect( db.send(:slapcat) ).to eq(
-        "/real/slapcat -F #{conf_file} #{slapcat_args.join(' ')}"
+        "real_slapcat -F /etc/ldap/slapd.d -H ldap:///subtree-dn -a \"(!(entryDN:dnSubtreeMatch:=ou=People,dc=example,dc=com))\""
       )
     end
 
     it 'supports sudo' do
       db.stubs(:use_sudo).returns("true")
-      db.stubs(:user_options).returns(nil)
-      db.stubs(:conf_file).returns("conf_file")
-      db.stubs(:slapcat_utility).returns("real_slapcat")
       expect( db.send(:slapcat) ).to eq(
-        "sudo real_slapcat -F conf_file "
+        "sudo real_slapcat -F /etc/ldap/slapd.d "
       )
     end
 
     it 'returns full slapcat command built from additional options and conf file and sudo' do
-      db.stubs(:slapcat_utility).returns("real_slapcat")
       db.stubs(:slapcat_args).returns(slapcat_args)
-      db.stubs(:conf_file).returns(conf_file)
       db.stubs(:use_sudo).returns("true")
       expect( db.send(:slapcat) ).to eq(
-        "sudo #{db.slapcat_utility} -F #{conf_file} #{slapcat_args.join(' ')}"
+        "sudo real_slapcat -F /etc/ldap/slapd.d -H ldap:///subtree-dn -a \"(!(entryDN:dnSubtreeMatch:=ou=People,dc=example,dc=com))\""
       )
     end
-  end
+
+    context "slapcat_conf_option" do
+      it 'supports both slapcat confdir' do
+        db.instance_variable_set(:@slapcat_conf, "/etc/ldap/slapd.d")
+        expect( db.send(:slapcat) ).to eq(
+          "real_slapcat -F /etc/ldap/slapd.d "
+        )
+      end
+
+      it 'supports both slapcat conffile' do
+        db.instance_variable_set(:@slapcat_conf, "/etc/ldap/ldap.conf")
+        expect( db.send(:slapcat) ).to eq(
+          "real_slapcat -f /etc/ldap/ldap.conf "
+        )
+      end
+    end
+  end # describe '#slapcat'
 end
 end

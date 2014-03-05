@@ -17,7 +17,7 @@ module Backup
 
       ##
       # Stores the location of the slapd.conf
-      attr_accessor :conf_file
+      attr_accessor :slapcat_conf
 
       ##
       # Additional "slapcat" options
@@ -33,11 +33,11 @@ module Backup
         super
         instance_eval(&block) if block_given?
 
-        @slapcat_args     ||= Array.new
         @name             ||= 'ldap_backup'
         @use_sudo         ||= false
+        @slapcat_args     ||= Array.new
         @slapcat_utility  ||= utility(:slapcat)
-        @conf_file        ||= '/etc/ldap/slapd.d'
+        @slapcat_conf     ||= '/etc/ldap/slapd.d'
       end
 
       ##
@@ -73,9 +73,15 @@ module Backup
       ##
       # Builds the full slapcat string based on all attributes
       def slapcat
-        command = "#{ slapcat_utility } -F #{ conf_file } #{ user_options }"
+        command = "#{ slapcat_utility } #{ slapcat_conf_option } #{ slapcat_conf } #{ user_options }"
         command.prepend("sudo ") if use_sudo
         command
+      end
+
+      ##
+      # Uses different slapcat switch depending on confdir or conffile set
+      def slapcat_conf_option
+        @slapcat_conf.include?(".d") ? "-F" : "-f"
       end
 
       ##
@@ -84,7 +90,6 @@ module Backup
       def user_options
         slapcat_args.join(' ')
       end
-
     end
   end
 end

@@ -14,8 +14,9 @@
     # db.use_sudo = true
 
     # Stores the location of the slapd.conf,
-    # defaults to "/etc/ldap/slapd.d"
-    # db.conf_file = /path/to/slapd.conf
+    # defaults to "/etc/ldap/slapd.d" confdir
+    # you can use also conf file instead of directory
+    # db.slapcat_conf = /path/to/slapd.conf
 
     # Optional: Use to set the location of slapcat utility
     # if it cannot be found by name in your $PATH
