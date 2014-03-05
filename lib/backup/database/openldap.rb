@@ -16,11 +16,11 @@ module Backup
       attr_accessor :use_sudo
 
       ##
-      # Stores the location of the slapd.conf
+      # Stores the location of the slapd.conf or slapcat confdir
       attr_accessor :slapcat_conf
 
       ##
-      # Additional "slapcat" options
+      # Additional slapcat options
       attr_accessor :slapcat_args
 
       ##
