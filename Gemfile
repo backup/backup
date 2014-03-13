@@ -33,6 +33,7 @@ group :production do
   gem 'twitter'
   gem 'hipchat'
   gem 'json'
+  gem 'azure'
 end
 
 gem 'rspec'
