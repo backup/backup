@@ -7,11 +7,11 @@ module Backup
       class Error < Backup::Error; end
 
       # Azure credentials
-      attr_reader :storage_account, :storage_access_key
+      attr_accessor :storage_account, :storage_access_key
 
       # Azure Storage Container
       attr_accessor :container_name, :container
-      attr_accessor :blob_service
+      attr_accessor :blob_service, :chunk_size
 
       def initialize(model, storage_id = nil)
         super
@@ -30,10 +30,22 @@ module Backup
 
         package.filenames.each do |filename|
           src = File.join(Config.tmp_path, filename)
-          dest = "%s-%s" % [ DateTime.parse(`date`).strftime("%Y-%m-%d-%H-%M-%S"), filename ]
-          Logger.info "Storing '#{ container }/#{ dest }'..."
-          content = File.open(src, 'rb') { |file| file.read }
-          blob_service.create_block_blob(container.name, dest, content)
+
+          backup_date = DateTime.parse(`date`).strftime("%Y-%m-%d-%H-%M-%S")
+          dest = "%s-%s" % [ backup_date, filename ]
+          Logger.info "Creating Block Blob '#{ container.name }/#{ dest }'..."
+          blob = blob_service.create_block_blob(container.name, dest, "")
+          chunk_ids = []
+
+          File.open(src,"r") do |fh_in|
+            until fh_in.eof?
+              chunk = "#{"%05d"%(fh_in.pos/chunk_size)}"
+              Logger.info "Storing blob'#{ blob.name }/#{ chunk }'..."
+              blob_service.create_blob_block(container.name, blob.name, chunk, fh_in.read(chunk_size))
+              chunk_ids.push([chunk])
+            end
+          end
+          blob_service.commit_blob_blocks(container.name, blob.name, chunk_ids)
         end
       end
 
