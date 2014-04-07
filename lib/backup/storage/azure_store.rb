@@ -15,7 +15,8 @@ module Backup
 
       def initialize(model, storage_id = nil)
         super
-        @path ||= 'backups'
+        @path       ||= 'backups'
+        @chunk_size ||= 1024 * 1024 * 4 # bytes
         path.sub!(/^\//, '')
 
         #check_configuration
