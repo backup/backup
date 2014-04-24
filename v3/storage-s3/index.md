@@ -88,7 +88,7 @@ You may configure your AWS S3 stored files to use [Server-Side Encryption][] by 
 
 ```rb
 store_with S3 do |s3|
-  s3.encryption = :aes256
+  s3.encryption = "aes256"
 end
 ```
 
