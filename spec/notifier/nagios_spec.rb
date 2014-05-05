@@ -19,6 +19,7 @@ describe Notifier::Nagios do
     it 'provides default values' do
       expect( notifier.nagios_host  ).to eq 'my.hostname'
       expect( notifier.nagios_port  ).to be 5667
+      expect( notifier.send_nsca_cfg).to eq "/etc/nagios/send_nsca.cfg"
       expect( notifier.service_name ).to eq 'Backup test_trigger'
       expect( notifier.service_host ).to eq 'my.hostname'
 
@@ -33,6 +34,7 @@ describe Notifier::Nagios do
       notifier = Notifier::Nagios.new(model) do |nagios|
         nagios.nagios_host  = 'my_nagios_host'
         nagios.nagios_port  = 1234
+        nagios.send_nsca_cfg= 'my_send_nsca_cfg'
         nagios.service_name = 'my_service_name'
         nagios.service_host = 'my_service_host'
 
@@ -45,6 +47,7 @@ describe Notifier::Nagios do
 
       expect( notifier.nagios_host  ).to eq 'my_nagios_host'
       expect( notifier.nagios_port  ).to be 1234
+      expect( notifier.send_nsca_cfg).to eq 'my_send_nsca_cfg'
       expect( notifier.service_name ).to eq 'my_service_name'
       expect( notifier.service_host ).to eq 'my_service_host'
 
@@ -57,7 +60,7 @@ describe Notifier::Nagios do
   end # describe '#initialize'
 
   describe '#notify!' do
-    let(:nagios_cmd) { "send_nsca -H 'my.hostname' -p '5667'" }
+    let(:nagios_cmd) { "send_nsca -H 'my.hostname' -p '5667' -c '/etc/nagios/send_nsca.cfg'" }
 
     before do
       notifier.service_host = 'my.service.host'
