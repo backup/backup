@@ -31,13 +31,14 @@ describe Backup::Utilities do
         pbzip2  '/path/to/pbzip2' # deprecated
 
         # Database Utilities
-        mongo       '/path/to/mongo'
-        mongodump   '/path/to/mongodump'
-        mysqldump   '/path/to/mysqldump'
-        pg_dump     '/path/to/pg_dump'
-        pg_dumpall  '/path/to/pg_dumpall'
-        redis_cli   '/path/to/redis-cli'
-        riak_admin  '/path/to/riak-admin'
+        mongo        '/path/to/mongo'
+        mongodump    '/path/to/mongodump'
+        mysqldump    '/path/to/mysqldump'
+        pg_dump      '/path/to/pg_dump'
+        pg_dumpall   '/path/to/pg_dumpall'
+        redis_cli    '/path/to/redis-cli'
+        riak_admin   '/path/to/riak-admin'
+        innobackupex '/path/to/innobackupex'
 
         # Encryptors
         gpg     '/path/to/gpg'
