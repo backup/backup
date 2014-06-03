@@ -41,7 +41,7 @@ module Backup
 
       ##
       # Default is :mysqldump (which is built in MySQL and generates
-      # a textual SQL file), but can be changed to :mysqldump, which
+      # a textual SQL file), but can be changed to :innobackupex, which
       # has more feasible restore times for large databases.
       # See: http://www.percona.com/doc/percona-xtrabackup/
       attr_accessor :backup_engine
