@@ -163,17 +163,25 @@ describe Database::MySQL do
 
         db.username = 'my_user'
         expect( db.send(:credential_options) ).to eq(
-          "--user='my_user'"
+          "--user=my_user"
         )
 
         db.password = 'my_password'
         expect( db.send(:credential_options) ).to eq(
-          "--user='my_user' --password='my_password'"
+          "--user=my_user --password=my_password"
         )
 
         db.username = nil
         expect( db.send(:credential_options) ).to eq(
-          "--password='my_password'"
+          "--password=my_password"
+        )
+      end
+
+      it 'handles special characters' do
+        db.username = "my_user'\""
+        db.password = "my_password'\""
+        expect( db.send(:credential_options) ).to eq(
+          "--user=my_user\\'\\\" --password=my_password\\'\\\""
         )
       end
     end # describe '#credential_options'
