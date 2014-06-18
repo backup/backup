@@ -33,6 +33,7 @@ group :production do
   gem 'twitter'
   gem 'hipchat'
   gem 'json'
+  gem 'nokogiri', '< 1.6.0'
 end
 
 gem 'rspec'
