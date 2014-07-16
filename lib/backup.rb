@@ -105,6 +105,7 @@ module Backup
     autoload :Prowl,     File.join(NOTIFIER_PATH, 'prowl')
     autoload :Hipchat,   File.join(NOTIFIER_PATH, 'hipchat')
     autoload :Pushover,  File.join(NOTIFIER_PATH, 'pushover')
+    autoload :Slack,     File.join(NOTIFIER_PATH, 'slack')
     autoload :HttpPost,  File.join(NOTIFIER_PATH, 'http_post')
     autoload :Nagios,    File.join(NOTIFIER_PATH, 'nagios')
   end
