@@ -554,7 +554,7 @@ describe 'Backup::CLI' do
         syncers (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
         encryptor (gpg, openssl)
         compressor (bzip2, custom, gzip)
-        notifiers (campfire, hipchat, http_post, mail, nagios, prowl, pushover, twitter)
+        notifiers (campfire, flowdock, hipchat, http_post, mail, nagios, prowl, pushover, twitter)
       EOS
 
       out, err = capture_io do
