@@ -108,6 +108,7 @@ module Backup
     autoload :Slack,     File.join(NOTIFIER_PATH, 'slack')
     autoload :HttpPost,  File.join(NOTIFIER_PATH, 'http_post')
     autoload :Nagios,    File.join(NOTIFIER_PATH, 'nagios')
+    autoload :FlowDock,  File.join(NOTIFIER_PATH, 'flowdock')
   end
 
   ##
