@@ -1,7 +1,7 @@
   ##
   # Flowdock [Notifier]
   #
-  notify_by Flowdock do |flowdock|
+  notify_by FlowDock do |flowdock|
     flowdock.on_success = true
     flowdock.on_warning = true
     flowdock.on_failure = true
