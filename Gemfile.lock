@@ -17,6 +17,9 @@ GEM
     faraday (0.8.8)
       multipart-post (~> 1.2.0)
     ffi (1.9.3)
+    flowdock (0.4.0)
+      httparty (~> 0.7)
+      multi_json
     fog (1.19.0)
       builder
       excon (~> 0.31.0)
@@ -126,6 +129,7 @@ PLATFORMS
 
 DEPENDENCIES
   dropbox-sdk (= 1.5.1)
+  flowdock
   fog
   fuubar
   guard

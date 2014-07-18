@@ -1,0 +1,16 @@
+  ##
+  # Flowdock [Notifier]
+  #
+  notify_by Flowdock do |flowdock|
+    flowdock.on_success = true
+    flowdock.on_warning = true
+    flowdock.on_failure = true
+
+    flowdock.token          = "token"
+    flowdock.from_name      = 'my_name'
+    flowdock.from_email     = 'email@example.com'
+    flowdock.subject        = 'My Daily Backup'
+    flowdock.source         = 'Backup'
+    flowdock.tags           = ['prod', 'backup']
+    flowdock.link           = 'www.example.com'
+  end
