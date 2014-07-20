@@ -36,6 +36,19 @@ module Backup
         attr_reader :log_path
 
         ##
+        # Backup's logfile in which backup logs can be written
+        #
+        # As there is already a log_path, this can simply be just a file name
+        # that will be created (If not exists) on log_path directory
+        #
+        # This may also be set on the command line using +--log-file+.
+        # If set on the command line, any setting here will be ignored.
+        #
+        # @param [String]
+        # @return [String] Default: 'backup.log'
+        attr_reader :log_file
+
+        ##
         # Size in bytes to truncate logfile to before backup jobs are run.
         #
         # This is done once before all +triggers+, so the maximum logfile size
@@ -89,7 +102,8 @@ module Backup
           path = File.join(Backup::Config.root_path, path)
         end
         FileUtils.mkdir_p(path)
-        path = File.join(path, 'backup.log')
+        log_file = @options.log_file || 'backup.log'
+        path = File.join(path, log_file)
         if File.exist?(path) && !File.writable?(path)
           raise Error, "Log File at '#{ path }' is not writable"
         end
