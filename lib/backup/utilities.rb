@@ -15,6 +15,7 @@ module Backup
       sendmail exim
       send_nsca
       zabbix_sender
+      git hg
     }
 
     module DSL

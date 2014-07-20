@@ -46,6 +46,9 @@ module Backup
     autoload :SSHBase,    File.join(STORAGE_PATH, 'ssh_base')
     autoload :SFTP,       File.join(STORAGE_PATH, 'sftp')
     autoload :SCP,        File.join(STORAGE_PATH, 'scp')
+    autoload :SCMBase,    File.join(STORAGE_PATH, 'scm_base')
+    autoload :Git,        File.join(STORAGE_PATH, 'git')
+    autoload :Hg,         File.join(STORAGE_PATH, 'hg')
     autoload :RSync,      File.join(STORAGE_PATH, 'rsync')
     autoload :Local,      File.join(STORAGE_PATH, 'local')
   end
