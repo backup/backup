@@ -45,7 +45,7 @@ module Backup
       end
 
       ##
-      # Performs the mysqldump command and outputs the dump file
+      # Performs the pgdump command and outputs the dump file
       # in the +dump_path+ using +dump_filename+.
       #
       #   <trigger>/databases/PostgreSQL[-<database_id>].sql[.gz]
