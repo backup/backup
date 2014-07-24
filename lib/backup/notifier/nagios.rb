@@ -13,6 +13,10 @@ module Backup
       attr_accessor :nagios_port
 
       ##
+      # Nagios nrpe configuration file.
+      attr_accessor :send_nsca_cfg     
+ 
+      ##
       # Name of the Nagios service for the backup check.
       attr_accessor :service_name
 
@@ -26,6 +30,7 @@ module Backup
 
         @nagios_host  ||= Config.hostname
         @nagios_port  ||= 5667
+        @send_nsca_cfg||= "/etc/nagios/send_nsca.cfg"
         @service_name ||= "Backup #{ model.trigger }"
         @service_host ||= Config.hostname
       end
@@ -59,7 +64,7 @@ module Backup
       end
 
       def send_message(message)
-        cmd = "#{ utility(:send_nsca) } -H '#{ nagios_host }' -p '#{ nagios_port }'"
+        cmd = "#{ utility(:send_nsca) } -H '#{ nagios_host }' -p '#{ nagios_port }' -c '#{ send_nsca_cfg }'"
         msg = [service_host, service_name, model.exit_status, message].join("\t")
         run("echo '#{ msg }' | #{ cmd }")
       end
