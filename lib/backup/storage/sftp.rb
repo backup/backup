@@ -3,33 +3,14 @@ require 'net/sftp'
 
 module Backup
   module Storage
-    class SFTP < Base
+    class SFTP < SSHBase
       include Storage::Cycler
-
-      ##
-      # Server credentials
-      attr_accessor :username, :password, :ssh_options
-
-      ##
-      # Server IP Address and SFTP port
-      attr_accessor :ip, :port
 
       def initialize(model, storage_id = nil)
         super
-
-        @ssh_options ||= {}
-        @port        ||= 22
-        @path        ||= 'backups'
-        path.sub!(/^~\//, '')
       end
 
       private
-
-      def connection
-        Net::SFTP.start(
-          ip, username, { :password => password, :port => port }.merge(ssh_options)
-        ) {|sftp| yield sftp }
-      end
 
       def transfer!
         connection do |sftp|

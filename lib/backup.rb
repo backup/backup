@@ -43,6 +43,7 @@ module Backup
     autoload :Ninefold,   File.join(STORAGE_PATH, 'ninefold')
     autoload :Dropbox,    File.join(STORAGE_PATH, 'dropbox')
     autoload :FTP,        File.join(STORAGE_PATH, 'ftp')
+    autoload :SSHBase,    File.join(STORAGE_PATH, 'ssh_base')
     autoload :SFTP,       File.join(STORAGE_PATH, 'sftp')
     autoload :SCP,        File.join(STORAGE_PATH, 'scp')
     autoload :RSync,      File.join(STORAGE_PATH, 'rsync')
