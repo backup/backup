@@ -198,6 +198,7 @@ module Backup
         else
           raise Error, <<-EOS
             '#{ name }' failed with exit status: #{ ps.exitstatus }
+            Command: #{ command }
             STDOUT Messages: #{ out.empty? ? 'None' : "\n#{ out }" }
             STDERR Messages: #{ err.empty? ? 'None' : "\n#{ err }" }
           EOS
