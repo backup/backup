@@ -1,4 +1,5 @@
 # encoding: utf-8
+require 'shellwords'
 
 module Backup
   module Database
@@ -81,8 +82,8 @@ module Backup
 
       def credential_options
         opts = []
-        opts << "--user='#{ username }'" if username
-        opts << "--password='#{ password }'" if password
+        opts << "--user=#{ Shellwords.escape(username) }" if username
+        opts << "--password=#{ Shellwords.escape(password) }" if password
         opts.join(' ')
       end
 
