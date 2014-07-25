@@ -695,7 +695,6 @@ describe 'Backup::Model' do
   describe '#package!' do
     it 'should package the backup' do
       Backup::Packager.expects(:package!).in_sequence(s).with(model)
-      Backup::Cleaner.expects(:remove_packaging).in_sequence(s).with(model)
 
       model.send(:package!)
     end
@@ -703,6 +702,7 @@ describe 'Backup::Model' do
 
   describe '#clean!' do
     it 'should remove the final packaged files' do
+      Backup::Cleaner.expects(:remove_packaging).in_sequence(s).with(model)
       Backup::Cleaner.expects(:remove_package).with(model.package)
 
       model.send(:clean!)
