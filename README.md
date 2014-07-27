@@ -11,7 +11,7 @@ was built with modularity, extensibility and simplicity in mind.
 [Installation][] &middot; [Release Notes][] &middot; [Documentation][]
 
 
-**Copyright (c) 2009-2014 [Michael van Rooijen][] ( [@meskyanichi][] )**
+**Copyright (c) 2009-2014 [Michael van Rooijen][] ( [@meskyanichi][] )**  
 Released under the **MIT** [License](LICENSE.md).
 
 [Installation]:  http://meskyanichi.github.io/backup/v4/installation
