@@ -93,13 +93,12 @@ describe Notifier::Twitter do
     it 'sends a message' do
       client, config = mock, mock
 
-      ::Twitter.expects(:configure).yields(config)
+      ::Twitter::REST::Client.expects(:new).yields(config).returns(client)
       config.expects(:consumer_key=).with('my_consumer_key')
       config.expects(:consumer_secret=).with('my_consumer_secret')
-      config.expects(:oauth_token=).with('my_oauth_token')
-      config.expects(:oauth_token_secret=).with('my_oauth_token_secret')
+      config.expects(:access_token=).with('my_oauth_token')
+      config.expects(:access_token_secret=).with('my_oauth_token_secret')
 
-      ::Twitter::Client.expects(:new).returns(client)
       client.expects(:update).with('a message')
 
       notifier.send(:send_message, 'a message')

@@ -49,14 +49,13 @@ module Backup
 
       # Twitter::Client will raise an error if unsuccessful.
       def send_message(message)
-        ::Twitter.configure do |config|
-          config.consumer_key       = @consumer_key
-          config.consumer_secret    = @consumer_secret
-          config.oauth_token        = @oauth_token
-          config.oauth_token_secret = @oauth_token_secret
+        client = ::Twitter::REST::Client.new do |config|
+          config.consumer_key        = @consumer_key
+          config.consumer_secret     = @consumer_secret
+          config.access_token        = @oauth_token
+          config.access_token_secret = @oauth_token_secret
         end
 
-        client = ::Twitter::Client.new
         client.update(message)
       end
 
