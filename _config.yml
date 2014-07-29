@@ -109,11 +109,13 @@ nav_v4: [
       ['RSync',                     'syncer-rsync'              ],
     ['Notifiers',                 'notifiers',                'xxx|xxxxxxxx'],
       ['Campfire',                  'notifier-campfire'         ],
-      ['Hipchat',                   'notifier-hipchat'          ],
+      ['HipChat',                   'notifier-hipchat'          ],
       ['HttpPost',                  'notifier-httppost'         ],
       ['Mail',                      'notifier-mail'             ],
       ['Nagios',                    'notifier-nagios'           ],
       ['Prowl',                     'notifier-prowl'            ],
       ['Pushover',                  'notifier-pushover'         ],
-      ['Twitter',                   'notifier-twitter'          ]
+      ['Twitter',                   'notifier-twitter'          ],
+      ['Slack',                     'notifier-slack'            ],
+      ['Flowdock',                  'notifier-flowdock'         ]
 ]
