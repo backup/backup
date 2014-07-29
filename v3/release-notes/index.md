@@ -12,6 +12,11 @@ All deprecations are made in such a way that your currently configured backups w
 However, the use of deprecated options will cause your backup jobs to complete "with Warnings" until
 your configuration files are updated. You can check your configuration using `backup check`.
 
+3.11.1
+-----
+
+- Add [Percona XtraBackup][database-mysql] support for MySQL databases.
+
 3.10.0
 ------
 
