@@ -32,28 +32,48 @@ module Backup
       attr_accessor :only_tables
 
       ##
-      # Additional "mysqldump" options
+      # Additional "mysqldump" or "innobackupex (backup creation)" options
       attr_accessor :additional_options
+
+      ##
+      # Additional innobackupex log preparation phase ("apply-logs") options
+      attr_accessor :prepare_options
+
+      ##
+      # Default is :mysqldump (which is built in MySQL and generates
+      # a textual SQL file), but can be changed to :innobackupex, which
+      # has more feasible restore times for large databases.
+      # See: http://www.percona.com/doc/percona-xtrabackup/
+      attr_accessor :backup_engine
+
+      ##
+      # If set the backup engine command block is executed as the given user
+      attr_accessor :sudo_user
+
+      ##
+      # If set, do not suppress innobackupdb output (useful for debugging)
+      attr_accessor :verbose
 
       def initialize(model, database_id = nil, &block)
         super
         instance_eval(&block) if block_given?
 
         @name ||= :all
+        @backup_engine ||= :mysqldump
       end
 
       ##
-      # Performs the mysqldump command and outputs the dump file
-      # in the +dump_path+ using +dump_filename+.
+      # Performs the mysqldump or innobackupex command and outputs
+      # the dump file in the +dump_path+ using +dump_filename+.
       #
-      #   <trigger>/databases/MySQL[-<database_id>].sql[.gz]
+      #   <trigger>/databases/MySQL[-<database_id>].[sql|tar][.gz]
       def perform!
         super
 
         pipeline = Pipeline.new
-        dump_ext = 'sql'
+        dump_ext = sql_backup? ? 'sql' : 'tar'
 
-        pipeline << mysqldump
+        pipeline << sudo_option(sql_backup? ? mysqldump : innobackupex)
 
         model.compressor.compress_with do |command, ext|
           pipeline << command
@@ -99,6 +119,10 @@ module Backup
         Array(additional_options).join(' ')
       end
 
+      def user_prepare_options
+        Array(prepare_options).join(' ')
+      end
+
       def name_option
         dump_all? ? '--all-databases' : name
       end
@@ -129,6 +153,39 @@ module Backup
           :action => lambda {|klass, val|
             Utilities.configure { mysqldump val }
           }
+
+      def sql_backup?
+        backup_engine.to_sym == :mysqldump
+      end
+
+      def innobackupex
+        # Creation phase
+        "#{ utility(:innobackupex) } #{ credential_options } " +
+        "#{ connectivity_options } #{ user_options } " +
+        "--no-timestamp #{ temp_dir } #{ quiet_option } && " +
+        # Log applying phase (prepare for restore)
+        "#{ utility(:innobackupex) } --apply-log #{ temp_dir } " +
+        "#{ user_prepare_options }  #{ quiet_option } && " +
+        # Move files to tar-ed stream on stdout
+        "#{ utility(:tar) } --remove-files -cf -  " +
+        "-C #{ File.dirname(temp_dir) } #{ File.basename(temp_dir) }"
+      end
+
+      def sudo_option(command_block)
+        return command_block unless sudo_user
+
+        "sudo -s -u #{ sudo_user } -- <<END_OF_SUDO\n" +
+        "#{command_block}\n" +
+        "END_OF_SUDO\n"
+      end
+
+      def quiet_option
+        verbose ? "" : " 2> /dev/null "
+      end
+
+      def temp_dir
+        File.join(dump_path, dump_filename + ".bkpdir")
+      end
 
     end
   end
