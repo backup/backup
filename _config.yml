@@ -117,5 +117,6 @@ nav_v4: [
       ['Pushover',                  'notifier-pushover'         ],
       ['Twitter',                   'notifier-twitter'          ],
       ['Slack',                     'notifier-slack'            ],
-      ['Flowdock',                  'notifier-flowdock'         ]
+      ['Flowdock',                  'notifier-flowdock'         ],
+      ['Zabbix',                    'notifier-zabbix'           ]
 ]

@@ -115,6 +115,7 @@ Supported notification services include:
 - [Pushover][notifier-pushover]
 - [Nagios][notifier-nagios]
 - [HTTP POST][notifier-httppost] _(compatible with a variety of services)_
+- [Zabbix][notifier-zabbix]
 
 
 {% include markdown_links %}

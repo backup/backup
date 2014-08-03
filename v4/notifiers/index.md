@@ -16,6 +16,7 @@ Backup includes the following Notifiers:
 - [Prowl][notifier-prowl]
 - [Pushover][notifier-pushover]
 - [Twitter][notifier-twitter]
+- [Zabbix][notifier-zabbix]
 
 
 Notifier Failures
