@@ -1,0 +1,15 @@
+##
+# Zabbix [Notifier]
+#
+notify_by Zabbix do |zabbix|
+    zabbix.on_success = true
+    zabbix.on_warning = true
+    zabbix.on_failure = true
+
+    zabbix.zabbix_host  = "zabbix_server_hostname"
+    zabbix.zabbix_port  = 10051
+    zabbix.service_name = "Backup trigger"
+    zabbix.service_host = "zabbix_host"
+    zabbix.item_key     = "backup_status"
+  end
+

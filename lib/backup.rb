@@ -109,6 +109,7 @@ module Backup
     autoload :HttpPost,  File.join(NOTIFIER_PATH, 'http_post')
     autoload :Nagios,    File.join(NOTIFIER_PATH, 'nagios')
     autoload :FlowDock,  File.join(NOTIFIER_PATH, 'flowdock')
+    autoload :Zabbix,    File.join(NOTIFIER_PATH, 'zabbix')
   end
 
   ##
