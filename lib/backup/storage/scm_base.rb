@@ -49,8 +49,12 @@ module Backup
           @rsync.port = self.port
           @rsync.ssh_user = self.username
           @rsync.path = self.remote_path
+
           Dir.glob(File.join(Config.tmp_path, package.trigger, '*')).each do |dir|
             @rsync.add dir
+          end
+          self.excludes.each do |dir|
+            @rsync.exclude dir
           end
         end
         @rsync
@@ -58,6 +62,10 @@ module Backup
 
       # Disable cycling for an obvious reason
       def cycle!
+      end
+
+      def excludes
+        []
       end
 
     end

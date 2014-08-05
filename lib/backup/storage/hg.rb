@@ -21,6 +21,10 @@ module Backup
       def cmd
         "cd '#{remote_path}' && #{utility :hg}"
       end
+
+      def excludes
+        ['.hg']
+      end
     end
   end
 end

@@ -23,6 +23,10 @@ module Backup
       def cmd
         "cd '#{remote_path}' && #{utility :git}"
       end
+
+      def excludes
+        ['.git']
+      end
     end
   end
 end
