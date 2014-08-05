@@ -49,7 +49,9 @@ module Backup
           @rsync.port = self.port
           @rsync.ssh_user = self.username
           @rsync.path = self.remote_path
-          @rsync.add File.join(Config.tmp_path, package.trigger)
+          Dir.glob(File.join(Config.tmp_path, package.trigger, '*')).each do |dir|
+            @rsync.add dir
+          end
         end
         @rsync
       end
