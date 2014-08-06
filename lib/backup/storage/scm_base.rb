@@ -45,6 +45,7 @@ module Backup
           @rsync = Backup::Syncer::RSync::Push.new
           @rsync.mode = :ssh
           @rsync.mirror = true
+          @rsync.compress = true
           @rsync.host = self.ip
           @rsync.port = self.port
           @rsync.ssh_user = self.username
