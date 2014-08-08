@@ -15,7 +15,7 @@ module Backup
         filenames.each do |dir|
           ssh.exec! "#{self.cmd} add #{dir}"
         end
-        ssh.exec! "#{cmd} commit -m 'backup #{package.time}'"
+        ssh.exec! "#{cmd} --config ui.username=backup commit -m 'backup #{package.time}'"
       end
 
       def cmd
