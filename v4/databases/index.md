@@ -13,6 +13,7 @@ Backup includes the following Databases:
 - [PostgreSQL][database-postgresql]
 - [Redis][database-redis]
 - [Riak][database-riak]
+- [OpenLDAP][database-openldap]
 
 
 Database Identifiers

@@ -86,6 +86,7 @@ nav_v4: [
       ['MongoDB',                   'database-mongodb'          ],
       ['Redis',                     'database-redis'            ],
       ['Riak',                      'database-riak'             ],
+      ['OpenLDAP',                  'database-openldap'         ],
     ['Compressors',               'compressors',              'xxx|xxxxxxxx'],
       ['Gzip',                      'compressor-gzip'           ],
       ['Bzip2',                     'compressor-bzip2'          ],
