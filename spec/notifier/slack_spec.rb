@@ -12,24 +12,26 @@ describe Notifier::Slack do
 
   describe '#initialize' do
     it 'provides default values' do
-      expect( notifier.team     ).to be_nil
-      expect( notifier.token    ).to be_nil
-      expect( notifier.channel  ).to be_nil
-      expect( notifier.username ).to be_nil
+      expect( notifier.team       ).to be_nil
+      expect( notifier.token      ).to be_nil
+      expect( notifier.channel    ).to be_nil
+      expect( notifier.username   ).to be_nil
+      expect( notifier.icon_emoji ).to eq(':floppy_disk:')
 
-      expect( notifier.on_success     ).to be(true)
-      expect( notifier.on_warning     ).to be(true)
-      expect( notifier.on_failure     ).to be(true)
-      expect( notifier.max_retries    ).to be(10)
-      expect( notifier.retry_waitsec  ).to be(30)
+      expect( notifier.on_success    ).to be(true)
+      expect( notifier.on_warning    ).to be(true)
+      expect( notifier.on_failure    ).to be(true)
+      expect( notifier.max_retries   ).to be(10)
+      expect( notifier.retry_waitsec ).to be(30)
     end
 
     it 'configures the notifier' do
       notifier = Notifier::Slack.new(model) do |slack|
-        slack.team     = 'my_team'
-        slack.token    = 'my_token'
-        slack.channel  = 'my_channel'
-        slack.username = 'my_username'
+        slack.team       = 'my_team'
+        slack.token      = 'my_token'
+        slack.channel    = 'my_channel'
+        slack.username   = 'my_username'
+        slack.icon_emoji = ':vhs:'
 
         slack.on_success     = false
         slack.on_warning     = false
@@ -39,10 +41,11 @@ describe Notifier::Slack do
       end
 
 
-      expect( notifier.team     ).to eq 'my_team'
-      expect( notifier.token    ).to eq 'my_token'
-      expect( notifier.channel  ).to eq 'my_channel'
-      expect( notifier.username ).to eq 'my_username'
+      expect( notifier.team       ).to eq 'my_team'
+      expect( notifier.token      ).to eq 'my_token'
+      expect( notifier.channel    ).to eq 'my_channel'
+      expect( notifier.username   ).to eq 'my_username'
+      expect( notifier.icon_emoji ).to eq ':vhs:'
 
       expect( notifier.on_success     ).to be(false)
       expect( notifier.on_warning     ).to be(false)
@@ -124,19 +127,21 @@ describe Notifier::Slack do
     context 'when optional parameters are provided' do
       let(:notifier) {
         Notifier::Slack.new(model) do |slack|
-          slack.team     = 'my_team'
-          slack.token    = 'my_token'
-          slack.channel  = 'my_channel'
-          slack.username = 'my_username'
+          slack.team       = 'my_team'
+          slack.token      = 'my_token'
+          slack.channel    = 'my_channel'
+          slack.username   = 'my_username'
+          slack.icon_emoji = ':vhs:'
         end
       }
 
       it 'sends message with optional parameters' do
         Excon.expects(:post).with() do |_url, options|
           expected_excon_params(_url, options, {
-            :text     => "[Backup::Success] test label (test_trigger)",
-            :channel  => 'my_channel',
-            :username => 'my_username'
+            :text       => "[Backup::Success] test label (test_trigger)",
+            :channel    => 'my_channel',
+            :username   => 'my_username',
+            :icon_emoji => ':vhs:'
           })
         end
 
