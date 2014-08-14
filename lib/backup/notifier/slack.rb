@@ -23,6 +23,14 @@ module Backup
       attr_accessor :username
 
       ##
+      # The emoji icon to display along with the notification
+      #
+      # See http://www.emoji-cheat-sheet.com for a list of icons.
+      #
+      # Default: :floppy_disk:
+      attr_accessor :icon_emoji
+
+      ##
       # Array of statuses for which the log file should be attached.
       #
       # Available statuses are: `:success`, `:warning` and `:failure`.
@@ -34,6 +42,7 @@ module Backup
         instance_eval(&block) if block_given?
 
         @send_log_on ||= [:warning, :failure]
+        @icon_emoji  ||= ':floppy_disk:'
       end
 
       private
@@ -64,7 +73,7 @@ module Backup
         message = "#{ tag } #{ model.label } (#{ model.trigger })"
 
         data = { :text => message }
-        [:channel, :username].each do |param|
+        [:channel, :username, :icon_emoji].each do |param|
           val = send(param)
           data.merge!(param => val) if val
         end
