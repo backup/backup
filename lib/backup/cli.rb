@@ -142,6 +142,9 @@ module Backup
 
       rescue Exception => err
         Logger.error Error.wrap(err)
+        unless Helpers.is_backup_error? err
+          Logger.error err.backtrace.join("\n")
+        end
         # Logger configuration will be ignored
         # and messages will be output to the console only.
         Logger.abort!
@@ -219,6 +222,9 @@ module Backup
         Config.load(options)
       rescue Exception => err
         Logger.error Error.wrap(err)
+        unless Helpers.is_backup_error? err
+          Logger.error err.backtrace.join("\n")
+        end
       end
 
       if Logger.has_warnings? || Logger.has_errors?
@@ -355,6 +361,10 @@ module Backup
         def exec!(cmd)
           puts "Launching: #{ cmd }"
           exec(cmd)
+        end
+
+        def is_backup_error?(error)
+          error.class.ancestors.include? Backup::Error
         end
 
       end
