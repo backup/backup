@@ -23,6 +23,7 @@ Several changes have been made which will require your attention before you run 
 
 - Add [OpenLDAP][database-openldap] database.
 - Add [Slack][notifier-slack] icon emoji support.
+- Add backtraces to non-configuration related errors.
 
 4.0.3
 -----
