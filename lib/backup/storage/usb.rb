@@ -5,13 +5,36 @@ module Backup
     class Usb < Base
       class Error < Backup::Error; end
 
+      ##
+      #
+      # USB storage
+      #
+      # Copy your backups over to a USB drive to take off-site.
+      #
+      # If you are using a FAT32 file system I recommend using the 'split_into_chunks_of 2000'
+      #
+
+      ##
+      # Usb mount
+      # This is where you want to mount your USB drive.
+      # eg:
+      #   store_with Usb do |usb|
+      #     usb.path = "/home/myuser/usb/test"
+      #     usb.usb_mount = "/home/myuser/usb"
+      #   end
+      #
+      # Make sure you create the mount directory and it has the correct permissions.
+      #
+      # I also put this into my /etc/crontab
+      # /dev/disk/by-label/BACKUP	/home/myuser/usb	  auto	rw,noauto,user,exec	0	0
+      #
       attr_accessor :usb_mount
       
       def initialize(model, storage_id = nil)
         super
 
         @path ||= '~/backups'
-        @usb_mount ||= "/mnt"
+        @usb_mount ||= "~/usb"
       end
 
       private
