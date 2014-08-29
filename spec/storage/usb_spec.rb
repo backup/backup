@@ -16,7 +16,7 @@ module Backup
       it 'provides default values' do
         expect( storage.storage_id ).to be_nil
         expect( storage.keep       ).to be_nil
-        expect( storage.path       ).to eq '~/backups'
+        expect( storage.path       ).to eq '~/usb/backups'
       end
 
       it 'configures the storage' do
@@ -73,6 +73,23 @@ module Backup
           FileUtils.expects(:cp).in_sequence(s).with(src, dest)
 
           storage.send(:transfer!)
+        end
+
+        context "when remove_old is set to true" do
+          it "runs rm_r on the path" do
+            storage.remove_old = true
+            File.expects(:exists?).with("my/path").returns(true)
+            FileUtils.expects(:rm_r).with("my/path")
+            storage.send(:transfer!)
+          end
+        end
+
+        context "when remove_old is set to false" do
+          it "does not runs rm_r on the path" do
+            storage.remove_old = false
+            FileUtils.expects(:rm_r).never
+            storage.send(:transfer!)
+          end
         end
       end
 
