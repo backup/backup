@@ -28,13 +28,14 @@ module Backup
       # I also put this into my /etc/crontab
       # /dev/disk/by-label/BACKUP	/home/myuser/usb	  auto	rw,noauto,user,exec	0	0
       #
-      attr_accessor :usb_mount
+      attr_accessor :usb_mount, :remove_old
       
       def initialize(model, storage_id = nil)
         super
 
-        @path ||= '~/backups'
+        @path ||= '~/usb/backups'
         @usb_mount ||= "~/usb"
+        @remove_old ||= false
       end
 
       private
@@ -42,6 +43,8 @@ module Backup
       def transfer!
 
         if mount_usb
+          FileUtils.rm_r(@path) if File.exists?(@path) && @remove_old # Remove old directory
+          
           FileUtils.mkdir_p(remote_path)
 
           package.filenames.each do |filename|
