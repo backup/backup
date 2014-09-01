@@ -80,55 +80,101 @@ describe Syncer::RSync::Usb do
 
   describe '#perform!' do
 
-    specify 'with mirror option and Array of additional_rsync_options' do
-      syncer = Syncer::RSync::Usb.new do |rsync|
-        rsync.expects(:mounted?).returns(true)
+    context "when usb is not mounted" do
+      specify 'does not sync' do
+        syncer = Syncer::RSync::Usb.new do |rsync|
+          rsync.expects(:mounted?).returns(false)
 
-        rsync.path    = '~/my_backups'
-        rsync.mirror  = true
-        rsync.additional_rsync_options = ['--opt-a', '--opt-b']
+          rsync.path    = '~/my_backups'
+          rsync.mirror  = true
+          rsync.additional_rsync_options = ['--opt-a', '--opt-b']
 
-        rsync.directories do |directory|
-          directory.add '/some/directory/'
-          directory.add '~/home/directory'
+          rsync.directories do |directory|
+            directory.add '/some/directory/'
+            directory.add '~/home/directory'
+          end
         end
+
+        FileUtils.expects(:mkdir_p).never
+
+        syncer.expects(:run).with(
+          "rsync --archive --delete --opt-a --opt-b " +
+            "'/some/directory' '#{ File.expand_path('~/home/directory') }' " +
+            "'#{ File.expand_path('~/my_backups') }'"
+        ).never
+
+        syncer.perform!
       end
 
-      FileUtils.expects(:mkdir_p).with(File.expand_path('~/my_backups/'))
+      specify 'results in an error' do
+        syncer = Syncer::RSync::Usb.new do |rsync|
+          rsync.expects(:mounted?).returns(false)
 
-      syncer.expects(:run).with(
-        "rsync --archive --delete --opt-a --opt-b " +
-        "'/some/directory' '#{ File.expand_path('~/home/directory') }' " +
-        "'#{ File.expand_path('~/my_backups') }'"
-      )
+          rsync.path    = '~/my_backups'
+          rsync.mirror  = true
+          rsync.additional_rsync_options = ['--opt-a', '--opt-b']
 
-      syncer.perform!
-    end
-
-    specify 'without mirror option and String of additional_rsync_options' do
-      syncer = Syncer::RSync::Usb.new do |rsync|
-        rsync.expects(:mounted?).returns(true)
-
-        rsync.path    = '~/my_backups'
-        rsync.additional_rsync_options = '--opt-a --opt-b'
-
-        rsync.directories do |directory|
-          directory.add '/some/directory/'
-          directory.add '~/home/directory'
+          rsync.directories do |directory|
+            directory.add '/some/directory/'
+            directory.add '~/home/directory'
+          end
         end
+
+        Logger.expects(:error)
+        syncer.perform!
       end
-
-      FileUtils.expects(:mkdir_p).with(File.expand_path('~/my_backups/'))
-
-      syncer.expects(:run).with(
-        "rsync --archive --opt-a --opt-b " +
-        "'/some/directory' '#{ File.expand_path('~/home/directory') }' " +
-        "'#{ File.expand_path('~/my_backups') }'"
-      )
-
-      syncer.perform!
     end
+
     context "when usb is mounted" do
+      specify 'with mirror option and Array of additional_rsync_options' do
+        syncer = Syncer::RSync::Usb.new do |rsync|
+          rsync.expects(:mounted?).returns(true)
+
+          rsync.path    = '~/my_backups'
+          rsync.mirror  = true
+          rsync.additional_rsync_options = ['--opt-a', '--opt-b']
+
+          rsync.directories do |directory|
+            directory.add '/some/directory/'
+            directory.add '~/home/directory'
+          end
+        end
+
+        FileUtils.expects(:mkdir_p).with(File.expand_path('~/my_backups/'))
+
+        syncer.expects(:run).with(
+          "rsync --archive --delete --opt-a --opt-b " +
+            "'/some/directory' '#{ File.expand_path('~/home/directory') }' " +
+            "'#{ File.expand_path('~/my_backups') }'"
+        )
+
+        syncer.perform!
+      end
+
+      specify 'without mirror option and String of additional_rsync_options' do
+        syncer = Syncer::RSync::Usb.new do |rsync|
+          rsync.expects(:mounted?).returns(true)
+
+          rsync.path    = '~/my_backups'
+          rsync.additional_rsync_options = '--opt-a --opt-b'
+
+          rsync.directories do |directory|
+            directory.add '/some/directory/'
+            directory.add '~/home/directory'
+          end
+        end
+
+        FileUtils.expects(:mkdir_p).with(File.expand_path('~/my_backups/'))
+
+        syncer.expects(:run).with(
+          "rsync --archive --opt-a --opt-b " +
+            "'/some/directory' '#{ File.expand_path('~/home/directory') }' " +
+            "'#{ File.expand_path('~/my_backups') }'"
+        )
+
+        syncer.perform!
+      end
+
       specify 'with mirror, excludes and additional_rsync_options' do
         syncer = Syncer::RSync::Usb.new do |rsync|
           rsync.expects(:mounted?).returns(true)
