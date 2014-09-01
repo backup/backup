@@ -6,9 +6,8 @@ module Backup
       class Usb < Base
         attr_accessor :usb_mount
 
-        def initialize(syncer_id = nil, &block)
+        def initialize(syncer_id = nil)
           super
-          instance_eval(&block) if block_given?
 
           @path ||= '~/backups'
           @usb_mount ||= "~/usb"
@@ -17,7 +16,7 @@ module Backup
         def perform!
           log!(:started)
 
-          if mount_usb
+         if mount_usb
             create_dest_path!
             run("#{ rsync_command } #{ paths_to_push } '#{ dest_path }'")
             umount_usb
