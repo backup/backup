@@ -71,6 +71,7 @@ module Backup
   # Autoload Backup database files
   module Database
     autoload :Base,       File.join(DATABASE_PATH, 'base')
+    autoload :Firebird,   File.join(DATABASE_PATH, 'firebird')
     autoload :MySQL,      File.join(DATABASE_PATH, 'mysql')
     autoload :PostgreSQL, File.join(DATABASE_PATH, 'postgresql')
     autoload :MongoDB,    File.join(DATABASE_PATH, 'mongodb')

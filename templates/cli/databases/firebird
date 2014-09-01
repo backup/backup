@@ -1,0 +1,11 @@
+  ##
+  # Firebird [Database]
+  #
+  database Firebird do |db|
+    db.name               = "my_database.fdb"
+    db.username           = "my_username"
+    db.password           = "my_password"
+    db.host               = "localhost"
+    db.path               = "/var/lib/firebird/2.5/data/teste.fdb"
+    db.additional_options = ["-v"]
+  end
