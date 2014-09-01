@@ -62,6 +62,7 @@ module Backup
     module RSync
       autoload :Base,  File.join(SYNCER_PATH, 'rsync', 'base')
       autoload :Local, File.join(SYNCER_PATH, 'rsync', 'local')
+      autoload :Usb,   File.join(SYNCER_PATH, 'rsync', 'usb')
       autoload :Push,  File.join(SYNCER_PATH, 'rsync', 'push')
       autoload :Pull,  File.join(SYNCER_PATH, 'rsync', 'pull')
     end
