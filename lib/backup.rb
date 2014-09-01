@@ -78,6 +78,7 @@ module Backup
     autoload :Redis,      File.join(DATABASE_PATH, 'redis')
     autoload :Riak,       File.join(DATABASE_PATH, 'riak')
     autoload :OpenLDAP,   File.join(DATABASE_PATH, 'openldap')
+    autoload :SQLite,     File.join(DATABASE_PATH, 'sqlite')
   end
 
   ##
