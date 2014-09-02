@@ -31,6 +31,7 @@ Archives create basic `tar` archives. Both **GNU** and **BSD** `tar` are support
 
 Databases create backups of one of the following supported databases:
 
+- [Firebird][database-firebird]
 - [MySQL][database-mysql]
 - [PostgreSQL][database-postgresql]
 - [MongoDB][database-mongodb]
