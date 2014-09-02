@@ -20,7 +20,7 @@ It'll display something like this:
     Options:
       -t, --trigger=TRIGGER            # Trigger name for the Backup model
           [--config-file=CONFIG_FILE]  # Path to your Backup configuration file
-          [--databases=DATABASES]      # (mongodb, mysql, postgresql, redis, riak)
+          [--databases=DATABASES]      # (firebird, mongodb, mysql, postgresql, redis, riak)
           [--storages=STORAGES]        # (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
           [--syncers=SYNCERS]          # (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
           [--encryptor=ENCRYPTOR]      # (gpg, openssl)

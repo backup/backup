@@ -81,6 +81,7 @@ nav_v4: [
   ['Model Components',          '',                         '|'],
     ['Archives',                  'archives',                 'xxx|'],
     ['Databases',                 'databases',                'xxx|xxxxxxxx'],
+      ['Firebird',                  'database-firebird'         ],
       ['MySQL',                     'database-mysql'            ],
       ['PostgreSQL',                'database-postgresql'       ],
       ['MongoDB',                   'database-mongodb'          ],
