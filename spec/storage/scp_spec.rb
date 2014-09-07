@@ -102,8 +102,8 @@ describe Storage::SCP do
         expect do
           storage.send(:remove!, package)
         end.to raise_error {|err|
-          expect( err ).to be_an_instance_of Storage::SCP::Error
-          expect( err.message ).to eq "Storage::SCP::Error: " +
+          expect( err ).to be_an_instance_of Storage::SSHBase::Error
+          expect( err.message ).to eq "Storage::SSHBase::Error: " +
             "Net::SSH reported the following errors:\n" +
             "  path not found"
         }

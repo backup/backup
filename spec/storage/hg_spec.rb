@@ -43,16 +43,13 @@ describe Storage::Hg do
 
       storage.syncer.expects(:perform!)
 
-      connection.expects(:exec!).with(
-        "cd '#{remote_path}' && hg add #{storage.package.trigger}"
-      )
       syncer_dirs.each do |dir|
         connection.expects(:exec!).with(
           "cd '#{remote_path}' && hg add #{dir}"
         )
       end
       connection.expects(:exec!).with(
-        "cd '#{remote_path}' && hg commit -m 'backup #{storage.package.time}'"
+        "cd '#{remote_path}' && hg --config ui.username=backup commit -m 'backup #{storage.package.time}'"
       )
 
       storage.send(:transfer!)

@@ -37,7 +37,7 @@ module Backup
           end
         end
         unless errors.empty?
-          raise Error, "Net::SSH reported the following errors:\n" +
+          raise SSHBase::Error, "Net::SSH reported the following errors:\n" +
               errors.join("\n")
         end
       end

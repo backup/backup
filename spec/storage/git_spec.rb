@@ -49,9 +49,6 @@ describe Storage::Git do
 
       storage.syncer.expects(:perform!)
 
-      connection.expects(:exec!).with(
-        "cd '#{remote_path}' && git add #{storage.package.trigger}"
-      )
       syncer_dirs.each do |dir|
         connection.expects(:exec!).with(
           "cd '#{remote_path}' && git add #{dir}"
