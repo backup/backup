@@ -14,7 +14,7 @@ module Backup
       # Server IP Address and SFTP port
       attr_accessor :ip, :port
 
-      def initialize model, storage_id = nil
+      def initialize(model, storage_id = nil)
         super
 
         @port ||= 22

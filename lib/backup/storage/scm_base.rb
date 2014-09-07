@@ -6,7 +6,7 @@ module Backup
 
       include Utilities::Helpers
 
-      def initialize model, storage_id = nil
+      def initialize(model, storage_id = nil)
         super
       end
 
@@ -24,10 +24,10 @@ module Backup
 
       protected
 
-      def init_repo ssh
+      def init_repo(ssh)
         ssh.exec! "mkdir -p '#{ remote_path }'"
       end
-      def commit ssh
+      def commit(ssh)
         raise 'Not implemented'
       end
 

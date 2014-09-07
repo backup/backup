@@ -6,12 +6,12 @@ module Backup
 
       protected
 
-      def init_repo ssh
+      def init_repo(ssh)
         super
         ssh.exec! "#{cmd} init"
       end
 
-      def commit ssh
+      def commit(ssh)
         filenames.each do |dir|
           ssh.exec! "#{self.cmd} add #{dir}"
         end

@@ -6,14 +6,14 @@ module Backup
 
       protected
 
-      def init_repo ssh
+      def init_repo(ssh)
         super
         ssh.exec! "#{cmd} config --global user.name 'backup'"
         ssh.exec! "#{cmd} config --global user.email 'backup@#{Config.hostname}'"
         ssh.exec! "#{cmd} init"
       end
 
-      def commit ssh
+      def commit(ssh)
         filenames.each do |dir|
           ssh.exec! "#{self.cmd} add #{dir}"
         end
