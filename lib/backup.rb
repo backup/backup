@@ -11,6 +11,7 @@ require 'thread'
 
 require 'open4'
 require 'thor'
+require 'shellwords'
 
 require 'excon'
 # Include response.inspect in error messages.

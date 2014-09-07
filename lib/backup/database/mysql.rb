@@ -1,5 +1,4 @@
 # encoding: utf-8
-require 'shellwords'
 
 module Backup
   module Database

@@ -219,7 +219,14 @@ describe Database::PostgreSQL do
         expect( db.send(:password_option) ).to be_nil
 
         db.password = 'my_password'
-        expect( db.send(:password_option) ).to eq "PGPASSWORD='my_password' "
+        expect( db.send(:password_option) ).to eq "PGPASSWORD=my_password "
+      end
+
+      it 'handles special characters' do
+        db.password = "my_password'\""
+        expect( db.send(:password_option) ).to eq(
+          "PGPASSWORD=my_password\\'\\\" "
+        )
       end
     end # describe '#password_option'
 
@@ -237,7 +244,14 @@ describe Database::PostgreSQL do
         expect( db.send(:username_option) ).to be_nil
 
         db.username = 'my_username'
-        expect( db.send(:username_option) ).to eq "--username='my_username'"
+        expect( db.send(:username_option) ).to eq "--username=my_username"
+      end
+
+      it 'handles special characters' do
+        db.username = "my_user'\""
+        expect( db.send(:username_option) ).to eq(
+          "--username=my_user\\'\\\""
+        )
       end
     end # describe '#username_option'
 

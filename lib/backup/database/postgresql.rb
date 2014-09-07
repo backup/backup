@@ -88,7 +88,7 @@ module Backup
       end
 
       def password_option
-        "PGPASSWORD='#{ password }' " if password
+        "PGPASSWORD=#{ Shellwords.escape(password) } " if password
       end
 
       def sudo_option
@@ -96,7 +96,7 @@ module Backup
       end
 
       def username_option
-        "--username='#{ username }'" if username
+        "--username=#{ Shellwords.escape(username) }" if username
       end
 
       def connectivity_options
