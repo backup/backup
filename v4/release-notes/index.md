@@ -18,6 +18,12 @@ See the [Performing Backups][performing-backups] page for details.
 Before you upgrade to v4.x, see the [Upgrading][upgrading] page.
 Several changes have been made which will require your attention before you run your first backup using v4.x.
 
+4.0.5
+-----
+
+- Add [Pagerduty][notifier-pagerduty] notifier.
+- [Fix problem](https://github.com/meskyanichi/backup/issues/581) with PostgreSQL database username and password not being escaped.
+
 4.0.4
 -----
 
