@@ -87,6 +87,7 @@ nav_v4: [
       ['Redis',                     'database-redis'            ],
       ['Riak',                      'database-riak'             ],
       ['OpenLDAP',                  'database-openldap'         ],
+      ['SQLite',                    'database-sqlite'           ],
     ['Compressors',               'compressors',              'xxx|xxxxxxxx'],
       ['Gzip',                      'compressor-gzip'           ],
       ['Bzip2',                     'compressor-bzip2'          ],

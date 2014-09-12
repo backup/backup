@@ -36,6 +36,7 @@ Databases create backups of one of the following supported databases:
 - [MongoDB][database-mongodb]
 - [Redis][database-redis]
 - [Riak][database-riak]
+- [SQLite][database-sqlite]
 
 Any number of Archives and Databases may be defined within a backup _model_.
 

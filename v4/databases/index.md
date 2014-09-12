@@ -14,6 +14,7 @@ Backup includes the following Databases:
 - [Redis][database-redis]
 - [Riak][database-riak]
 - [OpenLDAP][database-openldap]
+- [SQLite][database-sqlite]
 
 
 Database Identifiers
