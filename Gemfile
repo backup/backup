@@ -35,6 +35,7 @@ group :production do
   gem 'hipchat'
   gem 'flowdock'
   gem 'json'
+  gem 'azure'
 end
 
 gem 'rspec'
