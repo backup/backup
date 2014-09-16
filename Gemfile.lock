@@ -10,6 +10,8 @@ GEM
     coderay (1.1.0)
     descendants_tracker (0.0.3)
     diff-lcs (1.2.5)
+    dogapi (1.11.0)
+      json (>= 1.5.1)
     dropbox-sdk (1.5.1)
       json
     equalizer (0.0.9)
@@ -130,6 +132,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  dogapi
   dropbox-sdk (= 1.5.1)
   flowdock
   fog
