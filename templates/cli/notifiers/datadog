@@ -39,7 +39,7 @@
     # Add a Source Type
     # Default is nil
     # see api docs for valid source_type_names
-    # data.source_type_name        = 'my apps'
+    # datadog.source_type_name        = 'my apps'
     #
     # Override the Priority Level
     # Default is 'normal'
