@@ -1,7 +1,7 @@
   ##
   # DataDog [Notifier]
   #
-  notify_by DataDog do |dtatdog|
+  notify_by DataDog do |datadog|
     datadog.on_success           = true
     datadog.on_warning           = true
     datadog.on_failure           = true
