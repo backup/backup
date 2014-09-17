@@ -68,23 +68,23 @@ module Backup
     end # describe '#initialize'
 
     describe '#notify!' do
-    let(:notifier) {
-      Notifier::DataDog.new(model) do |datadog|
-        datadog.api_key           = 'my_token'
-      end
-    }
 
-    let(:client) { mock }
-    let(:event) { mock }
+      let(:notifier) {
+        Notifier::DataDog.new(model) do |datadog|
+          datadog.api_key           = 'my_token'
+        end
+      }
+      let(:client) { mock }
+      let(:event) { mock }
 
       context 'when status is :success' do
           it 'sends a success message' do
             Dogapi::Client.expects(:new).in_sequence(s).
-                with('my_token').returns(client)
+              with('my_token').returns(client)
             Dogapi::Event.expects(:new).in_sequence(s).
-                with('Backup Notification for test label', {:msg_title => 'Backup test label', :alert_type => 'success'}).returns(event)
+              with('Backup Notification for test label', {:msg_title => 'Backup test label', :alert_type => 'success'}).returns(event)
             client.expects(:emit_event).in_sequence(s).
-                with(event)
+              with(event)
               
           notifier.send(:notify!, :success)
         end
@@ -93,12 +93,12 @@ module Backup
       context 'when status is :warning' do
           it 'sends a warning message' do
             Dogapi::Client.expects(:new).in_sequence(s).
-                with('my_token').returns(client)
+              with('my_token').returns(client)
             Dogapi::Event.expects(:new).in_sequence(s).
-                with('Backup Notification for test label', {:msg_title => 'Backup test label', :alert_type => 'warning'}).returns(event)
+              with('Backup Notification for test label', {:msg_title => 'Backup test label', :alert_type => 'warning'}).returns(event)
             client.expects(:emit_event).in_sequence(s).
-                with(event)         
-  
+              with(event)         
+      
           notifier.send(:notify!, :warning)
         end
       end
@@ -106,11 +106,11 @@ module Backup
       context 'when status is :failure' do
           it 'sends an error message' do
             Dogapi::Client.expects(:new).in_sequence(s).
-                with('my_token').returns(client)
+              with('my_token').returns(client)
             Dogapi::Event.expects(:new).in_sequence(s).
-                with('Backup Notification for test label', {:msg_title => 'Backup test label', :alert_type => 'error'}).returns(event)
+              with('Backup Notification for test label', {:msg_title => 'Backup test label', :alert_type => 'error'}).returns(event)
             client.expects(:emit_event).in_sequence(s).
-                with(event)
+              with(event)
               
           notifier.send(:notify!, :failure)
         end

@@ -51,7 +51,6 @@ module Backup
 
         @title          ||= default_title
         @text           ||= default_text
-
       end
 
       private
@@ -74,15 +73,15 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-      	hash = {alert_type: default_alert_type(status)}
-      	hash.store(:msg_title,        @title)
-      	hash.store(:date_happened,    @date_happened)    if @date_happened
-      	hash.store(:priority,         @priority)         if @priority
-      	hash.store(:host,             @host)             if @host
-      	hash.store(:tags,             @tags)             if @tags
-      	hash.store(:aggregation_key,  @aggregation_key)  if @aggregation_key
-      	hash.store(:source_type_name, @source_type_name) if @source_type_name
-      	hash.store(:alert_type,       @alert_type)       if @alert_type
+        hash = {alert_type: default_alert_type(status)}
+        hash.store(:msg_title,        @title)
+        hash.store(:date_happened,    @date_happened)    if @date_happened
+        hash.store(:priority,         @priority)         if @priority
+        hash.store(:host,             @host)             if @host
+        hash.store(:tags,             @tags)             if @tags
+        hash.store(:aggregation_key,  @aggregation_key)  if @aggregation_key
+        hash.store(:source_type_name, @source_type_name) if @source_type_name
+        hash.store(:alert_type,       @alert_type)       if @alert_type
         send_event(hash)
       end
 
@@ -110,7 +109,7 @@ module Backup
 
       # set default text
       def default_text
-      	"Backup Notification for #{ model.label }"
+        "Backup Notification for #{ model.label }"
       end
 
     end
