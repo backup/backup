@@ -101,7 +101,6 @@ module Backup
         end
       end
 
-
       # set default title
       def default_title
         "Backup #{ model.label }"

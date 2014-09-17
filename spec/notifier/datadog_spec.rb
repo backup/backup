@@ -85,11 +85,11 @@ module Backup
               with('Backup Notification for test label', {:msg_title => 'Backup test label', :alert_type => 'success'}).returns(event)
             client.expects(:emit_event).in_sequence(s).
               with(event)
-              
+
           notifier.send(:notify!, :success)
         end
       end
-  
+
       context 'when status is :warning' do
           it 'sends a warning message' do
             Dogapi::Client.expects(:new).in_sequence(s).
@@ -97,12 +97,12 @@ module Backup
             Dogapi::Event.expects(:new).in_sequence(s).
               with('Backup Notification for test label', {:msg_title => 'Backup test label', :alert_type => 'warning'}).returns(event)
             client.expects(:emit_event).in_sequence(s).
-              with(event)         
-      
+              with(event)
+
           notifier.send(:notify!, :warning)
         end
       end
-  
+
       context 'when status is :failure' do
           it 'sends an error message' do
             Dogapi::Client.expects(:new).in_sequence(s).
@@ -111,7 +111,7 @@ module Backup
               with('Backup Notification for test label', {:msg_title => 'Backup test label', :alert_type => 'error'}).returns(event)
             client.expects(:emit_event).in_sequence(s).
               with(event)
-              
+
           notifier.send(:notify!, :failure)
         end
       end

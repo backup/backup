@@ -33,7 +33,7 @@
     # :success => 'success'
     # :warning => 'warning'
     # :failure => 'error'
-    # valid options are: 'info', 'success', 'warning', 'error' 
+    # valid options are: 'info', 'success', 'warning', 'error'
     # datadog.alert_type           = 'info'
     #
     # Add a Source Type
@@ -45,7 +45,7 @@
     # Default is 'normal'
     # valid options are: 'normal' or 'low'
     # datadog.priority             = 'low'
-    # 
+    #
     # Override the Event Time (must be a unix Timestamp)
     # Default is Time.now.to_i
     # datadog.date_happened        = Time.now.to_i
