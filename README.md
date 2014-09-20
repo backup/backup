@@ -10,6 +10,8 @@ was built with modularity, extensibility and simplicity in mind.
 
 [Installation][] &middot; [Release Notes][] &middot; [Documentation][]
 
+Please use the Backup features [issue tracker](https://github.com/meskyanichi/backup-features/issues) to suggest new features.
+Only use the Backup gem [issue tracker](https://github.com/meskyanichi/backup/issues) for bugs and other issues.
 
 **Copyright (c) 2009-2014 [Michael van Rooijen][] ( [@meskyanichi][] )**  
 Released under the **MIT** [License](LICENSE.md).
