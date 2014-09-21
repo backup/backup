@@ -114,6 +114,7 @@ module Backup
     autoload :Nagios,    File.join(NOTIFIER_PATH, 'nagios')
     autoload :FlowDock,  File.join(NOTIFIER_PATH, 'flowdock')
     autoload :Zabbix,    File.join(NOTIFIER_PATH, 'zabbix')
+    autoload :DataDog,   File.join(NOTIFIER_PATH, 'datadog')
   end
 
   ##
