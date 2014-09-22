@@ -74,6 +74,59 @@ describe Storage::Local do
       end
     end
 
+    context 'when path is removable storage' do
+      before do
+        storage.removable_storage = true
+      end
+
+      context 'and path does exists' do
+        let(:path) { File.expand_path(File.dirname(__FILE__)) }
+
+        before do
+          storage.path = path
+          storage.stubs(:remote_path).returns(path)
+        end
+
+        it 'writes files' do
+          FileUtils.expects(:mkdir_p).never
+
+          Logger.expects(:error).never
+
+          src = File.join(Config.tmp_path, 'test_trigger.tar-aa')
+          dest = File.join(path, 'test_trigger.tar-aa')
+          Logger.expects(:info).in_sequence(s).with("Storing '#{ dest }'...")
+          FileUtils.expects(:cp).in_sequence(s).with(src, dest).returns(true)
+
+          src = File.join(Config.tmp_path, 'test_trigger.tar-ab')
+          dest = File.join(path, 'test_trigger.tar-ab')
+          Logger.expects(:info).in_sequence(s).with("Storing '#{ dest }'...")
+          FileUtils.expects(:cp).in_sequence(s).with(src, dest).returns(true)
+
+          storage.send(:transfer!)
+        end
+      end
+
+      context 'and path does not exists' do
+        let(:path) { '/non/existent/path/on/any/computer' }
+        before do
+          storage.path = path
+          storage.stubs(:remote_path).returns(path)
+        end
+
+        it 'logs an error' do
+          Logger.expects(:error).in_sequence(s).with do |err|
+            expect( err ).to be_an_instance_of Storage::Local::Error
+            expect( err.message ).to eq <<-EOS.gsub(/^ +/, '  ').strip
+              Storage::Local::Error: Removable storage location '#{storage.path}' does not exist!
+              Make sure the removable storage is mounted and available.
+            EOS
+          end
+
+          storage.send(:transfer!)
+        end
+      end
+    end
+
     context 'when the storage is not the last for the model' do
       before do
         model.storages << storage
