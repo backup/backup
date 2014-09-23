@@ -121,5 +121,6 @@ nav_v4: [
       ['Slack',                     'notifier-slack'            ],
       ['Flowdock',                  'notifier-flowdock'         ],
       ['Zabbix',                    'notifier-zabbix'           ],
-      ['Pagerduty',                 'notifier-pagerduty'        ]
+      ['Pagerduty',                 'notifier-pagerduty'        ],
+      ['DataDog',                   'notifier-datadog'        ]
 ]
