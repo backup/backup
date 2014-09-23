@@ -160,6 +160,62 @@ describe Storage::RSync do
 
         storage.send(:transfer!)
       end
+
+      context 'with removable_storage = true' do
+        before { storage.removable_storage = true }
+
+        context 'with existing path' do
+          let(:path) { File.expand_path(File.dirname(__FILE__)) }
+
+          before { storage.path = path }
+
+          it 'performs transfer' do
+            # write_password_file does nothing
+            Tempfile.expects(:new).never
+
+            Logger.expects(:error).never
+
+            # create_remote_path
+            FileUtils.expects(:mkdir_p).never
+
+            # First Package File
+            dest = File.join(path, 'test_trigger.tar-aa')
+            Logger.expects(:info).in_sequence(s).with(
+              "Syncing to '#{ dest }'..."
+            )
+            storage.expects(:run).in_sequence(s).with(
+              "rsync --archive '#{ package_files[0] }' '#{ dest }'"
+            )
+
+            # Second Package File
+            dest = File.join(path, 'test_trigger.tar-ab')
+            Logger.expects(:info).in_sequence(s).with(
+              "Syncing to '#{ dest }'..."
+            )
+            storage.expects(:run).in_sequence(s).with(
+              "rsync --archive '#{ package_files[1] }' '#{ dest }'"
+            )
+
+            storage.send(:transfer!)
+          end
+        end
+
+        context 'with non-existing path' do
+          before { storage.path = '/non/existent/path/on/any/computer' }
+
+          it 'logs an error when using unmounted removable storage' do
+            Logger.expects(:error).in_sequence(s).with do |err|
+              expect( err ).to be_an_instance_of Storage::RSync::Error
+              expect( err.message ).to eq <<-EOS.gsub(/^ +/, '  ').strip
+                Storage::RSync::Error: Removable storage location '#{storage.path}' does not exist!
+                Make sure the removable storage is mounted and available.
+              EOS
+            end
+
+            storage.send(:transfer!)
+          end
+        end
+      end
     end # context 'local transfer'
 
     context 'remote transfer in :ssh mode' do

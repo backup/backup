@@ -4,6 +4,7 @@ module Backup
   module Storage
     class RSync < Base
       include Utilities::Helpers
+      class Error < Backup::Error; end
 
       ##
       # Mode of operation
@@ -127,6 +128,10 @@ module Backup
       # be created if needed - either locally, or on the remote for :ssh mode.
       attr_accessor :path
 
+      # Boolean indicating if the specified path is expected to be a
+      # mounted removable storage location.
+      attr_accessor :removable_storage
+
       def initialize(model, storage_id = nil)
         super
 
@@ -178,6 +183,13 @@ module Backup
         if host
           run("#{ utility(:ssh) } #{ ssh_transport_args } #{ host } " +
                   %Q["mkdir -p '#{ remote_path }'"]) if mode == :ssh
+        elsif removable_storage
+          unless File.exists? remote_path
+            Logger.error Error.new(<<-EOS)
+              Removable storage location '#{remote_path}' does not exist!
+              Make sure the removable storage is mounted and available.
+            EOS
+          end
         else
           FileUtils.mkdir_p(remote_path)
         end
