@@ -2,9 +2,9 @@
   # SQLite [Database]
   #
   database SQLite do |db|
-    # To dump all databases, set `db.name = :all` (or leave blank)
-    db.name               = "my_database_name"
-    db.path               = "/path/to/my/sqlite/db"
+    # Database name and path
+    db.name               = "my_database_name.sqlite3"
+    db.path               = "/path/to/my/sqlite/db/"
 
     # Optional: Use to set the location of this utility
     #   if it cannot be found by name in your $PATH
