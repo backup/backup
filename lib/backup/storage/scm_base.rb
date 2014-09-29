@@ -13,7 +13,9 @@ module Backup
       def transfer!
         connection do |ssh|
           self.init_repo ssh
+          self.prepare_syncer
           self.syncer.perform!
+          Logger.info "Commiting changes"
           self.commit ssh
         end
       end
@@ -23,6 +25,13 @@ module Backup
       end
 
       protected
+
+      # now the triggers were run we can find and add them to the syncer
+      def prepare_syncer
+        Dir.glob(File.join(Config.tmp_path, package.trigger, '*')).each do |dir|
+          syncer.add dir
+        end
+      end
 
       def init_repo(ssh)
         ssh.exec! "mkdir -p '#{ remote_path }'"
@@ -51,9 +60,6 @@ module Backup
           @rsync.ssh_user = self.username
           @rsync.path = self.remote_path
 
-          Dir.glob(File.join(Config.tmp_path, package.trigger, '*')).each do |dir|
-            @rsync.add dir
-          end
           self.excludes.each do |dir|
             @rsync.exclude dir
           end
