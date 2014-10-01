@@ -48,9 +48,13 @@ module Backup
           directories.map {|dir| "'#{ File.expand_path(dir) }'" }.join(' ')
         end
 
-        def path_available?
+        def mount_points
+          `mount`.split("\n").grep(/dev/).map { |x| x.split(" ")[2]  }
+        end
+
+        def mounted?
           return true unless removable_storage
-          return true if File.exists?(path)
+          return true if mount_points.include?(path)
 
           Logger.error Error.new(<<-EOS)
             Removable storage location '#{path}' does not exist!

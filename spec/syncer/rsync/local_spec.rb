@@ -160,7 +160,8 @@ describe Syncer::RSync::Local do
           rsync.mirror  = true
           rsync.additional_rsync_options = ['--opt-a', '--opt-b']
           rsync.removable_storage = true
-
+          rsync.stubs(:mount_points).returns([File.expand_path(File.dirname(__FILE__))])
+          
           rsync.directories do |directory|
             directory.add '/some/directory/'
             directory.add '~/home/directory'
@@ -187,6 +188,7 @@ describe Syncer::RSync::Local do
           rsync.mirror  = true
           rsync.additional_rsync_options = ['--opt-a', '--opt-b']
           rsync.removable_storage = true
+          rsync.stubs(:mount_points).returns([])
 
           rsync.directories do |directory|
             directory.add '/some/directory/'
@@ -214,33 +216,6 @@ describe Syncer::RSync::Local do
         syncer.perform!
 
       end
-    end
-
-    specify "when path is removable storage and the path exists" do
-      
-      syncer = Syncer::RSync::Local.new do |rsync|
-        rsync.path    = File.expand_path(File.dirname(__FILE__))
-        rsync.mirror  = true
-        rsync.additional_rsync_options = ['--opt-a', '--opt-b']
-        rsync.removable_storage = true
-
-        rsync.directories do |directory|
-          directory.add '/some/directory/'
-          directory.add '~/home/directory'
-          directory.exclude '*~'
-          directory.exclude 'tmp/'
-        end
-      end
-
-      syncer.expects(:run).with(
-        "rsync --archive --delete --exclude='*~' --exclude='tmp/' " +
-        "--opt-a --opt-b " +
-        "'/some/directory' '#{ File.expand_path('~/home/directory') }' " +
-        "'#{ File.expand_path(File.dirname(__FILE__)) }'"
-      )
-
-      syncer.perform!
-
     end
 
     describe 'logging messages' do
