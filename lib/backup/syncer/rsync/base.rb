@@ -4,16 +4,22 @@ module Backup
   module Syncer
     module RSync
       class Base < Syncer::Base
+        class Error < Backup::Error; end
 
         ##
         # Additional String or Array of options for the rsync cli
         attr_accessor :additional_rsync_options
+
+        # Boolean indicating if the specified path is expected to be a
+        # mounted removable storage location.
+        attr_accessor :removable_storage
 
         def initialize(syncer_id = nil, &block)
           super
           instance_eval(&block) if block_given?
 
           @path ||= '~/backups'
+          @removable_storage ||= false
         end
 
         private
@@ -40,6 +46,17 @@ module Backup
         # behavior. This method is used by RSync::Local and RSync::Push.
         def paths_to_push
           directories.map {|dir| "'#{ File.expand_path(dir) }'" }.join(' ')
+        end
+
+        def path_available?
+          return true unless removable_storage
+          return true if File.exists?(path)
+
+          Logger.error Error.new(<<-EOS)
+            Removable storage location '#{path}' does not exist!
+            Make sure the removable storage is mounted and available.
+          EOS
+          false
         end
 
       end
