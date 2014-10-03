@@ -77,7 +77,7 @@ describe Syncer::RSync::Local do
       end
     end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
-
+  
   describe '#perform!' do
 
     specify 'with mirror option and Array of additional_rsync_options' do

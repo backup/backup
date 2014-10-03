@@ -6,6 +6,7 @@ module Backup
       class Base < Syncer::Base
         class Error < Backup::Error; end
 
+
         ##
         # Additional String or Array of options for the rsync cli
         attr_accessor :additional_rsync_options
@@ -48,13 +49,23 @@ module Backup
           directories.map {|dir| "'#{ File.expand_path(dir) }'" }.join(' ')
         end
 
+        ##
+        # Get a list of all mount points
         def mount_points
           `mount`.split("\n").grep(/dev/).map { |x| x.split(" ")[2]  }
         end
 
+        ##
+        # Exclude the common local mount points people use.
+        def removable_mount_points
+          mount_points.reject{ |x| %w(/ /dev /home /var /tmp).include? x }
+        end
+
+        ##
+        # Check if the remote path is mounted.
         def mounted?
           return true unless removable_storage
-          return true if mount_points.include?(path)
+          return true if removable_mount_points.select { |mount_point| path.include?(mount_point)}.length > 0
 
           Logger.error Error.new(<<-EOS)
             Removable storage location '#{path}' does not exist!
