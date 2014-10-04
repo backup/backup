@@ -56,17 +56,15 @@ module Backup
           log!(:finished)
         end
 
-        private
+        protected
 
         def sync_directory(dir)
           remote_base = path.empty? ? File.basename(dir) :
                                       File.join(path, File.basename(dir))
           Logger.info "Gathering remote data for '#{ remote_base }'..."
           remote_files = get_remote_files(remote_base)
-
           Logger.info("Gathering local data for '#{ File.expand_path(dir) }'...")
           local_files = LocalFile.find(dir, excludes)
-
           relative_paths = (local_files.keys | remote_files.keys).sort
           if relative_paths.empty?
             Logger.info 'No local or remote files found'
@@ -85,32 +83,6 @@ module Backup
               relative_paths.each(&sync_block)
             end
           end
-        end
-
-        def sync_in_threads(relative_paths, sync_block)
-          queue = Queue.new
-          queue << relative_paths.shift until relative_paths.empty?
-          num_threads = [thread_count, queue.size].min
-          Logger.info "\s\sUsing #{ num_threads } Threads"
-          threads = num_threads.times.map do
-            Thread.new do
-              loop do
-                path = queue.shift(true) rescue nil
-                path ? sync_block.call(path) : break
-              end
-            end
-          end
-
-          # abort if any thread raises an exception
-          while threads.any?(&:alive?)
-            if threads.any? {|thr| thr.status.nil? }
-              threads.each(&:kill)
-              Thread.pass while threads.any?(&:alive?)
-              break
-            end
-            sleep num_threads * 0.1
-          end
-          threads.each(&:join)
         end
 
         # If an exception is raised in multiple threads, only the exception
@@ -141,6 +113,34 @@ module Backup
           elsif remote_md5
             @orphans << remote_path
           end
+        end
+
+        private
+
+        def sync_in_threads(relative_paths, sync_block)
+          queue = Queue.new
+          queue << relative_paths.shift until relative_paths.empty?
+          num_threads = [thread_count, queue.size].min
+          Logger.info "\s\sUsing #{ num_threads } Threads"
+          threads = num_threads.times.map do
+            Thread.new do
+              loop do
+                path = queue.shift(true) rescue nil
+                path ? sync_block.call(path) : break
+              end
+            end
+          end
+
+          # abort if any thread raises an exception
+          while threads.any?(&:alive?)
+            if threads.any? {|thr| thr.status.nil? }
+              threads.each(&:kill)
+              Thread.pass while threads.any?(&:alive?)
+              break
+            end
+            sleep num_threads * 0.1
+          end
+          threads.each(&:join)
         end
 
         def process_orphans
