@@ -28,8 +28,8 @@ module Backup
         load_defaults!
 
         @mirror ||= false
-        @directories = []
-        @excludes = []
+        @directories ||= []
+        @excludes ||= []
       end
 
       ##
