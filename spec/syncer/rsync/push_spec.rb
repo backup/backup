@@ -188,7 +188,7 @@ describe Syncer::RSync::Push do
           "rsync --archive --delete --compress " +
           "-e \"ssh -p 22 -l ssh_username\" " +
           "'/this/dir' '#{ File.expand_path('that/dir') }' " +
-          "my_host:'path/in/remote/home'"
+          "ssh_username@my_host:'path/in/remote/home'"
         )
         syncer.perform!
       end
@@ -211,7 +211,7 @@ describe Syncer::RSync::Push do
           "rsync --archive --compress " +
           "-e \"ssh -p 22 -l ssh_username\" " +
           "'/this/dir' '#{ File.expand_path('that/dir') }' " +
-          "my_host:'relative/path/in/remote/home'"
+          "ssh_username@my_host:'relative/path/in/remote/home'"
         )
         syncer.perform!
       end
@@ -451,7 +451,7 @@ describe Syncer::RSync::Push do
             "rsync --archive --delete --compress " +
             "-e \"ssh -p 22 -l ssh_username\" " +
             "'/this/dir' '#{ File.expand_path('that/dir') }' " +
-            "my_host:'path/in/remote/home'"
+            "ssh_username@my_host:'path/in/remote/home'"
           )
           syncer.perform!
         end
@@ -591,7 +591,7 @@ describe Syncer::RSync::Push do
             "rsync --archive --delete --opt-a 'something' --compress " +
             "-e \"ssh -p 22 -l ssh_username --opt1 --opt2\" " +
             "'/this/dir' '#{ File.expand_path('that/dir') }' " +
-            "my_host:'some/path'"
+            "ssh_username@my_host:'some/path'"
           )
           syncer.perform!
         end
@@ -624,7 +624,7 @@ describe Syncer::RSync::Push do
             "rsync --archive " +
             "-e \"ssh -p 22 -l ssh_username -i '/path/to/id_rsa'\" " +
             "'/this/dir' '#{ File.expand_path('that/dir') }' " +
-            "my_host:'some/path'"
+            "ssh_username@my_host:'some/path'"
           )
 
           syncer.perform!
@@ -647,7 +647,7 @@ describe Syncer::RSync::Push do
             "rsync --archive " +
             "-e \"ssh -p 22 -l ssh_username -i '/path/to/id_rsa'\" " +
             "'/this/dir' '#{ File.expand_path('that/dir') }' " +
-            "my_host:'path'"
+            "ssh_username@my_host:'path'"
           )
 
           syncer.perform!

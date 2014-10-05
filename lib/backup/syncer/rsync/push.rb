@@ -148,7 +148,8 @@ module Backup
         # For Pull, this will prepend the first path in #paths_to_pull.
         def host_options
           if mode == :ssh
-            "#{ host }:"
+            user = "#{ ssh_user }@" if ssh_user
+            "#{user}#{ host }:"
           else
             user = "#{ rsync_user }@" if rsync_user
             "#{ user }#{ host }::"
