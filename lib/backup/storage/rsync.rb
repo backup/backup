@@ -183,15 +183,8 @@ module Backup
         if host
           run("#{ utility(:ssh) } #{ ssh_transport_args } #{ host } " +
                   %Q["mkdir -p '#{ remote_path }'"]) if mode == :ssh
-        elsif removable_storage
-          unless File.exists? remote_path
-            Logger.error Error.new(<<-EOS)
-              Removable storage location '#{remote_path}' does not exist!
-              Make sure the removable storage is mounted and available.
-            EOS
-          end
         else
-          FileUtils.mkdir_p(remote_path)
+          FileUtils.mkdir_p(remote_path) if mounted?
         end
       end
 
@@ -255,6 +248,25 @@ module Backup
         @password_file.delete if @password_file
       end
 
+      ##
+      # Get a list of all mount points
+      def mount_points
+        points = `mount`.split("\n").grep(/dev/).map { |x| x.split(" ")[2]  }
+        points.reject{ |x| %w(/ /dev /home /var /tmp).include? x } # Exclude local mounts
+      end
+
+      ##
+      # Check if the remote path is mounted.
+      def mounted?
+        return true unless removable_storage
+        return true if mount_points.select { |mount_point| path.include?(mount_point)}.length > 0
+
+        Logger.error Error.new(<<-EOS)
+          Removable storage location '#{remote_path}' does not exist!
+          Make sure the removable storage is mounted and available.
+        EOS
+        false
+      end
     end
   end
 end

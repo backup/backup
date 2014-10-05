@@ -162,12 +162,17 @@ describe Storage::RSync do
       end
 
       context 'with removable_storage = true' do
-        before { storage.removable_storage = true }
+        before {
+          storage.removable_storage = true
+        }
 
         context 'with existing path' do
           let(:path) { File.expand_path(File.dirname(__FILE__)) }
 
-          before { storage.path = path }
+          before {
+            storage.path = path 
+            storage.stubs(:mount_points).returns([path])
+          }
 
           it 'performs transfer' do
             # write_password_file does nothing
@@ -176,7 +181,7 @@ describe Storage::RSync do
             Logger.expects(:error).never
 
             # create_remote_path
-            FileUtils.expects(:mkdir_p).never
+            FileUtils.expects(:mkdir_p).with(path)
 
             # First Package File
             dest = File.join(path, 'test_trigger.tar-aa')

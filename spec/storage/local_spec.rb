@@ -85,6 +85,7 @@ describe Storage::Local do
         before do
           storage.path = path
           storage.stubs(:remote_path).returns(path)
+          storage.stubs(:mount_points).returns([path])
         end
 
         it 'writes files' do
@@ -111,6 +112,7 @@ describe Storage::Local do
         before do
           storage.path = path
           storage.stubs(:remote_path).returns(path)
+          storage.stubs(:mount_points).returns([])
         end
 
         it 'logs an error' do
