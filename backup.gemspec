@@ -43,6 +43,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'buftok', '= 0.2.0'
   gem.add_dependency 'builder', '= 3.2.2'
   gem.add_dependency 'descendants_tracker', '= 0.0.3'
+  gem.add_dependency 'dogapi', '= 1.11.0'
   gem.add_dependency 'dropbox-sdk', '= 1.5.1'
   gem.add_dependency 'equalizer', '= 0.0.9'
   gem.add_dependency 'excon', '= 0.31.0'
