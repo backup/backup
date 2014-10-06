@@ -8,10 +8,10 @@ operations. It provides an elegant DSL in Ruby for _modeling_ your backups. Back
 databases, storage protocols/services, syncers, compressors, encryptors and notifiers which you can mix and match. It
 was built with modularity, extensibility and simplicity in mind.
 
-[Installation][] &middot; [Release Notes][] &middot; [Documentation][]
+[Installation][] &middot; [Release Notes][] &middot; [Documentation][] &middot; [Issues][] &middot; [Features][]
 
-Please use the Backup features [issue tracker](https://github.com/meskyanichi/backup-features/issues) to suggest new features.
-Only use the Backup gem [issue tracker](https://github.com/meskyanichi/backup/issues) for bugs and other issues.
+Please use the Backup features [issue tracker][Features] to suggest new features.
+Only use the Backup gem [issue tracker][Issues] for bugs and other issues.
 
 **Copyright (c) 2009-2014 [Michael van Rooijen][] ( [@meskyanichi][] )**  
 Released under the **MIT** [License](LICENSE.md).
@@ -19,5 +19,7 @@ Released under the **MIT** [License](LICENSE.md).
 [Installation]:  http://meskyanichi.github.io/backup/v4/installation
 [Release Notes]: http://meskyanichi.github.io/backup/v4/release-notes
 [Documentation]: http://meskyanichi.github.io/backup/v4
+[Issues]: https://github.com/meskyanichi/backup/issues
+[Features]: https://github.com/meskyanichi/backup-features/issues
 [Michael van Rooijen]: http://michaelvanrooijen.com
 [@meskyanichi]: http://twitter.com/#!/meskyanichi
