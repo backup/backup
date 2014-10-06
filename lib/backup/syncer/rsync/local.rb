@@ -8,8 +8,10 @@ module Backup
         def perform!
           log!(:started)
 
-          create_dest_path!
-          run("#{ rsync_command } #{ paths_to_push } '#{ dest_path }'")
+          if path_available?
+            create_dest_path!
+            run("#{ rsync_command } #{ paths_to_push } '#{ dest_path }'")
+          end
 
           log!(:finished)
         end

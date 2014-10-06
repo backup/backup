@@ -48,9 +48,18 @@ module Backup
       end
       alias :remote_path_for :remote_path
 
+      ##
+      # Get a list of all mount points
+      def mount_points
+        points = `mount`.split("\n").grep(/dev/).map { |x| x.split(" ")[2]  }
+        points.reject{ |x| %w(/ /dev /home /var /tmp).include? x } # Exclude local mounts
+      end
+
+      ##
+      # Check if the remote path is mounted.
       def path_available?
         return true unless removable_storage
-        return true if File.exists?(remote_path)
+        return true if mount_points.select { |mount_point| remote_path.include?(mount_point)}.length > 0
 
         Logger.error Error.new(<<-EOS)
           Removable storage location '#{remote_path}' does not exist!
