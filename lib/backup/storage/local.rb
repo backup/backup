@@ -20,7 +20,7 @@ module Backup
       private
 
       def transfer!
-        if mounted?
+        if path_available?
           FileUtils.mkdir_p(remote_path) unless removable_storage
 
           transfer_method = package_movable? ? :mv : :cp
@@ -57,7 +57,7 @@ module Backup
 
       ##
       # Check if the remote path is mounted.
-      def mounted?
+      def path_available?
         return true unless removable_storage
         return true if mount_points.select { |mount_point| remote_path.include?(mount_point)}.length > 0
 

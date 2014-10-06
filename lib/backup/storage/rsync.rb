@@ -184,7 +184,7 @@ module Backup
           run("#{ utility(:ssh) } #{ ssh_transport_args } #{ host } " +
                   %Q["mkdir -p '#{ remote_path }'"]) if mode == :ssh
         else
-          FileUtils.mkdir_p(remote_path) if mounted?
+          FileUtils.mkdir_p(remote_path) if path_available?
         end
       end
 
@@ -257,7 +257,7 @@ module Backup
 
       ##
       # Check if the remote path is mounted.
-      def mounted?
+      def path_available?
         return true unless removable_storage
         return true if mount_points.select { |mount_point| path.include?(mount_point)}.length > 0
 

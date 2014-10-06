@@ -8,7 +8,7 @@ module Backup
         def perform!
           log!(:started)
 
-          if mounted?
+          if path_available?
             create_dest_path!
             run("#{ rsync_command } #{ paths_to_push } '#{ dest_path }'")
           end

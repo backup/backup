@@ -58,7 +58,7 @@ module Backup
 
         ##
         # Check if the remote path is mounted.
-        def mounted?
+        def path_available?
           return true unless removable_storage
           return true if mount_points.select { |mount_point| path.include?(mount_point)}.length > 0
 
