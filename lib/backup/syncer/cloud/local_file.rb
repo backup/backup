@@ -47,7 +47,6 @@ module Backup
               elsif File.file?(path)
                 if file = new(path)
                   unless exclude?(excludes, file.path)
-                    file.md5 = Digest::MD5.file(file.path).hexdigest
                     found << file
                   end
                 end
@@ -78,6 +77,10 @@ module Backup
 
         def invalid?
           !!@invalid
+        end
+
+        def md5
+          @md5 ||= Digest::MD5.file(path).hexdigest
         end
 
         private

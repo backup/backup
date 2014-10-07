@@ -20,7 +20,9 @@ module Backup
       # in the log messages.
       attr_reader :syncer_id
 
-      attr_reader :excludes
+      attr_accessor :directories
+
+      attr_accessor :excludes
 
       def initialize(syncer_id = nil)
         @syncer_id = syncer_id
