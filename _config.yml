@@ -110,6 +110,7 @@ nav_v4: [
       ['RSync',                     'syncer-rsync'              ],
       ['S3',                        'syncer-s3'                 ],
     ['Notifiers',                 'notifiers',                'xxx|xxxxxxxx'],
+      ['AWS SES',                   'notifier-ses'              ],
       ['Campfire',                  'notifier-campfire'         ],
       ['DataDog',                   'notifier-datadog'          ],
       ['Flowdock',                  'notifier-flowdock'         ],
