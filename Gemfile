@@ -36,6 +36,7 @@ group :production do
   gem 'flowdock'
   gem 'json'
   gem 'dogapi'
+  gem 'aws-ses'
 end
 
 gem 'rspec'

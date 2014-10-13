@@ -1,0 +1,15 @@
+  ##
+  # SES [Notifier]
+  #
+  notify_by Ses do |ses|
+    ses.on_success = true
+    ses.on_warning = true
+    ses.on_failure = true
+
+    ses.access_key_id = ''
+    ses.secret_access_key = ''
+    ses.region = 'eu-west-1'
+
+    ses.from = "sender@email.com"
+    ses.to = "receiver@email.com"
+  end
