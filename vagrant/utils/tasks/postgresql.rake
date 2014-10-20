@@ -38,7 +38,7 @@ module PostgreSQLTask
     def drop_all
       puts 'Dropping Databases...'
       connection = connect_to(nil)
-      DATABASES.keys.each do |db_name|
+      DATABASES.each_key do |db_name|
         connection.drop_database db_name
       end
     end
