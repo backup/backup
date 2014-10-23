@@ -15,7 +15,8 @@ module Backup
 
         packages = yaml_load.unshift(package)
         excess = packages.count - keep.to_i
-
+        excess = 0 if keep.to_i == 0
+        
         if excess > 0
           packages.pop(excess).each do |pkg|
             begin
