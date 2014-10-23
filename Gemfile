@@ -37,6 +37,8 @@ group :production do
   gem 'json'
   gem 'dogapi'
   gem 'aws-ses'
+  gem 'google-api-client'
+  gem 'mime-types'
 end
 
 gem 'rspec'
