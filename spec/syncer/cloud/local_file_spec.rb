@@ -29,7 +29,7 @@ describe Syncer::Cloud::LocalFile do
           'base_dir.file'               => 'a6cfa67bfa0e16402b76d4560c0baa3d' }
       }
       before do
-        test_files.keys.each do |path|
+        test_files.each_key do |path|
           File.open(File.join(@tmpdir, path), 'w') {|file| file.write path }
         end
       end

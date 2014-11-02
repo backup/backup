@@ -53,7 +53,7 @@ module MongoDBTask
 
     def drop_all
       puts 'Dropping Databases...'
-      DATABASES.keys.each do |db_name|
+      DATABASES.each_key do |db_name|
         mongo_client.drop_database db_name.to_s
       end
     end
