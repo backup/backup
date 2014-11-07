@@ -68,7 +68,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'hipchat', '= 1.0.1'
   gem.add_dependency 'http', '= 0.5.0'
   gem.add_dependency 'http_parser.rb', '= 0.6.0'
-  gem.add_dependency 'httparty', '= 0.12.0'
+  gem.add_dependency 'httparty', '= 0.13.3'
   gem.add_dependency 'inflecto', '= 0.0.2'
   gem.add_dependency 'ipaddress', '= 0.8.0'
   gem.add_dependency 'json', '= 1.8.1'
