@@ -47,6 +47,12 @@ module Backup
       attr_accessor :backup_engine
 
       ##
+      # If true (which is the default behaviour), the backup will be prepared
+      # after it has been successfuly created. This option is only valid if
+      # :backup_engine is set to :innobackupex.
+      attr_accessor :prepare_backup
+
+      ##
       # If set the backup engine command block is executed as the given user
       attr_accessor :sudo_user
 
@@ -60,6 +66,7 @@ module Backup
 
         @name ||= :all
         @backup_engine ||= :mysqldump
+        @prepare_backup = true if @prepare_backup.nil?
       end
 
       ##
@@ -151,12 +158,17 @@ module Backup
         "#{ utility(:innobackupex) } #{ credential_options } " +
         "#{ connectivity_options } #{ user_options } " +
         "--no-timestamp #{ temp_dir } #{ quiet_option } && " +
-        # Log applying phase (prepare for restore)
-        "#{ utility(:innobackupex) } --apply-log #{ temp_dir } " +
-        "#{ user_prepare_options }  #{ quiet_option } && " +
+        innobackupex_prepare +
         # Move files to tar-ed stream on stdout
         "#{ utility(:tar) } --remove-files -cf -  " +
         "-C #{ File.dirname(temp_dir) } #{ File.basename(temp_dir) }"
+      end
+
+      def innobackupex_prepare
+        return "" unless @prepare_backup
+        # Log applying phase (prepare for restore)
+        "#{ utility(:innobackupex) } --apply-log #{ temp_dir } " +
+        "#{ user_prepare_options }  #{ quiet_option } && "
       end
 
       def sudo_option(command_block)
