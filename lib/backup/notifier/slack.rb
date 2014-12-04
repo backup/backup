@@ -7,12 +7,8 @@ module Backup
     class Slack < Base
 
       ##
-      # The Team name
-      attr_accessor :team
-
-      ##
-      # The Integration Token
-      attr_accessor :token
+      # The incoming webhook url
+      attr_accessor :webhook_url
 
       ##
       # The channel to send messages to
@@ -151,7 +147,7 @@ module Backup
       end
 
       def uri
-        @uri ||= "https://#{team}.slack.com/services/hooks/incoming-webhook?token=#{token}"
+        @uri ||= webhook_url
       end
     end
   end
