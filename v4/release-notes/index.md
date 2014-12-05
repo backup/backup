@@ -18,6 +18,16 @@ See the [Performing Backups][performing-backups] page for details.
 Before you upgrade to v4.x, see the [Upgrading][upgrading] page.
 Several changes have been made which will require your attention before you run your first backup using v4.x.
 
+4.1.4
+-----
+
+- Update Slack notifier configuration, please read PR [#613](https://github.com/meskyanichi/backup/pull/613) for the updates.
+
+4.1.3
+-----
+
+- Add `prepare_backup` configuration option MySQL database, see PR [#606](https://github.com/meskyanichi/backup/pull/606) for more information.
+
 4.1.2
 -----
 
