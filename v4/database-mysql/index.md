@@ -25,6 +25,7 @@ Model.new(:my_backup, 'My Backup') do
     db.skip_tables        = ["skip", "these", "tables"]
     db.only_tables        = ["only", "these" "tables"]
     db.additional_options = ["--quick", "--single-transaction"]
+    db.prepare_backup = true # see https://github.com/meskyanichi/backup/pull/606f for more information
   end
 end
 ```
