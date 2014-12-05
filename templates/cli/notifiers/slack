@@ -6,11 +6,10 @@
     slack.on_warning = true
     slack.on_failure = true
 
-    # The team name
-    slack.team = 'my_team'
+    # The incoming webhook url
+    # https://hooks.slack.com/services/xxxxxxxx/xxxxxxxxx/xxxxxxxxxx
+    slack.webhook_url = 'xxxxxxxxxxxxxxxxxxxxxxxx'
 
-    # The integration token
-    slack.token = 'xxxxxxxxxxxxxxxxxxxxxxxx'
 
     ##
     # Optional
