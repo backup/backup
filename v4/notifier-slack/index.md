@@ -12,11 +12,8 @@ notify_by Slack do |slack|
   slack.on_warning = true
   slack.on_failure = true
 
-  # The team name
-  slack.team = 'my_team'
-
   # The integration token
-  slack.token = 'xxxxxxxxxxxxxxxxxxxxxxxx'
+  slack.webhook_url = 'my_webhook_url'
 
   ##
   # Optional
