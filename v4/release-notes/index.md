@@ -18,6 +18,11 @@ See the [Performing Backups][performing-backups] page for details.
 Before you upgrade to v4.x, see the [Upgrading][upgrading] page.
 Several changes have been made which will require your attention before you run your first backup using v4.x.
 
+4.1.5
+-----
+
+- Update Fog gem dependency, see [#616](https://github.com/meskyanichi/backup/pull/616) for the updates.
+
 4.1.4
 -----
 
