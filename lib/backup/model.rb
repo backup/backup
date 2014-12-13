@@ -322,12 +322,12 @@ module Backup
     # Once complete, the temporary folder used during packaging is removed.
     def package!
       Packager.package!(self)
-      Cleaner.remove_packaging(self)
     end
 
     ##
     # Removes the final package file(s) once all configured Storages have run.
     def clean!
+      Cleaner.remove_packaging(self)
       Cleaner.remove_package(package)
     end
 

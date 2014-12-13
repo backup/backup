@@ -45,6 +45,8 @@ describe Backup::Utilities do
         # Syncer and Storage
         rsync   '/path/to/rsync'
         ssh     '/path/to/ssh'
+        git     '/path/to/git'
+        hg      '/path/to/hg'
 
         # Notifiers
         sendmail  '/path/to/sendmail'
@@ -342,6 +344,7 @@ describe Backup::Utilities::Helpers do
             helpers.send(:run, command)
           end.to raise_error {|err|
             err.message.should == message_head +
+              "  Command: #{command}\n" +
               "  STDOUT Messages: None\n" +
               "  STDERR Messages: None"
           }
@@ -357,6 +360,7 @@ describe Backup::Utilities::Helpers do
             helpers.send(:run, command)
           end.to raise_error {|err|
             err.message.should == message_head +
+              "  Command: #{command}\n" +
               "  STDOUT Messages: \n" +
               "  out line1\n" +
               "  out line2\n" +
@@ -374,6 +378,7 @@ describe Backup::Utilities::Helpers do
             helpers.send(:run, command)
           end.to raise_error {|err|
             err.message.should == message_head +
+              "  Command: #{command}\n" +
               "  STDOUT Messages: None\n" +
               "  STDERR Messages: \n" +
               "  err line1\n" +
@@ -391,6 +396,7 @@ describe Backup::Utilities::Helpers do
             helpers.send(:run, command)
           end.to raise_error {|err|
             err.message.should == message_head +
+              "  Command: #{command}\n" +
               "  STDOUT Messages: \n" +
               "  out line1\n" +
               "  out line2\n" +

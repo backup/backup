@@ -15,6 +15,7 @@ module Backup
       sendmail exim
       send_nsca
       zabbix_sender
+      git hg
     }
 
     module DSL
@@ -198,6 +199,7 @@ module Backup
         else
           raise Error, <<-EOS
             '#{ name }' failed with exit status: #{ ps.exitstatus }
+            Command: #{ command }
             STDOUT Messages: #{ out.empty? ? 'None' : "\n#{ out }" }
             STDERR Messages: #{ err.empty? ? 'None' : "\n#{ err }" }
           EOS
