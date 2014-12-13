@@ -34,6 +34,8 @@ describe Syncer::Cloud::LocalFile do
         end
       end
 
+      # This fails on OSX, see https://github.com/meskyanichi/backup/issues/482
+      # for more information.
       it 'returns a Hash of LocalFile objects, keyed by relative path' do
         Dir.chdir(@tmpdir) do
           bad_file = "sync_dir/bad\xFFfile"
