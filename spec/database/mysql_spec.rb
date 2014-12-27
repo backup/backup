@@ -235,7 +235,7 @@ describe Database::MySQL do
 
   describe '#mysqldump' do
     let(:option_methods) {%w[
-      credential_options connectivity_options user_options
+      user_options credential_options connectivity_options
       name_option tables_to_dump tables_to_skip
     ]}
 
@@ -455,7 +455,7 @@ describe Database::MySQL do
           "innobackupex --no-timestamp /tmp/MySQL.bkpdir 2> /dev/null && " +
           "tar --remove-files -cf - -C /tmp MySQL.bkpdir"
         )
-      end      
+      end
     end
   end
 
