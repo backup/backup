@@ -49,7 +49,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'dropbox-sdk', '= 1.5.1'
   gem.add_dependency 'equalizer', '= 0.0.9'
   gem.add_dependency 'excon', '= 0.42.1'
-  gem.add_dependency 'faraday', '= 0.8.8'
+  gem.add_dependency 'faraday', '~> 0.9.0'
   gem.add_dependency 'fission', '= 0.5.0'
   gem.add_dependency 'flowdock', '= 0.4.0'
   gem.add_dependency 'fog', '= 1.25.0'
