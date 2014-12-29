@@ -37,6 +37,7 @@ group :production do
   gem 'json'
   gem 'dogapi'
   gem 'aws-ses'
+  gem 'httparty', '~> 0.13.3'
 end
 
 gem 'rspec'
