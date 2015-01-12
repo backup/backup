@@ -107,7 +107,7 @@ GEM
       multi_xml (>= 0.5.2)
     inflecto (0.0.2)
     ipaddress (0.8.0)
-    json (1.8.1)
+    json (1.8.2)
     listen (2.4.0)
       celluloid (>= 0.15.2)
       rb-fsevent (>= 0.9.3)
