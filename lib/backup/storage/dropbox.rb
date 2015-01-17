@@ -56,7 +56,6 @@ module Backup
         @chunk_size     ||= 4 # MiB
         @max_retries    ||= 10
         @retry_waitsec  ||= 30
-        path.sub!(/^\//, '')
       end
 
       private
