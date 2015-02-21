@@ -1,6 +1,6 @@
 name: Backup Documentation
 markdown: redcarpet
-highlighter: true
+pygments: true
 baseurl: /backup
 encoding: utf-8
 exclude: ['Gemfile', 'Gemfile.lock']
