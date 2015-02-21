@@ -18,10 +18,16 @@ See the [Performing Backups][performing-backups] page for details.
 Before you upgrade to v4.x, see the [Upgrading][upgrading] page.
 Several changes have been made which will require your attention before you run your first backup using v4.x.
 
-4.1.6 (unreleased)
+4.1.7
 -----
 
 - Remove outdated [SQLite][database-sqlite] attributes from template.
+- Update to fog v1.27.0
+
+4.1.6
+-----
+
+- Update json dependency to 1.8.2
 
 4.1.5
 -----
