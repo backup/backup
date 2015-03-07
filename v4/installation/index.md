@@ -23,9 +23,15 @@ For Ruby versions `1.8.7` and `1.9.2`, use [Backup v3.x][v3-overview].
 
 ### Using Bundler
 
-**Do not add `gem backup` to another application's Gemfile.** Backup is not a _gem library_ and should not be treated as a
-_dependency_ of another application. Bundler _can_ be used to manage an installation of Backup, but the reasons for why
-you might want to do this is beyond the scope of this document.
+**Do not add `gem backup` to another application's Gemfile.**
+This means you **should not add Backup to a Rails** application's Gemfile.
+Backup is not a _gem library_ and should not be treated as a _dependency_ of
+another application. Bundler _can_ be used to manage an installation of Backup,
+but the reasons for why you might want to do this is beyond the scope of this
+document.
+
+See also [this issue](https://github.com/meskyanichi/backup/issues/635) for
+more information.
 
 ### Using sudo
 
