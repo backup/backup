@@ -1,7 +1,7 @@
 Backup v4.x
 ===========
-[![Code Climate](https://codeclimate.com/github/meskyanichi/backup.png)](https://codeclimate.com/github/meskyanichi/backup)
-[![Build Status](https://travis-ci.org/meskyanichi/backup.svg?branch=master)](https://travis-ci.org/meskyanichi/backup)
+[![Code Climate](https://codeclimate.com/github/backup/backup.png)](https://codeclimate.com/github/backup/backup)
+[![Build Status](https://travis-ci.org/backup/backup.svg?branch=master)](https://travis-ci.org/backup/backup)
 
 Backup is a system utility for Linux and Mac OS X, distributed as a RubyGem, that allows you to easily perform backup
 operations. It provides an elegant DSL in Ruby for _modeling_ your backups. Backup has built-in support for various
