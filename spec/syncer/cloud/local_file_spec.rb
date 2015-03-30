@@ -34,7 +34,7 @@ describe Syncer::Cloud::LocalFile do
         end
       end
 
-      # This fails on OSX, see https://github.com/meskyanichi/backup/issues/482
+      # This fails on OSX, see https://github.com/backup/backup/issues/482
       # for more information.
       it 'returns a Hash of LocalFile objects, keyed by relative path' do
         Dir.chdir(@tmpdir) do

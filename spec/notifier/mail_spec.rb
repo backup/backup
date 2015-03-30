@@ -142,9 +142,9 @@ describe Notifier::Mail do
             Backup v#{ VERSION }
             Ruby: #{ RUBY_DESCRIPTION }
 
-            Project Home:  https://github.com/meskyanichi/backup
-            Documentation: http://meskyanichi.github.io/backup
-            Issue Tracker: https://github.com/meskyanichi/backup/issues
+            Project Home:  https://github.com/backup/backup
+            Documentation: http://backup.github.io/backup
+            Issue Tracker: https://github.com/backup/backup/issues
           EOS
         end
       end
@@ -171,9 +171,9 @@ describe Notifier::Mail do
             Backup v#{ VERSION }
             Ruby: #{ RUBY_DESCRIPTION }
 
-            Project Home:  https://github.com/meskyanichi/backup
-            Documentation: http://meskyanichi.github.io/backup
-            Issue Tracker: https://github.com/meskyanichi/backup/issues
+            Project Home:  https://github.com/backup/backup
+            Documentation: http://backup.github.io/backup
+            Issue Tracker: https://github.com/backup/backup/issues
           EOS
         end
       end
@@ -207,9 +207,9 @@ describe Notifier::Mail do
             Backup v#{ VERSION }
             Ruby: #{ RUBY_DESCRIPTION }
 
-            Project Home:  https://github.com/meskyanichi/backup
-            Documentation: http://meskyanichi.github.io/backup
-            Issue Tracker: https://github.com/meskyanichi/backup/issues
+            Project Home:  https://github.com/backup/backup
+            Documentation: http://backup.github.io/backup
+            Issue Tracker: https://github.com/backup/backup/issues
           EOS
         end
       end
@@ -238,9 +238,9 @@ describe Notifier::Mail do
             Backup v#{ VERSION }
             Ruby: #{ RUBY_DESCRIPTION }
 
-            Project Home:  https://github.com/meskyanichi/backup
-            Documentation: http://meskyanichi.github.io/backup
-            Issue Tracker: https://github.com/meskyanichi/backup/issues
+            Project Home:  https://github.com/backup/backup
+            Documentation: http://backup.github.io/backup
+            Issue Tracker: https://github.com/backup/backup/issues
           EOS
         end
       end
@@ -274,9 +274,9 @@ describe Notifier::Mail do
             Backup v#{ VERSION }
             Ruby: #{ RUBY_DESCRIPTION }
 
-            Project Home:  https://github.com/meskyanichi/backup
-            Documentation: http://meskyanichi.github.io/backup
-            Issue Tracker: https://github.com/meskyanichi/backup/issues
+            Project Home:  https://github.com/backup/backup
+            Documentation: http://backup.github.io/backup
+            Issue Tracker: https://github.com/backup/backup/issues
           EOS
         end
       end
@@ -305,9 +305,9 @@ describe Notifier::Mail do
             Backup v#{ VERSION }
             Ruby: #{ RUBY_DESCRIPTION }
 
-            Project Home:  https://github.com/meskyanichi/backup
-            Documentation: http://meskyanichi.github.io/backup
-            Issue Tracker: https://github.com/meskyanichi/backup/issues
+            Project Home:  https://github.com/backup/backup
+            Documentation: http://backup.github.io/backup
+            Issue Tracker: https://github.com/backup/backup/issues
           EOS
         end
       end

@@ -224,7 +224,7 @@ module Backup
 end
 
 # Patch mail v2.5.4 Exim delivery method
-# https://github.com/meskyanichi/backup/issues/446
+# https://github.com/backup/backup/issues/446
 # https://github.com/mikel/mail/pull/546
 module Mail
   class Exim

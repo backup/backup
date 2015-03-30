@@ -16,10 +16,10 @@ Only use the Backup gem [issue tracker][Issues] for bugs and other issues.
 **Copyright (c) 2009-2015 [Michael van Rooijen][] ( [@meskyanichi][] )**  
 Released under the **MIT** [License](LICENSE.md).
 
-[Installation]:  http://meskyanichi.github.io/backup/v4/installation
-[Release Notes]: http://meskyanichi.github.io/backup/v4/release-notes
-[Documentation]: http://meskyanichi.github.io/backup/v4
-[Issues]: https://github.com/meskyanichi/backup/issues
-[Features]: https://github.com/meskyanichi/backup-features/issues
+[Installation]:  http://backup.github.io/backup/v4/installation
+[Release Notes]: http://backup.github.io/backup/v4/release-notes
+[Documentation]: http://backup.github.io/backup/v4
+[Issues]: https://github.com/backup/backup/issues
+[Features]: https://github.com/backup/backup-features/issues
 [Michael van Rooijen]: http://michaelvanrooijen.com
 [@meskyanichi]: http://twitter.com/#!/meskyanichi
