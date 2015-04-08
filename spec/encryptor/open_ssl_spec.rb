@@ -117,11 +117,11 @@ describe Backup::Encryptor::OpenSSL do
     end
 
     context 'when #password is given (without #password_file given)' do
-      before { encryptor.password = 'password' }
+      before { encryptor.password = %q(pa\ss'w"ord) }
 
       it 'should include the given password in the #password option' do
         encryptor.send(:options).should ==
-            "aes-256-cbc -k 'password'"
+            %q(aes-256-cbc -k pa\\\ss\'w\"ord)
       end
     end
 
