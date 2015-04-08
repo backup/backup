@@ -62,8 +62,13 @@ module Backup
         opts = ['aes-256-cbc']
         opts << '-base64' if @base64
         opts << '-salt'   if @salt
-        opts << ( @password_file.to_s.empty? ?
-                "-k '#{@password}'" : "-pass file:#{@password_file}" )
+
+        if @password_file.to_s.empty?
+          opts << "-k #{Shellwords.escape(@password)}"
+        else
+          opts << "-pass file:#{@password_file}"
+        end
+
         opts.join(' ')
       end
 
