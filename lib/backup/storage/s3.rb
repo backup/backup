@@ -76,7 +76,8 @@ module Backup
         @retry_waitsec  ||= 30
         @path           ||= 'backups'
         @storage_class  ||= :standard
-        path.sub!(/^\//, '')
+
+        @path = @path.sub(/^\//, '')
 
         check_configuration
       end
