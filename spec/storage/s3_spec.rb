@@ -91,6 +91,27 @@ describe Storage::S3 do
       expect( storage.fog_options       ).to eq :my_key => 'my_value'
     end
 
+    it 'configures the storage with values passed as frozen strings' do
+      storage = Storage::S3.new(model, :my_id) do |s3|
+        s3.access_key_id      = 'my_access_key_id'.freeze
+        s3.secret_access_key  = 'my_secret_access_key'.freeze
+        s3.bucket             = 'my_bucket'.freeze
+        s3.region             = 'my_region'.freeze
+        s3.path               = 'my/path'.freeze
+        s3.encryption         = 'aes256'.freeze
+        s3.fog_options        = { :my_key => 'my_value'.freeze }
+      end
+
+      expect( storage.storage_id        ).to eq 'my_id'
+      expect( storage.access_key_id     ).to eq 'my_access_key_id'
+      expect( storage.secret_access_key ).to eq 'my_secret_access_key'
+      expect( storage.bucket            ).to eq 'my_bucket'
+      expect( storage.region            ).to eq 'my_region'
+      expect( storage.path              ).to eq 'my/path'
+      expect( storage.encryption        ).to eq 'aes256'
+      expect( storage.fog_options       ).to eq :my_key => 'my_value'
+    end
+
     it 'requires bucket' do
       pre_config = required_config
       expect do
