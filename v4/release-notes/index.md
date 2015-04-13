@@ -18,11 +18,15 @@ See the [Performing Backups][performing-backups] page for details.
 Before you upgrade to v4.x, see the [Upgrading][upgrading] page.
 Several changes have been made which will require your attention before you run your first backup using v4.x.
 
+4.1.10
+-----
+
+- Fix S3 bug with "frozen" strings in config [Issue 654](https://github.com/backup/backup/pull/654)
+
 4.1.9
 -----
 
 - Properly escape passwords in openssl [Issue 651](https://github.com/backup/backup/pull/651)
-- Fix S3 bug with "frozen" strings in config [Issue 654](https://github.com/backup/backup/pull/654)
 
 4.1.8
 -----
