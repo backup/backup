@@ -116,6 +116,7 @@ module Backup
     autoload :Zabbix,    File.join(NOTIFIER_PATH, 'zabbix')
     autoload :DataDog,   File.join(NOTIFIER_PATH, 'datadog')
     autoload :Ses,       File.join(NOTIFIER_PATH, 'ses')
+    autoload :Command,   File.join(NOTIFIER_PATH, 'command')
   end
 
   ##
