@@ -22,6 +22,7 @@ module Backup
       # In strings you can use the following placeholders:
       #
       # %l - Model label
+      # %t - Model trigger
       # %s - Status (success/failure/warning)
       # %v - Status verb (succeeded/failed/succeeded with warnings)
       #
@@ -71,7 +72,7 @@ module Backup
                   when "l"
                     model.label
                   when "t"
-                    model.trigger
+                    model.trigger.to_s
                   when "v"
                     status_verb(status)
                   when "s"

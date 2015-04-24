@@ -1,0 +1,32 @@
+  ##
+  # Command [Notifier]
+  #
+  notify_by Command do |cmd|
+    cmd.on_success = true
+    cmd.on_warning = true
+    cmd.on_failure = true
+
+    # Command to execute
+    cmd.command = 'notify-send'
+
+    # Arguments to pass to the command.
+    #
+    # Must be an array of strings or callable objects.
+    #
+    # Callables will be invoked with #call(model, status),
+    # and the return value used as the argument.
+    #
+    # In strings you can use the following placeholders:
+    #
+    # %l - Model label
+    # %t - Model trigger
+    # %s - Status (success/failure/warning)
+    # %v - Status verb (succeeded/failed/succeeded with warnings)
+    #
+    # All placeholders can be used with uppercase letters to capitalize
+    # the value.
+    #
+    # Defaults to ["%L %v"]
+    #
+    # cmd.args = ["Backup %L", "%V"]
+  end
