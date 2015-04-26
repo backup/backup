@@ -9,8 +9,8 @@ Syncer::Cloud::S3
 ``` rb
 sync_with Cloud::S3 do |s3|
   # AWS Credentials
-  s3.access_key_id     = "my_access_key_id"
-  s3.secret_access_key = "my_secret_access_key"
+  s3.aws_access_key_id = "my_access_key_id"
+  s3.aws_secret_access_key = "my_secret_access_key"
   # Or, to use a IAM Profile:
   # s3.use_iam_profile = true
 
