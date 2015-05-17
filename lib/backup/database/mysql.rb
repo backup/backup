@@ -15,6 +15,10 @@ module Backup
       attr_accessor :username, :password
 
       ##
+      # SSH option
+      attr_accessor :ssh
+
+      ##
       # Connectivity options
       attr_accessor :host, :port, :socket
 
@@ -101,9 +105,13 @@ module Backup
       private
 
       def mysqldump
-        "#{ utility(:mysqldump) } #{ credential_options } " +
+        "#{ ssh_option } #{ utility(:mysqldump) } #{ credential_options } " +
         "#{ connectivity_options } #{ user_options } #{ name_option } " +
         "#{ tables_to_dump } #{ tables_to_skip }"
+      end
+
+      def ssh_option
+        "ssh #{ssh}" if ssh
       end
 
       def credential_options
