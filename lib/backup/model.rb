@@ -303,7 +303,7 @@ module Backup
       return [] unless databases.any? || archives.any?
 
       [lambda { prepare! }, databases, archives,
-       lambda { package! }, storages, lambda { clean! }]
+       lambda { package! }, lambda { store! }, lambda { clean! }]
     end
 
     ##
@@ -323,6 +323,27 @@ module Backup
     def package!
       Packager.package!(self)
       Cleaner.remove_packaging(self)
+    end
+
+    ##
+    # Attempts to use all configured Storages, even if some of them result in exceptions.
+    # Returns true or raises first encountered exception.
+    def store!
+      storage_results = storages.map do |storage|
+        begin
+          storage.perform!
+        rescue => ex
+          ex
+        end
+      end
+
+      first_storage_exception = storage_results.detect { |result| result.is_a? Exception }
+
+      if first_storage_exception
+        raise first_storage_exception
+      else
+        true
+      end
     end
 
     ##
