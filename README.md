@@ -1,5 +1,7 @@
 Backup v4.x
 ===========
+
+[![Join the chat at https://gitter.im/backup/backup](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/backup/backup?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Code Climate](https://codeclimate.com/github/backup/backup.png)](https://codeclimate.com/github/backup/backup)
 [![Build Status](https://travis-ci.org/backup/backup.svg?branch=master)](https://travis-ci.org/backup/backup)
 
