@@ -733,6 +733,28 @@ describe 'Backup::Model' do
 
         expect { model.send(:store!) }.to raise_error 'Storage error'
       end
+
+      context 'and multiple storages fail' do
+        let(:storage_three) { mock() }
+
+        before do
+          model.stubs(:storages).returns([storage_one, storage_two, storage_three])
+        end
+
+        it 'should log the exceptions that are not re-raised' do
+          storage_one.expects(:perform!).raises 'Storage error'
+          storage_two.expects(:perform!).raises 'Different error'
+          storage_three.expects(:perform!).raises 'Another error'
+
+          expected_messages = [/\ADifferent error\z/, /.*/, /\AAnother error\z/, /.*/] # every other invocation contains a stack trace
+
+          Backup::Logger.expects(:error).in_sequence(s).times(4).with do |err|
+            err.to_s =~ expected_messages.shift
+          end
+
+          expect { model.send(:store!) }.to raise_error 'Storage error'
+        end
+      end
     end
   end
 

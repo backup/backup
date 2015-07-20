@@ -337,10 +337,14 @@ module Backup
         end
       end
 
-      first_storage_exception = storage_results.detect { |result| result.is_a? Exception }
+      first_exception, *other_exceptions = storage_results.select { |result| result.is_a? Exception }
 
-      if first_storage_exception
-        raise first_storage_exception
+      if first_exception
+        other_exceptions.each do |exception|
+         Logger.error exception.to_s
+         Logger.error exception.backtrace.join('\n')
+        end
+        raise first_exception
       else
         true
       end
