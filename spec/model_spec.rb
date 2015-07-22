@@ -641,7 +641,7 @@ describe 'Backup::Model' do
     before do
       model.stubs(:prepare!).returns(:prepare)
       model.stubs(:package!).returns(:package)
-      model.stubs(:storages).returns([:storage])
+      model.stubs(:store!).returns([:storage])
       model.stubs(:clean!).returns(:clean)
     end
 
@@ -662,7 +662,7 @@ describe 'Backup::Model' do
         two.should == [:database]
         three.should == []
         four.call.should == :package
-        five.should == [:storage]
+        five.call.should == [:storage]
         six.call.should == :clean
       end
     end
@@ -678,7 +678,7 @@ describe 'Backup::Model' do
         two.should == []
         three.should == [:archive]
         four.call.should == :package
-        five.should == [:storage]
+        five.call.should == [:storage]
         six.call.should == :clean
       end
     end
@@ -698,6 +698,63 @@ describe 'Backup::Model' do
       Backup::Cleaner.expects(:remove_packaging).in_sequence(s).with(model)
 
       model.send(:package!)
+    end
+  end
+
+  describe '#store!' do
+    context 'when no storages are configured' do
+      before do
+        model.stubs(:storages).returns([])
+      end
+
+      it 'should return true' do
+        expect(model.send(:store!)).to eq true
+      end
+    end
+
+    context 'when multiple storages are configured' do
+      let(:storage_one) { mock() }
+      let(:storage_two) { mock() }
+
+      before do
+        model.stubs(:storages).returns([storage_one, storage_two])
+      end
+
+      it 'should call storages in sequence and return true if all succeed' do
+        storage_one.expects(:perform!).in_sequence(s).returns(true)
+        storage_two.expects(:perform!).in_sequence(s).returns(true)
+
+        expect(model.send(:store!)).to eq true
+      end
+
+      it 'should call storages in sequence and re-raise the first exception that occours' do
+        storage_one.expects(:perform!).in_sequence(s).raises 'Storage error'
+        storage_two.expects(:perform!).in_sequence(s).returns(true)
+
+        expect { model.send(:store!) }.to raise_error 'Storage error'
+      end
+
+      context 'and multiple storages fail' do
+        let(:storage_three) { mock() }
+
+        before do
+          model.stubs(:storages).returns([storage_one, storage_two, storage_three])
+        end
+
+        it 'should log the exceptions that are not re-raised' do
+          storage_one.expects(:perform!).raises 'Storage error'
+          storage_two.expects(:perform!).raises 'Different error'
+          storage_three.expects(:perform!).raises 'Another error'
+
+          expected_messages = [/\ADifferent error\z/, /.*/, /\AAnother error\z/, /.*/] # every other invocation contains a stack trace
+
+          Backup::Logger.expects(:error).in_sequence(s).times(4).with do |err|
+            err.to_s =~ expected_messages.shift
+          end
+
+          expect { model.send(:store!) }.to raise_error 'Storage error'
+        end
+      end
     end
   end
 
