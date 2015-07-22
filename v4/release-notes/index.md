@@ -18,6 +18,14 @@ See the [Performing Backups][performing-backups] page for details.
 Before you upgrade to v4.x, see the [Upgrading][upgrading] page.
 Several changes have been made which will require your attention before you run your first backup using v4.x.
 
+4.1.11
+-----
+
+- Ruby 2.0+ is now required. We dropped support for 1.9.3.
+- Remove post install message.
+- Add "command" notifier, see [PR 658](https://github.com/backup/backup/pull/658)
+- Wait for all storages to finish and don't error out on the first one, see [PR 678](https://github.com/backup/backup/pull/676).
+
 4.1.10
 -----
 
