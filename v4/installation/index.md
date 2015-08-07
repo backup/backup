@@ -6,8 +6,8 @@ title: Installation
 Installation
 ============
 
-Backup v4.x is distributed using [RubyGems](https://rubygems.org) and supports [Ruby](https://www.ruby-lang.org)
-versions `1.9.3`, `2.0.0` and `2.1.0`.
+Backup v4.x is distributed using [RubyGems](https://rubygems.org) and supports
+[Ruby](https://www.ruby-lang.org) versions `2.0.0+`, `2.1.0+`, `2.2.0+`.
 
 To install the latest version, run:
 
@@ -19,7 +19,8 @@ See [Release Notes][release-notes] for changes in the latest version.
 
 If you're upgrading from Backup v3.x, see [Upgrading][upgrading].
 
-For Ruby versions `1.8.7` and `1.9.2`, use [Backup v3.x][v3-overview].
+For Ruby versions `1.9.3`, support was dropped on version `4.1.11` so use an earlier version.
+For Ruby versions `1.8.7` and `1.9.2`, please use [Backup v3.x][v3-overview].
 
 ### Using Bundler
 
