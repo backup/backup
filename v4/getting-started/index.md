@@ -16,7 +16,7 @@ Generating Your First Backup Model
 Let's generate a simple Backup model file:
 
     $ backup generate:model --trigger my_backup \
-      --archives --storages='local' --compressor='gzip' --notifiers='mail'
+      --archives --storages='local' --compressors='gzip' --notifiers='mail'
 
 (For a full list of options, view the [Generator][generator] Page)
 
