@@ -42,8 +42,11 @@ module Backup
         # The command's output will then be either piped to the Encryptor
         # or the Splitter (if no Encryptor), or through `cat` into the final
         # output file if neither are configured.
-        @pipeline << "#{ utility(:tar) } -cf - " +
-            "-C '#{ Config.tmp_path }' '#{ @package.trigger }'"
+        @pipeline.add(
+          "#{ utility(:tar) } -cf - " +
+          "-C '#{ Config.tmp_path }' '#{ @package.trigger }'",
+          tar_success_codes
+        )
 
         ##
         # If an Encryptor was configured, it will be called first
@@ -96,6 +99,9 @@ module Backup
         stack.shift
       end
 
+      def tar_success_codes
+        gnu_tar? ? [0, 1] : [0]
+      end
     end
   end
 end
