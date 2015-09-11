@@ -10,6 +10,11 @@ module Backup
       attr_accessor :token
 
       ##
+      # The Hipchat API version
+      # Either 'v1' or 'v2' (default is 'v1')
+      attr_accessor :api_version
+
+      ##
       # Who the notification should appear from
       attr_accessor :from
 
@@ -45,6 +50,7 @@ module Backup
         @success_color  ||= 'yellow'
         @warning_color  ||= 'yellow'
         @failure_color  ||= 'yellow'
+        @api_version    ||= 'v1'
       end
 
       private
@@ -76,9 +82,13 @@ module Backup
         send_message(message, color)
       end
 
+      def client_options
+        { api_version: @api_version }
+      end
+
       # Hipchat::Client will raise an error if unsuccessful.
       def send_message(msg, color)
-        client = HipChat::Client.new(token)
+        client = HipChat::Client.new(token, client_options)
         rooms_to_notify.each do |room|
           client[room].send(from, msg, :color => color, :notify => notify_users)
         end
