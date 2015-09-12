@@ -127,8 +127,8 @@ describe 'Backup::Packager' do
         packager.instance_variable_set(:@encryptor, nil)
         packager.instance_variable_set(:@splitter,  nil)
 
-        pipeline.expects(:<<).in_sequence(s).with(
-          "tar -cf - -C '#{ Backup::Config.tmp_path }' 'model_trigger'"
+        pipeline.expects(:add).in_sequence(s).with(
+          "tar -cf - -C '#{ Backup::Config.tmp_path }' 'model_trigger'", [0, 1]
         )
         pipeline.expects(:<<).in_sequence(s).with(
           "cat > #{ File.join(Backup::Config.tmp_path, 'base_filename.tar') }"
@@ -145,8 +145,8 @@ describe 'Backup::Packager' do
         packager.instance_variable_set(:@encryptor, encryptor)
         packager.instance_variable_set(:@splitter,  nil)
 
-        pipeline.expects(:<<).in_sequence(s).with(
-          "tar -cf - -C '#{ Backup::Config.tmp_path }' 'model_trigger'"
+        pipeline.expects(:add).in_sequence(s).with(
+          "tar -cf - -C '#{ Backup::Config.tmp_path }' 'model_trigger'", [0, 1]
         )
         pipeline.expects(:<<).in_sequence(s).with('encryption_command')
         pipeline.expects(:<<).in_sequence(s).with(
@@ -171,8 +171,8 @@ describe 'Backup::Packager' do
         packager.instance_variable_set(:@encryptor, nil)
         packager.instance_variable_set(:@splitter,  splitter)
 
-        pipeline.expects(:<<).in_sequence(s).with(
-          "tar -cf - -C '#{ Backup::Config.tmp_path }' 'model_trigger'"
+        pipeline.expects(:add).in_sequence(s).with(
+          "tar -cf - -C '#{ Backup::Config.tmp_path }' 'model_trigger'", [0, 1]
         )
         pipeline.expects(:<<).in_sequence(s).with('splitter_command')
 
@@ -195,8 +195,8 @@ describe 'Backup::Packager' do
         packager.instance_variable_set(:@encryptor, encryptor)
         packager.instance_variable_set(:@splitter,  splitter)
 
-        pipeline.expects(:<<).in_sequence(s).with(
-          "tar -cf - -C '#{ Backup::Config.tmp_path }' 'model_trigger'"
+        pipeline.expects(:add).in_sequence(s).with(
+          "tar -cf - -C '#{ Backup::Config.tmp_path }' 'model_trigger'", [0, 1]
         )
         pipeline.expects(:<<).in_sequence(s).with('encryption_command')
         pipeline.expects(:<<).in_sequence(s).with('splitter_command')
