@@ -52,11 +52,7 @@ describe Notifier::Twitter do
   end # describe '#initialize'
 
   describe '#notify!' do
-    let(:message) { '[Backup::%s] test label (test_trigger) (@ model-time)' }
-
-    before do
-      model.stubs(:time).returns('model-time')
-    end
+    let(:message) { '[Backup::%s] test label (test_trigger)' }
 
     context 'when status is :success' do
       it 'sends a success message' do

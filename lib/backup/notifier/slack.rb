@@ -61,20 +61,14 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        tag = case status
-              when :success then '[Backup::Success]'
-              when :failure then '[Backup::Failure]'
-              when :warning then '[Backup::Warning]'
-              end
-        message = "#{ tag } #{ model.label } (#{ model.trigger })"
-
-        data = { :text => message }
+        data = {
+          :text => message.call(model, :status => status_data_for(status)),
+          :attachments => [attachment(status)]
+        }
         [:channel, :username, :icon_emoji].each do |param|
           val = send(param)
           data.merge!(param => val) if val
         end
-
-        data.merge!(:attachments => [attachment(status)])
 
         options = {
           :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },

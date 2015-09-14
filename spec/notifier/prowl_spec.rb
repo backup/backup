@@ -53,8 +53,8 @@ describe Notifier::Prowl do
       end
     }
     let(:form_data) {
-      'application=my_app&apikey=my_api_key&' +
-      'event=%5BBackup%3A%3A' + 'STATUS' + '%5D&' +
+      'application=my_app&apikey=my_api_key&'\
+      'event=Backup%3A%3ASTATUS&'\
       'description=test+label+%28test_trigger%29'
     }
 

@@ -55,12 +55,7 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        message = case status
-              when :success then 'Completed Successfully'
-              when :warning then 'Completed Successfully (with Warnings)'
-              when :failure then 'Failed'
-              end
-        send_message("#{model.label}: #{ message } in #{ model.duration }")
+        send_message(message.call(model, :status => status_data_for(status)))
       end
 
       def send_message(message)

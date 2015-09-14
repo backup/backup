@@ -13,9 +13,10 @@ module Backup
       # The title of the event
       attr_accessor :title
 
-      ##
-      # The text information for the event
-      attr_accessor :text
+      attr_deprecate :text,
+        :version => '4.2',
+        :message => 'Please use the `message` attribute. For more information '\
+          'see https://github.com/backup/backup/pull/698'
 
       ##
       # The timestamp for the event
@@ -48,9 +49,7 @@ module Backup
       def initialize(model, &block)
         super
         instance_eval(&block) if block_given?
-
-        @title          ||= default_title
-        @text           ||= default_text
+        @title ||= "Backup #{ model.label }"
       end
 
       private
@@ -73,7 +72,9 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        hash = {alert_type: default_alert_type(status)}
+        msg = message.call(model, :status => status_data_for(status))
+
+        hash = { alert_type: default_alert_type(status) }
         hash.store(:msg_title,        @title)
         hash.store(:date_happened,    @date_happened)    if @date_happened
         hash.store(:priority,         @priority)         if @priority
@@ -82,13 +83,13 @@ module Backup
         hash.store(:aggregation_key,  @aggregation_key)  if @aggregation_key
         hash.store(:source_type_name, @source_type_name) if @source_type_name
         hash.store(:alert_type,       @alert_type)       if @alert_type
-        send_event(hash)
+        send_event(msg, hash)
       end
 
       # Dogapi::Client will raise an error if unsuccessful.
-      def send_event(hash)
+      def send_event(msg, hash)
         client = Dogapi::Client.new(@api_key)
-        event = Dogapi::Event.new(@text, hash)
+        event = Dogapi::Event.new(msg, hash)
         client.emit_event(event)
       end
 
@@ -99,16 +100,6 @@ module Backup
         when :warning then 'warning'
         when :failure then 'error'
         end
-      end
-
-      # set default title
-      def default_title
-        "Backup #{ model.label }"
-      end
-
-      # set default text
-      def default_text
-        "Backup Notification for #{ model.label }"
       end
 
     end

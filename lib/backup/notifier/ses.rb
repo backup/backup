@@ -66,14 +66,8 @@ module Backup
       # : backup log, if `on_failure` is `true`.
       #
       def notify!(status)
-        tag = case status
-                when :success then '[Backup::Success]'
-                when :warning then '[Backup::Warning]'
-                when :failure then '[Backup::Failure]'
-              end
-
         email = ::Mail.new(:to => to, :from => from)
-        email.subject = "#{ tag } #{ model.label } (#{ model.trigger })"
+        email.subject = message.call(model, :status => status_data_for(status))
 
         send_log = send_log_on.include?(status)
         template = Backup::Template.new({ :model => model, :send_log => send_log })

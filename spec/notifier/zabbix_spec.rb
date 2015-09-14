@@ -68,11 +68,11 @@ module Backup
 
       context 'when status is :success' do
         let(:zabbix_msg) {
-          "my.service.host\tBackup test_trigger\t0\t" +
-          "Completed Successfully in #{ model.duration }"
+          "my.service.host\tBackup test_trigger\t0\t"\
+          "[Backup::Success] test label (test_trigger)"
         }
 
-        let(:zabbix_cmd) { 
+        let(:zabbix_cmd) {
           "zabbix_sender -z 'zabbix.hostname'" +
           " -p '#{ notifier.zabbix_port }'" +
           " -s #{ notifier.service_host }" +
@@ -90,11 +90,11 @@ module Backup
 
       context 'when status is :warning' do
         let(:zabbix_msg) {
-          "my.service.host\tBackup test_trigger\t1\t" +
-          "Completed Successfully (with Warnings) in #{ model.duration }"
+          "my.service.host\tBackup test_trigger\t1\t"\
+          "[Backup::Warning] test label (test_trigger)"
         }
 
-        let(:zabbix_cmd) { 
+        let(:zabbix_cmd) {
           "zabbix_sender -z 'zabbix.hostname'" +
           " -p '#{ notifier.zabbix_port }'" +
           " -s #{ notifier.service_host }" +
@@ -112,10 +112,11 @@ module Backup
 
       context 'when status is :failure' do
         let(:zabbix_msg) {
-          "my.service.host\tBackup test_trigger\t2\tFailed in #{ model.duration }"
+          "my.service.host\tBackup test_trigger\t2\t"\
+          "[Backup::Failure] test label (test_trigger)"
         }
 
-        let(:zabbix_cmd) { 
+        let(:zabbix_cmd) {
           "zabbix_sender -z 'zabbix.hostname'" +
           " -p '#{ notifier.zabbix_port }'" +
           " -s #{ notifier.service_host }" +

@@ -16,6 +16,9 @@ module Backup
       attr_accessor :api_key
 
       def initialize(model, &block)
+        @message = lambda do |model, data|
+          "#{ model.label } (#{ model.trigger })"
+        end
         super
         instance_eval(&block) if block_given?
       end
@@ -40,21 +43,17 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        tag = case status
-              when :success then '[Backup::Success]'
-              when :warning then '[Backup::Warning]'
-              when :failure then '[Backup::Failure]'
-              end
-        send_message(tag)
+        send_message(status)
       end
 
-      def send_message(message)
+      def send_message(status)
         uri = 'https://api.prowlapp.com/publicapi/add'
+        status_data = status_data_for(status)
         data = {
           :application  => application,
           :apikey       => api_key,
-          :event        => message,
-          :description  => "#{ model.label } (#{ model.trigger })"
+          :event        => status_data[:message],
+          :description  => message.call(model, :status => status_data)
         }
         options = {
           :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },

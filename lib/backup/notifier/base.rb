@@ -36,6 +36,15 @@ module Backup
       # Default: 30
       attr_accessor :retry_waitsec
 
+      ##
+      # Message to send. Depends on notifier implementation if this is used.
+      # Default: lambda returning:
+      # "#{ message } #{ model.label } (#{ model.trigger })"
+      #
+      # @yieldparam [model] Backup::Model
+      # @yieldparam [data] Hash containing `message` and `key` values.
+      attr_accessor :message
+
       attr_reader :model
 
       def initialize(model)
@@ -47,6 +56,9 @@ module Backup
         @on_failure = true if on_failure.nil?
         @max_retries    ||= 10
         @retry_waitsec  ||= 30
+        @message        ||= lambda do |model, data|
+          "[#{ data[:status][:message] }] #{ model.label } (#{ model.trigger })"
+        end
       end
 
       # This method is called from an ensure block in Model#perform! and must
@@ -93,6 +105,24 @@ module Backup
         self.class.to_s.sub('Backup::', '')
       end
 
+      ##
+      # Return status data for message creation
+      def status_data_for(status)
+        {
+          :success => {
+            :message => 'Backup::Success',
+            :key => :success
+          },
+          :warning => {
+            :message => 'Backup::Warning',
+            :key => :warning
+          },
+          :failure => {
+            :message => 'Backup::Failure',
+            :key => :failure
+          }
+        }[status]
+      end
     end
   end
 end
