@@ -38,13 +38,7 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        tag = case status
-              when :success then '[Backup::Success]'
-              when :warning then '[Backup::Warning]'
-              when :failure then '[Backup::Failure]'
-              end
-        message = "#{ tag } #{ model.label } (#{ model.trigger }) (@ #{ model.time })"
-        send_message(message)
+        send_message(message.call(model, :status => status_data_for(status)))
       end
 
       # Twitter::Client will raise an error if unsuccessful.

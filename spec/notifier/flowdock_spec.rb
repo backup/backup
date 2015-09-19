@@ -66,7 +66,7 @@ module Backup
       }
       let(:client) { mock }
       let(:push_to_team_inbox) { mock }
-      let(:message) { 'test label (test_trigger)' }
+      let(:message) { '[Backup::%s] test label (test_trigger)' }
 
       context 'when status is :success' do
         it 'sends a success message' do
@@ -76,7 +76,7 @@ module Backup
                     ).returns(client)
           client.expects(:push_to_team_inbox).in_sequence(s).
               with(:subject => 'My Daily Backup',
-                   :content => message,
+                   :content => message % 'Success',
                    :tags => [ 'prod', '#BackupSuccess' ],
                    :link => 'www.example.com' )
 
@@ -92,7 +92,7 @@ module Backup
                     ).returns(client)
           client.expects(:push_to_team_inbox).in_sequence(s).
               with(:subject => 'My Daily Backup',
-                   :content => message,
+                   :content => message % 'Warning',
                    :tags => [ 'prod', '#BackupWarning' ],
                    :link => 'www.example.com' )
 
@@ -108,7 +108,7 @@ module Backup
                     ).returns(client)
           client.expects(:push_to_team_inbox).in_sequence(s).
               with(:subject => 'My Daily Backup',
-                   :content => message,
+                   :content => message % 'Failure',
                    :tags => [ 'prod', '#BackupFailure' ],
                    :link => 'www.example.com' )
 

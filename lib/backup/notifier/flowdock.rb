@@ -61,15 +61,16 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        @tags  += default_tags(status)
-        message = "#{ model.label } (#{ model.trigger })"
-        send_message(message)
+        @tags += default_tags(status)
+        send_message(message.call(model, status: status_data_for(status)))
       end
 
       # Flowdock::Client will raise an error if unsuccessful.
       def send_message(msg)
-        client = Flowdock::Flow.new(:api_token => token, :source => source,
-                                    :from => {:name => from_name, :address => from_email })
+        client = Flowdock::Flow.new(
+          :api_token => token, :source => source,
+          :from => {:name => from_name, :address => from_email }
+        )
 
         client.push_to_team_inbox(:subject => subject,
                                   :content => msg,

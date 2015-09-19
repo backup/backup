@@ -95,18 +95,13 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        tag = case status
-              when :success then '[Backup::Success]'
-              when :failure then '[Backup::Failure]'
-              when :warning then '[Backup::Warning]'
-              end
-        message = "#{ tag } #{ model.label } (#{ model.trigger })"
+        msg = message.call(model, :status => status_data_for(status))
 
         opts = {
           :headers => { 'User-Agent' => "Backup/#{ VERSION }" }.
               merge(headers).reject {|k,v| v.nil? }.
               merge('Content-Type' => 'application/x-www-form-urlencoded'),
-          :body => URI.encode_www_form({ 'message' => message }.
+          :body => URI.encode_www_form({ 'message' => msg }.
               merge(params).reject {|k,v| v.nil? }.
               merge('status' => status.to_s)),
           :expects => success_codes # raise error if unsuccessful

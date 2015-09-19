@@ -67,13 +67,9 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        tag, color = case status
-                     when :success then ['[Backup::Success]', success_color]
-                     when :warning then ['[Backup::Warning]', warning_color]
-                     when :failure then ['[Backup::Failure]', failure_color]
-                     end
-        message = "#{ tag } #{ model.label } (#{ model.trigger })"
-        send_message(message, color)
+        status_data = status_data_for(status)
+        msg = message.call(model, :status => status_data)
+        send_message(msg, status_data[:color])
       end
 
       # Hipchat::Client will raise an error if unsuccessful.
@@ -88,6 +84,19 @@ module Backup
         Array(rooms_notified).map {|r| r.split(',').map(&:strip) }.flatten
       end
 
+      def status_data_for(status)
+        data = super(status)
+        data[:color] = status_color_for(status)
+        data
+      end
+
+      def status_color_for(status)
+        {
+          :success => success_color,
+          :warning => warning_color,
+          :failure => failure_color
+        }[status]
+      end
     end
   end
 end

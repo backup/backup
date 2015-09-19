@@ -69,8 +69,8 @@ describe Notifier::Nagios do
 
     context 'when status is :success' do
       let(:nagios_msg) {
-        "my.service.host\tBackup test_trigger\t0\t" +
-        "test model: Completed Successfully in 12:34:56"
+        "my.service.host\tBackup test_trigger\t0\t"\
+        "[Backup::Success] test model (test_trigger)"
       }
       before { model.stubs(:exit_status).returns(0) }
 
@@ -83,8 +83,8 @@ describe Notifier::Nagios do
 
     context 'when status is :warning' do
       let(:nagios_msg) {
-        "my.service.host\tBackup test_trigger\t1\t" +
-        "test model: Completed Successfully (with Warnings) in 12:34:56"
+        "my.service.host\tBackup test_trigger\t1\t"\
+        "[Backup::Warning] test model (test_trigger)"
       }
       before { model.stubs(:exit_status).returns(1) }
 
@@ -97,7 +97,8 @@ describe Notifier::Nagios do
 
     context 'when status is :failure' do
       let(:nagios_msg) {
-        "my.service.host\tBackup test_trigger\t2\ttest model: Failed in 12:34:56"
+        "my.service.host\tBackup test_trigger\t2\t"\
+        "[Backup::Failure] test model (test_trigger)"
       }
       before { model.stubs(:exit_status).returns(2) }
 
