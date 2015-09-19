@@ -64,7 +64,7 @@ task :release => :gemspec do
     end
   end
 
-  puts `git commit -m 'Release v#{ version }' lib/backup/version.rb`
+  puts `git commit -m 'Release v#{ version } [ci skip]' lib/backup/version.rb`
   `git tag #{ version }`
   exec 'gem build backup.gemspec'
 end
