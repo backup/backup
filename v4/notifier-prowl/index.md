@@ -14,6 +14,12 @@ notify_by Prowl do |prowl|
 
   prowl.application = 'my_application'  # Example: Server Backup
   prowl.api_key     = 'my_api_key'
+
+  # Change default notifier message.
+  # See https://github.com/backup/backup/pull/698 for more information.
+  # campfire.message = lambda do |model, data|
+  #   "[#{data[:status][:message]}] #{model.label} (#{model.trigger})"
+  # end
 end
 ```
 

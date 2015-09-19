@@ -21,9 +21,11 @@ notify_by DataDog do |datadog|
   # Default is: "Backup #{:label}"
   # datadog.title                = "Backup #{:status}"
   #
-  # Override Default Text
-  # Default is "Backup Notification for #{:label}"
-  # datadog.text                 = "Backup #{:status} - #{:message}"
+  # Change default notifier message.
+  # See https://github.com/backup/backup/pull/698 for more information.
+  # campfire.message = lambda do |model, data|
+  #   "[#{data[:status][:message]}] #{model.label} (#{model.trigger})"
+  # end
   #
   # Provide a hostname to associate this backup to
   # Default is nil

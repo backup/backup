@@ -18,6 +18,12 @@ See the [Performing Backups][performing-backups] page for details.
 Before you upgrade to v4.x, see the [Upgrading][upgrading] page.
 Several changes have been made which will require your attention before you run your first backup using v4.x.
 
+4.2.0
+-----
+
+- Most notifiers now have customizable messages. See [PR #698](https://github.com/backup/backup/pull/698).
+- Fix incorrect success codes for packager tar command. See [PR #693](https://github.com/backup/backup/pull/693).
+
 4.1.12
 -----
 

@@ -111,6 +111,7 @@ nav_v4: [
       ['S3',                        'syncer-s3'                 ],
     ['Notifiers',                 'notifiers',                'xxx|xxxxxxxx'],
       ['AWS SES',                   'notifier-ses'              ],
+      ['Command',                   'notifier-command'          ],
       ['Campfire',                  'notifier-campfire'         ],
       ['DataDog',                   'notifier-datadog'          ],
       ['Flowdock',                  'notifier-flowdock'         ],

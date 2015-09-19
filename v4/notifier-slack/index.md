@@ -27,6 +27,12 @@ notify_by Slack do |slack|
   # The emoji icon to use for notifications.
   # See http://www.emoji-cheat-sheet.com for a list of icons.
   # slack.icon_emoji = ':ghost:'
+  #
+  # Change default notifier message.
+  # See https://github.com/backup/backup/pull/698 for more information.
+  # campfire.message = lambda do |model, data|
+  #   "[#{data[:status][:message]}] #{model.label} (#{model.trigger})"
+  # end
 end
 ```
 

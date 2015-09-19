@@ -9,12 +9,17 @@ Notifiers
 Backup includes the following Notifiers:
 
 - [Campfire][notifier-campfire]
+- [Datadog][notifier-datadog]
+- [Flowdock][notifier-flowdock]
 - [Hipchat][notifier-hipchat]
 - [HttpPost][notifier-httppost]
 - [Mail][notifier-mail]
 - [Nagios][notifier-nagios]
+- [Pagerduty][notifier-pagerduty]
 - [Prowl][notifier-prowl]
 - [Pushover][notifier-pushover]
+- [AWS SES][notifier-ses]
+- [Slack][notifier-slack]
 - [Twitter][notifier-twitter]
 - [Zabbix][notifier-zabbix]
 

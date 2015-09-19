@@ -16,6 +16,12 @@ notify_by Nagios do |nagios|
   nagios.nagios_port  = 5667
   nagios.service_name = 'My Backup'
   nagios.service_host = 'backuphost'
+
+  # Change default notifier message.
+  # See https://github.com/backup/backup/pull/698 for more information.
+  # campfire.message = lambda do |model, data|
+  #   "[#{data[:status][:message]}] #{model.label} (#{model.trigger})"
+  # end
 end
 ```
 
