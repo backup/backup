@@ -15,8 +15,17 @@ module Backup
       attr_accessor :ip, :port
 
       ##
-      # use passive mode?
+      # Use passive mode?
       attr_accessor :passive_mode
+
+      ##
+      # Configure connection open and read timeouts.
+      # Net::FTP's open_timeout and read_timeout will both be configured using
+      # this setting.
+      # @!attribute [rw] timeout
+      #   @param [Integer|Float]
+      #   @return [Integer|Float]
+      attr_accessor :timeout
 
       def initialize(model, storage_id = nil)
         super
@@ -24,6 +33,7 @@ module Backup
         @port         ||= 21
         @path         ||= 'backups'
         @passive_mode ||= false
+        @timeout      ||= nil
         path.sub!(/^~\//, '')
       end
 
@@ -42,6 +52,10 @@ module Backup
         end; Net::FTP.send(:const_set, :FTP_PORT, port)
 
         Net::FTP.open(ip, username, password) do |ftp|
+          if timeout
+            ftp.open_timeout = timeout
+            ftp.read_timeout = timeout
+          end
           ftp.passive = true if passive_mode
           yield ftp
         end

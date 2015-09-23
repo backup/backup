@@ -22,6 +22,7 @@ describe Storage::FTP do
       expect( storage.ip            ).to be_nil
       expect( storage.port          ).to be 21
       expect( storage.passive_mode  ).to be false
+      expect( storage.timeout       ).to be nil
       expect( storage.path          ).to eq 'backups'
     end
 
@@ -33,6 +34,7 @@ describe Storage::FTP do
         ftp.ip            = 'my_host'
         ftp.port          = 123
         ftp.passive_mode  = true
+        ftp.timeout       = 10
         ftp.path          = 'my/path'
       end
 
@@ -43,6 +45,7 @@ describe Storage::FTP do
       expect( storage.ip            ).to eq 'my_host'
       expect( storage.port          ).to be 123
       expect( storage.passive_mode  ).to be true
+      expect( storage.timeout       ).to be 10
       expect( storage.path          ).to eq 'my/path'
     end
 
@@ -107,6 +110,19 @@ describe Storage::FTP do
       ).yields(connection)
 
       connection.expects(:passive=).with(true)
+
+      storage.send(:connection) {}
+    end
+
+    it 'sets timeout if specified' do
+      storage.timeout = 10
+
+      Net::FTP.expects(:open).with(
+        '123.45.678.90', 'my_user', 'my_pass'
+      ).yields(connection)
+
+      connection.expects(:open_timeout=).with(10)
+      connection.expects(:read_timeout=).with(10)
 
       storage.send(:connection) {}
     end
