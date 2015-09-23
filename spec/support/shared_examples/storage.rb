@@ -64,10 +64,14 @@ shared_examples 'a storage that cycles' do
     let(:pkg_c) { Backup::Package.new(model) }
 
     before do
+      storage.package.time = Time.now
       pkg_a.time = Time.now - 10
       pkg_b.time = Time.now - 20
       pkg_c.time = Time.now - 30
       stored_packages = [pkg_a, pkg_b, pkg_c]
+      (stored_packages + [storage.package]).each do |pkg|
+        pkg.time = pkg.time.strftime('%Y.%m.%d.%H.%M.%S')
+      end
       File.expects(:exist?).with(yaml_file).returns(true)
       File.expects(:zero?).with(yaml_file).returns(false)
       YAML.expects(:load_file).with(yaml_file).returns(stored_packages)
@@ -145,6 +149,13 @@ shared_examples 'a storage that cycles' do
     let(:yaml_file) { File.join(Backup::Config.data_path, 'test_trigger',
                                 "#{ storage_name.split('::').last }.yml") }
     before { storage.keep = 2 }
+    include_examples 'storage cycling'
+  end
+
+  context 'keep as a Time' do
+    let(:yaml_file) { File.join(Backup::Config.data_path, 'test_trigger',
+                                "#{ storage_name.split('::').last }.yml") }
+    before { storage.keep = Time.now - 11 }
     include_examples 'storage cycling'
   end
 

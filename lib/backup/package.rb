@@ -47,5 +47,9 @@ module Backup
       "#{ trigger }.#{ extension }"
     end
 
+    def time_as_object
+      Time.strptime(time, '%Y.%m.%d.%H.%M.%S')
+    end
+
   end
 end

@@ -33,7 +33,9 @@ module Backup
       def perform!
         Logger.info "#{ storage_name } Started..."
         transfer!
-        cycle! if respond_to?(:cycle!, true) && keep.to_i > 0
+        if respond_to?(:cycle!, true) && (keep.to_i > 0 || keep.is_a?(Time))
+          cycle!
+        end
         Logger.info "#{ storage_name } Finished!"
       end
 
