@@ -8,5 +8,6 @@
     server.port         = 21
     server.path         = "~/backups/"
     server.keep         = 5
+    # server.keep         = 1.year.ago # Remove all backups older than 1 year.
     server.passive_mode = false
   end

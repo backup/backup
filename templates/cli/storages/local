@@ -4,4 +4,5 @@
   store_with Local do |local|
     local.path       = "~/backups/"
     local.keep       = 5
+    # local.keep       = 1.year.ago # Remove all backups older than 1 year.
   end

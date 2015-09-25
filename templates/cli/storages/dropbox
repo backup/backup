@@ -16,4 +16,5 @@
     db.access_type = :app_folder
     db.path        = "/path/to/my/backups"
     db.keep        = 25
+    # db.keep        = 1.year.ago # Remove all backups older than 1 year.
   end

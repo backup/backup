@@ -10,8 +10,18 @@ module Backup
       attr_accessor :path
 
       ##
-      # Sets the limit to how many backups to keep in the remote location.
-      # If exceeded, the oldest will be removed to make room for the newest
+      # Number of backups to keep or time until which to keep.
+      #
+      # If an Integer is given it sets the limit to how many backups to keep in
+      # the remote location. If exceeded, the oldest will be removed to make
+      # room for the newest.
+      #
+      # If a Time object is given it will remove backups _older_ than the given
+      # date.
+      #
+      # @!attribute [rw] keep
+      #   @param [Integer|Time]
+      #   @return [Integer|Time]
       attr_accessor :keep
 
       attr_reader :model, :package, :storage_id

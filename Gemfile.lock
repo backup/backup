@@ -206,7 +206,7 @@ GEM
       unf_ext
     unf_ext (0.0.6)
     xml-simple (1.1.4)
-    yard (0.8.7.3)
+    yard (0.8.7.6)
 
 PLATFORMS
   ruby

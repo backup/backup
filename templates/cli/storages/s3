@@ -11,4 +11,6 @@
     s3.region            = "us-east-1"
     s3.bucket            = "bucket-name"
     s3.path              = "path/to/backups"
+    s3.keep              = 5
+    # s3.keep              = 1.year.ago # Remove all backups older than 1 year.
   end
