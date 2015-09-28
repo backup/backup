@@ -13,6 +13,7 @@ store_with SFTP do |server|
   server.ip       = '123.45.678.90'
   server.port     = 22
   server.path     = '~/backups/'
+  # Use a number of Time object to specify how many backups to keep.
   server.keep     = 5
 
   # Additional options for the SSH connection.

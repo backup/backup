@@ -26,17 +26,26 @@ Each Storage (except for RSync) supports the `keep` setting, which specifies how
 
 ``` rb
 store_with SFTP do |sftp|
+  # Keep number of backups:
   sftp.keep = 5
+  # Or until time
+  sftp.keep = Time.now + 60 * 60 * 24 * 30 # 1 month from now
 end
 ```
 
-Once the `keep` limit has been reached, the oldest backup will be removed.
+See the documentation for your specific Storage, as other options for managing your stored backups may be available.
+
+#### `keep` as a Number
+
+If a number has been specified and once the `keep` limit has been reached, the oldest backup will be removed.
 
 Note that if `keep` is set to 5, then the 6th backup will be transferred and stored, _before_ the oldest is removed.
 So be sure you have space available for `keep + 1` backups.
 
-See the documentation for your specific Storage, as other options for managing your stored backups may be available.
+#### `keep` as Time
 
+When a Time object is set to `keep` it will keep backups _until_ that time.
+Everything older than the set time will be removed.
 
 ### Storage Identifiers
 
@@ -143,9 +152,9 @@ Model.new(:my_backup, 'My Backup') do
 end
 ```
 
-The cycle data for these backups would be stored in 3 separate YAML files.  
-`<data_path>/my_backup/SFTP-monthly.yml`  
-`<data_path>/my_backup/SFTP-weekly.yml`  
+The cycle data for these backups would be stored in 3 separate YAML files.
+`<data_path>/my_backup/SFTP-monthly.yml`
+`<data_path>/my_backup/SFTP-weekly.yml`
 `<data_path>/my_backup/SFTP-daily.yml`
 
 **Note:** It's not required that the `path` be updated for each unique Storage (as shown in the example), since each

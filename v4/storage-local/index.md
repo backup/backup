@@ -9,6 +9,7 @@ Storage::Local
 ``` rb
 store_with Local do |local|
   local.path = '~/backups/'
+  # Use a number of Time object to specify how many backups to keep.
   local.keep = 5
 end
 ```
