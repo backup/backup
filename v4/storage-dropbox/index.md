@@ -17,7 +17,7 @@ store_with Dropbox do |db|
   # :app_folder (default) or :dropbox
   db.access_type = :app_folder
   db.path        = "/path/to/my/backups"
-  # Use a number of Time object to specify how many backups to keep.
+  # Use a number or a Time object to specify how many backups to keep.
   db.keep        = 25
 end
 ```

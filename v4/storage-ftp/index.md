@@ -13,7 +13,7 @@ store_with FTP do |server|
   server.ip           = '123.45.678.90'
   server.port         = 21
   server.path         = '~/backups/'
-  # Use a number of Time object to specify how many backups to keep.
+  # Use a number or a Time object to specify how many backups to keep.
   server.keep         = 5
   server.passive_mode = false
 end
