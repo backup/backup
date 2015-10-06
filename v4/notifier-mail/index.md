@@ -12,8 +12,13 @@ notify_by Mail do |mail|
   mail.on_warning           = true
   mail.on_failure           = true
 
+  # For information on the types of these attributes, see the Mail gem documentation.
+  # http://www.rubydoc.info/github/mikel/mail/Mail/Message
   mail.from                 = 'sender@email.com'
   mail.to                   = 'receiver@email.com'
+  mail.cc                   = 'cc@email.com'
+  mail.bcc                  = 'bcc@email.com'
+  mail.reply_to             = 'reply_to@email.com'
   mail.address              = 'smtp.gmail.com'
   mail.port                 = 587
   mail.domain               = 'your.host.name'
