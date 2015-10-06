@@ -11,6 +11,9 @@
 
     mail.from                 = "sender@email.com"
     mail.to                   = "receiver@email.com"
+    mail.cc                   = "cc@email.com"
+    mail.bcc                  = "bcc@email.com"
+    mail.reply_to             = "reply_to@email.com"
     mail.address              = "smtp.gmail.com"
     mail.port                 = 587
     mail.domain               = "your.host.name"

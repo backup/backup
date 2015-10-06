@@ -38,6 +38,18 @@ module Backup
       attr_accessor :to
 
       ##
+      # CC receiver Email Address
+      attr_accessor :cc
+
+      ##
+      # BCC receiver Email Address
+      attr_accessor :bcc
+
+      ##
+      # Set reply to email address
+      attr_accessor :reply_to
+
+      ##
       # SMTP Server Address
       attr_accessor :address
 
@@ -208,8 +220,11 @@ module Backup
         end
 
         email = ::Mail.new
-        email.to   = @to
-        email.from = @from
+        email.to       = to
+        email.from     = from
+        email.cc       = cc
+        email.bcc      = bcc
+        email.reply_to = reply_to
         email
       end
 

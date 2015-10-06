@@ -22,6 +22,9 @@ describe Notifier::Mail do
       expect( notifier.delivery_method      ).to be_nil
       expect( notifier.to                   ).to be_nil
       expect( notifier.from                 ).to be_nil
+      expect( notifier.cc                   ).to be_nil
+      expect( notifier.bcc                  ).to be_nil
+      expect( notifier.reply_to             ).to be_nil
       expect( notifier.address              ).to be_nil
       expect( notifier.port                 ).to be_nil
       expect( notifier.domain               ).to be_nil
@@ -47,6 +50,9 @@ describe Notifier::Mail do
         mail.delivery_method      = :smtp
         mail.to                   = 'my.receiver.email@gmail.com'
         mail.from                 = 'my.sender.email@gmail.com'
+        mail.cc                   = 'my.cc.email@gmail.com'
+        mail.bcc                  = 'my.bcc.email@gmail.com'
+        mail.reply_to             = 'my.reply_to.email@gmail.com'
         mail.address              = 'smtp.gmail.com'
         mail.port                 = 587
         mail.domain               = 'your.host.name'
@@ -70,6 +76,9 @@ describe Notifier::Mail do
       expect( notifier.delivery_method      ).to eq :smtp
       expect( notifier.to                   ).to eq 'my.receiver.email@gmail.com'
       expect( notifier.from                 ).to eq 'my.sender.email@gmail.com'
+      expect( notifier.cc                   ).to eq 'my.cc.email@gmail.com'
+      expect( notifier.bcc                  ).to eq 'my.bcc.email@gmail.com'
+      expect( notifier.reply_to             ).to eq 'my.reply_to.email@gmail.com'
       expect( notifier.address              ).to eq 'smtp.gmail.com'
       expect( notifier.port                 ).to eq 587
       expect( notifier.domain               ).to eq 'your.host.name'
@@ -333,6 +342,9 @@ describe Notifier::Mail do
           mail.delivery_method      = :smtp
           mail.to                   = 'my.receiver.email@gmail.com'
           mail.from                 = 'my.sender.email@gmail.com'
+          mail.cc                   = 'my.cc.email@gmail.com'
+          mail.bcc                  = 'my.bcc.email@gmail.com'
+          mail.reply_to             = 'my.reply_to.email@gmail.com'
           mail.address              = 'smtp.gmail.com'
           mail.port                 = 587
           mail.domain               = 'your.host.name'
@@ -344,15 +356,15 @@ describe Notifier::Mail do
         end
       }
 
-      it 'should return an email using SMTP' do
-        email = notifier.send(:new_email)
-        expect( email.delivery_method ).to be_an_instance_of ::Mail::SMTP
-      end
-
       it 'should set the proper options' do
         email = notifier.send(:new_email)
-        expect( email.to    ).to eq ['my.receiver.email@gmail.com']
-        expect( email.from  ).to eq ['my.sender.email@gmail.com']
+        expect( email.delivery_method ).to be_an_instance_of ::Mail::SMTP
+
+        expect( email.to       ).to eq ['my.receiver.email@gmail.com']
+        expect( email.from     ).to eq ['my.sender.email@gmail.com']
+        expect( email.cc       ).to eq ['my.cc.email@gmail.com']
+        expect( email.bcc      ).to eq ['my.bcc.email@gmail.com']
+        expect( email.reply_to ).to eq ['my.reply_to.email@gmail.com']
 
         settings = email.delivery_method.settings
         expect( settings[:address]                ).to eq 'smtp.gmail.com'
@@ -392,20 +404,22 @@ describe Notifier::Mail do
           mail.delivery_method      = :sendmail
           mail.to                   = 'my.receiver.email@gmail.com'
           mail.from                 = 'my.sender.email@gmail.com'
+          mail.cc                   = 'my.cc.email@gmail.com'
+          mail.bcc                  = 'my.bcc.email@gmail.com'
+          mail.reply_to             = 'my.reply_to.email@gmail.com'
           mail.sendmail_args        = '-i -t -X/tmp/traffic.log'
         end
       }
 
-      it 'should return an email using Sendmail' do
-        email = notifier.send(:new_email)
-        expect( email.delivery_method ).to be_an_instance_of ::Mail::Sendmail
-      end
-
       it 'should set the proper options' do
         email = notifier.send(:new_email)
+        expect( email.delivery_method ).to be_an_instance_of ::Mail::Sendmail
 
-        expect( email.to   ).to eq ['my.receiver.email@gmail.com']
-        expect( email.from ).to eq ['my.sender.email@gmail.com']
+        expect( email.to       ).to eq ['my.receiver.email@gmail.com']
+        expect( email.from     ).to eq ['my.sender.email@gmail.com']
+        expect( email.cc       ).to eq ['my.cc.email@gmail.com']
+        expect( email.bcc      ).to eq ['my.bcc.email@gmail.com']
+        expect( email.reply_to ).to eq ['my.reply_to.email@gmail.com']
 
         settings = email.delivery_method.settings
         expect( settings[:location]   ).to eq '/path/to/sendmail'
@@ -419,20 +433,22 @@ describe Notifier::Mail do
           mail.delivery_method      = :exim
           mail.to                   = 'my.receiver.email@gmail.com'
           mail.from                 = 'my.sender.email@gmail.com'
+          mail.cc                   = 'my.cc.email@gmail.com'
+          mail.bcc                  = 'my.bcc.email@gmail.com'
+          mail.reply_to             = 'my.reply_to.email@gmail.com'
           mail.exim_args            = '-i -t -X/tmp/traffic.log'
         end
       }
 
-      it 'should return an email using Exim' do
-        email = notifier.send(:new_email)
-        expect( email.delivery_method ).to be_an_instance_of ::Mail::Exim
-      end
-
       it 'should set the proper options' do
         email = notifier.send(:new_email)
+        expect( email.delivery_method ).to be_an_instance_of ::Mail::Exim
 
-        expect( email.to    ).to eq ['my.receiver.email@gmail.com']
-        expect( email.from  ).to eq ['my.sender.email@gmail.com']
+        expect( email.to       ).to eq ['my.receiver.email@gmail.com']
+        expect( email.from     ).to eq ['my.sender.email@gmail.com']
+        expect( email.cc       ).to eq ['my.cc.email@gmail.com']
+        expect( email.bcc      ).to eq ['my.bcc.email@gmail.com']
+        expect( email.reply_to ).to eq ['my.reply_to.email@gmail.com']
 
         settings = email.delivery_method.settings
         expect( settings[:location]  ).to eq '/path/to/exim'
@@ -446,20 +462,22 @@ describe Notifier::Mail do
           mail.delivery_method      = :file
           mail.to                   = 'my.receiver.email@gmail.com'
           mail.from                 = 'my.sender.email@gmail.com'
+          mail.cc                   = 'my.cc.email@gmail.com'
+          mail.bcc                  = 'my.bcc.email@gmail.com'
+          mail.reply_to             = 'my.reply_to.email@gmail.com'
           mail.mail_folder          = '/path/to/backup/mails'
         end
       }
 
-      it 'should return an email using FileDelievery' do
-        email = notifier.send(:new_email)
-        expect( email.delivery_method ).to be_an_instance_of ::Mail::FileDelivery
-      end
-
       it 'should set the proper options' do
         email = notifier.send(:new_email)
+        expect( email.delivery_method ).to be_an_instance_of ::Mail::FileDelivery
 
-        expect( email.to    ).to eq ['my.receiver.email@gmail.com']
-        expect( email.from  ).to eq ['my.sender.email@gmail.com']
+        expect( email.to       ).to eq ['my.receiver.email@gmail.com']
+        expect( email.from     ).to eq ['my.sender.email@gmail.com']
+        expect( email.cc       ).to eq ['my.cc.email@gmail.com']
+        expect( email.bcc      ).to eq ['my.bcc.email@gmail.com']
+        expect( email.reply_to ).to eq ['my.reply_to.email@gmail.com']
 
         settings = email.delivery_method.settings
         expect( settings[:location] ).to eq '/path/to/backup/mails'
