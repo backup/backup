@@ -17,7 +17,7 @@ notify_by Prowl do |prowl|
 
   # Change default notifier message.
   # See https://github.com/backup/backup/pull/698 for more information.
-  # campfire.message = lambda do |model, data|
+  # prowl.message = lambda do |model, data|
   #   "[#{data[:status][:message]}] #{model.label} (#{model.trigger})"
   # end
 end
