@@ -14,6 +14,7 @@ describe Notifier::Hipchat do
   describe '#initialize' do
     it 'provides default values' do
       expect( notifier.token          ).to be_nil
+      expect( notifier.api_version    ).to eq 'v1'
       expect( notifier.from           ).to be_nil
       expect( notifier.rooms_notified ).to eq []
       expect( notifier.notify_users   ).to be(false)
@@ -73,6 +74,7 @@ describe Notifier::Hipchat do
         hipchat.failure_color   = :failure_color
       end
     }
+    let(:client_options) { {api_version: 'v1'} }
     let(:client) { mock }
     let(:room) { mock }
     let(:message) { '[Backup::%s] test label (test_trigger)' }
@@ -80,7 +82,7 @@ describe Notifier::Hipchat do
     context 'when status is :success' do
       it 'sends a success message' do
         HipChat::Client.expects(:new).in_sequence(s).
-            with('my_token').returns(client)
+            with('my_token', client_options).returns(client)
         client.expects(:[]).in_sequence(s).
             with('room_a').returns(room)
         room.expects(:send).in_sequence(s).
@@ -99,7 +101,7 @@ describe Notifier::Hipchat do
     context 'when status is :warning' do
       it 'sends a warning message' do
         HipChat::Client.expects(:new).in_sequence(s).
-            with('my_token').returns(client)
+            with('my_token', client_options).returns(client)
         client.expects(:[]).in_sequence(s).
             with('room_a').returns(room)
         room.expects(:send).in_sequence(s).
@@ -118,7 +120,7 @@ describe Notifier::Hipchat do
     context 'when status is :failure' do
       it 'sends a failure message' do
         HipChat::Client.expects(:new).in_sequence(s).
-            with('my_token').returns(client)
+            with('my_token', client_options).returns(client)
         client.expects(:[]).in_sequence(s).
             with('room_a').returns(room)
         room.expects(:send).in_sequence(s).
