@@ -16,6 +16,8 @@ store_with FTP do |server|
   # Use a number or a Time object to specify how many backups to keep.
   server.keep         = 5
   server.passive_mode = false
+  # Configures open_timeout and read_timeout for Net::FTP
+  server.timeout      = 10
 end
 ```
 

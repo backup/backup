@@ -23,6 +23,7 @@ Several changes have been made which will require your attention before you run 
 
 - Allow Storage `keep` to use a Time object. See [PR #701](https://github.com/backup/backup/pull/701).
 - Support CC, BCC and reply to fields for [Mail notifier][notifier-mail]. See [PR #707](https://github.com/backup/backup/pull/707).
+- Allow timeout configuration for [FTP storage][storage-ftp]. See [PR #702](https://github.com/backup/backup/pull/702).
 
 4.2.0
 -----
