@@ -19,6 +19,7 @@ notify_by Hipchat do |hipchat|
   hipchat.token = 'hipchat api token' # required
   hipchat.from = 'DB Backup' # required
   hipchat.rooms_notified = ['activity'] # required
+  hipchat.api_version = 'v1'
 
   # Change default notifier message.
   # See https://github.com/backup/backup/pull/698 for more information.
