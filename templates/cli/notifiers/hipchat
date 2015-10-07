@@ -12,4 +12,5 @@
     hipchat.success_color  = "green"
     hipchat.warning_color  = "yellow"
     hipchat.failure_color  = "red"
+    hipchat.api_version    = "v1"
   end
