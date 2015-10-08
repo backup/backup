@@ -8,7 +8,7 @@
     server.port       = 22
     server.path       = "~/backups/"
     server.keep       = 5
-    # server.keep       = 1.year.ago # Remove all backups older than 1 year.
+    # server.keep         = Time.now - 2592000 # Remove all backups older than 1 month.
 
     # Additional options for the SSH connection.
     # server.ssh_options = {}

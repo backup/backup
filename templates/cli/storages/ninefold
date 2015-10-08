@@ -6,5 +6,5 @@
     nf.storage_secret  = "my_storage_secret"
     nf.path            = "/path/to/my/backups"
     nf.keep            = 10
-    # nf.keep            = 1.year.ago # Remove all backups older than 1 year.
+    # nf.keep            = Time.now - 2592000 # Remove all backups older than 1 month.
   end

@@ -12,5 +12,5 @@
     s3.bucket            = "bucket-name"
     s3.path              = "path/to/backups"
     s3.keep              = 5
-    # s3.keep              = 1.year.ago # Remove all backups older than 1 year.
+    # s3.keep              = Time.now - 2592000 # Remove all backups older than 1 month.
   end
