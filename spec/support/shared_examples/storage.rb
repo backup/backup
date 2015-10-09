@@ -1,4 +1,5 @@
 # encoding: utf-8
+require 'awesome_print'
 
 shared_examples 'a subclass of Storage::Base' do
   let(:storage_name) { described_class.name.sub('Backup::', '') }
@@ -87,7 +88,7 @@ shared_examples 'a storage that cycles' do
       File.expects(:open).with(yaml_file, 'w').yields(file)
       saved_packages = [storage.package, pkg_a]
       file.expects(:write).with(saved_packages.to_yaml)
-      #storage.expects(:cycle!)
+
       storage.perform!
     end
 
@@ -101,6 +102,28 @@ shared_examples 'a storage that cycles' do
       File.expects(:open).with(yaml_file, 'w').yields(file)
       saved_packages = [storage.package, pkg_a]
       file.expects(:write).with(saved_packages.to_yaml)
+
+      storage.perform!
+    end
+
+    it 'does cycle when the available packages are more than the keep setting' do
+
+      storage.expects(:remove!).with(pkg_a).never
+      storage.expects(:remove!).with(pkg_b)
+      storage.expects(:remove!).with(pkg_c)
+
+      storage.keep = 2
+
+      puts storage.keep
+
+      FileUtils.expects(:mkdir_p).with(File.dirname(yaml_file))
+      file = mock
+      File.expects(:open).with(yaml_file, 'w').yields(file)
+      saved_packages = [storage.package, pkg_a]
+      file.expects(:write).with(saved_packages.to_yaml)
+
+      ap saved_packages
+      ap storage.package
 
       storage.perform!
     end
