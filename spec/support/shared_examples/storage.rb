@@ -1,5 +1,4 @@
 # encoding: utf-8
-require 'awesome_print'
 
 shared_examples 'a subclass of Storage::Base' do
   let(:storage_name) { described_class.name.sub('Backup::', '') }
@@ -114,16 +113,11 @@ shared_examples 'a storage that cycles' do
 
       storage.keep = 2
 
-      puts storage.keep
-
       FileUtils.expects(:mkdir_p).with(File.dirname(yaml_file))
       file = mock
       File.expects(:open).with(yaml_file, 'w').yields(file)
       saved_packages = [storage.package, pkg_a]
       file.expects(:write).with(saved_packages.to_yaml)
-
-      ap saved_packages
-      ap storage.package
 
       storage.perform!
     end
