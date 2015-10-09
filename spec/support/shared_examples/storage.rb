@@ -87,7 +87,7 @@ shared_examples 'a storage that cycles' do
       File.expects(:open).with(yaml_file, 'w').yields(file)
       saved_packages = [storage.package, pkg_a]
       file.expects(:write).with(saved_packages.to_yaml)
-
+      #storage.expects(:cycle!)
       storage.perform!
     end
 
@@ -100,6 +100,26 @@ shared_examples 'a storage that cycles' do
       file = mock
       File.expects(:open).with(yaml_file, 'w').yields(file)
       saved_packages = [storage.package, pkg_a]
+      file.expects(:write).with(saved_packages.to_yaml)
+
+      storage.perform!
+    end
+
+
+    it 'does not cycle when the available packages are less than the keep setting' do
+
+      storage.expects(:remove!).with(pkg_a).never
+      storage.expects(:remove!).with(pkg_b).never
+      storage.expects(:remove!).with(pkg_c).never
+
+      storage.keep = 5
+
+      puts storage.keep
+
+      FileUtils.expects(:mkdir_p).with(File.dirname(yaml_file))
+      file = mock
+      File.expects(:open).with(yaml_file, 'w').yields(file)
+      saved_packages = [storage.package, pkg_a, pkg_b, pkg_c]
       file.expects(:write).with(saved_packages.to_yaml)
 
       storage.perform!
