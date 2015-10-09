@@ -131,8 +131,6 @@ shared_examples 'a storage that cycles' do
 
       storage.keep = 5
 
-      puts storage.keep
-
       FileUtils.expects(:mkdir_p).with(File.dirname(yaml_file))
       file = mock
       File.expects(:open).with(yaml_file, 'w').yields(file)
