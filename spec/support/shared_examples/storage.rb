@@ -105,6 +105,41 @@ shared_examples 'a storage that cycles' do
       storage.perform!
     end
 
+    it 'does cycle when the available packages are more than the keep setting' do
+
+      storage.expects(:remove!).with(pkg_a).never
+      storage.expects(:remove!).with(pkg_b)
+      storage.expects(:remove!).with(pkg_c)
+
+      storage.keep = 2
+
+      FileUtils.expects(:mkdir_p).with(File.dirname(yaml_file))
+      file = mock
+      File.expects(:open).with(yaml_file, 'w').yields(file)
+      saved_packages = [storage.package, pkg_a]
+      file.expects(:write).with(saved_packages.to_yaml)
+
+      storage.perform!
+    end
+
+
+    it 'does not cycle when the available packages are less than the keep setting' do
+
+      storage.expects(:remove!).with(pkg_a).never
+      storage.expects(:remove!).with(pkg_b).never
+      storage.expects(:remove!).with(pkg_c).never
+
+      storage.keep = 5
+
+      FileUtils.expects(:mkdir_p).with(File.dirname(yaml_file))
+      file = mock
+      File.expects(:open).with(yaml_file, 'w').yields(file)
+      saved_packages = [storage.package, pkg_a, pkg_b, pkg_c]
+      file.expects(:write).with(saved_packages.to_yaml)
+
+      storage.perform!
+    end
+
     it 'warns if remove fails' do
       storage.expects(:remove!).with(pkg_b).raises('error message')
       storage.expects(:remove!).with(pkg_c)

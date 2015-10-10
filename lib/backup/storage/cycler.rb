@@ -22,7 +22,7 @@ module Backup
           end
         else
           excess = packages.count - keep.to_i
-          cycled_packages = packages.last(excess)
+          cycled_packages = packages.last(excess) if excess > 0
         end
 
         saved_packages = packages - cycled_packages
