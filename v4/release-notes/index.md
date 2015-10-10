@@ -18,7 +18,12 @@ See the [Performing Backups][performing-backups] page for details.
 Before you upgrade to v4.x, see the [Upgrading][upgrading] page.
 Several changes have been made which will require your attention before you run your first backup using v4.x.
 
-4.2.1
+4.2.2
+-----
+
+- Fix Storage `keep` using numeric values lower than the current backup count. See [Issue #709](https://github.com/backup/backup/issues/709) and [PR #712](https://github.com/backup/backup/pull/712).
+
+4.2.1 - yanked version
 -----
 
 - Allow Storage `keep` to use a Time object. See [PR #701](https://github.com/backup/backup/pull/701).
