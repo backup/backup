@@ -106,7 +106,6 @@ shared_examples 'a storage that cycles' do
     end
 
     it 'does cycle when the available packages are more than the keep setting' do
-
       storage.expects(:remove!).with(pkg_a).never
       storage.expects(:remove!).with(pkg_b)
       storage.expects(:remove!).with(pkg_c)
@@ -124,7 +123,6 @@ shared_examples 'a storage that cycles' do
 
 
     it 'does not cycle when the available packages are less than the keep setting' do
-
       storage.expects(:remove!).with(pkg_a).never
       storage.expects(:remove!).with(pkg_b).never
       storage.expects(:remove!).with(pkg_c).never
