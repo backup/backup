@@ -29,7 +29,7 @@ store_with SFTP do |sftp|
   # Keep number of backups:
   sftp.keep = 5
   # Or until time
-  sftp.keep = Time.now + 60 * 60 * 24 * 30 # 1 month from now
+  sftp.keep = Time.now - 60 * 60 * 24 * 30 # 1 month from now
 end
 ```
 
