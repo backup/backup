@@ -164,7 +164,7 @@ Ignoring Warnings
 -----------------
 
 Whenever Backup's Logger receives `:warn` level messages, this will cause Backup to send `on_warning`
-[Notifications](Notifiers) and report the backup as having "Completed (with Warnings)". If you're receiving warning
+[Notifications][notifiers] and report the backup as having "Completed (with Warnings)". If you're receiving warning
 messages that can't be avoided for some reason, you can configure Backup's Logger to ignore these messages.
 
 ```rb
