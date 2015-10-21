@@ -83,7 +83,7 @@ Model.new(:my_backup, 'My Backup') do
     # that no longer exist in the sources (rsync.directories).
     rsync.mirror   = true
     ##
-    # When set to `true`, rsync will compress the data being transerred.
+    # When set to `true`, rsync will compress the data being transferred.
     # Note that this only reduces the amount of data sent.
     # It does not result in compressed files on the destination.
     rsync.compress = true

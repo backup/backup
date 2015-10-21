@@ -78,7 +78,7 @@ store_with RSync do |storage|
   # Options may be given as an Array (as shown) or as a String.
   storage.additional_rsync_options = ['--sparse', "--exclude='some_pattern'"]
   ##
-  # When set to `true`, rsync will compress the data being transerred.
+  # When set to `true`, rsync will compress the data being transferred.
   # Note that this only reduces the amount of data sent.
   # It does not result in compressed files on the destination.
   storage.compress = true
