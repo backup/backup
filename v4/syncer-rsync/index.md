@@ -83,6 +83,12 @@ Model.new(:my_backup, 'My Backup') do
     # that no longer exist in the sources (rsync.directories).
     rsync.mirror   = true
     ##
+    # When set to `false` this removes rsync's --archive option,
+    # Note that rsync wont do anything unless the `additional_rsync_options`
+    # option is set. This is helpful when working with fuse filesystems to
+    # remove the file permission flags included in the `--archiv` flag
+    rsync.archive  = true
+    ##
     # When set to `true`, rsync will compress the data being transferred.
     # Note that this only reduces the amount of data sent.
     # It does not result in compressed files on the destination.
