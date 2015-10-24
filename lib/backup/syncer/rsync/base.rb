@@ -8,12 +8,14 @@ module Backup
         ##
         # Additional String or Array of options for the rsync cli
         attr_accessor :additional_rsync_options
+        attr_accessor :archive
 
         def initialize(syncer_id = nil, &block)
           super
           instance_eval(&block) if block_given?
 
           @path ||= '~/backups'
+          @archive = @archive.nil? ? true : @archive
         end
 
         private
@@ -21,12 +23,16 @@ module Backup
         ##
         # Common base command for Local/Push/Pull
         def rsync_command
-          utility(:rsync) << ' --archive' << mirror_option << exclude_option <<
+          utility(:rsync) << archive_option << mirror_option << exclude_option <<
               " #{ Array(additional_rsync_options).join(' ') }".rstrip
         end
 
         def mirror_option
           mirror ? ' --delete' : ''
+        end
+
+        def archive_option
+          archive ? ' --archive' : ''
         end
 
         def exclude_option
