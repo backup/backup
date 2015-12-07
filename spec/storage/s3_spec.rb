@@ -224,7 +224,7 @@ describe Storage::S3 do
           s3.storage_class = :glacier
         end
       end.to raise_error {|err|
-        expect( err.message ).to match(/must be :standard or :reduced_redundancy/)
+        expect( err.message ).to match(/must be :standard or :standard_ia or :reduced_redundancy/)
       }
     end
 
