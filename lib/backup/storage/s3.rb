@@ -58,6 +58,7 @@ module Backup
       # Supported values:
       #
       # - :standard (default)
+      # - :standard_ia
       # - :reduced_redundancy
       #
       # Default: :standard
@@ -143,10 +144,10 @@ module Backup
           #encryption must be :aes256 or nil
         EOS
 
-        classes = ['STANDARD', 'REDUCED_REDUNDANCY']
+        classes = ['STANDARD', 'STANDARD_IA', 'REDUCED_REDUNDANCY']
         raise Error, <<-EOS unless classes.include?(storage_class.to_s.upcase)
           Configuration Error
-          #storage_class must be :standard or :reduced_redundancy
+          #storage_class must be :standard or :standard_ia or :reduced_redundancy
         EOS
       end
 
