@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 # Load Ruby Core Libraries
+require 'time'
 require 'fileutils'
 require 'tempfile'
 require 'syslog'
