@@ -82,5 +82,13 @@ describe Package do
     end
   end
 
+  describe '#time_as_object' do
+    it 'returns Time object from string' do
+      package.time = dummy_time = '2015.12.30.20.45.59'
+      expect( package.time_as_object )
+        .to eq Time.strptime(dummy_time, '%Y.%m.%d.%H.%M.%S')
+    end
+  end
+
 end
 end
