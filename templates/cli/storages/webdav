@@ -1,0 +1,13 @@
+  ##
+  # Webdav [Storage]
+  #
+  store_with Webdav do |server|
+    server.username   = "my_username"
+    server.password   = "my_password"
+    server.ip         = "123.45.678.90"
+    server.port       = 443
+    server.use_ssl    = true
+    server.ssl_verify = true
+    server.path       = "remote.php/webdav/backups"
+    server.keep       = 3
+  end

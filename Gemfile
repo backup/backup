@@ -29,6 +29,7 @@ group :production do
   gem 'net-ssh'
   gem 'net-scp'
   gem 'net-sftp'
+  gem 'faraday'
   gem 'mail', '= 2.5.4' # patched
   gem 'pagerduty'
   gem 'twitter'

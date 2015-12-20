@@ -198,6 +198,7 @@ DEPENDENCIES
   aws-ses
   dogapi
   dropbox-sdk (= 1.5.1)
+  faraday
   flowdock
   fog
   fuubar
