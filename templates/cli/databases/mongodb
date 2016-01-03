@@ -6,7 +6,7 @@
     db.username           = "my_username"
     db.password           = "my_password"
     db.host               = "localhost"
-    db.port               = 5432
+    db.port               = 27017
     db.ipv6               = false
     db.only_collections   = ["only", "these", "collections"]
     db.additional_options = []
