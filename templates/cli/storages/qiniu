@@ -1,0 +1,12 @@
+  ##
+  # Qiniu [Storage]
+  #
+  store_with Qiniu do |qiniu|
+    # Qiniu Credentials
+    qiniu.access_key = "my_access_key"
+    qiniu.secret_key = "my_secret_key"
+
+    qiniu.bucket     = "bucket-name"
+    qiniu.keep       = 5
+    qiniu.path       = "path/to/backups"
+  end
