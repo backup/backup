@@ -11,7 +11,7 @@ module Backup
 
       ##
       # Credentials for the specified database
-      attr_accessor :username, :password
+      attr_accessor :username, :password, :authdb
 
       ##
       # Connectivity options
@@ -132,6 +132,7 @@ module Backup
         opts = []
         opts << "--username='#{ username }'" if username
         opts << "--password='#{ password }'" if password
+        opts << "--authenticationDatabase='#{ authdb }'" if authdb
         opts.join(' ')
       end
 

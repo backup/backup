@@ -28,6 +28,7 @@ describe Database::MongoDB do
       expect( db.name               ).to be_nil
       expect( db.username           ).to be_nil
       expect( db.password           ).to be_nil
+      expect( db.authdb             ).to be_nil
       expect( db.host               ).to be_nil
       expect( db.port               ).to be_nil
       expect( db.ipv6               ).to be_nil
@@ -42,6 +43,7 @@ describe Database::MongoDB do
         mongodb.name               = 'my_name'
         mongodb.username           = 'my_username'
         mongodb.password           = 'my_password'
+        mongodb.authdb             = 'my_authdb'
         mongodb.host               = 'my_host'
         mongodb.port               = 'my_port'
         mongodb.ipv6               = 'my_ipv6'
@@ -55,6 +57,7 @@ describe Database::MongoDB do
       expect( db.name               ).to eq 'my_name'
       expect( db.username           ).to eq 'my_username'
       expect( db.password           ).to eq 'my_password'
+      expect( db.authdb             ).to eq 'my_authdb'
       expect( db.host               ).to eq 'my_host'
       expect( db.port               ).to eq 'my_port'
       expect( db.ipv6               ).to eq 'my_ipv6'
@@ -258,7 +261,7 @@ describe Database::MongoDB do
     end # describe '#name_option'
 
     describe '#credential_options' do
-      it 'returns credentials arguments based on #username and #password' do
+      it 'returns credentials arguments based on #username and #password and #authdb' do
         expect( db.send(:credential_options) ).to eq ''
 
         db.username = 'my_user'
@@ -271,7 +274,17 @@ describe Database::MongoDB do
           "--username='my_user' --password='my_password'"
         )
 
+        db.authdb = 'my_authdb'
+        expect( db.send(:credential_options) ).to eq(
+          "--username='my_user' --password='my_password' --authenticationDatabase='my_authdb'"
+        )
+
         db.username = nil
+        expect( db.send(:credential_options) ).to eq(
+          "--password='my_password' --authenticationDatabase='my_authdb'"
+        )
+
+        db.authdb = nil
         expect( db.send(:credential_options) ).to eq(
           "--password='my_password'"
         )
@@ -364,12 +377,13 @@ describe Database::MongoDB do
       db.port = 'my_port'
       db.username = 'my_user'
       db.password = 'my_pwd'
+      db.authdb  = 'my_authdb'
       db.ipv6 = true
       db.name = 'my_db'
 
       expect( db.send(:mongo_shell) ).to eq(
         "mongo --host='my_host' --port='my_port' --username='my_user' " +
-        "--password='my_pwd' --ipv6 'my_db'"
+        "--password='my_pwd' --authenticationDatabase='my_authdb' --ipv6 'my_db'"
       )
     end
 
