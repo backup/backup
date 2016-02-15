@@ -49,6 +49,10 @@ module Backup
       # master/slave replication deployments.
       attr_accessor :oplog
 
+      ##
+      # Mongodump for each collection
+      attr_accessor :each_collection
+
       def initialize(model, database_id = nil, &block)
         super
         instance_eval(&block) if block_given?
@@ -74,6 +78,10 @@ module Backup
         FileUtils.mkdir_p dump_packaging_path
 
         collections = Array(only_collections)
+        if each_collection && collections.empty?
+          collections = get_collections
+        end
+
         if collections.empty?
           run(mongodump)
         else
@@ -172,6 +180,15 @@ module Backup
         EOS
 
         run(unlock_command)
+      end
+
+      def get_collections
+        get_collections = <<-EOS.gsub(/^ +/, '')
+          echo 'db.getCollectionNames()' | #{ mongo_shell } '--quiet'
+        EOS
+
+        rst = run(get_collections) || "[]"
+        eval(rst)
       end
 
       def mongo_shell
