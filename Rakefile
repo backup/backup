@@ -24,7 +24,7 @@ task :gemspec do
     require 'bundler'
     Bundler.setup(:production)
 
-    ignored_gems = ['bundler', 'io-console']
+    ignored_gems = ['bundler', 'io-console', 'did_you_mean']
     lines = File.readlines('backup.gemspec')
     File.open('backup.gemspec', 'w') do |file|
       lines.each do |line|
