@@ -18,6 +18,15 @@ See the [Performing Backups][performing-backups] page for details.
 Before you upgrade to v4.x, see the [Upgrading][upgrading] page.
 Several changes have been made which will require your attention before you run your first backup using v4.x.
 
+4.2.3
+-----
+
+- Allow [rsync syncer][syncer-rsync] to run without the archive option. See [PR #716](https://github.com/backup/backup/pull/716).
+- Add support for S3 Infrequent Access storage class. See [PR #725](https://github.com/backup/backup/pull/725).
+- Require Ruby's Time library on load. Fixes Storage `.keep` usage with time. See [PR #729](https://github.com/backup/backup/pull/729).
+- Update [MongoDB][database-mongodb]'s default port. See [PR #732](https://github.com/backup/backup/pull/732).
+- Add `authenticationDatabase` option for [MongoDB][database-mongodb]. See [PR #736](https://github.com/backup/backup/pull/736).
+
 4.2.2
 -----
 
