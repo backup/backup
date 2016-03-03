@@ -61,6 +61,7 @@ module Backup
         def initialize
           @enabled = true
           @log_path = ''
+          @log_file = ''
           @max_bytes = 500_000
         end
 
@@ -74,6 +75,10 @@ module Backup
 
         def log_path=(val)
           @log_path = val.to_s.strip if log_path.empty?
+        end
+
+        def log_file=(val)
+          @log_file = val.to_s.strip if log_file.empty?
         end
       end
 
@@ -102,7 +107,7 @@ module Backup
           path = File.join(Backup::Config.root_path, path)
         end
         FileUtils.mkdir_p(path)
-        log_file = @options.log_file || 'backup.log'
+        log_file = @options.log_file.strip.empty? ? 'backup.log' : @options.log_file
         path = File.join(path, log_file)
         if File.exist?(path) && !File.writable?(path)
           raise Error, "Log File at '#{ path }' is not writable"
