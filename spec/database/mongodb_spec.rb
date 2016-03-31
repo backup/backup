@@ -383,7 +383,8 @@ describe Database::MongoDB do
       db.each_collection = true
 
       db.expects(:run).with(
-        "echo 'db.getCollectionNames()' | mongo_shell '--quiet'\n"
+        "echo 'rs.slaveOk()\n" +
+        "db.getCollectionNames()' | mongo_shell '--quiet'\n"
       )
       db.send(:get_collections)
     end

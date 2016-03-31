@@ -184,7 +184,8 @@ module Backup
 
       def get_collections
         get_collections = <<-EOS.gsub(/^ +/, '')
-          echo 'db.getCollectionNames()' | #{ mongo_shell } '--quiet'
+          echo 'rs.slaveOk()
+          db.getCollectionNames()' | #{ mongo_shell } '--quiet'
         EOS
 
         rst = run(get_collections) || "[]"
