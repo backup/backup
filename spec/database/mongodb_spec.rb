@@ -36,6 +36,7 @@ describe Database::MongoDB do
       expect( db.additional_options ).to be_nil
       expect( db.lock               ).to be_nil
       expect( db.oplog              ).to be_nil
+      expect( db.each_collection    ).to be_nil
     end
 
     it 'configures the database' do
@@ -51,6 +52,7 @@ describe Database::MongoDB do
         mongodb.additional_options = 'my_additional_options'
         mongodb.lock               = 'my_lock'
         mongodb.oplog              = 'my_oplog'
+        mongodb.each_collection    = 'my_each_collection'
       end
 
       expect( db.database_id        ).to eq 'my_id'
@@ -65,6 +67,7 @@ describe Database::MongoDB do
       expect( db.additional_options ).to eq 'my_additional_options'
       expect( db.lock               ).to eq 'my_lock'
       expect( db.oplog              ).to eq 'my_oplog'
+      expect( db.each_collection    ).to eq 'my_each_collection'
     end
   end # describe '#initialize'
 
@@ -370,6 +373,22 @@ describe Database::MongoDB do
       db.send(:unlock_database)
     end
   end # describe '#unlock_database'
+
+  describe '#each_collection' do
+    it 'runs command to each collection' do
+
+      db = Database::MongoDB.new(model)
+      db.stubs(:mongo_shell).returns('mongo_shell')
+
+      db.each_collection = true
+
+      db.expects(:run).with(
+        "echo 'rs.slaveOk()\n" +
+        "db.getCollectionNames()' | mongo_shell '--quiet'\n"
+      )
+      db.send(:get_collections)
+    end
+  end
 
   describe '#mongo_shell' do
     specify 'with all options' do
