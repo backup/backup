@@ -80,7 +80,7 @@ module Backup
                   :default  => '',
                   :desc     => "Path to store Backup's log file."
 
-    method_option :log_file,
+    method_option :log_filename,
                   :aliases  => '-f',
                   :type     => :string,
                   :default  => '',
@@ -125,11 +125,11 @@ module Backup
         # Set logger options
         opts = options
         Logger.configure do
-          console.quiet     = opts[:quiet]
-          logfile.enabled   = opts[:logfile]
-          logfile.log_path  = opts[:log_path]
-          logfile.log_file  = opts[:log_file]
-          syslog.enabled    = opts[:syslog]
+          console.quiet         = opts[:quiet]
+          logfile.enabled       = opts[:logfile]
+          logfile.log_path      = opts[:log_path]
+          logfile.log_filename  = opts[:log_filename]
+          syslog.enabled        = opts[:syslog]
         end
 
         # Load the user's +config.rb+ file and all their Models
