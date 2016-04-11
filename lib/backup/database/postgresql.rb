@@ -92,7 +92,7 @@ module Backup
       end
 
       def sudo_option
-        "#{ utility(:sudo) } -n -u #{ sudo_user } " if sudo_user
+        "#{ utility(:sudo) } -n -H -u #{ sudo_user } " if sudo_user
       end
 
       def username_option
