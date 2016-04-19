@@ -21,7 +21,7 @@ module Backup
         @path ||= 'backups'
 
         check_configuration
-        ::Qiniu.establish_connection!(access_key: access_key, secret_key: secret_key)
+        config_credentials
       end
 
       private
@@ -55,6 +55,10 @@ module Backup
           Configuration Error
           #{ required.map {|name| "##{ name }"}.join(', ') } are all required
         EOS
+      end
+
+      def config_credentials
+        ::Qiniu.establish_connection!(access_key: access_key, secret_key: secret_key)
       end
     end
   end
