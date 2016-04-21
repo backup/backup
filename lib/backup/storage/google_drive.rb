@@ -53,7 +53,7 @@ module Backup
       # # Any error raised will be logged as a warning.
       def remove!(package)
         Logger.info "Removing backup package dated #{ package.time }..."
-        id = find_id_from_path(remote_path_for(package))
+        id = find_id_from_path(remote_path_for(package), false)
         if id.to_s.empty?
           raise Error, "Backup packge #{ package.time } not found in Google Drive"
         else
@@ -61,11 +61,11 @@ module Backup
         end
       end
 
-      def find_id_from_path(path = remote_path)
+      def find_id_from_path(path = remote_path, create = true)
         parent = nil
         path.split('/').each do |path_part|
           id = get_folder_id(path_part, parent)
-          if id.to_s.empty?
+          if id.to_s.empty? && create
             id = gdrive_mkdir(path_part, parent)
           end
           parent = id
