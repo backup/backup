@@ -80,6 +80,7 @@ module Backup
     autoload :Riak,       File.join(DATABASE_PATH, 'riak')
     autoload :OpenLDAP,   File.join(DATABASE_PATH, 'openldap')
     autoload :SQLite,     File.join(DATABASE_PATH, 'sqlite')
+    autoload :Neo4j,      File.join(DATABASE_PATH, 'neo4j')
   end
 
   ##

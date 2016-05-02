@@ -15,6 +15,7 @@ module Backup
       sendmail exim
       send_nsca
       zabbix_sender
+      neo4j-backup
     }
 
     module DSL
@@ -76,13 +77,14 @@ module Backup
       #     bzip2   '/path/to/bzip2'
       #
       #     # Database Utilities
-      #     mongo       '/path/to/mongo'
-      #     mongodump   '/path/to/mongodump'
-      #     mysqldump   '/path/to/mysqldump'
-      #     pg_dump     '/path/to/pg_dump'
-      #     pg_dumpall  '/path/to/pg_dumpall'
-      #     redis_cli   '/path/to/redis-cli'
-      #     riak_admin  '/path/to/riak-admin'
+      #     mongo        '/path/to/mongo'
+      #     mongodump    '/path/to/mongodump'
+      #     mysqldump    '/path/to/mysqldump'
+      #     pg_dump      '/path/to/pg_dump'
+      #     pg_dumpall   '/path/to/pg_dumpall'
+      #     redis_cli    '/path/to/redis-cli'
+      #     riak_admin   '/path/to/riak-admin'
+      #     neo4j_backup '/path/to/neo4j-backup'
       #
       #     # Encryptors
       #     gpg     '/path/to/gpg'
