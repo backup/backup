@@ -1,11 +1,9 @@
 name: Backup Documentation
 markdown: kramdown
-pygments: true
+highlighter: rouge
 baseurl: /backup
 encoding: utf-8
 exclude: ['Gemfile', 'Gemfile.lock']
-redcarpet:
-  extensions: ['no_intra_emphasis']
 
 nav_v3: [
   ['Installation',              'installation'              ],
