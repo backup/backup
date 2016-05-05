@@ -1,9 +1,9 @@
 name: Backup Documentation
-markdown: kramdown
-highlighter: rouge
 baseurl: /backup
 encoding: utf-8
 exclude: ['Gemfile', 'Gemfile.lock']
+kramdown:
+  input: GFM
 
 nav_v3: [
   ['Installation',              'installation'              ],

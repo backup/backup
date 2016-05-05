@@ -16,7 +16,9 @@ end
 
 The `:my_backup` symbol is the model's `trigger` and used to perform the job:
 
-    $ backup perform --trigger my_backup
+```
+$ backup perform --trigger my_backup
+```
 
 Below is an overview of the _Model Components_ available, which are added to define the actions to be performed.
 

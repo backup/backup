@@ -7,10 +7,11 @@
 {% endcase %}
 
 {% for node in tree %}
-  {% assign path = node[1] %}
-  {% unless path contains '|' %}
+  {% assign path = node[1] | default: '' %}
+  {% if path == '' or path contains '|' %}
+    {% continue %}
+  {% endif %}
 [{{ path }}]: {{ site.baseurl }}/{{ version }}/{{ path }}
-  {% endunless %}
 {% endfor %}
 [v3-overview]: {{ site.baseurl }}/v3
 [v4-overview]: {{ site.baseurl }}/v4
