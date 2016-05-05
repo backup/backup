@@ -220,7 +220,7 @@ class DropboxClient
         data = @file_obj.read(chunk_size)
 
         begin
-          resp = @client.parse_response(
+          resp = ::Dropbox::parse_response(
             @client.partial_chunked_upload(data, @upload_id, @offset)
           )
         rescue DropboxError => err

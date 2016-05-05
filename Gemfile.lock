@@ -16,7 +16,7 @@ GEM
     diff-lcs (1.2.5)
     dogapi (1.11.0)
       json (>= 1.5.1)
-    dropbox-sdk (1.5.1)
+    dropbox-sdk (1.6.5)
       json
     equalizer (0.0.9)
     excon (0.44.4)
@@ -197,7 +197,7 @@ PLATFORMS
 DEPENDENCIES
   aws-ses
   dogapi
-  dropbox-sdk (= 1.5.1)
+  dropbox-sdk (= 1.6.5)
   flowdock
   fog
   fuubar
@@ -222,4 +222,4 @@ DEPENDENCIES
   yard
 
 BUNDLED WITH
-   1.10.6
+   1.11.2
