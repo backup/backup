@@ -22,6 +22,7 @@ Several changes have been made which will require your attention before you run 
 -----
 
 - Remove ninefold storage. See [issue #757](https://github.com/backup/backup/issues/757).
+- Upgrade Dropbox gem and remove patch. See [PR #763] and commit [bd837d](https://github.com/backup/backup/commit/bd837db3b8aeb52c6b4bd1ea19851bc06639d9f7).
 
 4.2.3
 -----
