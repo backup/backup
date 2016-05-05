@@ -1,5 +1,5 @@
 name: Backup Documentation
-markdown: redcarpet
+markdown: kramdown
 pygments: true
 baseurl: /backup
 encoding: utf-8
