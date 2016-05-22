@@ -37,7 +37,12 @@ module Backup
 
       # expanded since this is a local path
       def remote_path(pkg = package)
-        File.expand_path(super)
+        parent_path = super
+        if Pathname.new(parent_path).absolute?
+          File.expand_path parent_path
+        else
+          File.expand_path File.join(Config.root_path, parent_path)
+        end
       end
       alias :remote_path_for :remote_path
 
