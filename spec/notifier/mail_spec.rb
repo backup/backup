@@ -396,6 +396,22 @@ describe Notifier::Mail do
         expect( settings[:ssl]                  ).to be(false)
         expect( settings[:tls]                  ).to be(true)
       end
+
+      it 'should not override mail smtp domain setting' do
+        Mail.defaults do
+          delivery_method :smtp, {
+                                   :domain => 'localhost.localdomain'
+                                 }
+        end
+
+        notifier.domain = nil
+
+        email = notifier.send(:new_email)
+
+        settings = email.delivery_method.settings
+
+        expect( settings[:domain] ).to eq 'localhost.localdomain'
+      end
     end
 
     context 'when delivery_method is :sendmail' do
