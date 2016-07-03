@@ -18,11 +18,13 @@ See the [Performing Backups][performing-backups] page for details.
 Before you upgrade to v4.x, see the [Upgrading][upgrading] page.
 Several changes have been made which will require your attention before you run your first backup using v4.x.
 
-4.3.0 (unreleased)
+4.3.0
 -----
 
 - Remove ninefold storage. See [issue #757](https://github.com/backup/backup/issues/757).
-- Upgrade Dropbox gem and remove patch. See [PR #763] and commit [bd837d](https://github.com/backup/backup/commit/bd837db3b8aeb52c6b4bd1ea19851bc06639d9f7).
+- Upgrade Dropbox gem and remove patch. See [PR #763](https://github.com/backup/backup/issues/763) and commit [bd837d](https://github.com/backup/backup/commit/bd837db3b8aeb52c6b4bd1ea19851bc06639d9f7).
+- Update net-ssh. See [PR #785](https://github.com/backup/backup/issues/785).
+- Remove global Mail defaults, set the per instance. See [PR #782](https://github.com/backup/backup/issues/782).
 
 4.2.3
 -----
