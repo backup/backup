@@ -75,7 +75,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'multipart-post', '= 1.2.0'
   gem.add_dependency 'net-scp', '= 1.2.1'
   gem.add_dependency 'net-sftp', '= 2.1.2'
-  gem.add_dependency 'net-ssh', '= 2.9.2'
+  gem.add_dependency 'net-ssh', '= 3.2.0'
   gem.add_dependency 'netrc', '= 0.11.0'
   gem.add_dependency 'nokogiri', '= 1.6.6.2'
   gem.add_dependency 'open4', '= 1.3.0'
