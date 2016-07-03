@@ -216,9 +216,7 @@ module Backup
             end
 
         email = ::Mail.new
-
         email.delivery_method method.to_sym, options
-
         email.to       = to
         email.from     = from
         email.cc       = cc
