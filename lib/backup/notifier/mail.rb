@@ -215,11 +215,10 @@ module Backup
             when 'test' then {}
             end
 
-        ::Mail.defaults do
-          delivery_method method.to_sym, options
-        end
-
         email = ::Mail.new
+
+        email.delivery_method method.to_sym, options
+
         email.to       = to
         email.from     = from
         email.cc       = cc
