@@ -14,6 +14,9 @@ module Backup
       it 'provides default values' do
         expect(notifier.to).to be_nil
         expect(notifier.from).to be_nil
+        expect(notifier.cc).to be_nil
+        expect(notifier.bcc).to be_nil
+        expect(notifier.reply_to).to be_nil
         expect(notifier.send_log_on).to eq [:warning, :failure]
 
         expect(notifier.on_success).to be(true)
@@ -24,20 +27,26 @@ module Backup
       end
 
       it 'configures the notifier' do
-        notifier = Notifier::Ses.new(model) do |mail|
-          mail.to = 'my.receiver.email@gmail.com'
-          mail.from = 'my.sender.email@gmail.com'
-          mail.send_log_on = [:success, :warning, :failure]
+        notifier = Notifier::Ses.new(model) do |ses|
+          ses.to = 'my.receiver.email@gmail.com'
+          ses.from = 'my.sender.email@gmail.com'
+          ses.cc = 'my.cc.email@gmail.com'
+          ses.bcc = 'my.bcc.email@gmail.com'
+          ses.reply_to = 'my.reply_to.email@gmail.com'
+          ses.send_log_on = [:success, :warning, :failure]
 
-          mail.on_success = false
-          mail.on_warning = false
-          mail.on_failure = false
-          mail.max_retries = 5
-          mail.retry_waitsec = 10
+          ses.on_success = false
+          ses.on_warning = false
+          ses.on_failure = false
+          ses.max_retries = 5
+          ses.retry_waitsec = 10
         end
 
         expect(notifier.to).to eq 'my.receiver.email@gmail.com'
         expect(notifier.from).to eq 'my.sender.email@gmail.com'
+        expect(notifier.cc).to eq 'my.cc.email@gmail.com'
+        expect(notifier.bcc).to eq 'my.bcc.email@gmail.com'
+        expect(notifier.reply_to).to eq 'my.reply_to.email@gmail.com'
         expect(notifier.send_log_on).to eq [:success, :warning, :failure]
 
         expect(notifier.on_success).to be(false)
