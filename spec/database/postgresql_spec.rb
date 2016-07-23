@@ -235,7 +235,7 @@ describe Database::PostgreSQL do
         expect( db.send(:sudo_option) ).to be_nil
 
         db.sudo_user = 'my_sudo_user'
-        expect( db.send(:sudo_option) ).to eq 'sudo -n -u my_sudo_user '
+        expect( db.send(:sudo_option) ).to eq 'sudo -n -H -u my_sudo_user '
       end
     end # describe '#sudo_option'
 
