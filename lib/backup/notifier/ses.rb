@@ -21,6 +21,18 @@ module Backup
       # Receiver Email Address
       attr_accessor :to
 
+      ##
+      # CC receiver Email Address
+      attr_accessor :cc
+
+      ##
+      # BCC receiver Email Address
+      attr_accessor :bcc
+
+      ##
+      # Set reply to email address
+      attr_accessor :reply_to
+
       def initialize(model, &block)
         super
         instance_eval(&block) if block_given?
@@ -66,8 +78,13 @@ module Backup
       # : backup log, if `on_failure` is `true`.
       #
       def notify!(status)
-        email = ::Mail.new(:to => to, :from => from)
-        email.subject = message.call(model, :status => status_data_for(status))
+        email = ::Mail.new
+        email.to       = to
+        email.from     = from
+        email.cc       = cc
+        email.bcc      = bcc
+        email.reply_to = reply_to
+        email.subject  = message.call(model, :status => status_data_for(status))
 
         send_log = send_log_on.include?(status)
         template = Backup::Template.new({ :model => model, :send_log => send_log })
