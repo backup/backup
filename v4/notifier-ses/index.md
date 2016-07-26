@@ -20,6 +20,9 @@ notify_by Ses do |ses|
 
   ses.from = "sender@email.com"
   ses.to = "receiver@email.com"
+  ses.cc = "cc@email.com"
+  ses.bcc = "bcc@email.com"
+  ses.reply_to = "reply_to@email.com"
 
   # Change default notifier message.
   # See https://github.com/backup/backup/pull/698 for more information.
