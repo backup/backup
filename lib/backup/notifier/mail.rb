@@ -188,9 +188,9 @@ module Backup
         options =
             case method
             when 'smtp'
-              { :address              => @address,
+              opts = {
+                :address              => @address,
                 :port                 => @port,
-                :domain               => @domain,
                 :user_name            => @user_name,
                 :password             => @password,
                 :authentication       => @authentication,
@@ -199,6 +199,11 @@ module Backup
                 :ssl                  => @encryption == :ssl,
                 :tls                  => @encryption == :tls
               }
+
+              # Don't override default domain setting if domain not applicable.
+              # ref https://github.com/mikel/mail/blob/2.6.3/lib/mail/network/delivery_methods/smtp.rb#L82
+              opts[:domain] = @domain if @domain
+              opts
             when 'sendmail'
               opts = {}
               opts.merge!(:location  => utility(:sendmail))
