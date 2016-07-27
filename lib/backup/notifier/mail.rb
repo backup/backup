@@ -191,7 +191,6 @@ module Backup
               opts = {
                 :address              => @address,
                 :port                 => @port,
-                :domain               => @domain,
                 :user_name            => @user_name,
                 :password             => @password,
                 :authentication       => @authentication,
@@ -203,7 +202,7 @@ module Backup
 
               # Don't override default domain setting if domain not applicable.
               # ref https://github.com/mikel/mail/blob/2.6.3/lib/mail/network/delivery_methods/smtp.rb#L82
-              opts.delete :domain if @domain.nil?
+              opts[:domain] = @domain if @domain
               opts
             when 'sendmail'
               opts = {}

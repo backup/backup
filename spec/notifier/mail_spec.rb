@@ -399,17 +399,12 @@ describe Notifier::Mail do
 
       it 'should not override mail smtp domain setting' do
         Mail.defaults do
-          delivery_method :smtp, {
-                                   :domain => 'localhost.localdomain'
-                                 }
+          delivery_method :smtp, :domain => 'localhost.localdomain'
         end
-
         notifier.domain = nil
-
         email = notifier.send(:new_email)
 
         settings = email.delivery_method.settings
-
         expect( settings[:domain] ).to eq 'localhost.localdomain'
       end
     end
