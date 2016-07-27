@@ -23,6 +23,7 @@ Several changes have been made which will require your attention before you run 
 
 - Fix PostgreSQL sudo option not able to change directories. See [PR #761](https://github.com/backup/backup/pull/761).
 - Add support for CC, BCC, and Reply-To headers in AWS SES notifier. See [PR #788](https://github.com/backup/backup/pull/788).
+- Fix issue on Mail Notifier with the default `domain` config value being unset when `nil` was given as a value. See [PR #781](https://github.com/backup/backup/pull/781).
 
 4.3.0
 -----
