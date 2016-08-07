@@ -73,6 +73,8 @@ module Backup
                     model.label
                   when "t"
                     model.trigger.to_s
+                  when "d"
+                    model.duration
                   when "v"
                     status_verb(status)
                   when "s"
