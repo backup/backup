@@ -19,6 +19,10 @@ module Backup
       attr_accessor :from
 
       ##
+      # Custom server URL
+      attr_accessor :server_url
+
+      ##
       # The rooms that should be notified
       attr_accessor :rooms_notified
 
@@ -79,7 +83,9 @@ module Backup
       end
 
       def client_options
-        { api_version: @api_version }
+        { api_version: @api_version }.tap do |h|
+          h[:server_url] = server_url if server_url
+        end
       end
 
       # Hipchat::Client will raise an error if unsuccessful.
