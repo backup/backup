@@ -23,6 +23,7 @@ module Backup
       #
       # %l - Model label
       # %t - Model trigger
+      # %d - Backup duration (HH:MM:SS)
       # %s - Status (success/failure/warning)
       # %v - Status verb (succeeded/failed/succeeded with warnings)
       #
@@ -73,6 +74,8 @@ module Backup
                     model.label
                   when "t"
                     model.trigger.to_s
+                  when "d"
+                    model.duration
                   when "v"
                     status_verb(status)
                   when "s"
