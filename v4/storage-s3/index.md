@@ -92,7 +92,9 @@ store_with S3 do |s3|
 end
 ```
 
-### Reduced Redundancy Storage
+### Storage types
+
+#### Reduced Redundancy Storage
 
 You may configure your AWS S3 stored files to use [Reduced Redundancy Storage][] by adding the following:
 
@@ -102,12 +104,21 @@ store_with S3 do |s3|
 end
 ```
 
-### Amazon Glacier
+#### Infrequent Access Storage
+
+You may configure your AWS S3 stored files to use [Infrequent Access Storage][] by adding the following:
+
+```rb
+store_with S3 do |s3|
+  s3.storage_class = :standard_ia
+end
+```
+
+#### Amazon Glacier
 
 Backup does not have direct Amazon Glacier support. However, using AWS [Object Lifecycle Management][],
 you can setup rules to [transition objects to Glacier][]. A major benefit of this is that these these backups
 can be [restored using the S3 console][].
-
 
 ### Cycling Backups
 
@@ -137,6 +148,7 @@ e.g. `Fog::Storage.new({ :provider => 'AWS'}.merge(fog_options))`
 
 [Multipart Uploading]:            http://docs.aws.amazon.com/AmazonS3/latest/dev/mpuoverview.html
 [Server-Side Encryption]:         http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html
+[Infrequent Access Storage]:      http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html
 [Reduced Redundancy Storage]:     http://docs.aws.amazon.com/AmazonS3/latest/dev/Introduction.html#RRS
 [Object Lifecycle Management]:    http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html
 [transition objects to Glacier]:  http://docs.aws.amazon.com/AmazonS3/latest/dev/object-archival.html
