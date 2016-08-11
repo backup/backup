@@ -32,6 +32,7 @@ end
 * `ap-southeast-2` - Asia Pacific (Sydney)
 * `ap-northeast-1` - Asia Pacific (Tokyo)
 * `sa-east-1` - South America (Sao Paulo)
+* `cn-north-1` - China North 1 - see [this section](#china-region) for support.
 
 ### Multipart Uploading
 
@@ -145,6 +146,20 @@ end
 These options will be merged into those used to establish the connection via fog.  
 e.g. `Fog::Storage.new({ :provider => 'AWS'}.merge(fog_options))`
 
+### China region
+
+Backup relies on [fog][] for AWS S3 support. Fog does not support the China region directly.
+
+A workaround is the following config, as seen in [issue #791][].
+
+```rb
+store_with S3 do |s3|
+  # ... your config
+
+  s3.region = "cn-north-1"
+  s3.fog_options = { endpoint: "https://s3.cn-north-1.amazonaws.com.cn" }
+end
+```
 
 [Multipart Uploading]:            http://docs.aws.amazon.com/AmazonS3/latest/dev/mpuoverview.html
 [Server-Side Encryption]:         http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html
@@ -154,5 +169,7 @@ e.g. `Fog::Storage.new({ :provider => 'AWS'}.merge(fog_options))`
 [transition objects to Glacier]:  http://docs.aws.amazon.com/AmazonS3/latest/dev/object-archival.html
 [restored using the S3 console]:  http://docs.aws.amazon.com/AmazonS3/latest/dev/restoring-objects-console.html
 [automatically remove]:           http://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectExpiration.html
+[fog]:                            https://github.com/fog/fog-aws/
+[issue #791]:                      https://github.com/backup/backup/issues/791#issuecomment-239059386
 
 {% include markdown_links %}
