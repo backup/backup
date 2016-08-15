@@ -119,6 +119,7 @@ module Backup
     autoload :DataDog,   File.join(NOTIFIER_PATH, 'datadog')
     autoload :Ses,       File.join(NOTIFIER_PATH, 'ses')
     autoload :Command,   File.join(NOTIFIER_PATH, 'command')
+    autoload :Telegram,  File.join(NOTIFIER_PATH, 'telegram')
   end
 
   ##
