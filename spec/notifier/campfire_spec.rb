@@ -46,6 +46,15 @@ describe Notifier::Campfire do
       expect( notifier.max_retries    ).to be(5)
       expect( notifier.retry_waitsec  ).to be(10)
     end
+
+    it 'accepts multiple room ids' do
+      notifier = Notifier::Campfire.new(model) do |campfire|
+        campfire.room_id = %w[room_id1 room_id2]
+      end
+
+      expect(notifier.room_id).to eq %w[room_id1 room_id2]
+    end
+
   end # describe '#initialize'
 
   describe '#notify!' do
@@ -65,17 +74,36 @@ describe Notifier::Campfire do
       )
     }
 
+    context 'with multiple room ids' do
+      let(:notifier) {
+        Notifier::Campfire.new(model) do |campfire|
+          campfire.api_token = 'my_token'
+          campfire.subdomain = 'my_subdomain'
+          campfire.room_id   = %w[my_room_id1 my_room_id2]
+        end
+      }
+
+      it 'sends messages to all rooms' do
+        Excon.expects(:post).with(
+          'https://my_subdomain.campfirenow.com/room/my_room_id1/speak.json',
+          response('Success')
+        )
+
+        Excon.expects(:post).with(
+          'https://my_subdomain.campfirenow.com/room/my_room_id2/speak.json',
+          response('Success')
+        )
+
+        notifier.send(:notify!, :success)
+      end
+    end
+
+
     context 'when status is :success' do
       it 'sends a success message' do
         Excon.expects(:post).with(
           'https://my_subdomain.campfirenow.com/room/my_room_id/speak.json',
-          {
-            :headers  => { 'Content-Type' => 'application/json' },
-            :body     => json_body.sub('STATUS', 'Success'),
-            :user     => 'my_token',
-            :password => 'x',
-            :expects  => 201
-          }
+          response('Success')
         )
 
         notifier.send(:notify!, :success)
@@ -86,13 +114,7 @@ describe Notifier::Campfire do
       it 'sends a warning message' do
         Excon.expects(:post).with(
           'https://my_subdomain.campfirenow.com/room/my_room_id/speak.json',
-          {
-            :headers  => { 'Content-Type' => 'application/json' },
-            :body     => json_body.sub('STATUS', 'Warning'),
-            :user     => 'my_token',
-            :password => 'x',
-            :expects  => 201
-          }
+          response('Warning')
         )
 
         notifier.send(:notify!, :warning)
@@ -103,13 +125,7 @@ describe Notifier::Campfire do
       it 'sends a failure message' do
         Excon.expects(:post).with(
           'https://my_subdomain.campfirenow.com/room/my_room_id/speak.json',
-          {
-            :headers  => { 'Content-Type' => 'application/json' },
-            :body     => json_body.sub('STATUS', 'Failure'),
-            :user     => 'my_token',
-            :password => 'x',
-            :expects  => 201
-          }
+          response('Failure')
         )
 
         notifier.send(:notify!, :failure)
@@ -117,5 +133,15 @@ describe Notifier::Campfire do
     end
 
   end # describe '#notify!'
+
+  def response(status)
+    {
+      :headers  => { 'Content-Type' => 'application/json' },
+      :body     => json_body.sub('STATUS', status),
+      :user     => 'my_token',
+      :password => 'x',
+      :expects  => 201
+    }
+  end
 end
 end
