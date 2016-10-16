@@ -27,7 +27,7 @@ module Backup
             [ # Databases
               ["MySQL", "PostgreSQL", "MongoDB", "Redis", "Riak", "OpenLDAP", "SQLite"],
               # Storages
-              ["S3", "CloudFiles", "Dropbox", "FTP",
+              ["S3", "CloudFiles", "Dropbox", "FTP", 'Swift'
                "SFTP", "SCP", "RSync", "Local", "Qiniu"],
               # Compressors
               ["Gzip", "Bzip2", "Custom"],
