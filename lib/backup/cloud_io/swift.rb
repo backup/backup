@@ -1,6 +1,5 @@
-# encoding: utf-8
-require 'backup/cloud_io/base'
-require 'fog/openstack'
+require "backup/cloud_io/base"
+require "fog/openstack"
 
 LARGE_FILE = 5 * 1024**3 - 1
 
@@ -11,8 +10,8 @@ module Backup
       Object = Fog::Storage::OpenStack::File
 
       attr_reader :username, :password, :tenant, :region,
-                  :container, :auth_url, :max_retries,
-                  :retry_waitsec, :fog_options, :batch_size
+        :container, :auth_url, :max_retries,
+        :retry_waitsec, :fog_options, :batch_size
 
       def initialize(opts = {})
         super
@@ -34,9 +33,9 @@ module Backup
 
         raise FileSizeError, <<-EOS if file_size > LARGE_FILE
           [FIXME] File Too Large
-          File: #{ src }
-          Size: #{ file_size }
-          Max Swift Upload Size is #{ LARGE_FILE } (5 Gb) (FIXME)
+          File: #{src}
+          Size: #{file_size}
+          Max Swift Upload Size is #{LARGE_FILE} (5 Gb) (FIXME)
         EOS
 
         directory.files.create key: dest, body: File.open(src)
@@ -47,9 +46,9 @@ module Backup
         keys = keys.map(&:key) unless keys.first.is_a?(String)
 
         until keys.empty?
-          _k = keys.slice!(0, batch_size)
-          with_retries('DELETE Multiple Objects') do
-            resp = connection.delete_multiple_objects(container, _k)
+          key = keys.slice!(0, batch_size)
+          with_retries("DELETE Multiple Objects") do
+            resp = connection.delete_multiple_objects(container, key)
             if resp.data[:status] != 200
               raise Error, <<-EOS
                 Failed to delete.
@@ -63,7 +62,7 @@ module Backup
       end
 
       def objects(prefix)
-        directory.files.all(prefix: prefix.chomp('/') + '/')
+        directory.files.all(prefix: prefix.chomp("/") + "/")
       end
 
       private
@@ -75,10 +74,9 @@ module Backup
       def connection
         @connection ||= begin
           opts = {
-            provider: 'OpenStack',
             openstack_auth_url: auth_url,
             openstack_username: username,
-            openstack_api_key: password,
+            openstack_api_key: password
           }
           opts[:openstack_region] = region unless region.nil?
           opts[:openstack_tenant] = tenant unless tenant.nil?
@@ -87,7 +85,6 @@ module Backup
           Fog::Storage.new(opts)
         end
       end
-
     end
   end
 end
