@@ -7,8 +7,7 @@ Thank you for contributing to Backup!
 To report a bug, use the [GitHub issue tracker](https://github.com/backup/backup/issues). Please check the Open issues, and create a new issue if you do not see a report that matches the bug that you have found.
 
 Backup is used with many different systems and configurations, so the first step for us to solve a problem is knowing how to reproduce it. You can help us solve your issue by including the versions of Ruby,
-Backup and the operating system on both the computers that created the backups,
-and the computer that you use to restore backups.
+Backup and the operating system on the computer that you used.
 
 To submit a bug fix, please create a [create a Pull Request](https://github.com/backup/backup/compare). Always develop changes against the
 `master` branch. Read the Pull Requests section below for more help with
@@ -32,8 +31,7 @@ developing features in this project.
 
 If you would like to talk about either using Backup or writing code for it,
 please leave a message in our [Gitter room](https://gitter.im/backup/backup).
-Maintainers are not always online, but we will reply to any questions that you
-ask there.
+Maintainers are not online at all times, but we will reply to any questions that you ask there.
 
 ## Pull Requests
 
