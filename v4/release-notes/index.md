@@ -18,13 +18,14 @@ See the [Performing Backups][performing-backups] page for details.
 Before you upgrade to v4.x, see the [Upgrading][upgrading] page.
 Several changes have been made which will require your attention before you run your first backup using v4.x.
 
-4.3.1 (unreleased)
+4.4.0
 -----
 
 - Fix PostgreSQL sudo option not able to change directories. See [PR #761](https://github.com/backup/backup/pull/761).
 - Add support for CC, BCC, and Reply-To headers in AWS SES notifier. See [PR #788](https://github.com/backup/backup/pull/788).
 - Fix issue on Mail Notifier with the default `domain` config value being unset when `nil` was given as a value. See [PR #781](https://github.com/backup/backup/pull/781).
 - Add support for a custom server url in the HipChat notifier. See [Issue #790](https://github.com/backup/backup/pull/790).
+- Update Nokogiri dependency to 1.6.8. See [Issue #799](https://github.com/backup/backup/pull/799).
 
 4.3.0
 -----
