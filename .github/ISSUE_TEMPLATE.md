@@ -1,25 +1,26 @@
-## Expected behavior
+## What went wrong?
 
-## Actual behavior
+** Please give us a brief description of the problem, **
+** including the text of any error messages **
 
-## Reproducing the behavior
+## What steps did you follow?
 
-### Computer that is creating the backups
+** Change the steps below to match the commands that you ran **
 
-* Operating system, e.g. `Ubuntu Server 14.04.5`:
-* Ruby version, e.g. `2.3.1`:
-* Version of backup gem, e.g. `4.3.0`:
-* Versions of tools or services, e.g. `MySQL 5.7.9`:
+1. gem install backup --version 4.3.0
+2. backup check
+3. backup perform [OPTIONS]
+4. Check the file that is produced by backup
 
-### Computer that is restoring the backups
+## How is your copy of backup configured?
 
-* Operating system, e.g. `Ubuntu Server 14.04.5`:
-* Ruby version, e.g. `2.3.1`:
-* Version of backup gem, e.g. `4.3.0`:
-* Versions of tools or services, e.g. `OpenSSL 0.9.8zh`:
+** Please attach the `config.rb` file that backup is using, **
+** and any relevant model files from the `models/` directory **
 
-### Steps to reproduce the behavior
+## Tell us about the computer that runs the backup gem
 
-1.
-2.
-3.
+** Change the information below to match the details of your computer **
+
+* Operating system: Ubuntu Server 14.04.5
+* Ruby version: 2.3.1
+* Tools or services used by backup: MySQL 5.7.9, GnuPG 1.4.16
