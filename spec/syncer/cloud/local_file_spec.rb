@@ -36,7 +36,7 @@ describe Syncer::Cloud::LocalFile do
 
       # This fails on OSX, see https://github.com/backup/backup/issues/482
       # for more information.
-      it 'returns a Hash of LocalFile objects, keyed by relative path' do
+      it 'returns a Hash of LocalFile objects, keyed by relative path', :pending => RUBY_PLATFORM =~ /darwin/ do
         Dir.chdir(@tmpdir) do
           bad_file = "sync_dir/bad\xFFfile"
           sanitized_bad_file = "sync_dir/bad\xEF\xBF\xBDfile"
