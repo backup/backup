@@ -41,7 +41,6 @@ group :production do
 end
 
 gem 'rspec'
-gem 'fuubar'
 gem 'mocha'
 gem 'timecop'
 
