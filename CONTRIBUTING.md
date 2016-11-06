@@ -9,7 +9,7 @@ To report a bug, use the [GitHub issue tracker](https://github.com/backup/backup
 Backup is used with many different systems and configurations, so the first step for us to solve a problem is knowing how to reproduce it. You can help us solve your issue by including the versions of Ruby,
 Backup and the operating system on the computer that you used.
 
-To submit a bug fix, please create a [create a Pull Request](https://github.com/backup/backup/compare). Always develop changes against the
+To submit a bug fix, please [create a Pull Request](https://github.com/backup/backup/compare). Always develop changes against the
 `master` branch. Read the Pull Requests section below for more help with
 preparing fixes.
 
