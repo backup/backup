@@ -1,6 +1,7 @@
 language: ruby
 bundler_args: --without no_ci
-script: "bundle exec rspec ./spec/"
+script:
+  - "bundle exec rspec"
 os:
   - linux
   - osx
@@ -9,6 +10,10 @@ rvm:
   - 2.1.0
   - 2.2.0
   - 2.3.0
+matrix:
+  include:
+    - rvm: "2.3.0"
+      script: "bundle exec rubocop"
 branches:
   only:
     - master

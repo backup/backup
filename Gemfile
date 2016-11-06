@@ -40,6 +40,7 @@ group :production do
   gem 'qiniu', '~> 6.5.1'
 end
 
+gem 'rubocop', require: false
 gem 'rspec'
 gem 'mocha'
 gem 'timecop'

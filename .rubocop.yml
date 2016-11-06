@@ -1,0 +1,37 @@
+AllCops:
+  TargetRubyVersion: 2.0
+  Include:
+    - "Gemfile"
+  Exclude:
+    - "tmp/**/*"
+    - "vagrant/**/*"
+  DisplayCopNames: true
+  UseCache: true
+  CacheRootDirectory: ./tmp
+
+Style/Documentation:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+Style/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+
+Style/MultilineOperationIndentation:
+  EnforcedStyle: indented
+
+Style/AlignHash:
+  EnforcedLastArgumentHashStyle: ignore_implicit
+
+Style/IndentArray:
+  EnforcedStyle: consistent
+
+Style/FormatString:
+  EnforcedStyle: sprintf
+
+Metrics/MethodLength:
+  Max: 15
