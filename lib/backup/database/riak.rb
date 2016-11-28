@@ -61,12 +61,18 @@ module Backup
       # the user running Backup, since the absence of the execute bit on their
       # home directory would deny +user+ access.
       def with_riak_owned_dump_path
-        run("#{ utility(:sudo) } -n #{ utility(:chown) } " +
+        # sudo if not root
+        Config.user == 'root' ? sudo = '' : sudo = "#{ utility(:sudo) } -n "
+
+        run("#{ sudo }#{ utility(:chown) } " +
             "#{ user } '#{ dump_path }'")
         yield
       ensure
         # reclaim ownership
-        run("#{ utility(:sudo) } -n #{ utility(:chown) } -R " +
+
+        # sudo if not root
+        Config.user == 'root' ? sudo = '' : sudo = "#{ utility(:sudo) } -n "
+        run("#{ sudo }#{ utility(:chown) } -R " +
             "#{ Config.user } '#{ dump_path }'")
       end
 
