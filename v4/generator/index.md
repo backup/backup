@@ -18,16 +18,17 @@ It'll display something like this:
       backup generate:model -t, --trigger=TRIGGER
 
     Options:
-      -t, --trigger=TRIGGER            # Trigger name for the Backup model
-          [--config-file=CONFIG_FILE]  # Path to your Backup configuration file
-          [--databases=DATABASES]      # (mongodb, mysql, postgresql, redis, riak)
-          [--storages=STORAGES]        # (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
-          [--syncers=SYNCERS]          # (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
-          [--encryptor=ENCRYPTOR]      # (gpg, openssl)
-          [--compressor=COMPRESSOR]    # (bzip2, custom, gzip)
-          [--notifiers=NOTIFIERS]      # (campfire, hipchat, http_post, mail, nagios, prowl, pushover, twitter)
-          [--archives]                 # Model will include tar archives.
-          [--splitter]                 # Add Splitter to the model
+      -t, --trigger=TRIGGER              # Trigger name for the Backup model
+          [--config-path=CONFIG_PATH]    # Path to your Backup configuration directory
+          [--databases=DATABASES]        # (mongodb, mysql, postgresql, redis, riak)
+          [--storages=STORAGES]          # (cloud_files, dropbox, ftp, local, ninefold, rsync, s3, scp, sftp)
+          [--syncers=SYNCERS]            # (cloud_files, rsync_local, rsync_pull, rsync_push, s3)
+          [--encryptors=ENCRYPTORS]      # (gpg, openssl)
+          [--compressors=COMPRESSORS]    # (bzip2, custom, gzip, lzma, pbzip2)
+          [--notifiers=NOTIFIERS]        # (campfire, hipchat, mail, prowl, pushover, twitter)
+          [--archives], [--no-archives]  # Model will include tar archives.
+          [--splitter], [--no-splitter]  # Use `--no-splitter` to disable
+                                         # Default: true
 
 The options is what makes setting up a Backup configuration file a breeze.
 
@@ -44,7 +45,7 @@ To get up and running quickly, issue the following command:
 
     $ backup generate:model --trigger my_backup \
         --databases="mongodb, postgresql" --storages="s3" --syncers="s3" \
-        --encryptor="gpg" --compressor="gzip" --notifiers="mail"
+        --encryptors="gpg" --compressors="gzip" --notifiers="mail"
 
 This will create a new file: `~/Backup/models/my_backup.rb` (the default location), and the file will look like this:
 
