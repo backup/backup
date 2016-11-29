@@ -89,6 +89,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'thread_safe', '= 0.1.3'
   gem.add_dependency 'twitter', '= 5.5.0'
   gem.add_dependency 'unf', '= 0.1.3'
-  gem.add_dependency 'unf_ext', '= 0.0.6'
   gem.add_dependency 'xml-simple', '= 1.1.4'
 end
