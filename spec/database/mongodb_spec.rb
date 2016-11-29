@@ -133,10 +133,10 @@ describe Database::MongoDB do
         db.only_collections = ['collection_a', 'collection_b']
 
         db.expects(:run).in_sequence(s).with(
-          "mongodump_command --collection='collection_a'"
+          "mongodump_command --db='db.name' --collection='collection_a'"
         )
         db.expects(:run).in_sequence(s).with(
-          "mongodump_command --collection='collection_b'"
+          "mongodump_command --db='db.name' --collection='collection_b'"
         )
 
         db.send(:dump!)
@@ -146,7 +146,7 @@ describe Database::MongoDB do
         db.only_collections = 'collection_a'
 
         db.expects(:run).in_sequence(s).with(
-          "mongodump_command --collection='collection_a'"
+          "mongodump_command --db='db.name' --collection='collection_a'"
         )
 
         db.send(:dump!)

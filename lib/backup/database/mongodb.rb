@@ -78,7 +78,7 @@ module Backup
           run(mongodump)
         else
           collections.each do |collection|
-            run("#{ mongodump } --collection='#{ collection }'")
+            run("#{ mongodump } --db='#{ name }' --collection='#{ collection }'")
           end
         end
       end
