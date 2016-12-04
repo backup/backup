@@ -80,3 +80,36 @@ task :release do # rubocop:disable Metrics/BlockLength
 
   puts "Backup version #{new_version} released!"
 end
+
+namespace :docker do
+
+  namespace :test do
+
+    desc "Build an image for testing"
+    task :build do
+      sh "docker build -t backup_main:latest ."
+    end
+
+    desc "Remove unused images, and all containers"
+    task :clean do
+      containers = `docker ps -a -q`
+      if !containers.empty?
+        `docker stop $(docker ps -a -q)`
+        `docker rm $(docker ps -a -q)`
+      end
+      `docker images -qf dangling=true | xargs docker rmi`
+    end
+
+    desc "Start a container with a shell"
+    task :shell => [:build] do
+      sh "docker run -v $PWD:/usr/src/backup -it backup_main:latest /bin/bash"
+    end
+
+    desc "Run RSpec tests inside a container"
+    task :spec => [:build] do
+      sh "docker run -v $PWD:/usr/src/backup -it backup_main:latest bundle exec rspec ./spec/"
+    end
+
+  end
+
+end

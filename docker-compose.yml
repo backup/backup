@@ -1,0 +1,8 @@
+version: '2'
+
+services:
+  main:
+    build: .
+    command: /bin/bash
+    volumes:
+      - ".:/usr/src/backup"
