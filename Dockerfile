@@ -17,7 +17,7 @@ ENV APP_DEPS bsdtar ca-certificates curl g++ git \
     mongodb-clients \
     mysql-client-5.5 libmysqlclient-dev \
     percona-xtrabackup postgresql-client-9.4 redis-tools rsync \
-    libsqlite3-dev sqlite3
+    libsqlite3-dev sqlite3 sudo
 
 RUN apt-get update && apt-get install -y --no-install-recommends $APP_DEPS
 

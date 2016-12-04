@@ -1,4 +1,8 @@
-require "rubocop/rake_task"
+require "rake/clean"
+require 'rubocop/rake_task'
+
+CLEAN.include("tmp")
+CLOBBER.include("tmp", "*.gem")
 
 RuboCop::RakeTask.new
 
@@ -82,8 +86,19 @@ task :release do # rubocop:disable Metrics/BlockLength
 end
 
 namespace :docker do
-
   namespace :test do
+    desc "Run integration tests inside a container"
+    task :integration => [:build, :prepare] do
+      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' -v $PWD:/usr/src/backup -it backup_runner:latest ruby -Ilib -S rspec ./integration/acceptance/"
+    end
+
+    desc "Create test files"
+    task :prepare do
+      root_tmp_dir = "tmp"
+      Dir.mkdir(root_tmp_dir) unless Dir.exist?(root_tmp_dir)
+      root_test_dir = File.join("tmp", "test_data")
+      Dir.mkdir(root_test_dir) unless Dir.exist?(root_test_dir)
+    end
 
     desc "Build an image for testing"
     task :build do
@@ -93,7 +108,7 @@ namespace :docker do
     desc "Remove unused images, and all containers"
     task :clean do
       containers = `docker ps -a -q`
-      if !containers.empty?
+      unless containers.empty?
         `docker stop $(docker ps -a -q)`
         `docker rm $(docker ps -a -q)`
       end
@@ -109,12 +124,6 @@ namespace :docker do
     task :spec => [:build] do
       sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' -v $PWD:/usr/src/backup -it backup_runner:latest ruby -Ilib -S rspec ./spec/"
     end
-
-    desc "Run the Backup executable and print version"
-    task :version => [:build] do
-      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' -v $PWD:/usr/src/backup -it backup_runner:latest ruby -Ilib -S bin/backup version"
-    end
-
   end
 
 end
