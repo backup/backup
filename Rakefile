@@ -87,7 +87,7 @@ namespace :docker do
 
     desc "Build an image for testing"
     task :build do
-      sh "docker build -t backup_main:latest ."
+      sh "docker build -t backup_runner:latest ."
     end
 
     desc "Remove unused images, and all containers"
@@ -102,12 +102,12 @@ namespace :docker do
 
     desc "Start a container with a shell"
     task :shell => [:build] do
-      sh "docker run -v $PWD:/usr/src/backup -it backup_main:latest /bin/bash"
+      sh "docker run -v $PWD:/usr/src/backup -it backup_runner:latest /bin/bash"
     end
 
     desc "Run RSpec tests inside a container"
     task :spec => [:build] do
-      sh "docker run -v $PWD:/usr/src/backup -it backup_main:latest bundle exec rspec ./spec/"
+      sh "docker run -v $PWD:/usr/src/backup -it backup_runner:latest bundle exec rspec ./spec/"
     end
 
   end

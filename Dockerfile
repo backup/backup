@@ -16,7 +16,7 @@ ENV APP_DEPS ca-certificates curl g++ git \
     libldap2-dev ldap-utils \
     mongodb-clients \
     mysql-client-5.5 libmysqlclient-dev \
-    postgresql-client-9.4 redis-tools \
+    postgresql-client-9.4 redis-tools rsync \
     libsqlite3-dev sqlite3
 
 RUN apt-get update && apt-get install -y --no-install-recommends $APP_DEPS
