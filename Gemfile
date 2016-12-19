@@ -40,9 +40,11 @@ group :production do
   gem 'qiniu', '~> 6.5.1'
 end
 
-gem 'rspec'
-gem 'mocha'
-gem 'timecop'
+group :test do 
+ gem 'rspec'
+ gem 'mocha'
+ gem 'timecop'
+end
 
 # Omitted from Travis CI Environment
 group :no_ci do
