@@ -114,9 +114,8 @@ module Backup
       end
 
       def connectivity_options
-        return "--socket='#{ socket }'" if socket
-
         opts = []
+        opts << "--socket='#{ socket }'" if socket
         opts << "--host='#{ host }'" if host
         opts << "--port='#{ port }'" if port
         opts.join(' ')
