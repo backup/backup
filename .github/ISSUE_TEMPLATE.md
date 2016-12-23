@@ -6,7 +6,7 @@
 
 **Change the steps below to match the commands that you ran**
 
-1. gem install backup --version 4.3.0
+1. gem install backup --version 4.4.0
 2. backup check
 3. backup perform [OPTIONS]
 4. Check the file that is produced by backup
