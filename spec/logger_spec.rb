@@ -325,7 +325,7 @@ describe Logger do
     context 'when messages with :warn log level are sent' do
       it 'returns true' do
         Logger.warn 'warn message'
-        Logger.has_warnings?.should be_true
+        Logger.has_warnings?.should be_truthy
       end
     end
 
@@ -333,7 +333,7 @@ describe Logger do
       it 'returns false' do
         Logger.info 'info message'
         Logger.error 'error message'
-        Logger.has_warnings?.should be_false
+        Logger.has_warnings?.should be_falsey
       end
     end
   end
@@ -342,7 +342,7 @@ describe Logger do
     context 'when messages with :error log level are sent' do
       it 'returns true' do
         Logger.error 'error message'
-        Logger.has_errors?.should be_true
+        Logger.has_errors?.should be_truthy
       end
     end
 
@@ -350,7 +350,7 @@ describe Logger do
       it 'returns false' do
         Logger.info 'info message'
         Logger.warn 'warn message'
-        Logger.has_errors?.should be_false
+        Logger.has_errors?.should be_falsey
       end
     end
   end
@@ -362,8 +362,8 @@ describe Logger do
       Logger.error 'error message'
 
       Logger.messages.count.should be(3)
-      Logger.has_warnings?.should be_true
-      Logger.has_errors?.should be_true
+      Logger.has_warnings?.should be_truthy
+      Logger.has_errors?.should be_truthy
 
       @initial_logger = Logger.instance_variable_get(:@logger)
       Logger.clear!
@@ -375,11 +375,11 @@ describe Logger do
     end
 
     it 'resets has_warnings? to false' do
-      Logger.has_warnings?.should be_false
+      Logger.has_warnings?.should be_falsey
     end
 
     it 'resets has_errors? to false' do
-      Logger.has_errors?.should be_false
+      Logger.has_errors?.should be_falsey
     end
 
     it 'replaces the logger' do

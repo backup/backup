@@ -7,7 +7,7 @@ describe 'Backup::Pipeline' do
 
   it 'should include Utilities::Helpers' do
     Backup::Pipeline.
-        include?(Backup::Utilities::Helpers).should be_true
+        include?(Backup::Utilities::Helpers).should be_truthy
   end
 
   describe '#initialize' do
@@ -187,12 +187,12 @@ describe 'Backup::Pipeline' do
 
   describe '#success?' do
     it 'returns true when @errors is empty' do
-      pipeline.success?.should be_true
+      pipeline.success?.should be_truthy
     end
 
     it 'returns false when @errors is not empty' do
       pipeline.instance_variable_set(:@errors, ['foo'])
-      pipeline.success?.should be_false
+      pipeline.success?.should be_falsey
     end
   end # describe '#success?'
 
@@ -284,7 +284,7 @@ describe 'Backup::Pipeline' do
 
     context 'when @stderr is empty' do
       it 'should return false' do
-        pipeline.send(:stderr_messages).should be_false
+        pipeline.send(:stderr_messages).should be_falsey
       end
     end
   end # describe '#stderr_message'

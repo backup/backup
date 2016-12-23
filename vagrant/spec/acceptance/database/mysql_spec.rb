@@ -23,7 +23,7 @@ describe 'Database::MySQL' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         532976 my_backup/databases/MySQL.sql
       ])
@@ -51,7 +51,7 @@ describe 'Database::MySQL' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         525504 my_backup/databases/MySQL.sql
       ])
@@ -76,7 +76,7 @@ describe 'Database::MySQL' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         9532 my_backup/databases/MySQL.sql
       ])
@@ -98,7 +98,7 @@ describe 'Database::MySQL' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         2686 my_backup/databases/MySQL.sql
       ])
@@ -120,7 +120,7 @@ describe 'Database::MySQL' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         8117 my_backup/databases/MySQL.sql
       ])
@@ -151,7 +151,7 @@ describe 'Database::MySQL' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         9532 my_backup/databases/MySQL-dump_01.sql
        10282 my_backup/databases/MySQL-Dump__2.sql

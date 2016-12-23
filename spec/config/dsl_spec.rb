@@ -14,9 +14,9 @@ describe Config::DSL do
 
       load File.expand_path('../../../lib/backup/config/dsl.rb', __FILE__)
 
-      expect( described_class.const_defined?('MySQL') ).to be_true
-      expect( described_class.const_defined?('RSync') ).to be_true
-      expect( described_class::RSync.const_defined?('Local') ).to be_true
+      expect( described_class.const_defined?('MySQL') ).to be_truthy
+      expect( described_class.const_defined?('RSync') ).to be_truthy
+      expect( described_class::RSync.const_defined?('Local') ).to be_truthy
     end
   end
 
@@ -26,8 +26,8 @@ describe Config::DSL do
     context 'when given an array of constant names' do
       it 'creates modules for the given scope' do
         described_class.send(:create_modules, TestScope, ['Foo', 'Bar'])
-        TestScope.const_defined?('Foo').should be_true
-        TestScope.const_defined?('Bar').should be_true
+        TestScope.const_defined?('Foo').should be_truthy
+        TestScope.const_defined?('Bar').should be_truthy
         TestScope::Foo.class.should == Module
         TestScope::Bar.class.should == Module
       end
@@ -44,11 +44,11 @@ describe Config::DSL do
             } ]
           } ]
         )
-        TestScope.const_defined?('FooBar').should be_true
-        TestScope.const_defined?('LevelA').should be_true
-        TestScope::LevelA.const_defined?('NameA').should be_true
-        TestScope::LevelA.const_defined?('LevelB').should be_true
-        TestScope::LevelA::LevelB.const_defined?('NameB').should be_true
+        TestScope.const_defined?('FooBar').should be_truthy
+        TestScope.const_defined?('LevelA').should be_truthy
+        TestScope::LevelA.const_defined?('NameA').should be_truthy
+        TestScope::LevelA.const_defined?('LevelB').should be_truthy
+        TestScope::LevelA::LevelB.const_defined?('NameB').should be_truthy
       end
     end
   end

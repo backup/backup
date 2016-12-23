@@ -278,7 +278,7 @@ describe Config do
       context 'when a root_path is not given' do
         it 'should do nothing' do
           config.send(:set_path_variable, 'var', nil, 'ending', false)
-          config.instance_variable_defined?(:@var).should be_false
+          config.instance_variable_defined?(:@var).should be_falsey
         end
       end
     end # context 'when no path is given'

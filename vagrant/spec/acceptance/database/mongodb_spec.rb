@@ -19,7 +19,7 @@ describe 'Database::MongoDB' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
 
       expect( job.package ).to match_manifest(%q[
         - my_backup/databases/MongoDB.tar
@@ -51,7 +51,7 @@ describe 'Database::MongoDB' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
 
       expect( job.package ).to match_manifest(%q[
         - my_backup/databases/MongoDB.tar.gz
@@ -83,7 +83,7 @@ describe 'Database::MongoDB' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
 
       expect( job.package ).to match_manifest(%q[
         - my_backup/databases/MongoDB.tar
@@ -116,7 +116,7 @@ describe 'Database::MongoDB' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
 
       expect( job.package ).to match_manifest(%q[
         - my_backup/databases/MongoDB.tar
@@ -155,7 +155,7 @@ describe 'Database::MongoDB' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
 
       expect( job.package ).to match_manifest(%q[
         - my_backup/databases/MongoDB.tar
@@ -201,7 +201,7 @@ describe 'Database::MongoDB' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
 
       expect( job.package ).to match_manifest(%q[
         - my_backup/databases/MongoDB-dump_01.tar

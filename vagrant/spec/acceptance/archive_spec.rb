@@ -25,7 +25,7 @@ describe Archive do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
 
       expect( job.package ).to match_manifest(%q[
         1_105_920 my_backup/archives/archive_a.tar
@@ -91,7 +91,7 @@ describe Archive do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         - my_backup/archives/archive_a.tar.gz
         - my_backup/archives/archive_b.tar.gz
@@ -146,7 +146,7 @@ describe Archive do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         - my_backup/archives/archive_a.tar.gz
         - my_backup/archives/archive_b.tar.gz
@@ -231,7 +231,7 @@ describe Archive do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         - my_backup/archives/my_archive.tar
       ])

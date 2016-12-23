@@ -39,7 +39,7 @@ describe Logger::Logfile do
 
       Logger::Syslog.any_instance.expects(:log).never
       Logger.info 'message'
-      File.exist?(@log_path_default).should be_false
+      File.exist?(@log_path_default).should be_falsey
     end
 
     it 'may be forced disabled via the command line' do
@@ -55,7 +55,7 @@ describe Logger::Logfile do
 
       Logger::Syslog.any_instance.expects(:log).never
       Logger.info 'message'
-      File.exist?(@log_path_default).should be_false
+      File.exist?(@log_path_default).should be_falsey
     end
 
     it 'ignores log_path setting if it is already set' do
@@ -70,9 +70,9 @@ describe Logger::Logfile do
 
       Logger.start!
 
-      File.exist?(@log_path_default).should be_false
-      File.exist?(@log_path_absolute).should be_false
-      File.exist?(@log_path_rel).should be_true
+      File.exist?(@log_path_default).should be_falsey
+      File.exist?(@log_path_absolute).should be_falsey
+      File.exist?(@log_path_rel).should be_truthy
     end
   end
 
@@ -84,9 +84,9 @@ describe Logger::Logfile do
         end
 
         it 'should create the default log_path' do
-          File.exist?(@log_path_rel).should be_false
-          File.exist?(@log_path_absolute).should be_false
-          File.exist?(@log_path_default).should be_true
+          File.exist?(@log_path_rel).should be_falsey
+          File.exist?(@log_path_absolute).should be_falsey
+          File.exist?(@log_path_default).should be_truthy
         end
       end
 
@@ -100,9 +100,9 @@ describe Logger::Logfile do
         end
 
         it 'should create the absolute log_path' do
-          File.exist?(@log_path_default).should be_false
-          File.exist?(@log_path_rel).should be_false
-          File.exist?(@log_path_absolute).should be_true
+          File.exist?(@log_path_default).should be_falsey
+          File.exist?(@log_path_rel).should be_falsey
+          File.exist?(@log_path_absolute).should be_truthy
         end
       end
 
@@ -115,9 +115,9 @@ describe Logger::Logfile do
         end
 
         it 'should create the log_path relative to Backup::Config.root_path' do
-          File.exist?(@log_path_default).should be_false
-          File.exist?(@log_path_absolute).should be_false
-          File.exist?(@log_path_rel).should be_true
+          File.exist?(@log_path_default).should be_falsey
+          File.exist?(@log_path_absolute).should be_falsey
+          File.exist?(@log_path_rel).should be_truthy
         end
 
       end
@@ -148,7 +148,7 @@ describe Logger::Logfile do
           Logger.start!
           File.stat(@logfile_default).size.should be <= 1000
           File.readlines(@logfile_default).last.should match(/#{ lineno }x/)
-          File.exist?(@logfile_default + '~').should be_false
+          File.exist?(@logfile_default + '~').should be_falsey
         end
       end
 
@@ -160,8 +160,8 @@ describe Logger::Logfile do
 
           File.stat(@logfile_default).size.should be > 0
           File.stat(@logfile_default).size.should be < 500
-          File.exist?(@log_path_default).should be_true
-          File.exist?(@logfile_default).should be_true
+          File.exist?(@log_path_default).should be_truthy
+          File.exist?(@logfile_default).should be_truthy
         end
       end
 
@@ -169,8 +169,8 @@ describe Logger::Logfile do
         it 'does not truncates the file' do
           File.expects(:mv).never
           Logger.start!
-          File.exist?(@log_path_default).should be_true
-          File.exist?(@logfile_default).should be_false
+          File.exist?(@log_path_default).should be_truthy
+          File.exist?(@logfile_default).should be_falsey
         end
       end
     end # describe 'logfile truncation'

@@ -7,7 +7,7 @@ describe 'Backup::Packager' do
 
   it 'should include Utilities::Helpers' do
     packager.instance_eval('class << self; self; end').
-        include?(Backup::Utilities::Helpers).should be_true
+        include?(Backup::Utilities::Helpers).should be_truthy
   end
 
   describe '#package!' do

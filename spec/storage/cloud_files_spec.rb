@@ -220,7 +220,7 @@ describe Storage::CloudFiles do
 
       storage.send(:transfer!)
 
-      expect( storage.package.no_cycle ).to be_false
+      expect( storage.package.no_cycle ).to be_falsey
     end
 
     context 'when days_to_keep is set' do
@@ -229,7 +229,7 @@ describe Storage::CloudFiles do
       it 'marks package so the cycler will not attempt to remove it' do
         cloud_io.stubs(:upload)
         storage.send(:transfer!)
-        expect( storage.package.no_cycle ).to be_true
+        expect( storage.package.no_cycle ).to be_truthy
       end
     end
 

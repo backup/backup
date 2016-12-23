@@ -132,7 +132,7 @@ describe Notifier::Mail do
           filename = "#{ model.time }.#{ model.trigger }.log"
 
           expect( sent_message.subject          ).to eq message % 'Success'
-          expect( sent_message.body.multipart?  ).to be_true
+          expect( sent_message.body.multipart?  ).to be_truthy
           expect( sent_message.attachments[filename].read ).
               to eq "line 1\nline 2\nline 3"
           expect( sent_message.text_part ).to be_an_instance_of ::Mail::Part
@@ -164,8 +164,8 @@ describe Notifier::Mail do
 
           sent_message = ::Mail::TestMailer.deliveries.first
           expect( sent_message.subject          ).to eq message % 'Success'
-          expect( sent_message.multipart?       ).to be_false
-          expect( sent_message.has_attachments? ).to be_false
+          expect( sent_message.multipart?       ).to be_falsey
+          expect( sent_message.has_attachments? ).to be_falsey
           expect( sent_message.body ).to be_an_instance_of ::Mail::Body
           expect( sent_message.body.decoded ).to eq <<-EOS.gsub(/^ +/, '')
 
@@ -197,7 +197,7 @@ describe Notifier::Mail do
           filename = "#{ model.time }.#{ model.trigger }.log"
 
           expect( sent_message.subject          ).to eq message % 'Warning'
-          expect( sent_message.body.multipart?  ).to be_true
+          expect( sent_message.body.multipart?  ).to be_truthy
           expect( sent_message.attachments[filename].read ).
               to eq "line 1\nline 2\nline 3"
           expect( sent_message.text_part ).to be_an_instance_of ::Mail::Part
@@ -231,8 +231,8 @@ describe Notifier::Mail do
 
           sent_message = ::Mail::TestMailer.deliveries.first
           expect( sent_message.subject          ).to eq message % 'Warning'
-          expect( sent_message.multipart?       ).to be_false
-          expect( sent_message.has_attachments? ).to be_false
+          expect( sent_message.multipart?       ).to be_falsey
+          expect( sent_message.has_attachments? ).to be_falsey
           expect( sent_message.body ).to be_an_instance_of ::Mail::Body
           expect( sent_message.body.decoded ).to eq <<-EOS.gsub(/^ +/, '')
 
@@ -264,7 +264,7 @@ describe Notifier::Mail do
           filename = "#{ model.time }.#{ model.trigger }.log"
 
           expect( sent_message.subject          ).to eq message % 'Failure'
-          expect( sent_message.body.multipart?  ).to be_true
+          expect( sent_message.body.multipart?  ).to be_truthy
           expect( sent_message.attachments[filename].read ).
               to eq "line 1\nline 2\nline 3"
           expect( sent_message.text_part ).to be_an_instance_of ::Mail::Part
@@ -298,8 +298,8 @@ describe Notifier::Mail do
 
           sent_message = ::Mail::TestMailer.deliveries.first
           expect( sent_message.subject          ).to eq message % 'Failure'
-          expect( sent_message.multipart?       ).to be_false
-          expect( sent_message.has_attachments? ).to be_false
+          expect( sent_message.multipart?       ).to be_falsey
+          expect( sent_message.has_attachments? ).to be_falsey
           expect( sent_message.body ).to be_an_instance_of ::Mail::Body
           expect( sent_message.body.decoded ).to eq <<-EOS.gsub(/^ +/, '')
 

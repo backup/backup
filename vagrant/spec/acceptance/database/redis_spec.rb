@@ -21,7 +21,7 @@ describe 'Database::Redis' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         5782  my_backup/databases/Redis.rdb
       ])
@@ -42,7 +42,7 @@ describe 'Database::Redis' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         2200..2300  my_backup/databases/Redis.rdb.gz
       ])
@@ -67,7 +67,7 @@ describe 'Database::Redis' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         5782  my_backup/databases/Redis-dump_01.rdb
         5782  my_backup/databases/Redis-Dump__2.rdb

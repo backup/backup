@@ -211,7 +211,7 @@ describe Backup::Encryptor::GPG do
     context 'when #gpg_homedir is not set' do
       it 'should return false' do
         encryptor.gpg_homedir = nil
-        encryptor.send(:setup_gpg_homedir).should be_false
+        encryptor.send(:setup_gpg_homedir).should be_falsey
       end
     end
 
@@ -282,7 +282,7 @@ describe Backup::Encryptor::GPG do
     context 'when #gpg_config is not set' do
       it 'should return false' do
         encryptor.gpg_config = nil
-        encryptor.send(:setup_gpg_config).should be_false
+        encryptor.send(:setup_gpg_config).should be_falsey
       end
     end
 
@@ -494,7 +494,7 @@ describe Backup::Encryptor::GPG do
     context 'when :passphrase is not set' do
       it 'should return false' do
         encryptor.expects(:passphrase).returns(nil)
-        encryptor.send(:setup_passphrase_file).should be_false
+        encryptor.send(:setup_passphrase_file).should be_falsey
       end
     end
 
@@ -539,7 +539,7 @@ describe Backup::Encryptor::GPG do
             err.message.should match('Error creating temporary passphrase file')
             err.message.should match('RuntimeError: an error')
           end
-          encryptor.send(:setup_passphrase_file).should be_false
+          encryptor.send(:setup_passphrase_file).should be_falsey
         end
       end
 
