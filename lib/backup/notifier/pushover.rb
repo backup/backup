@@ -1,10 +1,9 @@
 # encoding: utf-8
-require 'uri'
+require "uri"
 
 module Backup
   module Notifier
     class Pushover < Base
-
       ##
       # The API User Token
       attr_accessor :user
@@ -51,24 +50,23 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        send_message(message.call(model, :status => status_data_for(status)))
+        send_message(message.call(model, status: status_data_for(status)))
       end
 
       def send_message(message)
-        uri = 'https://api.pushover.net/1/messages.json'
-        data = { :user => user, :token => token, :message => message }
+        uri = "https://api.pushover.net/1/messages.json"
+        data = { user: user, token: token, message: message }
         [:device, :title, :priority].each do |param|
           val = send(param)
           data.merge!(param => val) if val
         end
         options = {
-          :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
-          :body     => URI.encode_www_form(data)
+          headers: { "Content-Type" => "application/x-www-form-urlencoded" },
+          body: URI.encode_www_form(data)
         }
-        options.merge!(:expects => 200) # raise error if unsuccessful
+        options[:expects] = 200 # raise error if unsuccessful
         Excon.post(uri, options)
       end
-
     end
   end
 end

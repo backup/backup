@@ -1,10 +1,9 @@
 # encoding: utf-8
-require 'pagerduty'
+require "pagerduty"
 
 module Backup
   module Notifier
     class PagerDuty < Base
-
       ##
       # PagerDuty Service API Key. Should be a 32 character hex string.
       attr_accessor :service_key
@@ -46,15 +45,15 @@ module Backup
         incident_description = "Backup - #{model.label}"
         incident_key = "backup/#{model.trigger}"
         incident_details = {
-          :incident_key => incident_key,
-          :details => {
-            :trigger => model.trigger,
-            :label => model.label,
-            :started_at => model.started_at,
-            :finished_at => model.finished_at,
-            :duration => model.duration,
-            :status => status,
-            :exception => model.exception
+          incident_key: incident_key,
+          details: {
+            trigger: model.trigger,
+            label: model.label,
+            started_at: model.started_at,
+            finished_at: model.finished_at,
+            duration: model.duration,
+            status: status,
+            exception: model.exception
           }
         }
 

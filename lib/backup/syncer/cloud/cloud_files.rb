@@ -1,5 +1,5 @@
 # encoding: utf-8
-require 'backup/cloud_io/cloud_files'
+require "backup/cloud_io/cloud_files"
 
 module Backup
   module Syncer
@@ -45,38 +45,37 @@ module Backup
 
         def cloud_io
           @cloud_io ||= CloudIO::CloudFiles.new(
-            :username           => username,
-            :api_key            => api_key,
-            :auth_url           => auth_url,
-            :region             => region,
-            :servicenet         => servicenet,
-            :container          => container,
-            :max_retries        => max_retries,
-            :retry_waitsec      => retry_waitsec,
+            username: username,
+            api_key: api_key,
+            auth_url: auth_url,
+            region: region,
+            servicenet: servicenet,
+            container: container,
+            max_retries: max_retries,
+            retry_waitsec: retry_waitsec,
             # Syncer can not use SLOs.
-            :segments_container => nil,
-            :segment_size       => 0,
-            :fog_options        => fog_options
+            segments_container: nil,
+            segment_size: 0,
+            fog_options: fog_options
           )
         end
 
         def get_remote_files(remote_base)
           hash = {}
           cloud_io.objects(remote_base).each do |object|
-            relative_path = object.name.sub(remote_base + '/', '')
+            relative_path = object.name.sub(remote_base + "/", "")
             hash[relative_path] = object.hash
           end
           hash
         end
 
         def check_configuration
-          required = %w{ username api_key container }
-          raise Error, <<-EOS if required.map {|name| send(name) }.any?(&:nil?)
+          required = %w(username api_key container)
+          raise Error, <<-EOS if required.map { |name| send(name) }.any?(&:nil?)
             Configuration Error
-            #{ required.map {|name| "##{ name }"}.join(', ') } are all required
+            #{required.map { |name| "##{name}" }.join(", ")} are all required
           EOS
         end
-
       end # class Cloudfiles < Base
     end # module Cloud
   end

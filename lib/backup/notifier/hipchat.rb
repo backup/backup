@@ -1,10 +1,9 @@
 # encoding: utf-8
-require 'hipchat'
+require "hipchat"
 
 module Backup
   module Notifier
     class Hipchat < Base
-
       ##
       # The Hipchat API token
       attr_accessor :token
@@ -51,10 +50,10 @@ module Backup
 
         @notify_users   ||= false
         @rooms_notified ||= []
-        @success_color  ||= 'yellow'
-        @warning_color  ||= 'yellow'
-        @failure_color  ||= 'yellow'
-        @api_version    ||= 'v1'
+        @success_color  ||= "yellow"
+        @warning_color  ||= "yellow"
+        @failure_color  ||= "yellow"
+        @api_version    ||= "v1"
       end
 
       private
@@ -78,7 +77,7 @@ module Backup
       #
       def notify!(status)
         status_data = status_data_for(status)
-        msg = message.call(model, :status => status_data)
+        msg = message.call(model, status: status_data)
         send_message(msg, status_data[:color])
       end
 
@@ -92,12 +91,12 @@ module Backup
       def send_message(msg, color)
         client = HipChat::Client.new(token, client_options)
         rooms_to_notify.each do |room|
-          client[room].send(from, msg, :color => color, :notify => notify_users)
+          client[room].send(from, msg, color: color, notify: notify_users)
         end
       end
 
       def rooms_to_notify
-        Array(rooms_notified).map {|r| r.split(',').map(&:strip) }.flatten
+        Array(rooms_notified).map { |r| r.split(",").map(&:strip) }.flatten
       end
 
       def status_data_for(status)
@@ -108,9 +107,9 @@ module Backup
 
       def status_color_for(status)
         {
-          :success => success_color,
-          :warning => warning_color,
-          :failure => failure_color
+          success: success_color,
+          warning: warning_color,
+          failure: failure_color
         }[status]
       end
     end

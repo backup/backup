@@ -12,7 +12,7 @@ module Backup
       @commands = []
       @success_codes = []
       @errors = []
-      @stderr = ''
+      @stderr = ""
     end
 
     ##
@@ -51,22 +51,21 @@ module Backup
     # Use `#success?` to determine if all commands in the pipeline succeeded.
     # If `#success?` returns `false`, use `#error_messages` to get an error report.
     def run
-      Open4.popen4(pipeline) do |pid, stdin, stdout, stderr|
-        pipestatus = stdout.read.gsub("\n", '').split(':').sort
+      Open4.popen4(pipeline) do |_pid, _stdin, stdout, stderr|
+        pipestatus = stdout.read.delete("\n").split(":").sort
         pipestatus.each do |status|
-          index, exitstatus = status.split('|').map(&:to_i)
-          unless @success_codes[index].include?(exitstatus)
-            command = command_name(@commands[index])
-            @errors << SystemCallError.new(
-              "'#{ command }' returned exit code: #{ exitstatus }", exitstatus
-            )
-          end
+          index, exitstatus = status.split("|").map(&:to_i)
+          next if @success_codes[index].include?(exitstatus)
+          command = command_name(@commands[index])
+          @errors << SystemCallError.new(
+            "'#{command}' returned exit code: #{exitstatus}", exitstatus
+          )
         end
         @stderr = stderr.read.strip
       end
       Logger.warn(stderr_messages) if success? && stderr_messages
     rescue Exception => err
-      raise Error.wrap(err, 'Pipeline failed to execute')
+      raise Error.wrap(err, "Pipeline failed to execute")
     end
 
     def success?
@@ -78,9 +77,9 @@ module Backup
     # from the commands in the pipeline (if any), along with the SystemCallError
     # (Errno) message for each command which had a non-zero exit status.
     def error_messages
-      @error_messages ||= (stderr_messages || '') +
-          "The following system errors were returned:\n" +
-          @errors.map {|err| "#{ err.class }: #{ err.message }" }.join("\n")
+      @error_messages ||= (stderr_messages || "") +
+        "The following system errors were returned:\n" +
+        @errors.map { |err| "#{err.class}: #{err.message}" }.join("\n")
     end
 
     private
@@ -106,19 +105,18 @@ module Backup
     def pipeline
       parts = []
       @commands.each_with_index do |command, index|
-        parts << %Q[{ #{ command } 2>&4 ; echo "#{ index }|$?:" >&3 ; }]
+        parts << %({ #{command} 2>&4 ; echo "#{index}|$?:" >&3 ; })
       end
-      %Q[{ #{ parts.join(' | ') } } 3>&1 1>&2 4>&2]
+      %({ #{parts.join(" | ")} } 3>&1 1>&2 4>&2)
     end
 
     def stderr_messages
-      @stderr_messages ||= @stderr.empty? ? false : <<-EOS.gsub(/^ +/, '  ')
+      @stderr_messages ||= @stderr.empty? ? false : <<-EOS.gsub(/^ +/, "  ")
         Pipeline STDERR Messages:
         (Note: may be interleaved if multiple commands returned error messages)
 
-        #{ @stderr }
+        #{@stderr}
       EOS
     end
-
   end
 end

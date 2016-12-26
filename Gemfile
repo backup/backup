@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-source 'https://rubygems.org'
+source "https://rubygems.org"
 
 ##
 # Gemfile.lock controls the dependencies used when running the specs in `spec/`.
@@ -20,38 +20,38 @@ source 'https://rubygems.org'
 
 # Specify version requirements to control `bundle update` if needed.
 group :production do
-  gem 'thor'
-  gem 'open4'
-  gem 'fog'
+  gem "thor"
+  gem "open4"
+  gem "fog"
   # gem 'excon' - use version specified by fog
-  gem 'unf' # for fog/AWS
-  gem 'dropbox-sdk', '1.6.5'
-  gem 'net-ssh'
-  gem 'net-scp'
-  gem 'net-sftp'
-  gem 'mail', '= 2.6.3' # patched
-  gem 'pagerduty'
-  gem 'twitter'
-  gem 'hipchat'
-  gem 'flowdock'
-  gem 'json'
-  gem 'dogapi'
-  gem 'aws-ses'
-  gem 'qiniu', '~> 6.5.1'
+  gem "unf" # for fog/AWS
+  gem "dropbox-sdk", "1.6.5"
+  gem "net-ssh"
+  gem "net-scp"
+  gem "net-sftp"
+  gem "mail", "= 2.6.3" # patched
+  gem "pagerduty"
+  gem "twitter"
+  gem "hipchat"
+  gem "flowdock"
+  gem "json"
+  gem "dogapi"
+  gem "aws-ses"
+  gem "qiniu", "~> 6.5.1"
 end
 
-gem 'rubocop', require: false
-gem 'rspec'
-gem 'mocha'
-gem 'timecop'
+gem "rubocop", require: false
+gem "rspec"
+gem "mocha"
+gem "timecop"
 
 # Omitted from Travis CI Environment
 group :no_ci do
-  gem 'rb-fsevent' # Mac OS X
-  gem 'rb-inotify' # Linux
-  gem 'pry'
+  gem "rb-fsevent" # Mac OS X
+  gem "rb-inotify" # Linux
+  gem "pry"
 
-  gem 'yard'
-  gem 'redcarpet'
+  gem "yard"
+  gem "redcarpet"
   # gem 'rake' - this will interfere with `rake gemspec`
 end

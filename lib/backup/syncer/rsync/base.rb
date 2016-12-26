@@ -4,7 +4,6 @@ module Backup
   module Syncer
     module RSync
       class Base < Syncer::Base
-
         ##
         # Additional String or Array of options for the rsync cli
         attr_accessor :additional_rsync_options
@@ -14,7 +13,7 @@ module Backup
           super
           instance_eval(&block) if block_given?
 
-          @path ||= '~/backups'
+          @path ||= "~/backups"
           @archive = @archive.nil? ? true : @archive
         end
 
@@ -24,19 +23,19 @@ module Backup
         # Common base command for Local/Push/Pull
         def rsync_command
           utility(:rsync) << archive_option << mirror_option << exclude_option <<
-              " #{ Array(additional_rsync_options).join(' ') }".rstrip
+            " #{Array(additional_rsync_options).join(" ")}".rstrip
         end
 
         def mirror_option
-          mirror ? ' --delete' : ''
+          mirror ? " --delete" : ""
         end
 
         def archive_option
-          archive ? ' --archive' : ''
+          archive ? " --archive" : ""
         end
 
         def exclude_option
-          excludes.map {|pattern| " --exclude='#{ pattern }'" }.join
+          excludes.map { |pattern| " --exclude='#{pattern}'" }.join
         end
 
         ##
@@ -45,9 +44,8 @@ module Backup
         # each path, as we don't want rsync's "trailing / on source directories"
         # behavior. This method is used by RSync::Local and RSync::Push.
         def paths_to_push
-          directories.map {|dir| "'#{ File.expand_path(dir) }'" }.join(' ')
+          directories.map { |dir| "'#{File.expand_path(dir)}'" }.join(" ")
         end
-
       end
     end
   end

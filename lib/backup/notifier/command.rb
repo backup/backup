@@ -3,7 +3,6 @@
 module Backup
   module Notifier
     class Command < Base
-
       ##
       # Command to execute.
       #

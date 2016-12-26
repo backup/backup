@@ -4,12 +4,11 @@ module Backup
   module Syncer
     module RSync
       class Local < Base
-
         def perform!
           log!(:started)
 
           create_dest_path!
-          run("#{ rsync_command } #{ paths_to_push } '#{ dest_path }'")
+          run("#{rsync_command} #{paths_to_push} '#{dest_path}'")
 
           log!(:finished)
         end
@@ -24,7 +23,6 @@ module Backup
         def create_dest_path!
           FileUtils.mkdir_p dest_path
         end
-
       end
     end
   end

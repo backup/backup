@@ -28,10 +28,10 @@ module Backup
       def perform!
         super
 
-        dump = "echo '.dump' | #{ sqlitedump_utility } #{ path }"
+        dump = "echo '.dump' | #{sqlitedump_utility} #{path}"
 
         pipeline = Pipeline.new
-        dump_ext = 'sql'
+        dump_ext = "sql"
 
         pipeline << dump
         if model.compressor
@@ -41,7 +41,7 @@ module Backup
           end
         end
 
-        pipeline << "cat > '#{ File.join( dump_path , dump_filename) }.#{ dump_ext }'"
+        pipeline << "cat > '#{File.join(dump_path, dump_filename)}.#{dump_ext}'"
 
         pipeline.run
 
@@ -49,7 +49,7 @@ module Backup
           log!(:finished)
         else
           raise Error,
-            "#{ database_name } Dump Failed!\n" + pipeline.error_messages
+            "#{database_name} Dump Failed!\n" + pipeline.error_messages
         end
       end
     end

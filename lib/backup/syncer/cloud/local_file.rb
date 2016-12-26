@@ -1,5 +1,5 @@
 # encoding: utf-8
-require 'digest/md5'
+require "digest/md5"
 
 module Backup
   module Syncer
@@ -9,7 +9,6 @@ module Backup
         attr_accessor :md5
 
         class << self
-
           # Returns a Hash of LocalFile objects for each file within +dir+,
           # except those matching any of the +excludes+.
           # Hash keys are the file's path relative to +dir+.
@@ -17,7 +16,7 @@ module Backup
             dir = File.expand_path(dir)
             hash = {}
             find_md5(dir, excludes).each do |file|
-              hash[file.path.sub(dir + '/', '')] = file
+              hash[file.path.sub(dir + "/", "")] = file
             end
             hash
           end
@@ -27,7 +26,7 @@ module Backup
           def new(*args)
             file = super
             if file.invalid?
-              Logger.warn("\s\s[skipping] #{ file.path }\n" +
+              Logger.warn("\s\s[skipping] #{file.path}\n" \
                           "\s\sPath Contains Invalid UTF-8 byte sequences")
               file = nil
             end
@@ -39,7 +38,7 @@ module Backup
           # Returns an Array of file paths and their md5 hashes.
           def find_md5(dir, excludes)
             found = []
-            (Dir.entries(dir) - %w{. ..}).map {|e| File.join(dir, e) }.each do |path|
+            (Dir.entries(dir) - %w(. ..)).map { |e| File.join(dir, e) }.each do |path|
               if File.directory?(path)
                 unless exclude?(excludes, path)
                   found += find_md5(path, excludes)
@@ -85,7 +84,7 @@ module Backup
         def sanitize(str)
           str.each_char.map do |char|
             begin
-              char.unpack('U')
+              char.unpack("U")
               char
             rescue
               @invalid = true
@@ -93,7 +92,6 @@ module Backup
             end
           end.join
         end
-
       end
     end
   end

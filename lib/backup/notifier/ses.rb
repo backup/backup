@@ -1,10 +1,9 @@
 # encoding: utf-8
-require 'aws/ses'
+require "aws/ses"
 
 module Backup
   module Notifier
     class Ses < Base
-
       ##
       # Amazon Simple Email Service (SES) Credentials
       attr_accessor :access_key_id, :secret_access_key
@@ -37,7 +36,7 @@ module Backup
         super
         instance_eval(&block) if block_given?
 
-        @region ||= 'eu-west-1'
+        @region ||= "eu-west-1"
         @send_log_on ||= [:warning, :failure]
       end
 
@@ -52,9 +51,9 @@ module Backup
 
       def client
         AWS::SES::Base.new(
-          :access_key_id => access_key_id,
-          :secret_access_key => secret_access_key,
-          :server => "email.#{region}.amazonaws.com"
+          access_key_id: access_key_id,
+          secret_access_key: secret_access_key,
+          server: "email.#{region}.amazonaws.com"
         )
       end
 
@@ -84,17 +83,17 @@ module Backup
         email.cc       = cc
         email.bcc      = bcc
         email.reply_to = reply_to
-        email.subject  = message.call(model, :status => status_data_for(status))
+        email.subject  = message.call(model, status: status_data_for(status))
 
         send_log = send_log_on.include?(status)
-        template = Backup::Template.new({ :model => model, :send_log => send_log })
-        email.body = template.result('notifier/mail/%s.erb' % status.to_s)
+        template = Backup::Template.new(model: model, send_log: send_log)
+        email.body = template.result(sprintf("notifier/mail/%s.erb", status.to_s))
 
         if send_log
           email.convert_to_multipart
-          email.attachments["#{ model.time }.#{ model.trigger }.log"] = {
-            :mime_type => 'text/plain;',
-            :content   => Logger.messages.map(&:formatted_lines).flatten.join("\n")
+          email.attachments["#{model.time}.#{model.trigger}.log"] = {
+            mime_type: "text/plain;",
+            content: Logger.messages.map(&:formatted_lines).flatten.join("\n")
           }
         end
 

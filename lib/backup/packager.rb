@@ -22,7 +22,7 @@ module Backup
           Logger.info "Packaging Complete!"
         else
           raise Error, "Failed to Create Backup Package\n" +
-              @pipeline.error_messages
+            @pipeline.error_messages
         end
       end
 
@@ -43,8 +43,8 @@ module Backup
         # or the Splitter (if no Encryptor), or through `cat` into the final
         # output file if neither are configured.
         @pipeline.add(
-          "#{ utility(:tar) } -cf - " +
-          "-C '#{ Config.tmp_path }' '#{ @package.trigger }'",
+          "#{utility(:tar)} -cf - " \
+          "-C '#{Config.tmp_path}' '#{@package.trigger}'",
           tar_success_codes
         )
 
@@ -85,7 +85,7 @@ module Backup
         else
           stack << lambda do
             outfile = File.join(Config.tmp_path, @package.basename)
-            @pipeline << "#{ utility(:cat) } > #{ outfile }"
+            @pipeline << "#{utility(:cat)} > #{outfile}"
             stack.shift.call
           end
         end
@@ -94,7 +94,7 @@ module Backup
         # Last Proc to be called runs the Pipeline the procedure built.
         # Once complete, the call stack will unwind back through the
         # preceeding Procs in the stack (if any)
-        stack << lambda { @pipeline.run }
+        stack << -> { @pipeline.run }
 
         stack.shift
       end

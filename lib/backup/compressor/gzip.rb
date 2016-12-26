@@ -35,8 +35,8 @@ module Backup
       # Determine if +--rsyncable+ is supported and cache the result.
       def self.has_rsyncable?
         return @has_rsyncable unless @has_rsyncable.nil?
-        cmd = "#{ utility(:gzip) } --rsyncable --version >/dev/null 2>&1; echo $?"
-        @has_rsyncable = %x[#{ cmd }].chomp == '0'
+        cmd = "#{utility(:gzip)} --rsyncable --version >/dev/null 2>&1; echo $?"
+        @has_rsyncable = `#{cmd}`.chomp == "0"
       end
 
       ##
@@ -49,26 +49,27 @@ module Backup
 
         instance_eval(&block) if block_given?
 
-        @cmd = "#{ utility(:gzip) }#{ options }"
-        @ext = '.gz'
+        @cmd = "#{utility(:gzip)}#{options}"
+        @ext = ".gz"
       end
 
       private
 
       def options
-        opts = ''
-        opts << " -#{ @level }" if @level
-        if self.class.has_rsyncable?
-          opts << ' --rsyncable'
-        else
-          Logger.warn Error.new(<<-EOS)
-            'rsyncable' option ignored.
-            Your system's 'gzip' does not support the `--rsyncable` option.
-          EOS
-        end if @rsyncable
+        opts = ""
+        opts << " -#{@level}" if @level
+        if @rsyncable
+          if self.class.has_rsyncable?
+            opts << " --rsyncable"
+          else
+            Logger.warn Error.new(<<-EOS)
+              'rsyncable' option ignored.
+              Your system's 'gzip' does not support the `--rsyncable` option.
+            EOS
+          end
+        end
         opts
       end
-
     end
   end
 end

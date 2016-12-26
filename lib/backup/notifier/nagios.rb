@@ -3,7 +3,6 @@
 module Backup
   module Notifier
     class Nagios < Base
-
       ##
       # Host of Nagios server to notify on backup completion.
       attr_accessor :nagios_host
@@ -30,8 +29,8 @@ module Backup
 
         @nagios_host  ||= Config.hostname
         @nagios_port  ||= 5667
-        @send_nsca_cfg||= "/etc/nagios/send_nsca.cfg"
-        @service_name ||= "Backup #{ model.trigger }"
+        @send_nsca_cfg ||= "/etc/nagios/send_nsca.cfg"
+        @service_name ||= "Backup #{model.trigger}"
         @service_host ||= Config.hostname
       end
 
@@ -55,15 +54,14 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        send_message(message.call(model, :status => status_data_for(status)))
+        send_message(message.call(model, status: status_data_for(status)))
       end
 
       def send_message(message)
-        cmd = "#{ utility(:send_nsca) } -H '#{ nagios_host }' -p '#{ nagios_port }' -c '#{ send_nsca_cfg }'"
+        cmd = "#{utility(:send_nsca)} -H '#{nagios_host}' -p '#{nagios_port}' -c '#{send_nsca_cfg}'"
         msg = [service_host, service_name, model.exit_status, message].join("\t")
-        run("echo '#{ msg }' | #{ cmd }")
+        run("echo '#{msg}' | #{cmd}")
       end
-
     end
   end
 end

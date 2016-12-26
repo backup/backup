@@ -4,14 +4,13 @@ module Backup
   module Syncer
     module RSync
       class Pull < Push
-
         def perform!
           log!(:started)
           write_password_file!
 
           create_dest_path!
-          run("#{ rsync_command } #{ host_options }#{ paths_to_pull } " +
-              "'#{ dest_path }'")
+          run("#{rsync_command} #{host_options}#{paths_to_pull} " \
+              "'#{dest_path}'")
 
           log!(:finished)
         ensure
@@ -30,10 +29,10 @@ module Backup
         # Also remove any trailing `/`, since we don't want rsync's
         # "trailing / on source directories" behavior.
         def paths_to_pull
-          sep = mode == :ssh ? ':' : '::'
-          directories.map {|dir|
-            "#{ sep }'#{ dir.sub(/^~\//, '').sub(/\/$/, '') }'"
-          }.join(' ').sub(/^#{ sep }/, '')
+          sep = mode == :ssh ? ":" : "::"
+          directories.map do |dir|
+            "#{sep}'#{dir.sub(/^~\//, "").sub(/\/$/, "")}'"
+          end.join(" ").sub(/^#{ sep }/, "")
         end
 
         # Expand path, since this is local and shell-quoted.
@@ -44,7 +43,6 @@ module Backup
         def create_dest_path!
           FileUtils.mkdir_p dest_path
         end
-
       end
     end
   end

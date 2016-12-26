@@ -4,7 +4,6 @@ module Backup
   module Syncer
     module RSync
       class Push < Base
-
         ##
         # Mode of operation
         #
@@ -114,8 +113,8 @@ module Backup
           write_password_file!
 
           create_dest_path!
-          run("#{ rsync_command } #{ paths_to_push } " +
-              "#{ host_options }'#{ dest_path }'")
+          run("#{rsync_command} #{paths_to_push} " \
+              "#{host_options}'#{dest_path}'")
 
           log!(:finished)
         ensure
@@ -128,7 +127,7 @@ module Backup
         # Remove any preceeding '~/', since this is on the remote,
         # and remove any trailing `/`.
         def dest_path
-          @dest_path ||= path.sub(/^~\//, '').sub(/\/$/, '')
+          @dest_path ||= path.sub(/^~\//, "").sub(/\/$/, "")
         end
 
         ##
@@ -137,10 +136,10 @@ module Backup
         # call 'mkdir' without the '-p' option. This is only applicable in :ssh
         # mode, and only used if the path would require this.
         def create_dest_path!
-          return unless mode == :ssh && dest_path.index('/').to_i > 0
+          return unless mode == :ssh && dest_path.index("/").to_i > 0
 
-          run "#{ utility(:ssh) } #{ ssh_transport_args } #{ host } " +
-                 %Q["mkdir -p '#{ dest_path }'"]
+          run "#{utility(:ssh)} #{ssh_transport_args} #{host} " +
+            %("mkdir -p '#{dest_path}'")
         end
 
         ##
@@ -148,10 +147,10 @@ module Backup
         # For Pull, this will prepend the first path in #paths_to_pull.
         def host_options
           if mode == :ssh
-            "#{ host }:"
+            "#{host}:"
           else
-            user = "#{ rsync_user }@" if rsync_user
-            "#{ user }#{ host }::"
+            user = "#{rsync_user}@" if rsync_user
+            "#{user}#{host}::"
           end
         end
 
@@ -162,35 +161,35 @@ module Backup
         end
 
         def compress_option
-          compress ? ' --compress' : ''
+          compress ? " --compress" : ""
         end
 
         def password_option
-          return '' if mode == :ssh
+          return "" if mode == :ssh
 
           path = @password_file ? @password_file.path : rsync_password_file
-          path ? " --password-file='#{ File.expand_path(path) }'" : ''
+          path ? " --password-file='#{File.expand_path(path)}'" : ""
         end
 
         def transport_options
           if mode == :rsync_daemon
-            " --port #{ port }"
+            " --port #{port}"
           else
-            %Q[ -e "#{ utility(:ssh) } #{ ssh_transport_args }"]
+            %( -e "#{utility(:ssh)} #{ssh_transport_args}")
           end
         end
 
         def ssh_transport_args
-          args = "-p #{ port } "
-          args << "-l #{ ssh_user } " if ssh_user
-          args << Array(additional_ssh_options).join(' ')
+          args = "-p #{port} "
+          args << "-l #{ssh_user} " if ssh_user
+          args << Array(additional_ssh_options).join(" ")
           args.rstrip
         end
 
         def write_password_file!
           return unless rsync_password && mode != :ssh
 
-          @password_file = Tempfile.new('backup-rsync-password')
+          @password_file = Tempfile.new("backup-rsync-password")
           @password_file.write(rsync_password)
           @password_file.close
         end
@@ -198,7 +197,6 @@ module Backup
         def remove_password_file!
           @password_file.delete if @password_file
         end
-
       end
     end
   end

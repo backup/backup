@@ -81,7 +81,7 @@ module Backup
 
         def initialize
           @enabled = false
-          @ident = 'backup'
+          @ident = "backup"
           @options = ::Syslog::LOG_PID
           @facility = ::Syslog::LOG_LOCAL0
           @info = ::Syslog::LOG_INFO
@@ -108,7 +108,7 @@ module Backup
       def log(message)
         level = @options.send(message.level)
         ::Syslog.open(@options.ident, @options.options, @options.facility) do |s|
-          message.lines.each {|line| s.log(level, '%s', line) }
+          message.lines.each { |line| s.log(level, "%s", line) }
         end
       end
     end
