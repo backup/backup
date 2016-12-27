@@ -1,10 +1,9 @@
 # encoding: utf-8
-require 'json'
+require "json"
 
 module Backup
   module Notifier
     class Campfire < Base
-
       ##
       # Campfire api authentication token
       attr_accessor :api_token
@@ -42,22 +41,22 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        send_message(message.call(model, :status => status_data_for(status)))
+        send_message(message.call(model, status: status_data_for(status)))
       end
 
       def send_message(message)
-        uri = "https://#{ subdomain }.campfirenow.com/room/#{ room_id }/speak.json"
+        uri = "https://#{subdomain}.campfirenow.com/room/#{room_id}/speak.json"
         options = {
-          :headers  => { 'Content-Type' => 'application/json' },
-          :body     => JSON.dump(
-            { :message => { :body => message, :type => 'Textmessage' } }
+          headers: { "Content-Type" => "application/json" },
+          body: JSON.dump(
+            message: { body: message, type: "Textmessage" }
           )
         }
-        options.merge!(:user => api_token, :password => 'x') # Basic Auth
-        options.merge!(:expects => 201) # raise error if unsuccessful
+        options[:user] = api_token
+        options[:password] = "x" # Basic Auth
+        options[:expects] = 201 # raise error if unsuccessful
         Excon.post(uri, options)
       end
-
     end
   end
 end

@@ -1,14 +1,13 @@
 # encoding: utf-8
 
 # require only the logger
-require 'formatador'
-require 'fog/core/logger'
+require "formatador"
+require "fog/core/logger"
 
 module Backup
   class Logger
     module FogAdapter
       class << self
-
         # Logged as :info so these won't generate warnings.
         # This is mostly to keep STDOUT clean and to provide
         # supplemental messages for our own warnings.
@@ -20,7 +19,6 @@ module Backup
         def tty?
           false
         end
-
       end
     end
   end

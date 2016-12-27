@@ -53,18 +53,17 @@ module Backup
       private
 
       def syncer_name
-        @syncer_name ||= self.class.to_s.sub('Backup::', '') +
-            (syncer_id ? " (#{ syncer_id })" : '')
+        @syncer_name ||= self.class.to_s.sub("Backup::", "") +
+          (syncer_id ? " (#{syncer_id})" : "")
       end
 
       def log!(action)
         msg = case action
-              when :started then 'Started...'
-              when :finished then 'Finished!'
+              when :started then "Started..."
+              when :finished then "Finished!"
               end
-        Logger.info "#{ syncer_name } #{ msg }"
+        Logger.info "#{syncer_name} #{msg}"
       end
-
     end
   end
 end

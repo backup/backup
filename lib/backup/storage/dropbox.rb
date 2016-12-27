@@ -1,5 +1,5 @@
 # encoding: utf-8
-require 'dropbox_sdk'
+require "dropbox_sdk"
 
 module Backup
   module Storage
@@ -50,13 +50,13 @@ module Backup
       def initialize(model, storage_id = nil)
         super
 
-        @path           ||= 'backups'
-        @cache_path     ||= '.cache'
+        @path           ||= "backups"
+        @cache_path     ||= ".cache"
         @access_type    ||= :app_folder
         @chunk_size     ||= 4 # MiB
         @max_retries    ||= 10
         @retry_waitsec  ||= 30
-        path.sub!(/^\//, '')
+        path.sub!(/^\//, "")
       end
 
       private
@@ -83,7 +83,7 @@ module Backup
         @connection = DropboxClient.new(session, access_type)
 
       rescue => err
-        raise Error.wrap(err, 'Authorization Failed')
+        raise Error.wrap(err, "Authorization Failed")
       end
 
       ##
@@ -113,10 +113,10 @@ module Backup
         package.filenames.each do |filename|
           src = File.join(Config.tmp_path, filename)
           dest = File.join(remote_path, filename)
-          Logger.info "Storing '#{ dest }'..."
+          Logger.info "Storing '#{dest}'..."
 
           uploader = nil
-          File.open(src, 'r') do |file|
+          File.open(src, "r") do |file|
             uploader = connection.get_chunked_uploader(file, file.stat.size)
             while uploader.offset < uploader.total_size
               with_retries do
@@ -131,7 +131,7 @@ module Backup
         end
 
       rescue => err
-        raise Error.wrap(err, 'Upload Failed!')
+        raise Error.wrap(err, "Upload Failed!")
       end
 
       def with_retries
@@ -142,7 +142,7 @@ module Backup
           retries += 1
           raise if retries > max_retries
 
-          Logger.info Error.wrap(err, "Retry ##{ retries } of #{ max_retries }.")
+          Logger.info Error.wrap(err, "Retry ##{retries} of #{max_retries}.")
           sleep(retry_waitsec)
           retry
         end
@@ -151,13 +151,13 @@ module Backup
       # Called by the Cycler.
       # Any error raised will be logged as a warning.
       def remove!(package)
-        Logger.info "Removing backup package dated #{ package.time }..."
+        Logger.info "Removing backup package dated #{package.time}..."
 
         connection.file_delete(remote_path_for(package))
       end
 
       def cached_file
-        path = cache_path.start_with?('/') ?
+        path = cache_path.start_with?("/") ?
                cache_path : File.join(Config.root_path, cache_path)
         File.join(path, api_key + api_secret)
       end
@@ -175,7 +175,7 @@ module Backup
       # Create a new session, write a serialized version of it to the
       # .cache directory, and return the session object
       def create_write_and_return_new_session!
-        require 'timeout'
+        require "timeout"
 
         session = DropboxSession.new(api_key, api_secret)
 
@@ -183,12 +183,12 @@ module Backup
         session.get_request_token
 
         template = Backup::Template.new(
-          {:session => session, :cached_file => cached_file}
+          session: session, cached_file: cached_file
         )
         template.render("storage/dropbox/authorization_url.erb")
 
         # wait for user to hit 'return' to continue
-        Timeout::timeout(180) { STDIN.gets }
+        Timeout.timeout(180) { STDIN.gets }
 
         # this will raise an error if the user did not
         # visit the authorization_url and grant access
@@ -204,9 +204,8 @@ module Backup
         session
 
       rescue => err
-        raise Error.wrap(err, 'Could not create or authenticate a new session')
+        raise Error.wrap(err, "Could not create or authenticate a new session")
       end
-
     end
   end
 end

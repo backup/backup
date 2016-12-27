@@ -1,10 +1,9 @@
 # encoding: utf-8
-require 'twitter'
+require "twitter"
 
 module Backup
   module Notifier
     class Twitter < Base
-
       ##
       # Twitter consumer key credentials
       attr_accessor :consumer_key, :consumer_secret
@@ -38,7 +37,7 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        send_message(message.call(model, :status => status_data_for(status)))
+        send_message(message.call(model, status: status_data_for(status)))
       end
 
       # Twitter::Client will raise an error if unsuccessful.
@@ -52,7 +51,6 @@ module Backup
 
         client.update(message)
       end
-
     end
   end
 end

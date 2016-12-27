@@ -1,10 +1,9 @@
 # encoding: utf-8
-require 'flowdock'
+require "flowdock"
 
 module Backup
   module Notifier
     class FlowDock < Base
-
       ##
       # The Flowdock API token
       attr_accessor :token
@@ -68,36 +67,34 @@ module Backup
       # Flowdock::Client will raise an error if unsuccessful.
       def send_message(msg)
         client = Flowdock::Flow.new(
-          :api_token => token, :source => source,
-          :from => {:name => from_name, :address => from_email }
+          api_token: token, source: source,
+          from: { name: from_name, address: from_email }
         )
 
-        client.push_to_team_inbox(:subject => subject,
-                                  :content => msg,
-                                  :tags => tags,
-                                  :link => link )
+        client.push_to_team_inbox(subject: subject,
+                                  content: msg,
+                                  tags: tags,
+                                  link: link)
       end
 
       # set related tags
       def default_tags(status)
         case status
-        when :success then ['#BackupSuccess']
-        when :warning then ['#BackupWarning']
-        when :failure then ['#BackupFailure']
+        when :success then ["#BackupSuccess"]
+        when :warning then ["#BackupWarning"]
+        when :failure then ["#BackupFailure"]
         end
       end
 
-
-      #set default source
+      # set default source
       def default_source
-        "Backup #{ model.label }"
+        "Backup #{model.label}"
       end
 
       # set default subject
       def default_subject
-        'Backup Notification'
+        "Backup Notification"
       end
-
     end
   end
 end

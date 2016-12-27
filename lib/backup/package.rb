@@ -2,7 +2,6 @@
 
 module Backup
   class Package
-
     ##
     # The time when the backup initiated (in format: 2011.02.20.03.29.59)
     attr_accessor :time
@@ -29,8 +28,8 @@ module Backup
 
     def initialize(model)
       @trigger = model.trigger
-      @extension = 'tar'
-      @chunk_suffixes = Array.new
+      @extension = "tar"
+      @chunk_suffixes = []
       @no_cycle = false
       @version = VERSION
     end
@@ -39,17 +38,16 @@ module Backup
       if chunk_suffixes.empty?
         [basename]
       else
-        chunk_suffixes.map {|suffix| "#{ basename }-#{ suffix }" }
+        chunk_suffixes.map { |suffix| "#{basename}-#{suffix}" }
       end
     end
 
     def basename
-      "#{ trigger }.#{ extension }"
+      "#{trigger}.#{extension}"
     end
 
     def time_as_object
-      Time.strptime(time, '%Y.%m.%d.%H.%M.%S')
+      Time.strptime(time, "%Y.%m.%d.%H.%M.%S")
     end
-
   end
 end

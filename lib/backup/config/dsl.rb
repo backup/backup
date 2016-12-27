@@ -27,23 +27,23 @@ module Backup
           create_modules(
             DSL,
             [ # Databases
-              ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Riak', 'OpenLDAP', 'SQLite'],
+              ["MySQL", "PostgreSQL", "MongoDB", "Redis", "Riak", "OpenLDAP", "SQLite"],
               # Storages
-              ['S3', 'CloudFiles', 'Ninefold', 'Dropbox', 'FTP',
-              'SFTP', 'SCP', 'RSync', 'Local', 'Qiniu'],
+              ["S3", "CloudFiles", "Ninefold", "Dropbox", "FTP",
+               "SFTP", "SCP", "RSync", "Local", "Qiniu"],
               # Compressors
-              ['Gzip', 'Bzip2', 'Custom', 'Pbzip2', 'Lzma'],
+              ["Gzip", "Bzip2", "Custom", "Pbzip2", "Lzma"],
               # Encryptors
-              ['OpenSSL', 'GPG'],
+              ["OpenSSL", "GPG"],
               # Syncers
               [
-                { 'Cloud' => ['CloudFiles', 'S3'] },
-                { 'RSync' => ['Push', 'Pull', 'Local'] }
+                { "Cloud" => ["CloudFiles", "S3"] },
+                { "RSync" => ["Push", "Pull", "Local"] }
               ],
               # Notifiers
-              ['Mail', 'Twitter', 'Campfire', 'Prowl',
-              'Hipchat', 'PagerDuty', 'Pushover', 'HttpPost', 'Nagios',
-              'Slack', 'FlowDock', 'Zabbix', 'Ses', 'DataDog', 'Command']
+              ["Mail", "Twitter", "Campfire", "Prowl",
+               "Hipchat", "PagerDuty", "Pushover", "HttpPost", "Nagios",
+               "Slack", "FlowDock", "Zabbix", "Ses", "DataDog", "Command"]
             ]
           )
         end
@@ -69,7 +69,7 @@ module Backup
         end
       end
 
-      add_dsl_constants  # add constants on load
+      add_dsl_constants # add constants on load
 
       attr_reader :_config_options
 
@@ -79,25 +79,24 @@ module Backup
 
       # Allow users to set command line path options in config.rb
       [:root_path, :data_path, :tmp_path].each do |name|
-        define_method name, lambda {|path| _config_options[name] = path }
+        define_method name, ->(path) { _config_options[name] = path }
       end
 
       # Allows users to create preconfigured models.
       def preconfigure(name, &block)
         unless name.is_a?(String) && name =~ /^[A-Z]/
-          raise Error, "Preconfigured model names must be given as a string " +
+          raise Error, "Preconfigured model names must be given as a string " \
                         "and start with a capital letter."
         end
 
         if DSL.const_defined?(name)
-          raise Error, "'#{ name }' is already in use " +
+          raise Error, "'#{name}' is already in use " \
                         "and can not be used for a preconfigured model."
         end
 
         DSL.const_set(name, Class.new(Model))
         DSL.const_get(name).preconfigure(&block)
       end
-
     end
   end
 end

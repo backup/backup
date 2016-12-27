@@ -1,5 +1,5 @@
 # encoding: utf-8
-require 'net/sftp'
+require "net/sftp"
 
 module Backup
   module Storage
@@ -19,16 +19,16 @@ module Backup
 
         @ssh_options ||= {}
         @port        ||= 22
-        @path        ||= 'backups'
-        path.sub!(/^~\//, '')
+        @path        ||= "backups"
+        path.sub!(/^~\//, "")
       end
 
       private
 
       def connection
         Net::SFTP.start(
-          ip, username, { :password => password, :port => port }.merge(ssh_options)
-        ) {|sftp| yield sftp }
+          ip, username, { password: password, port: port }.merge(ssh_options)
+        ) { |sftp| yield sftp }
       end
 
       def transfer!
@@ -38,7 +38,7 @@ module Backup
           package.filenames.each do |filename|
             src = File.join(Config.tmp_path, filename)
             dest = File.join(remote_path, filename)
-            Logger.info "Storing '#{ ip }:#{ dest }'..."
+            Logger.info "Storing '#{ip}:#{dest}'..."
             sftp.upload!(src, dest)
           end
         end
@@ -47,7 +47,7 @@ module Backup
       # Called by the Cycler.
       # Any error raised will be logged as a warning.
       def remove!(package)
-        Logger.info "Removing backup package dated #{ package.time }..."
+        Logger.info "Removing backup package dated #{package.time}..."
 
         remote_path = remote_path_for(package)
         connection do |sftp|
@@ -68,15 +68,14 @@ module Backup
       # Net::SFTP raises an exception when the directory it's trying to create
       # already exists, so we have rescue it
       def create_remote_path(sftp)
-        path_parts = Array.new
-        remote_path.split('/').each do |path_part|
+        path_parts = []
+        remote_path.split("/").each do |path_part|
           path_parts << path_part
           begin
-            sftp.mkdir!(path_parts.join('/'))
+            sftp.mkdir!(path_parts.join("/"))
           rescue Net::SFTP::StatusException; end
         end
       end
-
     end
   end
 end

@@ -1,10 +1,9 @@
 # encoding: utf-8
-require 'dogapi'
+require "dogapi"
 
 module Backup
   module Notifier
     class DataDog < Base
-
       ##
       # The DataDog API key
       attr_accessor :api_key
@@ -14,9 +13,9 @@ module Backup
       attr_accessor :title
 
       attr_deprecate :text,
-        :version => '4.2',
-        :message => 'Please use the `message` attribute. For more information '\
-          'see https://github.com/backup/backup/pull/698'
+        version: "4.2",
+        message: "Please use the `message` attribute. For more information "\
+          "see https://github.com/backup/backup/pull/698"
 
       ##
       # The timestamp for the event
@@ -49,7 +48,7 @@ module Backup
       def initialize(model, &block)
         super
         instance_eval(&block) if block_given?
-        @title ||= "Backup #{ model.label }"
+        @title ||= "Backup #{model.label}"
       end
 
       private
@@ -72,7 +71,7 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        msg = message.call(model, :status => status_data_for(status))
+        msg = message.call(model, status: status_data_for(status))
 
         hash = { alert_type: default_alert_type(status) }
         hash.store(:msg_title,        @title)
@@ -96,12 +95,11 @@ module Backup
       # set alert type
       def default_alert_type(status)
         case status
-        when :success then 'success'
-        when :warning then 'warning'
-        when :failure then 'error'
+        when :success then "success"
+        when :warning then "warning"
+        when :failure then "error"
         end
       end
-
     end
   end
 end

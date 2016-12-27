@@ -9,3 +9,4 @@ vagrant/spec/live.yml
 *.swo
 .ruby-*
 doc/
+tmp/

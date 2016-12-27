@@ -3,7 +3,6 @@
 module Backup
   module Compressor
     class Bzip2 < Base
-
       ##
       # Specify the level of compression to use.
       #
@@ -24,16 +23,15 @@ module Backup
 
         instance_eval(&block) if block_given?
 
-        @cmd = "#{ utility(:bzip2) }#{ options }"
-        @ext = '.bz2'
+        @cmd = "#{utility(:bzip2)}#{options}"
+        @ext = ".bz2"
       end
 
       private
 
       def options
-        " -#{ @level }" if @level
+        " -#{@level}" if @level
       end
-
     end
   end
 end

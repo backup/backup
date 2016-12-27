@@ -1,5 +1,5 @@
 # encoding: utf-8
-require 'backup/cloud_io/cloud_files'
+require "backup/cloud_io/cloud_files"
 
 module Backup
   module Storage
@@ -79,8 +79,8 @@ module Backup
         @max_retries        ||= 10
         @retry_waitsec      ||= 30
 
-        @path ||= 'backups'
-        path.sub!(/^\//, '')
+        @path ||= "backups"
+        path.sub!(/^\//, "")
 
         check_configuration
       end
@@ -89,18 +89,18 @@ module Backup
 
       def cloud_io
         @cloud_io ||= CloudIO::CloudFiles.new(
-          :username           => username,
-          :api_key            => api_key,
-          :auth_url           => auth_url,
-          :region             => region,
-          :servicenet         => servicenet,
-          :container          => container,
-          :segments_container => segments_container,
-          :segment_size       => segment_size,
-          :days_to_keep       => days_to_keep,
-          :max_retries        => max_retries,
-          :retry_waitsec      => retry_waitsec,
-          :fog_options        => fog_options
+          username: username,
+          api_key: api_key,
+          auth_url: auth_url,
+          region: region,
+          servicenet: servicenet,
+          container: container,
+          segments_container: segments_container,
+          segment_size: segment_size,
+          days_to_keep: days_to_keep,
+          max_retries: max_retries,
+          retry_waitsec: retry_waitsec,
+          fog_options: fog_options
         )
       end
 
@@ -108,7 +108,7 @@ module Backup
         package.filenames.each do |filename|
           src = File.join(Config.tmp_path, filename)
           dest = File.join(remote_path, filename)
-          Logger.info "Storing '#{ container }/#{ dest }'..."
+          Logger.info "Storing '#{container}/#{dest}'..."
           cloud_io.upload(src, dest)
         end
 
@@ -118,12 +118,12 @@ module Backup
       # Called by the Cycler.
       # Any error raised will be logged as a warning.
       def remove!(package)
-        Logger.info "Removing backup package dated #{ package.time }..."
+        Logger.info "Removing backup package dated #{package.time}..."
 
         remote_path = remote_path_for(package)
         objects = cloud_io.objects(remote_path)
 
-        raise Error, "Package at '#{ remote_path }' not found" if objects.empty?
+        raise Error, "Package at '#{remote_path}' not found" if objects.empty?
 
         slo_objects, objects = objects.partition(&:slo?)
         cloud_io.delete_slo(slo_objects)
@@ -131,10 +131,10 @@ module Backup
       end
 
       def check_configuration
-        required = %w{ username api_key container }
-        raise Error, <<-EOS if required.map {|name| send(name) }.any?(&:nil?)
+        required = %w(username api_key container)
+        raise Error, <<-EOS if required.map { |name| send(name) }.any?(&:nil?)
           Configuration Error
-          #{ required.map {|name| "##{ name }"}.join(', ') } are all required
+          #{required.map { |name| "##{name}" }.join(", ")} are all required
         EOS
 
         raise Error, <<-EOS if segment_size > 0 && segments_container.to_s.empty?
@@ -152,7 +152,6 @@ module Backup
           #segment_size is too large (max 5120)
         EOS
       end
-
     end
   end
 end
