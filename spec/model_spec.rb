@@ -478,8 +478,8 @@ describe 'Backup::Model' do
 
         model.perform!
 
-        before_called.should be_true
-        procedure_called.should be_true
+        before_called.should be_truthy
+        procedure_called.should be_truthy
         after_called_with.should be 0
       end
 
@@ -492,7 +492,7 @@ describe 'Backup::Model' do
         model.perform!
 
         model.exit_status.should be 1
-        procedure_called.should be_true
+        procedure_called.should be_truthy
         after_called_with.should be 1
       end
 
@@ -505,8 +505,8 @@ describe 'Backup::Model' do
         model.perform!
 
         model.exit_status.should be 2
-        procedure_called.should be_false
-        after_called.should be_false
+        procedure_called.should be_falsey
+        after_called.should be_falsey
       end
 
       specify 'before hook may abort backup with fatal exception' do
@@ -518,8 +518,8 @@ describe 'Backup::Model' do
         model.perform!
 
         model.exit_status.should be 3
-        procedure_called.should be_false
-        after_called.should be_false
+        procedure_called.should be_falsey
+        after_called.should be_falsey
       end
 
       specify 'after hook is called when procedure raises non-fatal exception' do
@@ -563,7 +563,7 @@ describe 'Backup::Model' do
 
         model.exit_status.should be 2
         after_called_with.should be 2
-        Backup::Logger.has_warnings?.should be_true
+        Backup::Logger.has_warnings?.should be_truthy
       end
 
       specify 'after hook may fail model with non-fatal exceptions' do

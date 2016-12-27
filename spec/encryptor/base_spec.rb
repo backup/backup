@@ -7,12 +7,12 @@ describe Backup::Encryptor::Base do
 
   it 'should include Utilities::Helpers' do
     Backup::Encryptor::Base.
-      include?(Backup::Utilities::Helpers).should be_true
+      include?(Backup::Utilities::Helpers).should be_truthy
   end
 
   it 'should include Config::Helpers' do
     Backup::Encryptor::Base.
-      include?(Backup::Config::Helpers).should be_true
+      include?(Backup::Config::Helpers).should be_truthy
   end
 
   describe '#initialize' do

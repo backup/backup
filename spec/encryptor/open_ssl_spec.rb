@@ -37,8 +37,8 @@ describe Backup::Encryptor::OpenSSL do
         encryptor = Backup::Encryptor::OpenSSL.new
         encryptor.password.should       be_nil
         encryptor.password_file.should  be_nil
-        encryptor.base64.should         be_false
-        encryptor.salt.should           be_true
+        encryptor.base64.should         be_falsey
+        encryptor.salt.should           be_truthy
       end
     end # context 'when no pre-configured defaults have been set'
 

@@ -31,12 +31,12 @@ describe Storage::SCP do
 
     job_b = backup_perform :my_backup
     expect( job_b.package.files.count ).to be(2)
-    expect( job_a.package.exist? ).to be_true
+    expect( job_a.package.exist? ).to be_truthy
 
     job_c = backup_perform :my_backup
     expect( job_c.package.files.count ).to be(2)
-    expect( job_b.package.exist? ).to be_true
-    expect( job_a.package.removed? ).to be_true
+    expect( job_b.package.exist? ).to be_truthy
+    expect( job_a.package.removed? ).to be_truthy
   end
 end
 end

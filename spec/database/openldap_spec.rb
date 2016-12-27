@@ -24,7 +24,7 @@ module Backup
       it 'provides default values' do
         expect(db.name).to eq('ldap_backup')
         expect(db.slapcat_args).to be_empty
-        expect(db.use_sudo).to be_false
+        expect(db.use_sudo).to be_falsey
         expect(db.slapcat_utility).to eq '/real/slapcat'
         expect(db.slapcat_conf).to eq '/etc/ldap/slapd.d'
       end

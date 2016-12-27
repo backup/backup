@@ -10,7 +10,7 @@ describe Notifier::PagerDuty do
   describe '#initialize' do
     it 'has sensible defaults' do
       expect(notifier.service_key).to be_nil
-      expect(notifier.resolve_on_warning).to be_false
+      expect(notifier.resolve_on_warning).to be_falsey
     end
 
     it 'yields to allow modifying defaults' do

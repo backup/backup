@@ -48,7 +48,7 @@ describe Syncer::Cloud::S3,
         expected_on_remote(:before_update, mirror)
       )
 
-      expect( skipped_file_logged?(job) ).to be_true
+      expect( skipped_file_logged?(job) ).to be_truthy
 
       update_local_sync_files
 
@@ -61,7 +61,7 @@ describe Syncer::Cloud::S3,
         expected_on_remote(:after_update, mirror)
       )
 
-      expect( skipped_file_logged?(job) ).to be_true
+      expect( skipped_file_logged?(job) ).to be_truthy
 
       expect(
         objects.all? {|obj| obj.storage_class == 'STANDARD' }
@@ -132,7 +132,7 @@ describe Syncer::Cloud::S3,
 
     expect(
       objects.all? {|obj| obj.encryption == 'AES256' }
-    ).to be_true
+    ).to be_truthy
   end
 
   it 'excludes files', :live do

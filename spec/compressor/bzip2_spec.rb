@@ -24,7 +24,7 @@ describe Backup::Compressor::Bzip2 do
 
     context 'when no pre-configured defaults have been set' do
       it 'should use default values' do
-        compressor.level.should be_false
+        compressor.level.should be_falsey
 
         compressor.instance_variable_get(:@cmd).should == 'bzip2'
         compressor.instance_variable_get(:@ext).should == '.bz2'

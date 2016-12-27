@@ -37,7 +37,7 @@ describe Database::MySQL do
       expect( db.prepare_options    ).to be_nil
       expect( db.sudo_user          ).to be_nil
       expect( db.backup_engine      ).to eq :mysqldump
-      expect( db.prepare_backup     ).to be_true
+      expect( db.prepare_backup     ).to be_truthy
     end
 
     it 'configures the database' do
@@ -70,8 +70,8 @@ describe Database::MySQL do
       expect( db.prepare_options    ).to eq 'my_prepare_options'
       expect( db.sudo_user          ).to eq 'my_sudo_user'
       expect( db.backup_engine      ).to eq 'my_backup_engine'
-      expect( db.verbose            ).to be_false
-      expect( db.prepare_backup     ).to be_false
+      expect( db.verbose            ).to be_falsey
+      expect( db.prepare_backup     ).to be_falsey
     end
   end # describe '#initialize'
 

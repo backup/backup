@@ -17,7 +17,7 @@ describe 'Database::Riak' do
     # due to permissions needed by riak-admin to perform the dump.
     job = backup_perform :my_backup, '--tmp-path=/tmp'
 
-    expect( job.package.exist? ).to be_true
+    expect( job.package.exist? ).to be_truthy
     expect( job.package ).to match_manifest(%q[
       156000..157000 my_backup/databases/Riak-riak@127.0.0.1
     ])
@@ -36,7 +36,7 @@ describe 'Database::Riak' do
     # due to permissions needed by riak-admin to perform the dump.
     job = backup_perform :my_backup, '--tmp-path=/tmp'
 
-    expect( job.package.exist? ).to be_true
+    expect( job.package.exist? ).to be_truthy
     expect( job.package ).to match_manifest(%q[
       6500..6800 my_backup/databases/Riak-riak@127.0.0.1.gz
     ])

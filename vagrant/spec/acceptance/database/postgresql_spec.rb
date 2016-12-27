@@ -18,7 +18,7 @@ describe 'Database::PostgreSQL' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         3118 my_backup/databases/PostgreSQL.sql.gz
       ])
@@ -34,7 +34,7 @@ describe 'Database::PostgreSQL' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         21809 my_backup/databases/PostgreSQL.sql
       ])
@@ -56,7 +56,7 @@ describe 'Database::PostgreSQL' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         9199 my_backup/databases/PostgreSQL.sql
       ])
@@ -75,7 +75,7 @@ describe 'Database::PostgreSQL' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         2056 my_backup/databases/PostgreSQL.sql
       ])
@@ -94,7 +94,7 @@ describe 'Database::PostgreSQL' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         7860 my_backup/databases/PostgreSQL.sql
       ])
@@ -119,7 +119,7 @@ describe 'Database::PostgreSQL' do
 
       job = backup_perform :my_backup
 
-      expect( job.package.exist? ).to be_true
+      expect( job.package.exist? ).to be_truthy
       expect( job.package ).to match_manifest(%q[
         9199 my_backup/databases/PostgreSQL-dump_01.sql
         9799 my_backup/databases/PostgreSQL-Dump__2.sql

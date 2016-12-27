@@ -48,7 +48,7 @@ describe Syncer::Cloud::CloudFiles,
       ).to eq(
         expected_on_remote(:before_update, mirror)
       )
-      expect( skipped_file_logged?(job) ).to be_true
+      expect( skipped_file_logged?(job) ).to be_truthy
 
       update_local_sync_files
 
@@ -59,7 +59,7 @@ describe Syncer::Cloud::CloudFiles,
       ).to eq(
         expected_on_remote(:after_update, mirror)
       )
-      expect( skipped_file_logged?(job) ).to be_true
+      expect( skipped_file_logged?(job) ).to be_truthy
     end
 
   end # shared_examples 'sync test (cf)'

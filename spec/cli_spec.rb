@@ -36,7 +36,7 @@ describe 'Backup::CLI' do
         end.not_to raise_error
 
         logger_options.console.quiet.should be(false)
-        logger_options.logfile.enabled.should be_true
+        logger_options.logfile.enabled.should be_truthy
         logger_options.logfile.log_path.should == ''
         logger_options.syslog.enabled.should be(false)
       end
@@ -50,10 +50,10 @@ describe 'Backup::CLI' do
           cli.start
         end.not_to raise_error
 
-        logger_options.console.quiet.should be_true
+        logger_options.console.quiet.should be_truthy
         logger_options.logfile.enabled.should be_nil
         logger_options.logfile.log_path.should == ''
-        logger_options.syslog.enabled.should be_true
+        logger_options.syslog.enabled.should be_truthy
       end
 
       it 'forces console logging' do
@@ -65,7 +65,7 @@ describe 'Backup::CLI' do
         end.not_to raise_error
 
         logger_options.console.quiet.should be_nil
-        logger_options.logfile.enabled.should be_true
+        logger_options.logfile.enabled.should be_truthy
         logger_options.logfile.log_path.should == ''
         logger_options.syslog.enabled.should be(false)
       end
@@ -95,7 +95,7 @@ describe 'Backup::CLI' do
         end.not_to raise_error
 
         logger_options.console.quiet.should be(false)
-        logger_options.logfile.enabled.should be_true
+        logger_options.logfile.enabled.should be_truthy
         logger_options.logfile.log_path.should == 'my/log/path'
         logger_options.syslog.enabled.should be(false)
       end
@@ -474,8 +474,8 @@ describe 'Backup::CLI' do
             err.should be_empty
             out.should == "Generated configuration file: '#{ config_file }'.\n" +
                           "Generated model file: '#{ model_file }'.\n"
-            File.exist?(model_file).should be_true
-            File.exist?(config_file).should be_true
+            File.exist?(model_file).should be_truthy
+            File.exist?(config_file).should be_truthy
           end
         end
       end
@@ -501,7 +501,7 @@ describe 'Backup::CLI' do
 
             err.should be_empty
             out.should == "Generated model file: '#{ model_file }'.\n"
-            File.exist?(model_file).should be_true
+            File.exist?(model_file).should be_truthy
           end
         end
       end
@@ -526,7 +526,7 @@ describe 'Backup::CLI' do
 
             err.should include('Do you want to overwrite?')
             out.should == "Generated configuration file: '#{ config_file }'.\n"
-            File.exist?(config_file).should be_true
+            File.exist?(config_file).should be_truthy
           end
         end
       end
@@ -548,8 +548,8 @@ describe 'Backup::CLI' do
           err.should be_empty
           out.should == "Generated configuration file: '#{ config_file }'.\n" +
                         "Generated model file: '#{ model_file }'.\n"
-          File.exist?(model_file).should be_true
-          File.exist?(config_file).should be_true
+          File.exist?(model_file).should be_truthy
+          File.exist?(config_file).should be_truthy
         end
       end
     end
@@ -601,7 +601,7 @@ describe 'Backup::CLI' do
 
           err.should be_empty
           out.should == "Generated configuration file: '#{ config_file }'.\n"
-          File.exist?(config_file).should be_true
+          File.exist?(config_file).should be_truthy
         end
       end
     end
@@ -619,7 +619,7 @@ describe 'Backup::CLI' do
 
           err.should be_empty
           out.should == "Generated configuration file: '#{ config_file }'.\n"
-          File.exist?(config_file).should be_true
+          File.exist?(config_file).should be_truthy
         end
       end
     end
@@ -679,7 +679,7 @@ describe 'Backup::CLI' do
         )
         $stdin.expects(:gets).returns("yes\n")
 
-        expect( helpers.overwrite?('a/path') ).to be_true
+        expect( helpers.overwrite?('a/path') ).to be_truthy
       end
 
       it 'prompts user and accepts cancelation' do
@@ -689,13 +689,13 @@ describe 'Backup::CLI' do
         )
         $stdin.expects(:gets).returns("no\n")
 
-        expect( helpers.overwrite?('a/path') ).to be_false
+        expect( helpers.overwrite?('a/path') ).to be_falsey
       end
 
       it 'returns true if path does not exist' do
         File.expects(:exist?).with('a/path').returns(false)
         $stderr.expects(:print).never
-        expect( helpers.overwrite?('a/path') ).to be_true
+        expect( helpers.overwrite?('a/path') ).to be_truthy
       end
     end
 
