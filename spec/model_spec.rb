@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-require File.expand_path("../spec_helper.rb", __FILE__)
+require "spec_helper"
 
 describe "Backup::Model" do
   let(:model) { Backup::Model.new(:test_trigger, "test label") }
