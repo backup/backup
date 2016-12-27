@@ -11,12 +11,12 @@ LABEL version="0.1.0" \
 # Dependencies for developing and running Backup
 #  * The Nokogiri gem requires libxml2
 #  * The unf_ext gem requires the g++ compiler to build
-ENV APP_DEPS ca-certificates curl g++ git \
+ENV APP_DEPS bsdtar ca-certificates curl g++ git \
     libxml2 libxslt1.1 libyaml-0-2 openssl \
     libldap2-dev ldap-utils \
     mongodb-clients \
     mysql-client-5.5 libmysqlclient-dev \
-    postgresql-client-9.4 redis-tools rsync \
+    percona-xtrabackup postgresql-client-9.4 redis-tools rsync \
     libsqlite3-dev sqlite3
 
 RUN apt-get update && apt-get install -y --no-install-recommends $APP_DEPS
