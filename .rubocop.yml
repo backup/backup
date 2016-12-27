@@ -4,6 +4,7 @@ AllCops:
   TargetRubyVersion: 2.0
   Include:
     - "Gemfile"
+    - "Rakefile"
   Exclude:
     - "tmp/**/*"
     - "vagrant/**/*"
