@@ -41,7 +41,7 @@ module Backup
                 { 'RSync' => ['Push', 'Pull', 'Local'] }
               ],
               # Notifiers
-              ['Mail', 'Twitter', 'Campfire', 'Prowl',
+              ['Mail', 'Twitter', 'Campfire', 'Prowl', 'Telegram',
               'Hipchat', 'PagerDuty', 'Pushover', 'HttpPost', 'Nagios',
               'Slack', 'FlowDock', 'Zabbix', 'Ses', 'DataDog', 'Command']
             ]

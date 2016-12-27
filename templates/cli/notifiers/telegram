@@ -1,0 +1,11 @@
+##
+# Telegram [Notifier]
+#
+notify_by Telegram do |telegram|
+  telegram.on_success = true
+  telegram.on_warning = true
+  telegram.on_failure = true
+
+  telegram.bot_token	= "bot_api_token"
+  telegram.chat_id   	= "@chatpublicname"
+end
