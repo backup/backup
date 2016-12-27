@@ -102,12 +102,17 @@ namespace :docker do
 
     desc "Start a container with a shell"
     task :shell => [:build] do
-      sh "docker run -v $PWD:/usr/src/backup -it backup_runner:latest /bin/bash"
+      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' -v $PWD:/usr/src/backup -it backup_runner:latest /bin/bash"
     end
 
     desc "Run RSpec tests inside a container"
     task :spec => [:build] do
-      sh "docker run -v $PWD:/usr/src/backup -it backup_runner:latest bundle exec rspec ./spec/"
+      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' -v $PWD:/usr/src/backup -it backup_runner:latest ruby -Ilib -S rspec ./spec/"
+    end
+
+    desc "Run the Backup executable and print version"
+    task :version => [:build] do
+      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' -v $PWD:/usr/src/backup -it backup_runner:latest ruby -Ilib -S bin/backup version"
     end
 
   end
