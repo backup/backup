@@ -1,13 +1,6 @@
-task :default => :tasklist
-
 require 'rubocop/rake_task'
 
 RuboCop::RakeTask.new
-
-desc 'Show Rake Tasks (`rake -T`)'
-task :tasklist do
-  exec 'rake -T'
-end
 
 desc 'Open a pry console in the Backup context'
 task :console do
