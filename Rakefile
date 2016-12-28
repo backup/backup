@@ -1,5 +1,9 @@
 task :default => :tasklist
 
+require 'rubocop/rake_task'
+
+RuboCop::RakeTask.new
+
 desc 'Show Rake Tasks (`rake -T`)'
 task :tasklist do
   exec 'rake -T'
