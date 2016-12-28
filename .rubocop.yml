@@ -5,6 +5,7 @@ AllCops:
   Include:
     - "Gemfile"
     - "Rakefile"
+    - "backup.gemspec"
   Exclude:
     - "tmp/**/*"
     - "vagrant/**/*"

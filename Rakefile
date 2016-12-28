@@ -71,8 +71,7 @@ task :release do # rubocop:disable Metrics/BlockLength
   puts `gem build backup.gemspec`
 
   puts "Pushing to repository.."
-  files = [version_file, "Gemfile.lock"]
-  puts `git commit -m "Release v#{new_version} [ci skip]" #{files.join(" ")}`
+  puts `git commit -m "Release v#{new_version} [ci skip]" #{version_file}`
   puts `git tag #{new_version}`
   puts `git push origin #{new_version} #{current_branch}`
 
