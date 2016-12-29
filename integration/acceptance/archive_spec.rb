@@ -190,10 +190,10 @@ module Backup
 
         job = backup_perform :my_backup
 
-        expect(job.package.files.count).to be(2)
+        expect(job.package.files.count).to be(1)
 
         expect(job.package).to match_manifest(%q[
-          1_105_920 my_backup/archives/my_archive.tar
+          20_480 my_backup/archives/my_archive.tar
         ])
 
         expect(
@@ -242,8 +242,6 @@ module Backup
           18 /usr/src/backup/tmp/test_data/dir_a/file_c
         EOS
       end
-
-
     end # shared_examples "GNU or BSD tar"
 
     describe "Using GNU tar" do
@@ -313,6 +311,5 @@ module Backup
         expect(Utilities.send(:gnu_tar?)).to be(false)
       end
     end
-
   end
 end

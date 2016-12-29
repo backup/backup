@@ -18,8 +18,9 @@ module Backup
       EOS
 
       job = backup_perform :my_backup
+
       expect(job.package.exist?).to be_true
-      expect(job.package.files.count).to be(2)
+      expect(job.package.files.count).to be(1)
       expect(job.package).to match_manifest(%q[
         - my_backup/archives/my_archive.tar
       ])
