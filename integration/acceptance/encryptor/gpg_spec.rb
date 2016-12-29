@@ -80,7 +80,7 @@ module Backup
 
       import_public_keys_for :backup01
 
-      job = backup_perform :my_backup, :exit_status => 1
+      job = backup_perform :my_backup, exit_status: 1
       expect(job.package.exist?).to be_true
       expect(job.package.path.end_with?(".gpg")).to be_true
 
@@ -117,7 +117,7 @@ module Backup
 
       import_public_keys_for :backup01
 
-      job = backup_perform :my_backup, :exit_status => 2
+      job = backup_perform :my_backup, exit_status: 2
       expect(job.package.exist?).to be_false
 
       expect(job.logger.has_warnings?).to be_true
@@ -279,7 +279,7 @@ module Backup
       # :backup04 is preloaded, :backup01 is imported, but neither are recipients
       import_public_keys_for :backup04
 
-      job = backup_perform :my_backup, :exit_status => 1
+      job = backup_perform :my_backup, exit_status: 1
       expect(job.package.exist?).to be_true
       expect(job.package.path.end_with?(".gpg")).to be_true
 
@@ -358,7 +358,7 @@ module Backup
       outfile = File.join(File.dirname(path), "decrypted.tar")
       FileUtils.rm_f outfile
 
-      pass_opt = "--passphrase '#{ passphrase }'" if passphrase
+      pass_opt = "--passphrase '#{passphrase}'" if passphrase
       gpg_encryptor.send(:run,
         "#{gpg_encryptor.send(:utility, :gpg)} " +
         "#{gpg_encryptor.send(:base_options)} " +
