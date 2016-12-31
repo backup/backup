@@ -365,7 +365,7 @@ module Backup
         "#{pass_opt} -o '#{outfile}' -d '#{path}' 2>&1")
       if File.exist?(outfile)
         expect(BackupSpec::TarFile.new(outfile)).to match_manifest(%q[
-          20_480 my_backup/archives/my_archive.tar
+          10_496_000 my_backup/archives/my_archive.tar
         ])
       else
         false

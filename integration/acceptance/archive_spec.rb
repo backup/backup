@@ -26,44 +26,44 @@ module Backup
         expect(job.package.exist?).to be_true
 
         expect(job.package).to match_manifest(%q[
-          20_480 my_backup/archives/archive_a.tar
-          20_480 my_backup/archives/archive_b.tar
+          10_496_000 my_backup/archives/archive_a.tar
+          10_496_000 my_backup/archives/archive_b.tar
         ])
 
         # without :root option
         package_a = job.package["my_backup/archives/archive_a.tar"]
         expect(package_a).to match_manifest(%q[
-          18 /usr/src/backup/tmp/test_data/dir_a/file_a
-          18 /usr/src/backup/tmp/test_data/dir_a/file_b
-          18 /usr/src/backup/tmp/test_data/dir_a/file_c
+          1_048_576 /usr/src/backup/tmp/test_data/dir_a/1.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_a/2.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_a/3.txt
 
-          18 /usr/src/backup/tmp/test_data/dir_b/file_a
-          18 /usr/src/backup/tmp/test_data/dir_b/file_b
-          18 /usr/src/backup/tmp/test_data/dir_b/file_c
+          1_048_576 /usr/src/backup/tmp/test_data/dir_b/1.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_b/2.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_b/3.txt
 
-          18 /usr/src/backup/tmp/test_data/dir_c/file_a
-          18 /usr/src/backup/tmp/test_data/dir_c/file_b
-          18 /usr/src/backup/tmp/test_data/dir_c/file_c
+          1_048_576 /usr/src/backup/tmp/test_data/dir_c/1.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_c/2.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_c/3.txt
 
-          18 /usr/src/backup/tmp/test_data/dir_d/file_a
+          1_048_576 /usr/src/backup/tmp/test_data/dir_d/1.txt
         ])
 
         # with :root option
         package_b = job.package["my_backup/archives/archive_b.tar"]
         expect(package_b).to match_manifest(%q[
-          18 test_data/dir_a/file_a
-          18 test_data/dir_a/file_b
-          18 test_data/dir_a/file_c
+          1_048_576 test_data/dir_a/1.txt
+          1_048_576 test_data/dir_a/2.txt
+          1_048_576 test_data/dir_a/3.txt
 
-          18 test_data/dir_b/file_a
-          18 test_data/dir_b/file_b
-          18 test_data/dir_b/file_c
+          1_048_576 test_data/dir_b/1.txt
+          1_048_576 test_data/dir_b/2.txt
+          1_048_576 test_data/dir_b/3.txt
 
-          18 test_data/dir_c/file_a
-          18 test_data/dir_c/file_b
-          18 test_data/dir_c/file_c
+          1_048_576 test_data/dir_c/1.txt
+          1_048_576 test_data/dir_c/2.txt
+          1_048_576 test_data/dir_c/3.txt
 
-          18 test_data/dir_d/file_a
+          1_048_576 test_data/dir_d/1.txt
         ])
       end
 
@@ -98,25 +98,25 @@ module Backup
         # without :root option
         package_a = job.package["my_backup/archives/archive_a.tar.gz"]
         expect(package_a).to match_manifest(%q[
-          18 /usr/src/backup/tmp/test_data/dir_a/file_a
-          18 /usr/src/backup/tmp/test_data/dir_a/file_b
-          18 /usr/src/backup/tmp/test_data/dir_a/file_c
+          1_048_576 /usr/src/backup/tmp/test_data/dir_a/1.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_a/2.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_a/3.txt
 
-          18 /usr/src/backup/tmp/test_data/dir_b/file_a
-          18 /usr/src/backup/tmp/test_data/dir_b/file_b
-          18 /usr/src/backup/tmp/test_data/dir_b/file_c
+          1_048_576 /usr/src/backup/tmp/test_data/dir_b/1.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_b/2.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_b/3.txt
         ])
 
         # with :root option
         package_b = job.package["my_backup/archives/archive_b.tar.gz"]
         expect(package_b).to match_manifest(%q[
-          18 dir_a/file_a
-          18 dir_a/file_b
-          18 dir_a/file_c
+          1_048_576 dir_a/1.txt
+          1_048_576 dir_a/2.txt
+          1_048_576 dir_a/3.txt
 
-          18 dir_b/file_a
-          18 dir_b/file_b
-          18 dir_b/file_c
+          1_048_576 dir_b/1.txt
+          1_048_576 dir_b/2.txt
+          1_048_576 dir_b/3.txt
         ])
       end
 
@@ -153,25 +153,25 @@ module Backup
         # without :root option
         package_a = job.package["my_backup/archives/archive_a.tar.gz"]
         expect(package_a).to match_manifest(%q[
-          18 /usr/src/backup/tmp/test_data/dir_b/file_a
-          18 /usr/src/backup/tmp/test_data/dir_b/file_b
-          18 /usr/src/backup/tmp/test_data/dir_b/file_c
+          1_048_576 /usr/src/backup/tmp/test_data/dir_b/1.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_b/2.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_b/3.txt
 
-          18 /usr/src/backup/tmp/test_data/dir_c/file_a
-          18 /usr/src/backup/tmp/test_data/dir_c/file_b
-          18 /usr/src/backup/tmp/test_data/dir_c/file_c
+          1_048_576 /usr/src/backup/tmp/test_data/dir_c/1.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_c/2.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_c/3.txt
         ])
 
         # with :root option
         package_b = job.package["my_backup/archives/archive_b.tar.gz"]
         expect(package_b).to match_manifest(%q[
-          18 test_data/dir_b/file_a
-          18 test_data/dir_b/file_b
-          18 test_data/dir_b/file_c
+          1_048_576 test_data/dir_b/1.txt
+          1_048_576 test_data/dir_b/2.txt
+          1_048_576 test_data/dir_b/3.txt
 
-          18 test_data/dir_c/file_a
-          18 test_data/dir_c/file_b
-          18 test_data/dir_c/file_c
+          1_048_576 test_data/dir_c/1.txt
+          1_048_576 test_data/dir_c/2.txt
+          1_048_576 test_data/dir_c/3.txt
         ])
       end
 
@@ -190,28 +190,28 @@ module Backup
 
         job = backup_perform :my_backup
 
-        expect(job.package.files.count).to be(1)
+        expect(job.package.files.count).to be(11)
 
         expect(job.package).to match_manifest(%q[
-          20_480 my_backup/archives/my_archive.tar
+          10_496_000 my_backup/archives/my_archive.tar
         ])
 
         expect(
           job.package["my_backup/archives/my_archive.tar"]
         ).to match_manifest(<<-EOS)
-          18 /usr/src/backup/tmp/test_data/dir_a/file_a
-          18 /usr/src/backup/tmp/test_data/dir_a/file_b
-          18 /usr/src/backup/tmp/test_data/dir_a/file_c
+          1_048_576 /usr/src/backup/tmp/test_data/dir_a/1.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_a/2.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_a/3.txt
 
-          18 /usr/src/backup/tmp/test_data/dir_b/file_a
-          18 /usr/src/backup/tmp/test_data/dir_b/file_b
-          18 /usr/src/backup/tmp/test_data/dir_b/file_c
+          1_048_576 /usr/src/backup/tmp/test_data/dir_b/1.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_b/2.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_b/3.txt
 
-          18 /usr/src/backup/tmp/test_data/dir_c/file_a
-          18 /usr/src/backup/tmp/test_data/dir_c/file_b
-          18 /usr/src/backup/tmp/test_data/dir_c/file_c
+          1_048_576 /usr/src/backup/tmp/test_data/dir_c/1.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_c/2.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_c/3.txt
 
-          18 /usr/src/backup/tmp/test_data/dir_d/file_a
+          1_048_576 /usr/src/backup/tmp/test_data/dir_d/1.txt
         EOS
       end
 
@@ -237,9 +237,9 @@ module Backup
         expect(
           job.package["my_backup/archives/my_archive.tar"]
         ).to match_manifest(<<-EOS)
-          18 /usr/src/backup/tmp/test_data/dir_a/file_a
-          18 /usr/src/backup/tmp/test_data/dir_a/file_b
-          18 /usr/src/backup/tmp/test_data/dir_a/file_c
+          1_048_576 /usr/src/backup/tmp/test_data/dir_a/1.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_a/2.txt
+          1_048_576 /usr/src/backup/tmp/test_data/dir_a/3.txt
         EOS
       end
     end # shared_examples "GNU or BSD tar"

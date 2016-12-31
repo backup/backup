@@ -14,6 +14,14 @@ RSpec.configure do |config|
 
   config.include BackupSpec::ExampleHelpers
 
+  config.before(:all) do
+    fb = BackupSpec::FilesetBuilder.new
+    test_dirs = { "dir_a" => 3, "dir_b" => 3, "dir_c" => 3, "dir_d" => 1 }
+    test_dirs.each do |dir, total|
+      fb.create(File.join("tmp", "test_data"), dir, total, 1)
+    end
+  end
+
   config.before(:each) do
     # Reset to default paths
     Backup::Config.send(:reset!)

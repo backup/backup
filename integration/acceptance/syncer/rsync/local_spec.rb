@@ -55,7 +55,7 @@ module Backup
               dirs.add "./tmp/test_data/dir_a"
               dirs.add "./tmp/test_data/dir_b"
               dirs.add "./tmp/test_data/dir_c"
-              dirs.exclude "file_b"
+              dirs.exclude "2.txt"
             end
           end
         end
@@ -64,13 +64,13 @@ module Backup
       backup_perform :my_backup
 
       expect(dir_contents("./tmp/Storage/dir_a")).to eq(
-        dir_contents("./tmp/test_data/dir_a") - ["/file_b"]
+        dir_contents("./tmp/test_data/dir_a") - ["/2.txt"]
       )
       expect(dir_contents("./tmp/Storage/dir_b")).to eq(
-        dir_contents("./tmp/test_data/dir_b") - ["/file_b"]
+        dir_contents("./tmp/test_data/dir_b") - ["/2.txt"]
       )
       expect(dir_contents("./tmp/Storage/dir_c")).to eq(
-        dir_contents("./tmp/test_data/dir_c") - ["/file_b"]
+        dir_contents("./tmp/test_data/dir_c") - ["/2.txt"]
       )
     end
   end
