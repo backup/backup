@@ -7,8 +7,8 @@ module BackupSpec
       create_fileset(File.join(root_dir, dir_name), total, file_size)
     end
 
-    def create_dir(dir, dir_name)
-      dir = File.join(dir, dir_name)
+    def create_dir(parent_dir, dir_name)
+      dir = File.join(parent_dir, dir_name)
       Dir.mkdir(dir) unless Dir.exist?(dir)
     end
 
