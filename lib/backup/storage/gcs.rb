@@ -82,6 +82,7 @@ module Backup
       def check_configuration
         required =
           %w(google_storage_secret_access_key google_storage_access_key_id bucket)
+
         raise Error, <<-EOS if required.map { |name| send(name) }.any?(&:nil?)
           Configuration Error
           #{required.map { |name| "##{name}" }.join(", ")} are all required

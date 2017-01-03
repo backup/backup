@@ -122,7 +122,7 @@ module Backup
     end # describe '#initialize'
 
     describe "#cloud_io" do
-      specify "when using GCS access keys" do
+      specify "when using GCS XML access keys" do
         CloudIO::GCS.expects(:new).once.with(
           google_storage_access_key_id: "my_access_key_id",
           google_storage_secret_access_key: "my_secret_access_key",

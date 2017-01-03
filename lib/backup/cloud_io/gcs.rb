@@ -1,32 +1,20 @@
 # encoding: utf-8
 require "backup/cloud_io/base"
 require "fog"
-#require "digest/md5"
-#require "base64"
-#require "stringio"
 
 module Backup
   module CloudIO
     class GCS < Base
       class Error < Backup::Error; end
 
-      MAX_FILE_SIZE       = 1024**3 * 5   # 5 GiB
-      MAX_MULTIPART_SIZE  = 1024**4 * 5   # 5 TiB
+      MAX_FILE_SIZE       = 1024**5 * 5   # 5 TiB
 
-      attr_reader :google_project, :google_client_email, :google_key_location,
-        :google_key_string, :google_json_key_location, :google_json_key_string,
-        :google_storage_access_key_id, :google_storage_secret_access_key, :bucket,
-        :fog_options
+      attr_reader :google_storage_access_key_id, :google_storage_secret_access_key,
+        :bucket, :fog_options
 
       def initialize(options = {})
         super
 
-        @google_project                   = options[:google_project]
-        @google_client_email              = options[:google_client_email]
-        @google_key_location              = options[:google_key_location]
-        @google_key_string                = options[:google_key_string]
-        @google_json_key_location         = options[:google_json_key_location]
-        @google_json_key_string           = options[:google_json_key_string]
         @google_storage_access_key_id     = options[:google_storage_access_key_id]
         @google_storage_secret_access_key = options[:google_storage_secret_access_key]
         @bucket                           = options[:bucket]
@@ -96,7 +84,7 @@ module Backup
           begin
             opts = { provider: "Google",
                      google_storage_access_key_id: google_storage_access_key_id,
-                     google_storage_secret_access_key: google_storage_secret_access_key }
+                     google_storage_secret_access_key: google_storage_secret_access_key}
 
             opts.merge!(fog_options || {})
             conn = Fog::Storage.new(opts)
@@ -112,7 +100,7 @@ module Backup
             begin
               connection.put_object(bucket, dest, file, options)
             rescue Exception => e
-              raise Error, "The server returned the following:\n#{e.message}\n#{e.backtrace}"
+              raise Error, "The server returned the following:\n#{e.message}\n"
             end
           end
         end
