@@ -40,6 +40,7 @@ module Backup
     autoload :Base,       File.join(STORAGE_PATH, "base")
     autoload :Cycler,     File.join(STORAGE_PATH, "cycler")
     autoload :S3,         File.join(STORAGE_PATH, "s3")
+    autoload :GCS,        File.join(STORAGE_PATH, "gcs")
     autoload :CloudFiles, File.join(STORAGE_PATH, "cloud_files")
     autoload :Ninefold,   File.join(STORAGE_PATH, "ninefold")
     autoload :Dropbox,    File.join(STORAGE_PATH, "dropbox")
@@ -60,6 +61,7 @@ module Backup
       autoload :LocalFile,  File.join(SYNCER_PATH, "cloud", "local_file")
       autoload :CloudFiles, File.join(SYNCER_PATH, "cloud", "cloud_files")
       autoload :S3,         File.join(SYNCER_PATH, "cloud", "s3")
+      autoload :GCS,        File.join(SYNCER_PATH, "cloud", "gcs")
     end
     module RSync
       autoload :Base,  File.join(SYNCER_PATH, "rsync", "base")

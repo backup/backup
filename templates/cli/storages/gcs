@@ -1,0 +1,8 @@
+  ##
+  # Google Cloud Storage Service [Storage]
+  #
+  store_with GCS do |gcs|
+    gcs.google_storage_access_key_id      = "GOOGXXXXXXXXXXXXXXXXX"
+    gcs.google_storage_secret_access_key  = "XXXXXXXXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX"
+    gcs.bucket                            = 'backups'
+  end
