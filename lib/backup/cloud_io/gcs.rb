@@ -7,7 +7,7 @@ module Backup
     class GCS < Base
       class Error < Backup::Error; end
 
-      MAX_FILE_SIZE       = 1024**5 * 5   # 5 TiB
+      MAX_FILE_SIZE = 1024**5 * 5 # 5 TiB
 
       attr_reader :google_storage_access_key_id, :google_storage_secret_access_key,
         :bucket, :fog_options
@@ -32,7 +32,7 @@ module Backup
             Max File Size is #{MAX_FILE_SIZE} (5 GiB)
           EOS
 
-          put_object(src, dest)
+        put_object(src, dest)
       end
 
       # Returns all objects in the bucket with the given prefix.
@@ -69,8 +69,8 @@ module Backup
         keys.each do |key|
           with_retries("DELETE object") do
             begin
-              resp = connection.delete(bucket, key)
-            rescue Exception => e
+              connection.delete(bucket, key)
+            rescue StandardError => e
               raise Error, "The server returned the following:\n#{e.message}"
             end
           end
@@ -84,7 +84,7 @@ module Backup
           begin
             opts = { provider: "Google",
                      google_storage_access_key_id: google_storage_access_key_id,
-                     google_storage_secret_access_key: google_storage_secret_access_key}
+                     google_storage_secret_access_key: google_storage_secret_access_key }
 
             opts.merge!(fog_options || {})
             conn = Fog::Storage.new(opts)
@@ -94,12 +94,12 @@ module Backup
 
       def put_object(src, dest)
         md5 = Base64.encode64(Digest::MD5.file(src).digest).chomp
-        options = {"Content-MD5" => md5}
+        options = { "Content-MD5" => md5 }
         with_retries("PUT '#{bucket}/#{dest}'") do
           File.open(src, "r") do |file|
             begin
               connection.put_object(bucket, dest, file, options)
-            rescue Exception => e
+            rescue StandardError => e
               raise Error, "The server returned the following:\n#{e.message}\n"
             end
           end

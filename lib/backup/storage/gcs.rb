@@ -39,7 +39,7 @@ module Backup
         @max_retries    ||= 10
         @retry_waitsec  ||= 30
         @path           ||= "backups"
-        @path = @path.sub(/^\//, "")
+        @path = @path.sub(%r{^/}, "")
 
         check_configuration
       end

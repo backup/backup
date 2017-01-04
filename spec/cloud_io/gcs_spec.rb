@@ -179,7 +179,7 @@ module Backup
         object_b = described_class::Object.new(:foo, "Key" => "obj_key_b")
         cloud_io.expects(:with_retries).with("DELETE object").twice.yields
         connection.expects(:delete).with(
-          "my_bucket", anything()
+          "my_bucket", anything
         ).twice.returns(resp_ok)
 
         objects = [object_a, object_b]
@@ -199,7 +199,7 @@ module Backup
       it "accepts multiple keys" do
         cloud_io.expects(:with_retries).with("DELETE object").twice.yields
         connection.expects(:delete).with(
-          "my_bucket", anything()
+          "my_bucket", anything
         ).twice.returns(resp_ok)
 
         objects = ["obj_key_a", "obj_key_b"]
