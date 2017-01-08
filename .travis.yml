@@ -9,6 +9,7 @@ rvm:
   - 2.1.0
   - 2.2.0
   - 2.3.0
+  - 2.4.0
 matrix:
   include:
     - rvm: "2.3.0"
@@ -17,3 +18,4 @@ branches:
   only:
     - master
     - develop
+    - v4-stable
