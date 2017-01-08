@@ -78,6 +78,9 @@ Metrics/AbcSize:
 # Configuration parameters: CountComments.
 Metrics/BlockLength:
   Max: 28
+  Exclude:
+    - "backup.gemspec"
+    - "spec/**/*"
 
 # Offense count: 1
 Metrics/BlockNesting:

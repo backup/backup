@@ -1,6 +1,6 @@
 .DS_Store
 *.gem
-.rvmrc
+*.lock
 .bundle/
 vendor/bundle
 vagrant/spec/live/.cache

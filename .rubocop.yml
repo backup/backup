@@ -4,6 +4,8 @@ AllCops:
   TargetRubyVersion: 2.0
   Include:
     - "Gemfile"
+    - "Rakefile"
+    - "backup.gemspec"
   Exclude:
     - "tmp/**/*"
     - "vagrant/**/*"
