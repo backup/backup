@@ -18,8 +18,8 @@ module Backup
 
       backup_perform :my_backup
 
-      expect(dir_contents("./tmp/Storage/test_data")).
-          to eq(dir_contents("./tmp/test_data"))
+      expect(dir_contents("./tmp/Storage/test_data"))
+        .to eq(dir_contents("./tmp/test_data"))
     end
 
     specify "multiple directories" do
@@ -38,12 +38,12 @@ module Backup
 
       backup_perform :my_backup
 
-      expect(dir_contents("./tmp/Storage/dir_a")).
-          to eq(dir_contents("./tmp/test_data/dir_a"))
-      expect(dir_contents("./tmp/Storage/dir_b")).
-          to eq(dir_contents("./tmp/test_data/dir_b"))
-      expect(dir_contents("./tmp/Storage/dir_c")).
-          to eq(dir_contents("./tmp/test_data/dir_c"))
+      expect(dir_contents("./tmp/Storage/dir_a"))
+        .to eq(dir_contents("./tmp/test_data/dir_a"))
+      expect(dir_contents("./tmp/Storage/dir_b"))
+        .to eq(dir_contents("./tmp/test_data/dir_b"))
+      expect(dir_contents("./tmp/Storage/dir_c"))
+        .to eq(dir_contents("./tmp/test_data/dir_c"))
     end
 
     specify "multiple directories with excludes" do

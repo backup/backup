@@ -3,7 +3,6 @@
 require File.expand_path("../../spec_helper", __FILE__)
 
 describe "Backup Configuration" do
-
   specify "Models may be preconfigured" do
     create_config <<-EOS
       preconfigure "MyModel" do
@@ -67,5 +66,4 @@ describe "Backup Configuration" do
       File.join(alt_config_path, Backup::Config::DEFAULTS[:data_path])
     )
   end
-
 end

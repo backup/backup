@@ -360,8 +360,8 @@ module Backup
 
       pass_opt = "--passphrase '#{passphrase}'" if passphrase
       gpg_encryptor.send(:run,
-        "#{gpg_encryptor.send(:utility, :gpg)} " +
-        "#{gpg_encryptor.send(:base_options)} " +
+        "#{gpg_encryptor.send(:utility, :gpg)} " \
+        "#{gpg_encryptor.send(:base_options)} " \
         "#{pass_opt} -o '#{outfile}' -d '#{path}' 2>&1")
       if File.exist?(outfile)
         expect(BackupSpec::TarFile.new(outfile)).to match_manifest(%q[

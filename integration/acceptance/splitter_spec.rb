@@ -21,7 +21,7 @@ module Backup
 
       expect(job.package.exist?).to be_true
       expect(job.package.files.count).to be(11)
-      expect( job.package.files.first ).to end_with('-aaaaa')
+      expect(job.package.files.first).to end_with("-aaaaa")
       expect(job.package).to match_manifest(%q[
         - my_backup/archives/my_archive.tar
       ])
