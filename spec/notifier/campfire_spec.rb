@@ -68,10 +68,10 @@ module Backup
           Excon.expects(:post).with(
             "https://my_subdomain.campfirenow.com/room/my_room_id/speak.json",
             headers: { "Content-Type" => "application/json" },
-body: json_body.sub("STATUS", "Success"),
-user: "my_token",
-password: "x",
-expects: 201
+            body: json_body.sub("STATUS", "Success"),
+            user: "my_token",
+            password: "x",
+            expects: 201
           )
 
           notifier.send(:notify!, :success)
@@ -83,10 +83,10 @@ expects: 201
           Excon.expects(:post).with(
             "https://my_subdomain.campfirenow.com/room/my_room_id/speak.json",
             headers: { "Content-Type" => "application/json" },
-body: json_body.sub("STATUS", "Warning"),
-user: "my_token",
-password: "x",
-expects: 201
+            body: json_body.sub("STATUS", "Warning"),
+            user: "my_token",
+            password: "x",
+            expects: 201
           )
 
           notifier.send(:notify!, :warning)
@@ -98,10 +98,10 @@ expects: 201
           Excon.expects(:post).with(
             "https://my_subdomain.campfirenow.com/room/my_room_id/speak.json",
             headers: { "Content-Type" => "application/json" },
-body: json_body.sub("STATUS", "Failure"),
-user: "my_token",
-password: "x",
-expects: 201
+            body: json_body.sub("STATUS", "Failure"),
+            user: "my_token",
+            password: "x",
+            expects: 201
           )
 
           notifier.send(:notify!, :failure)
