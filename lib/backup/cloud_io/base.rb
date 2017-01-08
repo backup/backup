@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   module CloudIO
     class Error < Backup::Error; end

@@ -1,4 +1,3 @@
-# encoding: utf-8
 require "dropbox_sdk"
 
 module Backup

@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 shared_examples "a subclass of Storage::Base" do
   let(:storage_name) { described_class.name.sub("Backup::", "") }
 

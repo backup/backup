@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 ##
 # Build the Backup Command Line Interface using Thor
 module Backup

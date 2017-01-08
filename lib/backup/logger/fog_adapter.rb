@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 # require only the logger
 require "formatador"
 require "fog/core/logger"

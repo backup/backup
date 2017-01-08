@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 require "spec_helper"
 
 describe Backup::Compressor::Bzip2 do

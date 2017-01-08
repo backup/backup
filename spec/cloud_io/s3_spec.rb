@@ -1,4 +1,3 @@
-# encoding: utf-8
 require "spec_helper"
 require "backup/cloud_io/s3"
 

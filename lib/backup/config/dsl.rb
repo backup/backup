@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   module Config
     # Context for loading user config.rb and model files.
