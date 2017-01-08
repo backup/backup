@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   class Splitter
     include Utilities::Helpers

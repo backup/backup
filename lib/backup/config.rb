@@ -1,4 +1,3 @@
-# encoding: utf-8
 require "backup/config/dsl"
 require "backup/config/helpers"
 

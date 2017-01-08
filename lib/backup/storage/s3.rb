@@ -1,4 +1,3 @@
-# encoding: utf-8
 require "backup/cloud_io/s3"
 
 module Backup

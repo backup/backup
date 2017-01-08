@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 # Matches the contents of a TarFile (or PerformedJob.package)
 # against the given manifest.
 #

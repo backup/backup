@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module BackupSpec
   GPGKeys = Hash.new {|h,k| h[k] = {} }
 

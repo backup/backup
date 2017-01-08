@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   # Provides cascading errors with formatted messages.
   # See the specs for details.

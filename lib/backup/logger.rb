@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 require "backup/logger/console"
 require "backup/logger/logfile"
 require "backup/logger/syslog"

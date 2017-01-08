@@ -1,5 +1,4 @@
-# encoding: utf-8
-require File.expand_path("../../spec_helper.rb", __FILE__)
+require "spec_helper"
 require "backup/cloud_io/cloud_files"
 
 module Backup
