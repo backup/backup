@@ -28,6 +28,7 @@ WORKDIR $APP_HOME
 
 ## 4. Add Ruby gem packages ##
 
-COPY Gemfile* $APP_HOME/
-RUN bundle config build.nokogiri --use-system-libraries && \
-    bundle install
+COPY lib/backup/version.rb $APP_HOME/lib/backup/
+COPY backup.gemspec Gemfile* $APP_HOME/
+RUN bundle config build.nokogiri --use-system-libraries && bundle install && \
+    rm -r $APP_HOME/lib/backup
