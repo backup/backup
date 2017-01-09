@@ -16,7 +16,7 @@ Please use the Backup features [issue tracker][Features] to suggest new features
 Only use the Backup gem [issue tracker][Issues] for bugs and other issues.
 We're also available on [Gitter] for questions and problems.
 
-**Copyright (c) 2009-2016 [Michael van Rooijen][] ( [@mrrooijen] )**  
+**Copyright (c) 2009-2017 [Michael van Rooijen][] ( [@mrrooijen] )**  
 Released under the **MIT** [LICENSE](LICENSE).
 
 [Installation]:  http://backup.github.io/backup/v4/installation
