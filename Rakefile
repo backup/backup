@@ -1,5 +1,5 @@
 require "rake/clean"
-require 'rubocop/rake_task'
+require "rubocop/rake_task"
 
 CLEAN.include("tmp")
 CLOBBER.include("tmp", "*.gem")
@@ -87,17 +87,14 @@ end
 
 namespace :docker do
   namespace :test do
-    desc "Run integration tests inside a container"
-    task :integration => [:build, :prepare] do
-      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' -v $PWD:/usr/src/backup -it backup_runner:latest ruby -Ilib -S rspec ./integration/acceptance/"
-    end
+    directory "tmp"
+    directory "tmp/test_data"
 
-    desc "Create test files"
-    task :prepare do
-      root_tmp_dir = "tmp"
-      Dir.mkdir(root_tmp_dir) unless Dir.exist?(root_tmp_dir)
-      root_test_dir = File.join("tmp", "test_data")
-      Dir.mkdir(root_test_dir) unless Dir.exist?(root_test_dir)
+    desc "Run integration tests inside a container"
+    task integration: [:build, "tmp", "tmp/test_data"] do
+      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' " \
+        "-v $PWD:/usr/src/backup " \
+        "-it backup_runner:latest ruby -Ilib -S rspec ./integration/acceptance/"
     end
 
     desc "Build an image for testing"
@@ -116,14 +113,16 @@ namespace :docker do
     end
 
     desc "Start a container with a shell"
-    task :shell => [:build] do
-      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' -v $PWD:/usr/src/backup -it backup_runner:latest /bin/bash"
+    task shell: [:build] do
+      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' " \
+         "-v $PWD:/usr/src/backup -it backup_runner:latest /bin/bash"
     end
 
     desc "Run RSpec tests inside a container"
-    task :spec => [:build] do
-      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' -v $PWD:/usr/src/backup -it backup_runner:latest ruby -Ilib -S rspec ./spec/"
+    task spec: [:build] do
+      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' " \
+         "-v $PWD:/usr/src/backup " \
+         "-it backup_runner:latest ruby -Ilib -S rspec ./spec/"
     end
   end
-
 end
