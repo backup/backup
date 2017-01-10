@@ -39,20 +39,21 @@ RSpec::Matchers.define :match_manifest do |expected|
       expected_contents.map { |fields| [fields[1], fields[0]] }
     ]
 
-    if files_match = expected_contents.keys.sort == actual.contents.keys.sort
+    files_match = expected_contents.keys.sort == actual.contents.keys.sort
+    if files_match
       sizes_ok = true
       expected_contents.each do |path, size|
         actual_size = actual.contents[path]
 
         sizes_ok =
-            case size
-            when "-" then true
-            when /\d+(\.\.)\d+/
-              a, b = size.split("..").map(&:to_i)
-              (a..b).include? actual_size
-            else
-              size.to_i == actual_size
-            end
+          case size
+          when "-" then true
+          when /\d+(\.\.)\d+/
+            a, b = size.split("..").map(&:to_i)
+            (a..b).cover? actual_size
+          else
+            size.to_i == actual_size
+          end
 
         break unless sizes_ok
       end
@@ -62,7 +63,7 @@ RSpec::Matchers.define :match_manifest do |expected|
   end
 
   failure_message_for_should do |actual|
-    "expected that:\n\n#{actual.manifest}\n" +
+    "expected that:\n\n#{actual.manifest}\n" \
     "would match:\n#{expected}"
   end
 end

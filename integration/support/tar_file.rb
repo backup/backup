@@ -13,7 +13,7 @@ module BackupSpec
     def manifest
       @manifest ||= begin
         if File.exist?(path.to_s)
-          %x[#{ utility(:tar) } -tvf #{ path } 2>/dev/null]
+          `#{ utility(:tar) } -tvf #{ path } 2>/dev/null`
         else
           ""
         end
@@ -25,12 +25,12 @@ module BackupSpec
     # Returns a Hash of { "path" => size } for only the files in the manifest.
     def contents
       @contents ||= begin
-        data = manifest.split("\n").reject {|line| line =~ /\/$/ }
-        data.map! {|line| line.split(" ") }
+        data = manifest.split("\n").reject { |line| line =~ %r{\/$} }
+        data.map! { |line| line.split(" ") }
         if gnu_tar?
-          Hash[data.map {|fields| [fields[5], fields[2].to_i] }]
+          Hash[data.map { |fields| [fields[5], fields[2].to_i] }]
         else
-          Hash[data.map {|fields| [fields[8], fields[4].to_i] }]
+          Hash[data.map { |fields| [fields[8], fields[4].to_i] }]
         end
       end
     end
@@ -48,17 +48,17 @@ module BackupSpec
         base_path = File.dirname(path)
         filename = File.basename(path)
         Dir.chdir(base_path) do
-          %x[#{ utility(:tar) } -xf #{ filename } 2>/dev/null]
+          `#{ utility(:tar) } -xf #{ filename } 2>/dev/null`
         end
         Hash[
-          contents.keys.map {|manifest_path|
-            path = File.join(base_path, manifest_path.sub(/^\//, ""))
+          contents.keys.map do |manifest_path|
+            path = File.join(base_path, manifest_path.sub(%r{^\/}, ""))
             if path =~ /\.tar.*$/
               [manifest_path, self.class.new(path)]
             else
               [manifest_path, path]
             end
-          }
+          end
         ]
       end
     end

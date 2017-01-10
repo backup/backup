@@ -68,7 +68,7 @@ module BackupSpec
       base_ext = orig_ext.split("-").first
       outfile = File.basename(files.first).sub(/#{ orig_ext }$/, base_ext)
       Dir.chdir(base_dir) do
-        %x[#{ utility(:cat) } #{ outfile }-* > #{ outfile }]
+        `#{ utility(:cat) } #{ outfile }-* > #{ outfile }`
       end
       File.join(base_dir, outfile)
     end
