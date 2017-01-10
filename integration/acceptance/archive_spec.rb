@@ -25,14 +25,14 @@ module Backup
 
         expect(job.package.exist?).to be_true
 
-        expect(job.package).to match_manifest(%q[
-          10_496_000 my_backup/archives/archive_a.tar
-          10_496_000 my_backup/archives/archive_b.tar
-        ])
+        expect(job.package).to match_manifest(<<-EOS)
+            10_496_000 my_backup/archives/archive_a.tar
+            10_496_000 my_backup/archives/archive_b.tar
+          EOS
 
         # without :root option
         package_a = job.package["my_backup/archives/archive_a.tar"]
-        expect(package_a).to match_manifest(%q[
+        expect(package_a).to match_manifest(<<-EOS)
           1_048_576 /usr/src/backup/tmp/test_data/dir_a/1.txt
           1_048_576 /usr/src/backup/tmp/test_data/dir_a/2.txt
           1_048_576 /usr/src/backup/tmp/test_data/dir_a/3.txt
@@ -46,25 +46,25 @@ module Backup
           1_048_576 /usr/src/backup/tmp/test_data/dir_c/3.txt
 
           1_048_576 /usr/src/backup/tmp/test_data/dir_d/1.txt
-        ])
+        EOS
 
         # with :root option
         package_b = job.package["my_backup/archives/archive_b.tar"]
-        expect(package_b).to match_manifest(%q[
-          1_048_576 test_data/dir_a/1.txt
-          1_048_576 test_data/dir_a/2.txt
-          1_048_576 test_data/dir_a/3.txt
+        expect(package_b).to match_manifest(<<-EOS)
+            1_048_576 test_data/dir_a/1.txt
+            1_048_576 test_data/dir_a/2.txt
+            1_048_576 test_data/dir_a/3.txt
 
-          1_048_576 test_data/dir_b/1.txt
-          1_048_576 test_data/dir_b/2.txt
-          1_048_576 test_data/dir_b/3.txt
+            1_048_576 test_data/dir_b/1.txt
+            1_048_576 test_data/dir_b/2.txt
+            1_048_576 test_data/dir_b/3.txt
 
-          1_048_576 test_data/dir_c/1.txt
-          1_048_576 test_data/dir_c/2.txt
-          1_048_576 test_data/dir_c/3.txt
+            1_048_576 test_data/dir_c/1.txt
+            1_048_576 test_data/dir_c/2.txt
+            1_048_576 test_data/dir_c/3.txt
 
-          1_048_576 test_data/dir_d/1.txt
-        ])
+            1_048_576 test_data/dir_d/1.txt
+          EOS
       end
 
       specify "Specific directories, with compression, with/without :root" do
@@ -90,14 +90,14 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
+        expect(job.package).to match_manifest(<<-EOS)
           - my_backup/archives/archive_a.tar.gz
           - my_backup/archives/archive_b.tar.gz
-        ])
+        EOS
 
         # without :root option
         package_a = job.package["my_backup/archives/archive_a.tar.gz"]
-        expect(package_a).to match_manifest(%q[
+        expect(package_a).to match_manifest(<<-EOS)
           1_048_576 /usr/src/backup/tmp/test_data/dir_a/1.txt
           1_048_576 /usr/src/backup/tmp/test_data/dir_a/2.txt
           1_048_576 /usr/src/backup/tmp/test_data/dir_a/3.txt
@@ -105,11 +105,11 @@ module Backup
           1_048_576 /usr/src/backup/tmp/test_data/dir_b/1.txt
           1_048_576 /usr/src/backup/tmp/test_data/dir_b/2.txt
           1_048_576 /usr/src/backup/tmp/test_data/dir_b/3.txt
-        ])
+        EOS
 
         # with :root option
         package_b = job.package["my_backup/archives/archive_b.tar.gz"]
-        expect(package_b).to match_manifest(%q[
+        expect(package_b).to match_manifest(<<-EOS)
           1_048_576 dir_a/1.txt
           1_048_576 dir_a/2.txt
           1_048_576 dir_a/3.txt
@@ -117,7 +117,6 @@ module Backup
           1_048_576 dir_b/1.txt
           1_048_576 dir_b/2.txt
           1_048_576 dir_b/3.txt
-        ])
       end
 
       specify "Excluded directories, with compression, with/without :root" do
@@ -145,14 +144,16 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
-          - my_backup/archives/archive_a.tar.gz
-          - my_backup/archives/archive_b.tar.gz
-        ])
+        expect(job.package).to match_manifest(
+          <<-EOS
+            - my_backup/archives/archive_a.tar.gz
+            - my_backup/archives/archive_b.tar.gz
+          EOS
+        )
 
         # without :root option
         package_a = job.package["my_backup/archives/archive_a.tar.gz"]
-        expect(package_a).to match_manifest(%q[
+        expect(package_a).to match_manifest(<<-EOS)
           1_048_576 /usr/src/backup/tmp/test_data/dir_b/1.txt
           1_048_576 /usr/src/backup/tmp/test_data/dir_b/2.txt
           1_048_576 /usr/src/backup/tmp/test_data/dir_b/3.txt
@@ -160,11 +161,11 @@ module Backup
           1_048_576 /usr/src/backup/tmp/test_data/dir_c/1.txt
           1_048_576 /usr/src/backup/tmp/test_data/dir_c/2.txt
           1_048_576 /usr/src/backup/tmp/test_data/dir_c/3.txt
-        ])
+        EOS
 
         # with :root option
         package_b = job.package["my_backup/archives/archive_b.tar.gz"]
-        expect(package_b).to match_manifest(%q[
+        expect(package_b).to match_manifest(<<-EOS)
           1_048_576 test_data/dir_b/1.txt
           1_048_576 test_data/dir_b/2.txt
           1_048_576 test_data/dir_b/3.txt
@@ -172,7 +173,7 @@ module Backup
           1_048_576 test_data/dir_c/1.txt
           1_048_576 test_data/dir_c/2.txt
           1_048_576 test_data/dir_c/3.txt
-        ])
+        EOS
       end
 
       specify "Using Splitter" do
@@ -192,9 +193,9 @@ module Backup
 
         expect(job.package.files.count).to be(11)
 
-        expect(job.package).to match_manifest(%q[
-          10_496_000 my_backup/archives/my_archive.tar
-        ])
+        expect(job.package).to match_manifest(
+          "10_496_000 my_backup/archives/my_archive.tar"
+        )
 
         expect(
           job.package["my_backup/archives/my_archive.tar"]
@@ -230,9 +231,9 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
-          - my_backup/archives/my_archive.tar
-        ])
+        expect(job.package).to match_manifest(
+          "- my_backup/archives/my_archive.tar"
+        )
 
         expect(
           job.package["my_backup/archives/my_archive.tar"]

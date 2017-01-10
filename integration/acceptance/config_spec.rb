@@ -25,10 +25,10 @@ describe "Backup Configuration" do
     job = backup_perform :my_backup
 
     expect(job.package.exist?).to be_true
-    expect(job.package).to match_manifest(%q[
+    expect(job.package).to match_manifest(<<-EOS)
       - my_backup/archives/archive_a.tar.gz
       - my_backup/archives/archive_b.tar.gz
-    ])
+    EOS
   end
 
   specify "Command line path options may be set in config.rb" do
@@ -53,9 +53,9 @@ describe "Backup Configuration" do
     job = backup_perform :my_backup, "--config-file", config_file
 
     expect(job.package.exist?).to be_true
-    expect(job.package).to match_manifest(%q[
+    expect(job.package).to match_manifest(<<-EOS)
       - my_backup/archives/my_archive.tar
-    ])
+    EOS
 
     # without setting root_path in config.rb,
     # these would still be based on the default root_path (~/Backup)

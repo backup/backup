@@ -364,9 +364,9 @@ module Backup
         "#{gpg_encryptor.send(:base_options)} " \
         "#{pass_opt} -o '#{outfile}' -d '#{path}' 2>&1")
       if File.exist?(outfile)
-        expect(BackupSpec::TarFile.new(outfile)).to match_manifest(%q[
-          10_496_000 my_backup/archives/my_archive.tar
-        ])
+        expect(BackupSpec::TarFile.new(outfile)).to match_manifest(
+          "10_496_000 my_backup/archives/my_archive.tar"
+        )
       else
         false
       end
