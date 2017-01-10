@@ -117,6 +117,7 @@ module Backup
           1_048_576 dir_b/1.txt
           1_048_576 dir_b/2.txt
           1_048_576 dir_b/3.txt
+        EOS
       end
 
       specify "Excluded directories, with compression, with/without :root" do
