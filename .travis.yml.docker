@@ -1,0 +1,15 @@
+sudo: required
+
+language: ruby
+
+services:
+  - docker
+
+before_install:
+  - docker-compose build
+
+script: "bundle exec rake docker:test:ci"
+
+branches:
+  only:
+    - feature/docker-testing
