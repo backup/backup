@@ -86,43 +86,62 @@ task :release do # rubocop:disable Metrics/BlockLength
 end
 
 namespace :docker do # rubocop:disable Metrics/BlockLength
-  namespace :test do # rubocop:disable Metrics/BlockLength
+  desc "Remove Docker containers for Backup"
+  task :clean do
+    containers = `docker ps -a | grep 'ruby_backup_*' | awk '{ print $1 }'`
+      .tr("\n", " ")
+    unless containers.empty?
+      `docker stop #{containers}`
+      `docker rm #{containers}`
+    end
+  end
+
+  desc "Remove Docker containers and images for Backup"
+  task clobber: [:clean] do
+    images = `docker images | grep 'ruby_backup_*' | awk '{ print $3 }'`
+      .tr("\n", " ")
+    `docker rmi #{images}` unless images.empty?
+  end
+
+  desc "Build a Docker image for Backup itself"
+  task :build do
+    sh "docker build -t ruby_backup_runner:latest ."
+  end
+
+  namespace :test do
     directory "tmp"
     directory "tmp/test_data"
 
-    desc "Run integration tests inside a container"
-    task integration: [:build, "tmp", "tmp/test_data"] do
-      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' " \
+    desc "Build a Docker Compose environment for Backup"
+    task :prepare do
+      sh "docker-compose build"
+    end
+
+    desc "Run all test suites inside a container environment"
+    task ci: [:run_spec, :run_integration]
+
+    desc "Run integration tests inside a container environment"
+    task integration: [:prepare, :run_integration]
+
+    task run_integration: ["tmp", "tmp/test_data"] do
+      sh "docker run " \
         "-v $PWD:/usr/src/backup " \
-        "-it backup_runner:latest ruby -Ilib -S rspec ./integration/acceptance/"
+        "-it ruby_backup_tester:latest ruby -Ilib -S rspec ./integration/acceptance/"
     end
 
-    desc "Build an image for testing"
-    task :build do
-      sh "docker build -t backup_runner:latest ."
-    end
-
-    desc "Remove unused images, and all containers"
-    task :clean do
-      containers = `docker ps -a -q`
-      unless containers.empty?
-        `docker stop $(docker ps -a -q)`
-        `docker rm $(docker ps -a -q)`
-      end
-      `docker images -qf dangling=true | xargs docker rmi`
-    end
-
-    desc "Start a container with a shell"
-    task shell: [:build] do
-      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' " \
-         "-v $PWD:/usr/src/backup -it backup_runner:latest /bin/bash"
-    end
-
-    desc "Run RSpec tests inside a container"
-    task spec: [:build] do
-      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' " \
+    task :run_spec do
+      sh "docker run " \
          "-v $PWD:/usr/src/backup " \
-         "-it backup_runner:latest ruby -Ilib -S rspec ./spec/"
+         "-it ruby_backup_tester:latest ruby -Ilib -S rspec ./spec/"
     end
+
+    desc "Start a container environment with a shell"
+    task shell: [:prepare] do
+      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' " \
+         "-v $PWD:/usr/src/backup -it ruby_backup_tester:latest /bin/bash"
+    end
+
+    desc "Run RSpec tests inside a container environment"
+    task spec: [:prepare, :run_spec]
   end
 end

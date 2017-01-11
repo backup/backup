@@ -1,9 +1,10 @@
 version: '2'
 
 services:
-  runner:
+  tester:
     build: .
     command: /bin/bash
+    image: ruby_backup_tester
     volumes:
       - ".:/usr/src/backup"
     links:
