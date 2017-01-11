@@ -135,7 +135,7 @@ namespace :docker do # rubocop:disable Metrics/BlockLength
          "-it ruby_backup_tester:latest ruby -Ilib -S rspec ./spec/"
     end
 
-    desc "Start a container environment with a shell"
+    desc "Start a container environment with an interactive shell"
     task shell: [:prepare] do
       sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' " \
          "-v $PWD:/usr/src/backup -it ruby_backup_tester:latest /bin/bash"
