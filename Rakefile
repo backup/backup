@@ -117,7 +117,7 @@ namespace :docker do # rubocop:disable Metrics/BlockLength
       sh "docker-compose build"
     end
 
-    desc "Run all test suites inside a container environment"
+    desc "Run all test suites inside an existing container environment"
     task ci: [:run_spec, :run_integration]
 
     desc "Run integration tests inside a container environment"
