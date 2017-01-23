@@ -44,8 +44,9 @@ Gem::Specification.new do |gem|
   gem.add_dependency "json", "1.8.2"
   gem.add_dependency "dogapi", "1.11.0"
   gem.add_dependency "aws-ses", "0.5.0"
-  gem.add_dependency "qiniu", "6.5.1"
+  gem.add_dependency "qiniu", "6.8.0"
   gem.add_dependency "nokogiri", "~> 1.6.0"
+  gem.add_dependency "aliyun-sdk", "~> 0.3.7"
 
   gem.add_development_dependency "rubocop", "0.45.0"
   gem.add_development_dependency "rake"

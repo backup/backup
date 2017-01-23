@@ -1,0 +1,14 @@
+##
+# Aliyun OSS [Storage]
+#
+store_with AliyunOSS do |oss|
+  # Qiniu Credentials
+  oss.access_key = "my_access_key"
+  oss.secret_key = "my_secret_key"
+
+  oss.bucket     = "bucket-name"
+  # More options see this https://help.aliyun.com/document_detail/31837.html
+  oss.endpoint   = "your_region.aliyuncs.com"
+  qiniu.keep     = 5
+  qiniu.path     = "path/to/backups"
+en
