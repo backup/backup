@@ -36,35 +36,41 @@ describe Database::MongoDB do
       expect( db.additional_options ).to be_nil
       expect( db.lock               ).to be_nil
       expect( db.oplog              ).to be_nil
+      expect( db.each_collection    ).to be_nil
+      expect( db.exclude_collections).to be_nil
     end
 
     it 'configures the database' do
       db = Database::MongoDB.new(model, :my_id) do |mongodb|
-        mongodb.name               = 'my_name'
-        mongodb.username           = 'my_username'
-        mongodb.password           = 'my_password'
-        mongodb.authdb             = 'my_authdb'
-        mongodb.host               = 'my_host'
-        mongodb.port               = 'my_port'
-        mongodb.ipv6               = 'my_ipv6'
-        mongodb.only_collections   = 'my_only_collections'
-        mongodb.additional_options = 'my_additional_options'
-        mongodb.lock               = 'my_lock'
-        mongodb.oplog              = 'my_oplog'
+        mongodb.name                = 'my_name'
+        mongodb.username            = 'my_username'
+        mongodb.password            = 'my_password'
+        mongodb.authdb              = 'my_authdb'
+        mongodb.host                = 'my_host'
+        mongodb.port                = 'my_port'
+        mongodb.ipv6                = 'my_ipv6'
+        mongodb.only_collections    = 'my_only_collections'
+        mongodb.additional_options  = 'my_additional_options'
+        mongodb.lock                = 'my_lock'
+        mongodb.oplog               = 'my_oplog'
+        mongodb.each_collection     = 'my_each_collection'
+        mongodb.exclude_collections = 'my_exclude_collections'
       end
 
-      expect( db.database_id        ).to eq 'my_id'
-      expect( db.name               ).to eq 'my_name'
-      expect( db.username           ).to eq 'my_username'
-      expect( db.password           ).to eq 'my_password'
-      expect( db.authdb             ).to eq 'my_authdb'
-      expect( db.host               ).to eq 'my_host'
-      expect( db.port               ).to eq 'my_port'
-      expect( db.ipv6               ).to eq 'my_ipv6'
-      expect( db.only_collections   ).to eq 'my_only_collections'
-      expect( db.additional_options ).to eq 'my_additional_options'
-      expect( db.lock               ).to eq 'my_lock'
-      expect( db.oplog              ).to eq 'my_oplog'
+      expect( db.database_id         ).to eq 'my_id'
+      expect( db.name                ).to eq 'my_name'
+      expect( db.username            ).to eq 'my_username'
+      expect( db.password            ).to eq 'my_password'
+      expect( db.authdb              ).to eq 'my_authdb'
+      expect( db.host                ).to eq 'my_host'
+      expect( db.port                ).to eq 'my_port'
+      expect( db.ipv6                ).to eq 'my_ipv6'
+      expect( db.only_collections    ).to eq 'my_only_collections'
+      expect( db.additional_options  ).to eq 'my_additional_options'
+      expect( db.lock                ).to eq 'my_lock'
+      expect( db.oplog               ).to eq 'my_oplog'
+      expect( db.each_collection     ).to eq 'my_each_collection'
+      expect( db.exclude_collections ).to eq 'my_exclude_collections'
     end
   end # describe '#initialize'
 
@@ -370,6 +376,36 @@ describe Database::MongoDB do
       db.send(:unlock_database)
     end
   end # describe '#unlock_database'
+
+  describe '#each_collection' do
+    it 'runs command to each collection' do
+
+      db = Database::MongoDB.new(model)
+      db.stubs(:mongo_shell).returns('mongo_shell')
+
+      db.each_collection = true
+
+      db.expects(:run).with(
+        "echo 'rs.slaveOk()\n" +
+        "db.getCollectionNames()' | mongo_shell '--quiet'\n"
+      )
+      db.send(:get_collections)
+    end
+    it 'runs command to exclude collections with each collection' do
+      db = Database::MongoDB.new(model)
+      db.stubs(:mongo_shell).returns('mongo_shell')
+
+      db.each_collection = true
+      db.exclude_collections= [:my_id]
+
+      db.expects(:run).with(
+        "echo 'rs.slaveOk()\n" +
+        "db.getCollectionNames()' | mongo_shell '--quiet'\n"
+      )
+
+      db.send(:get_collections, db.exclude_collections)
+    end
+  end
 
   describe '#mongo_shell' do
     specify 'with all options' do
