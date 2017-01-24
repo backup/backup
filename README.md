@@ -14,10 +14,10 @@ was built with modularity, extensibility and simplicity in mind.
 
 Please use the Backup features [issue tracker][Features] to suggest new features.
 Only use the Backup gem [issue tracker][Issues] for bugs and other issues.
-We're also available on [Gitter][] for questions and problems.
+We're also available on [Gitter] for questions and problems.
 
-**Copyright (c) 2009-2015 [Michael van Rooijen][] ( [@meskyanichi][] )**  
-Released under the **MIT** [License](LICENSE.md).
+**Copyright (c) 2009-2017 [Michael van Rooijen][] ( [@mrrooijen] )**  
+Released under the **MIT** [LICENSE](LICENSE).
 
 [Installation]:  http://backup.github.io/backup/v4/installation
 [Release Notes]: http://backup.github.io/backup/v4/release-notes
@@ -25,5 +25,5 @@ Released under the **MIT** [License](LICENSE.md).
 [Issues]: https://github.com/backup/backup/issues
 [Features]: https://github.com/backup/backup-features/issues
 [Gitter]: https://gitter.im/backup/backup?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-[Michael van Rooijen]: http://michaelvanrooijen.com
-[@meskyanichi]: http://twitter.com/#!/meskyanichi
+[Michael van Rooijen]: http://github.com/mrrooijen
+[@mrrooijen]: http://twitter.com/mrrooijen

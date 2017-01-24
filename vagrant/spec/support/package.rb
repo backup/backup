@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module BackupSpec
   class Package
     include Backup::Utilities::Helpers

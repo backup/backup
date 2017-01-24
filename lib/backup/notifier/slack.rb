@@ -1,11 +1,9 @@
-# encoding: utf-8
-require 'uri'
-require 'json'
+require "uri"
+require "json"
 
 module Backup
   module Notifier
     class Slack < Base
-
       ##
       # The incoming webhook url
       attr_accessor :webhook_url
@@ -38,7 +36,7 @@ module Backup
         instance_eval(&block) if block_given?
 
         @send_log_on ||= [:warning, :failure]
-        @icon_emoji  ||= ':floppy_disk:'
+        @icon_emoji  ||= ":floppy_disk:"
       end
 
       private
@@ -62,8 +60,8 @@ module Backup
       #
       def notify!(status)
         data = {
-          :text => message.call(model, :status => status_data_for(status)),
-          :attachments => [attachment(status)]
+          text: message.call(model, status: status_data_for(status)),
+          attachments: [attachment(status)]
         }
         [:channel, :username, :icon_emoji].each do |param|
           val = send(param)
@@ -71,43 +69,43 @@ module Backup
         end
 
         options = {
-          :headers  => { 'Content-Type' => 'application/x-www-form-urlencoded' },
-          :body     => URI.encode_www_form(:payload => JSON.dump(data))
+          headers: { "Content-Type" => "application/x-www-form-urlencoded" },
+          body: URI.encode_www_form(payload: JSON.dump(data))
         }
-        options.merge!(:expects => 200) # raise error if unsuccessful
+        options[:expects] = 200 # raise error if unsuccessful
         Excon.post(uri, options)
       end
 
       def attachment(status)
         {
-          :fallback => "#{title(status)} - Job: #{model.label} (#{model.trigger})",
-          :text     => title(status),
-          :color    => color(status),
-          :fields   => [
+          fallback: "#{title(status)} - Job: #{model.label} (#{model.trigger})",
+          text: title(status),
+          color: color(status),
+          fields: [
             {
-              :title => "Job",
-              :value => "#{model.label} (#{model.trigger})",
-              :short => false
+              title: "Job",
+              value: "#{model.label} (#{model.trigger})",
+              short: false
             },
             {
-              :title => "Started",
-              :value => model.started_at,
-              :short => true
+              title: "Started",
+              value: model.started_at,
+              short: true
             },
             {
-              :title => "Finished",
-              :value => model.finished_at,
-              :short => true
+              title: "Finished",
+              value: model.finished_at,
+              short: true
             },
             {
-              :title => "Duration",
-              :value => model.duration,
-              :short => true
+              title: "Duration",
+              value: model.duration,
+              short: true
             },
             {
-              :title => "Version",
-              :value => "Backup v#{Backup::VERSION}\nRuby: #{RUBY_DESCRIPTION}",
-              :short => false
+              title: "Version",
+              value: "Backup v#{Backup::VERSION}\nRuby: #{RUBY_DESCRIPTION}",
+              short: false
             },
             log_field(status)
           ].compact
@@ -116,27 +114,28 @@ module Backup
 
       def log_field(status)
         send_log = send_log_on.include?(status)
+        return unless send_log
 
-        return {
-          :title => "Detailed Backup Log",
-          :value => Logger.messages.map(&:formatted_lines).flatten.join("\n"),
-          :short => false,
-        } if send_log
+        {
+          title: "Detailed Backup Log",
+          value: Logger.messages.map(&:formatted_lines).flatten.join("\n"),
+          short: false
+        }
       end
 
       def color(status)
         case status
-        when :success then 'good'
-        when :failure then 'danger'
-        when :warning then 'warning'
+        when :success then "good"
+        when :failure then "danger"
+        when :warning then "warning"
         end
       end
 
       def title(status)
         case status
-        when :success then 'Backup Completed Successfully!'
-        when :failure then 'Backup Failed!'
-        when :warning then 'Backup Completed Successfully (with Warnings)!'
+        when :success then "Backup Completed Successfully!"
+        when :failure then "Backup Failed!"
+        when :warning then "Backup Completed Successfully (with Warnings)!"
         end
       end
 

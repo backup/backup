@@ -1,15 +1,14 @@
-# encoding: utf-8
-require 'backup/config/dsl'
-require 'backup/config/helpers'
+require "backup/config/dsl"
+require "backup/config/helpers"
 
 module Backup
   module Config
     class Error < Backup::Error; end
 
     DEFAULTS = {
-      :config_file  => 'config.rb',
-      :data_path    => '.data',
-      :tmp_path     => '.tmp'
+      config_file: "config.rb",
+      data_path: ".data",
+      tmp_path: ".tmp"
     }
 
     class << self
@@ -19,20 +18,20 @@ module Backup
 
       # Loads the user's +config.rb+ and all model files.
       def load(options = {})
-        update(options)  # from the command line
+        update(options) # from the command line
 
         unless File.exist?(config_file)
           raise Error, "Could not find configuration file: '#{config_file}'."
         end
 
         config = File.read(config_file)
-        version = Backup::VERSION.split('.').first
+        version = Backup::VERSION.split(".").first
         unless config =~ /^# Backup v#{ version }\.x Configuration$/
           raise Error, <<-EOS
             Invalid Configuration File
-            The configuration file at '#{ config_file }'
-            does not appear to be a Backup v#{ version }.x configuration file.
-            If you have upgraded to v#{ version }.x from a previous version,
+            The configuration file at '#{config_file}'
+            does not appear to be a Backup v#{version}.x configuration file.
+            If you have upgraded to v#{version}.x from a previous version,
             you need to upgrade your configuration file.
             Please see the instructions for upgrading in the Backup documentation.
           EOS
@@ -44,7 +43,7 @@ module Backup
         update(dsl._config_options)  # from config.rb
         update(options)              # command line takes precedence
 
-        Dir[File.join(File.dirname(config_file), 'models', '*.rb')].each do |model|
+        Dir[File.join(File.dirname(config_file), "models", "*.rb")].each do |model|
           dsl.instance_eval(File.read(model), model)
         end
       end
@@ -79,7 +78,7 @@ module Backup
           raise Error, <<-EOS
             Root Path Not Found
             When specifying a --root-path, the path must exist.
-            Path was: #{ path }
+            Path was: #{path}
           EOS
         end
         @root_path = path
@@ -88,7 +87,7 @@ module Backup
       def set_path_variable(name, path, ending, root_path)
         # strip any trailing '/' in case the user supplied this as part of
         # an absolute path, so we can match it against File.expand_path()
-        path = path.to_s.sub(/\/\s*$/, '').lstrip
+        path = path.to_s.sub(/\/\s*$/, "").lstrip
         new_path = false
         # If no path is given, the variable will not be set/updated
         # unless a root_path was given. In which case the value will
@@ -108,12 +107,12 @@ module Backup
       end
 
       def reset!
-        @user      = ENV['USER'] || Etc.getpwuid.name
-        @root_path = File.join(File.expand_path(ENV['HOME'] || ''), 'Backup')
-        update(:root_path => @root_path)
+        @user      = ENV["USER"] || Etc.getpwuid.name
+        @root_path = File.join(File.expand_path(ENV["HOME"] || ""), "Backup")
+        update(root_path: @root_path)
       end
     end
 
-    reset!  # set defaults on load
+    reset! # set defaults on load
   end
 end

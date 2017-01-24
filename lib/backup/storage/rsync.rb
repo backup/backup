@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   module Storage
     class RSync < Base
@@ -133,7 +131,7 @@ module Backup
         @mode ||= :ssh
         @port ||= mode == :rsync_daemon ? 873 : 22
         @compress ||= false
-        @path ||= '~/backups'
+        @path ||= "~/backups"
       end
 
       private
@@ -143,10 +141,10 @@ module Backup
         create_remote_path
 
         package.filenames.each do |filename|
-          src = "'#{ File.join(Config.tmp_path, filename) }'"
-          dest = "#{ host_options }'#{ File.join(remote_path, filename) }'"
-          Logger.info "Syncing to #{ dest }..."
-          run("#{ rsync_command } #{ src } #{ dest }")
+          src = "'#{File.join(Config.tmp_path, filename)}'"
+          dest = "#{host_options}'#{File.join(remote_path, filename)}'"
+          Logger.info "Syncing to #{dest}..."
+          run("#{rsync_command} #{src} #{dest}")
         end
       ensure
         remove_password_file
@@ -159,7 +157,7 @@ module Backup
       def remote_path
         @remote_path ||= begin
           if host
-            path.sub(/^~\//, '').sub(/\/$/, '')
+            path.sub(/^~\//, "").sub(/\/$/, "")
           else
             File.expand_path(path)
           end
@@ -176,8 +174,9 @@ module Backup
       # module name that must define a path on the remote that already exists.
       def create_remote_path
         if host
-          run("#{ utility(:ssh) } #{ ssh_transport_args } #{ host } " +
-                  %Q["mkdir -p '#{ remote_path }'"]) if mode == :ssh
+          return unless mode == :ssh
+          run "#{utility(:ssh)} #{ssh_transport_args} #{host} " +
+            %("mkdir -p '#{remote_path}'")
         else
           FileUtils.mkdir_p(remote_path)
         end
@@ -186,55 +185,55 @@ module Backup
       def host_options
         @host_options ||= begin
           if !host
-            ''
+            ""
           elsif mode == :ssh
-            "#{ host }:"
+            "#{host}:"
           else
-            user = "#{ rsync_user }@" if rsync_user
-            "#{ user }#{ host }::"
+            user = "#{rsync_user}@" if rsync_user
+            "#{user}#{host}::"
           end
         end
       end
 
       def rsync_command
         @rsync_command ||= begin
-          cmd = utility(:rsync) << ' --archive' <<
-              " #{ Array(additional_rsync_options).join(' ') }".rstrip
+          cmd = utility(:rsync) << " --archive" <<
+            " #{Array(additional_rsync_options).join(" ")}".rstrip
           cmd << compress_option << password_option << transport_options if host
           cmd
         end
       end
 
       def compress_option
-        compress ? ' --compress' : ''
+        compress ? " --compress" : ""
       end
 
       def password_option
-        return '' if mode == :ssh
+        return "" if mode == :ssh
 
         path = @password_file ? @password_file.path : rsync_password_file
-        path ? " --password-file='#{ File.expand_path(path) }'" : ''
+        path ? " --password-file='#{File.expand_path(path)}'" : ""
       end
 
       def transport_options
         if mode == :rsync_daemon
-          " --port #{ port }"
+          " --port #{port}"
         else
-          %Q[ -e "#{ utility(:ssh) } #{ ssh_transport_args }"]
+          %( -e "#{utility(:ssh)} #{ssh_transport_args}")
         end
       end
 
       def ssh_transport_args
-        args = "-p #{ port } "
-        args << "-l #{ ssh_user } " if ssh_user
-        args << Array(additional_ssh_options).join(' ')
+        args = "-p #{port} "
+        args << "-l #{ssh_user} " if ssh_user
+        args << Array(additional_ssh_options).join(" ")
         args.rstrip
       end
 
       def write_password_file
         return unless host && rsync_password && mode != :ssh
 
-        @password_file = Tempfile.new('backup-rsync-password')
+        @password_file = Tempfile.new("backup-rsync-password")
         @password_file.write(rsync_password)
         @password_file.close
       end
@@ -242,7 +241,6 @@ module Backup
       def remove_password_file
         @password_file.delete if @password_file
       end
-
     end
   end
 end

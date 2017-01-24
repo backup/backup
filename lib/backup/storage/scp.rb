@@ -1,5 +1,4 @@
-# encoding: utf-8
-require 'net/scp'
+require "net/scp"
 
 module Backup
   module Storage
@@ -19,27 +18,27 @@ module Backup
         super
 
         @port ||= 22
-        @path ||= 'backups'
+        @path ||= "backups"
         @ssh_options ||= {}
-        path.sub!(/^~\//, '')
+        path.sub!(/^~\//, "")
       end
 
       private
 
       def connection
         Net::SSH.start(
-          ip, username, { :password => password, :port => port }.merge(ssh_options)
-        ) {|ssh| yield ssh }
+          ip, username, { password: password, port: port }.merge(ssh_options)
+        ) { |ssh| yield ssh }
       end
 
       def transfer!
         connection do |ssh|
-          ssh.exec!("mkdir -p '#{ remote_path }'")
+          ssh.exec!("mkdir -p '#{remote_path}'")
 
           package.filenames.each do |filename|
             src = File.join(Config.tmp_path, filename)
             dest = File.join(remote_path, filename)
-            Logger.info "Storing '#{ ip }:#{ dest }'..."
+            Logger.info "Storing '#{ip}:#{dest}'..."
             ssh.scp.upload!(src, dest)
           end
         end
@@ -48,20 +47,19 @@ module Backup
       # Called by the Cycler.
       # Any error raised will be logged as a warning.
       def remove!(package)
-        Logger.info "Removing backup package dated #{ package.time }..."
+        Logger.info "Removing backup package dated #{package.time}..."
 
         errors = []
         connection do |ssh|
-          ssh.exec!("rm -r '#{ remote_path_for(package) }'") do |ch, stream, data|
+          ssh.exec!("rm -r '#{remote_path_for(package)}'") do |_, stream, data|
             errors << data if stream == :stderr
           end
         end
         unless errors.empty?
           raise Error, "Net::SSH reported the following errors:\n" +
-              errors.join("\n")
+            errors.join("\n")
         end
       end
-
     end
   end
 end

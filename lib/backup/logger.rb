@@ -1,13 +1,10 @@
-# encoding: utf-8
-
-require 'backup/logger/console'
-require 'backup/logger/logfile'
-require 'backup/logger/syslog'
-require 'backup/logger/fog_adapter'
+require "backup/logger/console"
+require "backup/logger/logfile"
+require "backup/logger/syslog"
+require "backup/logger/fog_adapter"
 
 module Backup
   class Logger
-
     class Config
       class Logger < Struct.new(:class, :options)
         def enabled?
@@ -44,22 +41,22 @@ module Backup
       #   [YYYY/MM/DD HH:MM:SS][level] message line text
       def formatted_lines
         timestamp = time.strftime("%Y/%m/%d %H:%M:%S")
-        lines.map {|line| "[#{ timestamp }][#{ level }] #{ line }" }
+        lines.map { |line| "[#{timestamp}][#{level}] #{line}" }
       end
 
       def matches?(ignores)
         text = lines.join("\n")
-        ignores.any? {|obj|
+        ignores.any? do |obj|
           obj.is_a?(Regexp) ? text.match(obj) : text.include?(obj)
-        }
+        end
       end
     end
 
     class << self
       extend Forwardable
       def_delegators :logger,
-          :start!, :abort!, :info, :warn, :error,
-          :messages, :has_warnings?, :has_errors?
+        :start!, :abort!, :info, :warn, :error,
+        :messages, :has_warnings?, :has_errors?
 
       ##
       # Allows the Logger to be configured.
@@ -137,9 +134,9 @@ module Backup
     # Sends a message to the Logger using the specified log level.
     # +obj+ may be any Object that responds to #to_s (i.e. an Exception)
     [:info, :warn, :error].each do |level|
-      define_method level, lambda {|obj|
+      define_method level do |obj|
         MUTEX.synchronize { log(obj, level) }
-      }
+      end
     end
 
     ##
@@ -169,7 +166,7 @@ module Backup
         @loggers << logger.class.new(logger.options) if logger.enabled?
       end
       messages.each do |message|
-        @loggers.each {|logger| logger.log(message) }
+        @loggers.each { |logger| logger.log(message) }
       end
     end
 
@@ -187,13 +184,14 @@ module Backup
     def log(obj, level)
       message = Message.new(Time.now.utc, level, obj.to_s.split("\n"))
 
-      message.level = :info if message.level == :warn &&
-          message.matches?(@config.ignores)
+      if message.level == :warn && message.matches?(@config.ignores)
+        message.level = :info
+      end
       @has_warnings ||= message.level == :warn
       @has_errors   ||= message.level == :error
 
       messages << message
-      @loggers.each {|logger| logger.log(message) }
+      @loggers.each { |logger| logger.log(message) }
     end
   end
 end

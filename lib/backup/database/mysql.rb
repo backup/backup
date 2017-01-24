@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   module Database
     class MySQL < Base
@@ -78,71 +76,73 @@ module Backup
         super
 
         pipeline = Pipeline.new
-        dump_ext = sql_backup? ? 'sql' : 'tar'
+        dump_ext = sql_backup? ? "sql" : "tar"
 
         pipeline << sudo_option(sql_backup? ? mysqldump : innobackupex)
 
-        model.compressor.compress_with do |command, ext|
-          pipeline << command
-          dump_ext << ext
-        end if model.compressor
+        if model.compressor
+          model.compressor.compress_with do |command, ext|
+            pipeline << command
+            dump_ext << ext
+          end
+        end
 
-        pipeline << "#{ utility(:cat) } > " +
-            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
+        pipeline << "#{utility(:cat)} > " \
+          "'#{File.join(dump_path, dump_filename)}.#{dump_ext}'"
 
         pipeline.run
         if pipeline.success?
           log!(:finished)
         else
-          raise Error, "Dump Failed!\n" + pipeline.error_messages
+          raise Error, "Dump Failed!\n#{pipeline.error_messages}"
         end
       end
 
       private
 
       def mysqldump
-        "#{ utility(:mysqldump) } #{ user_options } #{ credential_options } " +
-        "#{ connectivity_options } #{ name_option } " +
-        "#{ tables_to_dump } #{ tables_to_skip }"
+        "#{utility(:mysqldump)} #{user_options} #{credential_options} " \
+          "#{connectivity_options} #{name_option} " \
+          "#{tables_to_dump} #{tables_to_skip}"
       end
 
       def credential_options
         opts = []
-        opts << "--user=#{ Shellwords.escape(username) }" if username
-        opts << "--password=#{ Shellwords.escape(password) }" if password
-        opts.join(' ')
+        opts << "--user=#{Shellwords.escape(username)}" if username
+        opts << "--password=#{Shellwords.escape(password)}" if password
+        opts.join(" ")
       end
 
       def connectivity_options
-        return "--socket='#{ socket }'" if socket
+        return "--socket='#{socket}'" if socket
 
         opts = []
-        opts << "--host='#{ host }'" if host
-        opts << "--port='#{ port }'" if port
-        opts.join(' ')
+        opts << "--host='#{host}'" if host
+        opts << "--port='#{port}'" if port
+        opts.join(" ")
       end
 
       def user_options
-        Array(additional_options).join(' ')
+        Array(additional_options).join(" ")
       end
 
       def user_prepare_options
-        Array(prepare_options).join(' ')
+        Array(prepare_options).join(" ")
       end
 
       def name_option
-        dump_all? ? '--all-databases' : name
+        dump_all? ? "--all-databases" : name
       end
 
       def tables_to_dump
-        Array(only_tables).join(' ') unless dump_all?
+        Array(only_tables).join(" ") unless dump_all?
       end
 
       def tables_to_skip
         Array(skip_tables).map do |table|
-          table = (dump_all? || table['.']) ? table : "#{ name }.#{ table }"
-          "--ignore-table='#{ table }'"
-        end.join(' ')
+          table = dump_all? || table["."] ? table : "#{name}.#{table}"
+          "--ignore-table='#{table}'"
+        end.join(" ")
       end
 
       def dump_all?
@@ -155,28 +155,28 @@ module Backup
 
       def innobackupex
         # Creation phase
-        "#{ utility(:innobackupex) } #{ credential_options } " +
-        "#{ connectivity_options } #{ user_options } " +
-        "--no-timestamp #{ temp_dir } #{ quiet_option } && " +
-        innobackupex_prepare +
-        # Move files to tar-ed stream on stdout
-        "#{ utility(:tar) } --remove-files -cf -  " +
-        "-C #{ File.dirname(temp_dir) } #{ File.basename(temp_dir) }"
+        "#{utility(:innobackupex)} #{credential_options} " \
+          "#{connectivity_options} #{user_options} " \
+          "--no-timestamp #{temp_dir} #{quiet_option} && " +
+          innobackupex_prepare +
+          # Move files to tar-ed stream on stdout
+          "#{utility(:tar)} --remove-files -cf -  " \
+          "-C #{File.dirname(temp_dir)} #{File.basename(temp_dir)}"
       end
 
       def innobackupex_prepare
         return "" unless @prepare_backup
         # Log applying phase (prepare for restore)
-        "#{ utility(:innobackupex) } --apply-log #{ temp_dir } " +
-        "#{ user_prepare_options }  #{ quiet_option } && "
+        "#{utility(:innobackupex)} --apply-log #{temp_dir} " \
+          "#{user_prepare_options}  #{quiet_option} && "
       end
 
       def sudo_option(command_block)
         return command_block unless sudo_user
 
-        "sudo -s -u #{ sudo_user } -- <<END_OF_SUDO\n" +
-        "#{command_block}\n" +
-        "END_OF_SUDO\n"
+        "sudo -s -u #{sudo_user} -- <<END_OF_SUDO\n" \
+          "#{command_block}\n" \
+          "END_OF_SUDO\n"
       end
 
       def quiet_option
@@ -184,9 +184,8 @@ module Backup
       end
 
       def temp_dir
-        File.join(dump_path, dump_filename + ".bkpdir")
+        File.join(dump_path, "#{dump_filename}.bkpdir")
       end
-
     end
   end
 end
