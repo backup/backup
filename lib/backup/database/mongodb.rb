@@ -51,6 +51,7 @@ module Backup
       # Mongodump for each collection
       attr_accessor :each_collection
 
+
       # exclude collections
       # This is used with `each_collection`
       attr_accessor :exclude_collections
@@ -192,7 +193,6 @@ module Backup
           echo 'rs.slaveOk()
           db.getCollectionNames()' | #{ mongo_shell } '--quiet'
         EOS
-
         rst = eval(run(get_collections) || "[]")
         rst = rst - explode_collections if !explode_collections.nil?
 

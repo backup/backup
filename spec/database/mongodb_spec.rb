@@ -402,19 +402,64 @@ module Backup
 
         db.send(:get_collections, db.exclude_collections)
       end
-    end # describe #each_collection
+    end # describe '#user_options'
 
-    describe "#mongo_shell" do
-      specify "with all options" do
-        db.host = "my_host"
-        db.port = "my_port"
-        db.username = "my_user"
-        db.password = "my_pwd"
-        db.authdb = "my_authdb"
-        db.ipv6 = true
-        db.name = "my_db"
+  end # describe 'mongo and monogodump option methods'
 
-        expect(db.send(:mongo_shell)).to eq(
+  describe '#lock_database' do
+    it 'runs command to disable profiling and lock the database' do
+      db = Database::MongoDB.new(model)
+      db.stubs(:mongo_shell).returns('mongo_shell')
+
+      db.expects(:run).with(
+        "echo 'use admin\n" +
+        "db.setProfilingLevel(0)\n" +
+        "db.fsyncLock()' | mongo_shell\n"
+      )
+      db.send(:lock_database)
+    end
+  end # describe '#lock_database'
+
+  describe '#unlock_database' do
+    it 'runs command to unlock the database' do
+      db = Database::MongoDB.new(model)
+      db.stubs(:mongo_shell).returns('mongo_shell')
+
+      db.expects(:run).with(
+        "echo 'use admin\n" +
+        "db.fsyncUnlock()' | mongo_shell\n"
+      )
+      db.send(:unlock_database)
+    end
+  end # describe '#unlock_database'
+
+  describe '#each_collection' do
+    it 'runs command to each collection' do
+
+      db = Database::MongoDB.new(model)
+      db.stubs(:mongo_shell).returns('mongo_shell')
+
+      db.each_collection = true
+
+      db.expects(:run).with(
+        "echo 'rs.slaveOk()\n" +
+        "db.getCollectionNames()' | mongo_shell '--quiet'\n"
+      )
+      db.send(:get_collections)
+    end
+  end
+
+  describe '#mongo_shell' do
+    specify 'with all options' do
+      db.host = 'my_host'
+      db.port = 'my_port'
+      db.username = 'my_user'
+      db.password = 'my_pwd'
+      db.authdb  = 'my_authdb'
+      db.ipv6 = true
+      db.name = 'my_db'
+
+      expect(db.send(:mongo_shell)).to eq(
           "mongo --host='my_host' --port='my_port' --username='my_user' " \
           "--password='my_pwd' --authenticationDatabase='my_authdb' --ipv6 'my_db'"
         )
