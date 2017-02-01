@@ -22,6 +22,10 @@ module Backup
       attr_accessor :host, :port, :socket
 
       ##
+      # URL includes credentials and connectivity options
+      attr_accessor :url
+
+      ##
       # Tables to skip while dumping the database.
       # If `name` is set to :all (or not specified), these are ignored.
       attr_accessor :skip_tables
@@ -76,8 +80,16 @@ module Backup
       def pgdump
         password_option.to_s +
           sudo_option.to_s +
-          "#{utility(:pg_dump)} #{username_option} #{connectivity_options} " \
-          "#{user_options} #{tables_to_dump} #{tables_to_skip} #{name}"
+          "#{utility(:pg_dump)} #{pgdump_arguments}"
+      end
+
+      def pgdump_arguments
+        if url.nil?
+          "#{username_option} #{connectivity_options} #{user_options} #{tables_to_dump} " \
+          "#{tables_to_skip} #{name}"
+        else
+          "#{user_options} #{tables_to_dump} #{tables_to_skip} #{url}"
+        end
       end
 
       def pgdumpall

@@ -29,6 +29,7 @@ module Backup
         expect(db.skip_tables).to be_nil
         expect(db.only_tables).to be_nil
         expect(db.additional_options).to be_nil
+        expect(db.url).to be_nil
       end
 
       it "configures the database" do
@@ -43,6 +44,7 @@ module Backup
           pgsql.skip_tables        = "my_skip_tables"
           pgsql.only_tables        = "my_only_tables"
           pgsql.additional_options = "my_additional_options"
+          pgsql.url                = "postgresql://username:password@host:5432/database"
         end
 
         expect(db.database_id).to eq "my_id"
@@ -56,6 +58,7 @@ module Backup
         expect(db.skip_tables).to eq "my_skip_tables"
         expect(db.only_tables).to eq "my_only_tables"
         expect(db.additional_options).to eq "my_additional_options"
+        expect(db.url).to eq "postgresql://username:password@host:5432/database"
       end
     end # describe '#initialize'
 
@@ -159,30 +162,49 @@ module Backup
     end # describe '#perform!'
 
     describe "#pgdump" do
-      let(:option_methods) do
-        %w(
-          username_option connectivity_options
-          user_options tables_to_dump tables_to_skip name
-        )
-      end
-      # password_option and sudo_option leave no leading space if it's not used
+      context "when url is not set" do
+        let(:option_methods) do
+          %w(
+            username_option connectivity_options
+            user_options tables_to_dump tables_to_skip name
+          )
+        end
+        # password_option and sudo_option leave no leading space if it's not used
 
-      it "returns full pg_dump command built from all options" do
-        option_methods.each { |name| db.stubs(name).returns(name) }
-        db.stubs(:password_option).returns("password_option")
-        db.stubs(:sudo_option).returns("sudo_option")
-        expect(db.send(:pgdump)).to eq(
-          "password_optionsudo_optionpg_dump #{option_methods.join(" ")}"
-        )
+        it "returns full pg_dump command built from all options" do
+          option_methods.each { |name| db.stubs(name).returns(name) }
+          db.stubs(:password_option).returns("password_option")
+          db.stubs(:sudo_option).returns("sudo_option")
+          expect(db.send(:pgdump)).to eq(
+            "password_optionsudo_optionpg_dump #{option_methods.join(" ")}"
+          )
+        end
+
+        it "handles nil values from option methods" do
+          option_methods.each { |name| db.stubs(name).returns(nil) }
+          db.stubs(:password_option).returns(nil)
+          db.stubs(:sudo_option).returns(nil)
+          expect(db.send(:pgdump)).to eq(
+            "pg_dump #{" " * (option_methods.count - 1)}"
+          )
+        end
       end
 
-      it "handles nil values from option methods" do
-        option_methods.each { |name| db.stubs(name).returns(nil) }
-        db.stubs(:password_option).returns(nil)
-        db.stubs(:sudo_option).returns(nil)
-        expect(db.send(:pgdump)).to eq(
-          "pg_dump #{" " * (option_methods.count - 1)}"
-        )
+      context "when url is set" do
+        let(:option_methods) do
+          %w(
+            user_options tables_to_dump tables_to_skip url
+          )
+        end
+
+        it "returns pg_dump command with url" do
+          option_methods.each { |name| db.stubs(name).returns(name) }
+          db.stubs(:password_option).returns("password_option")
+          db.stubs(:sudo_option).returns("sudo_option")
+          expect(db.send(:pgdump)).to eq(
+            "password_optionsudo_optionpg_dump #{option_methods.join(" ")}"
+          )
+        end
       end
     end # describe '#pgdump'
 
@@ -238,6 +260,35 @@ module Backup
           expect(db.send(:sudo_option)).to eq "sudo -n -H -u my_sudo_user "
         end
       end # describe '#sudo_option'
+
+      describe "#pgdump_arguments" do
+        context "when url is not set" do
+          let(:option_methods) do
+            %w(
+              username_option connectivity_options user_options tables_to_dump
+              tables_to_skip name
+            )
+          end
+
+          it "returns username and connectivity options as separate arguments" do
+            option_methods.each { |name| db.stubs(name).returns(name) }
+            expect(db.send(:pgdump_arguments)).to eq option_methods.join(" ")
+          end
+        end
+
+        context "when url is set" do
+          before do
+            db.url = "postgres://username:password@localhost:5432/db_name"
+          end
+
+          let(:option_methods) { %w(user_options tables_to_dump tables_to_skip) }
+
+          it "returns an url with username and connectivity options included" do
+            option_methods.each { |name| db.stubs(name).returns(name) }
+            expect(db.send(:pgdump_arguments)).to eq "#{option_methods.join(" ")} #{db.url}"
+          end
+        end
+      end
 
       describe "#username_option" do
         it "returns argument if specified" do
