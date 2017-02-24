@@ -118,21 +118,17 @@ namespace :docker do # rubocop:disable Metrics/BlockLength
     end
 
     desc "Run all test suites inside an existing container environment"
-    task ci: [:run_spec, :run_integration]
+    task run_all: [:run_spec, :run_integration]
 
     desc "Run integration tests inside a container environment"
     task integration: [:prepare, :run_integration]
 
     task run_integration: ["tmp", "tmp/test_data"] do
-      sh "docker run " \
-        "-v $PWD:/usr/src/backup " \
-        "-it ruby_backup_tester:latest ruby -Ilib -S rspec ./integration/acceptance/"
+      sh "docker-compose run ruby_backup_tester ruby -Ilib -S rspec ./integration/acceptance/"
     end
 
     task :run_spec do
-      sh "docker run " \
-         "-v $PWD:/usr/src/backup " \
-         "-it ruby_backup_tester:latest ruby -Ilib -S rspec ./spec/"
+      sh "docker-compose run ruby_backup_tester ruby -Ilib -S rspec ./spec/"
     end
 
     desc "Start a container environment with an interactive shell"

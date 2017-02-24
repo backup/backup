@@ -1,7 +1,7 @@
 version: '2'
 
 services:
-  tester:
+  ruby_backup_tester:
     build: .
     command: /bin/bash
     image: ruby_backup_tester
