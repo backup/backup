@@ -238,7 +238,7 @@ module Mail
   class Exim
     def self.call(path, arguments, _destinations, encoded_message)
       popen "#{path} #{arguments}" do |io|
-        io.puts encoded_message.to_lf
+        io.puts ::Mail::Utilities.to_lf(encoded_message)
         io.flush
       end
     end
