@@ -27,7 +27,7 @@ Gem::Specification.new do |gem|
 
   gem.required_ruby_version = ">= 2.0"
 
-  gem.add_dependency "thor", "0.18.1"
+  gem.add_dependency "thor", "0.19.0"
   gem.add_dependency "open4", "1.3.0"
   gem.add_dependency "fog", "1.28.0"
   gem.add_dependency "excon", "~> 0.44"
@@ -46,6 +46,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency "aws-ses", "0.5.0"
   gem.add_dependency "qiniu", "6.5.1"
   gem.add_dependency "nokogiri", "~> 1.6.0"
+  gem.add_dependency "azure", "~> 0.7.7"
 
   gem.add_development_dependency "rubocop", "0.45.0"
   gem.add_development_dependency "rake"
