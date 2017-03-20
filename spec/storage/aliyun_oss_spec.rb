@@ -8,7 +8,7 @@ module Backup
         oss.access_key = "my_access_key"
         oss.secret_key = "my_secret_key"
         oss.bucket     = "my_bucket"
-        oss.endpoint   = "my_endpoint"
+        oss.endpoint   = "endpoint.test"
       end
     end
     let(:storage) { Storage::AliyunOss.new(model, &required_config) }
@@ -20,7 +20,7 @@ module Backup
         expect(storage.bucket).to eq "my_bucket"
         expect(storage.access_key).to eq "my_access_key"
         expect(storage.secret_key).to eq "my_secret_key"
-        expect(storage.endpoint).to eq "my_endpoint"
+        expect(storage.endpoint).to eq "endpoint.test"
 
         # defaults
         expect(storage.storage_id).to be_nil
@@ -38,7 +38,11 @@ module Backup
     end
 
     it "#client" do
-      ::Aliyun::OSS::Client.expects(:new).with(endpoint: 'my_endpoint', access_key_id: "my_access_key", access_key_secret: "my_secret_key")
+      ::Aliyun::OSS::Client.expects(:new).with(
+        endpoint: "endpoint.test",
+        access_key_id: "my_access_key",
+        access_key_secret: "my_secret_key"
+      )
 
       pre_config = required_config
       storage = Storage::AliyunOss.new(model) do |qiniu|
