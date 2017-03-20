@@ -1,4 +1,4 @@
-require 'aliyun/oss'
+require "aliyun/oss"
 
 module Backup
   module Storage
@@ -62,10 +62,11 @@ module Backup
       def client
         return @client if @client
 
-        @client =  Aliyun::OSS::Client.new(
+        puts endpoint
+        @client = Aliyun::OSS::Client.new(
           endpoint: endpoint,
           access_key_id: access_key,
-          access_key_secret: secret_key,
+          access_key_secret: secret_key
         )
       end
     end
