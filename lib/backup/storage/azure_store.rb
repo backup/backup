@@ -1,5 +1,5 @@
 # encoding: utf-8
-require 'azure'
+require "azure"
 
 module Backup
   module Storage
@@ -16,14 +16,14 @@ module Backup
 
       def initialize(model, storage_id = nil)
         super
-        @path       ||= 'backups'
+        @path       ||= "backups"
         @chunk_size ||= 1024 * 1024 * 4 # bytes
-        path.sub!(/^\//, '')
-
-        #check_configuration
+        path.sub!(%r{^/}, "")
 
         Azure.config.storage_account_name = storage_account
         Azure.config.storage_access_key = storage_access_key
+
+        check_configuration
       end
 
       def azure_blob_service
@@ -38,14 +38,14 @@ module Backup
         package.filenames.each do |filename|
           src = File.join(Config.tmp_path, filename)
           dest = File.join(remote_path, filename)
-          Logger.info "Creating Block Blob '#{ azure_container.name }/#{ dest }'..."
+          Logger.info "Creating Block Blob '#{azure_container.name}/#{dest}'..."
           blob = blob_service.create_block_blob(@azure_container.name, dest, "")
           chunk_ids = []
 
           File.open(src, "r") do |fh_in|
             until fh_in.eof?
-              chunk = "#{"%05d"%(fh_in.pos/chunk_size)}"
-              Logger.info "Storing blob '#{ blob.name }/#{ chunk }'..."
+              chunk = sprintf("%05d", (fh_in.pos / chunk_size))
+              Logger.info "Storing blob '#{blob.name}/#{chunk}'..."
               azure_blob_service.create_blob_block(azure_container.name, blob.name, chunk, fh_in.read(chunk_size))
               chunk_ids.push([chunk])
             end
@@ -65,11 +65,11 @@ module Backup
       end
 
       def check_configuration
-        required = %w(storage_account storage_access_key)
+        required = %w(storage_account storage_access_key container_name)
 
-        raise Error, <<-EOS if required.map {|name| send(name) }.any?(&:nil?)
+        raise Error, <<-EOS if required.map { |name| send(name) }.any?(&:nil?)
           Configuration Error
-          #{ required.map {|name| "##{ name }"}.join(', ') } are all required
+          #{required.map { |name| "##{name}" }.join(", ")} are all required
         EOS
       end
     end
