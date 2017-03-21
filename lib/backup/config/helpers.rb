@@ -78,7 +78,11 @@ module Backup
       def load_defaults!
         self.class.defaults._attributes.each do |name|
           val = self.class.defaults.send(name)
-          val = val.dup rescue val
+          val = begin
+                  val.dup
+                rescue
+                  val
+                end
           send(:"#{ name }=", val)
         end
       end

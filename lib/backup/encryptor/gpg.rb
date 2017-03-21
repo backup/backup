@@ -69,7 +69,7 @@ module Backup
     class GPG < Base
       class Error < Backup::Error; end
 
-      MODES = [:asymmetric, :symmetric, :both]
+      MODES = [:asymmetric, :symmetric, :both].freeze
 
       ##
       # Sets the mode of operation.
@@ -432,7 +432,7 @@ module Backup
         @user_keys = nil
         @system_identifiers = nil
       end
-      alias :cleanup :prepare
+      alias cleanup prepare
 
       ##
       # Returns the options needed for the gpg command line which are

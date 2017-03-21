@@ -22,11 +22,11 @@ module Backup
 
       context "when given an array of constant names" do
         it "creates modules for the given scope" do
-          described_class.send(:create_modules, TestScope, ["Foo", "Bar"])
+          described_class.send(:create_modules, TestScope, %w(Foo Bar))
           TestScope.const_defined?("Foo").should be_true
           TestScope.const_defined?("Bar").should be_true
-          TestScope::Foo.class.should == Module
-          TestScope::Bar.class.should == Module
+          TestScope::Foo.class.should eq(Module)
+          TestScope::Bar.class.should eq(Module)
         end
       end
 
@@ -90,7 +90,7 @@ module Backup
         block = proc {}
         subject.preconfigure("MyBackup", &block)
         klass = described_class.const_get("MyBackup")
-        klass.superclass.should == Backup::Model
+        klass.superclass.should eq(Backup::Model)
 
         expect do
           subject.preconfigure("MyBackup", &block)

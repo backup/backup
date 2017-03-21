@@ -3,7 +3,7 @@ module Backup
     class Redis < Base
       class Error < Backup::Error; end
 
-      MODES = [:copy, :sync]
+      MODES = [:copy, :sync].freeze
 
       ##
       # Mode of operation.

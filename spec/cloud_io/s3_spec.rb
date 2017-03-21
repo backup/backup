@@ -290,7 +290,7 @@ module Backup
         object_b = described_class::Object.new(:foo, "Key" => "obj_key_b")
         cloud_io.expects(:with_retries).with("DELETE Multiple Objects").yields
         connection.expects(:delete_multiple_objects).with(
-          "my_bucket", ["obj_key_a", "obj_key_b"], quiet: true
+          "my_bucket", %w(obj_key_a obj_key_b), quiet: true
         ).returns(resp_ok)
 
         objects = [object_a, object_b]
@@ -310,10 +310,10 @@ module Backup
       it "accepts multiple keys" do
         cloud_io.expects(:with_retries).with("DELETE Multiple Objects").yields
         connection.expects(:delete_multiple_objects).with(
-          "my_bucket", ["obj_key_a", "obj_key_b"], quiet: true
+          "my_bucket", %w(obj_key_a obj_key_b), quiet: true
         ).returns(resp_ok)
 
-        objects = ["obj_key_a", "obj_key_b"]
+        objects = %w(obj_key_a obj_key_b)
         expect do
           cloud_io.delete(objects)
         end.not_to change { objects }
@@ -625,7 +625,7 @@ module Backup
         expect(
           cloud_io.send(:upload_parts,
             "/src/file", "dest/file", 1234, chunk_bytes, file_size)
-        ).to eq ["chunk_a_etag", "chunk_b_etag"]
+        ).to eq %w(chunk_a_etag chunk_b_etag)
 
         expect(Logger.messages.map(&:lines).join("\n")).to eq(
           "  Uploading 2 Parts...\n" \
@@ -733,15 +733,15 @@ module Backup
       it "returns empty headers by default" do
         cloud_io.stubs(:encryption).returns(nil)
         cloud_io.stubs(:storage_class).returns(nil)
-        cloud_io.send(:headers).should == {}
+        cloud_io.send(:headers).should eq({})
       end
 
       it "returns headers for server-side encryption" do
         cloud_io.stubs(:storage_class).returns(nil)
         ["aes256", :aes256].each do |arg|
           cloud_io.stubs(:encryption).returns(arg)
-          cloud_io.send(:headers).should ==
-            { "x-amz-server-side-encryption" => "AES256" }
+          cloud_io.send(:headers).should
+          eq("x-amz-server-side-encryption" => "AES256")
         end
       end
 
@@ -749,23 +749,23 @@ module Backup
         cloud_io.stubs(:encryption).returns(nil)
         ["reduced_redundancy", :reduced_redundancy].each do |arg|
           cloud_io.stubs(:storage_class).returns(arg)
-          cloud_io.send(:headers).should ==
-            { "x-amz-storage-class" => "REDUCED_REDUNDANCY" }
+          cloud_io.send(:headers).should
+          eq("x-amz-storage-class" => "REDUCED_REDUNDANCY")
         end
       end
 
       it "returns headers for both" do
         cloud_io.stubs(:encryption).returns(:aes256)
         cloud_io.stubs(:storage_class).returns(:reduced_redundancy)
-        cloud_io.send(:headers).should ==
-          { "x-amz-server-side-encryption" => "AES256",
-            "x-amz-storage-class" => "REDUCED_REDUNDANCY" }
+        cloud_io.send(:headers).should
+        eq("x-amz-server-side-encryption" => "AES256",
+             "x-amz-storage-class" => "REDUCED_REDUNDANCY")
       end
 
       it "returns empty headers for empty values" do
         cloud_io.stubs(:encryption).returns("")
         cloud_io.stubs(:storage_class).returns("")
-        cloud_io.send(:headers).should == {}
+        cloud_io.send(:headers).should eq({})
       end
     end # describe '#headers
 

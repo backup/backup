@@ -278,7 +278,7 @@ module Backup
         )
         cloud_io.expects(:with_retries).with("DELETE Multiple Objects").yields
         connection.expects(:delete_multiple_objects)
-          .with("my_container", ["obj_a_name", "obj_b_name"]).returns(resp_ok)
+          .with("my_container", %w(obj_a_name obj_b_name)).returns(resp_ok)
 
         objects = [object_a, object_b]
         expect do
@@ -296,9 +296,9 @@ module Backup
       it "accepts multiple names" do
         cloud_io.expects(:with_retries).with("DELETE Multiple Objects").yields
         connection.expects(:delete_multiple_objects)
-          .with("my_container", ["obj_a_name", "obj_b_name"]).returns(resp_ok)
+          .with("my_container", %w(obj_a_name obj_b_name)).returns(resp_ok)
 
-        names = ["obj_a_name", "obj_b_name"]
+        names = %w(obj_a_name obj_b_name)
         expect do
           cloud_io.delete(names)
         end.not_to change { names }

@@ -34,7 +34,7 @@ module Backup
           datadog.date_happened    = 12_345
           datadog.priority         = "low"
           datadog.host             = "local"
-          datadog.tags             = ["tag1", "tag2"]
+          datadog.tags             = %w(tag1 tag2)
           datadog.alert_type       = "error"
           datadog.aggregation_key  = "key"
           datadog.source_type_name = "my apps"

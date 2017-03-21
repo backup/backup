@@ -9,7 +9,7 @@ describe Backup::Compressor::Gzip do
 
   it "should be a subclass of Compressor::Base" do
     Backup::Compressor::Gzip
-      .superclass.should == Backup::Compressor::Base
+      .superclass.should eq(Backup::Compressor::Base)
   end
 
   it "should be extended by Utilities::Helpers" do
@@ -60,8 +60,8 @@ describe Backup::Compressor::Gzip do
         compressor.rsyncable.should be(false)
 
         compressor.compress_with do |cmd, ext|
-          cmd.should == "gzip"
-          ext.should == ".gz"
+          cmd.should eq("gzip")
+          ext.should eq(".gz")
         end
       end
 
@@ -70,12 +70,12 @@ describe Backup::Compressor::Gzip do
           c.level = 5
           c.rsyncable = true
         end
-        compressor.level.should == 5
+        compressor.level.should eq(5)
         compressor.rsyncable.should be(true)
 
         compressor.compress_with do |cmd, ext|
-          cmd.should == "gzip -5 --rsyncable"
-          ext.should == ".gz"
+          cmd.should eq("gzip -5 --rsyncable")
+          ext.should eq(".gz")
         end
       end
     end # context 'when no pre-configured defaults have been set'
@@ -89,12 +89,12 @@ describe Backup::Compressor::Gzip do
       end
 
       it "should use pre-configured defaults" do
-        compressor.level.should == 7
+        compressor.level.should eq(7)
         compressor.rsyncable.should be(true)
 
         compressor.compress_with do |cmd, ext|
-          cmd.should == "gzip -7 --rsyncable"
-          ext.should == ".gz"
+          cmd.should eq("gzip -7 --rsyncable")
+          ext.should eq(".gz")
         end
       end
 
@@ -103,12 +103,12 @@ describe Backup::Compressor::Gzip do
           c.level = 6
           c.rsyncable = false
         end
-        compressor.level.should == 6
+        compressor.level.should eq(6)
         compressor.rsyncable.should be(false)
 
         compressor.compress_with do |cmd, ext|
-          cmd.should == "gzip -6"
-          ext.should == ".gz"
+          cmd.should eq("gzip -6")
+          ext.should eq(".gz")
         end
       end
     end # context 'when pre-configured defaults have been set'
@@ -125,12 +125,12 @@ describe Backup::Compressor::Gzip do
         c.level = 5
         c.rsyncable = true
       end
-      compressor.level.should == 5
+      compressor.level.should eq(5)
       compressor.rsyncable.should be(true)
 
       compressor.compress_with do |cmd, ext|
-        cmd.should == "gzip -5"
-        ext.should == ".gz"
+        cmd.should eq("gzip -5")
+        ext.should eq(".gz")
       end
     end
   end # describe '#initialize'

@@ -79,7 +79,7 @@ module Backup
         @retry_waitsec      ||= 30
 
         @path ||= "backups"
-        path.sub!(/^\//, "")
+        path.sub!(%r{^/}, "")
 
         check_configuration
       end

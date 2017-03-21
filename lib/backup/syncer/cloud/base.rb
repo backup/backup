@@ -93,7 +93,11 @@ module Backup
           threads = Array.new(num_threads) do
             Thread.new do
               loop do
-                path = queue.shift(true) rescue nil
+                path = begin
+                         queue.shift(true)
+                       rescue
+                         nil
+                       end
                 path ? sync_block.call(path) : break
               end
             end

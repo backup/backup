@@ -47,6 +47,7 @@ module Backup
     autoload :RSync,      File.join(STORAGE_PATH, "rsync")
     autoload :Local,      File.join(STORAGE_PATH, "local")
     autoload :Qiniu,      File.join(STORAGE_PATH, "qiniu")
+    autoload :AzureStore, File.join(STORAGE_PATH, "azure_store")
   end
 
   ##

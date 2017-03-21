@@ -54,7 +54,7 @@ describe Backup::Utilities do
 
     it "allows utilities to be configured" do
       utilities::NAMES.each do |name|
-        helpers.send(:utility, name).should == "/path/to/#{name}"
+        helpers.send(:utility, name).should eq("/path/to/#{name}")
       end
     end
 
@@ -79,8 +79,8 @@ describe Backup::Utilities do
         tar "my_tar"
       end
       path = File.expand_path("my_tar")
-      utilities::UTILITY["tar"].should == path
-      helpers.send(:utility, :tar).should == path
+      utilities::UTILITY["tar"].should eq(path)
+      helpers.send(:utility, :tar).should eq(path)
     end
 
     it "raises Error if utility is not found or executable" do
@@ -142,15 +142,15 @@ describe Backup::Utilities::Helpers do
     context "when a system path for the utility is available" do
       it "should return the system path with newline removed" do
         utilities.expects(:`).with("which 'foo' 2>/dev/null").returns("system_path\n")
-        helpers.send(:utility, :foo).should == "system_path"
+        helpers.send(:utility, :foo).should eq("system_path")
       end
 
       it "should cache the returned path" do
         utilities.expects(:`).once.with("which 'cache_me' 2>/dev/null")
           .returns("cached_path\n")
 
-        helpers.send(:utility, :cache_me).should == "cached_path"
-        helpers.send(:utility, :cache_me).should == "cached_path"
+        helpers.send(:utility, :cache_me).should eq("cached_path")
+        helpers.send(:utility, :cache_me).should eq("cached_path")
       end
 
       it "should return a mutable copy of the path" do
@@ -158,17 +158,17 @@ describe Backup::Utilities::Helpers do
           .returns("cached_path\n")
 
         helpers.send(:utility, :cache_me) << "foo"
-        helpers.send(:utility, :cache_me).should == "cached_path"
+        helpers.send(:utility, :cache_me).should eq("cached_path")
       end
 
       it "should cache the value for all extended objects" do
         utilities.expects(:`).once.with("which 'once_only' 2>/dev/null")
           .returns("cached_path\n")
 
-        helpers.send(:utility, :once_only).should == "cached_path"
+        helpers.send(:utility, :once_only).should eq("cached_path")
         Class.new.extend(Backup::Utilities::Helpers).send(
           :utility, :once_only
-        ).should == "cached_path"
+        ).should eq("cached_path")
       end
     end
 
@@ -269,7 +269,7 @@ describe Backup::Utilities::Helpers do
         let(:stderr_messages) { "" }
 
         it "should return stdout and generate no additional log messages" do
-          helpers.send(:run, command).should == ""
+          helpers.send(:run, command).should eq("")
         end
       end
 
@@ -281,7 +281,7 @@ describe Backup::Utilities::Helpers do
           Backup::Logger.expects(:info).with(
             "cmd_name:STDOUT: out line1\ncmd_name:STDOUT: out line2"
           )
-          helpers.send(:run, command).should == stdout_messages.strip
+          helpers.send(:run, command).should eq(stdout_messages.strip)
         end
       end
 
@@ -293,7 +293,7 @@ describe Backup::Utilities::Helpers do
           Backup::Logger.expects(:warn).with(
             "cmd_name:STDERR: err line1\ncmd_name:STDERR: err line2"
           )
-          helpers.send(:run, command).should == ""
+          helpers.send(:run, command).should eq("")
         end
       end
 
@@ -308,7 +308,7 @@ describe Backup::Utilities::Helpers do
           Backup::Logger.expects(:warn).with(
             "cmd_name:STDERR: err line1\ncmd_name:STDERR: err line2"
           )
-          helpers.send(:run, command).should == stdout_messages.strip
+          helpers.send(:run, command).should eq(stdout_messages.strip)
         end
       end
     end # context 'when the command is successful'
@@ -339,9 +339,9 @@ describe Backup::Utilities::Helpers do
           expect do
             helpers.send(:run, command)
           end.to raise_error { |err|
-            err.message.should == message_head +
+            err.message.should eq(message_head +
               "  STDOUT Messages: None\n" \
-              "  STDERR Messages: None"
+              "  STDERR Messages: None")
           }
         end
       end
@@ -354,11 +354,11 @@ describe Backup::Utilities::Helpers do
           expect do
             helpers.send(:run, command)
           end.to raise_error { |err|
-            err.message.should == message_head +
+            err.message.should eq(message_head +
               "  STDOUT Messages: \n" \
               "  out line1\n" \
               "  out line2\n" \
-              "  STDERR Messages: None"
+              "  STDERR Messages: None")
           }
         end
       end
@@ -371,11 +371,11 @@ describe Backup::Utilities::Helpers do
           expect do
             helpers.send(:run, command)
           end.to raise_error { |err|
-            err.message.should == message_head +
+            err.message.should eq(message_head +
               "  STDOUT Messages: None\n" \
               "  STDERR Messages: \n" \
               "  err line1\n" \
-              "  err line2"
+              "  err line2")
           }
         end
       end
@@ -388,13 +388,13 @@ describe Backup::Utilities::Helpers do
           expect do
             helpers.send(:run, command)
           end.to raise_error { |err|
-            err.message.should == message_head +
+            err.message.should eq(message_head +
               "  STDOUT Messages: \n" \
               "  out line1\n" \
               "  out line2\n" \
               "  STDERR Messages: \n" \
               "  err line1\n" \
-              "  err line2"
+              "  err line2")
           }
         end
       end

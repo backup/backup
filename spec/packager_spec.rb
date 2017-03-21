@@ -156,9 +156,9 @@ describe "Backup::Packager" do
 
         packager.send(:procedure).call
 
-        Fake.stack_trace.should == [
+        Fake.stack_trace.should eq([
           :encryptor_before, :command_executed, :encryptor_after
-        ]
+        ])
       end
     end
 
@@ -180,9 +180,9 @@ describe "Backup::Packager" do
 
         packager.send(:procedure).call
 
-        Fake.stack_trace.should == [
+        Fake.stack_trace.should eq([
           :splitter_before, :command_executed, :splitter_after
-        ]
+        ])
       end
     end
 
@@ -205,12 +205,12 @@ describe "Backup::Packager" do
 
         packager.send(:procedure).call
 
-        Fake.stack_trace.should == [
+        Fake.stack_trace.should eq([
           :encryptor_before, :splitter_before,
           :command_executed,
           :splitter_after, :encryptor_after
-        ]
-        package.extension.should == "tar.enc"
+        ])
+        package.extension.should eq("tar.enc")
       end
     end
   end # describe '#procedure'

@@ -139,12 +139,12 @@ module Backup
           #chunk_size must be between 5 and 5120 (or 0 to disable multipart)
         EOS
 
-        raise Error, <<-EOS if encryption && encryption.to_s.upcase != "AES256"
+        raise Error, <<-EOS if encryption && !encryption.to_s.casecmp("AES256").zero?
           Configuration Error
           #encryption must be :aes256 or nil
         EOS
 
-        classes = ["STANDARD", "STANDARD_IA", "REDUCED_REDUNDANCY"]
+        classes = %w(STANDARD STANDARD_IA REDUCED_REDUNDANCY)
         raise Error, <<-EOS unless classes.include?(storage_class.to_s.upcase)
           Configuration Error
           #storage_class must be :standard or :standard_ia or :reduced_redundancy

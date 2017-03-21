@@ -31,7 +31,7 @@ module Backup
         info: "\e[32m%s\e[0m", # green
         warn: "\e[33m%s\e[0m", # yellow
         error: "\e[31m%s\e[0m" # red
-      }
+      }.freeze
 
       def initialize(_options = nil)
         $stdout.sync = $stderr.sync = true

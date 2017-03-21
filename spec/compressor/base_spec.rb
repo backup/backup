@@ -21,15 +21,15 @@ describe Backup::Compressor::Base do
       compressor.expects(:log!)
 
       compressor.compress_with do |cmd, ext|
-        cmd.should == "compressor command"
-        ext.should == "compressor extension"
+        cmd.should eq("compressor command")
+        ext.should eq("compressor extension")
       end
     end
   end
 
   describe "#compressor_name" do
     it "should return class name with Backup namespace removed" do
-      compressor.send(:compressor_name).should == "Compressor::Base"
+      compressor.send(:compressor_name).should eq("Compressor::Base")
     end
   end
 

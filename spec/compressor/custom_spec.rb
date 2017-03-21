@@ -14,7 +14,7 @@ describe Backup::Compressor::Custom do
 
   it "should be a subclass of Compressor::Base" do
     Backup::Compressor::Custom
-      .superclass.should == Backup::Compressor::Base
+      .superclass.should eq(Backup::Compressor::Base)
   end
 
   describe "#initialize" do
@@ -38,13 +38,13 @@ describe Backup::Compressor::Custom do
         c.extension = " my_extension "
       end
 
-      compressor.command.should   == " my_command --option foo "
-      compressor.extension.should == " my_extension "
+      compressor.command.should eq(" my_command --option foo ")
+      compressor.extension.should eq(" my_extension ")
 
       compressor.expects(:log!)
       compressor.compress_with do |cmd, ext|
-        cmd.should == "/path/to/my_command --option foo"
-        ext.should == "my_extension"
+        cmd.should eq("/path/to/my_command --option foo")
+        ext.should eq("my_extension")
       end
     end
 
@@ -53,8 +53,8 @@ describe Backup::Compressor::Custom do
         compressor.command.should   be_nil
         compressor.extension.should be_nil
 
-        compressor.instance_variable_get(:@cmd).should == "error"
-        compressor.instance_variable_get(:@ext).should == ""
+        compressor.instance_variable_get(:@cmd).should eq("error")
+        compressor.instance_variable_get(:@ext).should eq("")
       end
 
       it "should use the values given" do
@@ -63,11 +63,11 @@ describe Backup::Compressor::Custom do
           c.extension = "my_extension"
         end
 
-        compressor.command.should   == "my_command"
-        compressor.extension.should == "my_extension"
+        compressor.command.should eq("my_command")
+        compressor.extension.should eq("my_extension")
 
-        compressor.instance_variable_get(:@cmd).should == "/path/to/my_command"
-        compressor.instance_variable_get(:@ext).should == "my_extension"
+        compressor.instance_variable_get(:@cmd).should eq("/path/to/my_command")
+        compressor.instance_variable_get(:@ext).should eq("my_extension")
       end
     end # context 'when no pre-configured defaults have been set'
 
@@ -80,11 +80,11 @@ describe Backup::Compressor::Custom do
       end
 
       it "should use pre-configured defaults" do
-        compressor.command.should   == "default_command"
-        compressor.extension.should == "default_extension"
+        compressor.command.should eq("default_command")
+        compressor.extension.should eq("default_extension")
 
-        compressor.instance_variable_get(:@cmd).should == "/path/to/default_command"
-        compressor.instance_variable_get(:@ext).should == "default_extension"
+        compressor.instance_variable_get(:@cmd).should eq("/path/to/default_command")
+        compressor.instance_variable_get(:@ext).should eq("default_extension")
       end
 
       it "should override pre-configured defaults" do
@@ -93,11 +93,11 @@ describe Backup::Compressor::Custom do
           c.extension = "new_extension"
         end
 
-        compressor.command.should   == "new_command"
-        compressor.extension.should == "new_extension"
+        compressor.command.should eq("new_command")
+        compressor.extension.should eq("new_extension")
 
-        compressor.instance_variable_get(:@cmd).should == "/path/to/new_command"
-        compressor.instance_variable_get(:@ext).should == "new_extension"
+        compressor.instance_variable_get(:@cmd).should eq("/path/to/new_command")
+        compressor.instance_variable_get(:@ext).should eq("new_extension")
       end
     end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'

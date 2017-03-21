@@ -10,19 +10,19 @@ module Backup
       # When set to true, the user will be notified by email
       # when a backup process ends without raising any exceptions
       attr_accessor :on_success
-      alias :notify_on_success? :on_success
+      alias notify_on_success? on_success
 
       ##
       # When set to true, the user will be notified by email
       # when a backup process is successful, but has warnings
       attr_accessor :on_warning
-      alias :notify_on_warning? :on_warning
+      alias notify_on_warning? on_warning
 
       ##
       # When set to true, the user will be notified by email
       # when a backup process raises an exception before finishing
       attr_accessor :on_failure
-      alias :notify_on_failure? :on_failure
+      alias notify_on_failure? on_failure
 
       ##
       # Number of times to retry failed attempts to send notification.

@@ -13,7 +13,7 @@ module Backup
       sendmail exim
       send_nsca
       zabbix_sender
-    )
+    ).freeze
 
     module DSL
       class << self

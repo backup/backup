@@ -22,7 +22,7 @@ describe Backup::Encryptor::Base do
 
   describe "#encryptor_name" do
     it "should return class name with Backup namespace removed" do
-      base.send(:encryptor_name).should == "Encryptor::Base"
+      base.send(:encryptor_name).should eq("Encryptor::Base")
     end
   end
 

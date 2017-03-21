@@ -10,24 +10,24 @@ describe Backup::Encryptor::GPG do
 
   it "should be a subclass of Encryptor::Base" do
     Backup::Encryptor::GPG
-      .superclass.should == Backup::Encryptor::Base
+      .superclass.should eq(Backup::Encryptor::Base)
   end
 
   it "supports three modes of operation" do
-    Backup::Encryptor::GPG::MODES.should == [:asymmetric, :symmetric, :both]
+    Backup::Encryptor::GPG::MODES.should eq([:asymmetric, :symmetric, :both])
   end
 
   describe "#mode=" do
     it "should accept valid modes" do
       mode = Backup::Encryptor::GPG::MODES.sample
       encryptor.mode = mode
-      encryptor.mode.should == mode
+      encryptor.mode.should eq(mode)
     end
 
     it "should convert string input to a symbol" do
       mode = Backup::Encryptor::GPG::MODES.sample
       encryptor.mode = mode.to_s
-      encryptor.mode.should == mode
+      encryptor.mode.should eq(mode)
     end
 
     it "should raise an error for invalid modes" do
@@ -47,13 +47,13 @@ describe Backup::Encryptor::GPG do
 
     context "when no pre-configured defaults have been set" do
       it "should use the values given" do
-        encryptor.mode.should == :symmetric
-        encryptor.passphrase.should == "test secret"
+        encryptor.mode.should eq(:symmetric)
+        encryptor.passphrase.should eq("test secret")
       end
 
       it "should use default values if none are given" do
         encryptor = Backup::Encryptor::GPG.new
-        encryptor.mode.should == :asymmetric
+        encryptor.mode.should eq(:asymmetric)
         encryptor.keys.should be_nil
         encryptor.recipients.should be_nil
         encryptor.passphrase.should be_nil
@@ -75,18 +75,18 @@ describe Backup::Encryptor::GPG do
 
       it "should use pre-configured defaults" do
         encryptor = Backup::Encryptor::GPG.new
-        encryptor.mode.should == :both
-        encryptor.keys.should == { "test_key" => "test public key" }
-        encryptor.recipients.should == "test_key"
-        encryptor.passphrase_file.should == "my/pass/file"
+        encryptor.mode.should eq(:both)
+        encryptor.keys.should eq("test_key" => "test public key")
+        encryptor.recipients.should eq("test_key")
+        encryptor.passphrase_file.should eq("my/pass/file")
       end
 
       it "should override pre-configured defaults" do
-        encryptor.mode.should == :symmetric
-        encryptor.keys.should == { "test_key" => "test public key" }
-        encryptor.recipients.should == "test_key"
-        encryptor.passphrase.should == "test secret"
-        encryptor.passphrase_file.should == "my/pass/file"
+        encryptor.mode.should eq(:symmetric)
+        encryptor.keys.should eq("test_key" => "test public key")
+        encryptor.recipients.should eq("test_key")
+        encryptor.passphrase.should eq("test secret")
+        encryptor.passphrase_file.should eq("my/pass/file")
       end
     end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
@@ -105,8 +105,8 @@ describe Backup::Encryptor::GPG do
         encryptor.expects(:utility).with(:gpg).returns("gpg")
 
         encryptor.encrypt_with do |command, ext|
-          command.should == "gpg base_options mode_options"
-          ext.should == ".gpg"
+          command.should eq("gpg base_options mode_options")
+          ext.should eq(".gpg")
         end
       end
     end
@@ -127,12 +127,12 @@ describe Backup::Encryptor::GPG do
       encryptor.instance_variable_set(:@tempdirs, nil)
       FileUtils.expects(:rm_rf).never
       encryptor.send(:prepare)
-      encryptor.instance_variable_get(:@tempdirs).should == []
+      encryptor.instance_variable_get(:@tempdirs).should eq([])
     end
 
     it "should remove any tempdirs and clear all variables" do
-      encryptor.instance_variable_set(:@tempdirs, ["a", "b"])
-      FileUtils.expects(:rm_rf).with(["a", "b"], secure: true)
+      encryptor.instance_variable_set(:@tempdirs, %w(a b))
+      FileUtils.expects(:rm_rf).with(%w(a b), secure: true)
 
       encryptor.instance_variable_set(:@base_options, true)
       encryptor.instance_variable_set(:@mode_options, true)
@@ -142,7 +142,7 @@ describe Backup::Encryptor::GPG do
 
       encryptor.send(:cleanup)
 
-      encryptor.instance_variable_get(:@tempdirs).should == []
+      encryptor.instance_variable_get(:@tempdirs).should eq([])
       encryptor.instance_variable_get(:@base_options).should be_nil
       encryptor.instance_variable_get(:@mode_options).should be_nil
       encryptor.instance_variable_get(:@user_recipients).should be_nil
@@ -161,9 +161,9 @@ describe Backup::Encryptor::GPG do
           encryptor.expects(:setup_gpg_config).once.returns(false)
 
           ret = "--no-tty --homedir '/a/dir'"
-          encryptor.send(:base_options).should == ret
-          encryptor.send(:base_options).should == ret
-          encryptor.instance_variable_get(:@base_options).should == ret
+          encryptor.send(:base_options).should eq(ret)
+          encryptor.send(:base_options).should eq(ret)
+          encryptor.instance_variable_get(:@base_options).should eq(ret)
         end
       end
 
@@ -173,9 +173,9 @@ describe Backup::Encryptor::GPG do
           encryptor.expects(:setup_gpg_config).once.returns("/a/file")
 
           ret = "--no-tty --options '/a/file'"
-          encryptor.send(:base_options).should == ret
-          encryptor.send(:base_options).should == ret
-          encryptor.instance_variable_get(:@base_options).should == ret
+          encryptor.send(:base_options).should eq(ret)
+          encryptor.send(:base_options).should eq(ret)
+          encryptor.instance_variable_get(:@base_options).should eq(ret)
         end
       end
 
@@ -185,9 +185,9 @@ describe Backup::Encryptor::GPG do
           encryptor.expects(:setup_gpg_config).once.returns("/a/file")
 
           ret = "--no-tty --homedir '/a/dir' --options '/a/file'"
-          encryptor.send(:base_options).should == ret
-          encryptor.send(:base_options).should == ret
-          encryptor.instance_variable_get(:@base_options).should == ret
+          encryptor.send(:base_options).should eq(ret)
+          encryptor.send(:base_options).should eq(ret)
+          encryptor.instance_variable_get(:@base_options).should eq(ret)
         end
       end
 
@@ -197,9 +197,9 @@ describe Backup::Encryptor::GPG do
           encryptor.expects(:setup_gpg_config).once.returns(false)
 
           ret = "--no-tty"
-          encryptor.send(:base_options).should == ret
-          encryptor.send(:base_options).should == ret
-          encryptor.instance_variable_get(:@base_options).should == ret
+          encryptor.send(:base_options).should eq(ret)
+          encryptor.send(:base_options).should eq(ret)
+          encryptor.instance_variable_get(:@base_options).should eq(ret)
         end
       end
     end
@@ -240,7 +240,7 @@ describe Backup::Encryptor::GPG do
 
           it "should ensure permissions and return the path" do
             encryptor.expects(:utility).never
-            encryptor.send(:setup_gpg_homedir).should == expanded_path
+            encryptor.send(:setup_gpg_homedir).should eq(expanded_path)
           end
         end
 
@@ -254,7 +254,7 @@ describe Backup::Encryptor::GPG do
             encryptor.expects(:run).with(
               "gpg --homedir '#{expanded_path}' -K 2>&1 >/dev/null"
             )
-            encryptor.send(:setup_gpg_homedir).should == expanded_path
+            encryptor.send(:setup_gpg_homedir).should eq(expanded_path)
           end
         end
       end
@@ -332,10 +332,10 @@ describe Backup::Encryptor::GPG do
           encryptor.expects(:check_gpg_config).with(tempfile_path)
 
           # method returns the tempfile's path
-          encryptor.send(:setup_gpg_config).should == tempfile_path
+          encryptor.send(:setup_gpg_config).should eq(tempfile_path)
 
           # tempdir added to @tempdirs
-          encryptor.instance_variable_get(:@tempdirs)[0].should == tempdir
+          encryptor.instance_variable_get(:@tempdirs)[0].should eq(tempdir)
         end
       end
 
@@ -403,9 +403,9 @@ describe Backup::Encryptor::GPG do
           encryptor.expects(:asymmetric_options).never
 
           encryptor.mode = :symmetric
-          encryptor.send(:mode_options).should == s_opts
-          encryptor.send(:mode_options).should == s_opts
-          encryptor.instance_variable_get(:@mode_options).should == s_opts
+          encryptor.send(:mode_options).should eq(s_opts)
+          encryptor.send(:mode_options).should eq(s_opts)
+          encryptor.instance_variable_get(:@mode_options).should eq(s_opts)
         end
       end
 
@@ -415,9 +415,9 @@ describe Backup::Encryptor::GPG do
           encryptor.expects(:asymmetric_options).once.returns(a_opts)
 
           encryptor.mode = :asymmetric
-          encryptor.send(:mode_options).should == a_opts
-          encryptor.send(:mode_options).should == a_opts
-          encryptor.instance_variable_get(:@mode_options).should == a_opts
+          encryptor.send(:mode_options).should eq(a_opts)
+          encryptor.send(:mode_options).should eq(a_opts)
+          encryptor.instance_variable_get(:@mode_options).should eq(a_opts)
         end
       end
 
@@ -429,9 +429,9 @@ describe Backup::Encryptor::GPG do
           encryptor.mode = :both
           opts = "#{s_opts} #{a_opts}"
 
-          encryptor.send(:mode_options).should == opts
-          encryptor.send(:mode_options).should == opts
-          encryptor.instance_variable_get(:@mode_options).should == opts
+          encryptor.send(:mode_options).should eq(opts)
+          encryptor.send(:mode_options).should eq(opts)
+          encryptor.instance_variable_get(:@mode_options).should eq(opts)
         end
       end
     end
@@ -446,7 +446,7 @@ describe Backup::Encryptor::GPG do
         encryptor.expects(:setup_passphrase_file).returns(path)
         File.expects(:exist?).with(path).returns(true)
 
-        encryptor.send(:symmetric_options).should == s_opts
+        encryptor.send(:symmetric_options).should eq(s_opts)
       end
     end
 
@@ -473,7 +473,7 @@ describe Backup::Encryptor::GPG do
         context "when :passphrase_file exists" do
           it "should return the options" do
             File.expects(:exist?).with(path).returns(true)
-            encryptor.send(:symmetric_options).should == s_opts
+            encryptor.send(:symmetric_options).should eq(s_opts)
           end
         end
 
@@ -522,10 +522,10 @@ describe Backup::Encryptor::GPG do
           tempfile.expects(:write).with("a secret")
           tempfile.expects(:close)
 
-          encryptor.send(:setup_passphrase_file).should == tempfile_path
+          encryptor.send(:setup_passphrase_file).should eq(tempfile_path)
 
           # adds the temporary directory to @tempdirs
-          encryptor.instance_variable_get(:@tempdirs)[0].should == tempdir
+          encryptor.instance_variable_get(:@tempdirs)[0].should eq(tempdir)
         end
       end
 
@@ -546,9 +546,9 @@ describe Backup::Encryptor::GPG do
   describe "#asymmetric_options" do
     context "when recipients are found" do
       it "should return the options" do
-        encryptor.stubs(:user_recipients).returns(["keyid1", "keyid2"])
-        encryptor.send(:asymmetric_options).should ==
-          "-e --trust-model always -r 'keyid1' -r 'keyid2'"
+        encryptor.stubs(:user_recipients).returns(%w(keyid1 keyid2))
+        encryptor.send(:asymmetric_options).should
+        eq("-e --trust-model always -r 'keyid1' -r 'keyid2'")
       end
     end
 
@@ -565,7 +565,7 @@ describe Backup::Encryptor::GPG do
     context "when an Array of :recipients are given" do
       it "should return the recipient list and cache the result" do
         encryptor.expects(:recipients).returns(
-          ["key_id1", "key_id2", "key_id3", "key_id4"]
+          %w(key_id1 key_id2 key_id3 key_id4)
         )
         encryptor.expects(:clean_identifier).with("key_id1").returns("key_id1")
         encryptor.expects(:clean_identifier).with("key_id2").returns("key_id2")
@@ -573,7 +573,7 @@ describe Backup::Encryptor::GPG do
         encryptor.expects(:clean_identifier).with("key_id4").returns("key_id4")
 
         # key_id1 and key_id3 will be found in the system
-        encryptor.stubs(:system_identifiers).returns(["key_id1", "key_id3"])
+        encryptor.stubs(:system_identifiers).returns(%w(key_id1 key_id3))
 
         # key_id2 will be imported (key_id returned)
         encryptor.stubs(:user_keys).returns("key_id2" => "a public key")
@@ -588,11 +588,11 @@ describe Backup::Encryptor::GPG do
         end
 
         encryptor.instance_variable_set(:@user_recipients, nil)
-        recipient_list = ["key_id1", "key_id2", "key_id3"]
-        encryptor.send(:user_recipients).should == recipient_list
+        recipient_list = %w(key_id1 key_id2 key_id3)
+        encryptor.send(:user_recipients).should eq(recipient_list)
         # results are cached (expectations would fail if called twice)
-        encryptor.send(:user_recipients).should == recipient_list
-        encryptor.instance_variable_get(:@user_recipients).should == recipient_list
+        encryptor.send(:user_recipients).should eq(recipient_list)
+        encryptor.instance_variable_get(:@user_recipients).should eq(recipient_list)
       end
     end
 
@@ -603,14 +603,14 @@ describe Backup::Encryptor::GPG do
         encryptor.stubs(:system_identifiers).returns(["key_id"])
         encryptor.expects(:clean_identifier).with("key_id").returns("key_id")
 
-        encryptor.send(:user_recipients).should == ["key_id"]
+        encryptor.send(:user_recipients).should eq(["key_id"])
       end
     end
 
     context "when :recipients is not set" do
       it "should return an empty Array" do
         encryptor.expects(:recipients).returns(nil)
-        encryptor.send(:user_recipients).should == []
+        encryptor.send(:user_recipients).should eq([])
       end
     end
   end # describe '#user_recipients'
@@ -634,10 +634,10 @@ describe Backup::Encryptor::GPG do
         cleaned_hash = {
           "clean_key1" => :foo, "clean_key2" => :foo, "clean_key3" => :foo
         }
-        encryptor.send(:user_keys).should == cleaned_hash
+        encryptor.send(:user_keys).should eq(cleaned_hash)
         # results are cached (expectations would fail if called twice)
-        encryptor.send(:user_keys).should == cleaned_hash
-        encryptor.instance_variable_get(:@user_keys).should == cleaned_hash
+        encryptor.send(:user_keys).should eq(cleaned_hash)
+        encryptor.instance_variable_get(:@user_keys).should eq(cleaned_hash)
       end
 
       it "should log a warning if cleaning results in a duplicate identifier" do
@@ -651,10 +651,10 @@ describe Backup::Encryptor::GPG do
         cleaned_hash = {
           "clean_key1" => :foo, "clean_key2" => :foo
         }
-        encryptor.send(:user_keys).should == cleaned_hash
+        encryptor.send(:user_keys).should eq(cleaned_hash)
         # results are cached (expectations would fail if called twice)
-        encryptor.send(:user_keys).should == cleaned_hash
-        encryptor.instance_variable_get(:@user_keys).should == cleaned_hash
+        encryptor.send(:user_keys).should eq(cleaned_hash)
+        encryptor.instance_variable_get(:@user_keys).should eq(cleaned_hash)
       end
     end
 
@@ -665,7 +665,7 @@ describe Backup::Encryptor::GPG do
       end
 
       it "should return an empty hash" do
-        encryptor.send(:user_keys).should == {}
+        encryptor.send(:user_keys).should eq({})
       end
     end
   end # describe '#user_keys'
@@ -673,7 +673,7 @@ describe Backup::Encryptor::GPG do
   describe "#clean_identifier" do
     it "should remove all spaces and upcase non-email identifiers" do
       encryptor.send(:clean_identifier, " 9d66 6290 c5f7 ee0f ")
-        .should == "9D666290C5F7EE0F"
+        .should eq("9D666290C5F7EE0F")
     end
 
     # Even though spaces in an email are technically possible,
@@ -692,7 +692,7 @@ describe Backup::Encryptor::GPG do
 
       emails.map do |email|
         encryptor.send(:clean_identifier, email)
-      end.should == cleaned
+      end.should eq(cleaned)
     end
   end # describe '#clean_identifier'
 
@@ -762,7 +762,7 @@ gXY+pNqaEE6cHrg+uQatVQITX8EoVJhQ9Z1mYJB+g62zqOQPe10Spb381O9y4dN/
         Backup::Logger.expects(:warn).never
 
         encryptor.send(:import_key, "some_identifier", gpg_key)
-          .should == "9D666290C5F7EE0F"
+          .should eq("9D666290C5F7EE0F")
       end
     end
 
@@ -858,11 +858,11 @@ gXY+pNqaEE6cHrg+uQatVQITX8EoVJhQ9Z1mYJB+g62zqOQPe10Spb381O9y4dN/
         "gpg --base 'options' --with-colons --fixed-list-mode --fingerprint"
       ).returns(gpg_output)
 
-      encryptor.send(:system_identifiers).should == valid_identifiers
+      encryptor.send(:system_identifiers).should eq(valid_identifiers)
       # results cached
-      encryptor.send(:system_identifiers).should == valid_identifiers
+      encryptor.send(:system_identifiers).should eq(valid_identifiers)
       encryptor.instance_variable_get(:@system_identifiers)
-        .should == valid_identifiers
+        .should eq(valid_identifiers)
     end
   end # describe '#system_identifiers'
 end

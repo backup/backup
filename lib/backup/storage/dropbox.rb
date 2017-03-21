@@ -55,7 +55,7 @@ module Backup
         @chunk_size     ||= 4 # MiB
         @max_retries    ||= 10
         @retry_waitsec  ||= 30
-        path.sub!(/^\//, "")
+        path.sub!(%r{^/}, "")
       end
 
       private
@@ -73,7 +73,7 @@ module Backup
       def connection
         return @connection if @connection
 
-        unless session = cached_session
+        unless (session = cached_session)
           Logger.info "Creating a new session!"
           session = create_write_and_return_new_session!
         end
