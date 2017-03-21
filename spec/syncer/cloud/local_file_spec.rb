@@ -20,10 +20,10 @@ module Backup
 
       context "with test files" do
         let(:test_files) do
-          { "sync_dir/one.file"           => "c9f90c31589526ef50cc974a614038d5",
-            "sync_dir/two.file"           => "1d26903171cef8b1d7eb035ca049f492",
+          { "sync_dir/one.file" => "c9f90c31589526ef50cc974a614038d5",
+            "sync_dir/two.file" => "1d26903171cef8b1d7eb035ca049f492",
             "sync_dir/sub_dir/three.file" => "4ccdba38597e718ed00e3344dc78b6a1",
-            "base_dir.file"               => "a6cfa67bfa0e16402b76d4560c0baa3d" }
+            "base_dir.file" => "a6cfa67bfa0e16402b76d4560c0baa3d" }
         end
         before do
           test_files.each_key do |path|

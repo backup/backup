@@ -10,24 +10,24 @@ describe "Backup::Pipeline" do
 
   describe "#initialize" do
     it "should create a new pipeline" do
-      pipeline.instance_variable_get(:@commands).should == []
-      pipeline.instance_variable_get(:@success_codes).should == []
-      pipeline.errors.should == []
-      pipeline.stderr.should == ""
+      pipeline.instance_variable_get(:@commands).should eq([])
+      pipeline.instance_variable_get(:@success_codes).should eq([])
+      pipeline.errors.should eq([])
+      pipeline.stderr.should eq("")
     end
   end
 
   describe "#add" do
     it "should add a command with the given successful exit codes" do
       pipeline.add "a command", [0]
-      pipeline.instance_variable_get(:@commands).should == ["a command"]
-      pipeline.instance_variable_get(:@success_codes).should == [[0]]
+      pipeline.instance_variable_get(:@commands).should eq(["a command"])
+      pipeline.instance_variable_get(:@success_codes).should eq([[0]])
 
       pipeline.add "another command", [1, 3]
       pipeline.instance_variable_get(:@commands)
-        .should == ["a command", "another command"]
+        .should eq(["a command", "another command"])
       pipeline.instance_variable_get(:@success_codes)
-        .should == [[0], [1, 3]]
+        .should eq([[0], [1, 3]])
     end
   end
 
@@ -70,8 +70,8 @@ describe "Backup::Pipeline" do
             Backup::Logger.expects(:warn).never
 
             pipeline.run
-            pipeline.stderr.should == ""
-            pipeline.errors.should == []
+            pipeline.stderr.should eq("")
+            pipeline.errors.should eq([])
           end
         end
 
@@ -85,15 +85,15 @@ describe "Backup::Pipeline" do
             Backup::Logger.expects(:warn).with("stderr_messages_output")
 
             pipeline.run
-            pipeline.stderr.should == "stderr output"
-            pipeline.errors.should == []
+            pipeline.stderr.should eq("stderr output")
+            pipeline.errors.should eq([])
           end
         end
       end # context 'when all commands within the pipeline are successful'
 
       context "when commands within the pipeline are not successful" do
         before do
-          pipeline.instance_variable_set(:@commands, ["first", "second", "third"])
+          pipeline.instance_variable_set(:@commands, %w(first second third))
           pipeline.instance_variable_set(:@success_codes, [[0, 1], [0, 3], [0]])
           stderr.expects(:read).returns("stderr output\n")
           pipeline.stubs(:stderr_messages).returns("success? should be false")
@@ -108,7 +108,7 @@ describe "Backup::Pipeline" do
             Backup::Logger.expects(:warn).never
 
             pipeline.run
-            pipeline.stderr.should == "stderr output"
+            pipeline.stderr.should eq("stderr output")
             pipeline.errors.count.should be(1)
             pipeline.errors.first.should be_a_kind_of SystemCallError
             pipeline.errors.first.errno.should be(1)
@@ -127,7 +127,7 @@ describe "Backup::Pipeline" do
             Backup::Logger.expects(:warn).never
 
             pipeline.run
-            pipeline.stderr.should == "stderr output"
+            pipeline.stderr.should eq("stderr output")
             pipeline.errors.count.should be(1)
             pipeline.errors.first.should be_a_kind_of SystemCallError
             pipeline.errors.first.errno.should be(4)
@@ -146,7 +146,7 @@ describe "Backup::Pipeline" do
             Backup::Logger.expects(:warn).never
 
             pipeline.run
-            pipeline.stderr.should == "stderr output"
+            pipeline.stderr.should eq("stderr output")
             pipeline.errors.count.should be(2)
             pipeline.errors.each { |err| err.should be_a_kind_of SystemCallError }
             pipeline.errors[0].errno.should be(3)
@@ -243,10 +243,10 @@ describe "Backup::Pipeline" do
       end
 
       it "should build a pipeline with redirected/collected exit codes" do
-        pipeline.send(:pipeline).should ==
-          '{ { one 2>&4 ; echo "0|$?:" >&3 ; } | ' \
-          '{ two 2>&4 ; echo "1|$?:" >&3 ; } | ' \
-          '{ three 2>&4 ; echo "2|$?:" >&3 ; } } 3>&1 1>&2 4>&2'
+        pipeline.send(:pipeline).should
+        eq('{ { one 2>&4 ; echo "0|$?:" >&3 ; } | ' \
+           '{ two 2>&4 ; echo "1|$?:" >&3 ; } | ' \
+           '{ three 2>&4 ; echo "2|$?:" >&3 ; } } 3>&1 1>&2 4>&2')
       end
     end
 
@@ -256,8 +256,8 @@ describe "Backup::Pipeline" do
       end
 
       it "should build the command line in the same manner, but without pipes" do
-        pipeline.send(:pipeline).should ==
-          '{ { foo 2>&4 ; echo "0|$?:" >&3 ; } } 3>&1 1>&2 4>&2'
+        pipeline.send(:pipeline).should
+        eq('{ { foo 2>&4 ; echo "0|$?:" >&3 ; } } 3>&1 1>&2 4>&2')
       end
     end
   end # describe '#pipeline'
@@ -269,12 +269,12 @@ describe "Backup::Pipeline" do
       end
 
       it "should return a formatted message with the @stderr messages" do
-        pipeline.send(:stderr_messages).should ==
-          "  Pipeline STDERR Messages:\n" \
-          "  (Note: may be interleaved if multiple commands returned error messages)\n" \
-          "\n" \
-          "  stderr message\n" \
-          "  output\n"
+        pipeline.send(:stderr_messages).should
+        eq("  Pipeline STDERR Messages:\n" \
+           "  (Note: may be interleaved if multiple commands returned error messages)\n" \
+           "\n" \
+           "  stderr message\n" \
+           "  output\n")
       end
     end
 

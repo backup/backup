@@ -55,7 +55,7 @@ module Backup
         path.empty? ? File.join(pkg.trigger, pkg.time) :
                       File.join(path, pkg.trigger, pkg.time)
       end
-      alias :remote_path_for :remote_path
+      alias remote_path_for remote_path
 
       def storage_name
         @storage_name ||= self.class.to_s.sub("Backup::", "") +

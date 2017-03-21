@@ -70,7 +70,7 @@ module Backup
       end
 
       let(:expected_titles) do
-        ["Job", "Started", "Finished", "Duration", "Version"]
+        %w(Job Started Finished Duration Version)
       end
 
       let(:expected_titles_with_log) do

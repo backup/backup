@@ -127,7 +127,7 @@ module Backup
 
       context "when #only_collections are specified" do
         it "runs mongodump for each collection" do
-          db.only_collections = ["collection_a", "collection_b"]
+          db.only_collections = %w(collection_a collection_b)
 
           db.expects(:run).in_sequence(s).with(
             "mongodump_command --collection='collection_a'"

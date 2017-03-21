@@ -302,7 +302,7 @@ module Backup
         it "returns arguments for only_tables" do
           expect(db.send(:tables_to_dump)).to eq ""
 
-          db.only_tables = ["one", "two"]
+          db.only_tables = %w(one two)
           expect(db.send(:tables_to_dump)).to eq(
             "--table='one' --table='two'"
           )
@@ -318,7 +318,7 @@ module Backup
         it "returns arguments for skip_tables" do
           expect(db.send(:tables_to_skip)).to eq ""
 
-          db.skip_tables = ["one", "two"]
+          db.skip_tables = %w(one two)
           expect(db.send(:tables_to_skip)).to eq(
             "--exclude-table='one' --exclude-table='two'"
           )

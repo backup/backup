@@ -183,21 +183,21 @@ module Backup
       it "writes formatted messages to the log file" do
         Timecop.freeze do
           Logger.info "line one\nline two"
-          File.readlines(@logfile_default).should == [
+          File.readlines(@logfile_default).should eq([
             "[#{timestamp}][info] line one\n",
             "[#{timestamp}][info] line two\n"
-          ]
+          ])
         end
       end
 
       it "preserves blank lines within the messages" do
         Timecop.freeze do
           Logger.info "line one\n\nline two"
-          File.readlines(@logfile_default).should == [
+          File.readlines(@logfile_default).should eq([
             "[#{timestamp}][info] line one\n",
             "[#{timestamp}][info] \n",
             "[#{timestamp}][info] line two\n"
-          ]
+          ])
         end
       end
     end # describe '#log'

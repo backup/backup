@@ -71,7 +71,7 @@ module Backup
           Cleaner \
             .expects(:package_files_for)
             .with("test_trigger")
-            .returns(["file1", "file2"])
+            .returns(%w(file1 file2))
 
           FileUtils.expects(:rm_rf).never
           FileUtils.expects(:rm_f).with("file1")
@@ -104,7 +104,7 @@ module Backup
           Cleaner \
             .expects(:package_files_for)
             .with("test_trigger")
-            .returns(["file1", "file2"])
+            .returns(%w(file1 file2))
 
           FileUtils \
             .expects(:rm_rf)
@@ -147,7 +147,7 @@ module Backup
 
     describe "#remove_package" do
       it "removes the package files" do
-        package = stub(filenames: ["file1", "file2"])
+        package = stub(filenames: %w(file1 file2))
         Backup::Logger.expects(:info).with("Cleaning up the package files...")
         FileUtils.expects(:rm_f).with(File.join(Config.tmp_path, "file1"))
         FileUtils.expects(:rm_f).with(File.join(Config.tmp_path, "file2"))
@@ -213,7 +213,7 @@ module Backup
           Cleaner \
             .expects(:package_files_for)
             .with("test_trigger")
-            .returns(["file1", "file2"])
+            .returns(%w(file1 file2))
 
           Logger.expects(:warn).with do |err|
             expect(err).to be_an_instance_of Cleaner::Error
@@ -241,7 +241,7 @@ module Backup
           Cleaner \
             .expects(:package_files_for)
             .with("test_trigger")
-            .returns(["file1", "file2"])
+            .returns(%w(file1 file2))
 
           Logger.expects(:warn).with do |err|
             expect(err).to be_an_instance_of Cleaner::Error

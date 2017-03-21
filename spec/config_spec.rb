@@ -13,7 +13,7 @@ module Backup
           read: "# Backup v4.x Configuration\n@loaded << :config",
           directory?: true
         )
-        Dir.stubs(:[] => ["model_a", "model_b"])
+        Dir.stubs(:[] => %w(model_a model_b))
         File.expects(:read).with("model_a").returns("@loaded << :model_a")
         File.expects(:read).with("model_b").returns("@loaded << :model_b")
 
@@ -172,8 +172,8 @@ module Backup
 
       it "caches the hostname" do
         Utilities.expects(:run).once.with("/path/to/hostname").returns("my_hostname")
-        config.hostname.should == "my_hostname"
-        config.hostname.should == "my_hostname"
+        config.hostname.should eq("my_hostname")
+        config.hostname.should eq("my_hostname")
       end
     end
 
@@ -183,7 +183,7 @@ module Backup
           File.expects(:directory?).never
           expect do
             config.send(:set_root_path, config.root_path)
-              .should == config.root_path
+              .should eq(config.root_path)
           end.not_to raise_error
         end
       end
@@ -191,16 +191,16 @@ module Backup
       context "when the given path exists" do
         it "should set and return the @root_path" do
           expect do
-            config.send(:set_root_path, Dir.pwd).should == Dir.pwd
+            config.send(:set_root_path, Dir.pwd).should eq(Dir.pwd)
           end.not_to raise_error
-          config.root_path.should == Dir.pwd
+          config.root_path.should eq(Dir.pwd)
         end
 
         it "should expand relative paths" do
           expect do
-            config.send(:set_root_path, "").should == Dir.pwd
+            config.send(:set_root_path, "").should eq(Dir.pwd)
           end.not_to raise_error
-          config.root_path.should == Dir.pwd
+          config.root_path.should eq(Dir.pwd)
         end
       end
 
@@ -231,10 +231,10 @@ module Backup
             path = File.expand_path("foo")
 
             config.send(:set_path_variable, "var", path, "none", "/root/path")
-            config.instance_variable_get(:@var).should == path
+            config.instance_variable_get(:@var).should eq(path)
 
             config.send(:set_path_variable, "var", path, "none", nil)
-            config.instance_variable_get(:@var).should == path
+            config.instance_variable_get(:@var).should eq(path)
           end
         end
 
@@ -242,7 +242,7 @@ module Backup
           context "when a root_path is given" do
             it "should append the path to the root_path" do
               config.send(:set_path_variable, "var", "foo", "none", "/root/path")
-              config.instance_variable_get(:@var).should == "/root/path/foo"
+              config.instance_variable_get(:@var).should eq("/root/path/foo")
             end
           end
           context "when a root_path is not given" do
@@ -250,7 +250,7 @@ module Backup
               path = File.expand_path("foo")
 
               config.send(:set_path_variable, "var", "foo", "none", false)
-              config.instance_variable_get(:@var).should == path
+              config.instance_variable_get(:@var).should eq(path)
             end
           end
         end
@@ -260,7 +260,7 @@ module Backup
         context "when a root_path is given" do
           it "should use the root_path with the given ending" do
             config.send(:set_path_variable, "var", nil, "ending", "/root/path")
-            config.instance_variable_get(:@var).should == "/root/path/ending"
+            config.instance_variable_get(:@var).should eq("/root/path/ending")
           end
         end
         context "when a root_path is not given" do
@@ -294,7 +294,7 @@ module Backup
         config.instance_variables.should be_empty
 
         load File.expand_path("../../lib/backup/config.rb", __FILE__)
-        config.instance_variables.sort.map(&:to_sym).should == expected
+        config.instance_variables.sort.map(&:to_sym).should eq(expected)
       end
 
       context "when setting @user" do
@@ -303,7 +303,7 @@ module Backup
 
           it 'should set value for @user to ENV["USER"]' do
             config.send(:reset!)
-            config.user.should == "test"
+            config.user.should eq("test")
           end
         end
 
@@ -312,7 +312,7 @@ module Backup
 
           it "should set value using the user login name" do
             config.send(:reset!)
-            config.user.should == Etc.getpwuid.name
+            config.user.should eq(Etc.getpwuid.name)
           end
         end
       end # context 'when setting @user'
@@ -323,8 +323,7 @@ module Backup
 
           it 'should set value using ENV["HOME"]' do
             config.send(:reset!)
-            config.root_path.should ==
-              File.join(File.expand_path("test/home/dir"), "Backup")
+            config.root_path.should eq(File.join(File.expand_path("test/home/dir"), "Backup"))
           end
         end
 
@@ -333,7 +332,7 @@ module Backup
 
           it "should set value using $PWD" do
             config.send(:reset!)
-            config.root_path.should == File.expand_path("Backup")
+            config.root_path.should eq(File.expand_path("Backup"))
           end
         end
       end # context 'when setting @root_path'

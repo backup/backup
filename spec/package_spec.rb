@@ -52,7 +52,7 @@ module Backup
       end
 
       context "when the package files were split" do
-        before { package.chunk_suffixes = ["aa", "ab"] }
+        before { package.chunk_suffixes = %w(aa ab) }
 
         it "returns an array of the package filenames" do
           expect(package.filenames).to eq(

@@ -9,7 +9,7 @@ describe "Backup::Model" do
 
   describe ".all" do
     it "should be an empty array by default" do
-      Backup::Model.all.should == []
+      Backup::Model.all.should eq([])
     end
   end
 
@@ -24,20 +24,20 @@ describe "Backup::Model" do
       models = Backup::Model.find_by_trigger("trigger_one")
       models.should be_a(Array)
       models.count.should be(2)
-      models[0].label.should == "label1"
-      models[1].label.should == "label4"
+      models[0].label.should eq("label1")
+      models[1].label.should eq("label4")
     end
 
     it "should return an array of all models matching a wildcard trigger" do
       models = Backup::Model.find_by_trigger("trigger_t*")
       models.count.should be(2)
-      models[0].label.should == "label2"
-      models[1].label.should == "label3"
+      models[0].label.should eq("label2")
+      models[1].label.should eq("label3")
 
       models = Backup::Model.find_by_trigger("trig*ne")
       models.count.should be(2)
-      models[0].label.should == "label1"
-      models[1].label.should == "label4"
+      models[0].label.should eq("label1")
+      models[1].label.should eq("label4")
 
       Backup::Model.find_by_trigger("trigg*").count.should be(4)
     end
@@ -45,11 +45,11 @@ describe "Backup::Model" do
     it "should accept a symbol" do
       models = Backup::Model.find_by_trigger(:trigger_two)
       models.count.should be(1)
-      models[0].label.should == "label2"
+      models[0].label.should eq("label2")
     end
 
     it "should return an empty array if no matches are found" do
-      Backup::Model.find_by_trigger("foo*").should == []
+      Backup::Model.find_by_trigger("foo*").should eq([])
     end
   end # describe '.find_by_trigger'
 
@@ -79,23 +79,23 @@ describe "Backup::Model" do
       model_a = klass.new(:model_a, "Model A")
       model_b = Backup::Model.new(:model_b, "Mowel B")
       model_c = klass.new(:model_c, "Model C")
-      Backup::Model.all.should == [model_a, model_b, model_c]
+      Backup::Model.all.should eq([model_a, model_b, model_c])
       Backup::Model.find_by_trigger(:model_c).first.should be(model_c)
     end
   end
 
   describe "#initialize" do
     it "sets default values" do
-      model.trigger.should == "test_trigger"
-      model.label.should == "test label"
+      model.trigger.should eq("test_trigger")
+      model.label.should eq("test label")
       model.package.should be_an_instance_of Backup::Package
       model.time.should be_nil
 
-      model.databases.should == []
-      model.archives.should == []
-      model.storages.should == []
-      model.notifiers.should == []
-      model.syncers.should == []
+      model.databases.should eq([])
+      model.archives.should eq([])
+      model.storages.should eq([])
+      model.notifiers.should eq([])
+      model.syncers.should eq([])
 
       model.compressor.should be_nil
       model.encryptor.should be_nil
@@ -106,11 +106,11 @@ describe "Backup::Model" do
     end
 
     it "should convert trigger to a string" do
-      Backup::Model.new(:foo, :bar).trigger.should == "foo"
+      Backup::Model.new(:foo, :bar).trigger.should eq("foo")
     end
 
     it "should convert label to a string" do
-      Backup::Model.new(:foo, :bar).label.should == "bar"
+      Backup::Model.new(:foo, :bar).label.should eq("bar")
     end
 
     it "should accept and instance_eval a block" do
@@ -129,11 +129,11 @@ describe "Backup::Model" do
         Backup::Model.preconfigure(&pre_config_block)
         Backup::Model.new("foo", "", &model_config_block)
       end
-      caught.should == :pre_config
+      caught.should eq(:pre_config)
     end
 
     it "should add itself to Model.all" do
-      Backup::Model.all.should == [model]
+      Backup::Model.all.should eq([model])
     end
 
     # see also: spec/support/shared_examples/database.rb
@@ -206,14 +206,14 @@ describe "Backup::Model" do
         using_fake("Archive", Fake::TwoArgs::Base) do
           model.archive("foo") { |a| a.block_arg = :foo }
           model.archive("bar") { |a| a.block_arg = :bar }
-          model.archives.count.should == 2
+          model.archives.count.should eq(2)
           a1, a2 = model.archives
           a1.arg1.should be(model)
-          a1.arg2.should == "foo"
-          a1.block_arg.should == :foo
+          a1.arg2.should eq("foo")
+          a1.block_arg.should eq(:foo)
           a2.arg1.should be(model)
-          a2.arg2.should == "bar"
-          a2.block_arg.should == :bar
+          a2.arg2.should eq("bar")
+          a2.block_arg.should eq(:bar)
         end
       end
     end
@@ -227,11 +227,11 @@ describe "Backup::Model" do
           model.databases.count.should be(2)
           d1, d2 = model.databases
           d1.arg1.should be(model)
-          d1.arg2.should == "foo"
-          d1.block_arg.should == :foo
+          d1.arg2.should eq("foo")
+          d1.block_arg.should eq(:foo)
           d2.arg1.should be(model)
           d2.arg2.should be_nil
-          d2.block_arg.should == :bar
+          d2.block_arg.should eq(:bar)
         end
       end
 
@@ -252,11 +252,11 @@ describe "Backup::Model" do
           model.storages.count.should be(2)
           s1, s2 = model.storages
           s1.arg1.should be(model)
-          s1.arg2.should == "foo"
-          s1.block_arg.should == :foo
+          s1.arg2.should eq("foo")
+          s1.block_arg.should eq(:foo)
           s2.arg1.should be(model)
           s2.arg2.should be_nil
-          s2.block_arg.should == :bar
+          s2.block_arg.should eq(:bar)
         end
       end
 
@@ -276,10 +276,10 @@ describe "Backup::Model" do
           model.sync_with("Base") { |a| a.block_arg = :bar }
           model.syncers.count.should be(2)
           s1, s2 = model.syncers
-          s1.arg1.should == "foo"
-          s1.block_arg.should == :foo
+          s1.arg1.should eq("foo")
+          s1.block_arg.should eq(:foo)
           s2.arg1.should be_nil
-          s2.block_arg.should == :bar
+          s2.block_arg.should eq(:bar)
         end
       end
 
@@ -299,9 +299,9 @@ describe "Backup::Model" do
           model.notifiers.count.should be(2)
           n1, n2 = model.notifiers
           n1.arg1.should be(model)
-          n1.block_arg.should == :foo
+          n1.block_arg.should eq(:foo)
           n2.arg1.should be(model)
-          n2.block_arg.should == :bar
+          n2.block_arg.should eq(:bar)
         end
       end
 
@@ -318,7 +318,7 @@ describe "Backup::Model" do
         using_fake("Encryptor", Fake::NoArg) do
           model.encrypt_with("Base") { |a| a.block_arg = :foo }
           model.encryptor.should be_an_instance_of Fake::NoArg::Base
-          model.encryptor.block_arg.should == :foo
+          model.encryptor.block_arg.should eq(:foo)
         end
       end
 
@@ -335,7 +335,7 @@ describe "Backup::Model" do
         using_fake("Compressor", Fake::NoArg) do
           model.compress_with("Base") { |a| a.block_arg = :foo }
           model.compressor.should be_an_instance_of Fake::NoArg::Base
-          model.compressor.block_arg.should == :foo
+          model.compressor.block_arg.should eq(:foo)
         end
       end
 
@@ -353,8 +353,8 @@ describe "Backup::Model" do
           model.split_into_chunks_of(123, 2)
           model.splitter.should be_an_instance_of Fake::ThreeArgs::Base
           model.splitter.arg1.should be(model)
-          model.splitter.arg2.should == 123
-          model.splitter.arg3.should == 2
+          model.splitter.arg2.should eq(123)
+          model.splitter.arg3.should eq(2)
         end
       end
 
@@ -394,10 +394,10 @@ describe "Backup::Model" do
       model.perform!
       Timecop.return
 
-      model.started_at.should == started_at
-      model.time.should == time
-      model.package.time.should == time
-      model.finished_at.should == finished_at
+      model.started_at.should eq(started_at)
+      model.time.should eq(time)
+      model.package.time.should eq(time)
+      model.finished_at.should eq(finished_at)
     end
 
     it "performs all procedures" do
@@ -444,7 +444,7 @@ describe "Backup::Model" do
 
         model.perform!
 
-        model.exception.should == err
+        model.exception.should eq(err)
         model.exit_status.should be 2
       end
 
@@ -454,7 +454,7 @@ describe "Backup::Model" do
 
         model.perform!
 
-        model.exception.should == err
+        model.exception.should eq(err)
         model.exit_status.should be 3
       end
     end # context 'when errors occur'
@@ -634,7 +634,7 @@ describe "Backup::Model" do
           212_460  => "59:01:00", 212_461  => "59:01:01", 212_519  => "59:01:59",
           215_940  => "59:59:00", 215_941  => "59:59:01", 215_999  => "59:59:59" }.each do |duration, expected|
           model.stubs(:started_at).returns(Time.now - duration)
-          model.duration.should == expected
+          model.duration.should eq(expected)
         end
       end
     end
@@ -655,7 +655,7 @@ describe "Backup::Model" do
 
     context "when no databases or archives are configured" do
       it "returns an empty array" do
-        model.send(:procedures).should == []
+        model.send(:procedures).should eq([])
       end
     end
 
@@ -666,12 +666,12 @@ describe "Backup::Model" do
 
       it "returns all procedures" do
         one, two, three, four, five, six = model.send(:procedures)
-        one.call.should == :prepare
-        two.should == [:database]
-        three.should == []
-        four.call.should == :package
-        five.call.should == [:storage]
-        six.call.should == :clean
+        one.call.should eq(:prepare)
+        two.should eq([:database])
+        three.should eq([])
+        four.call.should eq(:package)
+        five.call.should eq([:storage])
+        six.call.should eq(:clean)
       end
     end
 
@@ -682,12 +682,12 @@ describe "Backup::Model" do
 
       it "returns all procedures" do
         one, two, three, four, five, six = model.send(:procedures)
-        one.call.should == :prepare
-        two.should == []
-        three.should == [:archive]
-        four.call.should == :package
-        five.call.should == [:storage]
-        six.call.should == :clean
+        one.call.should eq(:prepare)
+        two.should eq([])
+        three.should eq([:archive])
+        four.call.should eq(:package)
+        five.call.should eq([:storage])
+        six.call.should eq(:clean)
       end
     end
   end # describe '#procedures'
@@ -790,7 +790,7 @@ describe "Backup::Model" do
           :get_class_from_scope,
           Fake,
           "TestScope"
-        ).should == Fake::TestScope
+        ).should eq(Fake::TestScope)
       end
 
       it "should accept a nested class name" do
@@ -798,7 +798,7 @@ describe "Backup::Model" do
           :get_class_from_scope,
           Fake,
           "TestScope::TestKlass"
-        ).should == Fake::TestScope::TestKlass
+        ).should eq(Fake::TestScope::TestKlass)
       end
     end
 
@@ -808,7 +808,7 @@ describe "Backup::Model" do
           :get_class_from_scope,
           Fake,
           TestScope
-        ).should == Fake::TestScope
+        ).should eq(Fake::TestScope)
       end
 
       it "should accept a nested class name" do
@@ -816,7 +816,7 @@ describe "Backup::Model" do
           :get_class_from_scope,
           Fake,
           TestScope::TestKlass
-        ).should == Fake::TestScope::TestKlass
+        ).should eq(Fake::TestScope::TestKlass)
       end
     end
 
@@ -836,7 +836,7 @@ describe "Backup::Model" do
           :get_class_from_scope,
           Fake,
           Backup::Config::DSL::TestScope
-        ).should == Fake::TestScope
+        ).should eq(Fake::TestScope)
       end
 
       it "should accept a nested class name" do
@@ -844,7 +844,7 @@ describe "Backup::Model" do
           :get_class_from_scope,
           Fake,
           Backup::Config::DSL::TestScope::TestKlass
-        ).should == Fake::TestScope::TestKlass
+        ).should eq(Fake::TestScope::TestKlass)
       end
     end
   end # describe '#get_class_from_scope'
@@ -929,12 +929,12 @@ describe "Backup::Model" do
         before do
           model.stubs(:exit_status).returns(2)
           model.stubs(:exception).returns(StandardError.new("non-fatal error"))
-          error_a.stubs(:backtrace).returns(["many", "backtrace", "lines"])
+          error_a.stubs(:backtrace).returns(%w(many backtrace lines))
         end
 
         it "logs that the backup failed with a non-fatal exception" do
           Backup::Model::Error.expects(:wrap).in_sequence(s).with do |err, msg|
-            err.message.should == "non-fatal error"
+            err.message.should eq("non-fatal error")
             msg.should match(/Backup for test label \(test_trigger\) Failed!/)
           end.returns(error_a)
           Backup::Logger.expects(:error).in_sequence(s).with(error_a)
@@ -954,12 +954,12 @@ describe "Backup::Model" do
         before do
           model.stubs(:exit_status).returns(3)
           model.stubs(:exception).returns(Exception.new("fatal error"))
-          error_a.stubs(:backtrace).returns(["many", "backtrace", "lines"])
+          error_a.stubs(:backtrace).returns(%w(many backtrace lines))
         end
 
         it "logs that the backup failed with a fatal exception" do
           Backup::Model::FatalError.expects(:wrap).in_sequence(s).with do |err, msg|
-            err.message.should == "fatal error"
+            err.message.should eq("fatal error")
             msg.should match(/Backup for test label \(test_trigger\) Failed!/)
           end.returns(error_a)
           Backup::Logger.expects(:error).in_sequence(s).with(error_a)

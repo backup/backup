@@ -134,7 +134,7 @@ shared_examples "a storage that cycles" do
       storage.expects(:remove!).with(pkg_b).raises("error message")
       storage.expects(:remove!).with(pkg_c)
 
-      pkg_b.stubs(:filenames).returns(["file1", "file2"])
+      pkg_b.stubs(:filenames).returns(%w(file1 file2))
       Backup::Logger.expects(:warn).with do |err|
         expect(err).to be_an_instance_of Backup::Storage::Cycler::Error
         expect(err.message).to include(

@@ -35,7 +35,7 @@ describe "Backup::CLI" do
 
         logger_options.console.quiet.should be(false)
         logger_options.logfile.enabled.should be_true
-        logger_options.logfile.log_path.should == ""
+        logger_options.logfile.log_path.should eq("")
         logger_options.syslog.enabled.should be(false)
       end
 
@@ -50,7 +50,7 @@ describe "Backup::CLI" do
 
         logger_options.console.quiet.should be_true
         logger_options.logfile.enabled.should be_nil
-        logger_options.logfile.log_path.should == ""
+        logger_options.logfile.log_path.should eq("")
         logger_options.syslog.enabled.should be_true
       end
 
@@ -64,7 +64,7 @@ describe "Backup::CLI" do
 
         logger_options.console.quiet.should be_nil
         logger_options.logfile.enabled.should be_true
-        logger_options.logfile.log_path.should == ""
+        logger_options.logfile.log_path.should eq("")
         logger_options.syslog.enabled.should be(false)
       end
 
@@ -79,7 +79,7 @@ describe "Backup::CLI" do
 
         logger_options.console.quiet.should be(false)
         logger_options.logfile.enabled.should be_nil
-        logger_options.logfile.log_path.should == ""
+        logger_options.logfile.log_path.should eq("")
         logger_options.syslog.enabled.should be_nil
       end
 
@@ -94,7 +94,7 @@ describe "Backup::CLI" do
 
         logger_options.console.quiet.should be(false)
         logger_options.logfile.enabled.should be_true
-        logger_options.logfile.log_path.should == "my/log/path"
+        logger_options.logfile.log_path.should eq("my/log/path")
         logger_options.syslog.enabled.should be(false)
       end
     end # describe 'setting logger options'
@@ -468,8 +468,8 @@ describe "Backup::CLI" do
             end
 
             err.should be_empty
-            out.should == "Generated configuration file: '#{config_file}'.\n" \
-                          "Generated model file: '#{model_file}'.\n"
+            out.should eq("Generated configuration file: '#{config_file}'.\n" \
+                          "Generated model file: '#{model_file}'.\n")
             File.exist?(model_file).should be_true
             File.exist?(config_file).should be_true
           end
@@ -498,7 +498,7 @@ describe "Backup::CLI" do
             end
 
             err.should be_empty
-            out.should == "Generated model file: '#{model_file}'.\n"
+            out.should eq("Generated model file: '#{model_file}'.\n")
             File.exist?(model_file).should be_true
           end
         end
@@ -525,7 +525,7 @@ describe "Backup::CLI" do
             end
 
             err.should include("Do you want to overwrite?")
-            out.should == "Generated configuration file: '#{config_file}'.\n"
+            out.should eq("Generated configuration file: '#{config_file}'.\n")
             File.exist?(config_file).should be_true
           end
         end
@@ -545,8 +545,8 @@ describe "Backup::CLI" do
           end
 
           err.should be_empty
-          out.should == "Generated configuration file: '#{config_file}'.\n" \
-                        "Generated model file: '#{model_file}'.\n"
+          out.should eq("Generated configuration file: '#{config_file}'.\n" \
+                        "Generated model file: '#{model_file}'.\n")
           File.exist?(model_file).should be_true
           File.exist?(config_file).should be_true
         end
@@ -597,7 +597,7 @@ describe "Backup::CLI" do
           end
 
           err.should be_empty
-          out.should == "Generated configuration file: '#{config_file}'.\n"
+          out.should eq("Generated configuration file: '#{config_file}'.\n")
           File.exist?(config_file).should be_true
         end
       end
@@ -615,7 +615,7 @@ describe "Backup::CLI" do
           end
 
           err.should be_empty
-          out.should == "Generated configuration file: '#{config_file}'.\n"
+          out.should eq("Generated configuration file: '#{config_file}'.\n")
           File.exist?(config_file).should be_true
         end
       end
@@ -650,7 +650,7 @@ describe "Backup::CLI" do
         cli.start
       end
       err.should be_empty
-      out.should == "Backup #{Backup::VERSION}\n"
+      out.should eq("Backup #{Backup::VERSION}\n")
     end
 
     specify "using `backup -v`" do
@@ -659,7 +659,7 @@ describe "Backup::CLI" do
         cli.start
       end
       err.should be_empty
-      out.should == "Backup #{Backup::VERSION}\n"
+      out.should eq("Backup #{Backup::VERSION}\n")
     end
   end
 

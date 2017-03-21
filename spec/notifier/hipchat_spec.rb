@@ -33,7 +33,7 @@ module Backup
           hipchat.token           = "my_token"
           hipchat.from            = "my_from"
           hipchat.server_url      = "https://mycustom.server.com"
-          hipchat.rooms_notified  = ["room_a", "room_b"]
+          hipchat.rooms_notified  = %w(room_a room_b)
           hipchat.notify_users    = true
           hipchat.success_color   = :success_color
           hipchat.warning_color   = :warning_color
@@ -49,7 +49,7 @@ module Backup
         expect(notifier.token).to eq "my_token"
         expect(notifier.from).to eq "my_from"
         expect(notifier.server_url).to eq "https://mycustom.server.com"
-        expect(notifier.rooms_notified).to eq ["room_a", "room_b"]
+        expect(notifier.rooms_notified).to eq %w(room_a room_b)
         expect(notifier.notify_users).to be(true)
         expect(notifier.success_color).to eq :success_color
         expect(notifier.warning_color).to eq :warning_color
@@ -69,7 +69,7 @@ module Backup
           hipchat.token           = "my_token"
           hipchat.from            = "my_from"
           hipchat.server_url      = "https://mycustom.server.com"
-          hipchat.rooms_notified  = ["room_a", "room_b"]
+          hipchat.rooms_notified  = %w(room_a room_b)
           hipchat.notify_users    = true
           hipchat.success_color   = :success_color
           hipchat.warning_color   = :warning_color
@@ -162,7 +162,7 @@ module Backup
 
       it "returns an array of rooms from a comma-delimited string" do
         notifier.rooms_notified = "room_a, room_b"
-        expect(notifier.send(:rooms_to_notify)).to eq ["room_a", "room_b"]
+        expect(notifier.send(:rooms_to_notify)).to eq %w(room_a room_b)
       end
     end # describe '#rooms_to_notify'
   end

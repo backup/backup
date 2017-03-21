@@ -43,7 +43,7 @@ module Backup
                   found += find_md5(path, excludes)
                 end
               elsif File.file?(path)
-                if file = new(path)
+                if (file = new(path))
                   unless exclude?(excludes, file.path)
                     file.md5 = Digest::MD5.file(file.path).hexdigest
                     found << file

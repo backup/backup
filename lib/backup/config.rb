@@ -9,7 +9,7 @@ module Backup
       config_file: "config.rb",
       data_path: ".data",
       tmp_path: ".tmp"
-    }
+    }.freeze
 
     class << self
       include Utilities::Helpers

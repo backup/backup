@@ -25,23 +25,23 @@ module Backup
           create_modules(
             DSL,
             [ # Databases
-              ["MySQL", "PostgreSQL", "MongoDB", "Redis", "Riak", "OpenLDAP", "SQLite"],
+              %w(MySQL PostgreSQL MongoDB Redis Riak OpenLDAP SQLite),
               # Storages
-              ["S3", "CloudFiles", "Ninefold", "Dropbox", "FTP",
-               "SFTP", "SCP", "RSync", "Local", "Qiniu", "AzureStore"],
+              %w(S3 CloudFiles Ninefold Dropbox FTP
+                 SFTP SCP RSync Local Qiniu AzureStore),
               # Compressors
-              ["Gzip", "Bzip2", "Custom", "Pbzip2", "Lzma"],
+              %w(Gzip Bzip2 Custom Pbzip2 Lzma),
               # Encryptors
-              ["OpenSSL", "GPG"],
+              %w(OpenSSL GPG),
               # Syncers
               [
-                { "Cloud" => ["CloudFiles", "S3"] },
-                { "RSync" => ["Push", "Pull", "Local"] }
+                { "Cloud" => %w(CloudFiles S3) },
+                { "RSync" => %w(Push Pull Local) }
               ],
               # Notifiers
-              ["Mail", "Twitter", "Campfire", "Prowl",
-               "Hipchat", "PagerDuty", "Pushover", "HttpPost", "Nagios",
-               "Slack", "FlowDock", "Zabbix", "Ses", "DataDog", "Command"]
+              %w(Mail Twitter Campfire Prowl
+                 Hipchat PagerDuty Pushover HttpPost Nagios
+                 Slack FlowDock Zabbix Ses DataDog Command)
             ]
           )
         end

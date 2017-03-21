@@ -12,7 +12,7 @@ describe Backup::Encryptor::OpenSSL do
 
   it "should be a subclass of Encryptor::Base" do
     Backup::Encryptor::OpenSSL
-      .superclass.should == Backup::Encryptor::Base
+      .superclass.should eq(Backup::Encryptor::Base)
   end
 
   describe "#initialize" do
@@ -25,10 +25,10 @@ describe Backup::Encryptor::OpenSSL do
 
     context "when no pre-configured defaults have been set" do
       it "should use the values given" do
-        encryptor.password.should       == "mypassword"
-        encryptor.password_file.should  == "/my/password/file"
-        encryptor.base64.should         == true
-        encryptor.salt.should           == true
+        encryptor.password.should eq("mypassword")
+        encryptor.password_file.should eq("/my/password/file")
+        encryptor.base64.should be_true
+        encryptor.salt.should be_true
       end
 
       it "should use default values if none are given" do
@@ -59,10 +59,10 @@ describe Backup::Encryptor::OpenSSL do
       end
 
       it "should override pre-configured defaults" do
-        encryptor.password.should       == "mypassword"
-        encryptor.password_file.should  == "/my/password/file"
-        encryptor.base64.should         == true
-        encryptor.salt.should           == true
+        encryptor.password.should eq("mypassword")
+        encryptor.password_file.should eq("/my/password/file")
+        encryptor.base64.should be_true
+        encryptor.salt.should be_true
       end
     end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
@@ -74,8 +74,8 @@ describe Backup::Encryptor::OpenSSL do
       encryptor.expects(:options).returns("cmd_options")
 
       encryptor.encrypt_with do |command, ext|
-        command.should == "openssl_cmd cmd_options"
-        ext.should == ".enc"
+        command.should eq("openssl_cmd cmd_options")
+        ext.should eq(".enc")
       end
     end
   end
@@ -94,8 +94,8 @@ describe Backup::Encryptor::OpenSSL do
       end
 
       it "should add #password option whenever #password_file not given" do
-        encryptor.send(:options).should ==
-          "aes-256-cbc -k ''"
+        encryptor.send(:options).should
+        eq("aes-256-cbc -k ''")
       end
     end
 
@@ -103,14 +103,14 @@ describe Backup::Encryptor::OpenSSL do
       before { encryptor.password_file = "password_file" }
 
       it "should add #password_file option" do
-        encryptor.send(:options).should ==
-          "aes-256-cbc -pass file:password_file"
+        encryptor.send(:options).should
+        eq("aes-256-cbc -pass file:password_file")
       end
 
       it "should add #password_file option even when #password given" do
         encryptor.password = "password"
-        encryptor.send(:options).should ==
-          "aes-256-cbc -pass file:password_file"
+        encryptor.send(:options).should
+        eq("aes-256-cbc -pass file:password_file")
       end
     end
 
@@ -118,8 +118,8 @@ describe Backup::Encryptor::OpenSSL do
       before { encryptor.password = %q(pa\ss'w"ord) }
 
       it "should include the given password in the #password option" do
-        encryptor.send(:options).should ==
-          %q(aes-256-cbc -k pa\\\ss\'w\"ord)
+        encryptor.send(:options).should
+        eq(%q(aes-256-cbc -k pa\\\ss\'w\"ord))
       end
     end
 
@@ -127,8 +127,8 @@ describe Backup::Encryptor::OpenSSL do
       before { encryptor.base64 = true }
 
       it "should add the option" do
-        encryptor.send(:options).should ==
-          "aes-256-cbc -base64 -k ''"
+        encryptor.send(:options).should
+        eq("aes-256-cbc -base64 -k ''")
       end
     end
 
@@ -136,8 +136,8 @@ describe Backup::Encryptor::OpenSSL do
       before { encryptor.salt = true }
 
       it "should add the option" do
-        encryptor.send(:options).should ==
-          "aes-256-cbc -salt -k ''"
+        encryptor.send(:options).should
+        eq("aes-256-cbc -salt -k ''")
       end
     end
   end # describe '#options'

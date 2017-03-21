@@ -239,7 +239,7 @@ module SandboxFileUtils
           path(s) outside of the current sandbox path were detected.
           sandbox_path: #{path}
           path(s) for the current operation:
-          #{list.join($/)}
+          #{list.join($INPUT_RECORD_SEPARATOR)}
         EOS
       end
     end
