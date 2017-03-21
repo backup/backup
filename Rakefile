@@ -6,6 +6,8 @@ CLOBBER.include("tmp", "*.gem")
 
 RuboCop::RakeTask.new
 
+Dir["integration/tasks/**/*.rake"].each { |f| import f }
+
 desc "Open a pry console in the Backup context"
 task :console do
   require "pry"
@@ -86,6 +88,20 @@ task :release do # rubocop:disable Metrics/BlockLength
 end
 
 namespace :docker do # rubocop:disable Metrics/BlockLength
+  directory "tmp"
+  directory "tmp/test_data"
+
+  desc "Build a Docker image for Backup itself"
+  task :build do
+    sh "docker build -t ruby_backup_runner:latest ."
+  end
+
+  desc "Start a container environment with an interactive shell"
+  task shell: [:prepare] do
+    sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' " \
+       "-v $PWD:/usr/src/backup -it ruby_backup_tester:latest /bin/bash"
+  end
+
   desc "Remove Docker containers for Backup"
   task :clean do
     containers = `docker ps -a | grep 'ruby_backup_*' | awk '{ print $1 }'`
@@ -103,41 +119,28 @@ namespace :docker do # rubocop:disable Metrics/BlockLength
     `docker rmi #{images}` unless images.empty?
   end
 
-  desc "Build a Docker image for Backup itself"
-  task :build do
-    sh "docker build -t ruby_backup_runner:latest ."
+  task :prepare do
+    sh "docker-compose build"
   end
 
   namespace :test do
-    directory "tmp"
-    directory "tmp/test_data"
-
-    desc "Build a Docker Compose environment for Backup"
-    task :prepare do
-      sh "docker-compose build"
+    task integration: ["tmp", "tmp/test_data"] do
+      sh "docker-compose run ruby_backup_tester " \
+         "./integration/bin/wait-for-it.sh -h mysql -p 3306 -- " \
+         "rake docker:test:run_integration"
     end
 
-    desc "Run all test suites inside an existing container environment"
-    task run_all: [:run_spec, :run_integration]
+    task run_integration: ["db:mysql"] do
+      sh "ruby -Ilib -S rspec ./integration/acceptance/"
+    end
 
-    desc "Run integration tests inside a container environment"
-    task integration: [:prepare, :run_integration]
-
-    task run_integration: ["tmp", "tmp/test_data"] do
-      sh "docker-compose run ruby_backup_tester ruby -Ilib -S rspec ./integration/acceptance/"
+    task :spec do
+      sh "docker-compose run ruby_backup_tester " \
+         "rake docker:test:run_spec"
     end
 
     task :run_spec do
-      sh "docker-compose run ruby_backup_tester ruby -Ilib -S rspec ./spec/"
+      sh "ruby -Ilib -S rspec ./spec/"
     end
-
-    desc "Start a container environment with an interactive shell"
-    task shell: [:prepare] do
-      sh "docker run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' " \
-         "-v $PWD:/usr/src/backup -it ruby_backup_tester:latest /bin/bash"
-    end
-
-    desc "Run RSpec tests inside a container environment"
-    task spec: [:prepare, :run_spec]
   end
 end

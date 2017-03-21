@@ -20,9 +20,9 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
-          532976 my_backup/databases/MySQL.sql
-        ])
+        expect(job.package).to match_manifest(<<-EOS)
+           3174144 my_backup/databases/MySQL.sql
+        EOS
       end
 
       specify "Tables Excluded" do
@@ -37,7 +37,7 @@ module Backup
             database MySQL do |db|
               db.name         = :all
               db.username     = "root"
-              db.host         = "localhost"
+              db.host         = "mysql"
               db.port         = 3306
               db.skip_tables  = ["backup_test_01.twos", "backup_test_02.threes"]
             end
@@ -48,21 +48,20 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
-          525504 my_backup/databases/MySQL.sql
-        ])
+        expect(job.package).to match_manifest(<<-EOS)
+          3166717 my_backup/databases/MySQL.sql
+        EOS
       end
     end # describe "All Databases"
 
     describe "Single Database" do
-
       specify "All tables" do
         create_model :my_backup, <<-EOS
           Backup::Model.new(:my_backup, "a description") do
             database MySQL do |db|
               db.name     = "backup_test_01"
               db.username = "root"
-              db.host     = "localhost"
+              db.host     = "mysql"
               db.port     = 3306
             end
             store_with Local
@@ -72,9 +71,9 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
-          9532 my_backup/databases/MySQL.sql
-        ])
+        expect(job.package).to match_manifest(<<-EOS)
+          10451 my_backup/databases/MySQL.sql
+        EOS
       end
 
       specify "Only one table" do
@@ -83,7 +82,7 @@ module Backup
             database MySQL do |db|
               db.name         = "backup_test_01"
               db.username     = "root"
-              db.host         = "localhost"
+              db.host         = "mysql"
               db.port         = 3306
               db.only_tables  = ["ones"]
             end
@@ -94,9 +93,9 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
-          2686 my_backup/databases/MySQL.sql
-        ])
+        expect(job.package).to match_manifest(<<-EOS)
+          2677 my_backup/databases/MySQL.sql
+        EOS
       end
 
       specify "Exclude a table" do
@@ -105,7 +104,7 @@ module Backup
             database MySQL do |db|
               db.name         = "backup_test_01"
               db.username     = "root"
-              db.host         = "localhost"
+              db.host         = "mysql"
               db.port         = 3306
               db.skip_tables  = ["ones"]
             end
@@ -116,28 +115,26 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
-          8117 my_backup/databases/MySQL.sql
-        ])
+        expect(job.package).to match_manifest(<<-EOS)
+          9036 my_backup/databases/MySQL.sql
+        EOS
       end
-
     end # describe "Single Database"
 
     describe "Multiple Dumps" do
-
       specify "All tables" do
         create_model :my_backup, <<-EOS
           Backup::Model.new(:my_backup, "a description") do
             database MySQL, :dump_01 do |db|
               db.name     = "backup_test_01"
               db.username = "root"
-              db.host     = "localhost"
+              db.host     = "mysql"
               db.port     = 3306
             end
             database MySQL, "Dump #2" do |db|
               db.name     = "backup_test_02"
               db.username = "root"
-              db.host     = "localhost"
+              db.host     = "mysql"
               db.port     = 3306
             end
             store_with Local
@@ -147,10 +144,10 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
-          9532 my_backup/databases/MySQL-dump_01.sql
-         10282 my_backup/databases/MySQL-Dump__2.sql
-        ])
+        expect(job.package).to match_manifest(<<-EOS)
+          10451 my_backup/databases/MySQL-dump_01.sql
+          11201 my_backup/databases/MySQL-Dump__2.sql
+        EOS
       end
     end # describe "Multiple Dumps"
   end
