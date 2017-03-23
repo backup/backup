@@ -126,11 +126,11 @@ namespace :docker do # rubocop:disable Metrics/BlockLength
   namespace :test do
     task integration: ["tmp", "tmp/test_data"] do
       sh "docker-compose run ruby_backup_tester " \
-         "./integration/bin/wait-for-it.sh -h mysql -p 3306 -- " \
+         "./integration/bin/wait-for-it.sh -h redis -p 6379 -- " \
          "rake docker:test:run_integration"
     end
 
-    task run_integration: ["db:mysql"] do
+    task run_integration: ["db:create"] do
       sh "ruby -Ilib -S rspec ./integration/acceptance/"
     end
 
