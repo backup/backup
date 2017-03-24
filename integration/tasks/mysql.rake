@@ -1,7 +1,7 @@
 require "active_record"
 
 namespace :db do
-  desc "Rebuild MySQL Test Databases"
+  desc "Rebuild MySQL Test databases"
   task :mysql do
     begin
       puts "\n=> Preparing MySQL..."
@@ -30,15 +30,15 @@ module MySQLTask
         twos: 225,
         threes: 425
       }
-    }
+    }.freeze
     CONFIG = {
       adapter:  "mysql2",
       host:     "mysql"
-    }
-    OPTS = { charset: "utf8", collation: "utf8_unicode_ci" }
+    }.freeze
+    OPTS = { charset: "utf8", collation: "utf8_unicode_ci" }.freeze
 
     def drop_all
-      puts "Dropping Databases..."
+      puts "Dropping databases..."
       connection = connect_to(nil)
       DATABASES.each_key do |db_name|
         connection.drop_database db_name
@@ -48,7 +48,7 @@ module MySQLTask
     def create_all
       connection = connect_to(nil)
       DATABASES.each do |db_name, tables|
-        puts "Creating Database "#{ db_name }"..."
+        puts "Creating Database #{db_name}..."
         connection.create_database db_name, OPTS
         connection = connect_to(db_name)
         tables.each do |table_name, record_count|
@@ -59,8 +59,11 @@ module MySQLTask
           end
 
           name = classify(table_name)
-          klass = const_defined?(name) ? const_get(name) :
-              const_set(name, Class.new(ActiveRecord::Base))
+          klass = if const_defined?(name)
+                    const_get(name)
+                  else
+                    const_set(name, Class.new(ActiveRecord::Base))
+                  end
           record_count.times do |n|
             klass.create(number: n)
           end
