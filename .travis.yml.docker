@@ -8,7 +8,7 @@ services:
 before_install:
   - docker-compose build
 
-script: "bundle exec rake docker:test:ci"
+script: "bundle exec rake docker:test:all"
 
 branches:
   only:
