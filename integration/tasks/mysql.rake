@@ -7,9 +7,9 @@ namespace :db do
       puts "\n=> Preparing MySQL..."
       MySQLTask.drop_all
       MySQLTask.create_all
-    rescue Exception => err
-      errno = " (Error ##{ err.errno })" if err.respond_to?(:errno)
-      $stderr.puts "#{ err.class }#{ errno }): #{ err.message }"
+    rescue => err
+      errno = " (Error ##{err.errno})" if err.respond_to?(:errno)
+      $stderr.puts "#{err.class}#{errno}): #{err.message}"
       $stderr.puts err.backtrace
     end
   end

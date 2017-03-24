@@ -7,8 +7,8 @@ namespace :db do
       puts "\n=> Preparing PostgreSQL..."
       PostgreSQLTask.drop_all
       PostgreSQLTask.create_all
-    rescue Exception => err
-      $stderr.puts "#{ err.class }: #{ err.message }"
+    rescue => err
+      $stderr.puts "#{err.class}: #{err.message}"
       $stderr.puts err.backtrace
     end
   end

@@ -19,9 +19,9 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
+        expect(job.package).to match_manifest(<<-EOS)
           3200..3400 my_backup/databases/PostgreSQL.sql.gz
-        ])
+        EOS
       end
 
       specify "Without compression" do
@@ -39,15 +39,13 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
+        expect(job.package).to match_manifest(<<-EOS)
           23300..23499 my_backup/databases/PostgreSQL.sql
-        ])
+        EOS
       end
-
-    end # describe "All Databases"
+    end
 
     describe "Single Database" do
-
       specify "All tables" do
         create_model :my_backup, <<-EOS
           Backup::Model.new(:my_backup, "a description") do
@@ -63,9 +61,9 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
+        expect(job.package).to match_manifest(<<-EOS)
           10000..10099 my_backup/databases/PostgreSQL.sql
-        ])
+        EOS
       end
 
       specify "Only one table" do
@@ -84,9 +82,9 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
+        expect(job.package).to match_manifest(<<-EOS)
           2000..2099 my_backup/databases/PostgreSQL.sql
-        ])
+        EOS
       end
 
       specify "Exclude a table" do
@@ -105,9 +103,9 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
+        expect(job.package).to match_manifest(<<-EOS)
           8600..8699 my_backup/databases/PostgreSQL.sql
-        ])
+        EOS
       end
     end
 
@@ -132,10 +130,10 @@ module Backup
         job = backup_perform :my_backup
 
         expect(job.package.exist?).to be_true
-        expect(job.package).to match_manifest(%q[
+        expect(job.package).to match_manifest(<<-EOS)
           10600..10699 my_backup/databases/PostgreSQL-Dump__2.sql
           10000..10099 my_backup/databases/PostgreSQL-dump_01.sql
-        ])
+        EOS
       end
     end
   end
