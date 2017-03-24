@@ -1,7 +1,7 @@
 require "active_record"
 
 namespace :db do
-  desc "Rebuild MySQL Test databases"
+  desc "Rebuild MySQL test databases"
   task :mysql do
     begin
       puts "\n=> Preparing MySQL..."

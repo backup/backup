@@ -1,7 +1,7 @@
 require "active_record"
 
 namespace :db do
-  desc "Rebuild PostgreSQL Test Databases"
+  desc "Rebuild PostgreSQL test databases"
   task :postgresql do
     begin
       puts "\n=> Preparing PostgreSQL..."

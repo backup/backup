@@ -124,6 +124,16 @@ namespace :docker do # rubocop:disable Metrics/BlockLength
   end
 
   namespace :test do
+    desc "Run all tests with Docker Compose"
+    task all: ["tmp", "tmp/test_data"] do
+      sh "docker-compose run ruby_backup_tester " \
+         "./integration/bin/wait-for-it.sh -h redis -p 6379 -- " \
+         "rake docker:test:run_all"
+    end
+
+    task run_all: ["docker:test:run_spec", "docker:test:run_integration"]
+
+    desc "Run integration tests with Docker Compose"
     task integration: ["tmp", "tmp/test_data"] do
       sh "docker-compose run ruby_backup_tester " \
          "./integration/bin/wait-for-it.sh -h redis -p 6379 -- " \
@@ -134,6 +144,7 @@ namespace :docker do # rubocop:disable Metrics/BlockLength
       sh "ruby -Ilib -S rspec ./integration/acceptance/"
     end
 
+    desc "Run RSpec tests with Docker Compose"
     task :spec do
       sh "docker-compose run ruby_backup_tester " \
          "rake docker:test:run_spec"
