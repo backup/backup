@@ -8,14 +8,8 @@ services:
     volumes:
       - ".:/usr/src/backup"
     links:
-      - mongo
       - mysql
       - postgres
-      - redis
-  mongo:
-    image: mongo:2.4.10
-    ports:
-      - "27017:27017"
   mysql:
     image: mysql:5.5.54
     environment:
@@ -26,7 +20,3 @@ services:
     image: postgres:9.4.10
     ports:
       - "5432:5432"
-  redis:
-    image: redis:2.8.17
-    ports:
-      - "6379:6379"

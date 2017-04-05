@@ -21,7 +21,7 @@ module Backup
 
         expect(job.package.exist?).to be_true
         expect(job.package).to match_manifest(<<-EOS)
-           3174144 my_backup/databases/MySQL.sql
+           3180866 my_backup/databases/MySQL.sql
         EOS
       end
 
@@ -49,7 +49,7 @@ module Backup
 
         expect(job.package.exist?).to be_true
         expect(job.package).to match_manifest(<<-EOS)
-          3166717 my_backup/databases/MySQL.sql
+          3173439 my_backup/databases/MySQL.sql
         EOS
       end
     end # describe "All Databases"
