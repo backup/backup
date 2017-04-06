@@ -87,6 +87,11 @@ task :release do # rubocop:disable Metrics/BlockLength
   puts "Backup version #{new_version} released!"
 end
 
+namespace :ci do
+  desc "Run all quality and test tasks"
+  task test: ["rubocop", "docker:test:all"]
+end
+
 namespace :docker do # rubocop:disable Metrics/BlockLength
   directory "tmp"
   directory "tmp/test_data"
