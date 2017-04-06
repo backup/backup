@@ -139,13 +139,13 @@ namespace :docker do # rubocop:disable Metrics/BlockLength
     task run_all: ["docker:test:run_spec", "docker:test:run_integration"]
 
     desc "Run integration tests with Docker Compose"
-    task integration: ["tmp", "tmp/test_data"] do
+    task :integration do
       sh "docker-compose run ruby_backup_tester " \
          "./integration/bin/wait-for-it.sh -h postgres -p 5432 -- " \
          "rake docker:test:run_integration"
     end
 
-    task run_integration: ["db:create"] do
+    task run_integration: ["tmp", "tmp/test_data", "db:create"] do
       sh "ruby -Ilib -S rspec ./integration/acceptance/"
     end
 

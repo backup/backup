@@ -21,14 +21,28 @@ ENV APP_DEPS bsdtar ca-certificates curl g++ git \
 
 RUN apt-get update && apt-get install -y --no-install-recommends $APP_DEPS
 
-## 3. Set working directory ##
+## 3. Add custom Linux user account ##
+
+ENV APP_USER app
+RUN useradd -d /home/$APP_USER -u 1001 -m $APP_USER && \
+    adduser $APP_USER sudo && \
+    echo "$APP_USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/app_user && \
+    chown -R $APP_USER:$APP_USER /home/$APP_USER
+
+## 4. Set up working directory ##
 
 ENV APP_HOME /usr/src/backup
+RUN mkdir $APP_HOME && chown -R $APP_USER:$APP_USER $APP_HOME
 WORKDIR $APP_HOME
-
-## 4. Add Ruby gem packages ##
-
 COPY lib/backup/version.rb $APP_HOME/lib/backup/
 COPY backup.gemspec Gemfile* $APP_HOME/
+RUN chown -R $APP_USER:$APP_USER $APP_HOME
+
+## 5. Switch to custom user account ##
+
+USER $APP_USER
+
+## 6. Add Ruby gem packages ##
+
 RUN bundle config build.nokogiri --use-system-libraries && bundle install && \
     rm -r $APP_HOME/lib/backup
