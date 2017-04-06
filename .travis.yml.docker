@@ -12,4 +12,6 @@ script: "bundle exec rake docker:test:all"
 
 branches:
   only:
+    - master
+    - develop
     - feature/docker-testing
