@@ -14,9 +14,5 @@ services:
     image: mysql:5.5.54
     environment:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
-    ports:
-      - "3306:3306"
   postgres:
     image: postgres:9.4.10
-    ports:
-      - "5432:5432"
