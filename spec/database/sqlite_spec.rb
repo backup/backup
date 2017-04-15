@@ -26,13 +26,13 @@ module Backup
       end
 
       it "should pass the model reference to Base" do
-        db.instance_variable_get(:@model).should == model
+        expect(db.instance_variable_get(:@model)).to eq(model)
       end
 
       context "when no pre-configured defaults have been set" do
         context "when options are specified" do
           it "should use the given values" do
-            db.sqlitedump_utility.should == "/path/to/sqlitedump"
+            expect(db.sqlitedump_utility).to eq("/path/to/sqlitedump")
           end
         end
       end # context 'when no pre-configured defaults have been set'
@@ -48,7 +48,7 @@ module Backup
 
         context "when options are specified" do
           it "should override the pre-configured defaults" do
-            db.sqlitedump_utility.should == "/path/to/sqlitedump"
+            expect(db.sqlitedump_utility).to eq("/path/to/sqlitedump")
           end
         end
 
@@ -56,7 +56,7 @@ module Backup
           it "should use the pre-configured defaults" do
             db = Database::SQLite.new(model)
 
-            db.sqlitedump_utility.should == "/default/path/to/sqlitedump"
+            expect(db.sqlitedump_utility).to eq("/default/path/to/sqlitedump")
           end
         end
       end # context 'when no pre-configured defaults have been set'

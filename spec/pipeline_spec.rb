@@ -4,30 +4,30 @@ describe "Backup::Pipeline" do
   let(:pipeline) { Backup::Pipeline.new }
 
   it "should include Utilities::Helpers" do
-    Backup::Pipeline
-      .include?(Backup::Utilities::Helpers).should be_true
+    expect(Backup::Pipeline
+      .include?(Backup::Utilities::Helpers)).to eq(true)
   end
 
   describe "#initialize" do
     it "should create a new pipeline" do
-      pipeline.instance_variable_get(:@commands).should == []
-      pipeline.instance_variable_get(:@success_codes).should == []
-      pipeline.errors.should == []
-      pipeline.stderr.should == ""
+      expect(pipeline.instance_variable_get(:@commands)).to eq([])
+      expect(pipeline.instance_variable_get(:@success_codes)).to eq([])
+      expect(pipeline.errors).to eq([])
+      expect(pipeline.stderr).to eq("")
     end
   end
 
   describe "#add" do
     it "should add a command with the given successful exit codes" do
       pipeline.add "a command", [0]
-      pipeline.instance_variable_get(:@commands).should == ["a command"]
-      pipeline.instance_variable_get(:@success_codes).should == [[0]]
+      expect(pipeline.instance_variable_get(:@commands)).to eq(["a command"])
+      expect(pipeline.instance_variable_get(:@success_codes)).to eq([[0]])
 
       pipeline.add "another command", [1, 3]
-      pipeline.instance_variable_get(:@commands)
-        .should == ["a command", "another command"]
-      pipeline.instance_variable_get(:@success_codes)
-        .should == [[0], [1, 3]]
+      expect(pipeline.instance_variable_get(:@commands))
+        .to eq(["a command", "another command"])
+      expect(pipeline.instance_variable_get(:@success_codes))
+        .to eq([[0], [1, 3]])
     end
   end
 
@@ -70,8 +70,8 @@ describe "Backup::Pipeline" do
             Backup::Logger.expects(:warn).never
 
             pipeline.run
-            pipeline.stderr.should == ""
-            pipeline.errors.should == []
+            expect(pipeline.stderr).to eq("")
+            expect(pipeline.errors).to eq([])
           end
         end
 
@@ -85,8 +85,8 @@ describe "Backup::Pipeline" do
             Backup::Logger.expects(:warn).with("stderr_messages_output")
 
             pipeline.run
-            pipeline.stderr.should == "stderr output"
-            pipeline.errors.should == []
+            expect(pipeline.stderr).to eq("stderr output")
+            expect(pipeline.errors).to eq([])
           end
         end
       end # context 'when all commands within the pipeline are successful'
@@ -108,11 +108,11 @@ describe "Backup::Pipeline" do
             Backup::Logger.expects(:warn).never
 
             pipeline.run
-            pipeline.stderr.should == "stderr output"
-            pipeline.errors.count.should be(1)
-            pipeline.errors.first.should be_a_kind_of SystemCallError
-            pipeline.errors.first.errno.should be(1)
-            pipeline.errors.first.message.should match(
+            expect(pipeline.stderr).to eq("stderr output")
+            expect(pipeline.errors.count).to be(1)
+            expect(pipeline.errors.first).to be_a_kind_of SystemCallError
+            expect(pipeline.errors.first.errno).to be(1)
+            expect(pipeline.errors.first.message).to match(
               "'second' returned exit code: 1"
             )
           end
@@ -127,11 +127,11 @@ describe "Backup::Pipeline" do
             Backup::Logger.expects(:warn).never
 
             pipeline.run
-            pipeline.stderr.should == "stderr output"
-            pipeline.errors.count.should be(1)
-            pipeline.errors.first.should be_a_kind_of SystemCallError
-            pipeline.errors.first.errno.should be(4)
-            pipeline.errors.first.message.should match(
+            expect(pipeline.stderr).to eq("stderr output")
+            expect(pipeline.errors.count).to be(1)
+            expect(pipeline.errors.first).to be_a_kind_of SystemCallError
+            expect(pipeline.errors.first.errno).to be(4)
+            expect(pipeline.errors.first.message).to match(
               "'third' returned exit code: 4"
             )
           end
@@ -146,15 +146,15 @@ describe "Backup::Pipeline" do
             Backup::Logger.expects(:warn).never
 
             pipeline.run
-            pipeline.stderr.should == "stderr output"
-            pipeline.errors.count.should be(2)
-            pipeline.errors.each { |err| err.should be_a_kind_of SystemCallError }
-            pipeline.errors[0].errno.should be(3)
-            pipeline.errors[0].message.should match(
+            expect(pipeline.stderr).to eq("stderr output")
+            expect(pipeline.errors.count).to be(2)
+            pipeline.errors.each { |err| expect(err).to be_a_kind_of SystemCallError }
+            expect(pipeline.errors[0].errno).to be(3)
+            expect(pipeline.errors[0].message).to match(
               "'first' returned exit code: 3"
             )
-            pipeline.errors[1].errno.should be(1)
-            pipeline.errors[1].message.should match(
+            expect(pipeline.errors[1].errno).to be(1)
+            expect(pipeline.errors[1].message).to match(
               "'second' returned exit code: 1"
             )
           end
@@ -171,7 +171,7 @@ describe "Backup::Pipeline" do
         expect do
           pipeline.run
         end.to raise_error(Backup::Pipeline::Error) { |err|
-          err.message.should eq(
+          expect(err.message).to eq(
             "Pipeline::Error: Pipeline failed to execute\n" \
             "--- Wrapped Exception ---\n" \
             "RuntimeError: exec failed"
@@ -183,12 +183,12 @@ describe "Backup::Pipeline" do
 
   describe "#success?" do
     it "returns true when @errors is empty" do
-      pipeline.success?.should be_true
+      expect(pipeline.success?).to eq(true)
     end
 
     it "returns false when @errors is not empty" do
       pipeline.instance_variable_set(:@errors, ["foo"])
-      pipeline.success?.should be_false
+      expect(pipeline.success?).to eq(false)
     end
   end # describe '#success?'
 
@@ -211,7 +211,7 @@ describe "Backup::Pipeline" do
       end
 
       it "should output #stderr_messages and formatted system error messages" do
-        pipeline.error_messages.should match(/
+        expect(pipeline.error_messages).to match(/
           stderr\smessages\n
           The\sfollowing\ssystem\serrors\swere\sreturned:\n
           #{ sys_err }:\s(.*?)\sfirst\serror\n
@@ -226,7 +226,7 @@ describe "Backup::Pipeline" do
       end
 
       it "should only output the formatted system error messages" do
-        pipeline.error_messages.should match(/
+        expect(pipeline.error_messages).to match(/
           stderr\smessages\n
           The\sfollowing\ssystem\serrors\swere\sreturned:\n
           #{ sys_err }:\s(.*?)\sfirst\serror\n
@@ -243,10 +243,11 @@ describe "Backup::Pipeline" do
       end
 
       it "should build a pipeline with redirected/collected exit codes" do
-        pipeline.send(:pipeline).should ==
+        expect(pipeline.send(:pipeline)).to eq(
           '{ { one 2>&4 ; echo "0|$?:" >&3 ; } | ' \
           '{ two 2>&4 ; echo "1|$?:" >&3 ; } | ' \
           '{ three 2>&4 ; echo "2|$?:" >&3 ; } } 3>&1 1>&2 4>&2'
+        )
       end
     end
 
@@ -256,8 +257,9 @@ describe "Backup::Pipeline" do
       end
 
       it "should build the command line in the same manner, but without pipes" do
-        pipeline.send(:pipeline).should ==
+        expect(pipeline.send(:pipeline)).to eq(
           '{ { foo 2>&4 ; echo "0|$?:" >&3 ; } } 3>&1 1>&2 4>&2'
+        )
       end
     end
   end # describe '#pipeline'
@@ -269,18 +271,19 @@ describe "Backup::Pipeline" do
       end
 
       it "should return a formatted message with the @stderr messages" do
-        pipeline.send(:stderr_messages).should ==
+        expect(pipeline.send(:stderr_messages)).to eq(
           "  Pipeline STDERR Messages:\n" \
           "  (Note: may be interleaved if multiple commands returned error messages)\n" \
           "\n" \
           "  stderr message\n" \
           "  output\n"
+        )
       end
     end
 
     context "when @stderr is empty" do
       it "should return false" do
-        pipeline.send(:stderr_messages).should be_false
+        expect(pipeline.send(:stderr_messages)).to eq(false)
       end
     end
   end # describe '#stderr_message'

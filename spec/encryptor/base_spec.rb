@@ -4,13 +4,13 @@ describe Backup::Encryptor::Base do
   let(:base) { Backup::Encryptor::Base.new }
 
   it "should include Utilities::Helpers" do
-    Backup::Encryptor::Base
-      .include?(Backup::Utilities::Helpers).should be_true
+    expect(Backup::Encryptor::Base
+      .include?(Backup::Utilities::Helpers)).to eq(true)
   end
 
   it "should include Config::Helpers" do
-    Backup::Encryptor::Base
-      .include?(Backup::Config::Helpers).should be_true
+    expect(Backup::Encryptor::Base
+      .include?(Backup::Config::Helpers)).to eq(true)
   end
 
   describe "#initialize" do
@@ -22,7 +22,7 @@ describe Backup::Encryptor::Base do
 
   describe "#encryptor_name" do
     it "should return class name with Backup namespace removed" do
-      base.send(:encryptor_name).should == "Encryptor::Base"
+      expect(base.send(:encryptor_name)).to eq("Encryptor::Base")
     end
   end
 

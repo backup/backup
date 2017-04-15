@@ -9,7 +9,7 @@ describe "Backup::Model" do
 
   describe ".all" do
     it "should be an empty array by default" do
-      Backup::Model.all.should == []
+      expect(Backup::Model.all).to eq([])
     end
   end
 
@@ -22,43 +22,43 @@ describe "Backup::Model" do
 
     it "should return an array of all models matching the trigger" do
       models = Backup::Model.find_by_trigger("trigger_one")
-      models.should be_a(Array)
-      models.count.should be(2)
-      models[0].label.should == "label1"
-      models[1].label.should == "label4"
+      expect(models).to be_a(Array)
+      expect(models.count).to be(2)
+      expect(models[0].label).to eq("label1")
+      expect(models[1].label).to eq("label4")
     end
 
     it "should return an array of all models matching a wildcard trigger" do
       models = Backup::Model.find_by_trigger("trigger_t*")
-      models.count.should be(2)
-      models[0].label.should == "label2"
-      models[1].label.should == "label3"
+      expect(models.count).to be(2)
+      expect(models[0].label).to eq("label2")
+      expect(models[1].label).to eq("label3")
 
       models = Backup::Model.find_by_trigger("trig*ne")
-      models.count.should be(2)
-      models[0].label.should == "label1"
-      models[1].label.should == "label4"
+      expect(models.count).to be(2)
+      expect(models[0].label).to eq("label1")
+      expect(models[1].label).to eq("label4")
 
-      Backup::Model.find_by_trigger("trigg*").count.should be(4)
+      expect(Backup::Model.find_by_trigger("trigg*").count).to be(4)
     end
 
     it "should accept a symbol" do
       models = Backup::Model.find_by_trigger(:trigger_two)
-      models.count.should be(1)
-      models[0].label.should == "label2"
+      expect(models.count).to be(1)
+      expect(models[0].label).to eq("label2")
     end
 
     it "should return an empty array if no matches are found" do
-      Backup::Model.find_by_trigger("foo*").should == []
+      expect(Backup::Model.find_by_trigger("foo*")).to eq([])
     end
   end # describe '.find_by_trigger'
 
   describe ".preconfigure" do
     it "returns preconfiguration block if set" do
       block = proc {}
-      Backup::Model.preconfigure.should be_nil
+      expect(Backup::Model.preconfigure).to be_nil
       Backup::Model.preconfigure(&block)
-      Backup::Model.preconfigure.should be(block)
+      expect(Backup::Model.preconfigure).to be(block)
     end
 
     it "stores preconfiguration for each subclass" do
@@ -68,8 +68,8 @@ describe "Backup::Model" do
       block_b = proc {}
       klass_a.preconfigure(&block_a)
       klass_b.preconfigure(&block_b)
-      klass_a.preconfigure.should be(block_a)
-      klass_b.preconfigure.should be(block_b)
+      expect(klass_a.preconfigure).to be(block_a)
+      expect(klass_b.preconfigure).to be(block_b)
     end
   end
 
@@ -79,38 +79,38 @@ describe "Backup::Model" do
       model_a = klass.new(:model_a, "Model A")
       model_b = Backup::Model.new(:model_b, "Mowel B")
       model_c = klass.new(:model_c, "Model C")
-      Backup::Model.all.should == [model_a, model_b, model_c]
-      Backup::Model.find_by_trigger(:model_c).first.should be(model_c)
+      expect(Backup::Model.all).to eq([model_a, model_b, model_c])
+      expect(Backup::Model.find_by_trigger(:model_c).first).to be(model_c)
     end
   end
 
   describe "#initialize" do
     it "sets default values" do
-      model.trigger.should == "test_trigger"
-      model.label.should == "test label"
-      model.package.should be_an_instance_of Backup::Package
-      model.time.should be_nil
+      expect(model.trigger).to eq("test_trigger")
+      expect(model.label).to eq("test label")
+      expect(model.package).to be_an_instance_of Backup::Package
+      expect(model.time).to be_nil
 
-      model.databases.should == []
-      model.archives.should == []
-      model.storages.should == []
-      model.notifiers.should == []
-      model.syncers.should == []
+      expect(model.databases).to eq([])
+      expect(model.archives).to eq([])
+      expect(model.storages).to eq([])
+      expect(model.notifiers).to eq([])
+      expect(model.syncers).to eq([])
 
-      model.compressor.should be_nil
-      model.encryptor.should be_nil
-      model.splitter.should be_nil
+      expect(model.compressor).to be_nil
+      expect(model.encryptor).to be_nil
+      expect(model.splitter).to be_nil
 
-      model.exit_status.should be_nil
-      model.exception.should be_nil
+      expect(model.exit_status).to be_nil
+      expect(model.exception).to be_nil
     end
 
     it "should convert trigger to a string" do
-      Backup::Model.new(:foo, :bar).trigger.should == "foo"
+      expect(Backup::Model.new(:foo, :bar).trigger).to eq("foo")
     end
 
     it "should convert label to a string" do
-      Backup::Model.new(:foo, :bar).label.should == "bar"
+      expect(Backup::Model.new(:foo, :bar).label).to eq("bar")
     end
 
     it "should accept and instance_eval a block" do
@@ -119,7 +119,7 @@ describe "Backup::Model" do
         before(&before_block)
       end
       model = Backup::Model.new(:foo, "", &block)
-      model.before.should be(before_block)
+      expect(model.before).to be(before_block)
     end
 
     it "should instance_eval the preconfiguration block" do
@@ -129,11 +129,11 @@ describe "Backup::Model" do
         Backup::Model.preconfigure(&pre_config_block)
         Backup::Model.new("foo", "", &model_config_block)
       end
-      caught.should == :pre_config
+      expect(caught).to eq(:pre_config)
     end
 
     it "should add itself to Model.all" do
-      Backup::Model.all.should == [model]
+      expect(Backup::Model.all).to eq([model])
     end
 
     # see also: spec/support/shared_examples/database.rb
@@ -206,14 +206,14 @@ describe "Backup::Model" do
         using_fake("Archive", Fake::TwoArgs::Base) do
           model.archive("foo") { |a| a.block_arg = :foo }
           model.archive("bar") { |a| a.block_arg = :bar }
-          model.archives.count.should == 2
+          expect(model.archives.count).to eq(2)
           a1, a2 = model.archives
-          a1.arg1.should be(model)
-          a1.arg2.should == "foo"
-          a1.block_arg.should == :foo
-          a2.arg1.should be(model)
-          a2.arg2.should == "bar"
-          a2.block_arg.should == :bar
+          expect(a1.arg1).to be(model)
+          expect(a1.arg2).to eq("foo")
+          expect(a1.block_arg).to eq(:foo)
+          expect(a2.arg1).to be(model)
+          expect(a2.arg2).to eq("bar")
+          expect(a2.block_arg).to eq(:bar)
         end
       end
     end
@@ -224,21 +224,21 @@ describe "Backup::Model" do
           model.database("Base", "foo") { |a| a.block_arg = :foo }
           # second arg is optional
           model.database("Base") { |a| a.block_arg = :bar }
-          model.databases.count.should be(2)
+          expect(model.databases.count).to be(2)
           d1, d2 = model.databases
-          d1.arg1.should be(model)
-          d1.arg2.should == "foo"
-          d1.block_arg.should == :foo
-          d2.arg1.should be(model)
-          d2.arg2.should be_nil
-          d2.block_arg.should == :bar
+          expect(d1.arg1).to be(model)
+          expect(d1.arg2).to eq("foo")
+          expect(d1.block_arg).to eq(:foo)
+          expect(d2.arg1).to be(model)
+          expect(d2.arg2).to be_nil
+          expect(d2.block_arg).to eq(:bar)
         end
       end
 
       it "should accept a nested class name" do
         using_fake("Database", Fake) do
           model.database("TwoArgs::Base")
-          model.databases.first.should be_an_instance_of Fake::TwoArgs::Base
+          expect(model.databases.first).to be_an_instance_of Fake::TwoArgs::Base
         end
       end
     end
@@ -249,21 +249,21 @@ describe "Backup::Model" do
           model.store_with("Base", "foo") { |a| a.block_arg = :foo }
           # second arg is optional
           model.store_with("Base") { |a| a.block_arg = :bar }
-          model.storages.count.should be(2)
+          expect(model.storages.count).to be(2)
           s1, s2 = model.storages
-          s1.arg1.should be(model)
-          s1.arg2.should == "foo"
-          s1.block_arg.should == :foo
-          s2.arg1.should be(model)
-          s2.arg2.should be_nil
-          s2.block_arg.should == :bar
+          expect(s1.arg1).to be(model)
+          expect(s1.arg2).to eq("foo")
+          expect(s1.block_arg).to eq(:foo)
+          expect(s2.arg1).to be(model)
+          expect(s2.arg2).to be_nil
+          expect(s2.block_arg).to eq(:bar)
         end
       end
 
       it "should accept a nested class name" do
         using_fake("Storage", Fake) do
           model.store_with("TwoArgs::Base")
-          model.storages.first.should be_an_instance_of Fake::TwoArgs::Base
+          expect(model.storages.first).to be_an_instance_of Fake::TwoArgs::Base
         end
       end
     end
@@ -274,19 +274,19 @@ describe "Backup::Model" do
           model.sync_with("Base", "foo") { |a| a.block_arg = :foo }
           # second arg is optional
           model.sync_with("Base") { |a| a.block_arg = :bar }
-          model.syncers.count.should be(2)
+          expect(model.syncers.count).to be(2)
           s1, s2 = model.syncers
-          s1.arg1.should == "foo"
-          s1.block_arg.should == :foo
-          s2.arg1.should be_nil
-          s2.block_arg.should == :bar
+          expect(s1.arg1).to eq("foo")
+          expect(s1.block_arg).to eq(:foo)
+          expect(s2.arg1).to be_nil
+          expect(s2.block_arg).to eq(:bar)
         end
       end
 
       it "should accept a nested class name" do
         using_fake("Syncer", Fake) do
           model.sync_with("OneArg::Base")
-          model.syncers.first.should be_an_instance_of Fake::OneArg::Base
+          expect(model.syncers.first).to be_an_instance_of Fake::OneArg::Base
         end
       end
     end
@@ -296,19 +296,19 @@ describe "Backup::Model" do
         using_fake("Notifier", Fake::OneArg) do
           model.notify_by("Base") { |a| a.block_arg = :foo }
           model.notify_by("Base") { |a| a.block_arg = :bar }
-          model.notifiers.count.should be(2)
+          expect(model.notifiers.count).to be(2)
           n1, n2 = model.notifiers
-          n1.arg1.should be(model)
-          n1.block_arg.should == :foo
-          n2.arg1.should be(model)
-          n2.block_arg.should == :bar
+          expect(n1.arg1).to be(model)
+          expect(n1.block_arg).to eq(:foo)
+          expect(n2.arg1).to be(model)
+          expect(n2.block_arg).to eq(:bar)
         end
       end
 
       it "should accept a nested class name" do
         using_fake("Notifier", Fake) do
           model.notify_by("OneArg::Base")
-          model.notifiers.first.should be_an_instance_of Fake::OneArg::Base
+          expect(model.notifiers.first).to be_an_instance_of Fake::OneArg::Base
         end
       end
     end
@@ -317,15 +317,15 @@ describe "Backup::Model" do
       it "should add an encryptor" do
         using_fake("Encryptor", Fake::NoArg) do
           model.encrypt_with("Base") { |a| a.block_arg = :foo }
-          model.encryptor.should be_an_instance_of Fake::NoArg::Base
-          model.encryptor.block_arg.should == :foo
+          expect(model.encryptor).to be_an_instance_of Fake::NoArg::Base
+          expect(model.encryptor.block_arg).to eq(:foo)
         end
       end
 
       it "should accept a nested class name" do
         using_fake("Encryptor", Fake) do
           model.encrypt_with("NoArg::Base")
-          model.encryptor.should be_an_instance_of Fake::NoArg::Base
+          expect(model.encryptor).to be_an_instance_of Fake::NoArg::Base
         end
       end
     end
@@ -334,15 +334,15 @@ describe "Backup::Model" do
       it "should add a compressor" do
         using_fake("Compressor", Fake::NoArg) do
           model.compress_with("Base") { |a| a.block_arg = :foo }
-          model.compressor.should be_an_instance_of Fake::NoArg::Base
-          model.compressor.block_arg.should == :foo
+          expect(model.compressor).to be_an_instance_of Fake::NoArg::Base
+          expect(model.compressor.block_arg).to eq(:foo)
         end
       end
 
       it "should accept a nested class name" do
         using_fake("Compressor", Fake) do
           model.compress_with("NoArg::Base")
-          model.compressor.should be_an_instance_of Fake::NoArg::Base
+          expect(model.compressor).to be_an_instance_of Fake::NoArg::Base
         end
       end
     end
@@ -351,10 +351,10 @@ describe "Backup::Model" do
       it "should add a splitter" do
         using_fake("Splitter", Fake::ThreeArgs::Base) do
           model.split_into_chunks_of(123, 2)
-          model.splitter.should be_an_instance_of Fake::ThreeArgs::Base
-          model.splitter.arg1.should be(model)
-          model.splitter.arg2.should == 123
-          model.splitter.arg3.should == 2
+          expect(model.splitter).to be_an_instance_of Fake::ThreeArgs::Base
+          expect(model.splitter.arg1).to be(model)
+          expect(model.splitter.arg2).to eq(123)
+          expect(model.splitter.arg3).to eq(2)
         end
       end
 
@@ -362,8 +362,8 @@ describe "Backup::Model" do
         expect do
           model.split_into_chunks_of("345", 2)
         end.to raise_error { |err|
-          err.should be_an_instance_of Backup::Model::Error
-          err.message.should match(/must be Integers/)
+          expect(err).to be_an_instance_of Backup::Model::Error
+          expect(err.message).to match(/must be Integers/)
         }
       end
 
@@ -371,8 +371,8 @@ describe "Backup::Model" do
         expect do
           model.split_into_chunks_of(345, "2")
         end.to raise_error { |err|
-          err.should be_an_instance_of Backup::Model::Error
-          err.message.should match(/must be Integers/)
+          expect(err).to be_an_instance_of Backup::Model::Error
+          expect(err.message).to match(/must be Integers/)
         }
       end
     end
@@ -394,10 +394,10 @@ describe "Backup::Model" do
       model.perform!
       Timecop.return
 
-      model.started_at.should == started_at
-      model.time.should == time
-      model.package.time.should == time
-      model.finished_at.should == finished_at
+      expect(model.started_at).to eq(started_at)
+      expect(model.time).to eq(time)
+      expect(model.package.time).to eq(time)
+      expect(model.finished_at).to eq(finished_at)
     end
 
     it "performs all procedures" do
@@ -417,16 +417,16 @@ describe "Backup::Model" do
 
       model.perform!
 
-      model.exception.should be_nil
-      model.exit_status.should be 0
+      expect(model.exception).to be_nil
+      expect(model.exit_status).to be 0
     end
 
     describe "exit status" do
       it "sets exit_status to 0 when successful" do
         model.perform!
 
-        model.exception.should be_nil
-        model.exit_status.should be 0
+        expect(model.exception).to be_nil
+        expect(model.exit_status).to be 0
       end
 
       it "sets exit_status to 1 when warnings are logged" do
@@ -434,8 +434,8 @@ describe "Backup::Model" do
 
         model.perform!
 
-        model.exception.should be_nil
-        model.exit_status.should be 1
+        expect(model.exception).to be_nil
+        expect(model.exit_status).to be 1
       end
 
       it "sets exit_status 2 for a StandardError" do
@@ -444,8 +444,8 @@ describe "Backup::Model" do
 
         model.perform!
 
-        model.exception.should == err
-        model.exit_status.should be 2
+        expect(model.exception).to eq(err)
+        expect(model.exit_status).to be 2
       end
 
       it "sets exit_status 3 for an Exception" do
@@ -454,8 +454,8 @@ describe "Backup::Model" do
 
         model.perform!
 
-        model.exception.should == err
-        model.exit_status.should be 3
+        expect(model.exception).to eq(err)
+        expect(model.exit_status).to be 3
       end
     end # context 'when errors occur'
 
@@ -470,9 +470,9 @@ describe "Backup::Model" do
 
         model.perform!
 
-        before_called.should be_true
-        procedure_called.should be_true
-        after_called_with.should be 0
+        expect(before_called).to be_truthy
+        expect(procedure_called).to be_truthy
+        expect(after_called_with).to be 0
       end
 
       specify "before hook may log warnings" do
@@ -484,37 +484,37 @@ describe "Backup::Model" do
 
         model.perform!
 
-        model.exit_status.should be 1
-        procedure_called.should be_true
-        after_called_with.should be 1
+        expect(model.exit_status).to be 1
+        expect(procedure_called).to be_truthy
+        expect(after_called_with).to be 1
       end
 
       specify "before hook may abort model with non-fatal exception" do
-        procedure_called = nil
-        after_called = nil
+        procedure_called = false
+        after_called = false
         model.before { raise StandardError }
         model.stubs(:procedures).returns([-> { procedure_called = true }])
         model.after { after_called = true }
 
         model.perform!
 
-        model.exit_status.should be 2
-        procedure_called.should be_false
-        after_called.should be_false
+        expect(model.exit_status).to be 2
+        expect(procedure_called).to eq(false)
+        expect(after_called).to eq(false)
       end
 
       specify "before hook may abort backup with fatal exception" do
-        procedure_called = nil
-        after_called = nil
+        procedure_called = false
+        after_called = false
         model.before { raise Exception }
         model.stubs(:procedures).returns([-> { procedure_called = true }])
         model.after { after_called = true }
 
         model.perform!
 
-        model.exit_status.should be 3
-        procedure_called.should be_false
-        after_called.should be_false
+        expect(model.exit_status).to be 3
+        expect(procedure_called).to eq(false)
+        expect(after_called).to eq(false)
       end
 
       specify "after hook is called when procedure raises non-fatal exception" do
@@ -524,8 +524,8 @@ describe "Backup::Model" do
 
         model.perform!
 
-        model.exit_status.should be 2
-        after_called_with.should be 2
+        expect(model.exit_status).to be 2
+        expect(after_called_with).to be 2
       end
 
       specify "after hook is called when procedure raises fatal exception" do
@@ -535,8 +535,8 @@ describe "Backup::Model" do
 
         model.perform!
 
-        model.exit_status.should be 3
-        after_called_with.should be 3
+        expect(model.exit_status).to be 3
+        expect(after_called_with).to be 3
       end
 
       specify "after hook may log warnings" do
@@ -548,8 +548,8 @@ describe "Backup::Model" do
 
         model.perform!
 
-        model.exit_status.should be 1
-        after_called_with.should be 0
+        expect(model.exit_status).to be 1
+        expect(after_called_with).to be 0
       end
 
       specify "after hook warnings will not decrease exit_status" do
@@ -562,9 +562,9 @@ describe "Backup::Model" do
 
         model.perform!
 
-        model.exit_status.should be 2
-        after_called_with.should be 2
-        Backup::Logger.has_warnings?.should be_true
+        expect(model.exit_status).to be 2
+        expect(after_called_with).to be 2
+        expect(Backup::Logger.has_warnings?).to be_truthy
       end
 
       specify "after hook may fail model with non-fatal exceptions" do
@@ -577,8 +577,8 @@ describe "Backup::Model" do
 
         model.perform!
 
-        model.exit_status.should be 2
-        after_called_with.should be 1
+        expect(model.exit_status).to be 2
+        expect(after_called_with).to be 1
       end
 
       specify "after hook exception will not decrease exit_status" do
@@ -591,8 +591,8 @@ describe "Backup::Model" do
 
         model.perform!
 
-        model.exit_status.should be 3
-        after_called_with.should be 3
+        expect(model.exit_status).to be 3
+        expect(after_called_with).to be 3
       end
 
       specify "after hook may abort backup with fatal exceptions" do
@@ -605,17 +605,17 @@ describe "Backup::Model" do
 
         model.perform!
 
-        model.exit_status.should be 3
-        after_called_with.should be 2
+        expect(model.exit_status).to be 3
+        expect(after_called_with).to be 2
       end
 
       specify "hooks may be overridden" do
         block_a = proc {}
         block_b = proc {}
         model.before(&block_a)
-        model.before.should be(block_a)
+        expect(model.before).to be(block_a)
         model.before(&block_b)
-        model.before.should be(block_b)
+        expect(model.before).to be(block_b)
       end
     end # describe 'hooks'
   end # describe '#perform!'
@@ -634,14 +634,14 @@ describe "Backup::Model" do
           212_460  => "59:01:00", 212_461  => "59:01:01", 212_519  => "59:01:59",
           215_940  => "59:59:00", 215_941  => "59:59:01", 215_999  => "59:59:59" }.each do |duration, expected|
           model.stubs(:started_at).returns(Time.now - duration)
-          model.duration.should == expected
+          expect(model.duration).to eq(expected)
         end
       end
     end
 
     it "returns nil if job has not finished" do
       model.stubs(:started_at).returns(Time.now)
-      model.duration.should be_nil
+      expect(model.duration).to be_nil
     end
   end # describe '#duration'
 
@@ -655,7 +655,7 @@ describe "Backup::Model" do
 
     context "when no databases or archives are configured" do
       it "returns an empty array" do
-        model.send(:procedures).should == []
+        expect(model.send(:procedures)).to eq([])
       end
     end
 
@@ -666,12 +666,12 @@ describe "Backup::Model" do
 
       it "returns all procedures" do
         one, two, three, four, five, six = model.send(:procedures)
-        one.call.should == :prepare
-        two.should == [:database]
-        three.should == []
-        four.call.should == :package
-        five.call.should == [:storage]
-        six.call.should == :clean
+        expect(one.call).to eq(:prepare)
+        expect(two).to eq([:database])
+        expect(three).to eq([])
+        expect(four.call).to eq(:package)
+        expect(five.call).to eq([:storage])
+        expect(six.call).to eq(:clean)
       end
     end
 
@@ -682,12 +682,12 @@ describe "Backup::Model" do
 
       it "returns all procedures" do
         one, two, three, four, five, six = model.send(:procedures)
-        one.call.should == :prepare
-        two.should == []
-        three.should == [:archive]
-        four.call.should == :package
-        five.call.should == [:storage]
-        six.call.should == :clean
+        expect(one.call).to eq(:prepare)
+        expect(two).to eq([])
+        expect(three).to eq([:archive])
+        expect(four.call).to eq(:package)
+        expect(five.call).to eq([:storage])
+        expect(six.call).to eq(:clean)
       end
     end
   end # describe '#procedures'
@@ -786,44 +786,32 @@ describe "Backup::Model" do
 
     context "when name is given as a string" do
       it "should return the constant for the given scope and name" do
-        model.send(
-          :get_class_from_scope,
-          Fake,
-          "TestScope"
-        ).should == Fake::TestScope
+        result = model.send(:get_class_from_scope, Fake, "TestScope")
+        expect(result).to eq(Fake::TestScope)
       end
 
       it "should accept a nested class name" do
-        model.send(
-          :get_class_from_scope,
-          Fake,
-          "TestScope::TestKlass"
-        ).should == Fake::TestScope::TestKlass
+        result = model.send(:get_class_from_scope, Fake, "TestScope::TestKlass")
+        expect(result).to eq(Fake::TestScope::TestKlass)
       end
     end
 
     context "when name is given as a module" do
       it "should return the constant for the given scope and name" do
-        model.send(
-          :get_class_from_scope,
-          Fake,
-          TestScope
-        ).should == Fake::TestScope
+        result = model.send(:get_class_from_scope, Fake, TestScope)
+        expect(result).to eq(Fake::TestScope)
       end
 
       it "should accept a nested class name" do
-        model.send(
-          :get_class_from_scope,
-          Fake,
-          TestScope::TestKlass
-        ).should == Fake::TestScope::TestKlass
+        result = model.send(:get_class_from_scope, Fake, TestScope::TestKlass)
+        expect(result).to eq(Fake::TestScope::TestKlass)
       end
     end
 
     context "when name is given as a module defined under Backup::Config::DSL" do
       # this is necessary since the specs in spec/config/dsl_spec.rb
       # remove all the constants from Backup::Config::DSL as part of those tests.
-      before(:all) do
+      before(:context) do
         class Backup::Config::DSL
           module TestScope
             module TestKlass; end
@@ -832,19 +820,21 @@ describe "Backup::Model" do
       end
 
       it "should return the constant for the given scope and name" do
-        model.send(
+        result = model.send(
           :get_class_from_scope,
           Fake,
           Backup::Config::DSL::TestScope
-        ).should == Fake::TestScope
+        )
+        expect(result).to eq(Fake::TestScope)
       end
 
       it "should accept a nested class name" do
-        model.send(
+        result = model.send(
           :get_class_from_scope,
           Fake,
           Backup::Config::DSL::TestScope::TestKlass
-        ).should == Fake::TestScope::TestKlass
+        )
+        expect(result).to eq(Fake::TestScope::TestKlass)
       end
     end
   end # describe '#get_class_from_scope'
@@ -853,7 +843,7 @@ describe "Backup::Model" do
     context "when the model completed successfully without warnings" do
       it "sets exit status to 0" do
         model.send(:set_exit_status)
-        model.exit_status.should be(0)
+        expect(model.exit_status).to be(0)
       end
     end
 
@@ -862,7 +852,7 @@ describe "Backup::Model" do
 
       it "sets exit status to 1" do
         model.send(:set_exit_status)
-        model.exit_status.should be(1)
+        expect(model.exit_status).to be(1)
       end
     end
 
@@ -871,7 +861,7 @@ describe "Backup::Model" do
 
       it "sets exit status to 2" do
         model.send(:set_exit_status)
-        model.exit_status.should be(2)
+        expect(model.exit_status).to be(2)
       end
     end
 
@@ -880,7 +870,7 @@ describe "Backup::Model" do
 
       it "sets exit status to 3" do
         model.send(:set_exit_status)
-        model.exit_status.should be(3)
+        expect(model.exit_status).to be(3)
       end
     end
   end # describe '#set_exit_status'
@@ -934,8 +924,8 @@ describe "Backup::Model" do
 
         it "logs that the backup failed with a non-fatal exception" do
           Backup::Model::Error.expects(:wrap).in_sequence(s).with do |err, msg|
-            err.message.should == "non-fatal error"
-            msg.should match(/Backup for test label \(test_trigger\) Failed!/)
+            expect(err.message).to eq("non-fatal error")
+            expect(msg).to match(/Backup for test label \(test_trigger\) Failed!/)
           end.returns(error_a)
           Backup::Logger.expects(:error).in_sequence(s).with(error_a)
           Backup::Logger.expects(:error).in_sequence(s).with(
@@ -959,8 +949,8 @@ describe "Backup::Model" do
 
         it "logs that the backup failed with a fatal exception" do
           Backup::Model::FatalError.expects(:wrap).in_sequence(s).with do |err, msg|
-            err.message.should == "fatal error"
-            msg.should match(/Backup for test label \(test_trigger\) Failed!/)
+            expect(err.message).to eq("fatal error")
+            expect(msg).to match(/Backup for test label \(test_trigger\) Failed!/)
           end.returns(error_a)
           Backup::Logger.expects(:error).in_sequence(s).with(error_a)
           Backup::Logger.expects(:error).in_sequence(s).with(

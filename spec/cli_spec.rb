@@ -33,10 +33,10 @@ describe "Backup::CLI" do
           cli.start
         end.not_to raise_error
 
-        logger_options.console.quiet.should be(false)
-        logger_options.logfile.enabled.should be_true
-        logger_options.logfile.log_path.should == ""
-        logger_options.syslog.enabled.should be(false)
+        expect(logger_options.console.quiet).to be(false)
+        expect(logger_options.logfile.enabled).to eq(true)
+        expect(logger_options.logfile.log_path).to eq("")
+        expect(logger_options.syslog.enabled).to be(false)
       end
 
       it "configures only the syslog" do
@@ -48,10 +48,10 @@ describe "Backup::CLI" do
           cli.start
         end.not_to raise_error
 
-        logger_options.console.quiet.should be_true
-        logger_options.logfile.enabled.should be_nil
-        logger_options.logfile.log_path.should == ""
-        logger_options.syslog.enabled.should be_true
+        expect(logger_options.console.quiet).to be_truthy
+        expect(logger_options.logfile.enabled).to be_nil
+        expect(logger_options.logfile.log_path).to eq("")
+        expect(logger_options.syslog.enabled).to be_truthy
       end
 
       it "forces console logging" do
@@ -62,10 +62,10 @@ describe "Backup::CLI" do
           cli.start
         end.not_to raise_error
 
-        logger_options.console.quiet.should be_nil
-        logger_options.logfile.enabled.should be_true
-        logger_options.logfile.log_path.should == ""
-        logger_options.syslog.enabled.should be(false)
+        expect(logger_options.console.quiet).to be_nil
+        expect(logger_options.logfile.enabled).to eq(true)
+        expect(logger_options.logfile.log_path).to eq("")
+        expect(logger_options.syslog.enabled).to be(false)
       end
 
       it "forces the logfile and syslog to be disabled" do
@@ -77,10 +77,10 @@ describe "Backup::CLI" do
           cli.start
         end.not_to raise_error
 
-        logger_options.console.quiet.should be(false)
-        logger_options.logfile.enabled.should be_nil
-        logger_options.logfile.log_path.should == ""
-        logger_options.syslog.enabled.should be_nil
+        expect(logger_options.console.quiet).to be(false)
+        expect(logger_options.logfile.enabled).to be_nil
+        expect(logger_options.logfile.log_path).to eq("")
+        expect(logger_options.syslog.enabled).to be_nil
       end
 
       it "configures the log_path" do
@@ -92,10 +92,10 @@ describe "Backup::CLI" do
           cli.start
         end.not_to raise_error
 
-        logger_options.console.quiet.should be(false)
-        logger_options.logfile.enabled.should be_true
-        logger_options.logfile.log_path.should == "my/log/path"
-        logger_options.syslog.enabled.should be(false)
+        expect(logger_options.console.quiet).to be(false)
+        expect(logger_options.logfile.enabled).to eq(true)
+        expect(logger_options.logfile.log_path).to eq("my/log/path")
+        expect(logger_options.syslog.enabled).to be(false)
       end
     end # describe 'setting logger options'
 
@@ -201,10 +201,10 @@ describe "Backup::CLI" do
         it "aborts with status code 3 and logs messages to the console only" do
           expectations = [
             proc do |err|
-              err.should be_a(Backup::CLI::Error)
-              err.message.should match(/config load error/)
+              expect(err).to be_a(Backup::CLI::Error)
+              expect(err.message).to match(/config load error/)
             end,
-            proc { |err| err.should be_a(String) }
+            proc { |err| expect(err).to be_a(String) }
           ]
           Backup::Logger.expects(:error).in_sequence(s).times(2).with do |err|
             expectation = expectations.shift
@@ -218,7 +218,7 @@ describe "Backup::CLI" do
               ["perform", "-t", "test_trigger_a"]
             )
             cli.start
-          end.to raise_error(SystemExit) { |exit| exit.status.should be(3) }
+          end.to raise_error(SystemExit) { |exit| expect(exit.status).to be(3) }
         end
       end
 
@@ -229,8 +229,8 @@ describe "Backup::CLI" do
 
         it "aborts and logs messages to the console only" do
           Backup::Logger.expects(:error).in_sequence(s).with do |err|
-            err.should be_a(Backup::CLI::Error)
-            err.message.should match(
+            expect(err).to be_a(Backup::CLI::Error)
+            expect(err.message).to match(
               /No Models found for trigger\(s\) 'test_trigger_foo'/
             )
           end
@@ -242,7 +242,7 @@ describe "Backup::CLI" do
               ["perform", "-t", "test_trigger_foo"]
             )
             cli.start
-          end.to raise_error(SystemExit) { |exit| exit.status.should be(3) }
+          end.to raise_error(SystemExit) { |exit| expect(exit.status).to be(3) }
         end
       end
     end # describe 'failure to prepare for backups'
@@ -299,7 +299,7 @@ describe "Backup::CLI" do
             ["perform", "-t", "test_trigger_a,test_trigger_b"]
           )
           cli.start
-        end.to raise_error(SystemExit) { |err| err.status.should be(1) }
+        end.to raise_error(SystemExit) { |err| expect(err.status).to be(1) }
       end
 
       specify "when a job has non-fatal errors" do
@@ -321,7 +321,7 @@ describe "Backup::CLI" do
             ["perform", "-t", "test_trigger_a,test_trigger_b"]
           )
           cli.start
-        end.to raise_error(SystemExit) { |err| err.status.should be(2) }
+        end.to raise_error(SystemExit) { |err| expect(err.status).to be(2) }
       end
 
       specify "when a job has fatal errors" do
@@ -340,7 +340,7 @@ describe "Backup::CLI" do
             ["perform", "-t", "test_trigger_a,test_trigger_b"]
           )
           cli.start
-        end.to raise_error(SystemExit) { |err| err.status.should be(3) }
+        end.to raise_error(SystemExit) { |err| expect(err.status).to be(3) }
       end
 
       specify "when jobs have errors and warnings" do
@@ -362,7 +362,7 @@ describe "Backup::CLI" do
             ["perform", "-t", "test_trigger_a,test_trigger_b"]
           )
           cli.start
-        end.to raise_error(SystemExit) { |err| err.status.should be(2) }
+        end.to raise_error(SystemExit) { |err| expect(err.status).to be(2) }
       end
     end # describe 'exit codes and notifications'
 
@@ -467,11 +467,11 @@ describe "Backup::CLI" do
               cli.start
             end
 
-            err.should be_empty
-            out.should == "Generated configuration file: '#{config_file}'.\n" \
-                          "Generated model file: '#{model_file}'.\n"
-            File.exist?(model_file).should be_true
-            File.exist?(config_file).should be_true
+            expect(err).to be_empty
+            expect(out).to eq("Generated configuration file: '#{config_file}'.\n" \
+                          "Generated model file: '#{model_file}'.\n")
+            expect(File.exist?(model_file)).to eq(true)
+            expect(File.exist?(config_file)).to eq(true)
           end
         end
       end
@@ -497,9 +497,9 @@ describe "Backup::CLI" do
               cli.start
             end
 
-            err.should be_empty
-            out.should == "Generated model file: '#{model_file}'.\n"
-            File.exist?(model_file).should be_true
+            expect(err).to be_empty
+            expect(out).to eq("Generated model file: '#{model_file}'.\n")
+            expect(File.exist?(model_file)).to eq(true)
           end
         end
       end
@@ -524,9 +524,9 @@ describe "Backup::CLI" do
               cli.start
             end
 
-            err.should include("Do you want to overwrite?")
-            out.should == "Generated configuration file: '#{config_file}'.\n"
-            File.exist?(config_file).should be_true
+            expect(err).to include("Do you want to overwrite?")
+            expect(out).to eq("Generated configuration file: '#{config_file}'.\n")
+            expect(File.exist?(config_file)).to eq(true)
           end
         end
       end
@@ -544,11 +544,11 @@ describe "Backup::CLI" do
             cli.start
           end
 
-          err.should be_empty
-          out.should == "Generated configuration file: '#{config_file}'.\n" \
-                        "Generated model file: '#{model_file}'.\n"
-          File.exist?(model_file).should be_true
-          File.exist?(config_file).should be_true
+          expect(err).to be_empty
+          expect(out).to eq("Generated configuration file: '#{config_file}'.\n" \
+                        "Generated model file: '#{model_file}'.\n")
+          expect(File.exist?(model_file)).to eq(true)
+          expect(File.exist?(config_file)).to eq(true)
         end
       end
     end
@@ -596,9 +596,9 @@ describe "Backup::CLI" do
             cli.start
           end
 
-          err.should be_empty
-          out.should == "Generated configuration file: '#{config_file}'.\n"
-          File.exist?(config_file).should be_true
+          expect(err).to be_empty
+          expect(out).to eq("Generated configuration file: '#{config_file}'.\n")
+          expect(File.exist?(config_file)).to eq(true)
         end
       end
     end
@@ -614,9 +614,9 @@ describe "Backup::CLI" do
             cli.start
           end
 
-          err.should be_empty
-          out.should == "Generated configuration file: '#{config_file}'.\n"
-          File.exist?(config_file).should be_true
+          expect(err).to be_empty
+          expect(out).to eq("Generated configuration file: '#{config_file}'.\n")
+          expect(File.exist?(config_file)).to eq(true)
         end
       end
     end
@@ -636,8 +636,8 @@ describe "Backup::CLI" do
             cli.start
           end
 
-          err.should include("Do you want to overwrite?")
-          out.should be_empty
+          expect(err).to include("Do you want to overwrite?")
+          expect(out).to be_empty
         end
       end
     end
@@ -649,8 +649,8 @@ describe "Backup::CLI" do
       out, err = capture_io do
         cli.start
       end
-      err.should be_empty
-      out.should == "Backup #{Backup::VERSION}\n"
+      expect(err).to be_empty
+      expect(out).to eq("Backup #{Backup::VERSION}\n")
     end
 
     specify "using `backup -v`" do
@@ -658,8 +658,8 @@ describe "Backup::CLI" do
       out, err = capture_io do
         cli.start
       end
-      err.should be_empty
-      out.should == "Backup #{Backup::VERSION}\n"
+      expect(err).to be_empty
+      expect(out).to eq("Backup #{Backup::VERSION}\n")
     end
   end
 
@@ -674,7 +674,7 @@ describe "Backup::CLI" do
         )
         $stdin.expects(:gets).returns("yes\n")
 
-        expect(helpers.overwrite?("a/path")).to be_true
+        expect(helpers.overwrite?("a/path")).to be_truthy
       end
 
       it "prompts user and accepts cancelation" do
@@ -684,13 +684,13 @@ describe "Backup::CLI" do
         )
         $stdin.expects(:gets).returns("no\n")
 
-        expect(helpers.overwrite?("a/path")).to be_false
+        expect(helpers.overwrite?("a/path")).to be_falsy
       end
 
       it "returns true if path does not exist" do
         File.expects(:exist?).with("a/path").returns(false)
         $stderr.expects(:print).never
-        expect(helpers.overwrite?("a/path")).to be_true
+        expect(helpers.overwrite?("a/path")).to eq(true)
       end
     end
   end # describe 'Helpers'

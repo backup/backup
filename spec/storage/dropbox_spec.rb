@@ -66,12 +66,12 @@ module Backup
         end
 
         it "uses the cached session to create the client" do
-          storage.send(:connection).should be(client)
+          expect(storage.send(:connection)).to be(client)
         end
 
         it "returns an already existing client" do
-          storage.send(:connection).should be(client)
-          storage.send(:connection).should be(client)
+          expect(storage.send(:connection)).to be(client)
+          expect(storage.send(:connection)).to be(client)
         end
       end
 
@@ -84,12 +84,12 @@ module Backup
         end
 
         it "creates a new session and returns the client" do
-          storage.send(:connection).should be(client)
+          expect(storage.send(:connection)).to be(client)
         end
 
         it "returns an already existing client" do
-          storage.send(:connection).should be(client)
-          storage.send(:connection).should be(client)
+          expect(storage.send(:connection)).to be(client)
+          expect(storage.send(:connection)).to be(client)
         end
       end
 
@@ -126,7 +126,7 @@ module Backup
         DropboxSession.expects(:deserialize).with("yaml_data").returns(session)
         Backup::Logger.expects(:info).with("Session data loaded from cache!")
 
-        storage.send(:cached_session).should be(session)
+        expect(storage.send(:cached_session)).to be(session)
       end
 
       it "returns false when no cached session file exists" do
@@ -451,7 +451,7 @@ module Backup
             "storage/dropbox/cache_file_written.erb"
           )
 
-          storage.send(:create_write_and_return_new_session!).should be(session)
+          expect(storage.send(:create_write_and_return_new_session!)).to be(session)
         end
       end
 

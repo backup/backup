@@ -30,7 +30,6 @@ module Backup
   end
 end
 
-require "rspec/autorun"
 RSpec.configure do |config|
   ##
   # Use Mocha to mock with RSpec
@@ -42,7 +41,6 @@ RSpec.configure do |config|
 
   config.filter_run focus: true
   config.run_all_when_everything_filtered = true
-  config.treat_symbols_as_metadata_keys_with_true_values = true
 
   config.before(:suite) do
     # Initializes SandboxFileUtils so the first call to deactivate!(:noop)
@@ -50,7 +48,7 @@ RSpec.configure do |config|
     SandboxFileUtils.activate!
   end
 
-  config.before(:each) do
+  config.before(:example) do
     # ::FileUtils will always be either SandboxFileUtils or FileUtils::NoWrite.
     SandboxFileUtils.deactivate!(:noop)
 

@@ -92,12 +92,12 @@ module Backup
 
         it "ensures temporary password file removal" do
           syncer.expects(:write_password_file!).in_sequence(s)
-          syncer.expects(:run).in_sequence(s).raises("error")
+          syncer.expects(:run).in_sequence(s).raises(VerySpecificError)
           syncer.expects(:remove_password_file!).in_sequence(s)
 
           expect do
             syncer.perform!
-          end.to raise_error
+          end.to raise_error(VerySpecificError)
         end
       end # describe 'password handling'
 

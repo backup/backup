@@ -35,7 +35,7 @@ module Backup
         expect(db.prepare_options).to be_nil
         expect(db.sudo_user).to be_nil
         expect(db.backup_engine).to eq :mysqldump
-        expect(db.prepare_backup).to be_true
+        expect(db.prepare_backup).to eq(true)
       end
 
       it "configures the database" do
@@ -68,8 +68,8 @@ module Backup
         expect(db.prepare_options).to eq "my_prepare_options"
         expect(db.sudo_user).to eq "my_sudo_user"
         expect(db.backup_engine).to eq "my_backup_engine"
-        expect(db.verbose).to be_false
-        expect(db.prepare_backup).to be_false
+        expect(db.verbose).to be_falsy
+        expect(db.prepare_backup).to eq(false)
       end
     end # describe '#initialize'
 

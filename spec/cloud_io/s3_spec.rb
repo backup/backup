@@ -733,15 +733,16 @@ module Backup
       it "returns empty headers by default" do
         cloud_io.stubs(:encryption).returns(nil)
         cloud_io.stubs(:storage_class).returns(nil)
-        cloud_io.send(:headers).should == {}
+        expect(cloud_io.send(:headers)).to eq({})
       end
 
       it "returns headers for server-side encryption" do
         cloud_io.stubs(:storage_class).returns(nil)
         ["aes256", :aes256].each do |arg|
           cloud_io.stubs(:encryption).returns(arg)
-          cloud_io.send(:headers).should ==
-            { "x-amz-server-side-encryption" => "AES256" }
+          expect(cloud_io.send(:headers)).to eq(
+            "x-amz-server-side-encryption" => "AES256"
+          )
         end
       end
 
@@ -749,23 +750,25 @@ module Backup
         cloud_io.stubs(:encryption).returns(nil)
         ["reduced_redundancy", :reduced_redundancy].each do |arg|
           cloud_io.stubs(:storage_class).returns(arg)
-          cloud_io.send(:headers).should ==
-            { "x-amz-storage-class" => "REDUCED_REDUNDANCY" }
+          expect(cloud_io.send(:headers)).to eq(
+            "x-amz-storage-class" => "REDUCED_REDUNDANCY"
+          )
         end
       end
 
       it "returns headers for both" do
         cloud_io.stubs(:encryption).returns(:aes256)
         cloud_io.stubs(:storage_class).returns(:reduced_redundancy)
-        cloud_io.send(:headers).should ==
-          { "x-amz-server-side-encryption" => "AES256",
-            "x-amz-storage-class" => "REDUCED_REDUNDANCY" }
+        expect(cloud_io.send(:headers)).to eq(
+          "x-amz-server-side-encryption" => "AES256",
+            "x-amz-storage-class" => "REDUCED_REDUNDANCY"
+        )
       end
 
       it "returns empty headers for empty values" do
         cloud_io.stubs(:encryption).returns("")
         cloud_io.stubs(:storage_class).returns("")
-        cloud_io.send(:headers).should == {}
+        expect(cloud_io.send(:headers)).to eq({})
       end
     end # describe '#headers
 

@@ -63,7 +63,7 @@ module Backup
         end
       end
       let(:client) { mock }
-      let(:push_to_team_inbox) { mock }
+      let(:push_to_team_inbox) { double }
       let(:message) { "[Backup::%s] test label (test_trigger)" }
 
       context "when status is :success" do

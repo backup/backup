@@ -8,13 +8,13 @@ describe Backup::Compressor::Gzip do
   end
 
   it "should be a subclass of Compressor::Base" do
-    Backup::Compressor::Gzip
-      .superclass.should == Backup::Compressor::Base
+    expect(Backup::Compressor::Gzip
+      .superclass).to eq(Backup::Compressor::Base)
   end
 
   it "should be extended by Utilities::Helpers" do
-    Backup::Compressor::Gzip.instance_eval("class << self; self; end")
-      .should include(Backup::Utilities::Helpers)
+    expect(Backup::Compressor::Gzip.instance_eval("class << self; self; end"))
+      .to include(Backup::Utilities::Helpers)
   end
 
   describe ".has_rsyncable?" do
@@ -30,8 +30,8 @@ describe Backup::Compressor::Gzip do
       end
 
       it "returns true and caches the result" do
-        Backup::Compressor::Gzip.has_rsyncable?.should be(true)
-        Backup::Compressor::Gzip.has_rsyncable?.should be(true)
+        expect(Backup::Compressor::Gzip.has_rsyncable?).to be(true)
+        expect(Backup::Compressor::Gzip.has_rsyncable?).to be(true)
       end
     end
 
@@ -43,8 +43,8 @@ describe Backup::Compressor::Gzip do
       end
 
       it "returns false and caches the result" do
-        Backup::Compressor::Gzip.has_rsyncable?.should be(false)
-        Backup::Compressor::Gzip.has_rsyncable?.should be(false)
+        expect(Backup::Compressor::Gzip.has_rsyncable?).to be(false)
+        expect(Backup::Compressor::Gzip.has_rsyncable?).to be(false)
       end
     end
   end
@@ -56,12 +56,12 @@ describe Backup::Compressor::Gzip do
 
     context "when no pre-configured defaults have been set" do
       it "should use default values" do
-        compressor.level.should be(false)
-        compressor.rsyncable.should be(false)
+        expect(compressor.level).to be(false)
+        expect(compressor.rsyncable).to be(false)
 
         compressor.compress_with do |cmd, ext|
-          cmd.should == "gzip"
-          ext.should == ".gz"
+          expect(cmd).to eq("gzip")
+          expect(ext).to eq(".gz")
         end
       end
 
@@ -70,12 +70,12 @@ describe Backup::Compressor::Gzip do
           c.level = 5
           c.rsyncable = true
         end
-        compressor.level.should == 5
-        compressor.rsyncable.should be(true)
+        expect(compressor.level).to eq(5)
+        expect(compressor.rsyncable).to be(true)
 
         compressor.compress_with do |cmd, ext|
-          cmd.should == "gzip -5 --rsyncable"
-          ext.should == ".gz"
+          expect(cmd).to eq("gzip -5 --rsyncable")
+          expect(ext).to eq(".gz")
         end
       end
     end # context 'when no pre-configured defaults have been set'
@@ -89,12 +89,12 @@ describe Backup::Compressor::Gzip do
       end
 
       it "should use pre-configured defaults" do
-        compressor.level.should == 7
-        compressor.rsyncable.should be(true)
+        expect(compressor.level).to eq(7)
+        expect(compressor.rsyncable).to be(true)
 
         compressor.compress_with do |cmd, ext|
-          cmd.should == "gzip -7 --rsyncable"
-          ext.should == ".gz"
+          expect(cmd).to eq("gzip -7 --rsyncable")
+          expect(ext).to eq(".gz")
         end
       end
 
@@ -103,12 +103,12 @@ describe Backup::Compressor::Gzip do
           c.level = 6
           c.rsyncable = false
         end
-        compressor.level.should == 6
-        compressor.rsyncable.should be(false)
+        expect(compressor.level).to eq(6)
+        expect(compressor.rsyncable).to be(false)
 
         compressor.compress_with do |cmd, ext|
-          cmd.should == "gzip -6"
-          ext.should == ".gz"
+          expect(cmd).to eq("gzip -6")
+          expect(ext).to eq(".gz")
         end
       end
     end # context 'when pre-configured defaults have been set'
@@ -117,20 +117,20 @@ describe Backup::Compressor::Gzip do
       Backup::Compressor::Gzip.instance_variable_set(:@has_rsyncable, false)
 
       Backup::Logger.expects(:warn).with do |err|
-        err.should be_a(Backup::Compressor::Gzip::Error)
-        err.message.should match(/'rsyncable' option ignored/)
+        expect(err).to be_a(Backup::Compressor::Gzip::Error)
+        expect(err.message).to match(/'rsyncable' option ignored/)
       end
 
       compressor = Backup::Compressor::Gzip.new do |c|
         c.level = 5
         c.rsyncable = true
       end
-      compressor.level.should == 5
-      compressor.rsyncable.should be(true)
+      expect(compressor.level).to eq(5)
+      expect(compressor.rsyncable).to be(true)
 
       compressor.compress_with do |cmd, ext|
-        cmd.should == "gzip -5"
-        ext.should == ".gz"
+        expect(cmd).to eq("gzip -5")
+        expect(ext).to eq(".gz")
       end
     end
   end # describe '#initialize'
