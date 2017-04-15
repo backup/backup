@@ -172,8 +172,8 @@ module Backup
 
       it "caches the hostname" do
         Utilities.expects(:run).once.with("/path/to/hostname").returns("my_hostname")
-        config.hostname.should == "my_hostname"
-        config.hostname.should == "my_hostname"
+        expect(config.hostname).to eq("my_hostname")
+        expect(config.hostname).to eq("my_hostname")
       end
     end
 
@@ -182,8 +182,8 @@ module Backup
         it "should return @root_path without requiring the path to exist" do
           File.expects(:directory?).never
           expect do
-            config.send(:set_root_path, config.root_path)
-              .should == config.root_path
+            expect(config.send(:set_root_path, config.root_path))
+              .to eq(config.root_path)
           end.not_to raise_error
         end
       end
@@ -191,16 +191,16 @@ module Backup
       context "when the given path exists" do
         it "should set and return the @root_path" do
           expect do
-            config.send(:set_root_path, Dir.pwd).should == Dir.pwd
+            expect(config.send(:set_root_path, Dir.pwd)).to eq(Dir.pwd)
           end.not_to raise_error
-          config.root_path.should == Dir.pwd
+          expect(config.root_path).to eq(Dir.pwd)
         end
 
         it "should expand relative paths" do
           expect do
-            config.send(:set_root_path, "").should == Dir.pwd
+            expect(config.send(:set_root_path, "")).to eq(Dir.pwd)
           end.not_to raise_error
-          config.root_path.should == Dir.pwd
+          expect(config.root_path).to eq(Dir.pwd)
         end
       end
 
@@ -210,9 +210,9 @@ module Backup
           expect do
             config.send(:set_root_path, "foo")
           end.to raise_error { |err|
-            err.should be_an_instance_of config::Error
-            err.message.should match(/Root Path Not Found/)
-            err.message.should match(/Path was: #{ path }/)
+            expect(err).to be_an_instance_of config::Error
+            expect(err.message).to match(/Root Path Not Found/)
+            expect(err.message).to match(/Path was: #{ path }/)
           }
         end
       end
@@ -231,10 +231,10 @@ module Backup
             path = File.expand_path("foo")
 
             config.send(:set_path_variable, "var", path, "none", "/root/path")
-            config.instance_variable_get(:@var).should == path
+            expect(config.instance_variable_get(:@var)).to eq(path)
 
             config.send(:set_path_variable, "var", path, "none", nil)
-            config.instance_variable_get(:@var).should == path
+            expect(config.instance_variable_get(:@var)).to eq(path)
           end
         end
 
@@ -242,7 +242,7 @@ module Backup
           context "when a root_path is given" do
             it "should append the path to the root_path" do
               config.send(:set_path_variable, "var", "foo", "none", "/root/path")
-              config.instance_variable_get(:@var).should == "/root/path/foo"
+              expect(config.instance_variable_get(:@var)).to eq("/root/path/foo")
             end
           end
           context "when a root_path is not given" do
@@ -250,7 +250,7 @@ module Backup
               path = File.expand_path("foo")
 
               config.send(:set_path_variable, "var", "foo", "none", false)
-              config.instance_variable_get(:@var).should == path
+              expect(config.instance_variable_get(:@var)).to eq(path)
             end
           end
         end
@@ -260,13 +260,13 @@ module Backup
         context "when a root_path is given" do
           it "should use the root_path with the given ending" do
             config.send(:set_path_variable, "var", nil, "ending", "/root/path")
-            config.instance_variable_get(:@var).should == "/root/path/ending"
+            expect(config.instance_variable_get(:@var)).to eq("/root/path/ending")
           end
         end
         context "when a root_path is not given" do
           it "should do nothing" do
             config.send(:set_path_variable, "var", nil, "ending", false)
-            config.instance_variable_defined?(:@var).should be_false
+            expect(config.instance_variable_defined?(:@var)).to eq(false)
           end
         end
       end # context 'when no path is given'
@@ -291,10 +291,10 @@ module Backup
         config.instance_variables.each do |var|
           config.send(:remove_instance_variable, var)
         end
-        config.instance_variables.should be_empty
+        expect(config.instance_variables).to be_empty
 
         load File.expand_path("../../lib/backup/config.rb", __FILE__)
-        config.instance_variables.sort.map(&:to_sym).should == expected
+        expect(config.instance_variables.sort.map(&:to_sym)).to eq(expected)
       end
 
       context "when setting @user" do
@@ -303,7 +303,7 @@ module Backup
 
           it 'should set value for @user to ENV["USER"]' do
             config.send(:reset!)
-            config.user.should == "test"
+            expect(config.user).to eq("test")
           end
         end
 
@@ -312,7 +312,7 @@ module Backup
 
           it "should set value using the user login name" do
             config.send(:reset!)
-            config.user.should == Etc.getpwuid.name
+            expect(config.user).to eq(Etc.getpwuid.name)
           end
         end
       end # context 'when setting @user'
@@ -323,8 +323,9 @@ module Backup
 
           it 'should set value using ENV["HOME"]' do
             config.send(:reset!)
-            config.root_path.should ==
+            expect(config.root_path).to eq(
               File.join(File.expand_path("test/home/dir"), "Backup")
+            )
           end
         end
 
@@ -333,7 +334,7 @@ module Backup
 
           it "should set value using $PWD" do
             config.send(:reset!)
-            config.root_path.should == File.expand_path("Backup")
+            expect(config.root_path).to eq(File.expand_path("Backup"))
           end
         end
       end # context 'when setting @root_path'

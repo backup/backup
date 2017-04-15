@@ -4,8 +4,8 @@ describe "Backup::Packager" do
   let(:packager) { Backup::Packager }
 
   it "should include Utilities::Helpers" do
-    packager.instance_eval("class << self; self; end")
-      .include?(Backup::Utilities::Helpers).should be_true
+    expect(packager.instance_eval("class << self; self; end")
+      .include?(Backup::Utilities::Helpers)).to eq(true)
   end
 
   describe "#package!" do
@@ -37,10 +37,10 @@ describe "Backup::Packager" do
 
         packager.package!(model)
 
-        packager.instance_variable_get(:@package).should be(package)
-        packager.instance_variable_get(:@encryptor).should be(encryptor)
-        packager.instance_variable_get(:@splitter).should be(splitter)
-        packager.instance_variable_get(:@pipeline).should be(pipeline)
+        expect(packager.instance_variable_get(:@package)).to be(package)
+        expect(packager.instance_variable_get(:@encryptor)).to be(encryptor)
+        expect(packager.instance_variable_get(:@splitter)).to be(splitter)
+        expect(packager.instance_variable_get(:@pipeline)).to be(pipeline)
       end
     end # context 'when pipeline command is successful'
 
@@ -68,10 +68,10 @@ describe "Backup::Packager" do
           "  pipeline_errors"
         )
 
-        packager.instance_variable_get(:@package).should be(package)
-        packager.instance_variable_get(:@encryptor).should be(encryptor)
-        packager.instance_variable_get(:@splitter).should be(splitter)
-        packager.instance_variable_get(:@pipeline).should be(pipeline)
+        expect(packager.instance_variable_get(:@package)).to be(package)
+        expect(packager.instance_variable_get(:@encryptor)).to be(encryptor)
+        expect(packager.instance_variable_get(:@splitter)).to be(splitter)
+        expect(packager.instance_variable_get(:@pipeline)).to be(pipeline)
       end
     end # context 'when pipeline command is successful'
   end # describe '#package!'
@@ -156,9 +156,9 @@ describe "Backup::Packager" do
 
         packager.send(:procedure).call
 
-        Fake.stack_trace.should == [
+        expect(Fake.stack_trace).to eq([
           :encryptor_before, :command_executed, :encryptor_after
-        ]
+        ])
       end
     end
 
@@ -180,9 +180,9 @@ describe "Backup::Packager" do
 
         packager.send(:procedure).call
 
-        Fake.stack_trace.should == [
+        expect(Fake.stack_trace).to eq([
           :splitter_before, :command_executed, :splitter_after
-        ]
+        ])
       end
     end
 
@@ -205,12 +205,12 @@ describe "Backup::Packager" do
 
         packager.send(:procedure).call
 
-        Fake.stack_trace.should == [
+        expect(Fake.stack_trace).to eq([
           :encryptor_before, :splitter_before,
           :command_executed,
           :splitter_after, :encryptor_after
-        ]
-        package.extension.should == "tar.enc"
+        ])
+        expect(package.extension).to eq("tar.enc")
       end
     end
   end # describe '#procedure'

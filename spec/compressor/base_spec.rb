@@ -4,13 +4,13 @@ describe Backup::Compressor::Base do
   let(:compressor) { Backup::Compressor::Base.new }
 
   it "should include Utilities::Helpers" do
-    Backup::Compressor::Base
-      .include?(Backup::Utilities::Helpers).should be_true
+    expect(Backup::Compressor::Base
+      .include?(Backup::Utilities::Helpers)).to eq(true)
   end
 
   it "should include Config::Helpers" do
-    Backup::Compressor::Base
-      .include?(Backup::Config::Helpers).should be_true
+    expect(Backup::Compressor::Base
+      .include?(Backup::Config::Helpers)).to eq(true)
   end
 
   describe "#compress_with" do
@@ -21,15 +21,15 @@ describe Backup::Compressor::Base do
       compressor.expects(:log!)
 
       compressor.compress_with do |cmd, ext|
-        cmd.should == "compressor command"
-        ext.should == "compressor extension"
+        expect(cmd).to eq("compressor command")
+        expect(ext).to eq("compressor extension")
       end
     end
   end
 
   describe "#compressor_name" do
     it "should return class name with Backup namespace removed" do
-      compressor.send(:compressor_name).should == "Compressor::Base"
+      expect(compressor.send(:compressor_name)).to eq("Compressor::Base")
     end
   end
 

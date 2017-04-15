@@ -54,14 +54,14 @@ describe Backup::Utilities do
 
     it "allows utilities to be configured" do
       utilities::NAMES.each do |name|
-        helpers.send(:utility, name).should == "/path/to/#{name}"
+        expect(helpers.send(:utility, name)).to eq("/path/to/#{name}")
       end
     end
 
     it "presets gnu_tar? value to true" do
       utilities.expects(:run).never
-      utilities.gnu_tar?.should be(true)
-      helpers.send(:gnu_tar?).should be(true)
+      expect(utilities.gnu_tar?).to be(true)
+      expect(helpers.send(:gnu_tar?)).to be(true)
     end
 
     it "presets gnu_tar? value to false" do
@@ -70,8 +70,8 @@ describe Backup::Utilities do
       end
 
       utilities.expects(:run).never
-      utilities.gnu_tar?.should be(false)
-      helpers.send(:gnu_tar?).should be(false)
+      expect(utilities.gnu_tar?).to be(false)
+      expect(helpers.send(:gnu_tar?)).to be(false)
     end
 
     it "expands relative paths" do
@@ -79,8 +79,8 @@ describe Backup::Utilities do
         tar "my_tar"
       end
       path = File.expand_path("my_tar")
-      utilities::UTILITY["tar"].should == path
-      helpers.send(:utility, :tar).should == path
+      expect(utilities::UTILITY["tar"]).to eq(path)
+      expect(helpers.send(:utility, :tar)).to eq(path)
     end
 
     it "raises Error if utility is not found or executable" do
@@ -103,8 +103,8 @@ describe Backup::Utilities do
       utilities.expects(:run).with("tar --version").returns(
         'tar (GNU tar) 1.26\nCopyright (C) 2011 Free Software Foundation, Inc.'
       )
-      utilities.gnu_tar?.should be(true)
-      utilities.instance_variable_get(:@gnu_tar).should be(true)
+      expect(utilities.gnu_tar?).to be(true)
+      expect(utilities.instance_variable_get(:@gnu_tar)).to be(true)
     end
 
     it "determines when tar is BSD tar" do
@@ -112,20 +112,20 @@ describe Backup::Utilities do
       utilities.expects(:run).with("tar --version").returns(
         "bsdtar 3.0.4 - libarchive 3.0.4"
       )
-      utilities.gnu_tar?.should be(false)
-      utilities.instance_variable_get(:@gnu_tar).should be(false)
+      expect(utilities.gnu_tar?).to be(false)
+      expect(utilities.instance_variable_get(:@gnu_tar)).to be(false)
     end
 
     it "returns cached true value" do
       utilities.instance_variable_set(:@gnu_tar, true)
       utilities.expects(:run).never
-      utilities.gnu_tar?.should be(true)
+      expect(utilities.gnu_tar?).to be(true)
     end
 
     it "returns cached false value" do
       utilities.instance_variable_set(:@gnu_tar, false)
       utilities.expects(:run).never
-      utilities.gnu_tar?.should be(false)
+      expect(utilities.gnu_tar?).to be(false)
     end
   end
 end # describe Backup::Utilities
@@ -142,15 +142,15 @@ describe Backup::Utilities::Helpers do
     context "when a system path for the utility is available" do
       it "should return the system path with newline removed" do
         utilities.expects(:`).with("which 'foo' 2>/dev/null").returns("system_path\n")
-        helpers.send(:utility, :foo).should == "system_path"
+        expect(helpers.send(:utility, :foo)).to eq("system_path")
       end
 
       it "should cache the returned path" do
         utilities.expects(:`).once.with("which 'cache_me' 2>/dev/null")
           .returns("cached_path\n")
 
-        helpers.send(:utility, :cache_me).should == "cached_path"
-        helpers.send(:utility, :cache_me).should == "cached_path"
+        expect(helpers.send(:utility, :cache_me)).to eq("cached_path")
+        expect(helpers.send(:utility, :cache_me)).to eq("cached_path")
       end
 
       it "should return a mutable copy of the path" do
@@ -158,17 +158,17 @@ describe Backup::Utilities::Helpers do
           .returns("cached_path\n")
 
         helpers.send(:utility, :cache_me) << "foo"
-        helpers.send(:utility, :cache_me).should == "cached_path"
+        expect(helpers.send(:utility, :cache_me)).to eq("cached_path")
       end
 
       it "should cache the value for all extended objects" do
         utilities.expects(:`).once.with("which 'once_only' 2>/dev/null")
           .returns("cached_path\n")
 
-        helpers.send(:utility, :once_only).should == "cached_path"
-        Class.new.extend(Backup::Utilities::Helpers).send(
+        expect(helpers.send(:utility, :once_only)).to eq("cached_path")
+        expect(Class.new.extend(Backup::Utilities::Helpers).send(
           :utility, :once_only
-        ).should == "cached_path"
+        )).to eq("cached_path")
       end
     end
 
@@ -178,7 +178,7 @@ describe Backup::Utilities::Helpers do
       expect do
         helpers.send(:utility, :unknown)
       end.to raise_error(Backup::Utilities::Error) { |err|
-        err.message.should match(/Could not locate 'unknown'/)
+        expect(err.message).to match(/Could not locate 'unknown'/)
       }
     end
 
@@ -269,7 +269,7 @@ describe Backup::Utilities::Helpers do
         let(:stderr_messages) { "" }
 
         it "should return stdout and generate no additional log messages" do
-          helpers.send(:run, command).should == ""
+          expect(helpers.send(:run, command)).to eq("")
         end
       end
 
@@ -281,7 +281,7 @@ describe Backup::Utilities::Helpers do
           Backup::Logger.expects(:info).with(
             "cmd_name:STDOUT: out line1\ncmd_name:STDOUT: out line2"
           )
-          helpers.send(:run, command).should == stdout_messages.strip
+          expect(helpers.send(:run, command)).to eq(stdout_messages.strip)
         end
       end
 
@@ -293,7 +293,7 @@ describe Backup::Utilities::Helpers do
           Backup::Logger.expects(:warn).with(
             "cmd_name:STDERR: err line1\ncmd_name:STDERR: err line2"
           )
-          helpers.send(:run, command).should == ""
+          expect(helpers.send(:run, command)).to eq("")
         end
       end
 
@@ -308,7 +308,7 @@ describe Backup::Utilities::Helpers do
           Backup::Logger.expects(:warn).with(
             "cmd_name:STDERR: err line1\ncmd_name:STDERR: err line2"
           )
-          helpers.send(:run, command).should == stdout_messages.strip
+          expect(helpers.send(:run, command)).to eq(stdout_messages.strip)
         end
       end
     end # context 'when the command is successful'
@@ -339,9 +339,9 @@ describe Backup::Utilities::Helpers do
           expect do
             helpers.send(:run, command)
           end.to raise_error { |err|
-            err.message.should == message_head +
+            expect(err.message).to eq(message_head +
               "  STDOUT Messages: None\n" \
-              "  STDERR Messages: None"
+              "  STDERR Messages: None")
           }
         end
       end
@@ -354,11 +354,11 @@ describe Backup::Utilities::Helpers do
           expect do
             helpers.send(:run, command)
           end.to raise_error { |err|
-            err.message.should == message_head +
+            expect(err.message).to eq(message_head +
               "  STDOUT Messages: \n" \
               "  out line1\n" \
               "  out line2\n" \
-              "  STDERR Messages: None"
+              "  STDERR Messages: None")
           }
         end
       end
@@ -371,11 +371,11 @@ describe Backup::Utilities::Helpers do
           expect do
             helpers.send(:run, command)
           end.to raise_error { |err|
-            err.message.should == message_head +
+            expect(err.message).to eq(message_head +
               "  STDOUT Messages: None\n" \
               "  STDERR Messages: \n" \
               "  err line1\n" \
-              "  err line2"
+              "  err line2")
           }
         end
       end
@@ -388,13 +388,13 @@ describe Backup::Utilities::Helpers do
           expect do
             helpers.send(:run, command)
           end.to raise_error { |err|
-            err.message.should == message_head +
+            expect(err.message).to eq(message_head +
               "  STDOUT Messages: \n" \
               "  out line1\n" \
               "  out line2\n" \
               "  STDERR Messages: \n" \
               "  err line1\n" \
-              "  err line2"
+              "  err line2")
           }
         end
       end
@@ -413,8 +413,8 @@ describe Backup::Utilities::Helpers do
         expect do
           helpers.send(:run, command)
         end.to raise_error(Backup::Utilities::Error) { |err|
-          err.message.should match("Failed to execute 'cmd_name'")
-          err.message.should match("RuntimeError: exec call failed")
+          expect(err.message).to match("Failed to execute 'cmd_name'")
+          expect(err.message).to match("RuntimeError: exec call failed")
         }
       end
     end # context 'when the system fails to execute the command'
@@ -423,12 +423,12 @@ describe Backup::Utilities::Helpers do
   describe "gnu_tar?" do
     it "returns true if tar_dist is gnu" do
       Backup::Utilities.stubs(:gnu_tar?).returns(true)
-      helpers.send(:gnu_tar?).should be(true)
+      expect(helpers.send(:gnu_tar?)).to be(true)
     end
 
     it "returns false if tar_dist is bsd" do
       Backup::Utilities.stubs(:gnu_tar?).returns(false)
-      helpers.send(:gnu_tar?).should be(false)
+      expect(helpers.send(:gnu_tar?)).to be(false)
     end
   end
 end # describe Backup::Utilities::Helpers

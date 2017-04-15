@@ -218,7 +218,7 @@ module Backup
 
         storage.send(:transfer!)
 
-        expect(storage.package.no_cycle).to be_false
+        expect(storage.package.no_cycle).to eq(false)
       end
 
       context "when days_to_keep is set" do
@@ -227,7 +227,7 @@ module Backup
         it "marks package so the cycler will not attempt to remove it" do
           cloud_io.stubs(:upload)
           storage.send(:transfer!)
-          expect(storage.package.no_cycle).to be_true
+          expect(storage.package.no_cycle).to eq(true)
         end
       end
     end # describe '#transfer!'

@@ -7,13 +7,13 @@ module Backup
         described_class.constants.each do |const|
           described_class.send(:remove_const, const)
         end
-        described_class.constants.should be_empty
+        expect(described_class.constants).to be_empty
 
         load File.expand_path("../../../lib/backup/config/dsl.rb", __FILE__)
 
-        expect(described_class.const_defined?("MySQL")).to be_true
-        expect(described_class.const_defined?("RSync")).to be_true
-        expect(described_class::RSync.const_defined?("Local")).to be_true
+        expect(described_class.const_defined?("MySQL")).to eq(true)
+        expect(described_class.const_defined?("RSync")).to eq(true)
+        expect(described_class::RSync.const_defined?("Local")).to eq(true)
       end
     end
 
@@ -23,10 +23,10 @@ module Backup
       context "when given an array of constant names" do
         it "creates modules for the given scope" do
           described_class.send(:create_modules, TestScope, ["Foo", "Bar"])
-          TestScope.const_defined?("Foo").should be_true
-          TestScope.const_defined?("Bar").should be_true
-          TestScope::Foo.class.should == Module
-          TestScope::Bar.class.should == Module
+          expect(TestScope.const_defined?("Foo")).to eq(true)
+          expect(TestScope.const_defined?("Bar")).to eq(true)
+          expect(TestScope::Foo.class).to eq(Module)
+          expect(TestScope::Bar.class).to eq(Module)
         end
       end
 
@@ -41,11 +41,11 @@ module Backup
               }]
             }]
           )
-          TestScope.const_defined?("FooBar").should be_true
-          TestScope.const_defined?("LevelA").should be_true
-          TestScope::LevelA.const_defined?("NameA").should be_true
-          TestScope::LevelA.const_defined?("LevelB").should be_true
-          TestScope::LevelA::LevelB.const_defined?("NameB").should be_true
+          expect(TestScope.const_defined?("FooBar")).to eq(true)
+          expect(TestScope.const_defined?("LevelA")).to eq(true)
+          expect(TestScope::LevelA.const_defined?("NameA")).to eq(true)
+          expect(TestScope::LevelA.const_defined?("LevelB")).to eq(true)
+          expect(TestScope::LevelA::LevelB.const_defined?("NameB")).to eq(true)
         end
       end
     end
@@ -90,7 +90,7 @@ module Backup
         block = proc {}
         subject.preconfigure("MyBackup", &block)
         klass = described_class.const_get("MyBackup")
-        klass.superclass.should == Backup::Model
+        expect(klass.superclass).to eq(Backup::Model)
 
         expect do
           subject.preconfigure("MyBackup", &block)

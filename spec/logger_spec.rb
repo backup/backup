@@ -25,9 +25,9 @@ module Backup
         it "returns a new message object" do
           Timecop.freeze do
             msg = Logger::Message.new(Time.now, :log_level, ["message", "lines"])
-            msg.time.should == Time.now
-            msg.level.should == :log_level
-            msg.lines.should == ["message", "lines"]
+            expect(msg.time).to eq(Time.now)
+            expect(msg.level).to eq(:log_level)
+            expect(msg.lines).to eq(["message", "lines"])
           end
         end
       end
@@ -37,10 +37,10 @@ module Backup
           Timecop.freeze do
             timestamp = Time.now.strftime("%Y/%m/%d %H:%M:%S")
             msg = Logger::Message.new(Time.now, :log_level, ["message", "lines"])
-            msg.formatted_lines.should == [
+            expect(msg.formatted_lines).to eq([
               "[#{timestamp}][log_level] message",
               "[#{timestamp}][log_level] lines"
-            ]
+            ])
           end
         end
 
@@ -48,11 +48,11 @@ module Backup
           Timecop.freeze do
             timestamp = Time.now.strftime("%Y/%m/%d %H:%M:%S")
             msg = Logger::Message.new(Time.now, :log_level, ["message", "", "lines"])
-            msg.formatted_lines.should == [
+            expect(msg.formatted_lines).to eq([
               "[#{timestamp}][log_level] message",
               "[#{timestamp}][log_level] ",
               "[#{timestamp}][log_level] lines"
-            ]
+            ])
           end
         end
       end
@@ -92,11 +92,11 @@ module Backup
 
         it "sends messages to only the enabled loggers" do
           console_logger.expects(:log).with do |msg|
-            msg.lines.should == ["line 1", "line 2"]
+            expect(msg.lines).to eq(["line 1", "line 2"])
           end
 
           logfile_logger.expects(:log).with do |msg|
-            msg.lines.should == ["line 1", "line 2"]
+            expect(msg.lines).to eq(["line 1", "line 2"])
           end
 
           syslog_logger.expects(:log).never
@@ -120,11 +120,11 @@ module Backup
           console_logger.expects(:log).never
 
           logfile_logger.expects(:log).with do |msg|
-            msg.lines.should == ["line 1", "line 2"]
+            expect(msg.lines).to eq(["line 1", "line 2"])
           end
 
           syslog_logger.expects(:log).with do |msg|
-            msg.lines.should == ["line 1", "line 2"]
+            expect(msg.lines).to eq(["line 1", "line 2"])
           end
 
           Logger.start!
@@ -144,13 +144,13 @@ module Backup
 
         it "sends messages to only the enabled loggers" do
           console_logger.expects(:log).with do |msg|
-            msg.lines.should == ["line 1", "line 2"]
+            expect(msg.lines).to eq(["line 1", "line 2"])
           end
 
           logfile_logger.expects(:log).never
 
           syslog_logger.expects(:log).with do |msg|
-            msg.lines.should == ["line 1", "line 2"]
+            expect(msg.lines).to eq(["line 1", "line 2"])
           end
 
           Logger.start!
@@ -198,7 +198,7 @@ module Backup
           default_loggers.each { |logger| logger.expects(:log).never }
 
           Logger.info "a message"
-          Logger.messages.first.lines.should == ["a message"]
+          expect(Logger.messages.first.lines).to eq(["a message"])
         end
 
         it "does not instantiate any loggers" do
@@ -207,7 +207,7 @@ module Backup
           Logger::Syslog.expects(:new).never
 
           Logger.info "a message"
-          Logger.send(:logger).instance_variable_get(:@loggers).should be_empty
+          expect(Logger.send(:logger).instance_variable_get(:@loggers)).to be_empty
         end
       end
 
@@ -240,19 +240,19 @@ module Backup
         it "stores and sends messages" do
           default_loggers.each do |logger|
             logger.expects(:log).with do |msg|
-              msg.lines.should == ["a message"]
+              expect(msg.lines).to eq(["a message"])
             end
           end
 
           Logger.start!
           Logger.info "a message"
-          Logger.messages.first.lines.should == ["a message"]
+          expect(Logger.messages.first.lines).to eq(["a message"])
         end
 
         it "instantiates all enabled loggers" do
           Logger.start!
-          Logger.send(:logger).instance_variable_get(:@loggers)
-            .should == default_loggers
+          expect(Logger.send(:logger).instance_variable_get(:@loggers))
+            .to eq(default_loggers)
         end
       end
     end # describe '.start!'
@@ -266,8 +266,8 @@ module Backup
         it "sends messages with log level :info" do
           Logger.info "info message"
           msg = Logger.messages.last
-          msg.level.should == :info
-          msg.lines.should == ["info message"]
+          expect(msg.level).to eq(:info)
+          expect(msg.lines).to eq(["info message"])
 
           default_loggers.each { |logger| logger.expects(:log).with(msg) }
           Logger.start!
@@ -278,8 +278,8 @@ module Backup
         it "sends messages with log level :warn" do
           Logger.warn "warn message"
           msg = Logger.messages.last
-          msg.level.should == :warn
-          msg.lines.should == ["warn message"]
+          expect(msg.level).to eq(:warn)
+          expect(msg.lines).to eq(["warn message"])
 
           default_loggers.each { |logger| logger.expects(:log).with(msg) }
           Logger.start!
@@ -290,8 +290,8 @@ module Backup
         it "sends messages with log level :error" do
           Logger.error "error message"
           msg = Logger.messages.last
-          msg.level.should == :error
-          msg.lines.should == ["error message"]
+          expect(msg.level).to eq(:error)
+          expect(msg.lines).to eq(["error message"])
 
           default_loggers.each { |logger| logger.expects(:log).with(msg) }
           Logger.start!
@@ -301,21 +301,21 @@ module Backup
       it "accepts objects responding to #to_s" do
         Logger.info StandardError.new("message")
         msg = Logger.messages.last
-        msg.level.should == :info
-        msg.lines.should == ["message"]
+        expect(msg.level).to eq(:info)
+        expect(msg.lines).to eq(["message"])
       end
 
       it "preserves blank lines in messages" do
         Logger.info "line one\n\nline two"
         msg = Logger.messages.last
-        msg.level.should == :info
-        msg.lines.should == ["line one", "", "line two"]
+        expect(msg.level).to eq(:info)
+        expect(msg.lines).to eq(["line one", "", "line two"])
       end
 
       it "logs messages with UTC time" do
         Logger.info "message"
         msg = Logger.messages.last
-        msg.time.should be_utc
+        expect(msg.time).to be_utc
       end
     end # describe 'log messaging methods'
 
@@ -323,7 +323,7 @@ module Backup
       context "when messages with :warn log level are sent" do
         it "returns true" do
           Logger.warn "warn message"
-          Logger.has_warnings?.should be_true
+          expect(Logger.has_warnings?).to eq(true)
         end
       end
 
@@ -331,7 +331,7 @@ module Backup
         it "returns false" do
           Logger.info "info message"
           Logger.error "error message"
-          Logger.has_warnings?.should be_false
+          expect(Logger.has_warnings?).to eq(false)
         end
       end
     end
@@ -340,7 +340,7 @@ module Backup
       context "when messages with :error log level are sent" do
         it "returns true" do
           Logger.error "error message"
-          Logger.has_errors?.should be_true
+          expect(Logger.has_errors?).to eq(true)
         end
       end
 
@@ -348,7 +348,7 @@ module Backup
         it "returns false" do
           Logger.info "info message"
           Logger.warn "warn message"
-          Logger.has_errors?.should be_false
+          expect(Logger.has_errors?).to eq(false)
         end
       end
     end
@@ -359,9 +359,9 @@ module Backup
         Logger.warn "warn message"
         Logger.error "error message"
 
-        Logger.messages.count.should be(3)
-        Logger.has_warnings?.should be_true
-        Logger.has_errors?.should be_true
+        expect(Logger.messages.count).to be(3)
+        expect(Logger.has_warnings?).to eq(true)
+        expect(Logger.has_errors?).to eq(true)
 
         @initial_logger = Logger.instance_variable_get(:@logger)
         Logger.clear!
@@ -369,24 +369,24 @@ module Backup
       end
 
       it "clears all stored messages" do
-        Logger.messages.should be_empty
+        expect(Logger.messages).to be_empty
       end
 
       it "resets has_warnings? to false" do
-        Logger.has_warnings?.should be_false
+        expect(Logger.has_warnings?).to eq(false)
       end
 
       it "resets has_errors? to false" do
-        Logger.has_errors?.should be_false
+        expect(Logger.has_errors?).to eq(false)
       end
 
       it "replaces the logger" do
-        @current_logger.should be_a(Backup::Logger)
-        @current_logger.should_not be(@initial_logger)
+        expect(@current_logger).to be_a(Backup::Logger)
+        expect(@current_logger).to_not be(@initial_logger)
       end
 
       it "starts the new logger" do
-        @current_logger.instance_variable_get(:@loggers).should == default_loggers
+        expect(@current_logger.instance_variable_get(:@loggers)).to eq(default_loggers)
       end
     end
 

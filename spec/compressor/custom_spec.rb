@@ -13,8 +13,8 @@ describe Backup::Compressor::Custom do
   end
 
   it "should be a subclass of Compressor::Base" do
-    Backup::Compressor::Custom
-      .superclass.should == Backup::Compressor::Base
+    expect(Backup::Compressor::Custom
+      .superclass).to eq(Backup::Compressor::Base)
   end
 
   describe "#initialize" do
@@ -38,23 +38,23 @@ describe Backup::Compressor::Custom do
         c.extension = " my_extension "
       end
 
-      compressor.command.should   == " my_command --option foo "
-      compressor.extension.should == " my_extension "
+      expect(compressor.command).to   eq(" my_command --option foo ")
+      expect(compressor.extension).to eq(" my_extension ")
 
       compressor.expects(:log!)
       compressor.compress_with do |cmd, ext|
-        cmd.should == "/path/to/my_command --option foo"
-        ext.should == "my_extension"
+        expect(cmd).to eq("/path/to/my_command --option foo")
+        expect(ext).to eq("my_extension")
       end
     end
 
     context "when no pre-configured defaults have been set" do
       it "should use default values" do
-        compressor.command.should   be_nil
-        compressor.extension.should be_nil
+        expect(compressor.command).to   be_nil
+        expect(compressor.extension).to be_nil
 
-        compressor.instance_variable_get(:@cmd).should == "error"
-        compressor.instance_variable_get(:@ext).should == ""
+        expect(compressor.instance_variable_get(:@cmd)).to eq("error")
+        expect(compressor.instance_variable_get(:@ext)).to eq("")
       end
 
       it "should use the values given" do
@@ -63,11 +63,11 @@ describe Backup::Compressor::Custom do
           c.extension = "my_extension"
         end
 
-        compressor.command.should   == "my_command"
-        compressor.extension.should == "my_extension"
+        expect(compressor.command).to   eq("my_command")
+        expect(compressor.extension).to eq("my_extension")
 
-        compressor.instance_variable_get(:@cmd).should == "/path/to/my_command"
-        compressor.instance_variable_get(:@ext).should == "my_extension"
+        expect(compressor.instance_variable_get(:@cmd)).to eq("/path/to/my_command")
+        expect(compressor.instance_variable_get(:@ext)).to eq("my_extension")
       end
     end # context 'when no pre-configured defaults have been set'
 
@@ -80,11 +80,11 @@ describe Backup::Compressor::Custom do
       end
 
       it "should use pre-configured defaults" do
-        compressor.command.should   == "default_command"
-        compressor.extension.should == "default_extension"
+        expect(compressor.command).to   eq("default_command")
+        expect(compressor.extension).to eq("default_extension")
 
-        compressor.instance_variable_get(:@cmd).should == "/path/to/default_command"
-        compressor.instance_variable_get(:@ext).should == "default_extension"
+        expect(compressor.instance_variable_get(:@cmd)).to eq("/path/to/default_command")
+        expect(compressor.instance_variable_get(:@ext)).to eq("default_extension")
       end
 
       it "should override pre-configured defaults" do
@@ -93,11 +93,11 @@ describe Backup::Compressor::Custom do
           c.extension = "new_extension"
         end
 
-        compressor.command.should   == "new_command"
-        compressor.extension.should == "new_extension"
+        expect(compressor.command).to   eq("new_command")
+        expect(compressor.extension).to eq("new_extension")
 
-        compressor.instance_variable_get(:@cmd).should == "/path/to/new_command"
-        compressor.instance_variable_get(:@ext).should == "new_extension"
+        expect(compressor.instance_variable_get(:@cmd)).to eq("/path/to/new_command")
+        expect(compressor.instance_variable_get(:@ext)).to eq("new_extension")
       end
     end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
