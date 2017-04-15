@@ -786,37 +786,25 @@ describe "Backup::Model" do
 
     context "when name is given as a string" do
       it "should return the constant for the given scope and name" do
-        expect(model.send(
-          :get_class_from_scope,
-          Fake,
-          "TestScope"
-        )).to eq(Fake::TestScope)
+        result = model.send(:get_class_from_scope, Fake, "TestScope")
+        expect(result).to eq(Fake::TestScope)
       end
 
       it "should accept a nested class name" do
-        expect(model.send(
-          :get_class_from_scope,
-          Fake,
-          "TestScope::TestKlass"
-        )).to eq(Fake::TestScope::TestKlass)
+        result = model.send(:get_class_from_scope, Fake, "TestScope::TestKlass")
+        expect(result).to eq(Fake::TestScope::TestKlass)
       end
     end
 
     context "when name is given as a module" do
       it "should return the constant for the given scope and name" do
-        expect(model.send(
-          :get_class_from_scope,
-          Fake,
-          TestScope
-        )).to eq(Fake::TestScope)
+        result = model.send(:get_class_from_scope, Fake, TestScope)
+        expect(result).to eq(Fake::TestScope)
       end
 
       it "should accept a nested class name" do
-        expect(model.send(
-          :get_class_from_scope,
-          Fake,
-          TestScope::TestKlass
-        )).to eq(Fake::TestScope::TestKlass)
+        result = model.send(:get_class_from_scope, Fake, TestScope::TestKlass)
+        expect(result).to eq(Fake::TestScope::TestKlass)
       end
     end
 
@@ -832,19 +820,21 @@ describe "Backup::Model" do
       end
 
       it "should return the constant for the given scope and name" do
-        expect(model.send(
+        result = model.send(
           :get_class_from_scope,
           Fake,
           Backup::Config::DSL::TestScope
-        )).to eq(Fake::TestScope)
+        )
+        expect(result).to eq(Fake::TestScope)
       end
 
       it "should accept a nested class name" do
-        expect(model.send(
+        result = model.send(
           :get_class_from_scope,
           Fake,
           Backup::Config::DSL::TestScope::TestKlass
-        )).to eq(Fake::TestScope::TestKlass)
+        )
+        expect(result).to eq(Fake::TestScope::TestKlass)
       end
     end
   end # describe '#get_class_from_scope'

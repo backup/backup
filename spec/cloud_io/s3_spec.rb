@@ -741,7 +741,7 @@ module Backup
         ["aes256", :aes256].each do |arg|
           cloud_io.stubs(:encryption).returns(arg)
           expect(cloud_io.send(:headers)).to eq(
-            { "x-amz-server-side-encryption" => "AES256" }
+            "x-amz-server-side-encryption" => "AES256"
           )
         end
       end
@@ -751,7 +751,7 @@ module Backup
         ["reduced_redundancy", :reduced_redundancy].each do |arg|
           cloud_io.stubs(:storage_class).returns(arg)
           expect(cloud_io.send(:headers)).to eq(
-            { "x-amz-storage-class" => "REDUCED_REDUNDANCY" }
+            "x-amz-storage-class" => "REDUCED_REDUNDANCY"
           )
         end
       end
@@ -760,8 +760,8 @@ module Backup
         cloud_io.stubs(:encryption).returns(:aes256)
         cloud_io.stubs(:storage_class).returns(:reduced_redundancy)
         expect(cloud_io.send(:headers)).to eq(
-          { "x-amz-server-side-encryption" => "AES256",
-            "x-amz-storage-class" => "REDUCED_REDUNDANCY" }
+          "x-amz-server-side-encryption" => "AES256",
+            "x-amz-storage-class" => "REDUCED_REDUNDANCY"
         )
       end
 

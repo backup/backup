@@ -166,9 +166,10 @@ describe Backup::Utilities::Helpers do
           .returns("cached_path\n")
 
         expect(helpers.send(:utility, :once_only)).to eq("cached_path")
-        expect(Class.new.extend(Backup::Utilities::Helpers).send(
+        result = Class.new.extend(Backup::Utilities::Helpers).send(
           :utility, :once_only
-        )).to eq("cached_path")
+        )
+        expect(result).to eq("cached_path")
       end
     end
 

@@ -76,14 +76,14 @@ describe Backup::Encryptor::GPG do
       it "should use pre-configured defaults" do
         encryptor = Backup::Encryptor::GPG.new
         expect(encryptor.mode).to eq(:both)
-        expect(encryptor.keys).to eq({ "test_key" => "test public key" })
+        expect(encryptor.keys).to eq("test_key" => "test public key")
         expect(encryptor.recipients).to eq("test_key")
         expect(encryptor.passphrase_file).to eq("my/pass/file")
       end
 
       it "should override pre-configured defaults" do
         expect(encryptor.mode).to eq(:symmetric)
-        expect(encryptor.keys).to eq({ "test_key" => "test public key" })
+        expect(encryptor.keys).to eq("test_key" => "test public key")
         expect(encryptor.recipients).to eq("test_key")
         expect(encryptor.passphrase).to eq("test secret")
         expect(encryptor.passphrase_file).to eq("my/pass/file")
