@@ -29,7 +29,7 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency "thor", "0.18.1"
   gem.add_dependency "open4", "1.3.0"
-  gem.add_dependency "fog", "1.28.0"
+  gem.add_dependency "fog", "~> 1.28"
   gem.add_dependency "excon", "~> 0.44"
   gem.add_dependency "unf", "0.1.3" # for fog/AWS
   gem.add_dependency "dropbox-sdk", "1.6.5"
@@ -41,11 +41,10 @@ Gem::Specification.new do |gem|
   gem.add_dependency "twitter", "5.5.0"
   gem.add_dependency "hipchat", "1.0.1"
   gem.add_dependency "flowdock", "0.4.0"
-  gem.add_dependency "json", "1.8.2"
   gem.add_dependency "dogapi", "1.11.0"
   gem.add_dependency "aws-ses", "0.5.0"
-  gem.add_dependency "qiniu", "6.5.1"
-  gem.add_dependency "nokogiri", "~> 1.6.0"
+  gem.add_dependency "qiniu", "~> 6.5"
+  gem.add_dependency "nokogiri", "~> 1.6"
 
   gem.add_development_dependency "rubocop", "0.45.0"
   gem.add_development_dependency "rake"
