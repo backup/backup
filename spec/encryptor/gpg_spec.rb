@@ -231,7 +231,7 @@ describe Backup::Encryptor::GPG do
 
         context "and the gpg_homedir files exist" do
           before do
-            %w(pubring.gpg secring.gpg trustdb.gpg).each do |file|
+            %w[pubring.gpg secring.gpg trustdb.gpg].each do |file|
               File.expects(:exist?).with(
                 File.join(expanded_path, file)
               ).returns(true)
@@ -265,11 +265,11 @@ describe Backup::Encryptor::GPG do
 
           expect do
             encryptor.send(:setup_gpg_homedir)
-          end.to raise_error { |err|
+          end.to raise_error(proc do |err|
             expect(err).to be_an_instance_of Backup::Encryptor::GPG::Error
             expect(err.message).to match("Failed to create or set permissions")
             expect(err.message).to match("RuntimeError: error message")
-          }
+          end)
         end
       end
     end
@@ -348,11 +348,11 @@ describe Backup::Encryptor::GPG do
 
           expect do
             encryptor.send(:setup_gpg_config)
-          end.to raise_error { |err|
+          end.to raise_error(proc do |err|
             expect(err).to be_an_instance_of(Backup::Encryptor::GPG::Error)
             expect(err.message).to match("Error creating temporary file for #gpg_config")
             expect(err.message).to match("RuntimeError: an error")
-          }
+          end)
         end
       end
     end
@@ -736,9 +736,7 @@ describe Backup::Encryptor::GPG do
 
     context "when the import is successful" do
       it "should return the long key ID" do
-        Tempfile.expects(:open).with(
-          "backup-gpg_import", "/tmp/path"
-        ).returns(tempfile)
+        Tempfile.expects(:open).with("backup-gpg_import", "/tmp/path").returns(tempfile)
         tempfile.expects(:write).with(<<-EOS)
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: GnuPG v1.4.12 (GNU/Linux)
@@ -835,20 +833,23 @@ gXY+pNqaEE6cHrg+uQatVQITX8EoVJhQ9Z1mYJB+g62zqOQPe10Spb381O9y4dN/
     end
 
     let(:valid_identifiers) do
-      %w(FF9CFEA6 5EFD157FFF9CFEA6 72E56E48E362BB402B3344045EFD157FFF9CFEA6
-         1E3DA3E8 570CE9221E3DA3E8 616BBC8409C1AED791F8E6F8570CE9221E3DA3E8
-         <backup04@foo.com> <backup03@foo.com>
-         A7641A16 54F81C93A7641A16 71335B9B960CF3A3071535F454F81C93A7641A16
-         <backup05@foo.com>
-         581A88CF 0A5B6CC9581A88CF E8C459082544924B8AEA06280A5B6CC9581A88CF
-         <backup08@foo.com> <backup07@foo.com>
-         FEEA03E2 E3DBAEC3FEEA03E2 444B0870D985CF70BBB7F4DCE3DBAEC3FEEA03E2
-         <backup13@foo.com> <backup14@foo.com>
-         8A82B9CB 027B83DB8A82B9CB A20D90150CE4E5F851AD3A9D027B83DB8A82B9CB
-         <backup01@foo.com>
-         A4A57A76 4CEA6442A4A57A76 5742EAFB4CF38014B474671E4CEA6442A4A57A76
-         <backup02@foo.com> )
+      %w[
+        FF9CFEA6 5EFD157FFF9CFEA6 72E56E48E362BB402B3344045EFD157FFF9CFEA6
+        1E3DA3E8 570CE9221E3DA3E8 616BBC8409C1AED791F8E6F8570CE9221E3DA3E8
+        <backup04@foo.com> <backup03@foo.com>
+        A7641A16 54F81C93A7641A16 71335B9B960CF3A3071535F454F81C93A7641A16
+        <backup05@foo.com>
+        581A88CF 0A5B6CC9581A88CF E8C459082544924B8AEA06280A5B6CC9581A88CF
+        <backup08@foo.com> <backup07@foo.com>
+        FEEA03E2 E3DBAEC3FEEA03E2 444B0870D985CF70BBB7F4DCE3DBAEC3FEEA03E2
+        <backup13@foo.com> <backup14@foo.com>
+        8A82B9CB 027B83DB8A82B9CB A20D90150CE4E5F851AD3A9D027B83DB8A82B9CB
+        <backup01@foo.com>
+        A4A57A76 4CEA6442A4A57A76 5742EAFB4CF38014B474671E4CEA6442A4A57A76
+        <backup02@foo.com>
+      ]
     end
+
     it "should return an array of all valid identifiers" do
       encryptor.instance_variable_set(:@system_identifiers, nil)
 

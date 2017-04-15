@@ -3,7 +3,7 @@ module Backup
     class Error < Backup::Error; end
 
     UTILITY = {}
-    NAMES = %w(
+    NAMES = %w[
       tar cat split sudo chown hostname
       gzip bzip2
       mongo mongodump mysqldump innobackupex
@@ -13,7 +13,7 @@ module Backup
       sendmail exim
       send_nsca
       zabbix_sender
-    )
+    ]
 
     module DSL
       class << self
@@ -23,7 +23,7 @@ module Backup
         # Utility names with dashes ('redis-cli') will be set using method calls
         # with an underscore ('redis_cli').
         NAMES.each do |name|
-          define_method name.tr("-", "_"), lambda { |val|
+          define_method name.tr("-", "_") do |val|
             path = File.expand_path(val)
             unless File.executable?(path)
               raise Utilities::Error, <<-EOS
@@ -32,7 +32,7 @@ module Backup
               EOS
             end
             UTILITY[name] = path
-          }
+          end
         end
 
         ##
@@ -214,7 +214,9 @@ module Backup
     # while allowing them to be stubbed in spec_helper for all specs.
     module Helpers
       [:utility, :command_name, :run].each do |name|
-        define_method name, ->(arg) { Utilities.send(name, arg) }
+        define_method name do |arg|
+          Utilities.send(name, arg)
+        end
         private name
       end
 

@@ -231,10 +231,10 @@ module Backup
 
     describe "#mysqldump" do
       let(:option_methods) do
-        %w(
+        %w[
           user_options credential_options connectivity_options
           name_option tables_to_dump tables_to_skip
-        )
+        ]
       end
 
       it "returns full mysqldump command built from all options" do

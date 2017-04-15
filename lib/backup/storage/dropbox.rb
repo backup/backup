@@ -80,7 +80,6 @@ module Backup
 
         # will raise an error if session not authorized
         @connection = DropboxClient.new(session, access_type)
-
       rescue => err
         raise Error.wrap(err, "Authorization Failed")
       end
@@ -93,7 +92,6 @@ module Backup
           begin
             session = DropboxSession.deserialize(File.read(cached_file))
             Logger.info "Session data loaded from cache!"
-
           rescue => err
             Logger.warn Error.wrap(err, <<-EOS)
               Could not read session data from cache.
@@ -128,7 +126,6 @@ module Backup
             uploader.finish(dest)
           end
         end
-
       rescue => err
         raise Error.wrap(err, "Upload Failed!")
       end
@@ -201,7 +198,6 @@ module Backup
         template.render("storage/dropbox/cache_file_written.erb")
 
         session
-
       rescue => err
         raise Error.wrap(err, "Could not create or authenticate a new session")
       end

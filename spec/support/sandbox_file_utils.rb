@@ -178,13 +178,17 @@ module SandboxFileUtils
       true
     end
 
-    %w(pwd getwd cd chdir uptodate? compare_file identical? cmp
-       compare_stream).each do |name|
+    %w[
+      pwd getwd cd chdir uptodate? compare_file identical? cmp
+      compare_stream
+    ].each do |name|
       public :"#{ name }"
     end
 
-    %w(mkdir mkdir_p makedirs mkpath rmdir rm remove rm_f safe_unlink rm_r
-       rm_rf rmtree touch).each do |name|
+    %w[
+      mkdir mkdir_p makedirs mkpath rmdir rm remove rm_f safe_unlink rm_r
+      rm_rf rmtree touch
+    ].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
         def #{name}(list, options = {})
           protect!(list)
@@ -193,7 +197,7 @@ module SandboxFileUtils
       EOS
     end
 
-    %w(cp copy cp_r install).each do |name|
+    %w[cp copy cp_r install].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
         def #{name}(src, dest, options = {})
           protect!(dest)
@@ -202,7 +206,7 @@ module SandboxFileUtils
       EOS
     end
 
-    %w(ln link ln_s symlink ln_sf mv move).each do |name|
+    %w[ln link ln_s symlink ln_sf mv move].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
         def #{name}(src, dest, options = {})
           protect!(src)
@@ -211,7 +215,7 @@ module SandboxFileUtils
       EOS
     end
 
-    %w(chmod chmod_R).each do |name|
+    %w[chmod chmod_R].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
         def #{name}(mode, list, options = {})
           protect!(list)
@@ -220,7 +224,7 @@ module SandboxFileUtils
       EOS
     end
 
-    %w(chown chown_R).each do |name|
+    %w[chown chown_R].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
         def #{name}(user, group, list, options = {})
           protect!(list)

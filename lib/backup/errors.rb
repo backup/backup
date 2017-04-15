@@ -3,11 +3,11 @@ module Backup
   # See the specs for details.
   module NestedExceptions
     def self.included(klass)
-      klass.extend Module.new {
+      klass.extend(Module.new do
         def wrap(wrapped_exception, msg = nil)
           new(msg, wrapped_exception)
         end
-      }
+      end)
     end
 
     def initialize(obj = nil, wrapped_exception = nil)

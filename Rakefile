@@ -39,7 +39,7 @@ def current_branch
 end
 
 desc "Release new Backup gem version. Use this to release a new version."
-task :release do # rubocop:disable Metrics/BlockLength
+task :release do
   puts "Current version: #{current_version}"
   print "Enter new version: "
   new_version = $stdin.gets.chomp

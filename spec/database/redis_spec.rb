@@ -297,9 +297,9 @@ module Backup
 
     describe "#redis_cli_cmd" do
       let(:option_methods) do
-        %w(
+        %w[
           password_option connectivity_options user_options
-        )
+        ]
       end
 
       it "returns full redis-cli command built from all options" do

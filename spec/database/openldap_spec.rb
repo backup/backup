@@ -135,9 +135,8 @@ module Backup
 
       it "returns full slapcat command built from additional options and conf file" do
         db.stubs(:slapcat_args).returns(slapcat_args)
-        expect(db.send(:slapcat)).to eq(
-          "real_slapcat -F /etc/ldap/slapd.d -H ldap:///subtree-dn -a \"(!(entryDN:dnSubtreeMatch:=ou=People,dc=example,dc=com))\""
-        )
+        expect(db.send(:slapcat)).to eq "real_slapcat -F /etc/ldap/slapd.d -H ldap:///subtree-dn "\
+          "-a \"(!(entryDN:dnSubtreeMatch:=ou=People,dc=example,dc=com))\""
       end
 
       it "supports sudo" do
@@ -150,9 +149,8 @@ module Backup
       it "returns full slapcat command built from additional options and conf file and sudo" do
         db.stubs(:slapcat_args).returns(slapcat_args)
         db.stubs(:use_sudo).returns("true")
-        expect(db.send(:slapcat)).to eq(
-          "sudo real_slapcat -F /etc/ldap/slapd.d -H ldap:///subtree-dn -a \"(!(entryDN:dnSubtreeMatch:=ou=People,dc=example,dc=com))\""
-        )
+        expect(db.send(:slapcat)).to eq "sudo real_slapcat -F /etc/ldap/slapd.d -H "\
+          "ldap:///subtree-dn -a \"(!(entryDN:dnSubtreeMatch:=ou=People,dc=example,dc=com))\""
       end
 
       context "slapcat_conf_option" do

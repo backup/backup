@@ -37,7 +37,7 @@ module Backup
           # Returns an Array of file paths and their md5 hashes.
           def find_md5(dir, excludes)
             found = []
-            (Dir.entries(dir) - %w(. ..)).map { |e| File.join(dir, e) }.each do |path|
+            (Dir.entries(dir) - %w[. ..]).map { |e| File.join(dir, e) }.each do |path|
               if File.directory?(path)
                 unless exclude?(excludes, path)
                   found += find_md5(path, excludes)

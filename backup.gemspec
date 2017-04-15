@@ -46,7 +46,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency "qiniu", "~> 6.5"
   gem.add_dependency "nokogiri", "~> 1.7", ">= 1.7.1"
 
-  gem.add_development_dependency "rubocop", "0.45.0"
+  gem.add_development_dependency "rubocop", "0.48.1"
   gem.add_development_dependency "rake"
   gem.add_development_dependency "rspec", "3.5.0"
   gem.add_development_dependency "mocha", "0.14.0"

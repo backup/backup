@@ -413,7 +413,6 @@ module Backup
         end
 
         yield "#{utility(:gpg)} #{base_options} #{mode_options}", ".gpg"
-
       ensure
         cleanup
       end
@@ -470,7 +469,7 @@ module Backup
         FileUtils.chown(Config.user, nil, path)
         FileUtils.chmod(0o700, path)
 
-        unless %w(pubring.gpg secring.gpg trustdb.gpg)
+        unless %w[pubring.gpg secring.gpg trustdb.gpg]
             .all? { |name| File.exist? File.join(path, name) }
           run("#{utility(:gpg)} --homedir '#{path}' -K 2>&1 >/dev/null")
         end
@@ -507,7 +506,6 @@ module Backup
         check_gpg_config(file.path)
 
         file.path
-
       rescue => err
         cleanup
         raise Error.wrap(err, "Error creating temporary file for #gpg_config.")
@@ -670,7 +668,6 @@ module Backup
         keyid = ret.match(/ 0x(\w{16})/).to_a[1]
         raise "GPG Returned:\n#{ret.gsub(/^\s*/, "  ")}" unless keyid
         keyid
-
       rescue => err
         Logger.warn Error.wrap(
           err, "Public key import failed for '#{identifier}'"

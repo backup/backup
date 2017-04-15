@@ -180,7 +180,7 @@ module Backup
       # Configures the Mail gem by setting the defaults.
       # Creates and returns a new email, based on the @delivery_method used.
       def new_email
-        method = %w(smtp sendmail exim file test)
+        method = %w[smtp sendmail exim file test]
           .index(@delivery_method.to_s) ? @delivery_method.to_s : "smtp"
 
         options =

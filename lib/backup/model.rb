@@ -268,14 +268,11 @@ module Backup
       end
 
       syncers.each(&:perform!)
-
     rescue Interrupt
       @interrupted = true
       raise
-
     rescue Exception => err
       @exception = err
-
     ensure
       unless @interrupted
         set_exit_status
@@ -403,7 +400,6 @@ module Backup
       Logger.info "Before Hook Starting..."
       before.call
       Logger.info "Before Hook Finished."
-
     rescue Exception => err
       @before_hook_failed = true
       ex = err.is_a?(StandardError) ? Error : FatalError
@@ -422,7 +418,6 @@ module Backup
       Logger.info "After Hook Finished."
 
       set_exit_status # in case hook logged warnings
-
     rescue Exception => err
       fatal = !err.is_a?(StandardError)
       ex = fatal ? FatalError : Error

@@ -36,19 +36,15 @@ module Backup
             rescue Exception => err
               raise ErrorC.wrap(err), "an error occurred in Zone C"
             end
-          end.to raise_error { |err|
-            expect(err.message).to eq(
-              "ErrorC: an error occurred in Zone C\n" \
-              "--- Wrapped Exception ---\n" \
-              "ErrorB\n" \
-              "--- Wrapped Exception ---\n" \
-              "ErrorA: an error occurred in Zone A\n" \
-              "  \n" \
-              "  the following error should give a reason\n" \
-              "--- Wrapped Exception ---\n" \
-              "StandardError: error message"
-            )
-          }
+          end.to raise_error described_class, "ErrorC: an error occurred in Zone C\n" \
+            "--- Wrapped Exception ---\n" \
+            "ErrorB\n" \
+            "--- Wrapped Exception ---\n" \
+            "ErrorA: an error occurred in Zone A\n" \
+            "  \n" \
+            "  the following error should give a reason\n" \
+            "--- Wrapped Exception ---\n" \
+            "StandardError: error message"
         end
       end
 
@@ -109,17 +105,13 @@ module Backup
           it "sets message to class name when not given" do
             expect do
               raise described_class
-            end.to raise_error { |err|
-              expect(err.message).to eq class_name
-            }
+            end.to raise_error described_class, class_name
           end
 
           it "prefixes given message with class name" do
             expect do
               raise described_class, "a message"
-            end.to raise_error { |err|
-              expect(err.message).to eq class_name + ": a message"
-            }
+            end.to raise_error described_class, "#{class_name}: a message"
           end
 
           it "formats message" do
@@ -132,15 +124,11 @@ module Backup
             the blank line below will not
 
           EOS
-            end.to raise_error { |err|
-              expect(err.message).to eq(
-                "#{class_name}: error message\n" \
-                "  this is a multi-line message\n" \
-                "  \n" \
-                "  the above blank line will remain\n" \
-                "  the blank line below will not"
-              )
-            }
+            end.to raise_error described_class, "#{class_name}: error message\n" \
+              "  this is a multi-line message\n" \
+              "  \n" \
+              "  the above blank line will remain\n" \
+              "  the blank line below will not"
           end
 
           # see note under '#initialize'
@@ -151,12 +139,7 @@ module Backup
               rescue => err
                 raise described_class, err
               end
-            end.to raise_error { |err|
-              expect(err.message).to eq(
-                "#{class_name}: wrapped error\n" \
-                "  message"
-              )
-            }
+            end.to raise_error described_class, "#{class_name}: wrapped error\n  message"
           end
 
           it "allows backtrace to be set (with message)" do
@@ -361,16 +344,12 @@ module Backup
               this error is wrapping another error
             EOS
               end
-            end.to raise_error { |err|
-              expect(err.message).to eq(
-                "#{class_name}: error message\n" \
-                "  \n" \
-                "  this error is wrapping another error\n" \
-                "--- Wrapped Exception ---\n" \
-                "StandardError:  wrapped error\n" \
-                "message "
-              )
-            }
+            end.to raise_error described_class, "#{class_name}: error message\n" \
+              "  \n" \
+              "  this error is wrapping another error\n" \
+              "--- Wrapped Exception ---\n" \
+              "StandardError:  wrapped error\n" \
+              "message "
           end
 
           # see note under '#initialize'
@@ -381,15 +360,11 @@ module Backup
               rescue => err
                 raise described_class.wrap(err), err
               end
-            end.to raise_error { |err|
-              expect(err.message).to eq(
-                "#{class_name}: wrapped error\n" \
-                "  message\n" \
-                "--- Wrapped Exception ---\n" \
-                "StandardError:  wrapped error\n" \
-                "message "
-              )
-            }
+            end.to raise_error described_class, "#{class_name}: wrapped error\n" \
+              "  message\n" \
+              "--- Wrapped Exception ---\n" \
+              "StandardError:  wrapped error\n" \
+              "message "
           end
 
           it "uses backtrace from wrapped exception" do

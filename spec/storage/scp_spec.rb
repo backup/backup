@@ -169,12 +169,9 @@ module Backup
 
           expect do
             storage.send(:remove!, package)
-          end.to raise_error { |err|
-            expect(err).to be_an_instance_of Storage::SCP::Error
-            expect(err.message).to eq "Storage::SCP::Error: " \
-              "Net::SSH reported the following errors:\n" \
-              "  path not found"
-          }
+          end.to raise_error Storage::SCP::Error, "Storage::SCP::Error: " \
+            "Net::SSH reported the following errors:\n" \
+            "  path not found"
         end
       end
     end # describe '#remove!'

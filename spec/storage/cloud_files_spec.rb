@@ -94,9 +94,7 @@ module Backup
             pre_config.call(cf)
             cf.username = nil
           end
-        end.to raise_error { |err|
-          expect(err.message).to match(/are all required/)
-        }
+        end.to raise_error StandardError, /are all required/
       end
 
       it "requires api_key" do
@@ -106,9 +104,7 @@ module Backup
             pre_config.call(cf)
             cf.api_key = nil
           end
-        end.to raise_error { |err|
-          expect(err.message).to match(/are all required/)
-        }
+        end.to raise_error StandardError, /are all required/
       end
 
       it "requires container" do
@@ -118,9 +114,7 @@ module Backup
             pre_config.call(cf)
             cf.container = nil
           end
-        end.to raise_error { |err|
-          expect(err.message).to match(/are all required/)
-        }
+        end.to raise_error StandardError, /are all required/
       end
 
       it "requires segments_container if segment_size > 0" do
@@ -130,9 +124,7 @@ module Backup
             pre_config.call(cf)
             cf.segment_size = 1
           end
-        end.to raise_error { |err|
-          expect(err.message).to match(/segments_container is required/)
-        }
+        end.to raise_error StandardError, /segments_container is required/
       end
 
       it "requires container and segments_container be different" do
@@ -143,9 +135,7 @@ module Backup
             cf.segments_container = "my_container"
             cf.segment_size = 1
           end
-        end.to raise_error { |err|
-          expect(err.message).to match(/segments_container must not be the same/)
-        }
+        end.to raise_error StandardError, /segments_container must not be the same/
       end
 
       it "requires segments_size be <= 5120" do
@@ -156,9 +146,7 @@ module Backup
             cf.segments_container = "my_segments_container"
             cf.segment_size = 5121
           end
-        end.to raise_error { |err|
-          expect(err.message).to match(/segment_size is too large/)
-        }
+        end.to raise_error StandardError, /segment_size is too large/
       end
     end # describe '#initialize'
 

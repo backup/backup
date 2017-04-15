@@ -83,9 +83,9 @@ module Backup
         def check_configuration
           required =
             if use_iam_profile
-              %w(bucket)
+              %w[bucket]
             else
-              %w(access_key_id secret_access_key bucket)
+              %w[access_key_id secret_access_key bucket]
             end
           raise Error, <<-EOS if required.map { |name| send(name) }.any?(&:nil?)
             Configuration Error

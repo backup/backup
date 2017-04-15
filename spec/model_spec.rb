@@ -361,19 +361,13 @@ describe "Backup::Model" do
       it "should raise an error if chunk_size is not an Integer" do
         expect do
           model.split_into_chunks_of("345", 2)
-        end.to raise_error { |err|
-          expect(err).to be_an_instance_of Backup::Model::Error
-          expect(err.message).to match(/must be Integers/)
-        }
+        end.to raise_error Backup::Model::Error, /must be Integers/
       end
 
       it "should raise an error if suffix_size is not an Integer" do
         expect do
           model.split_into_chunks_of(345, "2")
-        end.to raise_error { |err|
-          expect(err).to be_an_instance_of Backup::Model::Error
-          expect(err.message).to match(/must be Integers/)
-        }
+        end.to raise_error Backup::Model::Error, /must be Integers/
       end
     end
   end # describe 'DSL Methods'
@@ -739,7 +733,7 @@ describe "Backup::Model" do
         storage_one.expects(:perform!).in_sequence(s).raises "Storage error"
         storage_two.expects(:perform!).in_sequence(s).returns(true)
 
-        expect { model.send(:store!) }.to raise_error "Storage error"
+        expect { model.send(:store!) }.to raise_error StandardError, "Storage error"
       end
 
       context "and multiple storages fail" do
@@ -760,7 +754,7 @@ describe "Backup::Model" do
             err.to_s =~ expected_messages.shift
           end
 
-          expect { model.send(:store!) }.to raise_error "Storage error"
+          expect { model.send(:store!) }.to raise_error StandardError, "Storage error"
         end
       end
     end

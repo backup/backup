@@ -160,10 +160,10 @@ module Backup
 
     describe "#pgdump" do
       let(:option_methods) do
-        %w(
+        %w[
           username_option connectivity_options
           user_options tables_to_dump tables_to_skip name
-        )
+        ]
       end
       # password_option and sudo_option leave no leading space if it's not used
 
@@ -188,9 +188,9 @@ module Backup
 
     describe "#pgdumpall" do
       let(:option_methods) do
-        %w(
+        %w[
           username_option connectivity_options user_options
-        )
+        ]
       end
       # password_option and sudo_option leave no leading space if it's not used
 

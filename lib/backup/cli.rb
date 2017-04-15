@@ -271,7 +271,7 @@ module Backup
       desc: "Path to your Backup configuration file"
 
     # options with their available values
-    %w(databases storages syncers encryptor compressor notifiers).each do |name|
+    %w[databases storages syncers encryptor compressor notifiers].each do |name|
       path = File.join(Backup::TEMPLATE_PATH, "cli", name)
       opts = Dir[path + "/*"].sort.map { |p| File.basename(p) }.join(", ")
       method_option name, type: :string, desc: "(#{opts})"
