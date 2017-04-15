@@ -823,7 +823,7 @@ describe "Backup::Model" do
     context "when name is given as a module defined under Backup::Config::DSL" do
       # this is necessary since the specs in spec/config/dsl_spec.rb
       # remove all the constants from Backup::Config::DSL as part of those tests.
-      before(:all) do
+      before(:context) do
         class Backup::Config::DSL
           module TestScope
             module TestKlass; end

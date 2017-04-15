@@ -3,7 +3,7 @@ require "spec_helper"
 describe Backup::Compressor::Custom do
   let(:compressor) { Backup::Compressor::Custom.new }
 
-  before(:all) do
+  before(:context) do
     # Utilities::Helpers#utility will raise an error
     # if the command is invalid or not set
     Backup::Compressor::Custom.send(
