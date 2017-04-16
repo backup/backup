@@ -182,7 +182,7 @@ module SandboxFileUtils
       pwd getwd cd chdir uptodate? compare_file identical? cmp
       compare_stream
     ].each do |name|
-      public :"#{ name }"
+      public :"#{name}"
     end
 
     %w[

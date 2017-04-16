@@ -1,8 +1,9 @@
 module Backup
   class Archive
+    include Utilities::Helpers
+
     class Error < Backup::Error; end
 
-    include Utilities::Helpers
     attr_reader :name, :options
 
     ##
@@ -50,8 +51,8 @@ module Backup
     # stripped by default, so care must be taken when extracting archives with
     # mixed relative/absolute paths.
     def initialize(model, name, &block)
-      @model   = model
-      @name    = name.to_s
+      @model = model
+      @name = name.to_s
       @options = {
         sudo: false,
         root: false,
@@ -59,7 +60,7 @@ module Backup
         excludes: [],
         tar_options: ""
       }
-      DSL.new(@options).instance_eval(&block)
+      DSL.new(@options).instance_eval(&block) if block_given?
     end
 
     def perform!
@@ -84,16 +85,16 @@ module Backup
           end
         end
 
-        pipeline << "#{utility(:cat)} > " \
-          "'#{File.join(path, "#{name}.#{extension}")}'"
+        pipeline <<
+          "#{utility(:cat)} > '#{File.join(path, "#{name}.#{extension}")}'"
         pipeline.run
       end
 
       if pipeline.success?
         Logger.info "Archive '#{name}' Complete!"
       else
-        raise Error, "Failed to Create Archive '#{name}'\n" +
-          pipeline.error_messages
+        raise Error,
+          "Failed to Create Archive '#{name}'\n" + pipeline.error_messages
       end
     end
 
