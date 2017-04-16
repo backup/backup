@@ -228,10 +228,10 @@ module Backup
 
     describe "#mongodump" do
       let(:option_methods) do
-        %w(
+        %w[
           name_option credential_options connectivity_options
           ipv6_option oplog_option user_options dump_packaging_path
-        )
+        ]
       end
 
       it "returns full mongodump command built from all options" do

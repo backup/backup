@@ -239,7 +239,7 @@ describe "Backup::Pipeline" do
   describe "#pipeline" do
     context "when there are multiple system commands to execute" do
       before do
-        pipeline.instance_variable_set(:@commands, %w(one two three))
+        pipeline.instance_variable_set(:@commands, %w[one two three])
       end
 
       it "should build a pipeline with redirected/collected exit codes" do

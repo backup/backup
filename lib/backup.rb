@@ -120,7 +120,7 @@ module Backup
 
   ##
   # Require Backup base files
-  %w(
+  %w[
     errors
     logger
     utilities
@@ -136,5 +136,5 @@ module Backup
     splitter
     template
     version
-  ).each { |lib| require File.join(LIBRARY_PATH, lib) }
+  ].each { |lib| require File.join(LIBRARY_PATH, lib) }
 end

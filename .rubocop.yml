@@ -13,6 +13,9 @@ AllCops:
   UseCache: true
   CacheRootDirectory: ./tmp
 
+# Metrics/LineLength:
+#   Max: 80
+
 Style/Documentation:
   Enabled: false
 
@@ -42,3 +45,6 @@ Style/IndentArray:
 
 Style/FormatString:
   EnforcedStyle: sprintf
+
+Style/SymbolArray:
+  Enabled: false

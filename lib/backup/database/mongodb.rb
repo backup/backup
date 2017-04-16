@@ -58,7 +58,6 @@ module Backup
         lock_database if @lock
         dump!
         package!
-
       ensure
         unlock_database if @lock
       end

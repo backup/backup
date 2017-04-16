@@ -178,27 +178,21 @@ describe Backup::Utilities::Helpers do
 
       expect do
         helpers.send(:utility, :unknown)
-      end.to raise_error(Backup::Utilities::Error) { |err|
-        expect(err.message).to match(/Could not locate 'unknown'/)
-      }
+      end.to raise_error(Backup::Utilities::Error, /Could not locate 'unknown'/)
     end
 
     it "should raise an error if name is nil" do
       utilities.expects(:`).never
       expect do
         helpers.send(:utility, nil)
-      end.to raise_error(
-        Backup::Utilities::Error, "Utilities::Error: Utility Name Empty"
-      )
+      end.to raise_error(Backup::Utilities::Error, "Utilities::Error: Utility Name Empty")
     end
 
     it "should raise an error if name is empty" do
       utilities.expects(:`).never
       expect do
         helpers.send(:utility, " ")
-      end.to raise_error(
-        Backup::Utilities::Error, "Utilities::Error: Utility Name Empty"
-      )
+      end.to raise_error(Backup::Utilities::Error, "Utilities::Error: Utility Name Empty")
     end
   end # describe '#utility'
 
@@ -339,11 +333,9 @@ describe Backup::Utilities::Helpers do
         it "should raise an error reporting no messages" do
           expect do
             helpers.send(:run, command)
-          end.to raise_error { |err|
-            expect(err.message).to eq(message_head +
-              "  STDOUT Messages: None\n" \
-              "  STDERR Messages: None")
-          }
+          end.to raise_error StandardError, "#{message_head}"\
+            "  STDOUT Messages: None\n" \
+            "  STDERR Messages: None"
         end
       end
 
@@ -354,13 +346,11 @@ describe Backup::Utilities::Helpers do
         it "should raise an error and report the stdout messages" do
           expect do
             helpers.send(:run, command)
-          end.to raise_error { |err|
-            expect(err.message).to eq(message_head +
-              "  STDOUT Messages: \n" \
-              "  out line1\n" \
-              "  out line2\n" \
-              "  STDERR Messages: None")
-          }
+          end.to raise_error StandardError, "#{message_head}" \
+            "  STDOUT Messages: \n" \
+            "  out line1\n" \
+            "  out line2\n" \
+            "  STDERR Messages: None"
         end
       end
 
@@ -371,13 +361,11 @@ describe Backup::Utilities::Helpers do
         it "should raise an error and report the stderr messages" do
           expect do
             helpers.send(:run, command)
-          end.to raise_error { |err|
-            expect(err.message).to eq(message_head +
-              "  STDOUT Messages: None\n" \
-              "  STDERR Messages: \n" \
-              "  err line1\n" \
-              "  err line2")
-          }
+          end.to raise_error StandardError, "#{message_head}" \
+            "  STDOUT Messages: None\n" \
+            "  STDERR Messages: \n" \
+            "  err line1\n" \
+            "  err line2"
         end
       end
 
@@ -388,15 +376,13 @@ describe Backup::Utilities::Helpers do
         it "should raise an error and report the stdout and stderr messages" do
           expect do
             helpers.send(:run, command)
-          end.to raise_error { |err|
-            expect(err.message).to eq(message_head +
+          end.to raise_error StandardError, "#{message_head}" \
               "  STDOUT Messages: \n" \
               "  out line1\n" \
               "  out line2\n" \
               "  STDERR Messages: \n" \
               "  err line1\n" \
-              "  err line2")
-          }
+              "  err line2"
         end
       end
     end # context 'when the command is not successful'

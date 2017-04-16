@@ -130,7 +130,7 @@ module Backup
       end
 
       def check_configuration
-        required = %w(username api_key container)
+        required = %w[username api_key container]
         raise Error, <<-EOS if required.map { |name| send(name) }.any?(&:nil?)
           Configuration Error
           #{required.map { |name| "##{name}" }.join(", ")} are all required

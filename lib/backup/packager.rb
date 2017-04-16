@@ -73,20 +73,21 @@ module Backup
         #
         # If no Splitter was configured, the final file output will be
         # piped through `cat` into the final output file.
-        if @splitter
-          stack << lambda do
-            @splitter.split_with do |command|
-              @pipeline << command
+        stack <<
+          if @splitter
+            lambda do
+              @splitter.split_with do |command|
+                @pipeline << command
+                stack.shift.call
+              end
+            end
+          else
+            lambda do
+              outfile = File.join(Config.tmp_path, @package.basename)
+              @pipeline << "#{utility(:cat)} > #{outfile}"
               stack.shift.call
             end
           end
-        else
-          stack << lambda do
-            outfile = File.join(Config.tmp_path, @package.basename)
-            @pipeline << "#{utility(:cat)} > #{outfile}"
-            stack.shift.call
-          end
-        end
 
         ##
         # Last Proc to be called runs the Pipeline the procedure built.

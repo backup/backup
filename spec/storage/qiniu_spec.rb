@@ -29,9 +29,7 @@ module Backup
       it "requires access_key secret_key and bucket" do
         expect do
           Storage::Qiniu.new(model)
-        end.to raise_error { |err|
-          expect(err.message).to match(/#access_key, #secret_key, #bucket are all required/)
-        }
+        end.to raise_error StandardError, /#access_key, #secret_key, #bucket are all required/
       end
 
       it "establishes connection" do

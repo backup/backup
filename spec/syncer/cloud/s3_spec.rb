@@ -102,9 +102,7 @@ module Backup
             pre_config.call(s3)
             s3.bucket = nil
           end
-        end.to raise_error { |err|
-          expect(err.message).to match(/are all required/)
-        }
+        end.to raise_error(StandardError, /are all required/)
       end
 
       context "when using AWS IAM profile" do
@@ -126,9 +124,7 @@ module Backup
               pre_config.call(s3)
               s3.access_key_id = nil
             end
-          end.to raise_error { |err|
-            expect(err.message).to match(/are all required/)
-          }
+          end.to raise_error StandardError, /are all required/
         end
 
         it "requires secret_access_key" do
@@ -138,9 +134,7 @@ module Backup
               pre_config.call(s3)
               s3.secret_access_key = nil
             end
-          end.to raise_error { |err|
-            expect(err.message).to match(/are all required/)
-          }
+          end.to raise_error StandardError, /are all required/
         end
       end
 
@@ -151,9 +145,7 @@ module Backup
             pre_config.call(s3)
             s3.encryption = :aes512
           end
-        end.to raise_error { |err|
-          expect(err.message).to match(/must be :aes256 or nil/)
-        }
+        end.to raise_error StandardError, /must be :aes256 or nil/
       end
 
       it "validates storage_class" do
@@ -163,9 +155,7 @@ module Backup
             pre_config.call(s3)
             s3.storage_class = :glacier
           end
-        end.to raise_error { |err|
-          expect(err.message).to match(/must be :standard or :reduced_redundancy/)
-        }
+        end.to raise_error StandardError, /must be :standard or :reduced_redundancy/
       end
     end # describe '#initialize'
 

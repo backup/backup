@@ -281,9 +281,7 @@ module Backup
           .with("my_container", ["obj_a_name", "obj_b_name"]).returns(resp_ok)
 
         objects = [object_a, object_b]
-        expect do
-          cloud_io.delete(objects)
-        end.not_to change { objects }
+        expect { cloud_io.delete(objects) }.not_to change { objects }
       end
 
       it "accepts a single name" do
@@ -299,9 +297,7 @@ module Backup
           .with("my_container", ["obj_a_name", "obj_b_name"]).returns(resp_ok)
 
         names = ["obj_a_name", "obj_b_name"]
-        expect do
-          cloud_io.delete(names)
-        end.not_to change { names }
+        expect { cloud_io.delete(names) }.not_to change { names }
       end
 
       it "does nothing if empty array passed" do
@@ -320,9 +316,7 @@ module Backup
         connection.expects(:delete_multiple_objects)
           .with("my_container", names_remaining).returns(resp_ok)
 
-        expect do
-          cloud_io.delete(names_all)
-        end.not_to change { names_all }
+        expect { cloud_io.delete(names_all) }.not_to change { names_all }
       end
 
       it "retries on raised errors" do

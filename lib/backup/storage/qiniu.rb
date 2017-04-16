@@ -49,7 +49,7 @@ module Backup
       end
 
       def check_configuration
-        required = %w(access_key secret_key bucket)
+        required = %w[access_key secret_key bucket]
 
         raise Error, <<-EOS if required.map { |name| send(name) }.any?(&:nil?)
           Configuration Error

@@ -84,9 +84,7 @@ module Backup
             pre_config.call(cf)
             cf.username = nil
           end
-        end.to raise_error { |err|
-          expect(err.message).to match(/are all required/)
-        }
+        end.to raise_error StandardError, /are all required/
       end
 
       it "requires api_key" do
@@ -96,9 +94,7 @@ module Backup
             pre_config.call(cf)
             cf.api_key = nil
           end
-        end.to raise_error { |err|
-          expect(err.message).to match(/are all required/)
-        }
+        end.to raise_error StandardError, /are all required/
       end
 
       it "requires container" do
@@ -108,9 +104,7 @@ module Backup
             pre_config.call(cf)
             cf.container = nil
           end
-        end.to raise_error { |err|
-          expect(err.message).to match(/are all required/)
-        }
+        end.to raise_error StandardError, /are all required/
       end
     end # describe '#initialize'
 

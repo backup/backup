@@ -32,12 +32,7 @@ module Backup
         config_file = File.expand_path("foo")
         expect do
           config.load(config_file: config_file)
-        end.to raise_error { |err|
-          expect(err).to be_a config::Error
-          expect(err.message).to match(
-            /Could not find configuration file: '#{ config_file }'/
-          )
-        }
+        end.to raise_error config::Error, /Could not find configuration file: '#{ config_file }'/
       end
 
       it "raises an error if config file version is invalid" do
@@ -50,10 +45,7 @@ module Backup
 
         expect do
           config.load(config_file: "/foo")
-        end.to raise_error { |err|
-          expect(err).to be_a config::Error
-          expect(err.message).to match(/Invalid Configuration File/)
-        }
+        end.to raise_error config::Error, /Invalid Configuration File/
       end
 
       describe "setting config paths from command line options" do
@@ -181,25 +173,18 @@ module Backup
       context "when the given path == @root_path" do
         it "should return @root_path without requiring the path to exist" do
           File.expects(:directory?).never
-          expect do
-            expect(config.send(:set_root_path, config.root_path))
-              .to eq(config.root_path)
-          end.not_to raise_error
+          expect(config.send(:set_root_path, config.root_path)).to eq(config.root_path)
         end
       end
 
       context "when the given path exists" do
         it "should set and return the @root_path" do
-          expect do
-            expect(config.send(:set_root_path, Dir.pwd)).to eq(Dir.pwd)
-          end.not_to raise_error
+          expect(config.send(:set_root_path, Dir.pwd)).to eq(Dir.pwd)
           expect(config.root_path).to eq(Dir.pwd)
         end
 
         it "should expand relative paths" do
-          expect do
-            expect(config.send(:set_root_path, "")).to eq(Dir.pwd)
-          end.not_to raise_error
+          expect(config.send(:set_root_path, "")).to eq(Dir.pwd)
           expect(config.root_path).to eq(Dir.pwd)
         end
       end
@@ -209,11 +194,11 @@ module Backup
           path = File.expand_path("foo")
           expect do
             config.send(:set_root_path, "foo")
-          end.to raise_error { |err|
+          end.to raise_error(proc do |err|
             expect(err).to be_an_instance_of config::Error
             expect(err.message).to match(/Root Path Not Found/)
             expect(err.message).to match(/Path was: #{ path }/)
-          }
+          end)
         end
       end
     end # describe '#set_root_path'

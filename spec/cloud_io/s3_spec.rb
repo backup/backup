@@ -294,9 +294,7 @@ module Backup
         ).returns(resp_ok)
 
         objects = [object_a, object_b]
-        expect do
-          cloud_io.delete(objects)
-        end.not_to change { objects }
+        expect { cloud_io.delete(objects) }.not_to change { objects }
       end
 
       it "accepts a single key" do
@@ -314,9 +312,7 @@ module Backup
         ).returns(resp_ok)
 
         objects = ["obj_key_a", "obj_key_b"]
-        expect do
-          cloud_io.delete(objects)
-        end.not_to change { objects }
+        expect { cloud_io.delete(objects) }.not_to change { objects }
       end
 
       it "does nothing if empty array passed" do
@@ -341,9 +337,7 @@ module Backup
             "my_bucket", keys_10, quiet: true
           ).returns(resp_ok)
 
-          expect do
-            cloud_io.delete(keys_all)
-          end.not_to change { keys_all }
+          expect { cloud_io.delete(keys_all) }.not_to change { keys_all }
         end
 
         it "prevents mutation of options to delete_multiple_objects" do
@@ -354,9 +348,7 @@ module Backup
             "my_bucket", keys_10, quiet: true
           ).returns(resp_ok)
 
-          expect do
-            cloud_io.delete(keys_all)
-          end.not_to change { keys_all }
+          expect { cloud_io.delete(keys_all) }.not_to change { keys_all }
         end
       end
 
@@ -381,18 +373,14 @@ module Backup
 
         expect do
           cloud_io.delete("obj_key")
-        end.to raise_error(CloudIO::Error) { |err|
-          expect(err.message).to eq(
-            "CloudIO::Error: Max Retries (1) Exceeded!\n" \
-            "  Operation: DELETE Multiple Objects\n" \
-            "  Be sure to check the log messages for each retry attempt.\n" \
-            "--- Wrapped Exception ---\n" \
-            "CloudIO::S3::Error: The server returned the following:\n" \
-            "  Failed to delete: obj_key\n" \
-            "  Reason: InternalError: We encountered an internal error. " \
-              "Please try again."
-          )
-        }
+        end.to raise_error CloudIO::Error, "CloudIO::Error: Max Retries (1) Exceeded!\n" \
+          "  Operation: DELETE Multiple Objects\n" \
+          "  Be sure to check the log messages for each retry attempt.\n" \
+          "--- Wrapped Exception ---\n" \
+          "CloudIO::S3::Error: The server returned the following:\n" \
+          "  Failed to delete: obj_key\n" \
+          "  Reason: InternalError: We encountered an internal error. " \
+            "Please try again."
         expect(Logger.messages.map(&:lines).join("\n")).to eq(
           "CloudIO::Error: Retry #1 of 1\n" \
           "  Operation: DELETE Multiple Objects\n" \
@@ -490,15 +478,11 @@ module Backup
 
         expect do
           cloud_io.send(:put_object, "/src/file", "dest/file")
-        end.to raise_error(CloudIO::Error) { |err|
-          expect(err.message).to eq(
-            "CloudIO::Error: Max Retries (1) Exceeded!\n" \
-            "  Operation: PUT 'my_bucket/dest/file'\n" \
-            "  Be sure to check the log messages for each retry attempt.\n" \
-            "--- Wrapped Exception ---\n" \
-            "RuntimeError: error2"
-          )
-        }
+        end.to raise_error CloudIO::Error, "CloudIO::Error: Max Retries (1) Exceeded!\n" \
+          "  Operation: PUT 'my_bucket/dest/file'\n" \
+          "  Be sure to check the log messages for each retry attempt.\n" \
+          "--- Wrapped Exception ---\n" \
+          "RuntimeError: error2"
         expect(Logger.messages.map(&:lines).join("\n")).to eq(
           "CloudIO::Error: Retry #1 of 1\n" \
           "  Operation: PUT 'my_bucket/dest/file'\n" \
@@ -707,16 +691,12 @@ module Backup
 
         expect do
           cloud_io.send(:complete_multipart, "dest/file", 1234, [:parts])
-        end.to raise_error(CloudIO::Error) { |err|
-          expect(err.message).to eq(
-            "CloudIO::Error: Max Retries (1) Exceeded!\n" \
-            "  Operation: POST 'my_bucket/dest/file' (Complete)\n" \
-            "  Be sure to check the log messages for each retry attempt.\n" \
-            "--- Wrapped Exception ---\n" \
-            "CloudIO::S3::Error: The server returned the following error:\n" \
-            "  InternalError: We encountered an internal error. Please try again."
-          )
-        }
+        end.to raise_error CloudIO::Error, "CloudIO::Error: Max Retries (1) Exceeded!\n" \
+          "  Operation: POST 'my_bucket/dest/file' (Complete)\n" \
+          "  Be sure to check the log messages for each retry attempt.\n" \
+          "--- Wrapped Exception ---\n" \
+          "CloudIO::S3::Error: The server returned the following error:\n" \
+          "  InternalError: We encountered an internal error. Please try again."
         expect(Logger.messages.map(&:lines).join("\n")).to eq(
           "  Complete Multipart 'my_bucket/dest/file'\n" \
           "CloudIO::Error: Retry #1 of 1\n" \
