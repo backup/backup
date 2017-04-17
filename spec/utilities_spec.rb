@@ -53,7 +53,7 @@ describe Backup::Utilities do
     end
 
     it "allows utilities to be configured" do
-      utilities::NAMES.each do |name|
+      utilities::UTILITIES_NAMES.each do |name|
         expect(helpers.send(:utility, name)).to eq("/path/to/#{name}")
       end
     end
@@ -79,7 +79,7 @@ describe Backup::Utilities do
         tar "my_tar"
       end
       path = File.expand_path("my_tar")
-      expect(utilities::UTILITY["tar"]).to eq(path)
+      expect(utilities.utilities["tar"]).to eq(path)
       expect(helpers.send(:utility, :tar)).to eq(path)
     end
 

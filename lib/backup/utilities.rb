@@ -2,8 +2,7 @@ module Backup
   module Utilities
     class Error < Backup::Error; end
 
-    UTILITY = {}
-    NAMES = %w[
+    UTILITIES_NAMES = %w[
       tar cat split sudo chown hostname
       gzip bzip2
       mongo mongodump mysqldump innobackupex
@@ -13,33 +12,37 @@ module Backup
       sendmail exim
       send_nsca
       zabbix_sender
-    ]
+    ].freeze
 
-    module DSL
-      class << self
-        ##
-        # Allow users to set the path for all utilities in the .configure block.
-        #
-        # Utility names with dashes ('redis-cli') will be set using method calls
-        # with an underscore ('redis_cli').
-        NAMES.each do |name|
-          define_method name.tr("-", "_") do |val|
-            path = File.expand_path(val)
-            unless File.executable?(path)
-              raise Utilities::Error, <<-EOS
-                The path given for '#{name}' was not found or not executable.
-                Path was: #{path}
-              EOS
-            end
-            UTILITY[name] = path
+    # @api private
+    class DSL
+      def initialize(utils)
+        @utilities = utils
+      end
+
+      # Helper methods to allow users to set the path for all utilities in the
+      # .configure block.
+      #
+      # Utility names with dashes (`redis-cli`) will be set using method calls
+      # with an underscore (`redis_cli`).
+      UTILITIES_NAMES.each do |util_name|
+        define_method util_name.tr("-", "_") do |raw_path|
+          path = File.expand_path(raw_path)
+
+          unless File.executable?(path)
+            raise Utilities::Error, <<-EOS
+              The path given for '#{util_name}' was not found or not executable.
+              Path was: #{path}
+            EOS
           end
-        end
 
-        ##
-        # Allow users to set the +tar+ distribution if needed. (:gnu or :bsd)
-        def tar_dist(val)
-          Utilities.tar_dist(val)
+          @utilities.utilities[util_name] = path
         end
+      end
+
+      # Allow users to set the +tar+ distribution if needed. (:gnu or :bsd)
+      def tar_dist(val)
+        Utilities.tar_dist(val)
       end
     end
 
@@ -100,7 +103,7 @@ module Backup
       # These paths may be set using absolute paths, or relative to the
       # working directory when Backup is run.
       def configure(&block)
-        DSL.instance_eval(&block)
+        DSL.new(self).instance_eval(&block)
       end
 
       def tar_dist(val)
@@ -113,6 +116,10 @@ module Backup
         @gnu_tar = !!run("#{utility(:tar)} --version").match(/GNU/)
       end
 
+      def utilities
+        @utilities ||= {}
+      end
+
       private
 
       ##
@@ -122,15 +129,15 @@ module Backup
         name = name.to_s.strip
         raise Error, "Utility Name Empty" if name.empty?
 
-        UTILITY[name] ||= `which '#{name}' 2>/dev/null`.chomp
-        raise Error, <<-EOS if UTILITY[name].empty?
+        utilities[name] ||= `which '#{name}' 2>/dev/null`.chomp
+        raise Error, <<-EOS if utilities[name].empty?
           Could not locate '#{name}'.
           Make sure the specified utility is installed
           and available in your system's $PATH, or specify it's location
           in your 'config.rb' file using Backup::Utilities.configure
         EOS
 
-        UTILITY[name].dup
+        utilities[name].dup
       end
 
       ##
@@ -181,31 +188,27 @@ module Backup
           raise Error.wrap(e, "Failed to execute '#{name}'")
         end
 
-        if ps.success?
-          unless out.empty?
-            Logger.info(
-              out.lines.map { |line| "#{name}:STDOUT: #{line}" }.join
-            )
-          end
-
-          unless err.empty?
-            Logger.warn(
-              err.lines.map { |line| "#{name}:STDERR: #{line}" }.join
-            )
-          end
-
-          return out
-        else
+        unless ps.success?
           raise Error, <<-EOS
             '#{name}' failed with exit status: #{ps.exitstatus}
             STDOUT Messages: #{out.empty? ? "None" : "\n#{out}"}
             STDERR Messages: #{err.empty? ? "None" : "\n#{err}"}
           EOS
         end
+
+        unless out.empty?
+          Logger.info(out.lines.map { |line| "#{name}:STDOUT: #{line}" }.join)
+        end
+
+        unless err.empty?
+          Logger.warn(err.lines.map { |line| "#{name}:STDERR: #{line}" }.join)
+        end
+
+        out
       end
 
       def reset!
-        UTILITY.clear
+        utilities.clear
         @gnu_tar = nil
       end
     end

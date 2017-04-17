@@ -174,7 +174,6 @@ Style/MutableConstant:
     - 'lib/backup/database/redis.rb'
     - 'lib/backup/encryptor/gpg.rb'
     - 'lib/backup/logger/console.rb'
-    - 'lib/backup/utilities.rb'
     - 'lib/backup/version.rb'
 
 # Offense count: 4
