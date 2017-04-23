@@ -10,7 +10,6 @@ Backup includes the following Storages:
 
 - [CloudFiles][storage-cloudfiles]
 - [Dropbox][storage-dropbox]
-- [Ninefold][storage-ninefold]
 - [S3][storage-s3]
 - [FTP][storage-ftp]
 - [SCP][storage-scp]

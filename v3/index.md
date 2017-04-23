@@ -71,7 +71,6 @@ You can use any number of the following Storages to store your backup:
 
 - [Amazon S3][storage-s3]
 - [Rackspace Cloud Files][storage-cloudfiles]
-- [Ninefold][storage-ninefold]
 - [Dropbox][storage-dropbox]
 - [FTP][storage-ftp]
 - [SFTP][storage-sftp]
