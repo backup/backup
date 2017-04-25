@@ -56,7 +56,7 @@ module Backup
     end
 
     describe "#notify!" do
-      let(:fake_ses) { Aws::SES::Client.new(stub_responses: true) }
+      let!(:fake_ses) { Aws::SES::Client.new(stub_responses: true) }
 
       shared_examples "messages" do
         context "when status is :success" do
@@ -107,9 +107,20 @@ module Backup
       end
 
       context "uses access key id" do
+        before do
+          credentials = mock
+          Aws::Credentials
+            .expects(:new)
+            .with("my_access_key_id", "my_secret_access_key")
+            .returns(credentials)
+          Aws::SES::Client.stubs(:new).with(
+            region: "eu-west-1",
+            credentials: credentials
+          ).returns(fake_ses)
+        end
+
         it_behaves_like "messages" do
           let(:notifier) do
-            f = fake_ses
             Notifier::Ses.new(model) do |ses|
               ses.access_key_id = "my_access_key_id"
               ses.secret_access_key = "my_secret_access_key"
@@ -118,16 +129,23 @@ module Backup
               ses.cc = "my.cc.email@gmail.com"
               ses.bcc = "my.bcc.email@gmail.com"
               ses.reply_to = "my.reply_to.email@gmail.com"
-              ses.stubs(:client).returns(f)
             end
           end
         end
       end
 
       context "uses iam instance profile" do
+        before do
+          iam_profile = mock
+          Aws::InstanceProfileCredentials.expects(:new).returns(iam_profile)
+          Aws::SES::Client.stubs(:new).with(
+            region: "eu-west-1",
+            credentials: iam_profile
+          ).returns(fake_ses)
+        end
+
         it_behaves_like "messages" do
           let(:notifier) do
-            f = fake_ses
             Notifier::Ses.new(model) do |ses|
               ses.use_iam_profile = true
               ses.to = "my.receiver.email@gmail.com"
@@ -135,7 +153,6 @@ module Backup
               ses.cc = "my.cc.email@gmail.com"
               ses.bcc = "my.bcc.email@gmail.com"
               ses.reply_to = "my.reply_to.email@gmail.com"
-              ses.stubs(:client).returns(f)
             end
           end
         end
