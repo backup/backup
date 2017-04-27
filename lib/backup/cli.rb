@@ -87,19 +87,19 @@ module Backup
     # so the --no-<option> usage will set the value to nil instead of false.
     method_option :quiet,
       aliases: "-q",
-      type: :string,
+      type: :boolean,
       default: false,
       banner: "",
       desc: "Disable console log output."
 
     method_option :syslog,
-      type: :string,
+      type: :boolean,
       default: false,
       banner: "",
       desc: "Enable logging to syslog."
 
     method_option :logfile,
-      type: :string,
+      type: :boolean,
       default: true,
       banner: "",
       desc: "Enable Backup's log file."
