@@ -28,10 +28,8 @@ describe "Backup::CLI" do
       end
 
       it "configures console and logfile loggers by default" do
-        expect do
-          ARGV.replace(["perform", "-t", "test_trigger_a,test_trigger_b"])
-          cli.start
-        end.not_to raise_error
+        ARGV.replace(["perform", "-t", "test_trigger_a,test_trigger_b"])
+        cli.start
 
         expect(logger_options.console.quiet).to eq(false)
         expect(logger_options.logfile.enabled).to eq(true)
@@ -53,12 +51,10 @@ describe "Backup::CLI" do
       end
 
       it "forces console logging" do
-        expect do
-          ARGV.replace(
-            ["perform", "-t", "test_trigger_a,test_trigger_b", "--no-quiet"]
-          )
-          cli.start
-        end.not_to raise_error
+        ARGV.replace(
+          ["perform", "-t", "test_trigger_a,test_trigger_b", "--no-quiet"]
+        )
+        cli.start
 
         expect(logger_options.console.quiet).to eq(false)
         expect(logger_options.logfile.enabled).to eq(true)
@@ -67,13 +63,11 @@ describe "Backup::CLI" do
       end
 
       it "forces the logfile and syslog to be disabled" do
-        expect do
-          ARGV.replace(
-            ["perform", "-t", "test_trigger_a,test_trigger_b",
-             "--no-logfile", "--no-syslog"]
-          )
-          cli.start
-        end.not_to raise_error
+        ARGV.replace(
+          ["perform", "-t", "test_trigger_a,test_trigger_b",
+           "--no-logfile", "--no-syslog"]
+        )
+        cli.start
 
         expect(logger_options.console.quiet).to eq(false)
         expect(logger_options.logfile.enabled).to eq(false)
@@ -82,13 +76,11 @@ describe "Backup::CLI" do
       end
 
       it "configures the log_path" do
-        expect do
-          ARGV.replace(
-            ["perform", "-t", "test_trigger_a,test_trigger_b",
-             "--log-path", "my/log/path"]
-          )
-          cli.start
-        end.not_to raise_error
+        ARGV.replace(
+          ["perform", "-t", "test_trigger_a,test_trigger_b",
+           "--log-path", "my/log/path"]
+        )
+        cli.start
 
         expect(logger_options.console.quiet).to eq(false)
         expect(logger_options.logfile.enabled).to eq(true)
@@ -111,12 +103,10 @@ describe "Backup::CLI" do
         Backup::Logger.expects(:clear!).in_sequence(s)
         model_b.expects(:perform!).never
 
-        expect do
-          ARGV.replace(
-            ["perform", "-t", "test_trigger_a"]
-          )
-          cli.start
-        end.not_to raise_error
+        ARGV.replace(
+          ["perform", "-t", "test_trigger_a"]
+        )
+        cli.start
       end
 
       it "performs multiple triggers" do
@@ -125,12 +115,10 @@ describe "Backup::CLI" do
         model_b.expects(:perform!).in_sequence(s)
         Backup::Logger.expects(:clear!).in_sequence(s)
 
-        expect do
-          ARGV.replace(
-            ["perform", "-t", "test_trigger_a,test_trigger_b"]
-          )
-          cli.start
-        end.not_to raise_error
+        ARGV.replace(
+          ["perform", "-t", "test_trigger_a,test_trigger_b"]
+        )
+        cli.start
       end
 
       it "performs multiple models that share a trigger name" do
@@ -141,12 +129,10 @@ describe "Backup::CLI" do
         model_d.expects(:perform!).in_sequence(s)
         Backup::Logger.expects(:clear!).in_sequence(s)
 
-        expect do
-          ARGV.replace(
-            ["perform", "-t", "test_trigger_c"]
-          )
-          cli.start
-        end.not_to raise_error
+        ARGV.replace(
+          ["perform", "-t", "test_trigger_c"]
+        )
+        cli.start
       end
 
       it "performs unique models only once, in the order first found" do
@@ -157,12 +143,10 @@ describe "Backup::CLI" do
         model_c.expects(:perform!).in_sequence(s)
         Backup::Logger.expects(:clear!).in_sequence(s)
 
-        expect do
-          ARGV.replace(
-            ["perform", "-t", "test_trigger_a,test_trigger_b,test_trigger_c,test_trigger_b"]
-          )
-          cli.start
-        end.not_to raise_error
+        ARGV.replace(
+          ["perform", "-t", "test_trigger_a,test_trigger_b,test_trigger_c,test_trigger_b"]
+        )
+        cli.start
       end
 
       it "performs unique models only once, in the order first found (wildcard)" do
@@ -173,12 +157,10 @@ describe "Backup::CLI" do
         model_c.expects(:perform!).in_sequence(s)
         Backup::Logger.expects(:clear!).in_sequence(s)
 
-        expect do
-          ARGV.replace(
-            ["perform", "-t", "test_trigger_*"]
-          )
-          cli.start
-        end.not_to raise_error
+        ARGV.replace(
+          ["perform", "-t", "test_trigger_*"]
+        )
+        cli.start
       end
     end # describe 'setting triggers'
 
