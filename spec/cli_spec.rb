@@ -33,25 +33,23 @@ describe "Backup::CLI" do
           cli.start
         end.not_to raise_error
 
-        expect(logger_options.console.quiet).to be(false)
+        expect(logger_options.console.quiet).to eq(false)
         expect(logger_options.logfile.enabled).to eq(true)
         expect(logger_options.logfile.log_path).to eq("")
-        expect(logger_options.syslog.enabled).to be(false)
+        expect(logger_options.syslog.enabled).to eq(false)
       end
 
       it "configures only the syslog" do
-        expect do
-          ARGV.replace(
-            ["perform", "-t", "test_trigger_a,test_trigger_b",
-             "--quiet", "--no-logfile", "--syslog"]
-          )
-          cli.start
-        end.not_to raise_error
+        ARGV.replace(
+          ["perform", "-t", "test_trigger_a,test_trigger_b",
+           "--quiet", "--no-logfile", "--syslog"]
+        )
+        cli.start
 
-        expect(logger_options.console.quiet).to be_truthy
-        expect(logger_options.logfile.enabled).to be_nil
+        expect(logger_options.console.quiet).to eq(true)
+        expect(logger_options.logfile.enabled).to eq(false)
         expect(logger_options.logfile.log_path).to eq("")
-        expect(logger_options.syslog.enabled).to be_truthy
+        expect(logger_options.syslog.enabled).to eq(true)
       end
 
       it "forces console logging" do
@@ -62,10 +60,10 @@ describe "Backup::CLI" do
           cli.start
         end.not_to raise_error
 
-        expect(logger_options.console.quiet).to be_nil
+        expect(logger_options.console.quiet).to eq(false)
         expect(logger_options.logfile.enabled).to eq(true)
         expect(logger_options.logfile.log_path).to eq("")
-        expect(logger_options.syslog.enabled).to be(false)
+        expect(logger_options.syslog.enabled).to eq(false)
       end
 
       it "forces the logfile and syslog to be disabled" do
@@ -77,10 +75,10 @@ describe "Backup::CLI" do
           cli.start
         end.not_to raise_error
 
-        expect(logger_options.console.quiet).to be(false)
-        expect(logger_options.logfile.enabled).to be_nil
+        expect(logger_options.console.quiet).to eq(false)
+        expect(logger_options.logfile.enabled).to eq(false)
         expect(logger_options.logfile.log_path).to eq("")
-        expect(logger_options.syslog.enabled).to be_nil
+        expect(logger_options.syslog.enabled).to eq(false)
       end
 
       it "configures the log_path" do
@@ -92,10 +90,10 @@ describe "Backup::CLI" do
           cli.start
         end.not_to raise_error
 
-        expect(logger_options.console.quiet).to be(false)
+        expect(logger_options.console.quiet).to eq(false)
         expect(logger_options.logfile.enabled).to eq(true)
         expect(logger_options.logfile.log_path).to eq("my/log/path")
-        expect(logger_options.syslog.enabled).to be(false)
+        expect(logger_options.syslog.enabled).to eq(false)
       end
     end # describe 'setting logger options'
 
