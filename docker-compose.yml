@@ -1,0 +1,9 @@
+version: '2'
+
+services:
+  ruby_backup_tester:
+    build: .
+    command: /bin/bash
+    image: ruby_backup_tester
+    volumes:
+      - ".:/usr/src/backup"

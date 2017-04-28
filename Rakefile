@@ -80,3 +80,15 @@ task :release do
 
   puts "Backup version #{new_version} released!"
 end
+
+namespace :docker do
+  desc "Build testing containers with Docker Compose"
+  task :build do
+    sh "docker-compose build"
+  end
+  desc "Run RSpec tests with Docker Compose"
+  task spec: [:build] do
+    sh "docker-compose run ruby_backup_tester " \
+       "ruby -Ilib -S rspec ./spec/"
+  end
+end
