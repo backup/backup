@@ -1,3 +1,10 @@
+require "rake/clean"
+
+CLEAN.include("tmp")
+CLOBBER.include("tmp")
+
+Dir["integration/tasks/**/*.rake"].each { |f| import f }
+
 require "rubocop/rake_task"
 
 RuboCop::RakeTask.new
@@ -86,7 +93,12 @@ namespace :docker do
   task :build do
     sh "docker-compose build"
   end
-  desc "Run RSpec tests with Docker Compose"
+  desc "Run RSpec integration tests with Docker Compose"
+  task integration: ["build", "integration:files"] do
+    sh "docker-compose run ruby_backup_tester " \
+       "ruby -Ilib -S rspec ./integration/acceptance/"
+  end
+  desc "Run RSpec unit tests with Docker Compose"
   task spec: [:build] do
     sh "docker-compose run ruby_backup_tester " \
        "ruby -Ilib -S rspec ./spec/"
