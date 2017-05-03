@@ -1,11 +1,12 @@
-require "aws/ses"
+require "aws-sdk"
+require "mail"
 
 module Backup
   module Notifier
     class Ses < Base
       ##
       # Amazon Simple Email Service (SES) Credentials
-      attr_accessor :access_key_id, :secret_access_key
+      attr_accessor :access_key_id, :secret_access_key, :use_iam_profile
 
       ##
       # SES Region
@@ -49,10 +50,15 @@ module Backup
       private
 
       def client
-        AWS::SES::Base.new(
-          access_key_id: access_key_id,
-          secret_access_key: secret_access_key,
-          server: "email.#{region}.amazonaws.com"
+        credentials = if use_iam_profile
+                        Aws::InstanceProfileCredentials.new
+                      else
+                        Aws::Credentials.new(access_key_id, secret_access_key)
+                      end
+
+        Aws::SES::Client.new(
+          region: region,
+          credentials: credentials
         )
       end
 
@@ -84,6 +90,10 @@ module Backup
         email.reply_to = reply_to
         email.subject  = message.call(model, status: status_data_for(status))
 
+        # By default, the `mail` gem doesn't include BCC in raw output, which is
+        # needed for SES to send to those addresses.
+        email[:bcc].include_in_headers = true
+
         send_log = send_log_on.include?(status)
         template = Backup::Template.new(model: model, send_log: send_log)
         email.body = template.result(sprintf("notifier/mail/%s.erb", status.to_s))
@@ -96,7 +106,17 @@ module Backup
           }
         end
 
-        client.send_raw_email(email)
+        send_opts = {
+          raw_message: {
+            data: email.to_s
+          }
+        }
+
+        if email.respond_to?(:destinations)
+          send_opts[:destinations] = email.destinations
+        end
+
+        client.send_raw_email(send_opts)
       end
     end
   end
