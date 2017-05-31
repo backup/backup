@@ -3,6 +3,7 @@ require "spec_helper"
 module Backup
   describe Config do
     let(:config) { Config }
+    let(:major_gem_version) { Gem::Version.new(Backup::VERSION).segments.first }
 
     # Note: spec_helper resets Config before each example
 
@@ -10,7 +11,7 @@ module Backup
       it "loads config.rb and models" do
         File.stubs(
           exist?: true,
-          read: "# Backup v4.x Configuration\n@loaded << :config",
+          read: "# Backup v#{major_gem_version}.x Configuration\n@loaded << :config",
           directory?: true
         )
         Dir.stubs(:[] => ["model_a", "model_b"])
@@ -56,7 +57,7 @@ module Backup
         before do
           File.stubs(
             exist?: true,
-            read: "# Backup v4.x Configuration",
+            read: "# Backup v#{major_gem_version}.x Configuration",
             directory?: true
           )
           Dir.stubs(:[] => [])
