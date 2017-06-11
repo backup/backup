@@ -230,17 +230,3 @@ module Backup
     end
   end
 end
-
-# Patch mail v2.5.4 Exim delivery method
-# https://github.com/backup/backup/issues/446
-# https://github.com/mikel/mail/pull/546
-module Mail
-  class Exim
-    def self.call(path, arguments, _destinations, encoded_message)
-      popen "#{path} #{arguments}" do |io|
-        io.puts ::Mail::Utilities.to_lf(encoded_message)
-        io.flush
-      end
-    end
-  end
-end
