@@ -41,7 +41,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency "twitter", "~> 5.5"
   gem.add_dependency "hipchat", "1.0.1"
   gem.add_dependency "flowdock", "0.4.0"
-  gem.add_dependency "dogapi", "1.11.0"
+  gem.add_dependency "dogapi", "1.27.0"
   gem.add_dependency "aws-sdk", "~> 2"
   gem.add_dependency "qiniu", "~> 6.5"
   gem.add_dependency "nokogiri", "~> 1.7", ">= 1.7.2"
