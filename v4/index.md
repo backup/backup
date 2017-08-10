@@ -11,7 +11,7 @@ Project Status: Maintenance-Only
 
 This project is not under active development, although we will continue to provide support for current users, and at least one more maintenance release: version 5.0. The version 5.0 release will include support for Ruby 2.4, and various other fixes. Future releases of Backup will only include bug fixes.
 
-If you use this project and would like to develop it further, please introduce yourself on the [maintainers wanted][https://github.com/backup/backup/issues/803] ticket.
+If you use this project and would like to develop it further, please introduce yourself on the [maintainers wanted](https://github.com/backup/backup/issues/803) ticket.
 
 Backup is a DSL
 ---------------
