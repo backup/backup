@@ -82,7 +82,7 @@ in `lib/backup/encryptor/gpg.rb` or online at [rubydoc.info](http://rubydoc.info
 
 To decrypt your backup, use the following command:
 
-    $ gpg -d my_backup.tar.gpg -o my_backup.tar
+    $ gpg -o my_backup.tar -d my_backup.tar.gpg
 
 This will require the _private_ key or password needed.
 
