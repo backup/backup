@@ -8,14 +8,14 @@ Storages
 
 Backup includes the following Storages:
 
-- [CloudFiles][storage-cloudfiles]
-- [Dropbox][storage-dropbox]
-- [S3][storage-s3]
-- [FTP][storage-ftp]
-- [SCP][storage-scp]
-- [SFTP][storage-sftp]
-- [RSync][storage-rsync]
-- [Local][storage-local]
+- [CloudFiles][storage-cloudfiles] (Core)
+- [Dropbox][storage-dropbox] (Extra)
+- [S3][storage-s3] (Core)
+- [FTP][storage-ftp] (Extra)
+- [SCP][storage-scp] (Core)
+- [SFTP][storage-sftp] (Core)
+- [RSync][storage-rsync] (Core)
+- [Local][storage-local] (Core)
 
 
 Cycling Stored Backups

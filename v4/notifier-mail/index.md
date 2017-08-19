@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::Mail
+title: Notifier::Mail (Core)
 ---
 
 Notifier::Mail

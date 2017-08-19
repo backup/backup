@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::Command
+title: Notifier::Command (Core)
 ---
 
 Notifier::Command

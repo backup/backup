@@ -8,9 +8,9 @@ Logging
 
 Backup supports 3 different methods of logging messages during the backup process.
 
-- **Console**: Sending messages directly to the console.
-- **Logfile**: Storing all messages within Backup's own `backup.log` file.
-- **Syslog**: Sending messages to the system's Syslog compatible logger.
+- **Console**: Sending messages directly to the console. (Core)
+- **Logfile**: Storing all messages within Backup's own `backup.log` file. (Core)
+- **Syslog**: Sending messages to the system's Syslog compatible logger. (Extra)
 
 Each of these methods may be enabled/disabled via command line options, or within your `config.rb` file.
 

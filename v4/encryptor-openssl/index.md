@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Encryptor::OpenSSL
+title: Encryptor::OpenSSL (Core)
 ---
 
 Encryptor::OpenSSL

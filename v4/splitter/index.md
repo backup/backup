@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Splitter
+title: Splitter (Core)
 ---
 
 Splitter

@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Syncer::Cloud::S3
+title: Syncer::Cloud::S3 (Core)
 ---
 
 Syncer::Cloud::S3

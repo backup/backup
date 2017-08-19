@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Database::MySQL
+title: Database::MySQL (Core)
 ---
 
 Database::MySQL

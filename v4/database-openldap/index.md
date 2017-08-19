@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Database::OpenLDAP
+title: Database::OpenLDAP (Extra)
 ---
 
 Database::OpenLDAP

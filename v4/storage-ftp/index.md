@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Storage::FTP
+title: Storage::FTP (Extra)
 ---
 
 Storage::FTP

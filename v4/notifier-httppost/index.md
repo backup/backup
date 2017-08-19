@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::HttpPost
+title: Notifier::HttpPost (Core)
 ---
 
 Notifier::HttpPost

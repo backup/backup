@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Encryptor::GPG
+title: Encryptor::GPG (Core)
 ---
 
 Encryptor::GPG

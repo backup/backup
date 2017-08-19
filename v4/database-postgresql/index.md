@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Database::PostgreSQL
+title: Database::PostgreSQL (Core)
 ---
 
 Database::PostgreSQL

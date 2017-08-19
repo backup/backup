@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::Pagerduty
+title: Notifier::Pagerduty (Core)
 ---
 
 Notifier::Pagerduty

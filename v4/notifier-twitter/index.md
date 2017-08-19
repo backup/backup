@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::Twitter
+title: Notifier::Twitter (Extra)
 ---
 
 Notifier::Twitter

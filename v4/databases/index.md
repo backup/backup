@@ -8,13 +8,13 @@ Databases
 
 Backup includes the following Databases:
 
-- [MongoDB][database-mongodb]
-- [MySQL][database-mysql]
-- [PostgreSQL][database-postgresql]
-- [Redis][database-redis]
-- [Riak][database-riak]
-- [OpenLDAP][database-openldap]
-- [SQLite][database-sqlite]
+- [MongoDB][database-mongodb] (Core)
+- [MySQL][database-mysql] (Core)
+- [PostgreSQL][database-postgresql] (Core)
+- [Redis][database-redis] (Core)
+- [Riak][database-riak] (Extra)
+- [OpenLDAP][database-openldap] (Extra)
+- [SQLite][database-sqlite] (Core)
 
 
 Database Identifiers

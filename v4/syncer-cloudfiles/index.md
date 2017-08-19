@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Syncer::Cloud::CloudFiles
+title: Syncer::Cloud::CloudFiles (Extra)
 ---
 
 Syncer::Cloud::CloudFiles

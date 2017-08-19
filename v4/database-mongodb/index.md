@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Database::MongoDB
+title: Database::MongoDB (Core)
 ---
 
 Database::MongoDB

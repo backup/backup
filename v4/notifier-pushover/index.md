@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::Pushover
+title: Notifier::Pushover (Extra)
 ---
 
 Notifier::Pushover

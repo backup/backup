@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::Nagios
+title: Notifier::Nagios (Extra)
 ---
 
 Notifier::Nagios

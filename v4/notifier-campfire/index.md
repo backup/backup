@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::Campfire
+title: Notifier::Campfire (Extra)
 ---
 
 Notifier::Campfire

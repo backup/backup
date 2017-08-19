@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::Prowl
+title: Notifier::Prowl (Extra)
 ---
 
 Notifier::Prowl

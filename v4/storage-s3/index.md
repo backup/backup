@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Storage::S3
+title: Storage::S3 (Core)
 ---
 
 Storage::S3

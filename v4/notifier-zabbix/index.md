@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::Zabbix
+title: Notifier::Zabbix (Extra)
 ---
 
 Notifier::Zabbix
