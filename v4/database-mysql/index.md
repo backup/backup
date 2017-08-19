@@ -3,8 +3,8 @@ layout: main
 title: Database::MySQL (Core)
 ---
 
-Database::MySQL
-===============
+Database::MySQL (Core feature)
+==============================
 
 ``` rb
 Model.new(:my_backup, 'My Backup') do

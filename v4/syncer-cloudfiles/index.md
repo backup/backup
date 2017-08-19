@@ -3,8 +3,8 @@ layout: main
 title: Syncer::Cloud::CloudFiles (Extra)
 ---
 
-Syncer::Cloud::CloudFiles
-=========================
+Syncer::Cloud::CloudFiles (Extra)
+=================================
 
 ``` rb
 sync_with Cloud::CloudFiles do |cf|

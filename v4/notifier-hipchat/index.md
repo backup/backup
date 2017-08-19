@@ -3,8 +3,8 @@ layout: main
 title: Notifier::Hipchat (Extra)
 ---
 
-Notifier::Hipchat
-=================
+Notifier::Hipchat (Extra)
+=========================
 
 ``` rb
 notify_by Hipchat do |hipchat|

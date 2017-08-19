@@ -3,8 +3,8 @@ layout: main
 title: Notifier::Mail (Core)
 ---
 
-Notifier::Mail
-==============
+Notifier::Mail (Core feature)
+=============================
 
 ``` rb
 notify_by Mail do |mail|

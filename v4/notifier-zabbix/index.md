@@ -3,8 +3,8 @@ layout: main
 title: Notifier::Zabbix (Extra)
 ---
 
-Notifier::Zabbix
-=================
+Notifier::Zabbix (Extra)
+========================
 
 ``` rb
 notify_by Zabbix do |zabbix|

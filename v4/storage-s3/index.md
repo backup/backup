@@ -3,8 +3,8 @@ layout: main
 title: Storage::S3 (Core)
 ---
 
-Storage::S3
-===========
+Storage::S3 (Core feature)
+==========================
 
 You will need an Amazon AWS (S3) account. You can get one [here](http://aws.amazon.com/s3/).
 

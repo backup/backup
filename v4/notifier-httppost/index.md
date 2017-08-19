@@ -3,8 +3,8 @@ layout: main
 title: Notifier::HttpPost (Core)
 ---
 
-Notifier::HttpPost
-==================
+Notifier::HttpPost (Core feature)
+=================================
 
 ```rb
 notify_by HttpPost do |post|

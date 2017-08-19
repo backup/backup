@@ -3,8 +3,8 @@ layout: main
 title: Database::SQLite (Core)
 ---
 
-Database::SQLite
-===============
+Database::SQLite (Core feature)
+===============================
 
 ``` rb
 Model.new(:my_backup, 'My Backup') do

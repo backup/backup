@@ -3,8 +3,8 @@ layout: main
 title: Storage::Dropbox (Extra)
 ---
 
-Storage::Dropbox
-================
+Storage::Dropbox (Extra)
+========================
 
 ``` rb
 store_with Dropbox do |db|

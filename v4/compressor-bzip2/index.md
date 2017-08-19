@@ -1,10 +1,10 @@
 ---
 layout: main
-title: Compressor::Bzip2
+title: Compressor::Bzip2 (Extra)
 ---
 
-Compressor::Bzip2
-=================
+Compressor::Bzip2 (Extra)
+=========================
 
 ``` rb
 Model.new(:my_backup, 'My Backup') do

@@ -3,8 +3,8 @@ layout: main
 title: Storage::SFTP (Core)
 ---
 
-Storage::SFTP
-=============
+Storage::SFTP (Core feature)
+============================
 
 ``` rb
 store_with SFTP do |server|

@@ -3,8 +3,8 @@ layout: main
 title: Storage::FTP (Extra)
 ---
 
-Storage::FTP
-============
+Storage::FTP (Core feature)
+===========================
 
 ``` rb
 store_with FTP do |server|

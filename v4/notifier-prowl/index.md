@@ -3,8 +3,8 @@ layout: main
 title: Notifier::Prowl (Extra)
 ---
 
-Notifier::Prowl
-===============
+Notifier::Prowl (Extra)
+=======================
 
 ``` rb
 notify_by Prowl do |prowl|

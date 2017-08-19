@@ -3,8 +3,8 @@ layout: main
 title: Storage::CloudFiles (Extra)
 ---
 
-Storage::CloudFiles
-===================
+Storage::CloudFiles (Extra)
+===========================
 
 You will need a Rackspace Cloud Files account. You can get one [here](http://www.rackspace.com/cloud/).
 

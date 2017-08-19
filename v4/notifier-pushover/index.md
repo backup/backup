@@ -3,8 +3,8 @@ layout: main
 title: Notifier::Pushover (Extra)
 ---
 
-Notifier::Pushover
-==================
+Notifier::Pushover (Extra)
+==========================
 
 ``` rb
 notify_by Pushover do |pushover|

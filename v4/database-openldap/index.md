@@ -3,8 +3,8 @@ layout: main
 title: Database::OpenLDAP (Extra)
 ---
 
-Database::OpenLDAP
-===============
+Database::OpenLDAP (Extra)
+==========================
 
 ``` rb
 Model.new(:my_backup, 'My Backup') do

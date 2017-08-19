@@ -1,10 +1,10 @@
 ---
 layout: main
-title: Compressor::Custom
+title: Compressor::Custom (Extra)
 ---
 
-Compressor::Custom
-==================
+Compressor::Custom (Extra)
+==========================
 
 Backup can support any compressor you like. Besides the standard [gzip][] and [bzip2][] compressors, multi-threaded
 versions of each are also available, like [pigz][] and [pbzip2][]. There's also [xz][], the successor to LZMA, which

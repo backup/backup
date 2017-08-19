@@ -3,8 +3,8 @@ layout: main
 title: Notifier::Campfire (Extra)
 ---
 
-Notifier::Campfire
-==================
+Notifier::Campfire (Extra)
+==========================
 
 ``` rb
 notify_by Campfire do |campfire|
