@@ -149,10 +149,6 @@ module Backup
         command.shift while command[0].to_s.include?("=")
         parts << command.shift.split("/")[-1]
         if parts[0] == "sudo"
-          Logger.warn "The Backup option \"sudo\" is " \
-            "scheduled to be deprecated. If you're using this feature, " \
-            "please see: https://github.com/backup/backup/issues/851"
-
           until command.empty?
             part = command.shift
             if part.include?("/")
