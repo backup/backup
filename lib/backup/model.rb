@@ -3,18 +3,6 @@ module Backup
     class Error < Backup::Error; end
     class FatalError < Backup::FatalError; end
 
-    DEPRECATED_MODULES = %w[
-      Campfire
-      CloudFiles
-      FTP
-      Nagios
-      OpenLDAP
-      Prowl
-      Riak
-      Twitter
-      Zabbix
-    ].freeze
-
     class << self
       ##
       # The Backup::Model.all class method keeps track of all the models
@@ -152,12 +140,6 @@ module Backup
     ##
     # Adds an Database. Multiple Databases may be added to the model.
     def database(name, database_id = nil, &block)
-      dsl_name = dsl_const_name(name)
-      if deprecated_module? dsl_name
-        Logger.warn "The Backup database \"#{dsl_name}\" is " \
-          "scheduled to be deprecated. If you're using this feature, " \
-          "please see: https://github.com/backup/backup/issues/851"
-      end
       @databases << get_class_from_scope(Database, name)
         .new(self, database_id, &block)
     end
@@ -165,12 +147,6 @@ module Backup
     ##
     # Adds an Storage. Multiple Storages may be added to the model.
     def store_with(name, storage_id = nil, &block)
-      dsl_name = dsl_const_name(name)
-      if deprecated_module? dsl_name
-        Logger.warn "The Backup storage \"#{dsl_name}\" is " \
-          "scheduled to be deprecated. If you're using this feature, " \
-          "please see: https://github.com/backup/backup/issues/851"
-      end
       @storages << get_class_from_scope(Storage, name)
         .new(self, storage_id, &block)
     end
@@ -178,22 +154,12 @@ module Backup
     ##
     # Adds an Syncer. Multiple Syncers may be added to the model.
     def sync_with(name, syncer_id = nil, &block)
-      dsl_name = dsl_const_name(name)
-      Logger.warn "The Backup syncer \"#{dsl_name}\" is " \
-        "scheduled to be deprecated. If you're using this feature, " \
-        "please see: https://github.com/backup/backup/issues/851"
       @syncers << get_class_from_scope(Syncer, name).new(syncer_id, &block)
     end
 
     ##
     # Adds an Notifier. Multiple Notifiers may be added to the model.
     def notify_by(name, &block)
-      dsl_name = dsl_const_name(name)
-      if deprecated_module? dsl_name
-        Logger.warn "The Backup notifier \"#{dsl_name}\" is " \
-          "scheduled to be deprecated. If you're using this feature, " \
-          "please see: https://github.com/backup/backup/issues/851"
-      end
       @notifiers << get_class_from_scope(Notifier, name).new(self, &block)
     end
 
@@ -324,14 +290,6 @@ module Backup
     end
 
     private
-
-    def dsl_const_name(name)
-      name.to_s.sub "Backup::Config::DSL::", ""
-    end
-
-    def deprecated_module?(name)
-      DEPRECATED_MODULES.include? name
-    end
 
     ##
     # Returns an array of procedures that will be performed if any
