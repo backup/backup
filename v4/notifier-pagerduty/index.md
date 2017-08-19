@@ -1,10 +1,10 @@
 ---
 layout: main
-title: Notifier::Pagerduty (Core)
+title: Notifier::Pagerduty (Extra)
 ---
 
-Notifier::Pagerduty
-================
+Notifier::Pagerduty (Extra)
+===========================
 
 ```rb
 notify_by PagerDuty do |pagerduty|

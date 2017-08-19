@@ -3,8 +3,8 @@ layout: main
 title: Notifier::Datadog (Extra)
 ---
 
-Notifier::DataDog
-==================
+Notifier::DataDog (Extra)
+=========================
 
 ``` rb
 notify_by DataDog do |datadog|

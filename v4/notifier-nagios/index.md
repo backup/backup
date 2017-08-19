@@ -3,8 +3,8 @@ layout: main
 title: Notifier::Nagios (Extra)
 ---
 
-Notifier::Nagios
-================
+Notifier::Nagios (Extra)
+========================
 
 ```rb
 notify_by Nagios do |nagios|

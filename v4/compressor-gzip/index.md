@@ -1,10 +1,10 @@
 ---
 layout: main
-title: Compressor::Gzip
+title: Compressor::Gzip (Core)
 ---
 
-Compressor::Gzip
-================
+Compressor::Gzip (Core feature)
+===============================
 
 ``` rb
 Model.new(:my_backup, 'My Backup') do

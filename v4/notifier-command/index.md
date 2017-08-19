@@ -3,8 +3,8 @@ layout: main
 title: Notifier::Command (Core)
 ---
 
-Notifier::Command
-==================
+Notifier::Command (Core feature)
+================================
 
 Run custom commands to send notifications after executing a backup.
 

@@ -3,8 +3,8 @@ layout: main
 title: Encryptor::GPG (Core)
 ---
 
-Encryptor::GPG
-==============
+Encryptor::GPG (Core feature)
+=============================
 
 To use GPG you need to have a GPG encryption (public, private) key pair.
 

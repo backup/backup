@@ -3,8 +3,8 @@ layout: main
 title: Notifier::Ses (Core)
 ---
 
-Notifier::Ses
-=================
+Notifier::Ses (Core feature)
+============================
 
 [AWS SES](http://aws.amazon.com/ses/)
 

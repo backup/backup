@@ -3,8 +3,8 @@ layout: main
 title: Storage::Local (Core)
 ---
 
-Storage::Local
-==============
+Storage::Local (Core feature)
+=============================
 
 ``` rb
 store_with Local do |local|

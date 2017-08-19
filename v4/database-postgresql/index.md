@@ -3,8 +3,8 @@ layout: main
 title: Database::PostgreSQL (Core)
 ---
 
-Database::PostgreSQL
-====================
+Database::PostgreSQL (Core feature)
+===================================
 
 ``` rb
 Model.new(:my_backup, 'My Backup') do

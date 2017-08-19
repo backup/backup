@@ -3,8 +3,8 @@ layout: main
 title: Storage::RSync (Core)
 ---
 
-Storage::RSync
-==============
+Storage::RSync (Core feature)
+=============================
 
 Say you just transferred a backup of about 2000MB in size. 12 hours later the Backup gem packages a new backup file for
 you and it appears to be 2050MB in size. Rather than transferring the whole 2050MB to the remote server, it'll lookup

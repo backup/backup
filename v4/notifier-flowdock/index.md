@@ -3,8 +3,8 @@ layout: main
 title: Notifier::Flowdock (Extra)
 ---
 
-Notifier::Flowdock
-==================
+Notifier::Flowdock (Extra)
+==========================
 
 ``` rb
 notify_by FlowDock do |flowdock|

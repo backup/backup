@@ -3,8 +3,8 @@ layout: main
 title: Notifier::Slack (Core)
 ---
 
-Notifier::Slack
-=================
+Notifier::Slack (Core feature)
+==============================
 
 ``` rb
 notify_by Slack do |slack|

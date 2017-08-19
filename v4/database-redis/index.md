@@ -3,8 +3,8 @@ layout: main
 title: Database::Redis (Core)
 ---
 
-Database::Redis
-===============
+Database::Redis (Core feature)
+==============================
 
 ``` rb
 Model.new(:my_backup, 'My Backup') do

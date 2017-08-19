@@ -3,8 +3,8 @@ layout: main
 title: Database::Riak (Extra)
 ---
 
-Database::Riak
-==============
+Database::Riak (Extra)
+======================
 
 ``` rb
 Model.new(:my_backup, 'My Backup') do

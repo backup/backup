@@ -3,8 +3,8 @@ layout: main
 title: Encryptor::OpenSSL (Core)
 ---
 
-Encryptor::OpenSSL
-==================
+Encryptor::OpenSSL (Core feature)
+=================================
 
 Create a password-protected backup file with `my_password` as the password.
 

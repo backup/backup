@@ -3,8 +3,8 @@ layout: main
 title: Notifier::Twitter (Extra)
 ---
 
-Notifier::Twitter
-=================
+Notifier::Twitter (Extra)
+=========================
 
 ``` rb
 notify_by Twitter do |tweet|

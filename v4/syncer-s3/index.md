@@ -3,8 +3,8 @@ layout: main
 title: Syncer::Cloud::S3 (Core)
 ---
 
-Syncer::Cloud::S3
-=================
+Syncer::Cloud::S3 (Core feature)
+================================
 
 ``` rb
 sync_with Cloud::S3 do |s3|

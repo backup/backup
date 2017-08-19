@@ -3,8 +3,8 @@ layout: main
 title: Syncer::RSync (Core)
 ---
 
-Syncer::RSync
-=============
+Syncer::RSync (Core feature)
+============================
 
 The RSync Syncer supports 3 **types** of operations:
 

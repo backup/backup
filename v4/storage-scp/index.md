@@ -3,8 +3,8 @@ layout: main
 title: Storage::SCP (Core)
 ---
 
-Storage::SCP
-============
+Storage::SCP (Core feature)
+===========================
 
 ``` rb
 store_with SCP do |server|

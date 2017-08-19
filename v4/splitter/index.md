@@ -3,8 +3,8 @@ layout: main
 title: Splitter (Core)
 ---
 
-Splitter
-========
+Splitter (Core feature)
+=======================
 
 ``` rb
 Model.new(:my_backup, 'Description for my_backup') do

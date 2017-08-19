@@ -3,8 +3,8 @@ layout: main
 title: Database::MongoDB (Core)
 ---
 
-Database::MongoDB
-=================
+Database::MongoDB (Core feature)
+================================
 
 ``` rb
 Model.new(:my_backup, 'My Backup') do
