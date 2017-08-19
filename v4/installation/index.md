@@ -7,7 +7,11 @@ Installation
 ============
 
 Backup v4.x is distributed using [RubyGems](https://rubygems.org) and supports
-[Ruby](https://www.ruby-lang.org) versions `2.0.0+`, `2.1.0+`, `2.2.0+`.
+[Ruby](https://www.ruby-lang.org) versions `2.0.0+`,
+`2.1.0+`, `2.2.0+` and `2.3.0+`.
+Support for Ruby `2.4.0+` will be released in version 5, [try the
+beta](https://rubygems.org/gems/backup). Version 5 also drops support for Ruby
+`2.0`.
 
 To install the latest version, run:
 
