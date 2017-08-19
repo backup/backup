@@ -8,8 +8,8 @@ Encryptors
 
 Backup includes the following Encryptors:
 
-- [GPG][encryptor-gpg]
-- [OpenSSL][encryptor-openssl]
+- [GPG][encryptor-gpg] (Core)
+- [OpenSSL][encryptor-openssl] (Core)
 
 Only one Encryptor may be configured for each Model.
 

@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Database::Riak
+title: Database::Riak (Extra)
 ---
 
 Database::Riak

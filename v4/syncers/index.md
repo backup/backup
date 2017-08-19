@@ -8,9 +8,9 @@ Syncers
 
 Backup includes the following Syncers:
 
-- [Syncer::Cloudfiles][syncer-cloudfiles]
-- [Syncer::S3][syncer-s3]
-- [Syncer::RSync][syncer-rsync]
+- [Syncer::Cloudfiles][syncer-cloudfiles] (Extra) 
+- [Syncer::S3][syncer-s3] (Core)
+- [Syncer::RSync][syncer-rsync] (Core)
 
 Syncers are used to keep source directories and their contents synchronized with a destination directory.
 Only the contents of the source directories that have changed are transferred to the destination. The source and

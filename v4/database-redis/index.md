@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Database::Redis
+title: Database::Redis (Core)
 ---
 
 Database::Redis

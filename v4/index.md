@@ -35,20 +35,28 @@ Below is an overview of the _Model Components_ available, which are added to def
 See also [Getting Started][getting-started] for a simple walk-through using Backup's [Generator][generator]
 to familiarize yourself with setting up, configuring and running a backup job.
 
+Core and Extra Features
+-----------------------
+
+This documentation marks features as either **Core** or **Extra**.
+
+**Core** features are part of Backup. These features are tested for each release, and will be maintained.
+
+**Extra** features are included in Backup, but are not tested for each release. These will be maintained if possible, but may be removed if is not practical to continue supporting them.
 
 [Archives][archives] and [Databases][databases]
 -----------------------------------------------
 
 Archives create basic `tar` archives. Both **GNU** and **BSD** `tar` are supported.
 
-Databases create backups of one of the following supported databases:
+Databases create backups of one of the following databases:
 
-- [MySQL][database-mysql]
-- [PostgreSQL][database-postgresql]
-- [MongoDB][database-mongodb]
-- [Redis][database-redis]
-- [Riak][database-riak]
-- [SQLite][database-sqlite]
+- [MySQL][database-mysql] (Core)
+- [PostgreSQL][database-postgresql] (Core)
+- [MongoDB][database-mongodb] (Core)
+- [Redis][database-redis] (Core)
+- [Riak][database-riak] (Extra)
+- [SQLite][database-sqlite] (Core)
 
 Any number of Archives and Databases may be defined within a backup _model_.
 
@@ -82,14 +90,14 @@ $ tar -tvf my_backup.tar
 
 You can use any number of the following Storages to store your backup:
 
-- [Amazon S3][storage-s3]
-- [Rackspace Cloud Files][storage-cloudfiles]
-- [Dropbox][storage-dropbox]
-- [FTP][storage-ftp]
-- [SFTP][storage-sftp]
-- [SCP][storage-scp]
-- [RSync][storage-rsync]
-- [Local][storage-local]
+- [Amazon S3][storage-s3] (Core)
+- [Rackspace Cloud Files][storage-cloudfiles] (Extra)
+- [Dropbox][storage-dropbox] (Extra)
+- [FTP][storage-ftp] (Extra)
+- [SFTP][storage-sftp] (Core)
+- [SCP][storage-scp] (Core)
+- [RSync][storage-rsync] (Core)
+- [Local][storage-local] (Core)
 
 All of the above Storages _(except RSync)_ support:
 
@@ -105,9 +113,9 @@ Syncers are processed after your final backup package has been stored and allow 
 
 Backup includes the following Syncers:
 
-- [Amazon S3][syncer-s3] Cloud Syncer
-- [Rackspace Cloud Files][syncer-cloudfiles] Cloud Syncer
-- [RSync][syncer-rsync] Syncer for local, local-to-remote (`Push`) or remote-to-local (`Pull`) operations.
+- [Amazon S3][syncer-s3] Cloud Syncer (Core)
+- [Rackspace Cloud Files][syncer-cloudfiles] Cloud Syncer (Extra)
+- [RSync][syncer-rsync] Syncer for local, local-to-remote (`Push`) or remote-to-local (`Pull`) operations. (Core)
 
 A backup _model_ may contain _only_ Syncers as well.
 
@@ -119,15 +127,15 @@ Notifiers are used to send notifications upon successful and/or failed completio
 
 Supported notification services include:
 
-- [Email][notifier-mail] _(SMTP, Sendmail, Exim and File delivery)_
-- [Twitter][notifier-twitter]
-- [Campfire][notifier-campfire]
-- [Prowl][notifier-prowl]
-- [Hipchat][notifier-hipchat]
-- [Pushover][notifier-pushover]
-- [Nagios][notifier-nagios]
-- [HTTP POST][notifier-httppost] _(compatible with a variety of services)_
-- [Zabbix][notifier-zabbix]
+- [Email][notifier-mail] _(SMTP, Sendmail, Exim and File delivery)_ (Core)
+- [Twitter][notifier-twitter] (Extra)
+- [Campfire][notifier-campfire] (Extra)
+- [Prowl][notifier-prowl] (Extra)
+- [Hipchat][notifier-hipchat] (Extra)
+- [Pushover][notifier-pushover] (Extra)
+- [Nagios][notifier-nagios] (Extra)
+- [HTTP POST][notifier-httppost] _(compatible with a variety of services)_ (Core)
+- [Zabbix][notifier-zabbix] (Extra)
 
 
 {% include markdown_links %}

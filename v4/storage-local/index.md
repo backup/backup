@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Storage::Local
+title: Storage::Local (Core)
 ---
 
 Storage::Local

@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Storage::SCP
+title: Storage::SCP (Core)
 ---
 
 Storage::SCP

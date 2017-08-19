@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::Flowdock
+title: Notifier::Flowdock (Extra)
 ---
 
 Notifier::Flowdock

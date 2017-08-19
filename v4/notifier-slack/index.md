@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::Slack
+title: Notifier::Slack (Core)
 ---
 
 Notifier::Slack

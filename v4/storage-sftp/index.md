@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Storage::SFTP
+title: Storage::SFTP (Core)
 ---
 
 Storage::SFTP

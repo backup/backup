@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::Ses
+title: Notifier::Ses (Core)
 ---
 
 Notifier::Ses

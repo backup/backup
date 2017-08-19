@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Storage::RSync
+title: Storage::RSync (Core)
 ---
 
 Storage::RSync

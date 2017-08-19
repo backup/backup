@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::Hipchat
+title: Notifier::Hipchat (Extra)
 ---
 
 Notifier::Hipchat

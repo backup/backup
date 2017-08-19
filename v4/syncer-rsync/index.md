@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Syncer::RSync
+title: Syncer::RSync (Core)
 ---
 
 Syncer::RSync

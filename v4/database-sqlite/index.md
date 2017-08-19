@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Database::SQLite
+title: Database::SQLite (Core)
 ---
 
 Database::SQLite

@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Notifier::Datadog
+title: Notifier::Datadog (Extra)
 ---
 
 Notifier::DataDog
