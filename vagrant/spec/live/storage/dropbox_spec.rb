@@ -33,10 +33,7 @@ describe Storage::Dropbox,
 
         config = BackupSpec::LIVE['storage']['dropbox']
         store_with Dropbox do |db|
-          db.api_key     = config['api_key']
-          db.api_secret  = config['api_secret']
-          db.cache_path  = '/vagrant/spec/live/.cache'
-          db.access_type = config['access_type']
+          db.api_token   = config['api_token']
           db.path        = config['path']
           db.chunk_size  = 1 # MiB
           db.keep = 2
