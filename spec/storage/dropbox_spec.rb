@@ -227,7 +227,7 @@ module Backup
     describe '#remove!' do
       let(:client) { mock }
       let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
-      let(:remote_path) { File.join('my/path/test_trigger', timestamp) }
+      let(:remote_path) { File.join('/my/path/test_trigger', timestamp) }
       let(:package) {
         stub( # loaded from YAML storage file
              :trigger    => 'test_trigger',
