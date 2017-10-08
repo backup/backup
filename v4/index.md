@@ -38,11 +38,13 @@ to familiarize yourself with setting up, configuring and running a backup job.
 Core and Extra Features
 -----------------------
 
-This documentation marks features as either **Core** or **Extra**.
+This documentation marks features as either **Core**, **Extra**, or **BROKEN**.
 
 **Core** features are part of Backup. These features are tested for each release, and will be maintained.
 
 **Extra** features are included in Backup, but are not tested for each release. These will be maintained if possible, but may be removed if is not practical to continue supporting them.
+
+A **BROKEN** feature no longer works due to changes in the remote service, and will be removed from future releases.
 
 [Archives][archives] and [Databases][databases]
 -----------------------------------------------
@@ -92,7 +94,7 @@ You can use any number of the following Storages to store your backup:
 
 - [Amazon S3][storage-s3] (Core)
 - [Rackspace Cloud Files][storage-cloudfiles] (Extra)
-- [Dropbox][storage-dropbox] (Extra)
+- [Dropbox][storage-dropbox] (BROKEN)
 - [FTP][storage-ftp] (Extra)
 - [SFTP][storage-sftp] (Core)
 - [SCP][storage-scp] (Core)

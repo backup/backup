@@ -1,10 +1,12 @@
 ---
 layout: main
-title: Storage::Dropbox (Extra)
+title: Storage::Dropbox (BROKEN)
 ---
 
-Storage::Dropbox (Extra)
+Storage::Dropbox (BROKEN)
 ========================
+
+**Important:** This feature no longer works, due to Dropbox closing down version 1 of their API. It will be removed in the next release of Backup.  [GitHub issue #838](https://github.com/backup/backup/issues/899) has a discussion of this issue, and an unsupported patch to re-enable access to Dropbox with Backup version 4.
 
 ``` rb
 store_with Dropbox do |db|
