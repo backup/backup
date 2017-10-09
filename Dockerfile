@@ -1,4 +1,4 @@
-FROM ruby:2.4.1
+FROM ruby:2.4.2
 
 ## 1. Image metadata ##
  LABEL maintainer="stuart@stuartellis.name" \
