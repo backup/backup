@@ -1,9 +1,8 @@
 FROM ruby:2.4.1
 
 ## 1. Image metadata ##
-
-MAINTAINER Tom de Bruijn, tom@tomdebruijn.com
-LABEL version="0.1.0" \
+ LABEL maintainer="stuart@stuartellis.name" \
+    version="0.1.0" \
     description="Image for running the backup Rubygem"
 
 ## 2. Add operating system packages ##
