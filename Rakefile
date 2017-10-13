@@ -93,11 +93,31 @@ namespace :docker do
   task :build do
     sh "docker-compose build"
   end
+  desc "Remove Docker containers for Backup"
+  task :clean do
+    containers = `docker ps -a | grep 'ruby_backup_*' | awk '{ print $1 }'`
+      .tr("\n", " ")
+    unless containers.empty?
+      `docker stop #{containers}`
+      `docker rm #{containers}`
+    end
+  end
+  desc "Remove Docker containers and images for Backup"
+  task clobber: [:clean] do
+    images = `docker images | grep 'ruby_backup_*' | awk '{ print $3 }'`
+      .tr("\n", " ")
+    `docker rmi #{images}` unless images.empty?
+  end
   desc "Run RSpec integration tests with Docker Compose"
   task integration: ["build", "integration:files"] do
     sh "docker-compose run ruby_backup_tester " \
        "ruby -Ilib -S rspec ./integration/acceptance/"
   end
+  desc "Start a container environment with an interactive shell"
+  task shell: [:build] do
+    sh "docker-compose run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' " \
+         "-v $PWD:/usr/src/backup ruby_backup_tester /bin/bash"
+    end
   desc "Run RSpec unit tests with Docker Compose"
   task spec: [:build] do
     sh "docker-compose run ruby_backup_tester " \
