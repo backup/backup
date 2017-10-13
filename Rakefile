@@ -117,7 +117,7 @@ namespace :docker do
   task shell: [:build] do
     sh "docker-compose run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' " \
          "-v $PWD:/usr/src/backup ruby_backup_tester /bin/bash"
-    end
+  end
   desc "Run RSpec unit tests with Docker Compose"
   task spec: [:build] do
     sh "docker-compose run ruby_backup_tester " \
