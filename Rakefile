@@ -109,18 +109,19 @@ namespace :docker do
     `docker rmi #{images}` unless images.empty?
   end
   desc "Run RSpec integration tests with Docker Compose"
-  task integration: ["integration:files"] do
-    sh "docker-compose run ruby_backup_tester " \
-       "ruby -Ilib -S rspec ./integration/acceptance/"
+  task integration: ["docker:build", "integration:files"] do
+    run_in_docker_container "bin/docker_test integration"
   end
   desc "Start a container environment with an interactive shell"
-  task :shell do
-    sh "docker-compose run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' " \
-         "-v $PWD:/usr/src/backup ruby_backup_tester /bin/bash"
+  task shell: ["docker:build"] do
+    run_in_docker_container "bin/docker_test console"
   end
   desc "Run RSpec unit tests with Docker Compose"
-  task :spec do
-    sh "docker-compose run ruby_backup_tester " \
-       "ruby -Ilib -S rspec ./spec/"
+  task spec: ["docker:build"] do
+    run_in_docker_container "bin/docker_test rspec"
+  end
+
+  def run_in_docker_container(command)
+    sh "docker-compose run --rm ruby_backup_tester #{command}"
   end
 end
