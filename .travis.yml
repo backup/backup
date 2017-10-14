@@ -1,5 +1,8 @@
 language: ruby
 bundler_args: --without no_ci
+before_install:
+  - "gem update --system"
+  - "gem update bundler"
 script:
   - "bundle exec rspec"
 os:
