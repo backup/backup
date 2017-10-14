@@ -7,5 +7,5 @@ services:
     image: backup/test-suite:local
     working_dir: /usr/src/backup
     volumes:
-      - "./:/usr/src/backup"
-      - "./tmp/docker/:/tmp/docker"
+      - "./:/usr/src/backup:delegated"
+      - "./tmp/docker/:/tmp/docker:delegated"
