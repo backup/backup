@@ -4,21 +4,17 @@ set -eu
 export BUNDLE_PATH=/tmp/docker/bundle
 export BUNDLE_JOBS=4
 
-prepare_bundle() {
-  bundle check || bundle install
-}
-
 case "${1-}" in
+prepare)
+  bundle check || bundle install
+  ;;
 rspec)
-  prepare_bundle
   bundle exec rspec spec
   ;;
 integration)
-  prepare_bundle
   bundle exec rspec integration/acceptance/
   ;;
 console)
-  prepare_bundle
   bash
   ;;
 *)

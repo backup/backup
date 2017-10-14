@@ -93,9 +93,13 @@ namespace :docker do
   task :build do
     sh "docker-compose build"
   end
+  desc "Prepare the bundle on the Docker machine"
+  task prepare: ["docker:build"] do
+    run_in_docker_container "bin/docker_test prepare"
+  end
   desc "Remove Docker containers for Backup"
   task :clean do
-    containers = `docker ps -a | grep 'ruby_backup_*' | awk '{ print $1 }'`
+    containers = `docker ps -a | grep 'backup/test-suite:local' | awk '{ print $1 }'`
       .tr("\n", " ")
     unless containers.empty?
       `docker stop #{containers}`
@@ -104,7 +108,7 @@ namespace :docker do
   end
   desc "Remove Docker containers and images for Backup"
   task clobber: [:clean] do
-    images = `docker images | grep 'ruby_backup_*' | awk '{ print $3 }'`
+    images = `docker images | grep 'backup/test-suite:local' | awk '{ print $3 }'`
       .tr("\n", " ")
     `docker rmi #{images}` unless images.empty?
   end
