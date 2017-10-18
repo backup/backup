@@ -89,38 +89,33 @@ task :release do
 end
 
 namespace :docker do
-  desc "Build testing containers with Docker Compose"
   task :build do
     sh "docker-compose build"
   end
-  desc "Remove Docker containers for Backup"
-  task :clean do
-    containers = `docker ps -a | grep 'ruby_backup_*' | awk '{ print $1 }'`
-      .tr("\n", " ")
-    unless containers.empty?
-      `docker stop #{containers}`
-      `docker rm #{containers}`
-    end
+  desc "Prepare the bundle on the Docker machine"
+  task prepare: ["docker:build"] do
+    run_in_docker_container "bin/docker_test prepare"
   end
   desc "Remove Docker containers and images for Backup"
-  task clobber: [:clean] do
-    images = `docker images | grep 'ruby_backup_*' | awk '{ print $3 }'`
+  task :clobber do
+    images = `docker images | grep 'backup/test-suite' | awk '{ print $3 }'`
       .tr("\n", " ")
     `docker rmi #{images}` unless images.empty?
   end
   desc "Run RSpec integration tests with Docker Compose"
-  task integration: ["integration:files"] do
-    sh "docker-compose run ruby_backup_tester " \
-       "ruby -Ilib -S rspec ./integration/acceptance/"
+  task integration: ["docker:build", "integration:files"] do
+    run_in_docker_container "bin/docker_test integration"
   end
   desc "Start a container environment with an interactive shell"
-  task :shell do
-    sh "docker-compose run -e RUBYPATH='/usr/local/bundle/bin:/usr/local/bin' " \
-         "-v $PWD:/usr/src/backup ruby_backup_tester /bin/bash"
+  task shell: ["docker:build"] do
+    run_in_docker_container "bin/docker_test console"
   end
   desc "Run RSpec unit tests with Docker Compose"
-  task :spec do
-    sh "docker-compose run ruby_backup_tester " \
-       "ruby -Ilib -S rspec ./spec/"
+  task spec: ["docker:build"] do
+    run_in_docker_container "bin/docker_test rspec"
+  end
+
+  def run_in_docker_container(command)
+    sh "docker-compose run --rm ruby_backup_tester #{command}"
   end
 end

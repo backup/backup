@@ -1,5 +1,10 @@
+*.gem
+*.log
+.bundle
 .git
+.github
 .gitignore
 .travis.yml
 docker-compose.yml
+tmp
 vagrant

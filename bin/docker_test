@@ -1,0 +1,24 @@
+#!/bin/bash
+set -eu
+
+export BUNDLE_PATH=/tmp/docker/bundle
+export BUNDLE_JOBS=4
+
+case "${1-}" in
+prepare)
+  bundle check || bundle install
+  ;;
+rspec)
+  bundle exec rspec spec
+  ;;
+integration)
+  bundle exec rspec integration/acceptance/
+  ;;
+console)
+  bash
+  ;;
+*)
+  echo "Task not found"
+  exit 1
+  ;;
+esac
