@@ -89,7 +89,6 @@ task :release do
 end
 
 namespace :docker do
-  desc "Build testing containers with Docker Compose"
   task :build do
     sh "docker-compose build"
   end
