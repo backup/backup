@@ -98,7 +98,7 @@ namespace :docker do
   end
   desc "Remove Docker containers and images for Backup"
   task :clobber do
-    images = `docker images | grep 'backup/test-suite:local' | awk '{ print $3 }'`
+    images = `docker images | grep 'backup/test-suite' | awk '{ print $3 }'`
       .tr("\n", " ")
     `docker rmi #{images}` unless images.empty?
   end
