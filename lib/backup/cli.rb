@@ -182,7 +182,11 @@ module Backup
         Logger.clear!
       end
 
-      exit(errors ? 2 : 1) if errors || warnings
+      if errors || warnings
+        exit_status = errors ? 2 : 1
+        exit_message = model.exception && model.exception.message
+        raise SystemExit.new(exit_status, exit_message)
+      end
     end
 
     ##
