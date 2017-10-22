@@ -104,7 +104,7 @@ module Backup
         src = File.join(Config.tmp_path, 'test_trigger.tar-aa')
         dest = File.join('/', remote_path, 'test_trigger.tar-aa')
 
-        DropboxApi::ChunkedUploader.expects(:new).with(client, file).returns(uploader)
+        Storage::Dropbox::ChunkedUploader.expects(:new).with(client, file).returns(uploader)
         Logger.expects(:info).in_sequence(s).with("Storing '#{ dest }'...")
         File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
         uploader.expects(:upload).in_sequence(s).with(2_097_152)
@@ -114,7 +114,7 @@ module Backup
         src = File.join(Config.tmp_path, 'test_trigger.tar-ab')
         dest = File.join('/', remote_path, 'test_trigger.tar-ab')
 
-        DropboxApi::ChunkedUploader.expects(:new).with(client, file).returns(uploader)
+        Storage::Dropbox::ChunkedUploader.expects(:new).with(client, file).returns(uploader)
         Logger.expects(:info).in_sequence(s).with("Storing '#{ dest }'...")
         File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
         uploader.expects(:upload).in_sequence(s)
@@ -152,7 +152,7 @@ module Backup
         end
 
         File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
-        DropboxApi::ChunkedUploader.expects(:new).in_sequence(s).
+        Storage::Dropbox::ChunkedUploader.expects(:new).in_sequence(s).
           with(client, file).returns(uploader)
 
         uploader.expects(:upload).in_sequence(s).raises('chunk failed')
@@ -199,7 +199,7 @@ module Backup
         end
 
         File.expects(:open).in_sequence(s).with(src, 'r').yields(file)
-        DropboxApi::ChunkedUploader.expects(:new).in_sequence(s).
+        Storage::Dropbox::ChunkedUploader.expects(:new).in_sequence(s).
           with(client, file).returns(uploader)
 
         uploader.expects(:upload).in_sequence(s).raises('chunk failed')

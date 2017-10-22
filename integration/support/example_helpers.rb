@@ -124,7 +124,13 @@ module BackupSpec
           expect(exit.status).to be(exit_status)
         }
       else
-        Backup::CLI.start
+        begin
+          Backup::CLI.start
+        rescue SystemExit => e
+          if e.status > 1
+            raise e.message
+          end
+        end
       end
 
       models = triggers.map { |t| Backup::Model.find_by_trigger(t).first }

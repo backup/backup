@@ -5,6 +5,8 @@
 vendor/bundle
 vagrant/spec/live/.cache
 vagrant/spec/live.yml
+
+integration/live.yml
 *.swp
 *.swo
 .ruby-*

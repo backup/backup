@@ -12,7 +12,7 @@ rspec)
   bundle exec rspec spec
   ;;
 integration)
-  bundle exec rspec integration/acceptance/
+  bundle exec rspec integration
   ;;
 console)
   bash
