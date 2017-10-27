@@ -4,6 +4,7 @@ module BackupSpec
   CONFIG_TEMPLATE = Backup::Template.new.result("cli/config")
   PROJECT_ROOT = "/usr/src/backup".freeze
   LOCAL_STORAGE_PATH = File.join(PROJECT_ROOT, "tmp", "Storage")
+  ALT_CONFIG_PATH = File.join(PROJECT_ROOT, "tmp", "Backup_alt")
 
   module ExampleHelpers
     # Creates the config.rb file.
