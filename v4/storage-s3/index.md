@@ -146,6 +146,28 @@ end
 These options will be merged into those used to establish the connection via fog.  
 e.g. `Fog::Storage.new({ :provider => 'AWS'}.merge(fog_options))`
 
+### S3-Compatible APIs
+
+Fog allows Backup to be used with additional S3-interoperable object storage
+APIs like [DigitalOcean's Spaces] or [Minio] through additional configuration of
+`fog_options`. Depending on the service's level of compatibility, it is generally
+enough to define the `endpoint`. For example, the following configuration can
+be used to back up to Spaces:
+
+```rb
+store_with S3 do |s3|
+  s3.access_key_id     = "my_access_key_id"
+  s3.secret_access_key = "my_secret_access_key"
+  s3.region            = "nyc3"
+  s3.bucket            = "bucket-name"
+  s3.path              = "path/to/backups"
+  s3.fog_options       = {
+    endpoint: "https://nyc3.digitaloceanspaces.com",
+    aws_signature_version: 2
+  }
+end
+```
+
 ### China region
 
 Backup relies on [fog][] for AWS S3 support. Fog does not support the China region directly.
@@ -169,6 +191,8 @@ end
 [transition objects to Glacier]:  http://docs.aws.amazon.com/AmazonS3/latest/dev/object-archival.html
 [restored using the S3 console]:  http://docs.aws.amazon.com/AmazonS3/latest/dev/restoring-objects-console.html
 [automatically remove]:           http://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectExpiration.html
+[DigitalOcean's Spaces]:          https://developers.digitalocean.com/documentation/v2/
+[Minio]:                          https://www.minio.io/
 [fog]:                            https://github.com/fog/fog-aws/
 [issue #791]:                      https://github.com/backup/backup/issues/791#issuecomment-239059386
 
