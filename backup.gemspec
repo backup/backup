@@ -77,7 +77,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'net-sftp', '= 2.1.2'
   gem.add_dependency 'net-ssh', '= 3.2.0'
   gem.add_dependency 'netrc', '= 0.11.0'
-  gem.add_dependency 'nokogiri', '= 1.6.8'
+  gem.add_dependency "nokogiri", "~> 1.8", ">= 1.8.1"
   gem.add_dependency 'open4', '= 1.3.0'
   gem.add_dependency 'pagerduty', '= 2.0.0'
   gem.add_dependency 'pkg-config', '= 1.1.7'
