@@ -45,3 +45,7 @@ To help us review your code:
 * Write [clear commit
 messages](http://chris.beams.io/posts/git-commit/):
 the first line should be 50 characters or less, and be a clear summary of the commit, e.g. "Fix Nokogiri compile issue on macOS Sierra, GH #305".
+
+## Triage Issues [![Open Source Helpers](https://www.codetriage.com/backup/backup/badges/users.svg)](https://www.codetriage.com/backup/backup)
+
+In addition to contributing code, you can help to triage issues. This can include reproducing bug reports or asking for vital information, such as version numbers or reproduction instructions. If you would like to start triaging issues, one easy way to get started is to [subscribe to backup on CodeTriage](https://www.codetriage.com/backup/backup).
