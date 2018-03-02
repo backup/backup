@@ -69,7 +69,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'mail', '= 2.6.3'
   gem.add_dependency 'memoizable', '= 0.4.0'
   gem.add_dependency 'mime-types', '= 2.4.3'
-  gem.add_dependency 'mini_portile2', '= 2.1.0'
+  gem.add_dependency 'mini_portile2', '= 2.3.0'
   gem.add_dependency 'multi_json', '= 1.10.1'
   gem.add_dependency 'multi_xml', '= 0.5.5'
   gem.add_dependency 'multipart-post', '= 1.2.0'
@@ -77,7 +77,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'net-sftp', '= 2.1.2'
   gem.add_dependency 'net-ssh', '= 3.2.0'
   gem.add_dependency 'netrc', '= 0.11.0'
-  gem.add_dependency 'nokogiri', '= 1.6.8'
+  gem.add_dependency "nokogiri", "~> 1.8", ">= 1.8.1"
   gem.add_dependency 'open4', '= 1.3.0'
   gem.add_dependency 'pagerduty', '= 2.0.0'
   gem.add_dependency 'pkg-config', '= 1.1.7'
