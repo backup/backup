@@ -7,7 +7,7 @@ module Backup
 
       ##
       # Connectivity options for the +neo4j-backup+ utility.
-      attr_accessor :host, :port
+      attr_accessor :host, :port, :incremental_backup_path
 
       def initialize(model, database_id = nil, &block)
         super
@@ -26,8 +26,9 @@ module Backup
       # Performs all required neo4j-backup commands, dumping the output files
       # into the +dump_packaging_path+ directory for packaging.
       def dump!
-        FileUtils.mkdir_p dump_packaging_path
+        FileUtils.mkdir_p incremental_backup_path
         run(neo4j_backup)
+        FileUtils.copy_entry incremental_backup_path, dump_path
       end
 
       ##
@@ -65,9 +66,16 @@ module Backup
         File.join(dump_path, dump_filename)
       end
 
+      # Neo4j detects if a previous backup has been performed, and
+      # performs an incremental backup on that path.
+      # If not set, does not do incremental backups.
+      def incremental_backup_path
+        @incremental_backup_path ||= dump_packaging_path
+      end
+
       def neo4j_backup
         "#{ utility('neo4j-backup') } " +
-        "#{ connectivity_options } -to '#{ dump_packaging_path }'"
+        "#{ connectivity_options } -to '#{ incremental_backup_path }'"
       end
 
       def connectivity_options
