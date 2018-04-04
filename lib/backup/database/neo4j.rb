@@ -26,6 +26,7 @@ module Backup
       # Performs all required neo4j-backup commands, dumping the output files
       # into the +dump_packaging_path+ directory for packaging.
       def dump!
+        FileUtils.mkdir_p dump_packaging_path
         FileUtils.mkdir_p incremental_backup_path
         run(neo4j_backup)
         FileUtils.copy_entry incremental_backup_path, dump_path
