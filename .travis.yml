@@ -9,3 +9,4 @@ rvm:
 branches:
   only:
     - master
+    - v4-stable
