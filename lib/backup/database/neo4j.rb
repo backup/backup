@@ -29,7 +29,7 @@ module Backup
         FileUtils.mkdir_p dump_packaging_path
         FileUtils.mkdir_p incremental_backup_path
         run(neo4j_backup)
-        FileUtils.copy_entry incremental_backup_path, dump_path
+        FileUtils.copy_entry incremental_backup_path, dump_packaging_path
       end
 
       ##
