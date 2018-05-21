@@ -17,7 +17,7 @@ Major changes are located in the pipeline and configuration as Ruby may not be a
 - [Manager](#manager) implementation language
     - Ruby, Rust or something else?
 - [Configuration](#configuration) file format?
-  - YAML, JSON, TOML or something else?
+  - YAML, JSON, TOML, Ruby DSL or something else?
 - Decide upon first [component](#components) ([sources](#sources)) configuration.
   - Either STDIN or through a reference to the config or through arguments.
 - Create a binary for every component type (e.g. backup-gzip) or directly call the gzip binary?
@@ -27,6 +27,7 @@ Major changes are located in the pipeline and configuration as Ruby may not be a
 
 - [Motivation](#motivation)
 - [Impact](#impact)
+- [Drawbacks](#drawbacks)
 - [Pipeline](#pipeline)
 - [Configuration](#configuration)
 - [Components](#components)
@@ -58,6 +59,10 @@ It's also possible to move certain components away from the Ruby programming lan
 The configuration will also have to change in order to allow for more configuration options in this pipeline, such as allowing any custom command to be run as part of the pipeline. This flexibility will allow users to make their own parts of the backup pipeline without having to modify the Backup tool to add support for their component.
 
 The RFC also describes the components, their place in the pipeline and their responsibilities.
+
+## Drawbacks
+
+The suggested improvements of the Backup pipeline are backwards incompatible changes. Most of the code of the Ruby gem will need to be rewritten to accommodate the new pipeline. To update all components is a time intensive job and should be done one component at a time. A first release will not have the same features as the current Backup gem.
 
 ## Pipeline
 
