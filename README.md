@@ -25,6 +25,7 @@ Major changes are located in the pipeline and configuration as Ruby may not be a
 
 ## Overview
 
+- [Motivation](#motivation)
 - [Impact](#impact)
 - [Pipeline](#pipeline)
 - [Configuration](#configuration)
@@ -37,6 +38,14 @@ Major changes are located in the pipeline and configuration as Ruby may not be a
     - [Notifiers](#notifiers)
     - [Hooks](#hooks)
     - [Custom commands](#custom-commands)
+
+## Motivation
+
+The current Backup pipeline is using a lot of host system resources when making a backup. Using the file system for temporary files storage for every part of the pipeline requires a lot of disk space and IO.
+
+To speed up the backup process overhaul the pipeline to use UNIX pipes and stream data from component to component.
+
+Configuration changes allow for more flexibility in configuring the pipeline, allowing users to add their own components without needing to modify the Backup gem's source code.
 
 ## Impact
 
