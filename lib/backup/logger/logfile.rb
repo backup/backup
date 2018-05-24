@@ -56,9 +56,23 @@ module Backup
         # @return [Integer] Default: +500_000+
         attr_accessor :max_bytes
 
+        ##
+        # Backup's logfile name in which backup logs can be written
+        #
+        # As there is already a log_path, this can simply be just a file name
+        # that will be created (If not exists) on log_path directory
+        #
+        # This may also be set on the command line using +--log-filename+.
+        # If set on the command line, any setting here will be ignored.
+        #
+        # @param [String]
+        # @return [String] Default: 'backup.log'
+        attr_reader :log_filename
+
         def initialize
           @enabled = true
-          @log_path = ""
+          @log_path = ''
+          @log_filename = ''
           @max_bytes = 500_000
         end
 
@@ -72,6 +86,10 @@ module Backup
 
         def log_path=(val)
           @log_path = val.to_s.strip if log_path.empty?
+        end
+
+        def log_filename=(val)
+          @log_filename = val.to_s.strip if log_filename.empty?
         end
       end
 
@@ -100,8 +118,8 @@ module Backup
           path = File.join(Backup::Config.root_path, path)
         end
         FileUtils.mkdir_p(path)
-        log_file = @options.log_file || "backup.log"
-        path = File.join(path, log_file)
+        log_filename = @options.log_filename.empty? ? 'backup.log' : @options.log_filename
+        path = File.join(path, log_filename)
         if File.exist?(path) && !File.writable?(path)
           raise Error, "Log File at '#{path}' is not writable"
         end
