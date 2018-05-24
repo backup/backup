@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   module Notifier
     class Error < Backup::Error; end
@@ -56,8 +54,8 @@ module Backup
         @on_failure = true if on_failure.nil?
         @max_retries    ||= 10
         @retry_waitsec  ||= 30
-        @message        ||= lambda do |model, data|
-          "[#{ data[:status][:message] }] #{ model.label } (#{ model.trigger })"
+        @message        ||= lambda do |m, data|
+          "[#{data[:status][:message]}] #{m.label} (#{m.trigger})"
         end
       end
 
@@ -65,22 +63,22 @@ module Backup
       # not raise any exceptions. However, each Notifier's #notify! method
       # should raise an exception if the request fails so it may be retried.
       def perform!
-        status = case model.exit_status
-                 when 0
-                   :success if notify_on_success?
-                 when 1
-                   :warning if notify_on_success? || notify_on_warning?
-                 else
-                   :failure if notify_on_failure?
-                 end
+        status =
+          case model.exit_status
+          when 0
+            :success if notify_on_success?
+          when 1
+            :warning if notify_on_success? || notify_on_warning?
+          else
+            :failure if notify_on_failure?
+          end
 
         if status
-          Logger.info "Sending notification using #{ notifier_name }..."
+          Logger.info "Sending notification using #{notifier_name}..."
           with_retries { notify!(status) }
         end
-
       rescue Exception => err
-        Logger.error Error.wrap(err, "#{ notifier_name } Failed!")
+        Logger.error Error.wrap(err, "#{notifier_name} Failed!")
       end
 
       private
@@ -93,7 +91,7 @@ module Backup
           retries += 1
           raise if retries > max_retries
 
-          Logger.info Error.wrap(err, "Retry ##{ retries } of #{ max_retries }.")
+          Logger.info Error.wrap(err, "Retry ##{retries} of #{max_retries}.")
           sleep(retry_waitsec)
           retry
         end
@@ -102,24 +100,24 @@ module Backup
       ##
       # Return the notifier name, with Backup namespace removed
       def notifier_name
-        self.class.to_s.sub('Backup::', '')
+        self.class.to_s.sub("Backup::", "")
       end
 
       ##
       # Return status data for message creation
       def status_data_for(status)
         {
-          :success => {
-            :message => 'Backup::Success',
-            :key => :success
+          success: {
+            message: "Backup::Success",
+            key: :success
           },
-          :warning => {
-            :message => 'Backup::Warning',
-            :key => :warning
+          warning: {
+            message: "Backup::Warning",
+            key: :warning
           },
-          :failure => {
-            :message => 'Backup::Failure',
-            :key => :failure
+          failure: {
+            message: "Backup::Failure",
+            key: :failure
           }
         }[status]
       end

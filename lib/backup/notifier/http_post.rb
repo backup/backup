@@ -1,10 +1,8 @@
-# encoding: utf-8
-require 'uri'
+require "uri"
 
 module Backup
   module Notifier
     class HttpPost < Base
-
       ##
       # URI to post notification to.
       #
@@ -95,23 +93,22 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        msg = message.call(model, :status => status_data_for(status))
+        msg = message.call(model, status: status_data_for(status))
 
         opts = {
-          :headers => { 'User-Agent' => "Backup/#{ VERSION }" }.
-              merge(headers).reject {|k,v| v.nil? }.
-              merge('Content-Type' => 'application/x-www-form-urlencoded'),
-          :body => URI.encode_www_form({ 'message' => msg }.
-              merge(params).reject {|k,v| v.nil? }.
-              merge('status' => status.to_s)),
-          :expects => success_codes # raise error if unsuccessful
+          headers: { "User-Agent" => "Backup/#{VERSION}" }
+            .merge(headers).reject { |_, value| value.nil? }
+            .merge("Content-Type" => "application/x-www-form-urlencoded"),
+          body: URI.encode_www_form({ "message" => msg }
+              .merge(params).reject { |_, value| value.nil? }
+              .merge("status" => status.to_s)),
+          expects: success_codes # raise error if unsuccessful
         }
-        opts.merge!(:ssl_verify_peer => ssl_verify_peer) unless ssl_verify_peer.nil?
-        opts.merge!(:ssl_ca_file => ssl_ca_file) if ssl_ca_file
+        opts[:ssl_verify_peer] = ssl_verify_peer unless ssl_verify_peer.nil?
+        opts[:ssl_ca_file] = ssl_ca_file if ssl_ca_file
 
         Excon.post(uri, opts)
       end
-
     end
   end
 end

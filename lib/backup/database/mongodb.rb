@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   module Database
     class MongoDB < Base
@@ -60,7 +58,6 @@ module Backup
         lock_database if @lock
         dump!
         package!
-
       ensure
         unlock_database if @lock
       end
@@ -78,7 +75,7 @@ module Backup
           run(mongodump)
         else
           collections.each do |collection|
-            run("#{ mongodump } --collection='#{ collection }'")
+            run("#{mongodump} --collection='#{collection}'")
           end
         end
       end
@@ -92,25 +89,27 @@ module Backup
       # If successful, +dump_packaging_path+ is removed.
       def package!
         pipeline = Pipeline.new
-        dump_ext = 'tar'
+        dump_ext = "tar"
 
-        pipeline << "#{ utility(:tar) } -cf - " +
-            "-C '#{ dump_path }' '#{ dump_filename }'"
+        pipeline << "#{utility(:tar)} -cf - " \
+            "-C '#{dump_path}' '#{dump_filename}'"
 
-        model.compressor.compress_with do |command, ext|
-          pipeline << command
-          dump_ext << ext
-        end if model.compressor
+        if model.compressor
+          model.compressor.compress_with do |command, ext|
+            pipeline << command
+            dump_ext << ext
+          end
+        end
 
-        pipeline << "#{ utility(:cat) } > " +
-            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
+        pipeline << "#{utility(:cat)} > " \
+          "'#{File.join(dump_path, dump_filename)}.#{dump_ext}'"
 
         pipeline.run
         if pipeline.success?
           FileUtils.rm_rf dump_packaging_path
           log!(:finished)
         else
-          raise Error, "Dump Failed!\n" + pipeline.error_messages
+          raise Error, "Dump Failed!\n#{pipeline.error_messages}"
         end
       end
 
@@ -119,69 +118,69 @@ module Backup
       end
 
       def mongodump
-        "#{ utility(:mongodump) } #{ name_option } #{ credential_options } " +
-        "#{ connectivity_options } #{ ipv6_option } #{ oplog_option } " +
-        "#{ user_options } --out='#{ dump_packaging_path }'"
+        "#{utility(:mongodump)} #{name_option} #{credential_options} " \
+          "#{connectivity_options} #{ipv6_option} #{oplog_option} " \
+          "#{user_options} --out='#{dump_packaging_path}'"
       end
 
       def name_option
-        "--db='#{ name }'" if name
+        return unless name
+        "--db='#{name}'"
       end
 
       def credential_options
         opts = []
-        opts << "--username='#{ username }'" if username
-        opts << "--password='#{ password }'" if password
-        opts << "--authenticationDatabase='#{ authdb }'" if authdb
-        opts.join(' ')
+        opts << "--username='#{username}'" if username
+        opts << "--password='#{password}'" if password
+        opts << "--authenticationDatabase='#{authdb}'" if authdb
+        opts.join(" ")
       end
 
       def connectivity_options
         opts = []
-        opts << "--host='#{ host }'" if host
-        opts << "--port='#{ port }'" if port
-        opts.join(' ')
+        opts << "--host='#{host}'" if host
+        opts << "--port='#{port}'" if port
+        opts.join(" ")
       end
 
       def ipv6_option
-        '--ipv6' if ipv6
+        "--ipv6" if ipv6
       end
 
       def oplog_option
-        '--oplog' if oplog
+        "--oplog" if oplog
       end
 
       def user_options
-        Array(additional_options).join(' ')
+        Array(additional_options).join(" ")
       end
 
       def lock_database
-        lock_command = <<-EOS.gsub(/^ +/, '')
+        lock_command = <<-EOS.gsub(/^ +/, "")
           echo 'use admin
           db.setProfilingLevel(0)
-          db.fsyncLock()' | #{ mongo_shell }
+          db.fsyncLock()' | #{mongo_shell}
         EOS
 
         run(lock_command)
       end
 
       def unlock_database
-        unlock_command = <<-EOS.gsub(/^ +/, '')
+        unlock_command = <<-EOS.gsub(/^ +/, "")
           echo 'use admin
-          db.fsyncUnlock()' | #{ mongo_shell }
+          db.fsyncUnlock()' | #{mongo_shell}
         EOS
 
         run(unlock_command)
       end
 
       def mongo_shell
-        cmd = "#{ utility(:mongo) } #{ connectivity_options }".rstrip
-        cmd << " #{ credential_options }".rstrip
-        cmd << " #{ ipv6_option }".rstrip
-        cmd << " '#{ name }'" if name
+        cmd = "#{utility(:mongo)} #{connectivity_options}".rstrip
+        cmd << " #{credential_options}".rstrip
+        cmd << " #{ipv6_option}".rstrip
+        cmd << " '#{name}'" if name
         cmd
       end
-
     end
   end
 end

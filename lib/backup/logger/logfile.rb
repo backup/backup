@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   class Logger
     class Logfile
@@ -102,7 +100,7 @@ module Backup
       end
 
       def log(message)
-        File.open(@logfile, 'a') {|f| f.puts message.formatted_lines }
+        File.open(@logfile, "a") { |f| f.puts message.formatted_lines }
       end
 
       private
@@ -113,9 +111,9 @@ module Backup
       def setup_logfile
         # strip any trailing '/' in case the user supplied this as part of
         # an absolute path, so we can match it against File.expand_path()
-        path = @options.log_path.chomp('/')
+        path = @options.log_path.chomp("/")
         if path.empty?
-          path = File.join(Backup::Config.root_path, 'log')
+          path = File.join(Backup::Config.root_path, "log")
         elsif path != File.expand_path(path)
           path = File.join(Backup::Config.root_path, path)
         end
@@ -123,7 +121,7 @@ module Backup
         log_filename = @options.log_filename.empty? ? 'backup.log' : @options.log_filename
         path = File.join(path, log_filename)
         if File.exist?(path) && !File.writable?(path)
-          raise Error, "Log File at '#{ path }' is not writable"
+          raise Error, "Log File at '#{path}' is not writable"
         end
         path
       end
@@ -134,16 +132,16 @@ module Backup
         return unless File.exist?(@logfile)
 
         if File.stat(@logfile).size > @options.max_bytes
-          FileUtils.cp(@logfile, @logfile + '~')
-          File.open(@logfile + '~', 'r') do |io_in|
-            File.open(@logfile, 'w') do |io_out|
+          FileUtils.cp(@logfile, @logfile + "~")
+          File.open(@logfile + "~", "r") do |io_in|
+            File.open(@logfile, "w") do |io_out|
               io_in.seek(-@options.max_bytes, IO::SEEK_END) && io_in.gets
               while line = io_in.gets
                 io_out.puts line
               end
             end
           end
-          FileUtils.rm_f(@logfile + '~')
+          FileUtils.rm_f(@logfile + "~")
         end
       end
     end

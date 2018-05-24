@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module BackupSpec
   PROJECT_ROOT = '/backup.git'
   CONFIG_TEMPLATE = Backup::Template.new.result('cli/config')

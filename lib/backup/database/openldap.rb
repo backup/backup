@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   module Database
     class OpenLDAP < Base
@@ -33,11 +31,11 @@ module Backup
         super
         instance_eval(&block) if block_given?
 
-        @name             ||= 'ldap_backup'
+        @name             ||= "ldap_backup"
         @use_sudo         ||= false
-        @slapcat_args     ||= Array.new
+        @slapcat_args     ||= []
         @slapcat_utility  ||= utility(:slapcat)
-        @slapcat_conf     ||= '/etc/ldap/slapd.d'
+        @slapcat_conf     ||= "/etc/ldap/slapd.d"
       end
 
       ##
@@ -47,7 +45,7 @@ module Backup
         super
 
         pipeline = Pipeline.new
-        dump_ext = 'ldif'
+        dump_ext = "ldif"
 
         pipeline << slapcat
         if @model.compressor
@@ -57,8 +55,8 @@ module Backup
           end
         end
 
-        pipeline << "#{ utility(:cat) } > " +
-            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
+        pipeline << "#{utility(:cat)} > " \
+            "'#{File.join(dump_path, dump_filename)}.#{dump_ext}'"
 
         pipeline.run
         if pipeline.success?
@@ -73,7 +71,7 @@ module Backup
       ##
       # Builds the full slapcat string based on all attributes
       def slapcat
-        command = "#{ slapcat_utility } #{ slapcat_conf_option } #{ slapcat_conf } #{ user_options }"
+        command = "#{slapcat_utility} #{slapcat_conf_option} #{slapcat_conf} #{user_options}"
         command.prepend("sudo ") if use_sudo
         command
       end
@@ -88,7 +86,7 @@ module Backup
       # Builds a compatible string for the additional options
       # specified by the user
       def user_options
-        slapcat_args.join(' ')
+        slapcat_args.join(" ")
       end
     end
   end

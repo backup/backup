@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module BackupSpec
   class TarFile
     include Backup::Utilities::Helpers

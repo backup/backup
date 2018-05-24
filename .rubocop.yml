@@ -1,0 +1,50 @@
+inherit_from: .rubocop_todo.yml
+
+AllCops:
+  TargetRubyVersion: 2.0
+  Include:
+    - "Gemfile"
+    - "Rakefile"
+    - "backup.gemspec"
+  Exclude:
+    - "tmp/**/*"
+    - "vagrant/**/*"
+  DisplayCopNames: true
+  UseCache: true
+  CacheRootDirectory: ./tmp
+
+# Metrics/LineLength:
+#   Max: 80
+
+Style/Documentation:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+Style/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+
+Style/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+Style/MultilineOperationIndentation:
+  EnforcedStyle: indented
+
+Style/HashSyntax:
+  EnforcedStyle: ruby19
+
+Style/AlignHash:
+  EnforcedLastArgumentHashStyle: ignore_implicit
+
+Style/IndentArray:
+  EnforcedStyle: consistent
+
+Style/FormatString:
+  EnforcedStyle: sprintf
+
+Style/SymbolArray:
+  Enabled: false

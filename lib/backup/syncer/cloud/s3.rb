@@ -1,5 +1,4 @@
-# encoding: utf-8
-require 'backup/cloud_io/s3'
+require "backup/cloud_io/s3"
 
 module Backup
   module Syncer
@@ -57,53 +56,53 @@ module Backup
 
         def cloud_io
           @cloud_io ||= CloudIO::S3.new(
-            :access_key_id      => access_key_id,
-            :secret_access_key  => secret_access_key,
-            :use_iam_profile    => use_iam_profile,
-            :bucket             => bucket,
-            :region             => region,
-            :encryption         => encryption,
-            :storage_class      => storage_class,
-            :max_retries        => max_retries,
-            :retry_waitsec      => retry_waitsec,
+            access_key_id: access_key_id,
+            secret_access_key: secret_access_key,
+            use_iam_profile: use_iam_profile,
+            bucket: bucket,
+            region: region,
+            encryption: encryption,
+            storage_class: storage_class,
+            max_retries: max_retries,
+            retry_waitsec: retry_waitsec,
             # Syncer can not use multipart upload.
-            :chunk_size         => 0,
-            :fog_options        => fog_options
+            chunk_size: 0,
+            fog_options: fog_options
           )
         end
 
         def get_remote_files(remote_base)
           hash = {}
           cloud_io.objects(remote_base).each do |object|
-            relative_path = object.key.sub(remote_base + '/', '')
+            relative_path = object.key.sub(remote_base + "/", "")
             hash[relative_path] = object.etag
           end
           hash
         end
 
         def check_configuration
-          if use_iam_profile
-            required = %w{ bucket }
-          else
-            required = %w{ access_key_id secret_access_key bucket }
-          end
-          raise Error, <<-EOS if required.map {|name| send(name) }.any?(&:nil?)
+          required =
+            if use_iam_profile
+              %w[bucket]
+            else
+              %w[access_key_id secret_access_key bucket]
+            end
+          raise Error, <<-EOS if required.map { |name| send(name) }.any?(&:nil?)
             Configuration Error
-            #{ required.map {|name| "##{ name }"}.join(', ') } are all required
+            #{required.map { |name| "##{name}" }.join(", ")} are all required
           EOS
 
-          raise Error, <<-EOS if encryption && encryption.to_s.upcase != 'AES256'
+          raise Error, <<-EOS if encryption && encryption.to_s.upcase != "AES256"
             Configuration Error
             #encryption must be :aes256 or nil
           EOS
 
-          classes = ['STANDARD', 'REDUCED_REDUNDANCY']
+          classes = ["STANDARD", "REDUCED_REDUNDANCY"]
           raise Error, <<-EOS unless classes.include?(storage_class.to_s.upcase)
             Configuration Error
             #storage_class must be :standard or :reduced_redundancy
           EOS
         end
-
       end # Class S3 < Base
     end # module Cloud
   end

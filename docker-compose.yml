@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+  ruby_backup_tester:
+    build: .
+    command: /bin/bash
+    image: backup/test-suite:local
+    working_dir: /usr/src/backup
+    volumes:
+      - "./:/usr/src/backup:delegated"
+      - "./tmp/docker/:/tmp/docker:delegated"

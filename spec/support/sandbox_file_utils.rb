@@ -1,4 +1,3 @@
-# encoding: utf-8
 #
 # Provides the ability to perform +FileUtils+ actions, while restricting
 # any destructive actions outside of the specified +sandbox_path+.
@@ -104,7 +103,7 @@
 #   remove_file
 #   remove_dir
 #
-require 'fileutils'
+require "fileutils"
 module SandboxFileUtils
   class Error < StandardError; end
   class << self
@@ -179,51 +178,55 @@ module SandboxFileUtils
       true
     end
 
-    %w{ pwd getwd cd chdir uptodate? compare_file
-        identical? cmp compare_stream }.each do |name|
+    %w[
+      pwd getwd cd chdir uptodate? compare_file identical? cmp
+      compare_stream
+    ].each do |name|
       public :"#{ name }"
     end
 
-    %w{ mkdir mkdir_p makedirs mkpath rmdir
-        rm remove rm_f safe_unlink rm_r rm_rf rmtree touch }.each do |name|
+    %w[
+      mkdir mkdir_p makedirs mkpath rmdir rm remove rm_f safe_unlink rm_r
+      rm_rf rmtree touch
+    ].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
-        def #{ name }(list, options = {})
+        def #{name}(list, options = {})
           protect!(list)
           super
         end
       EOS
     end
 
-    %w{ cp copy cp_r install }.each do |name|
+    %w[cp copy cp_r install].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
-        def #{ name }(src, dest, options = {})
+        def #{name}(src, dest, options = {})
           protect!(dest)
           super
         end
       EOS
     end
 
-    %w{ ln link ln_s symlink ln_sf mv move }.each do |name|
+    %w[ln link ln_s symlink ln_sf mv move].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
-        def #{ name }(src, dest, options = {})
+        def #{name}(src, dest, options = {})
           protect!(src)
           super
         end
       EOS
     end
 
-    %w{ chmod chmod_R }.each do |name|
+    %w[chmod chmod_R].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
-        def #{ name }(mode, list, options = {})
+        def #{name}(mode, list, options = {})
           protect!(list)
           super
         end
       EOS
     end
 
-    %w{ chown chown_R }.each do |name|
+    %w[chown chown_R].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
-        def #{ name }(user, group, list, options = {})
+        def #{name}(user, group, list, options = {})
           protect!(list)
           super
         end
@@ -233,21 +236,21 @@ module SandboxFileUtils
     private
 
     def protect!(list)
-      list = Array(list).flatten.map {|p| File.expand_path(p) }
-      path = current_sandbox_path + '/'
-      unless list.all? {|p| p.start_with?(path) || p == path.chomp('/') }
-        raise Error, <<-EOS.gsub(/^ +/, ''), caller(1)
+      list = Array(list).flatten.map { |p| File.expand_path(p) }
+      path = current_sandbox_path + "/"
+      unless list.all? { |p| p.start_with?(path) || p == path.chomp("/") }
+        raise Error, <<-EOS.gsub(/^ +/, ""), caller(1)
           path(s) outside of the current sandbox path were detected.
-          sandbox_path: #{ path }
+          sandbox_path: #{path}
           path(s) for the current operation:
-          #{ list.join($/) }
+          #{list.join($/)}
         EOS
       end
     end
 
     def current_sandbox_path
-      path = sandbox_path.to_s.chomp('/')
-      raise Error, 'sandbox_path must be set' if path.empty?
+      path = sandbox_path.to_s.chomp("/")
+      raise Error, "sandbox_path must be set" if path.empty?
       File.expand_path(path)
     end
   end

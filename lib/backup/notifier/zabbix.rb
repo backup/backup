@@ -1,9 +1,6 @@
-# encoding: utf-8
-
 module Backup
   module Notifier
     class Zabbix < Base
-
       attr_accessor :zabbix_host
 
       attr_accessor :zabbix_port
@@ -19,10 +16,10 @@ module Backup
         instance_eval(&block) if block_given?
 
         @zabbix_host  ||= Config.hostname
-        @zabbix_port  ||= 10051
-        @service_name ||= "Backup #{ model.trigger }"
+        @zabbix_port  ||= 10_051
+        @service_name ||= "Backup #{model.trigger}"
         @service_host ||= Config.hostname
-        @item_key     ||= 'backup_status'
+        @item_key     ||= "backup_status"
       end
 
       private
@@ -45,18 +42,18 @@ module Backup
       # : Notification will be sent if `on_warning` or `on_success` is `true`.
       #
       def notify!(status)
-        send_message(message.call(model, :status => status_data_for(status)))
+        send_message(message.call(model, status: status_data_for(status)))
       end
 
       def send_message(message)
         msg = [service_host, service_name, model.exit_status, message].join("\t")
-        cmd = "#{ utility(:zabbix_sender) }" +
-              " -z '#{ zabbix_host }'" +
-              " -p '#{ zabbix_port }'" +
-              " -s #{ service_host }"  +
-              " -k #{ item_key }"      +
-              " -o '#{ msg }'"
-        run("echo '#{ msg }' | #{ cmd }")
+        cmd = utility(:zabbix_sender).to_s +
+          " -z '#{zabbix_host}'" \
+          " -p '#{zabbix_port}'" \
+          " -s #{service_host}"  \
+          " -k #{item_key}"      \
+          " -o '#{msg}'"
+        run("echo '#{msg}' | #{cmd}")
       end
     end
   end

@@ -1,10 +1,8 @@
-# encoding: utf-8
-require 'mail'
+require "mail"
 
 module Backup
   module Notifier
     class Mail < Base
-
       ##
       # Mail delivery method to be used by the Mail gem.
       #
@@ -161,17 +159,17 @@ module Backup
       #
       def notify!(status)
         email = new_email
-        email.subject = message.call(model, :status => status_data_for(status))
+        email.subject = message.call(model, status: status_data_for(status))
 
         send_log = send_log_on.include?(status)
-        template = Backup::Template.new({ :model => model, :send_log => send_log })
-        email.body = template.result('notifier/mail/%s.erb' % status.to_s)
+        template = Backup::Template.new(model: model, send_log: send_log)
+        email.body = template.result(sprintf("notifier/mail/%s.erb", status.to_s))
 
         if send_log
           email.convert_to_multipart
-          email.attachments["#{ model.time }.#{ model.trigger }.log"] = {
-            :mime_type => 'text/plain;',
-            :content   => Logger.messages.map(&:formatted_lines).flatten.join("\n")
+          email.attachments["#{model.time}.#{model.trigger}.log"] = {
+            mime_type: "text/plain;",
+            content: Logger.messages.map(&:formatted_lines).flatten.join("\n")
           }
         end
 
@@ -182,43 +180,43 @@ module Backup
       # Configures the Mail gem by setting the defaults.
       # Creates and returns a new email, based on the @delivery_method used.
       def new_email
-        method = %w{ smtp sendmail exim file test }.
-            index(@delivery_method.to_s) ? @delivery_method.to_s : 'smtp'
+        method = %w[smtp sendmail exim file test]
+          .index(@delivery_method.to_s) ? @delivery_method.to_s : "smtp"
 
         options =
-            case method
-            when 'smtp'
-              opts = {
-                :address              => @address,
-                :port                 => @port,
-                :user_name            => @user_name,
-                :password             => @password,
-                :authentication       => @authentication,
-                :enable_starttls_auto => @encryption == :starttls,
-                :openssl_verify_mode  => @openssl_verify_mode,
-                :ssl                  => @encryption == :ssl,
-                :tls                  => @encryption == :tls
-              }
+          case method
+          when "smtp"
+            opts = {
+              address: @address,
+              port: @port,
+              user_name: @user_name,
+              password: @password,
+              authentication: @authentication,
+              enable_starttls_auto: @encryption == :starttls,
+              openssl_verify_mode: @openssl_verify_mode,
+              ssl: @encryption == :ssl,
+              tls: @encryption == :tls
+            }
 
-              # Don't override default domain setting if domain not applicable.
-              # ref https://github.com/mikel/mail/blob/2.6.3/lib/mail/network/delivery_methods/smtp.rb#L82
-              opts[:domain] = @domain if @domain
-              opts
-            when 'sendmail'
-              opts = {}
-              opts.merge!(:location  => utility(:sendmail))
-              opts.merge!(:arguments => @sendmail_args) if @sendmail_args
-              opts
-            when 'exim'
-              opts = {}
-              opts.merge!(:location  => utility(:exim))
-              opts.merge!(:arguments => @exim_args) if @exim_args
-              opts
-            when 'file'
-              @mail_folder ||= File.join(Config.root_path, 'emails')
-              { :location => File.expand_path(@mail_folder) }
-            when 'test' then {}
-            end
+            # Don't override default domain setting if domain not applicable.
+            # ref https://github.com/mikel/mail/blob/2.6.3/lib/mail/network/delivery_methods/smtp.rb#L82
+            opts[:domain] = @domain if @domain
+            opts
+          when "sendmail"
+            opts = {}
+            opts[:location] = utility(:sendmail)
+            opts[:arguments] = @sendmail_args if @sendmail_args
+            opts
+          when "exim"
+            opts = {}
+            opts[:location] = utility(:exim)
+            opts[:arguments] = @exim_args if @exim_args
+            opts
+          when "file"
+            @mail_folder ||= File.join(Config.root_path, "emails")
+            { location: File.expand_path(@mail_folder) }
+          when "test" then {}
+          end
 
         email = ::Mail.new
         email.delivery_method method.to_sym, options
@@ -228,21 +226,6 @@ module Backup
         email.bcc      = bcc
         email.reply_to = reply_to
         email
-      end
-
-    end
-  end
-end
-
-# Patch mail v2.5.4 Exim delivery method
-# https://github.com/backup/backup/issues/446
-# https://github.com/mikel/mail/pull/546
-module Mail
-  class Exim
-    def self.call(path, arguments, destinations, encoded_message)
-      popen "#{path} #{arguments}" do |io|
-        io.puts encoded_message.to_lf
-        io.flush
       end
     end
   end

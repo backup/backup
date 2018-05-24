@@ -1,11 +1,8 @@
-# encoding: utf-8
-
 module Backup
   module Utilities
     class Error < Backup::Error; end
 
-    UTILITY = {}
-    NAMES = %w{
+    UTILITIES_NAMES = %w[
       tar cat split sudo chown hostname
       gzip bzip2
       mongo mongodump mysqldump innobackupex
@@ -15,33 +12,37 @@ module Backup
       sendmail exim
       send_nsca
       zabbix_sender
-    }
+    ].freeze
 
-    module DSL
-      class << self
-        ##
-        # Allow users to set the path for all utilities in the .configure block.
-        #
-        # Utility names with dashes ('redis-cli') will be set using method calls
-        # with an underscore ('redis_cli').
-        NAMES.each do |name|
-          define_method name.gsub('-', '_'), lambda {|val|
-            path = File.expand_path(val)
-            unless File.executable?(path)
-              raise Utilities::Error, <<-EOS
-                The path given for '#{ name }' was not found or not executable.
-                Path was: #{ path }
-              EOS
-            end
-            UTILITY[name] = path
-          }
-        end
+    # @api private
+    class DSL
+      def initialize(utils)
+        @utilities = utils
+      end
 
-        ##
-        # Allow users to set the +tar+ distribution if needed. (:gnu or :bsd)
-        def tar_dist(val)
-          Utilities.tar_dist(val)
+      # Helper methods to allow users to set the path for all utilities in the
+      # .configure block.
+      #
+      # Utility names with dashes (`redis-cli`) will be set using method calls
+      # with an underscore (`redis_cli`).
+      UTILITIES_NAMES.each do |util_name|
+        define_method util_name.tr("-", "_") do |raw_path|
+          path = File.expand_path(raw_path)
+
+          unless File.executable?(path)
+            raise Utilities::Error, <<-EOS
+              The path given for '#{util_name}' was not found or not executable.
+              Path was: #{path}
+            EOS
+          end
+
+          @utilities.utilities[util_name] = path
         end
+      end
+
+      # Allow users to set the +tar+ distribution if needed. (:gnu or :bsd)
+      def tar_dist(val)
+        Utilities.tar_dist(val)
       end
     end
 
@@ -102,7 +103,7 @@ module Backup
       # These paths may be set using absolute paths, or relative to the
       # working directory when Backup is run.
       def configure(&block)
-        DSL.instance_eval(&block)
+        DSL.new(self).instance_eval(&block)
       end
 
       def tar_dist(val)
@@ -112,7 +113,11 @@ module Backup
 
       def gnu_tar?
         return @gnu_tar unless @gnu_tar.nil?
-        @gnu_tar = !!run("#{ utility(:tar) } --version").match(/GNU/)
+        @gnu_tar = !!run("#{utility(:tar)} --version").match(/GNU/)
+      end
+
+      def utilities
+        @utilities ||= {}
       end
 
       private
@@ -122,17 +127,17 @@ module Backup
       # Raises an error if utility can not be found in the system's $PATH
       def utility(name)
         name = name.to_s.strip
-        raise Error, 'Utility Name Empty' if name.empty?
+        raise Error, "Utility Name Empty" if name.empty?
 
-        UTILITY[name] ||= %x[which '#{ name }' 2>/dev/null].chomp
-        raise Error, <<-EOS if UTILITY[name].empty?
-          Could not locate '#{ name }'.
+        utilities[name] ||= `which '#{name}' 2>/dev/null`.chomp
+        raise Error, <<-EOS if utilities[name].empty?
+          Could not locate '#{name}'.
           Make sure the specified utility is installed
           and available in your system's $PATH, or specify it's location
           in your 'config.rb' file using Backup::Utilities.configure
         EOS
 
-        UTILITY[name].dup
+        utilities[name].dup
       end
 
       ##
@@ -140,21 +145,21 @@ module Backup
       # This is only used to simplify log messages.
       def command_name(command)
         parts = []
-        command = command.split(' ')
-        command.shift while command[0].to_s.include?('=')
-        parts << command.shift.split('/')[-1]
-        if parts[0] == 'sudo'
+        command = command.split(" ")
+        command.shift while command[0].to_s.include?("=")
+        parts << command.shift.split("/")[-1]
+        if parts[0] == "sudo"
           until command.empty?
             part = command.shift
-            if part.include?('/')
-              parts << part.split('/')[-1]
+            if part.include?("/")
+              parts << part.split("/")[-1]
               break
             else
               parts << part
             end
           end
         end
-        parts.join(' ')
+        parts.join(" ")
       end
 
       ##
@@ -169,43 +174,41 @@ module Backup
       # Returns STDOUT
       def run(command)
         name = command_name(command)
-        Logger.info "Running system utility '#{ name }'..."
+        Logger.info "Running system utility '#{name}'..."
 
         begin
-          out, err = '', ''
-          ps = Open4.popen4(command) do |pid, stdin, stdout, stderr|
+          out = ""
+          err = ""
+          ps = Open4.popen4(command) do |_pid, stdin, stdout, stderr|
             stdin.close
-            out, err = stdout.read.strip, stderr.read.strip
+            out = stdout.read.strip
+            err = stderr.read.strip
           end
         rescue Exception => e
-          raise Error.wrap(e, "Failed to execute '#{ name }'")
+          raise Error.wrap(e, "Failed to execute '#{name}'")
         end
 
-        if ps.success?
-          unless out.empty?
-            Logger.info(
-              out.lines.map {|line| "#{ name }:STDOUT: #{ line }" }.join
-            )
-          end
-
-          unless err.empty?
-            Logger.warn(
-              err.lines.map {|line| "#{ name }:STDERR: #{ line }" }.join
-            )
-          end
-
-          return out
-        else
+        unless ps.success?
           raise Error, <<-EOS
-            '#{ name }' failed with exit status: #{ ps.exitstatus }
-            STDOUT Messages: #{ out.empty? ? 'None' : "\n#{ out }" }
-            STDERR Messages: #{ err.empty? ? 'None' : "\n#{ err }" }
+            '#{name}' failed with exit status: #{ps.exitstatus}
+            STDOUT Messages: #{out.empty? ? "None" : "\n#{out}"}
+            STDERR Messages: #{err.empty? ? "None" : "\n#{err}"}
           EOS
         end
+
+        unless out.empty?
+          Logger.info(out.lines.map { |line| "#{name}:STDOUT: #{line}" }.join)
+        end
+
+        unless err.empty?
+          Logger.warn(err.lines.map { |line| "#{name}:STDERR: #{line}" }.join)
+        end
+
+        out
       end
 
       def reset!
-        UTILITY.clear
+        utilities.clear
         @gnu_tar = nil
       end
     end
@@ -214,11 +217,17 @@ module Backup
     # while allowing them to be stubbed in spec_helper for all specs.
     module Helpers
       [:utility, :command_name, :run].each do |name|
-        define_method name, lambda {|arg| Utilities.send(name, arg) }
+        define_method name do |arg|
+          Utilities.send(name, arg)
+        end
         private name
       end
+
       private
-      def gnu_tar?; Utilities.gnu_tar?; end
+
+      def gnu_tar?
+        Utilities.gnu_tar?
+      end
     end
   end
 end

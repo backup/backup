@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   module Database
     class PostgreSQL < Base
@@ -53,17 +51,19 @@ module Backup
         super
 
         pipeline = Pipeline.new
-        dump_ext = 'sql'
+        dump_ext = "sql"
 
         pipeline << (dump_all? ? pgdumpall : pgdump)
 
-        model.compressor.compress_with do |command, ext|
-          pipeline << command
-          dump_ext << ext
-        end if model.compressor
+        if model.compressor
+          model.compressor.compress_with do |command, ext|
+            pipeline << command
+            dump_ext << ext
+          end
+        end
 
-        pipeline << "#{ utility(:cat) } > " +
-            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
+        pipeline << "#{utility(:cat)} > " \
+          "'#{File.join(dump_path, dump_filename)}.#{dump_ext}'"
 
         pipeline.run
         if pipeline.success?
@@ -74,60 +74,59 @@ module Backup
       end
 
       def pgdump
-        "#{ password_option }" +
-        "#{ sudo_option }" +
-        "#{ utility(:pg_dump) } #{ username_option } #{ connectivity_options } " +
-        "#{ user_options } #{ tables_to_dump } #{ tables_to_skip } #{ name }"
+        password_option.to_s +
+          sudo_option.to_s +
+          "#{utility(:pg_dump)} #{username_option} #{connectivity_options} " \
+          "#{user_options} #{tables_to_dump} #{tables_to_skip} #{name}"
       end
 
       def pgdumpall
-        "#{ password_option }" +
-        "#{ sudo_option }" +
-        "#{ utility(:pg_dumpall) } #{ username_option } " +
-        "#{ connectivity_options } #{ user_options }"
+        password_option.to_s +
+          sudo_option.to_s +
+          "#{utility(:pg_dumpall)} #{username_option} " \
+          "#{connectivity_options} #{user_options}"
       end
 
       def password_option
-        "PGPASSWORD=#{ Shellwords.escape(password) } " if password
+        "PGPASSWORD=#{Shellwords.escape(password)} " if password
       end
 
       def sudo_option
-        "#{ utility(:sudo) } -n -H -u #{ sudo_user } " if sudo_user
+        "#{utility(:sudo)} -n -H -u #{sudo_user} " if sudo_user
       end
 
       def username_option
-        "--username=#{ Shellwords.escape(username) }" if username
+        "--username=#{Shellwords.escape(username)}" if username
       end
 
       def connectivity_options
-        return "--host='#{ socket }'" if socket
+        return "--host='#{socket}'" if socket
 
         opts = []
-        opts << "--host='#{ host }'" if host
-        opts << "--port='#{ port }'" if port
-        opts.join(' ')
+        opts << "--host='#{host}'" if host
+        opts << "--port='#{port}'" if port
+        opts.join(" ")
       end
 
       def user_options
-        Array(additional_options).join(' ')
+        Array(additional_options).join(" ")
       end
 
       def tables_to_dump
         Array(only_tables).map do |table|
-          "--table='#{ table }'"
-        end.join(' ')
+          "--table='#{table}'"
+        end.join(" ")
       end
 
       def tables_to_skip
         Array(skip_tables).map do |table|
-          "--exclude-table='#{ table }'"
-        end.join(' ')
+          "--exclude-table='#{table}'"
+        end.join(" ")
       end
 
       def dump_all?
         name == :all
       end
-
     end
   end
 end

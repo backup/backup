@@ -1,9 +1,6 @@
-# encoding: utf-8
-
 module Backup
   module Encryptor
     class OpenSSL < Base
-
       ##
       # The password that'll be used to encrypt the backup. This
       # password will be required to decrypt the backup later on.
@@ -42,7 +39,7 @@ module Backup
       # so that any clean-up may be performed after the yield.
       def encrypt_with
         log!
-        yield "#{ utility(:openssl) } #{ options }", '.enc'
+        yield "#{utility(:openssl)} #{options}", ".enc"
       end
 
       private
@@ -59,19 +56,19 @@ module Backup
       # Always sets a password option, if even no password is given,
       # but will prefer the password_file option if both are given.
       def options
-        opts = ['aes-256-cbc']
-        opts << '-base64' if @base64
-        opts << '-salt'   if @salt
+        opts = ["aes-256-cbc"]
+        opts << "-base64" if @base64
+        opts << "-salt"   if @salt
 
-        if @password_file.to_s.empty?
-          opts << "-k #{Shellwords.escape(@password)}"
-        else
-          opts << "-pass file:#{@password_file}"
-        end
+        opts <<
+          if @password_file.to_s.empty?
+            "-k #{Shellwords.escape(@password)}"
+          else
+            "-pass file:#{@password_file}"
+          end
 
-        opts.join(' ')
+        opts.join(" ")
       end
-
     end
   end
 end

@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   module Packager
     class Error < Backup::Error; end
@@ -22,7 +20,7 @@ module Backup
           Logger.info "Packaging Complete!"
         else
           raise Error, "Failed to Create Backup Package\n" +
-              @pipeline.error_messages
+            @pipeline.error_messages
         end
       end
 
@@ -43,8 +41,8 @@ module Backup
         # or the Splitter (if no Encryptor), or through `cat` into the final
         # output file if neither are configured.
         @pipeline.add(
-          "#{ utility(:tar) } -cf - " +
-          "-C '#{ Config.tmp_path }' '#{ @package.trigger }'",
+          "#{utility(:tar)} -cf - " \
+          "-C '#{Config.tmp_path}' '#{@package.trigger}'",
           tar_success_codes
         )
 
@@ -75,26 +73,27 @@ module Backup
         #
         # If no Splitter was configured, the final file output will be
         # piped through `cat` into the final output file.
-        if @splitter
-          stack << lambda do
-            @splitter.split_with do |command|
-              @pipeline << command
+        stack <<
+          if @splitter
+            lambda do
+              @splitter.split_with do |command|
+                @pipeline << command
+                stack.shift.call
+              end
+            end
+          else
+            lambda do
+              outfile = File.join(Config.tmp_path, @package.basename)
+              @pipeline << "#{utility(:cat)} > #{outfile}"
               stack.shift.call
             end
           end
-        else
-          stack << lambda do
-            outfile = File.join(Config.tmp_path, @package.basename)
-            @pipeline << "#{ utility(:cat) } > #{ outfile }"
-            stack.shift.call
-          end
-        end
 
         ##
         # Last Proc to be called runs the Pipeline the procedure built.
         # Once complete, the call stack will unwind back through the
         # preceeding Procs in the stack (if any)
-        stack << lambda { @pipeline.run }
+        stack << -> { @pipeline.run }
 
         stack.shift
       end

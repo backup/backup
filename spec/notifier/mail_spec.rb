@@ -1,501 +1,495 @@
-# encoding: utf-8
-
-require File.expand_path('../../spec_helper.rb', __FILE__)
+require "spec_helper"
 
 module Backup
-describe Notifier::Mail do
-  let(:model) { Model.new(:test_trigger, 'test label') }
-  let(:notifier) { Notifier::Mail.new(model) }
-
-  before do
-    Notifier::Mail.any_instance.stubs(:utility).
-        with(:sendmail).returns('/path/to/sendmail')
-    Notifier::Mail.any_instance.stubs(:utility).
-        with(:exim).returns('/path/to/exim')
-  end
-
-  it_behaves_like 'a class that includes Config::Helpers'
-  it_behaves_like 'a subclass of Notifier::Base'
-
-  describe '#initialize' do
-    it 'provides default values' do
-      expect( notifier.delivery_method      ).to be_nil
-      expect( notifier.to                   ).to be_nil
-      expect( notifier.from                 ).to be_nil
-      expect( notifier.cc                   ).to be_nil
-      expect( notifier.bcc                  ).to be_nil
-      expect( notifier.reply_to             ).to be_nil
-      expect( notifier.address              ).to be_nil
-      expect( notifier.port                 ).to be_nil
-      expect( notifier.domain               ).to be_nil
-      expect( notifier.user_name            ).to be_nil
-      expect( notifier.password             ).to be_nil
-      expect( notifier.authentication       ).to be_nil
-      expect( notifier.encryption           ).to eq :starttls
-      expect( notifier.openssl_verify_mode  ).to be_nil
-      expect( notifier.sendmail_args        ).to be_nil
-      expect( notifier.exim_args            ).to be_nil
-      expect( notifier.mail_folder          ).to be_nil
-      expect( notifier.send_log_on          ).to eq [:warning, :failure]
-
-      expect( notifier.on_success     ).to be(true)
-      expect( notifier.on_warning     ).to be(true)
-      expect( notifier.on_failure     ).to be(true)
-      expect( notifier.max_retries    ).to be(10)
-      expect( notifier.retry_waitsec  ).to be(30)
-    end
-
-    it 'configures the notifier' do
-      notifier = Notifier::Mail.new(model) do |mail|
-        mail.delivery_method      = :smtp
-        mail.to                   = 'my.receiver.email@gmail.com'
-        mail.from                 = 'my.sender.email@gmail.com'
-        mail.cc                   = 'my.cc.email@gmail.com'
-        mail.bcc                  = 'my.bcc.email@gmail.com'
-        mail.reply_to             = 'my.reply_to.email@gmail.com'
-        mail.address              = 'smtp.gmail.com'
-        mail.port                 = 587
-        mail.domain               = 'your.host.name'
-        mail.user_name            = 'user'
-        mail.password             = 'secret'
-        mail.authentication       = 'plain'
-        mail.encryption           = :none
-        mail.openssl_verify_mode  = :none
-        mail.sendmail_args        = '-i -t -X/tmp/traffic.log'
-        mail.exim_args            = '-i -t -X/tmp/traffic.log'
-        mail.mail_folder          = '/path/to/backup/mails'
-        mail.send_log_on          = [:success, :warning, :failure]
-
-        mail.on_success     = false
-        mail.on_warning     = false
-        mail.on_failure     = false
-        mail.max_retries    = 5
-        mail.retry_waitsec  = 10
-      end
-
-      expect( notifier.delivery_method      ).to eq :smtp
-      expect( notifier.to                   ).to eq 'my.receiver.email@gmail.com'
-      expect( notifier.from                 ).to eq 'my.sender.email@gmail.com'
-      expect( notifier.cc                   ).to eq 'my.cc.email@gmail.com'
-      expect( notifier.bcc                  ).to eq 'my.bcc.email@gmail.com'
-      expect( notifier.reply_to             ).to eq 'my.reply_to.email@gmail.com'
-      expect( notifier.address              ).to eq 'smtp.gmail.com'
-      expect( notifier.port                 ).to eq 587
-      expect( notifier.domain               ).to eq 'your.host.name'
-      expect( notifier.user_name            ).to eq 'user'
-      expect( notifier.password             ).to eq 'secret'
-      expect( notifier.authentication       ).to eq 'plain'
-      expect( notifier.encryption           ).to eq :none
-      expect( notifier.openssl_verify_mode  ).to eq :none
-      expect( notifier.sendmail_args        ).to eq '-i -t -X/tmp/traffic.log'
-      expect( notifier.exim_args            ).to eq '-i -t -X/tmp/traffic.log'
-      expect( notifier.mail_folder          ).to eq '/path/to/backup/mails'
-      expect( notifier.send_log_on          ).to eq [:success, :warning, :failure]
-
-      expect( notifier.on_success     ).to be(false)
-      expect( notifier.on_warning     ).to be(false)
-      expect( notifier.on_failure     ).to be(false)
-      expect( notifier.max_retries    ).to be(5)
-      expect( notifier.retry_waitsec  ).to be(10)
-    end
-  end # describe '#initialize'
-
-  describe '#notify!' do
-    let(:message) { '[Backup::%s] test label (test_trigger)' }
+  describe Notifier::Mail do
+    let(:model) { Model.new(:test_trigger, "test label") }
+    let(:notifier) { Notifier::Mail.new(model) }
 
     before do
-      notifier.delivery_method = :test
-      notifier.to = 'to@email'
-      notifier.from = 'from@email'
-
-      ::Mail::TestMailer.deliveries.clear
-
-      Logger.stubs(:messages).returns([
-        stub(:formatted_lines => ['line 1', 'line 2']),
-        stub(:formatted_lines => ['line 3'])
-      ])
-
-      time = Time.now
-      model.stubs(:time).returns(time.strftime("%Y.%m.%d.%H.%M.%S"))
-      model.stubs(:started_at).returns(time)
-      model.stubs(:finished_at).returns(time + 5)
+      Notifier::Mail.any_instance.stubs(:utility)
+        .with(:sendmail).returns("/path/to/sendmail")
+      Notifier::Mail.any_instance.stubs(:utility)
+        .with(:exim).returns("/path/to/exim")
     end
 
-    context 'when status is :success' do
-      context 'when send_log_on includes :success' do
-        before { notifier.send_log_on = [:success, :warning, :failure] }
+    it_behaves_like "a class that includes Config::Helpers"
+    it_behaves_like "a subclass of Notifier::Base"
 
-        it 'sends a Success email with an attached log' do
-          notifier.send(:notify!, :success)
+    describe "#initialize" do
+      it "provides default values" do
+        expect(notifier.delivery_method).to be_nil
+        expect(notifier.to).to be_nil
+        expect(notifier.from).to be_nil
+        expect(notifier.cc).to be_nil
+        expect(notifier.bcc).to be_nil
+        expect(notifier.reply_to).to be_nil
+        expect(notifier.address).to be_nil
+        expect(notifier.port).to be_nil
+        expect(notifier.domain).to be_nil
+        expect(notifier.user_name).to be_nil
+        expect(notifier.password).to be_nil
+        expect(notifier.authentication).to be_nil
+        expect(notifier.encryption).to eq :starttls
+        expect(notifier.openssl_verify_mode).to be_nil
+        expect(notifier.sendmail_args).to be_nil
+        expect(notifier.exim_args).to be_nil
+        expect(notifier.mail_folder).to be_nil
+        expect(notifier.send_log_on).to eq [:warning, :failure]
 
-          sent_message = ::Mail::TestMailer.deliveries.first
-          filename = "#{ model.time }.#{ model.trigger }.log"
-
-          expect( sent_message.subject          ).to eq message % 'Success'
-          expect( sent_message.body.multipart?  ).to be_true
-          expect( sent_message.attachments[filename].read ).
-              to eq "line 1\nline 2\nline 3"
-          expect( sent_message.text_part ).to be_an_instance_of ::Mail::Part
-          expect( sent_message.text_part.decoded ).to eq <<-EOS.gsub(/^ +/, '')
-
-            Backup Completed Successfully!
-
-            Job: test label (test_trigger)
-            Started:  #{ model.started_at }
-            Finished: #{ model.finished_at }
-            Duration: 00:00:05
-
-            See the attached backup log for details.
-
-            #{ '=' * 75 }
-            Backup v#{ VERSION }
-            Ruby: #{ RUBY_DESCRIPTION }
-
-            Project Home:  https://github.com/backup/backup
-            Documentation: http://backup.github.io/backup
-            Issue Tracker: https://github.com/backup/backup/issues
-          EOS
-        end
+        expect(notifier.on_success).to be(true)
+        expect(notifier.on_warning).to be(true)
+        expect(notifier.on_failure).to be(true)
+        expect(notifier.max_retries).to be(10)
+        expect(notifier.retry_waitsec).to be(30)
       end
 
-      context 'when send_log_on does not include :success' do
-        it 'sends a Success email with no log attached' do
-          notifier.send(:notify!, :success)
-
-          sent_message = ::Mail::TestMailer.deliveries.first
-          expect( sent_message.subject          ).to eq message % 'Success'
-          expect( sent_message.multipart?       ).to be_false
-          expect( sent_message.has_attachments? ).to be_false
-          expect( sent_message.body ).to be_an_instance_of ::Mail::Body
-          expect( sent_message.body.decoded ).to eq <<-EOS.gsub(/^ +/, '')
-
-            Backup Completed Successfully!
-
-            Job: test label (test_trigger)
-            Started:  #{ model.started_at }
-            Finished: #{ model.finished_at }
-            Duration: 00:00:05
-
-            #{ '=' * 75 }
-            Backup v#{ VERSION }
-            Ruby: #{ RUBY_DESCRIPTION }
-
-            Project Home:  https://github.com/backup/backup
-            Documentation: http://backup.github.io/backup
-            Issue Tracker: https://github.com/backup/backup/issues
-          EOS
-        end
-      end
-    end # context 'when status is :success'
-
-    context 'when status is :warning' do
-      context 'when send_log_on includes :warning' do
-        it 'sends a Warning email with an attached log' do
-          notifier.send(:notify!, :warning)
-
-          sent_message = ::Mail::TestMailer.deliveries.first
-          filename = "#{ model.time }.#{ model.trigger }.log"
-
-          expect( sent_message.subject          ).to eq message % 'Warning'
-          expect( sent_message.body.multipart?  ).to be_true
-          expect( sent_message.attachments[filename].read ).
-              to eq "line 1\nline 2\nline 3"
-          expect( sent_message.text_part ).to be_an_instance_of ::Mail::Part
-          expect( sent_message.text_part.decoded ).to eq <<-EOS.gsub(/^ +/, '')
-
-            Backup Completed Successfully (with Warnings)!
-
-            Job: test label (test_trigger)
-            Started:  #{ model.started_at }
-            Finished: #{ model.finished_at }
-            Duration: 00:00:05
-
-            See the attached backup log for details.
-
-            #{ '=' * 75 }
-            Backup v#{ VERSION }
-            Ruby: #{ RUBY_DESCRIPTION }
-
-            Project Home:  https://github.com/backup/backup
-            Documentation: http://backup.github.io/backup
-            Issue Tracker: https://github.com/backup/backup/issues
-          EOS
-        end
-      end
-
-      context 'when send_log_on does not include :warning' do
-        before { notifier.send_log_on = [:success, :failure] }
-
-        it 'sends a Warning email with no log attached' do
-          notifier.send(:notify!, :warning)
-
-          sent_message = ::Mail::TestMailer.deliveries.first
-          expect( sent_message.subject          ).to eq message % 'Warning'
-          expect( sent_message.multipart?       ).to be_false
-          expect( sent_message.has_attachments? ).to be_false
-          expect( sent_message.body ).to be_an_instance_of ::Mail::Body
-          expect( sent_message.body.decoded ).to eq <<-EOS.gsub(/^ +/, '')
-
-            Backup Completed Successfully (with Warnings)!
-
-            Job: test label (test_trigger)
-            Started:  #{ model.started_at }
-            Finished: #{ model.finished_at }
-            Duration: 00:00:05
-
-            #{ '=' * 75 }
-            Backup v#{ VERSION }
-            Ruby: #{ RUBY_DESCRIPTION }
-
-            Project Home:  https://github.com/backup/backup
-            Documentation: http://backup.github.io/backup
-            Issue Tracker: https://github.com/backup/backup/issues
-          EOS
-        end
-      end
-    end # context 'when status is :warning'
-
-    context 'when status is :failure' do
-      context 'when send_log_on includes :failure' do
-        it 'sends a Failure email with an attached log' do
-          notifier.send(:notify!, :failure)
-
-          sent_message = ::Mail::TestMailer.deliveries.first
-          filename = "#{ model.time }.#{ model.trigger }.log"
-
-          expect( sent_message.subject          ).to eq message % 'Failure'
-          expect( sent_message.body.multipart?  ).to be_true
-          expect( sent_message.attachments[filename].read ).
-              to eq "line 1\nline 2\nline 3"
-          expect( sent_message.text_part ).to be_an_instance_of ::Mail::Part
-          expect( sent_message.text_part.decoded ).to eq <<-EOS.gsub(/^ +/, '')
-
-            Backup Failed!
-
-            Job: test label (test_trigger)
-            Started:  #{ model.started_at }
-            Finished: #{ model.finished_at }
-            Duration: 00:00:05
-
-            See the attached backup log for details.
-
-            #{ '=' * 75 }
-            Backup v#{ VERSION }
-            Ruby: #{ RUBY_DESCRIPTION }
-
-            Project Home:  https://github.com/backup/backup
-            Documentation: http://backup.github.io/backup
-            Issue Tracker: https://github.com/backup/backup/issues
-          EOS
-        end
-      end
-
-      context 'when send_log_on does not include :failure' do
-        before { notifier.send_log_on = [:success, :warning] }
-
-        it 'sends a Warning email with no log attached' do
-          notifier.send(:notify!, :failure)
-
-          sent_message = ::Mail::TestMailer.deliveries.first
-          expect( sent_message.subject          ).to eq message % 'Failure'
-          expect( sent_message.multipart?       ).to be_false
-          expect( sent_message.has_attachments? ).to be_false
-          expect( sent_message.body ).to be_an_instance_of ::Mail::Body
-          expect( sent_message.body.decoded ).to eq <<-EOS.gsub(/^ +/, '')
-
-            Backup Failed!
-
-            Job: test label (test_trigger)
-            Started:  #{ model.started_at }
-            Finished: #{ model.finished_at }
-            Duration: 00:00:05
-
-            #{ '=' * 75 }
-            Backup v#{ VERSION }
-            Ruby: #{ RUBY_DESCRIPTION }
-
-            Project Home:  https://github.com/backup/backup
-            Documentation: http://backup.github.io/backup
-            Issue Tracker: https://github.com/backup/backup/issues
-          EOS
-        end
-      end
-    end # context 'when status is :failure'
-
-  end # describe '#notify!'
-
-  describe '#new_email' do
-
-    context 'when no delivery_method is set' do
-      before { notifier.delivery_method = nil }
-
-      it 'defaults to :smtp' do
-        email = notifier.send(:new_email)
-        expect( email ).to be_an_instance_of ::Mail::Message
-        expect( email.delivery_method ).to be_an_instance_of ::Mail::SMTP
-      end
-    end
-
-    context 'when delivery_method is :smtp' do
-      let(:notifier) {
-        Notifier::Mail.new(model) do |mail|
+      it "configures the notifier" do
+        notifier = Notifier::Mail.new(model) do |mail|
           mail.delivery_method      = :smtp
-          mail.to                   = 'my.receiver.email@gmail.com'
-          mail.from                 = 'my.sender.email@gmail.com'
-          mail.cc                   = 'my.cc.email@gmail.com'
-          mail.bcc                  = 'my.bcc.email@gmail.com'
-          mail.reply_to             = 'my.reply_to.email@gmail.com'
-          mail.address              = 'smtp.gmail.com'
+          mail.to                   = "my.receiver.email@gmail.com"
+          mail.from                 = "my.sender.email@gmail.com"
+          mail.cc                   = "my.cc.email@gmail.com"
+          mail.bcc                  = "my.bcc.email@gmail.com"
+          mail.reply_to             = "my.reply_to.email@gmail.com"
+          mail.address              = "smtp.gmail.com"
           mail.port                 = 587
-          mail.domain               = 'your.host.name'
-          mail.user_name            = 'user'
-          mail.password             = 'secret'
-          mail.authentication       = 'plain'
-          mail.encryption           = :starttls
+          mail.domain               = "your.host.name"
+          mail.user_name            = "user"
+          mail.password             = "secret"
+          mail.authentication       = "plain"
+          mail.encryption           = :none
           mail.openssl_verify_mode  = :none
+          mail.sendmail_args        = "-i -t -X/tmp/traffic.log"
+          mail.exim_args            = "-i -t -X/tmp/traffic.log"
+          mail.mail_folder          = "/path/to/backup/mails"
+          mail.send_log_on          = [:success, :warning, :failure]
+
+          mail.on_success     = false
+          mail.on_warning     = false
+          mail.on_failure     = false
+          mail.max_retries    = 5
+          mail.retry_waitsec  = 10
         end
-      }
 
-      it 'should set the proper options' do
-        email = notifier.send(:new_email)
-        expect( email.delivery_method ).to be_an_instance_of ::Mail::SMTP
+        expect(notifier.delivery_method).to eq :smtp
+        expect(notifier.to).to eq "my.receiver.email@gmail.com"
+        expect(notifier.from).to eq "my.sender.email@gmail.com"
+        expect(notifier.cc).to eq "my.cc.email@gmail.com"
+        expect(notifier.bcc).to eq "my.bcc.email@gmail.com"
+        expect(notifier.reply_to).to eq "my.reply_to.email@gmail.com"
+        expect(notifier.address).to eq "smtp.gmail.com"
+        expect(notifier.port).to eq 587
+        expect(notifier.domain).to eq "your.host.name"
+        expect(notifier.user_name).to eq "user"
+        expect(notifier.password).to eq "secret"
+        expect(notifier.authentication).to eq "plain"
+        expect(notifier.encryption).to eq :none
+        expect(notifier.openssl_verify_mode).to eq :none
+        expect(notifier.sendmail_args).to eq "-i -t -X/tmp/traffic.log"
+        expect(notifier.exim_args).to eq "-i -t -X/tmp/traffic.log"
+        expect(notifier.mail_folder).to eq "/path/to/backup/mails"
+        expect(notifier.send_log_on).to eq [:success, :warning, :failure]
 
-        expect( email.to       ).to eq ['my.receiver.email@gmail.com']
-        expect( email.from     ).to eq ['my.sender.email@gmail.com']
-        expect( email.cc       ).to eq ['my.cc.email@gmail.com']
-        expect( email.bcc      ).to eq ['my.bcc.email@gmail.com']
-        expect( email.reply_to ).to eq ['my.reply_to.email@gmail.com']
+        expect(notifier.on_success).to be(false)
+        expect(notifier.on_warning).to be(false)
+        expect(notifier.on_failure).to be(false)
+        expect(notifier.max_retries).to be(5)
+        expect(notifier.retry_waitsec).to be(10)
+      end
+    end # describe '#initialize'
 
-        settings = email.delivery_method.settings
-        expect( settings[:address]                ).to eq 'smtp.gmail.com'
-        expect( settings[:port]                   ).to eq 587
-        expect( settings[:domain]                 ).to eq 'your.host.name'
-        expect( settings[:user_name]              ).to eq 'user'
-        expect( settings[:password]               ).to eq 'secret'
-        expect( settings[:authentication]         ).to eq 'plain'
-        expect( settings[:enable_starttls_auto]   ).to be(true)
-        expect( settings[:openssl_verify_mode]    ).to eq :none
-        expect( settings[:ssl]                    ).to be(false)
-        expect( settings[:tls]                    ).to be(false)
+    describe "#notify!" do
+      let(:message) { "[Backup::%s] test label (test_trigger)" }
+
+      before do
+        notifier.delivery_method = :test
+        notifier.to = "to@email"
+        notifier.from = "from@email"
+
+        ::Mail::TestMailer.deliveries.clear
+
+        Logger.stubs(:messages).returns([
+          stub(formatted_lines: ["line 1", "line 2"]),
+          stub(formatted_lines: ["line 3"])
+        ])
+
+        time = Time.now
+        model.stubs(:time).returns(time.strftime("%Y.%m.%d.%H.%M.%S"))
+        model.stubs(:started_at).returns(time)
+        model.stubs(:finished_at).returns(time + 5)
       end
 
-      it 'should properly set other encryption settings' do
-        notifier.encryption = :ssl
-        email = notifier.send(:new_email)
+      context "when status is :success" do
+        context "when send_log_on includes :success" do
+          before { notifier.send_log_on = [:success, :warning, :failure] }
 
-        settings = email.delivery_method.settings
-        expect( settings[:enable_starttls_auto] ).to be(false)
-        expect( settings[:ssl]                  ).to be(true)
-        expect( settings[:tls]                  ).to be(false)
+          it "sends a Success email with an attached log" do
+            notifier.send(:notify!, :success)
 
-        notifier.encryption = :tls
-        email = notifier.send(:new_email)
+            sent_message = ::Mail::TestMailer.deliveries.first
+            filename = "#{model.time}.#{model.trigger}.log"
 
-        settings = email.delivery_method.settings
-        expect( settings[:enable_starttls_auto] ).to be(false)
-        expect( settings[:ssl]                  ).to be(false)
-        expect( settings[:tls]                  ).to be(true)
-      end
+            expect(sent_message.subject).to eq message % "Success"
+            expect(sent_message.body.multipart?).to eq(true)
+            expect(sent_message.attachments[filename].read)
+              .to eq "line 1\nline 2\nline 3"
+            expect(sent_message.text_part).to be_an_instance_of ::Mail::Part
+            expect(sent_message.text_part.decoded).to eq <<-EOS.gsub(/^ +/, "")
 
-      it 'should not override mail smtp domain setting' do
-        Mail.defaults do
-          delivery_method :smtp, :domain => 'localhost.localdomain'
+            Backup Completed Successfully!
+
+            Job: test label (test_trigger)
+            Started:  #{model.started_at}
+            Finished: #{model.finished_at}
+            Duration: 00:00:05
+
+            See the attached backup log for details.
+
+            #{"=" * 75}
+            Backup v#{VERSION}
+            Ruby: #{RUBY_DESCRIPTION}
+
+            Project Home:  https://github.com/backup/backup
+            Documentation: http://backup.github.io/backup
+            Issue Tracker: https://github.com/backup/backup/issues
+          EOS
+          end
         end
-        notifier.domain = nil
-        email = notifier.send(:new_email)
 
-        settings = email.delivery_method.settings
-        expect( settings[:domain] ).to eq 'localhost.localdomain'
-      end
-    end
+        context "when send_log_on does not include :success" do
+          it "sends a Success email with no log attached" do
+            notifier.send(:notify!, :success)
 
-    context 'when delivery_method is :sendmail' do
-      let(:notifier) {
-        Notifier::Mail.new(model) do |mail|
-          mail.delivery_method      = :sendmail
-          mail.to                   = 'my.receiver.email@gmail.com'
-          mail.from                 = 'my.sender.email@gmail.com'
-          mail.cc                   = 'my.cc.email@gmail.com'
-          mail.bcc                  = 'my.bcc.email@gmail.com'
-          mail.reply_to             = 'my.reply_to.email@gmail.com'
-          mail.sendmail_args        = '-i -t -X/tmp/traffic.log'
+            sent_message = ::Mail::TestMailer.deliveries.first
+            expect(sent_message.subject).to eq message % "Success"
+            expect(sent_message.multipart?).to eq(false)
+            expect(sent_message.has_attachments?).to eq(false)
+            expect(sent_message.body).to be_an_instance_of ::Mail::Body
+            expect(sent_message.body.decoded).to eq <<-EOS.gsub(/^ +/, "")
+
+            Backup Completed Successfully!
+
+            Job: test label (test_trigger)
+            Started:  #{model.started_at}
+            Finished: #{model.finished_at}
+            Duration: 00:00:05
+
+            #{"=" * 75}
+            Backup v#{VERSION}
+            Ruby: #{RUBY_DESCRIPTION}
+
+            Project Home:  https://github.com/backup/backup
+            Documentation: http://backup.github.io/backup
+            Issue Tracker: https://github.com/backup/backup/issues
+          EOS
+          end
         end
-      }
+      end # context 'when status is :success'
 
-      it 'should set the proper options' do
-        email = notifier.send(:new_email)
-        expect( email.delivery_method ).to be_an_instance_of ::Mail::Sendmail
+      context "when status is :warning" do
+        context "when send_log_on includes :warning" do
+          it "sends a Warning email with an attached log" do
+            notifier.send(:notify!, :warning)
 
-        expect( email.to       ).to eq ['my.receiver.email@gmail.com']
-        expect( email.from     ).to eq ['my.sender.email@gmail.com']
-        expect( email.cc       ).to eq ['my.cc.email@gmail.com']
-        expect( email.bcc      ).to eq ['my.bcc.email@gmail.com']
-        expect( email.reply_to ).to eq ['my.reply_to.email@gmail.com']
+            sent_message = ::Mail::TestMailer.deliveries.first
+            filename = "#{model.time}.#{model.trigger}.log"
 
-        settings = email.delivery_method.settings
-        expect( settings[:location]   ).to eq '/path/to/sendmail'
-        expect( settings[:arguments]  ).to eq '-i -t -X/tmp/traffic.log'
-      end
-    end
+            expect(sent_message.subject).to eq message % "Warning"
+            expect(sent_message.body.multipart?).to eq(true)
+            expect(sent_message.attachments[filename].read)
+              .to eq "line 1\nline 2\nline 3"
+            expect(sent_message.text_part).to be_an_instance_of ::Mail::Part
+            expect(sent_message.text_part.decoded).to eq <<-EOS.gsub(/^ +/, "")
 
-    context 'when delivery_method is :exim' do
-      let(:notifier) {
-        Notifier::Mail.new(model) do |mail|
-          mail.delivery_method      = :exim
-          mail.to                   = 'my.receiver.email@gmail.com'
-          mail.from                 = 'my.sender.email@gmail.com'
-          mail.cc                   = 'my.cc.email@gmail.com'
-          mail.bcc                  = 'my.bcc.email@gmail.com'
-          mail.reply_to             = 'my.reply_to.email@gmail.com'
-          mail.exim_args            = '-i -t -X/tmp/traffic.log'
+            Backup Completed Successfully (with Warnings)!
+
+            Job: test label (test_trigger)
+            Started:  #{model.started_at}
+            Finished: #{model.finished_at}
+            Duration: 00:00:05
+
+            See the attached backup log for details.
+
+            #{"=" * 75}
+            Backup v#{VERSION}
+            Ruby: #{RUBY_DESCRIPTION}
+
+            Project Home:  https://github.com/backup/backup
+            Documentation: http://backup.github.io/backup
+            Issue Tracker: https://github.com/backup/backup/issues
+          EOS
+          end
         end
-      }
 
-      it 'should set the proper options' do
-        email = notifier.send(:new_email)
-        expect( email.delivery_method ).to be_an_instance_of ::Mail::Exim
+        context "when send_log_on does not include :warning" do
+          before { notifier.send_log_on = [:success, :failure] }
 
-        expect( email.to       ).to eq ['my.receiver.email@gmail.com']
-        expect( email.from     ).to eq ['my.sender.email@gmail.com']
-        expect( email.cc       ).to eq ['my.cc.email@gmail.com']
-        expect( email.bcc      ).to eq ['my.bcc.email@gmail.com']
-        expect( email.reply_to ).to eq ['my.reply_to.email@gmail.com']
+          it "sends a Warning email with no log attached" do
+            notifier.send(:notify!, :warning)
 
-        settings = email.delivery_method.settings
-        expect( settings[:location]  ).to eq '/path/to/exim'
-        expect( settings[:arguments] ).to eq '-i -t -X/tmp/traffic.log'
-      end
-    end
+            sent_message = ::Mail::TestMailer.deliveries.first
+            expect(sent_message.subject).to eq message % "Warning"
+            expect(sent_message.multipart?).to eq(false)
+            expect(sent_message.has_attachments?).to eq(false)
+            expect(sent_message.body).to be_an_instance_of ::Mail::Body
+            expect(sent_message.body.decoded).to eq <<-EOS.gsub(/^ +/, "")
 
-    context 'when delivery_method is :file' do
-      let(:notifier) {
-        Notifier::Mail.new(model) do |mail|
-          mail.delivery_method      = :file
-          mail.to                   = 'my.receiver.email@gmail.com'
-          mail.from                 = 'my.sender.email@gmail.com'
-          mail.cc                   = 'my.cc.email@gmail.com'
-          mail.bcc                  = 'my.bcc.email@gmail.com'
-          mail.reply_to             = 'my.reply_to.email@gmail.com'
-          mail.mail_folder          = '/path/to/backup/mails'
+            Backup Completed Successfully (with Warnings)!
+
+            Job: test label (test_trigger)
+            Started:  #{model.started_at}
+            Finished: #{model.finished_at}
+            Duration: 00:00:05
+
+            #{"=" * 75}
+            Backup v#{VERSION}
+            Ruby: #{RUBY_DESCRIPTION}
+
+            Project Home:  https://github.com/backup/backup
+            Documentation: http://backup.github.io/backup
+            Issue Tracker: https://github.com/backup/backup/issues
+          EOS
+          end
         end
-      }
+      end # context 'when status is :warning'
 
-      it 'should set the proper options' do
-        email = notifier.send(:new_email)
-        expect( email.delivery_method ).to be_an_instance_of ::Mail::FileDelivery
+      context "when status is :failure" do
+        context "when send_log_on includes :failure" do
+          it "sends a Failure email with an attached log" do
+            notifier.send(:notify!, :failure)
 
-        expect( email.to       ).to eq ['my.receiver.email@gmail.com']
-        expect( email.from     ).to eq ['my.sender.email@gmail.com']
-        expect( email.cc       ).to eq ['my.cc.email@gmail.com']
-        expect( email.bcc      ).to eq ['my.bcc.email@gmail.com']
-        expect( email.reply_to ).to eq ['my.reply_to.email@gmail.com']
+            sent_message = ::Mail::TestMailer.deliveries.first
+            filename = "#{model.time}.#{model.trigger}.log"
 
-        settings = email.delivery_method.settings
-        expect( settings[:location] ).to eq '/path/to/backup/mails'
+            expect(sent_message.subject).to eq message % "Failure"
+            expect(sent_message.body.multipart?).to eq(true)
+            expect(sent_message.attachments[filename].read)
+              .to eq "line 1\nline 2\nline 3"
+            expect(sent_message.text_part).to be_an_instance_of ::Mail::Part
+            expect(sent_message.text_part.decoded).to eq <<-EOS.gsub(/^ +/, "")
+
+            Backup Failed!
+
+            Job: test label (test_trigger)
+            Started:  #{model.started_at}
+            Finished: #{model.finished_at}
+            Duration: 00:00:05
+
+            See the attached backup log for details.
+
+            #{"=" * 75}
+            Backup v#{VERSION}
+            Ruby: #{RUBY_DESCRIPTION}
+
+            Project Home:  https://github.com/backup/backup
+            Documentation: http://backup.github.io/backup
+            Issue Tracker: https://github.com/backup/backup/issues
+          EOS
+          end
+        end
+
+        context "when send_log_on does not include :failure" do
+          before { notifier.send_log_on = [:success, :warning] }
+
+          it "sends a Warning email with no log attached" do
+            notifier.send(:notify!, :failure)
+
+            sent_message = ::Mail::TestMailer.deliveries.first
+            expect(sent_message.subject).to eq message % "Failure"
+            expect(sent_message.multipart?).to eq(false)
+            expect(sent_message.has_attachments?).to eq(false)
+            expect(sent_message.body).to be_an_instance_of ::Mail::Body
+            expect(sent_message.body.decoded).to eq <<-EOS.gsub(/^ +/, "")
+
+            Backup Failed!
+
+            Job: test label (test_trigger)
+            Started:  #{model.started_at}
+            Finished: #{model.finished_at}
+            Duration: 00:00:05
+
+            #{"=" * 75}
+            Backup v#{VERSION}
+            Ruby: #{RUBY_DESCRIPTION}
+
+            Project Home:  https://github.com/backup/backup
+            Documentation: http://backup.github.io/backup
+            Issue Tracker: https://github.com/backup/backup/issues
+          EOS
+          end
+        end
+      end # context 'when status is :failure'
+    end # describe '#notify!'
+
+    describe "#new_email" do
+      context "when no delivery_method is set" do
+        before { notifier.delivery_method = nil }
+
+        it "defaults to :smtp" do
+          email = notifier.send(:new_email)
+          expect(email).to be_an_instance_of ::Mail::Message
+          expect(email.delivery_method).to be_an_instance_of ::Mail::SMTP
+        end
       end
-    end
 
-  end # describe '#new_email'
+      context "when delivery_method is :smtp" do
+        let(:notifier) do
+          Notifier::Mail.new(model) do |mail|
+            mail.delivery_method      = :smtp
+            mail.to                   = "my.receiver.email@gmail.com"
+            mail.from                 = "my.sender.email@gmail.com"
+            mail.cc                   = "my.cc.email@gmail.com"
+            mail.bcc                  = "my.bcc.email@gmail.com"
+            mail.reply_to             = "my.reply_to.email@gmail.com"
+            mail.address              = "smtp.gmail.com"
+            mail.port                 = 587
+            mail.domain               = "your.host.name"
+            mail.user_name            = "user"
+            mail.password             = "secret"
+            mail.authentication       = "plain"
+            mail.encryption           = :starttls
+            mail.openssl_verify_mode  = :none
+          end
+        end
 
-end
+        it "should set the proper options" do
+          email = notifier.send(:new_email)
+          expect(email.delivery_method).to be_an_instance_of ::Mail::SMTP
+
+          expect(email.to).to eq ["my.receiver.email@gmail.com"]
+          expect(email.from).to eq ["my.sender.email@gmail.com"]
+          expect(email.cc).to eq ["my.cc.email@gmail.com"]
+          expect(email.bcc).to eq ["my.bcc.email@gmail.com"]
+          expect(email.reply_to).to eq ["my.reply_to.email@gmail.com"]
+
+          settings = email.delivery_method.settings
+          expect(settings[:address]).to eq "smtp.gmail.com"
+          expect(settings[:port]).to eq 587
+          expect(settings[:domain]).to eq "your.host.name"
+          expect(settings[:user_name]).to eq "user"
+          expect(settings[:password]).to eq "secret"
+          expect(settings[:authentication]).to eq "plain"
+          expect(settings[:enable_starttls_auto]).to be(true)
+          expect(settings[:openssl_verify_mode]).to eq :none
+          expect(settings[:ssl]).to be(false)
+          expect(settings[:tls]).to be(false)
+        end
+
+        it "should properly set other encryption settings" do
+          notifier.encryption = :ssl
+          email = notifier.send(:new_email)
+
+          settings = email.delivery_method.settings
+          expect(settings[:enable_starttls_auto]).to be(false)
+          expect(settings[:ssl]).to be(true)
+          expect(settings[:tls]).to be(false)
+
+          notifier.encryption = :tls
+          email = notifier.send(:new_email)
+
+          settings = email.delivery_method.settings
+          expect(settings[:enable_starttls_auto]).to be(false)
+          expect(settings[:ssl]).to be(false)
+          expect(settings[:tls]).to be(true)
+        end
+
+        it "should not override mail smtp domain setting" do
+          Mail.defaults do
+            delivery_method :smtp, domain: "localhost.localdomain"
+          end
+          notifier.domain = nil
+          email = notifier.send(:new_email)
+
+          settings = email.delivery_method.settings
+          expect(settings[:domain]).to eq "localhost.localdomain"
+        end
+      end
+
+      context "when delivery_method is :sendmail" do
+        let(:notifier) do
+          Notifier::Mail.new(model) do |mail|
+            mail.delivery_method      = :sendmail
+            mail.to                   = "my.receiver.email@gmail.com"
+            mail.from                 = "my.sender.email@gmail.com"
+            mail.cc                   = "my.cc.email@gmail.com"
+            mail.bcc                  = "my.bcc.email@gmail.com"
+            mail.reply_to             = "my.reply_to.email@gmail.com"
+            mail.sendmail_args        = "-i -t -X/tmp/traffic.log"
+          end
+        end
+
+        it "should set the proper options" do
+          email = notifier.send(:new_email)
+          expect(email.delivery_method).to be_an_instance_of ::Mail::Sendmail
+
+          expect(email.to).to eq ["my.receiver.email@gmail.com"]
+          expect(email.from).to eq ["my.sender.email@gmail.com"]
+          expect(email.cc).to eq ["my.cc.email@gmail.com"]
+          expect(email.bcc).to eq ["my.bcc.email@gmail.com"]
+          expect(email.reply_to).to eq ["my.reply_to.email@gmail.com"]
+
+          settings = email.delivery_method.settings
+          expect(settings[:location]).to eq "/path/to/sendmail"
+          expect(settings[:arguments]).to eq "-i -t -X/tmp/traffic.log"
+        end
+      end
+
+      context "when delivery_method is :exim" do
+        let(:notifier) do
+          Notifier::Mail.new(model) do |mail|
+            mail.delivery_method      = :exim
+            mail.to                   = "my.receiver.email@gmail.com"
+            mail.from                 = "my.sender.email@gmail.com"
+            mail.cc                   = "my.cc.email@gmail.com"
+            mail.bcc                  = "my.bcc.email@gmail.com"
+            mail.reply_to             = "my.reply_to.email@gmail.com"
+            mail.exim_args            = "-i -t -X/tmp/traffic.log"
+          end
+        end
+
+        it "should set the proper options" do
+          email = notifier.send(:new_email)
+          expect(email.delivery_method).to be_an_instance_of ::Mail::Exim
+
+          expect(email.to).to eq ["my.receiver.email@gmail.com"]
+          expect(email.from).to eq ["my.sender.email@gmail.com"]
+          expect(email.cc).to eq ["my.cc.email@gmail.com"]
+          expect(email.bcc).to eq ["my.bcc.email@gmail.com"]
+          expect(email.reply_to).to eq ["my.reply_to.email@gmail.com"]
+
+          settings = email.delivery_method.settings
+          expect(settings[:location]).to eq "/path/to/exim"
+          expect(settings[:arguments]).to eq "-i -t -X/tmp/traffic.log"
+        end
+      end
+
+      context "when delivery_method is :file" do
+        let(:notifier) do
+          Notifier::Mail.new(model) do |mail|
+            mail.delivery_method      = :file
+            mail.to                   = "my.receiver.email@gmail.com"
+            mail.from                 = "my.sender.email@gmail.com"
+            mail.cc                   = "my.cc.email@gmail.com"
+            mail.bcc                  = "my.bcc.email@gmail.com"
+            mail.reply_to             = "my.reply_to.email@gmail.com"
+            mail.mail_folder          = "/path/to/backup/mails"
+          end
+        end
+
+        it "should set the proper options" do
+          email = notifier.send(:new_email)
+          expect(email.delivery_method).to be_an_instance_of ::Mail::FileDelivery
+
+          expect(email.to).to eq ["my.receiver.email@gmail.com"]
+          expect(email.from).to eq ["my.sender.email@gmail.com"]
+          expect(email.cc).to eq ["my.cc.email@gmail.com"]
+          expect(email.bcc).to eq ["my.bcc.email@gmail.com"]
+          expect(email.reply_to).to eq ["my.reply_to.email@gmail.com"]
+
+          settings = email.delivery_method.settings
+          expect(settings[:location]).to eq "/path/to/backup/mails"
+        end
+      end
+    end # describe '#new_email'
+  end
 end

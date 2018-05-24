@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   module Database
     class Redis < Base
@@ -59,12 +57,10 @@ module Backup
 
         @mode ||= :copy
 
-        unless MODES.include?(mode)
-          raise Error, "'#{ mode }' is not a valid mode"
-        end
+        raise Error, "'#{mode}' is not a valid mode" unless MODES.include?(mode)
 
         if mode == :copy && rdb_path.nil?
-          raise Error, '`rdb_path` must be set when `mode` is :copy'
+          raise Error, "`rdb_path` must be set when `mode` is :copy"
         end
       end
 
@@ -96,17 +92,19 @@ module Backup
 
       def sync!
         pipeline = Pipeline.new
-        dump_ext = 'rdb'
+        dump_ext = "rdb"
 
-        pipeline << "#{ redis_cli_cmd } --rdb -"
+        pipeline << "#{redis_cli_cmd} --rdb -"
 
-        model.compressor.compress_with do |command, ext|
-          pipeline << command
-          dump_ext << ext
-        end if model.compressor
+        if model.compressor
+          model.compressor.compress_with do |command, ext|
+            pipeline << command
+            dump_ext << ext
+          end
+        end
 
-        pipeline << "#{ utility(:cat) } > " +
-            "'#{ File.join(dump_path, dump_filename) }.#{ dump_ext }'"
+        pipeline << "#{utility(:cat)} > " \
+          "'#{File.join(dump_path, dump_filename)}.#{dump_ext}'"
 
         pipeline.run
 
@@ -116,17 +114,16 @@ module Backup
       end
 
       def save!
-        resp = run("#{ redis_cli_cmd } SAVE")
+        resp = run("#{redis_cli_cmd} SAVE")
         unless resp =~ /OK$/
           raise Error, <<-EOS
             Failed to invoke the `SAVE` command
-            Response was: #{ resp }
+            Response was: #{resp}
           EOS
         end
-
       rescue Error
         if resp =~ /save already in progress/
-          unless (attempts ||= '0').next! == '5'
+          unless (attempts ||= "0").next! == "5"
             sleep 5
             retry
           end
@@ -138,14 +135,14 @@ module Backup
         unless File.exist?(rdb_path)
           raise Error, <<-EOS
             Redis database dump not found
-            `rdb_path` was '#{ rdb_path }'
+            `rdb_path` was '#{rdb_path}'
           EOS
         end
 
-        dst_path = File.join(dump_path, dump_filename + '.rdb')
+        dst_path = File.join(dump_path, dump_filename + ".rdb")
         if model.compressor
           model.compressor.compress_with do |command, ext|
-            run("#{ command } -c '#{ rdb_path }' > '#{ dst_path + ext }'")
+            run("#{command} -c '#{rdb_path}' > '#{dst_path + ext}'")
           end
         else
           FileUtils.cp(rdb_path, dst_path)
@@ -153,27 +150,27 @@ module Backup
       end
 
       def redis_cli_cmd
-        "#{ utility('redis-cli') } #{ password_option } " +
-        "#{ connectivity_options } #{ user_options }"
+        "#{utility("redis-cli")} #{password_option} " \
+          "#{connectivity_options} #{user_options}"
       end
 
       def password_option
-        "-a '#{ password }'" if password
+        return unless password
+        "-a '#{password}'"
       end
 
       def connectivity_options
-        return "-s '#{ socket }'" if socket
+        return "-s '#{socket}'" if socket
 
         opts = []
-        opts << "-h '#{ host }'" if host
-        opts << "-p '#{ port }'" if port
-        opts.join(' ')
+        opts << "-h '#{host}'" if host
+        opts << "-p '#{port}'" if port
+        opts.join(" ")
       end
 
       def user_options
-        Array(additional_options).join(' ')
+        Array(additional_options).join(" ")
       end
-
     end
   end
 end

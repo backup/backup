@@ -1,9 +1,6 @@
-# encoding: utf-8
-
 module Backup
   module Compressor
     class Custom < Base
-
       ##
       # Specify the system command to invoke a compressor,
       # including any command-line arguments.
@@ -36,9 +33,9 @@ module Backup
       # Return the command line using the full path.
       # Ensures the command exists and is executable.
       def set_cmd
-        parts = @command.to_s.split(' ')
+        parts = @command.to_s.split(" ")
         parts[0] = utility(parts[0])
-        parts.join(' ')
+        parts.join(" ")
       end
 
       ##
@@ -47,7 +44,6 @@ module Backup
       def set_ext
         @extension.to_s.strip
       end
-
     end
   end
 end

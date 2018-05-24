@@ -1,29 +1,25 @@
-# encoding: utf-8
-
 module Backup
-
   # Provides cascading errors with formatted messages.
   # See the specs for details.
   module NestedExceptions
-
     def self.included(klass)
-      klass.extend Module.new {
+      klass.extend(Module.new do
         def wrap(wrapped_exception, msg = nil)
           new(msg, wrapped_exception)
         end
-      }
+      end)
     end
 
     def initialize(obj = nil, wrapped_exception = nil)
       @wrapped_exception = wrapped_exception
-      msg = (obj.respond_to?(:to_str) ? obj.to_str : obj.to_s).
-            gsub(/^ */, '  ').strip
-      msg = clean_name(self.class.name) + (msg.empty? ? '' : ": #{ msg }")
+      msg = (obj.respond_to?(:to_str) ? obj.to_str : obj.to_s)
+        .gsub(/^ */, "  ").strip
+      msg = clean_name(self.class.name) + (msg.empty? ? "" : ": #{msg}")
 
       if wrapped_exception
         msg << "\n--- Wrapped Exception ---\n"
         class_name = clean_name(wrapped_exception.class.name)
-        msg << class_name + ': ' unless
+        msg << class_name + ": " unless
             wrapped_exception.message.start_with? class_name
         msg << wrapped_exception.message
       end
@@ -43,9 +39,8 @@ module Backup
     private
 
     def clean_name(name)
-      name.sub(/^Backup::/, '')
+      name.sub(/^Backup::/, "")
     end
-
   end
 
   class Error < StandardError

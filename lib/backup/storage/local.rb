@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   module Storage
     class Local < Base
@@ -9,7 +7,7 @@ module Backup
       def initialize(model, storage_id = nil)
         super
 
-        @path ||= '~/backups'
+        @path ||= "~/backups"
       end
 
       private
@@ -21,7 +19,7 @@ module Backup
         package.filenames.each do |filename|
           src = File.join(Config.tmp_path, filename)
           dest = File.join(remote_path, filename)
-          Logger.info "Storing '#{ dest }'..."
+          Logger.info "Storing '#{dest}'..."
 
           FileUtils.send(transfer_method, src, dest)
         end
@@ -30,7 +28,7 @@ module Backup
       # Called by the Cycler.
       # Any error raised will be logged as a warning.
       def remove!(package)
-        Logger.info "Removing backup package dated #{ package.time }..."
+        Logger.info "Removing backup package dated #{package.time}..."
 
         FileUtils.rm_r(remote_path_for(package))
       end
@@ -50,15 +48,14 @@ module Backup
         else
           Logger.warn Error.new(<<-EOS)
             Local File Copy Warning!
-            The final backup file(s) for '#{ model.label }' (#{ model.trigger })
-            will be *copied* to '#{ remote_path }'
+            The final backup file(s) for '#{model.label}' (#{model.trigger})
+            will be *copied* to '#{remote_path}'
             To avoid this, when using more than one Storage, the 'Local' Storage
             should be added *last* so the files may be *moved* to their destination.
           EOS
           false
         end
       end
-
     end
   end
 end

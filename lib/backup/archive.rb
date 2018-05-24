@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   class Archive
     class Error < Backup::Error; end
@@ -55,45 +53,47 @@ module Backup
       @model   = model
       @name    = name.to_s
       @options = {
-        :sudo        => false,
-        :root        => false,
-        :paths       => [],
-        :excludes    => [],
-        :tar_options => ''
+        sudo: false,
+        root: false,
+        paths: [],
+        excludes: [],
+        tar_options: ""
       }
       DSL.new(@options).instance_eval(&block)
     end
 
     def perform!
-      Logger.info "Creating Archive '#{ name }'..."
+      Logger.info "Creating Archive '#{name}'..."
 
-      path = File.join(Config.tmp_path, @model.trigger, 'archives')
+      path = File.join(Config.tmp_path, @model.trigger, "archives")
       FileUtils.mkdir_p(path)
 
       pipeline = Pipeline.new
       with_files_from(paths_to_package) do |files_from|
         pipeline.add(
-          "#{ tar_command } #{ tar_options } -cPf -#{ tar_root } " +
-          "#{ paths_to_exclude } #{ files_from }",
+          "#{tar_command} #{tar_options} -cPf -#{tar_root} " \
+            "#{paths_to_exclude} #{files_from}",
           tar_success_codes
         )
 
-        extension = 'tar'
-        @model.compressor.compress_with do |command, ext|
-          pipeline << command
-          extension << ext
-        end if @model.compressor
+        extension = "tar"
+        if @model.compressor
+          @model.compressor.compress_with do |command, ext|
+            pipeline << command
+            extension << ext
+          end
+        end
 
-        pipeline << "#{ utility(:cat) } > " +
-            "'#{ File.join(path, "#{ name }.#{ extension }") }'"
+        pipeline << "#{utility(:cat)} > " \
+          "'#{File.join(path, "#{name}.#{extension}")}'"
         pipeline.run
       end
 
       if pipeline.success?
-        Logger.info "Archive '#{ name }' Complete!"
+        Logger.info "Archive '#{name}' Complete!"
       else
-        raise Error, "Failed to Create Archive '#{ name }'\n" +
-            pipeline.error_messages
+        raise Error, "Failed to Create Archive '#{name}'\n" +
+          pipeline.error_messages
       end
     end
 
@@ -101,30 +101,30 @@ module Backup
 
     def tar_command
       tar = utility(:tar)
-      options[:sudo] ? "#{ utility(:sudo) } -n #{ tar }" : tar
+      options[:sudo] ? "#{utility(:sudo)} -n #{tar}" : tar
     end
 
     def tar_root
-      options[:root] ? " -C '#{ File.expand_path(options[:root]) }'" : ''
+      options[:root] ? " -C '#{File.expand_path(options[:root])}'" : ""
     end
 
     def paths_to_package
-      options[:paths].map {|path| prepare_path(path) }
+      options[:paths].map { |path| prepare_path(path) }
     end
 
     def with_files_from(paths)
-      tmpfile = Tempfile.new('backup-archive-paths')
-      paths.each {|path| tmpfile.puts path }
+      tmpfile = Tempfile.new("backup-archive-paths")
+      paths.each { |path| tmpfile.puts path }
       tmpfile.close
-      yield "-T '#{ tmpfile.path }'"
+      yield "-T '#{tmpfile.path}'"
     ensure
       tmpfile.delete
     end
 
     def paths_to_exclude
-      options[:excludes].map {|path|
-        "--exclude='#{ prepare_path(path) }'"
-      }.join(' ')
+      options[:excludes].map do |path|
+        "--exclude='#{prepare_path(path)}'"
+      end.join(" ")
     end
 
     def prepare_path(path)
@@ -133,7 +133,7 @@ module Backup
 
     def tar_options
       args = options[:tar_options]
-      gnu_tar? ? "--ignore-failed-read #{ args }".strip : args
+      gnu_tar? ? "--ignore-failed-read #{args}".strip : args
     end
 
     def tar_success_codes
@@ -165,6 +165,5 @@ module Backup
         @options[:tar_options] = opts
       end
     end
-
   end
 end

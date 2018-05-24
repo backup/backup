@@ -1,70 +1,67 @@
-# encoding: utf-8
-
-require File.expand_path('../../spec_helper.rb', __FILE__)
+require "spec_helper"
 
 describe Backup::Compressor::Bzip2 do
   before do
-    Backup::Compressor::Bzip2.any_instance.stubs(:utility).returns('bzip2')
+    Backup::Compressor::Bzip2.any_instance.stubs(:utility).returns("bzip2")
   end
 
-  it 'should be a subclass of Compressor::Base' do
-    Backup::Compressor::Bzip2.
-      superclass.should == Backup::Compressor::Base
+  it "should be a subclass of Compressor::Base" do
+    expect(Backup::Compressor::Bzip2
+      .superclass).to eq(Backup::Compressor::Base)
   end
 
-  describe '#initialize' do
+  describe "#initialize" do
     let(:compressor) { Backup::Compressor::Bzip2.new }
 
     after { Backup::Compressor::Bzip2.clear_defaults! }
 
-    it 'should load pre-configured defaults' do
+    it "should load pre-configured defaults" do
       Backup::Compressor::Bzip2.any_instance.expects(:load_defaults!)
       compressor
     end
 
-    context 'when no pre-configured defaults have been set' do
-      it 'should use default values' do
-        compressor.level.should be_false
+    context "when no pre-configured defaults have been set" do
+      it "should use default values" do
+        expect(compressor.level).to eq(false)
 
-        compressor.instance_variable_get(:@cmd).should == 'bzip2'
-        compressor.instance_variable_get(:@ext).should == '.bz2'
+        expect(compressor.instance_variable_get(:@cmd)).to eq("bzip2")
+        expect(compressor.instance_variable_get(:@ext)).to eq(".bz2")
       end
 
-      it 'should use the values given' do
+      it "should use the values given" do
         compressor = Backup::Compressor::Bzip2.new do |c|
           c.level = 5
         end
-        compressor.level.should == 5
+        expect(compressor.level).to eq(5)
 
-        compressor.instance_variable_get(:@cmd).should == 'bzip2 -5'
-        compressor.instance_variable_get(:@ext).should == '.bz2'
+        expect(compressor.instance_variable_get(:@cmd)).to eq("bzip2 -5")
+        expect(compressor.instance_variable_get(:@ext)).to eq(".bz2")
       end
     end # context 'when no pre-configured defaults have been set'
 
-    context 'when pre-configured defaults have been set' do
+    context "when pre-configured defaults have been set" do
       before do
         Backup::Compressor::Bzip2.defaults do |c|
           c.level = 7
         end
       end
 
-      it 'should use pre-configured defaults' do
-        compressor.level.should == 7
+      it "should use pre-configured defaults" do
+        expect(compressor.level).to eq(7)
 
-        compressor.instance_variable_get(:@cmd).should == 'bzip2 -7'
-        compressor.instance_variable_get(:@ext).should == '.bz2'
+        expect(compressor.instance_variable_get(:@cmd)).to eq("bzip2 -7")
+        expect(compressor.instance_variable_get(:@ext)).to eq(".bz2")
       end
 
-      it 'should override pre-configured defaults' do
+      it "should override pre-configured defaults" do
         compressor = Backup::Compressor::Bzip2.new do |c|
           c.level = 6
         end
-        compressor.level.should == 6
+        expect(compressor.level).to eq(6)
 
-        compressor.instance_variable_get(:@cmd).should == 'bzip2 -6'
-        compressor.instance_variable_get(:@ext).should == '.bz2'
+        expect(compressor.instance_variable_get(:@cmd)).to eq("bzip2 -6")
+        expect(compressor.instance_variable_get(:@ext)).to eq(".bz2")
       end
     end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
-
 end

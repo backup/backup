@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module BackupSpec
   class PerformedJob
     attr_reader :model, :logger, :package

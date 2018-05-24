@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   class Model
     class Error < Backup::Error; end
@@ -18,11 +16,11 @@ module Backup
       # Return an Array of Models matching the given +trigger+.
       def find_by_trigger(trigger)
         trigger = trigger.to_s
-        if trigger.include?('*')
+        if trigger.include?("*")
           regex = /^#{ trigger.gsub('*', '(.*)') }$/
-          all.select {|model| regex =~ model.trigger }
+          all.select { |model| regex =~ model.trigger }
         else
-          all.select {|model| trigger == model.trigger }
+          all.select { |model| trigger == model.trigger }
         end
       end
 
@@ -128,7 +126,7 @@ module Backup
 
       # trigger all defined databases to generate their #dump_filename
       # so warnings may be logged if `backup perform --check` is used
-      databases.each {|db| db.send(:dump_filename) }
+      databases.each { |db| db.send(:dump_filename) }
 
       Model.all << self
     end
@@ -142,15 +140,15 @@ module Backup
     ##
     # Adds an Database. Multiple Databases may be added to the model.
     def database(name, database_id = nil, &block)
-      @databases << get_class_from_scope(Database, name).
-          new(self, database_id, &block)
+      @databases << get_class_from_scope(Database, name)
+        .new(self, database_id, &block)
     end
 
     ##
     # Adds an Storage. Multiple Storages may be added to the model.
     def store_with(name, storage_id = nil, &block)
-      @storages << get_class_from_scope(Storage, name).
-          new(self, storage_id, &block)
+      @storages << get_class_from_scope(Storage, name)
+        .new(self, storage_id, &block)
     end
 
     ##
@@ -270,14 +268,11 @@ module Backup
       end
 
       syncers.each(&:perform!)
-
     rescue Interrupt
       @interrupted = true
       raise
-
     rescue Exception => err
       @exception = err
-
     ensure
       unless @interrupted
         set_exit_status
@@ -302,8 +297,8 @@ module Backup
     def procedures
       return [] unless databases.any? || archives.any?
 
-      [lambda { prepare! }, databases, archives,
-       lambda { package! }, lambda { store! }, lambda { clean! }]
+      [-> { prepare! }, databases, archives,
+       -> { package! }, -> { store! }, -> { clean! }]
     end
 
     ##
@@ -341,8 +336,8 @@ module Backup
 
       if first_exception
         other_exceptions.each do |exception|
-         Logger.error exception.to_s
-         Logger.error exception.backtrace.join('\n')
+          Logger.error exception.to_s
+          Logger.error exception.backtrace.join('\n')
         end
         raise first_exception
       else
@@ -375,8 +370,8 @@ module Backup
     #
     def get_class_from_scope(scope, name)
       klass = scope
-      name = name.to_s.sub(/^Backup::Config::DSL::/, '')
-      name.split('::').each do |chunk|
+      name = name.to_s.sub(/^Backup::Config::DSL::/, "")
+      name.split("::").each do |chunk|
         klass = klass.const_get(chunk)
       end
       klass
@@ -385,11 +380,12 @@ module Backup
     ##
     # Sets or updates the model's #exit_status.
     def set_exit_status
-      @exit_status = if exception
-        exception.is_a?(StandardError) ? 2 : 3
-      else
-        Logger.has_warnings? ? 1 : 0
-      end
+      @exit_status =
+        if exception
+          exception.is_a?(StandardError) ? 2 : 3
+        else
+          Logger.has_warnings? ? 1 : 0
+        end
     end
 
     ##
@@ -401,14 +397,13 @@ module Backup
     def before_hook
       return unless before
 
-      Logger.info 'Before Hook Starting...'
+      Logger.info "Before Hook Starting..."
       before.call
-      Logger.info 'Before Hook Finished.'
-
+      Logger.info "Before Hook Finished."
     rescue Exception => err
       @before_hook_failed = true
       ex = err.is_a?(StandardError) ? Error : FatalError
-      raise ex.wrap(err, 'Before Hook Failed!')
+      raise ex.wrap(err, "Before Hook Failed!")
     end
 
     ##
@@ -418,16 +413,15 @@ module Backup
     def after_hook
       return unless after && !@before_hook_failed
 
-      Logger.info 'After Hook Starting...'
+      Logger.info "After Hook Starting..."
       after.call(exit_status)
-      Logger.info 'After Hook Finished.'
+      Logger.info "After Hook Finished."
 
       set_exit_status # in case hook logged warnings
-
     rescue Exception => err
       fatal = !err.is_a?(StandardError)
       ex = fatal ? FatalError : Error
-      Logger.error ex.wrap(err, 'After Hook Failed!')
+      Logger.error ex.wrap(err, "After Hook Failed!")
       # upgrade exit_status if needed
       (@exit_status = fatal ? 3 : 2) unless exit_status == 3
     end
@@ -440,24 +434,24 @@ module Backup
     def log!(action)
       case action
       when :started
-        Logger.info "Performing Backup for '#{ label } (#{ trigger })'!\n" +
-            "[ backup #{ VERSION } : #{ RUBY_DESCRIPTION } ]"
+        Logger.info "Performing Backup for '#{label} (#{trigger})'!\n" \
+            "[ backup #{VERSION} : #{RUBY_DESCRIPTION} ]"
 
       when :finished
         if exit_status > 1
           ex = exit_status == 2 ? Error : FatalError
-          err = ex.wrap(exception, "Backup for #{ label } (#{ trigger }) Failed!")
+          err = ex.wrap(exception, "Backup for #{label} (#{trigger}) Failed!")
           Logger.error err
           Logger.error "\nBacktrace:\n\s\s" + err.backtrace.join("\n\s\s") + "\n\n"
 
           Cleaner.warnings(self)
         else
-          msg = "Backup for '#{ label } (#{ trigger })' "
+          msg = "Backup for '#{label} (#{trigger})' "
           if exit_status == 1
-            msg << "Completed Successfully (with Warnings) in #{ duration }"
+            msg << "Completed Successfully (with Warnings) in #{duration}"
             Logger.warn msg
           else
-            msg << "Completed Successfully in #{ duration }"
+            msg << "Completed Successfully in #{duration}"
             Logger.info msg
           end
         end
@@ -472,8 +466,7 @@ module Backup
       remainder = duration - (hours * 3600)
       minutes   = remainder / 60
       seconds   = remainder - (minutes * 60)
-      '%02d:%02d:%02d' % [hours, minutes, seconds]
+      sprintf "%02d:%02d:%02d", hours, minutes, seconds
     end
-
   end
 end

@@ -1,0 +1,1 @@
+class VerySpecificError < StandardError; end

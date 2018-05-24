@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 abort "These specs should only be run on the backup-testbox VM" unless
     %x[hostname].chomp == 'backup-testbox'
 

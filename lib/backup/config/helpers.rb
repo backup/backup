@@ -1,16 +1,13 @@
-# encoding: utf-8
-require 'ostruct'
+require "ostruct"
 
 module Backup
   module Config
     module Helpers
-
       def self.included(klass)
         klass.extend ClassMethods
       end
 
       module ClassMethods
-
         def defaults
           @defaults ||= Config::Defaults.new
 
@@ -31,12 +28,12 @@ module Backup
         end
 
         def log_deprecation_warning(name, deprecation)
-          msg = "#{ self }##{ name } has been deprecated as of " +
-              "backup v.#{ deprecation[:version] }"
-          msg << "\n#{ deprecation[:message] }" if deprecation[:message]
+          msg = "#{self}##{name} has been deprecated as of " \
+              "backup v.#{deprecation[:version]}"
+          msg << "\n#{deprecation[:message]}" if deprecation[:message]
           Logger.warn Config::Error.new(<<-EOS)
             [DEPRECATION WARNING]
-            #{ msg }
+            #{msg}
           EOS
         end
 
@@ -65,12 +62,11 @@ module Backup
         #
         def attr_deprecate(name, args = {})
           deprecations[name] = {
-            :version => nil,
-            :message => nil,
-            :action => nil
+            version: nil,
+            message: nil,
+            action: nil
           }.merge(args)
         end
-
       end # ClassMethods
 
       private
@@ -107,10 +103,10 @@ module Backup
       #
       def method_missing(name, *args)
         deprecation = nil
-        if method = name.to_s.chomp!('=')
+        if method = name.to_s.chomp!("=")
           if (len = args.count) != 1
             raise ArgumentError,
-              "wrong number of arguments (#{ len } for 1)", caller(1)
+              "wrong number of arguments (#{len} for 1)", caller(1)
           end
           deprecation = self.class.deprecations[method.to_sym]
         end
@@ -122,7 +118,6 @@ module Backup
           super
         end
       end
-
     end # Helpers
 
     # Store for pre-configured defaults.
@@ -138,6 +133,5 @@ module Backup
         @table.clear
       end
     end
-
   end
 end

@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   class Logger
     class Console
@@ -30,22 +28,21 @@ module Backup
       end
 
       COLORS = {
-        :info   => "\e[32m%s\e[0m", # green
-        :warn   => "\e[33m%s\e[0m", # yellow
-        :error  => "\e[31m%s\e[0m"  # red
+        info: "\e[32m%s\e[0m", # green
+        warn: "\e[33m%s\e[0m", # yellow
+        error: "\e[31m%s\e[0m" # red
       }
 
-      def initialize(options = nil)
+      def initialize(_options = nil)
         $stdout.sync = $stderr.sync = true
       end
 
       def log(message)
         io = message.level == :info ? $stdout : $stderr
         lines = message.formatted_lines
-        lines.map! {|line| COLORS[message.level] % line } if io.tty?
+        lines.map! { |line| COLORS[message.level] % line } if io.tty?
         io.puts lines
       end
-
     end
   end
 end

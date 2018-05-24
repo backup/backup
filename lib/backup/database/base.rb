@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 module Backup
   module Database
     class Error < Backup::Error; end
@@ -16,8 +14,8 @@ module Backup
       # the model.
       def initialize(model, database_id = nil)
         @model = model
-        @database_id = database_id.to_s.gsub(/\W/, '_') if database_id
-        @dump_path = File.join(Config.tmp_path, model.trigger, 'databases')
+        @database_id = database_id.to_s.gsub(/\W/, "_") if database_id
+        @dump_path = File.join(Config.tmp_path, model.trigger, "databases")
         load_defaults!
       end
 
@@ -45,11 +43,13 @@ module Backup
       # Model#initialize calls this method *after* all defined databases have
       # been initialized so `backup check` can report these warnings.
       def dump_filename
-        @dump_filename ||= begin
-          unless database_id
-            if model.databases.select {|d| d.class == self.class }.count > 1
-              sleep 1; @database_id = Time.now.to_i.to_s[-5, 5]
-              Logger.warn Error.new(<<-EOS)
+        @dump_filename ||=
+          begin
+            unless database_id
+              if model.databases.select { |d| d.class == self.class }.count > 1
+                sleep 1
+                @database_id = Time.now.to_i.to_s[-5, 5]
+                Logger.warn Error.new(<<-EOS)
                 Database Identifier Missing
                 When multiple Databases are configured in a single Backup Model
                 that have the same class (MySQL, PostgreSQL, etc.), the optional
@@ -58,27 +58,28 @@ module Backup
                 This will result in an output file in your final backup package like:
                 databases/MySQL-database_id.sql
 
-                Backup has auto-generated an identifier (#{ database_id }) for this
+                Backup has auto-generated an identifier (#{database_id}) for this
                 database dump and will now continue.
-              EOS
+                EOS
+              end
             end
-          end
 
-          self.class.name.split('::').last + (database_id ? "-#{ database_id }" : '')
-        end
+            self.class.name.split("::").last + (database_id ? "-#{database_id}" : "")
+          end
       end
 
       def database_name
-        @database_name ||= self.class.to_s.sub('Backup::', '') +
-            (database_id ? " (#{ database_id })" : '')
+        @database_name ||= self.class.to_s.sub("Backup::", "") +
+          (database_id ? " (#{database_id})" : "")
       end
 
       def log!(action)
-        msg = case action
-              when :started then 'Started...'
-              when :finished then 'Finished!'
-              end
-        Logger.info "#{ database_name } #{ msg }"
+        msg =
+          case action
+          when :started then "Started..."
+          when :finished then "Finished!"
+          end
+        Logger.info "#{database_name} #{msg}"
       end
     end
   end
