@@ -50,6 +50,12 @@ module Backup
           Net::FTP.send(:remove_const, :FTP_PORT)
         end; Net::FTP.send(:const_set, :FTP_PORT, port)
 
+        # Ensure default passive mode to false.
+        # Note: The default passive setting changed between Ruby 2.2 and 2.3
+        if Net::FTP.respond_to?(:default_passive=)
+          Net::FTP.default_passive = false
+        end
+
         Net::FTP.open(ip, username, password) do |ftp|
           if timeout
             ftp.open_timeout = timeout
