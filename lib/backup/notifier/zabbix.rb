@@ -50,7 +50,7 @@ module Backup
         cmd = utility(:zabbix_sender).to_s +
           " -z '#{zabbix_host}'" \
           " -p '#{zabbix_port}'" \
-          " -s #{service_host}"  \
+          " -s '#{service_host}'"  \
           " -k #{item_key}"      \
           " -o '#{msg}'"
         run("echo '#{msg}' | #{cmd}")
