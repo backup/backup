@@ -7,7 +7,14 @@ module Backup
   module CloudIO
     class Swift < Base
       class Error < Backup::Error; end
-      Object = Fog::Storage::OpenStack::File
+      # Handle fog-openstack namespace change, as they moved everything under
+      # the OpenStack namespace starting at version 1.0
+      if Fog::Storage.const_defined? :OpenStack
+        Storage = Fog::Storage::OpenStack
+      else
+        Storage = Fog::OpenStack::Storage
+      end
+      Object = Storage::File
 
       attr_reader :username, :password, :tenant, :region,
         :container, :auth_url, :max_retries,
@@ -82,7 +89,7 @@ module Backup
           opts[:openstack_tenant] = tenant unless tenant.nil?
 
           opts.merge!(fog_options || {})
-          Fog::Storage.new(opts)
+          Storage.new(opts)
         end
       end
     end
