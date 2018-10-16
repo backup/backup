@@ -9,11 +9,11 @@ module Backup
       class Error < Backup::Error; end
       # Handle fog-openstack namespace change, as they moved everything under
       # the OpenStack namespace starting at version 1.0
-      if Fog::Storage.const_defined? :OpenStack
-        Storage = Fog::Storage::OpenStack
-      else
-        Storage = Fog::OpenStack::Storage
-      end
+      Storage = if Fog::Storage.const_defined? :OpenStack
+                  Fog::Storage::OpenStack
+                else
+                  Fog::OpenStack::Storage
+                end
       Object = Storage::File
 
       attr_reader :username, :password, :tenant, :region,
