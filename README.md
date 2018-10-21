@@ -1,7 +1,7 @@
 Backup
 ======
 
-[![Code Climate](https://codeclimate.com/github/backup/backup.png)](https://codeclimate.com/github/backup/backup)
+[![Code Climate](https://codeclimate.com/github/backup/backup.svg)](https://codeclimate.com/github/backup/backup)
 [![Build Status](https://travis-ci.org/backup/backup.svg?branch=master)](https://travis-ci.org/backup/backup)
 [![Join the chat at https://gitter.im/backup/backup](https://badges.gitter.im/Join%20Chat.svg)][Gitter]
 
