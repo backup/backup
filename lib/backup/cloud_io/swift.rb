@@ -14,7 +14,6 @@ module Backup
                 else
                   Fog::OpenStack::Storage
                 end
-      Object = Storage::File
 
       attr_reader :username, :password, :tenant, :region,
         :container, :auth_url, :max_retries,
