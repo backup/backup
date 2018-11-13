@@ -352,13 +352,28 @@ shared_examples "a subclass of Syncer::Cloud::Base" do
       end
 
       it "logs and raises error on upload failure" do
-        allow(cloud_io).to receive(:upload).and_raise("upload failure")
-        expect(Backup::Logger).to receive(:error).at_least(1).times do |err|
-          expect(err.message).to eq "upload failure"
+        orig_report_on_exception = nil
+        if Thread.respond_to?(:report_on_exception)
+          orig_report_on_exception = Thread.report_on_exception
+          # Don't print $stderr message for this spec
+          Thread.report_on_exception = false
         end
-        expect do
-          syncer.perform!
-        end.to raise_error(Backup::Syncer::Cloud::Error)
+
+        begin
+          allow(cloud_io).to receive(:upload).and_raise("upload failure")
+          expect(Backup::Logger).to receive(:error).at_least(1).times do |err|
+            expect(err.message).to eq "upload failure"
+          end
+
+          expect do
+            syncer.perform!
+          end.to raise_error(Backup::Syncer::Cloud::Error)
+        ensure
+          # Restore original `report_on_exception` settings
+          if Thread.respond_to?(:report_on_exception)
+             Thread.report_on_exception = orig_report_on_exception
+          end
+        end
       end
     end # context 'with threads'
   end # describe '#perform'
