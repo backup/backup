@@ -68,20 +68,20 @@ module Backup
           datadog.api_key = "my_token"
         end
       end
-      let(:client) { mock }
-      let(:event) { mock }
+      let(:client) { double }
+      let(:event) { double }
 
       context "when status is :success" do
         it "sends a success message" do
-          Dogapi::Client.expects(:new).in_sequence(s)
+          expect(Dogapi::Client).to receive(:new).ordered
             .with("my_token")
-            .returns(client)
-          Dogapi::Event.expects(:new).in_sequence(s).with(
+            .and_return(client)
+          expect(Dogapi::Event).to receive(:new).ordered.with(
             "[Backup::Success] test label (test_trigger)",
             msg_title: "Backup test label",
             alert_type: "success"
-          ).returns(event)
-          client.expects(:emit_event).in_sequence(s).with(event)
+          ).and_return(event)
+          expect(client).to receive(:emit_event).ordered.with(event)
 
           notifier.send(:notify!, :success)
         end
@@ -89,15 +89,15 @@ module Backup
 
       context "when status is :warning" do
         it "sends a warning message" do
-          Dogapi::Client.expects(:new).in_sequence(s)
+          expect(Dogapi::Client).to receive(:new).ordered
             .with("my_token")
-            .returns(client)
-          Dogapi::Event.expects(:new).in_sequence(s).with(
+            .and_return(client)
+          expect(Dogapi::Event).to receive(:new).ordered.with(
             "[Backup::Warning] test label (test_trigger)",
             msg_title: "Backup test label",
             alert_type: "warning"
-          ).returns(event)
-          client.expects(:emit_event).in_sequence(s).with(event)
+          ).and_return(event)
+          expect(client).to receive(:emit_event).ordered.with(event)
 
           notifier.send(:notify!, :warning)
         end
@@ -105,15 +105,15 @@ module Backup
 
       context "when status is :failure" do
         it "sends an error message" do
-          Dogapi::Client.expects(:new).in_sequence(s)
+          expect(Dogapi::Client).to receive(:new).ordered
             .with("my_token")
-            .returns(client)
-          Dogapi::Event.expects(:new).in_sequence(s).with(
+            .and_return(client)
+          expect(Dogapi::Event).to receive(:new).ordered.with(
             "[Backup::Failure] test label (test_trigger)",
             msg_title: "Backup test label",
             alert_type: "error"
-          ).returns(event)
-          client.expects(:emit_event).in_sequence(s).with(event)
+          ).and_return(event)
+          expect(client).to receive(:emit_event).ordered.with(event)
 
           notifier.send(:notify!, :failure)
         end

@@ -73,7 +73,7 @@ module Backup
       it "defines additional headers to be sent" do
         notifier.headers = { "Authorization" => "my_auth" }
 
-        Excon.expects(:post).with(
+        expect(Excon).to receive(:post).with(
           "https://www.example.com/path",
           headers: { "User-Agent" => "Backup/#{VERSION}",
                      "Content-Type" => "application/x-www-form-urlencoded",
@@ -88,7 +88,7 @@ expects: 200
       it "may overrided the User-Agent header" do
         notifier.headers = { "Authorization" => "my_auth", "User-Agent" => "my_app" }
 
-        Excon.expects(:post).with(
+        expect(Excon).to receive(:post).with(
           "https://www.example.com/path",
           headers: { "User-Agent" => "my_app",
                      "Content-Type" => "application/x-www-form-urlencoded",
@@ -103,7 +103,7 @@ expects: 200
       it "may omit the User-Agent header" do
         notifier.headers = { "Authorization" => "my_auth", "User-Agent" => nil }
 
-        Excon.expects(:post).with(
+        expect(Excon).to receive(:post).with(
           "https://www.example.com/path",
           headers: { "Content-Type" => "application/x-www-form-urlencoded",
                      "Authorization" => "my_auth" },
@@ -121,7 +121,7 @@ expects: 200
         form_data = "message=%5BBackup%3A%3ASuccess%5D+test+label+%28test_trigger%29" \
             "&my_param=my_value&status=success"
 
-        Excon.expects(:post).with(
+        expect(Excon).to receive(:post).with(
           "https://www.example.com/path",
           headers: default_headers,
 body: form_data,
@@ -135,7 +135,7 @@ expects: 200
         notifier.params = { "my_param" => "my_value", "message" => "my message" }
         form_data = "message=my+message&my_param=my_value&status=success"
 
-        Excon.expects(:post).with(
+        expect(Excon).to receive(:post).with(
           "https://www.example.com/path",
           headers: default_headers,
 body: form_data,
@@ -149,7 +149,7 @@ expects: 200
         notifier.params = { "my_param" => "my_value", "message" => nil }
         form_data = "my_param=my_value&status=success"
 
-        Excon.expects(:post).with(
+        expect(Excon).to receive(:post).with(
           "https://www.example.com/path",
           headers: default_headers,
 body: form_data,
@@ -164,7 +164,7 @@ expects: 200
       it "specifies expected http success codes" do
         notifier.success_codes = [200, 201]
 
-        Excon.expects(:post).with(
+        expect(Excon).to receive(:post).with(
           "https://www.example.com/path",
           headers: default_headers,
 body: default_form_data,
@@ -179,7 +179,7 @@ expects: [200, 201]
       it "may force enable verification" do
         notifier.ssl_verify_peer = true
 
-        Excon.expects(:post).with(
+        expect(Excon).to receive(:post).with(
           "https://www.example.com/path",
           headers: default_headers,
 body: default_form_data,
@@ -193,7 +193,7 @@ ssl_verify_peer: true
       it "may disable verification" do
         notifier.ssl_verify_peer = false
 
-        Excon.expects(:post).with(
+        expect(Excon).to receive(:post).with(
           "https://www.example.com/path",
           headers: default_headers,
 body: default_form_data,
@@ -209,7 +209,7 @@ ssl_verify_peer: false
       it "specifies path to a custom cacert.pem file" do
         notifier.ssl_ca_file = "/my/cacert.pem"
 
-        Excon.expects(:post).with(
+        expect(Excon).to receive(:post).with(
           "https://www.example.com/path",
           headers: default_headers,
 body: default_form_data,
@@ -229,7 +229,7 @@ ssl_ca_file: "/my/cacert.pem"
 
       context "when status is :success" do
         it "sends a success message" do
-          Excon.expects(:post).with(
+          expect(Excon).to receive(:post).with(
             "https://www.example.com/path",
             headers: default_headers,
 body: form_data.sub("TAG", "Success").sub("STATUS", "success"),
@@ -242,7 +242,7 @@ expects: 200
 
       context "when status is :warning" do
         it "sends a warning message" do
-          Excon.expects(:post).with(
+          expect(Excon).to receive(:post).with(
             "https://www.example.com/path",
             headers: default_headers,
 body: form_data.sub("TAG", "Warning").sub("STATUS", "warning"),
@@ -255,7 +255,7 @@ expects: 200
 
       context "when status is :failure" do
         it "sends a failure message" do
-          Excon.expects(:post).with(
+          expect(Excon).to receive(:post).with(
             "https://www.example.com/path",
             headers: default_headers,
 body: form_data.sub("TAG", "Failure").sub("STATUS", "failure"),

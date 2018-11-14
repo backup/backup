@@ -35,10 +35,10 @@ module Backup
     after { Backup.send(:remove_const, "Foo") }
 
     describe ".defaults" do
-      let(:defaults) { mock }
+      let(:defaults) { double }
 
       before do
-        Config::Defaults.expects(:new).once.returns(defaults)
+        expect(Config::Defaults).to receive(:new).once.and_return(defaults)
       end
 
       it "should return the Config::Defaults for the class" do
@@ -121,7 +121,7 @@ module Backup
     describe ".log_deprecation_warning" do
       context "when no message given" do
         it "should log a warning that the attribute has been removed" do
-          Logger.expects(:warn).with do |err|
+          expect(Logger).to receive(:warn) do |err|
             expect(err.message).to eq "Config::Error: [DEPRECATION WARNING]\n" \
               "  Backup::Foo#removed has been deprecated as of backup v.1.1"
           end
@@ -133,7 +133,7 @@ module Backup
 
       context "when a message is given" do
         it "should log warning with the message" do
-          Logger.expects(:warn).with do |err|
+          expect(Logger).to receive(:warn) do |err|
             expect(err.message).to eq "Config::Error: [DEPRECATION WARNING]\n" \
               "  Backup::Foo#removed_with_message has been deprecated " \
               "as of backup v.1.2\n" \
@@ -195,7 +195,7 @@ module Backup
     describe "#method_missing" do
       context "when the method is a deprecated method" do
         before do
-          Logger.expects(:warn).with(instance_of(Config::Error))
+          expect(Logger).to receive(:warn).with(instance_of(Config::Error))
         end
 
         context "when an :action is specified" do
@@ -214,7 +214,7 @@ module Backup
 
         context "when no :action is specified" do
           it "should only log the warning" do
-            Foo.any_instance.expects(:accessor=).never
+            expect_any_instance_of(Foo).to receive(:accessor=).never
 
             klass = Foo.new
             klass.removed = "foo"
@@ -226,7 +226,7 @@ module Backup
 
       context "when the method is not a deprecated method" do
         it "should raise a NoMethodError" do
-          Logger.expects(:warn).never
+          expect(Logger).to receive(:warn).never
 
           klass = Foo.new
           expect do
@@ -237,7 +237,7 @@ module Backup
 
       context "when the method is not a set operation" do
         it "should raise a NoMethodError" do
-          Logger.expects(:warn).never
+          expect(Logger).to receive(:warn).never
 
           klass = Foo.new
           expect do

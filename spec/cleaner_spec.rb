@@ -16,16 +16,15 @@ module Backup
 
       context "when no temporary packaging folder or package files exist" do
         it "does nothing" do
-          File \
-            .expects(:exist?)
+          expect(File).to receive(:exist?)
             .with(File.join(Config.tmp_path, "test_trigger"))
-            .returns(false)
+            .and_return(false)
 
-          Cleaner.expects(:package_files_for).with("test_trigger").returns([])
+          expect(Cleaner).to receive(:package_files_for).with("test_trigger").and_return([])
 
-          FileUtils.expects(:rm_rf).never
-          FileUtils.expects(:rm_f).never
-          Logger.expects(:warn).never
+          expect(FileUtils).to receive(:rm_rf).never
+          expect(FileUtils).to receive(:rm_f).never
+          expect(Logger).to receive(:warn).never
 
           Cleaner.prepare(model)
         end
@@ -33,20 +32,18 @@ module Backup
 
       context "when a temporary packaging folder exists" do
         it "removes the folder and logs a warning" do
-          File \
-            .expects(:exist?)
+          expect(File).to receive(:exist?)
             .with(File.join(Config.tmp_path, "test_trigger"))
-            .returns(true)
+            .and_return(true)
 
-          Cleaner.expects(:package_files_for).with("test_trigger").returns([])
+          expect(Cleaner).to receive(:package_files_for).with("test_trigger").and_return([])
 
-          FileUtils \
-            .expects(:rm_rf)
+          expect(FileUtils).to receive(:rm_rf)
             .with(File.join(Config.tmp_path, "test_trigger"))
 
-          FileUtils.expects(:rm_f).never
+          expect(FileUtils).to receive(:rm_f).never
 
-          Logger.expects(:warn).with do |err|
+          expect(Logger).to receive(:warn) do |err|
             expect(err).to be_an_instance_of Cleaner::Error
             expect(err.message).to eq(<<-EOS.gsub(/^ +/, "  ").strip)
               Cleaner::Error: Cleanup Warning
@@ -63,21 +60,19 @@ module Backup
 
       context "when package files exist" do
         it "removes the files and logs a warning" do
-          File \
-            .expects(:exist?)
+          expect(File).to receive(:exist?)
             .with(File.join(Config.tmp_path, "test_trigger"))
-            .returns(false)
+            .and_return(false)
 
-          Cleaner \
-            .expects(:package_files_for)
+          expect(Cleaner).to receive(:package_files_for)
             .with("test_trigger")
-            .returns(["file1", "file2"])
+            .and_return(["file1", "file2"])
 
-          FileUtils.expects(:rm_rf).never
-          FileUtils.expects(:rm_f).with("file1")
-          FileUtils.expects(:rm_f).with("file2")
+          expect(FileUtils).to receive(:rm_rf).never
+          expect(FileUtils).to receive(:rm_f).with("file1")
+          expect(FileUtils).to receive(:rm_f).with("file2")
 
-          Logger.expects(:warn).with do |err|
+          expect(Logger).to receive(:warn) do |err|
             expect(err).to be_an_instance_of Cleaner::Error
             expect(err.message).to eq(<<-EOS.gsub(/^ +/, "  ").strip)
               Cleaner::Error: Cleanup Warning
@@ -96,24 +91,21 @@ module Backup
 
       context "when both the temporary packaging folder and package files exist" do
         it "removes both and logs a warning" do
-          File \
-            .expects(:exist?)
+          expect(File).to receive(:exist?)
             .with(File.join(Config.tmp_path, "test_trigger"))
-            .returns(true)
+            .and_return(true)
 
-          Cleaner \
-            .expects(:package_files_for)
+          expect(Cleaner).to receive(:package_files_for)
             .with("test_trigger")
-            .returns(["file1", "file2"])
+            .and_return(["file1", "file2"])
 
-          FileUtils \
-            .expects(:rm_rf)
+          expect(FileUtils).to receive(:rm_rf)
             .with(File.join(Config.tmp_path, "test_trigger"))
 
-          FileUtils.expects(:rm_f).with("file1")
-          FileUtils.expects(:rm_f).with("file2")
+          expect(FileUtils).to receive(:rm_f).with("file1")
+          expect(FileUtils).to receive(:rm_f).with("file2")
 
-          Logger.expects(:warn).with do |err|
+          expect(Logger).to receive(:warn) do |err|
             expect(err).to be_an_instance_of Cleaner::Error
             expect(err.message).to eq(<<-EOS.gsub(/^ +/, "  ").strip)
               Cleaner::Error: Cleanup Warning
@@ -137,9 +129,8 @@ module Backup
 
     describe "#remove_packaging" do
       it "removes the packaging directory" do
-        Logger.expects(:info).with("Cleaning up the temporary files...")
-        FileUtils \
-          .expects(:rm_rf)
+        expect(Logger).to receive(:info).with("Cleaning up the temporary files...")
+        expect(FileUtils).to receive(:rm_rf)
           .with(File.join(Config.tmp_path, "test_trigger"))
         Cleaner.remove_packaging(model)
       end
@@ -147,10 +138,10 @@ module Backup
 
     describe "#remove_package" do
       it "removes the package files" do
-        package = stub(filenames: ["file1", "file2"])
-        Backup::Logger.expects(:info).with("Cleaning up the package files...")
-        FileUtils.expects(:rm_f).with(File.join(Config.tmp_path, "file1"))
-        FileUtils.expects(:rm_f).with(File.join(Config.tmp_path, "file2"))
+        package = double(Backup::Package, filenames: ["file1", "file2"])
+        expect(Backup::Logger).to receive(:info).with("Cleaning up the package files...")
+        expect(FileUtils).to receive(:rm_f).with(File.join(Config.tmp_path, "file1"))
+        expect(FileUtils).to receive(:rm_f).with(File.join(Config.tmp_path, "file2"))
         Cleaner.remove_package(package)
       end
     end
@@ -167,14 +158,13 @@ module Backup
 
       context "when no temporary packaging folder or package files exist" do
         it "does nothing" do
-          File \
-            .expects(:exist?)
+          expect(File).to receive(:exist?)
             .with(File.join(Config.tmp_path, "test_trigger"))
-            .returns(false)
+            .and_return(false)
 
-          Cleaner.expects(:package_files_for).with("test_trigger").returns([])
+          expect(Cleaner).to receive(:package_files_for).with("test_trigger").and_return([])
 
-          Logger.expects(:warn).never
+          expect(Logger).to receive(:warn).never
 
           Cleaner.warnings(model)
         end
@@ -182,14 +172,13 @@ module Backup
 
       context "when a temporary packaging folder exists" do
         it "logs a warning" do
-          File \
-            .expects(:exist?)
+          expect(File).to receive(:exist?)
             .with(File.join(Config.tmp_path, "test_trigger"))
-            .returns(true)
+            .and_return(true)
 
-          Cleaner.expects(:package_files_for).with("test_trigger").returns([])
+          expect(Cleaner).to receive(:package_files_for).with("test_trigger").and_return([])
 
-          Logger.expects(:warn).with do |err|
+          expect(Logger).to receive(:warn) do |err|
             expect(err).to be_an_instance_of Cleaner::Error
             expect(err.message).to eq(<<-EOS.gsub(/^ +/, "  ").strip)
               Cleaner::Error: Cleanup Warning
@@ -206,16 +195,15 @@ module Backup
 
       context "when package files exist" do
         it "logs a warning" do
-          File \
-            .expects(:exist?).with(File.join(Config.tmp_path, "test_trigger"))
-            .returns(false)
+          expect(File).to receive(:exist?)
+            .with(File.join(Config.tmp_path, "test_trigger"))
+            .and_return(false)
 
-          Cleaner \
-            .expects(:package_files_for)
+          expect(Cleaner).to receive(:package_files_for)
             .with("test_trigger")
-            .returns(["file1", "file2"])
+            .and_return(["file1", "file2"])
 
-          Logger.expects(:warn).with do |err|
+          expect(Logger).to receive(:warn) do |err|
             expect(err).to be_an_instance_of Cleaner::Error
             expect(err.message).to eq(<<-EOS.gsub(/^ +/, "  ").strip)
               Cleaner::Error: Cleanup Warning
@@ -233,17 +221,15 @@ module Backup
 
       context "when both the temporary packaging folder and package files exist" do
         it "logs a warning" do
-          File \
-            .expects(:exist?)
+          expect(File).to receive(:exist?)
             .with(File.join(Config.tmp_path, "test_trigger"))
-            .returns(true)
+            .and_return(true)
 
-          Cleaner \
-            .expects(:package_files_for)
+          expect(Cleaner).to receive(:package_files_for)
             .with("test_trigger")
-            .returns(["file1", "file2"])
+            .and_return(["file1", "file2"])
 
-          Logger.expects(:warn).with do |err|
+          expect(Logger).to receive(:warn) do |err|
             expect(err).to be_an_instance_of Cleaner::Error
             expect(err.message).to eq(<<-EOS.gsub(/^ +/, "  ").strip)
               Cleaner::Error: Cleanup Warning

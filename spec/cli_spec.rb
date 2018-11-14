@@ -19,12 +19,12 @@ describe "Backup::CLI" do
       let(:logger_options) { Backup::Logger.instance_variable_get(:@config).dsl }
 
       before do
-        Backup::Config.expects(:load).in_sequence(s)
-        Backup::Logger.expects(:start!).in_sequence(s)
-        model_a.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
-        model_b.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
+        expect(Backup::Config).to receive(:load).ordered
+        expect(Backup::Logger).to receive(:start!).ordered
+        expect(model_a).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
+        expect(model_b).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
       end
 
       it "configures console and logfile loggers by default" do
@@ -93,15 +93,15 @@ describe "Backup::CLI" do
       let(:model_c) { Backup::Model.new(:test_trigger_c, "test label c") }
 
       before do
-        Backup::Logger.expects(:configure).in_sequence(s)
-        Backup::Config.expects(:load).in_sequence(s)
-        Backup::Logger.expects(:start!).in_sequence(s)
+        expect(Backup::Logger).to receive(:configure).ordered
+        expect(Backup::Config).to receive(:load).ordered
+        expect(Backup::Logger).to receive(:start!).ordered
       end
 
       it "performs a given trigger" do
-        model_a.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
-        model_b.expects(:perform!).never
+        expect(model_a).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
+        expect(model_b).to receive(:perform!).never
 
         ARGV.replace(
           ["perform", "-t", "test_trigger_a"]
@@ -110,10 +110,10 @@ describe "Backup::CLI" do
       end
 
       it "performs multiple triggers" do
-        model_a.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
-        model_b.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
+        expect(model_a).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
+        expect(model_b).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
 
         ARGV.replace(
           ["perform", "-t", "test_trigger_a,test_trigger_b"]
@@ -122,12 +122,12 @@ describe "Backup::CLI" do
       end
 
       it "performs multiple models that share a trigger name" do
-        model_c.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
+        expect(model_c).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
 
         model_d = Backup::Model.new(:test_trigger_c, "test label d")
-        model_d.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
+        expect(model_d).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
 
         ARGV.replace(
           ["perform", "-t", "test_trigger_c"]
@@ -136,12 +136,12 @@ describe "Backup::CLI" do
       end
 
       it "performs unique models only once, in the order first found" do
-        model_a.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
-        model_b.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
-        model_c.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
+        expect(model_a).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
+        expect(model_b).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
+        expect(model_c).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
 
         ARGV.replace(
           ["perform", "-t", "test_trigger_a,test_trigger_b,test_trigger_c,test_trigger_b"]
@@ -150,12 +150,12 @@ describe "Backup::CLI" do
       end
 
       it "performs unique models only once, in the order first found (wildcard)" do
-        model_a.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
-        model_b.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
-        model_c.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
+        expect(model_a).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
+        expect(model_b).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
+        expect(model_c).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
 
         ARGV.replace(
           ["perform", "-t", "test_trigger_*"]
@@ -166,16 +166,16 @@ describe "Backup::CLI" do
 
     describe "failure to prepare for backups" do
       before do
-        Backup::Logger.expects(:configure).in_sequence(s)
-        Backup::Logger.expects(:start!).never
-        model_a.expects(:perform!).never
-        model_b.expects(:perform!).never
-        Backup::Logger.expects(:clear!).never
+        expect(Backup::Logger).to receive(:configure).ordered
+        expect(Backup::Logger).to receive(:start!).never
+        expect(model_a).to receive(:perform!).never
+        expect(model_b).to receive(:perform!).never
+        expect(Backup::Logger).to receive(:clear!).never
       end
 
       describe "when errors are raised while loading config.rb" do
         before do
-          Backup::Config.expects(:load).in_sequence(s).raises("config load error")
+          expect(Backup::Config).to receive(:load).ordered.and_raise("config load error")
         end
 
         it "aborts with status code 3 and logs messages to the console only" do
@@ -186,12 +186,12 @@ describe "Backup::CLI" do
             end,
             proc { |err| expect(err).to be_a(String) }
           ]
-          Backup::Logger.expects(:error).in_sequence(s).times(2).with do |err|
+          expect(Backup::Logger).to receive(:error).ordered.exactly(2).times do |err|
             expectation = expectations.shift
             expectation.call(err) if expectation
           end
 
-          Backup::Logger.expects(:abort!).in_sequence(s)
+          expect(Backup::Logger).to receive(:abort!).ordered
 
           expect do
             ARGV.replace(
@@ -204,18 +204,18 @@ describe "Backup::CLI" do
 
       describe "when no models are found for the given triggers" do
         before do
-          Backup::Config.expects(:load).in_sequence(s)
+          expect(Backup::Config).to receive(:load).ordered
         end
 
         it "aborts and logs messages to the console only" do
-          Backup::Logger.expects(:error).in_sequence(s).with do |err|
+          expect(Backup::Logger).to receive(:error).ordered do |err|
             expect(err).to be_a(Backup::CLI::Error)
             expect(err.message).to match(
               /No Models found for trigger\(s\) 'test_trigger_foo'/
             )
           end
 
-          Backup::Logger.expects(:abort!).in_sequence(s)
+          expect(Backup::Logger).to receive(:abort!).ordered
 
           expect do
             ARGV.replace(
@@ -228,31 +228,31 @@ describe "Backup::CLI" do
     end # describe 'failure to prepare for backups'
 
     describe "exit codes and notifications" do
-      let(:notifier_a) { mock }
-      let(:notifier_b) { mock }
-      let(:notifier_c) { mock }
-      let(:notifier_d) { mock }
+      let(:notifier_a) { double }
+      let(:notifier_b) { double }
+      let(:notifier_c) { double }
+      let(:notifier_d) { double }
 
       before do
-        Backup::Config.stubs(:load)
-        Backup::Logger.stubs(:start!)
-        model_a.stubs(:notifiers).returns([notifier_a, notifier_c])
-        model_b.stubs(:notifiers).returns([notifier_b, notifier_d])
+        allow(Backup::Config).to receive(:load)
+        allow(Backup::Logger).to receive(:start!)
+        allow(model_a).to receive(:notifiers).and_return([notifier_a, notifier_c])
+        allow(model_b).to receive(:notifiers).and_return([notifier_b, notifier_d])
       end
 
       specify "when jobs are all successful" do
-        model_a.stubs(:exit_status).returns(0)
-        model_b.stubs(:exit_status).returns(0)
+        allow(model_a).to receive(:exit_status).and_return(0)
+        allow(model_b).to receive(:exit_status).and_return(0)
 
-        model_a.expects(:perform!).in_sequence(s)
-        notifier_a.expects(:perform!).in_sequence(s)
-        notifier_c.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
+        expect(model_a).to receive(:perform!).ordered
+        expect(notifier_a).to receive(:perform!).ordered
+        expect(notifier_c).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
 
-        model_b.expects(:perform!).in_sequence(s)
-        notifier_b.expects(:perform!).in_sequence(s)
-        notifier_d.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
+        expect(model_b).to receive(:perform!).ordered
+        expect(notifier_b).to receive(:perform!).ordered
+        expect(notifier_d).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
 
         ARGV.replace(
           ["perform", "-t", "test_trigger_a,test_trigger_b"]
@@ -261,18 +261,18 @@ describe "Backup::CLI" do
       end
 
       specify "when a job has warnings" do
-        model_a.stubs(:exit_status).returns(1)
-        model_b.stubs(:exit_status).returns(0)
+        allow(model_a).to receive(:exit_status).and_return(1)
+        allow(model_b).to receive(:exit_status).and_return(0)
 
-        model_a.expects(:perform!).in_sequence(s)
-        notifier_a.expects(:perform!).in_sequence(s)
-        notifier_c.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
+        expect(model_a).to receive(:perform!).ordered
+        expect(notifier_a).to receive(:perform!).ordered
+        expect(notifier_c).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
 
-        model_b.expects(:perform!).in_sequence(s)
-        notifier_b.expects(:perform!).in_sequence(s)
-        notifier_d.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
+        expect(model_b).to receive(:perform!).ordered
+        expect(notifier_b).to receive(:perform!).ordered
+        expect(notifier_d).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
 
         expect do
           ARGV.replace(
@@ -283,18 +283,18 @@ describe "Backup::CLI" do
       end
 
       specify "when a job has non-fatal errors" do
-        model_a.stubs(:exit_status).returns(2)
-        model_b.stubs(:exit_status).returns(0)
+        allow(model_a).to receive(:exit_status).and_return(2)
+        allow(model_b).to receive(:exit_status).and_return(0)
 
-        model_a.expects(:perform!).in_sequence(s)
-        notifier_a.expects(:perform!).in_sequence(s)
-        notifier_c.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
+        expect(model_a).to receive(:perform!).ordered
+        expect(notifier_a).to receive(:perform!).ordered
+        expect(notifier_c).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
 
-        model_b.expects(:perform!).in_sequence(s)
-        notifier_b.expects(:perform!).in_sequence(s)
-        notifier_d.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
+        expect(model_b).to receive(:perform!).ordered
+        expect(notifier_b).to receive(:perform!).ordered
+        expect(notifier_d).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
 
         expect do
           ARGV.replace(
@@ -305,15 +305,15 @@ describe "Backup::CLI" do
       end
 
       specify "when a job has fatal errors" do
-        model_a.stubs(:exit_status).returns(3)
-        model_b.stubs(:exit_status).returns(0)
+        allow(model_a).to receive(:exit_status).and_return(3)
+        allow(model_b).to receive(:exit_status).and_return(0)
 
-        model_a.expects(:perform!).in_sequence(s)
-        notifier_a.expects(:perform!).in_sequence(s)
-        notifier_c.expects(:perform!).in_sequence(s)
+        expect(model_a).to receive(:perform!).ordered
+        expect(notifier_a).to receive(:perform!).ordered
+        expect(notifier_c).to receive(:perform!).ordered
 
-        Backup::Logger.expects(:clear!).never
-        model_b.expects(:perform!).never
+        expect(Backup::Logger).to receive(:clear!).never
+        expect(model_b).to receive(:perform!).never
 
         expect do
           ARGV.replace(
@@ -324,18 +324,18 @@ describe "Backup::CLI" do
       end
 
       specify "when jobs have errors and warnings" do
-        model_a.stubs(:exit_status).returns(2)
-        model_b.stubs(:exit_status).returns(1)
+        allow(model_a).to receive(:exit_status).and_return(2)
+        allow(model_b).to receive(:exit_status).and_return(1)
 
-        model_a.expects(:perform!).in_sequence(s)
-        notifier_a.expects(:perform!).in_sequence(s)
-        notifier_c.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
+        expect(model_a).to receive(:perform!).ordered
+        expect(notifier_a).to receive(:perform!).ordered
+        expect(notifier_c).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
 
-        model_b.expects(:perform!).in_sequence(s)
-        notifier_b.expects(:perform!).in_sequence(s)
-        notifier_d.expects(:perform!).in_sequence(s)
-        Backup::Logger.expects(:clear!).in_sequence(s)
+        expect(model_b).to receive(:perform!).ordered
+        expect(notifier_b).to receive(:perform!).ordered
+        expect(notifier_d).to receive(:perform!).ordered
+        expect(Backup::Logger).to receive(:clear!).ordered
 
         expect do
           ARGV.replace(
@@ -348,7 +348,12 @@ describe "Backup::CLI" do
 
     describe "--check" do
       it "runs the check command" do
-        cli.any_instance.expects(:check).raises(SystemExit)
+        # RSpec aliases old check method to __check_without_any_instance__,
+        # and thor does not like it, rendering a warning message about the lack
+        # of description. Here we define a description before stubbing the method.
+        cli.desc "check", "RSpec Check Command"
+
+        expect_any_instance_of(cli).to receive(:check).and_raise(SystemExit)
         expect do
           ARGV.replace(
             ["perform", "-t", "test_trigger_foo", "--check"]
@@ -361,7 +366,7 @@ describe "Backup::CLI" do
 
   describe "#check" do
     it "fails if errors are raised" do
-      Backup::Config.stubs(:load).raises("an error")
+      allow(Backup::Config).to receive(:load).and_raise("an error")
 
       out, err = capture_io do
         ARGV.replace(["check"])
@@ -376,7 +381,7 @@ describe "Backup::CLI" do
     end
 
     it "fails if warnings are issued" do
-      Backup::Config.stubs(:load).with do
+      allow(Backup::Config).to receive(:load) do
         Backup::Logger.warn "warning message"
       end
 
@@ -393,7 +398,7 @@ describe "Backup::CLI" do
     end
 
     it "succeeds if there are no errors or warnings" do
-      Backup::Config.stubs(:load)
+      allow(Backup::Config).to receive(:load)
 
       out, err = capture_io do
         ARGV.replace(["check"])
@@ -408,10 +413,10 @@ describe "Backup::CLI" do
 
     it "uses --config-file if given" do
       # Note: Thor#options is returning a HashWithIndifferentAccess.
-      Backup::Config.expects(:load).with do |options|
+      expect(Backup::Config).to receive(:load) do |options|
         options[:config_file] == "/my/config.rb"
       end
-      Backup::Logger.stubs(:abort!) # suppress output
+      allow(Backup::Logger).to receive(:abort!) # suppress output
 
       ARGV.replace(["check", "--config-file", "/my/config.rb"])
       expect do
@@ -464,8 +469,8 @@ describe "Backup::CLI" do
             FileUtils.mkdir_p(File.join(path, "custom"))
             FileUtils.touch(config_file)
 
-            cli::Helpers.expects(:overwrite?).with(config_file).never
-            cli::Helpers.expects(:overwrite?).with(model_file).returns(true)
+            expect(cli::Helpers).to receive(:overwrite?).with(config_file).never
+            expect(cli::Helpers).to receive(:overwrite?).with(model_file).and_return(true)
 
             out, err = capture_io do
               ARGV.replace([
@@ -492,7 +497,7 @@ describe "Backup::CLI" do
             FileUtils.mkdir_p(File.dirname(model_file))
             FileUtils.touch(model_file)
 
-            $stdin.expects(:gets).returns("n")
+            expect($stdin).to receive(:gets).and_return("n")
 
             out, err = capture_io do
               ARGV.replace([
@@ -609,7 +614,7 @@ describe "Backup::CLI" do
           FileUtils.mkdir_p(File.dirname(config_file))
           FileUtils.touch(config_file)
 
-          $stdin.expects(:gets).returns("n")
+          expect($stdin).to receive(:gets).and_return("n")
 
           out, err = capture_io do
             ARGV.replace(["generate:config"])
@@ -648,28 +653,28 @@ describe "Backup::CLI" do
 
     describe "#overwrite?" do
       it "prompts user and accepts confirmation" do
-        File.expects(:exist?).with("a/path").returns(true)
-        $stderr.expects(:print).with(
+        expect(File).to receive(:exist?).with("a/path").and_return(true)
+        expect($stderr).to receive(:print).with(
           "A file already exists at 'a/path'.\nDo you want to overwrite? [y/n] "
         )
-        $stdin.expects(:gets).returns("yes\n")
+        expect($stdin).to receive(:gets).and_return("yes\n")
 
         expect(helpers.overwrite?("a/path")).to be_truthy
       end
 
       it "prompts user and accepts cancelation" do
-        File.expects(:exist?).with("a/path").returns(true)
-        $stderr.expects(:print).with(
+        expect(File).to receive(:exist?).with("a/path").and_return(true)
+        expect($stderr).to receive(:print).with(
           "A file already exists at 'a/path'.\nDo you want to overwrite? [y/n] "
         )
-        $stdin.expects(:gets).returns("no\n")
+        expect($stdin).to receive(:gets).and_return("no\n")
 
         expect(helpers.overwrite?("a/path")).to be_falsy
       end
 
       it "returns true if path does not exist" do
-        File.expects(:exist?).with("a/path").returns(false)
-        $stderr.expects(:print).never
+        expect(File).to receive(:exist?).with("a/path").and_return(false)
+        expect($stderr).to receive(:print).never
         expect(helpers.overwrite?("a/path")).to eq(true)
       end
     end

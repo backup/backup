@@ -9,7 +9,7 @@ module Backup
     let(:s) { sequence "" }
 
     before do
-      Splitter.any_instance.stubs(:utility).with(:split).returns("split")
+      allow_any_instance_of(Splitter).to receive(:utility).with(:split).and_return("split")
     end
 
     # Note: BSD split will not accept a 'M' suffix for the byte size
@@ -28,7 +28,7 @@ module Backup
     end
 
     describe "#split_with" do
-      let(:given_block) { mock }
+      let(:given_block) { double }
       let(:block) { ->(arg) { given_block.got(arg) } }
 
       shared_examples "split suffix handling" do
@@ -36,16 +36,16 @@ module Backup
           it "updates chunk_suffixes for the package" do
             suffixes = ["a" * splitter.suffix_length] * 2
             suffixes.last.next!
-            splitter.stubs(:chunks).returns(
+            allow(splitter).to receive(:chunks).and_return(
               suffixes.map { |s| "/tmp/test_trigger.tar-#{s}" }
             )
 
-            given_block.expects(:got).in_sequence(s).with(
+            expect(given_block).to receive(:got).ordered.with(
               "split -a #{splitter.suffix_length} -b 250m - " \
               "'#{File.join(Config.tmp_path, "test_trigger.tar-")}'"
             )
 
-            FileUtils.expects(:mv).never
+            expect(FileUtils).to receive(:mv).never
 
             splitter.split_with(&block)
 
@@ -56,14 +56,14 @@ module Backup
         context "when final package was not larger than chunk_size" do
           it "removes the suffix from the single file output by split" do
             suffix = "a" * splitter.suffix_length
-            splitter.stubs(:chunks).returns(["/tmp/test_trigger.tar-#{suffix}"])
+            allow(splitter).to receive(:chunks).and_return(["/tmp/test_trigger.tar-#{suffix}"])
 
-            given_block.expects(:got).in_sequence(s).with(
+            expect(given_block).to receive(:got).ordered.with(
               "split -a #{splitter.suffix_length} -b 250m - " \
               "'#{File.join(Config.tmp_path, "test_trigger.tar-")}'"
             )
 
-            FileUtils.expects(:mv).in_sequence(s).with(
+            expect(FileUtils).to receive(:mv).ordered.with(
               File.join(Config.tmp_path, "test_trigger.tar-#{suffix}"),
               File.join(Config.tmp_path, "test_trigger.tar")
             )

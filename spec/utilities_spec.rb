@@ -8,9 +8,9 @@ describe Backup::Utilities do
 
   describe ".configure" do
     before do
-      File.stubs(:executable?).returns(true)
-      utilities.unstub(:gnu_tar?)
-      utilities.unstub(:utility)
+      allow(File).to receive(:executable?).and_return(true)
+      allow(utilities).to receive(:gnu_tar?).and_call_original
+      allow(utilities).to receive(:utility).and_call_original
 
       utilities.configure do
         # General Utilites
@@ -59,7 +59,7 @@ describe Backup::Utilities do
     end
 
     it "presets gnu_tar? value to true" do
-      utilities.expects(:run).never
+      expect(utilities).to_not receive(:run)
       expect(utilities.gnu_tar?).to be(true)
       expect(helpers.send(:gnu_tar?)).to be(true)
     end
@@ -69,7 +69,7 @@ describe Backup::Utilities do
         tar_dist :bsd
       end
 
-      utilities.expects(:run).never
+      expect(utilities).to_not receive(:run)
       expect(utilities.gnu_tar?).to be(false)
       expect(helpers.send(:gnu_tar?)).to be(false)
     end
@@ -84,7 +84,7 @@ describe Backup::Utilities do
     end
 
     it "raises Error if utility is not found or executable" do
-      File.stubs(:executable?).returns(false)
+      allow(File).to receive(:executable?).and_return(false)
       expect do
         utilities.configure do
           tar "not_found"
@@ -95,12 +95,12 @@ describe Backup::Utilities do
 
   describe ".gnu_tar?" do
     before do
-      utilities.unstub(:gnu_tar?)
+      allow(utilities).to receive(:gnu_tar?).and_call_original
     end
 
     it "determines when tar is GNU tar" do
-      utilities.expects(:utility).with(:tar).returns("tar")
-      utilities.expects(:run).with("tar --version").returns(
+      expect(utilities).to receive(:utility).with(:tar).and_return("tar")
+      expect(utilities).to receive(:run).with("tar --version").and_return(
         'tar (GNU tar) 1.26\nCopyright (C) 2011 Free Software Foundation, Inc.'
       )
       expect(utilities.gnu_tar?).to be(true)
@@ -108,8 +108,8 @@ describe Backup::Utilities do
     end
 
     it "determines when tar is BSD tar" do
-      utilities.expects(:utility).with(:tar).returns("tar")
-      utilities.expects(:run).with("tar --version").returns(
+      expect(utilities).to receive(:utility).with(:tar).and_return("tar")
+      expect(utilities).to receive(:run).with("tar --version").and_return(
         "bsdtar 3.0.4 - libarchive 3.0.4"
       )
       expect(utilities.gnu_tar?).to be(false)
@@ -118,13 +118,13 @@ describe Backup::Utilities do
 
     it "returns cached true value" do
       utilities.instance_variable_set(:@gnu_tar, true)
-      utilities.expects(:run).never
+      expect(utilities).to_not receive(:run)
       expect(utilities.gnu_tar?).to be(true)
     end
 
     it "returns cached false value" do
       utilities.instance_variable_set(:@gnu_tar, false)
-      utilities.expects(:run).never
+      expect(utilities).to_not receive(:run)
       expect(utilities.gnu_tar?).to be(false)
     end
   end
@@ -136,34 +136,34 @@ describe Backup::Utilities::Helpers do
 
   describe "#utility" do
     before do
-      utilities.unstub(:utility)
+      allow(utilities).to receive(:utility).and_call_original
     end
 
     context "when a system path for the utility is available" do
       it "should return the system path with newline removed" do
-        utilities.expects(:`).with("which 'foo' 2>/dev/null").returns("system_path\n")
+        expect(utilities).to receive(:`).with("which 'foo' 2>/dev/null").and_return("system_path\n")
         expect(helpers.send(:utility, :foo)).to eq("system_path")
       end
 
       it "should cache the returned path" do
-        utilities.expects(:`).once.with("which 'cache_me' 2>/dev/null")
-          .returns("cached_path\n")
+        expect(utilities).to receive(:`).once.with("which 'cache_me' 2>/dev/null")
+          .and_return("cached_path\n")
 
         expect(helpers.send(:utility, :cache_me)).to eq("cached_path")
         expect(helpers.send(:utility, :cache_me)).to eq("cached_path")
       end
 
       it "should return a mutable copy of the path" do
-        utilities.expects(:`).once.with("which 'cache_me' 2>/dev/null")
-          .returns("cached_path\n")
+        expect(utilities).to receive(:`).once.with("which 'cache_me' 2>/dev/null")
+          .and_return("cached_path\n")
 
         helpers.send(:utility, :cache_me) << "foo"
         expect(helpers.send(:utility, :cache_me)).to eq("cached_path")
       end
 
       it "should cache the value for all extended objects" do
-        utilities.expects(:`).once.with("which 'once_only' 2>/dev/null")
-          .returns("cached_path\n")
+        expect(utilities).to receive(:`).once.with("which 'once_only' 2>/dev/null")
+          .and_return("cached_path\n")
 
         expect(helpers.send(:utility, :once_only)).to eq("cached_path")
         result = Class.new.extend(Backup::Utilities::Helpers).send(
@@ -174,7 +174,7 @@ describe Backup::Utilities::Helpers do
     end
 
     it "should raise an error if the utiilty is not found" do
-      utilities.expects(:`).with("which 'unknown' 2>/dev/null").returns("\n")
+      expect(utilities).to receive(:`).with("which 'unknown' 2>/dev/null").and_return("\n")
 
       expect do
         helpers.send(:utility, :unknown)
@@ -182,14 +182,14 @@ describe Backup::Utilities::Helpers do
     end
 
     it "should raise an error if name is nil" do
-      utilities.expects(:`).never
+      expect(utilities).to_not receive(:`)
       expect do
         helpers.send(:utility, nil)
       end.to raise_error(Backup::Utilities::Error, "Utilities::Error: Utility Name Empty")
     end
 
     it "should raise an error if name is empty" do
-      utilities.expects(:`).never
+      expect(utilities).to_not receive(:`)
       expect do
         helpers.send(:utility, " ")
       end.to raise_error(Backup::Utilities::Error, "Utilities::Error: Utility Name Empty")
@@ -236,27 +236,27 @@ describe Backup::Utilities::Helpers do
   end # describe '#command_name'
 
   describe "#run" do
-    let(:stdout_io) { stub(read: stdout_messages) }
-    let(:stderr_io) { stub(read: stderr_messages) }
-    let(:stdin_io)  { stub(:close) }
-    let(:process_status) { stub(success?: process_success) }
+    let(:stdout_io) { double(IO, read: stdout_messages) }
+    let(:stderr_io) { double(IO, read: stderr_messages) }
+    let(:stdin_io)  { double(IO, close: nil) }
+    let(:process_status) { double(Process::Status, success?: process_success) }
     let(:command) { "/path/to/cmd_name arg1 arg2" }
 
     before do
-      utilities.unstub(:run)
+      allow(utilities).to receive(:run).and_call_original
     end
 
     context "when the command is successful" do
       let(:process_success) { true }
 
       before do
-        Backup::Logger.expects(:info).with(
+        expect(Backup::Logger).to receive(:info).with(
           "Running system utility 'cmd_name'..."
         )
 
-        Open4.expects(:popen4).with(command).yields(
+        expect(Open4).to receive(:popen4).with(command).and_yield(
           nil, stdin_io, stdout_io, stderr_io
-        ).returns(process_status)
+        ).and_return(process_status)
       end
 
       context "and generates no messages" do
@@ -273,7 +273,7 @@ describe Backup::Utilities::Helpers do
         let(:stderr_messages) { "" }
 
         it "should return stdout and log the stdout messages" do
-          Backup::Logger.expects(:info).with(
+          expect(Backup::Logger).to receive(:info).with(
             "cmd_name:STDOUT: out line1\ncmd_name:STDOUT: out line2"
           )
           expect(helpers.send(:run, command)).to eq(stdout_messages.strip)
@@ -285,7 +285,7 @@ describe Backup::Utilities::Helpers do
         let(:stderr_messages) { "err line1\nerr line2\n" }
 
         it "should return stdout and log the stderr messages" do
-          Backup::Logger.expects(:warn).with(
+          expect(Backup::Logger).to receive(:warn).with(
             "cmd_name:STDERR: err line1\ncmd_name:STDERR: err line2"
           )
           expect(helpers.send(:run, command)).to eq("")
@@ -297,10 +297,10 @@ describe Backup::Utilities::Helpers do
         let(:stderr_messages) { "err line1\nerr line2\n" }
 
         it "should return stdout and log both stdout and stderr messages" do
-          Backup::Logger.expects(:info).with(
+          expect(Backup::Logger).to receive(:info).with(
             "cmd_name:STDOUT: out line1\ncmd_name:STDOUT: out line2"
           )
-          Backup::Logger.expects(:warn).with(
+          expect(Backup::Logger).to receive(:warn).with(
             "cmd_name:STDERR: err line1\ncmd_name:STDERR: err line2"
           )
           expect(helpers.send(:run, command)).to eq(stdout_messages.strip)
@@ -315,15 +315,15 @@ describe Backup::Utilities::Helpers do
       end
 
       before do
-        Backup::Logger.expects(:info).with(
+        expect(Backup::Logger).to receive(:info).with(
           "Running system utility 'cmd_name'..."
         )
 
-        Open4.expects(:popen4).with(command).yields(
+        expect(Open4).to receive(:popen4).with(command).and_yield(
           nil, stdin_io, stdout_io, stderr_io
-        ).returns(process_status)
+        ).and_return(process_status)
 
-        process_status.stubs(:exitstatus).returns(1)
+        allow(process_status).to receive(:exitstatus).and_return(1)
       end
 
       context "and generates no messages" do
@@ -389,11 +389,11 @@ describe Backup::Utilities::Helpers do
 
     context "when the system fails to execute the command" do
       before do
-        Backup::Logger.expects(:info).with(
+        expect(Backup::Logger).to receive(:info).with(
           "Running system utility 'cmd_name'..."
         )
 
-        Open4.expects(:popen4).raises("exec call failed")
+        expect(Open4).to receive(:popen4).and_raise("exec call failed")
       end
 
       it "should raise an error wrapping the system error raised" do
@@ -409,12 +409,12 @@ describe Backup::Utilities::Helpers do
 
   describe "gnu_tar?" do
     it "returns true if tar_dist is gnu" do
-      Backup::Utilities.stubs(:gnu_tar?).returns(true)
+      expect(Backup::Utilities).to receive(:gnu_tar?).and_return(true)
       expect(helpers.send(:gnu_tar?)).to be(true)
     end
 
     it "returns false if tar_dist is bsd" do
-      Backup::Utilities.stubs(:gnu_tar?).returns(false)
+      expect(Backup::Utilities).to receive(:gnu_tar?).and_return(false)
       expect(helpers.send(:gnu_tar?)).to be(false)
     end
   end

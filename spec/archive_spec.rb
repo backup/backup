@@ -43,30 +43,30 @@ module Backup
 
     describe "#perform!" do
       before do
-        Archive.any_instance.stubs(:utility).with(:tar).returns("tar")
-        Archive.any_instance.stubs(:utility).with(:cat).returns("cat")
-        Archive.any_instance.stubs(:utility).with(:sudo).returns("sudo")
-        Archive.any_instance.stubs(:with_files_from).yields("")
-        Config.stubs(:tmp_path).returns("/tmp/path")
-        Pipeline.any_instance.stubs(:success?).returns(true)
+        allow_any_instance_of(Archive).to receive(:utility).with(:tar).and_return("tar")
+        allow_any_instance_of(Archive).to receive(:utility).with(:cat).and_return("cat")
+        allow_any_instance_of(Archive).to receive(:utility).with(:sudo).and_return("sudo")
+        allow_any_instance_of(Archive).to receive(:with_files_from).and_yield("")
+        allow(Config).to receive(:tmp_path).and_return("/tmp/path")
+        allow_any_instance_of(Pipeline).to receive(:success?).and_return(true)
       end
 
       describe "success/failure messages" do
         let(:archive) { Archive.new(model, :my_archive) {} }
 
         it "logs info messages on success" do
-          Logger.expects(:info).with("Creating Archive 'my_archive'...")
-          Logger.expects(:info).with("Archive 'my_archive' Complete!")
+          expect(Logger).to receive(:info).with("Creating Archive 'my_archive'...")
+          expect(Logger).to receive(:info).with("Archive 'my_archive' Complete!")
 
           archive.perform!
         end
 
         it "raises error on failure" do
-          Pipeline.any_instance.stubs(:success?).returns(false)
-          Pipeline.any_instance.stubs(:error_messages).returns("error messages")
+          allow_any_instance_of(Pipeline).to receive(:success?).and_return(false)
+          allow_any_instance_of(Pipeline).to receive(:error_messages).and_return("error messages")
 
-          Logger.expects(:info).with("Creating Archive 'my_archive'...")
-          Logger.expects(:info).with("Archive 'my_archive' Complete!").never
+          expect(Logger).to receive(:info).with("Creating Archive 'my_archive'...")
+          expect(Logger).to receive(:info).with("Archive 'my_archive' Complete!").never
 
           expect do
             archive.perform!
@@ -81,7 +81,7 @@ module Backup
 
       describe "using GNU tar" do
         before do
-          Pipeline.any_instance.expects(:<<).with(
+          expect_any_instance_of(Pipeline).to receive(:<<).with(
             "cat > '/tmp/path/test_trigger/archives/my_archive.tar'"
           )
         end
@@ -89,7 +89,7 @@ module Backup
         it "returns GNU tar options" do
           archive = Archive.new(model, :my_archive) {}
 
-          Pipeline.any_instance.expects(:add).with(
+          expect_any_instance_of(Pipeline).to receive(:add).with(
             "tar --ignore-failed-read -cPf -  ", [0, 1]
           )
           archive.perform!
@@ -100,7 +100,7 @@ module Backup
             a.tar_options "-h --xattrs"
           end
 
-          Pipeline.any_instance.expects(:add).with(
+          expect_any_instance_of(Pipeline).to receive(:add).with(
             "tar --ignore-failed-read -h --xattrs -cPf -  ", [0, 1]
           )
           archive.perform!
@@ -109,8 +109,8 @@ module Backup
 
       describe "using BSD tar" do
         before do
-          Archive.any_instance.stubs(:gnu_tar?).returns(false)
-          Pipeline.any_instance.expects(:<<).with(
+          allow_any_instance_of(Archive).to receive(:gnu_tar?).and_return(false)
+          expect_any_instance_of(Pipeline).to receive(:<<).with(
             "cat > '/tmp/path/test_trigger/archives/my_archive.tar'"
           )
         end
@@ -118,7 +118,7 @@ module Backup
         it "returns no GNU options" do
           archive = Archive.new(model, :my_archive) {}
 
-          Pipeline.any_instance.expects(:add).with("tar  -cPf -  ", [0])
+          expect_any_instance_of(Pipeline).to receive(:add).with("tar  -cPf -  ", [0])
           archive.perform!
         end
 
@@ -127,7 +127,7 @@ module Backup
             a.tar_options "-h --xattrs"
           end
 
-          Pipeline.any_instance.expects(:add).with("tar -h --xattrs -cPf -  ", [0])
+          expect_any_instance_of(Pipeline).to receive(:add).with("tar -h --xattrs -cPf -  ", [0])
           archive.perform!
         end
       end
@@ -143,18 +143,18 @@ module Backup
               a.exclude "/another/path"
             end
 
-            archive.expects(:with_files_from).with(
+            expect(archive).to receive(:with_files_from).with(
               ["this/path", "/that/path"]
-            ).yields("-T '/path/to/tmpfile'")
+            ).and_yield("-T '/path/to/tmpfile'")
 
-            Pipeline.any_instance.expects(:add).with(
+            expect_any_instance_of(Pipeline).to receive(:add).with(
               "tar --ignore-failed-read -cPf - " \
               "-C '#{File.expand_path("root/path")}' " \
               "--exclude='other/path' --exclude='/another/path' " \
               "-T '/path/to/tmpfile'",
               [0, 1]
             )
-            Pipeline.any_instance.expects(:<<).with(
+            expect_any_instance_of(Pipeline).to receive(:<<).with(
               "cat > '/tmp/path/test_trigger/archives/my_archive.tar'"
             )
 
@@ -171,18 +171,18 @@ module Backup
               a.exclude "/another/path"
             end
 
-            archive.expects(:with_files_from).with(
+            expect(archive).to receive(:with_files_from).with(
               [File.expand_path("this/path"), "/that/path"]
-            ).yields("-T '/path/to/tmpfile'")
+            ).and_yield("-T '/path/to/tmpfile'")
 
-            Pipeline.any_instance.expects(:add).with(
+            expect_any_instance_of(Pipeline).to receive(:add).with(
               "tar --ignore-failed-read -cPf - " \
               "--exclude='#{File.expand_path("other/path")}' " \
               "--exclude='/another/path' " \
               "-T '/path/to/tmpfile'",
               [0, 1]
             )
-            Pipeline.any_instance.expects(:<<).with(
+            expect_any_instance_of(Pipeline).to receive(:<<).with(
               "cat > '/tmp/path/test_trigger/archives/my_archive.tar'"
             )
 
@@ -195,12 +195,12 @@ module Backup
         let(:archive) { Archive.new(model, :my_archive) {} }
 
         it "creates a compressed archive" do
-          compressor = mock
-          model.stubs(:compressor).returns(compressor)
-          compressor.stubs(:compress_with).yields("comp_command", ".comp_ext")
+          compressor = double
+          allow(model).to receive(:compressor).and_return(compressor)
+          allow(compressor).to receive(:compress_with).and_yield("comp_command", ".comp_ext")
 
-          Pipeline.any_instance.expects(:<<).with("comp_command")
-          Pipeline.any_instance.expects(:<<).with(
+          expect_any_instance_of(Pipeline).to receive(:<<).with("comp_command")
+          expect_any_instance_of(Pipeline).to receive(:<<).with(
             "cat > '/tmp/path/test_trigger/archives/my_archive.tar.comp_ext'"
           )
 
@@ -208,8 +208,8 @@ module Backup
         end
 
         it "creates an uncompressed archive" do
-          Pipeline.any_instance.expects(:<<).with("comp_command").never
-          Pipeline.any_instance.expects(:<<).with(
+          expect_any_instance_of(Pipeline).to receive(:<<).with("comp_command").never
+          expect_any_instance_of(Pipeline).to receive(:<<).with(
             "cat > '/tmp/path/test_trigger/archives/my_archive.tar'"
           )
 
@@ -220,10 +220,10 @@ module Backup
       specify "may use sudo" do
         archive = Archive.new(model, :my_archive, &:use_sudo)
 
-        Pipeline.any_instance.expects(:add).with(
+        expect_any_instance_of(Pipeline).to receive(:add).with(
           "sudo -n tar --ignore-failed-read -cPf -  ", [0, 1]
         )
-        Pipeline.any_instance.expects(:<<).with(
+        expect_any_instance_of(Pipeline).to receive(:<<).with(
           "cat > '/tmp/path/test_trigger/archives/my_archive.tar'"
         )
         archive.perform!
@@ -233,16 +233,16 @@ module Backup
     describe "#with_files_from" do
       let(:archive) { Archive.new(model, :test_archive) {} }
       let(:s) { sequence "" }
-      let(:tmpfile) { stub(path: "/path/to/tmpfile") }
+      let(:tmpfile) { double(File, path: "/path/to/tmpfile") }
       let(:paths) { ["this/path", "/that/path"] }
 
       # -T is used for BSD compatibility
       it "yields the tar --files-from option" do
-        Tempfile.expects(:new).in_sequence(s).returns(tmpfile)
-        tmpfile.expects(:puts).in_sequence(s).with("this/path")
-        tmpfile.expects(:puts).in_sequence(s).with("/that/path")
-        tmpfile.expects(:close).in_sequence(s)
-        tmpfile.expects(:delete).in_sequence(s)
+        expect(Tempfile).to receive(:new).ordered.and_return(tmpfile)
+        expect(tmpfile).to receive(:puts).ordered.with("this/path")
+        expect(tmpfile).to receive(:puts).ordered.with("/that/path")
+        expect(tmpfile).to receive(:close).ordered
+        expect(tmpfile).to receive(:delete).ordered
 
         archive.send(:with_files_from, paths) do |files_from|
           expect(files_from).to eq "-T '/path/to/tmpfile'"
@@ -250,9 +250,9 @@ module Backup
       end
 
       it "ensures the tmpfile is removed" do
-        Tempfile.expects(:new).returns(tmpfile)
-        tmpfile.expects(:close)
-        tmpfile.expects(:delete)
+        expect(Tempfile).to receive(:new).and_return(tmpfile)
+        expect(tmpfile).to receive(:close)
+        expect(tmpfile).to receive(:delete)
         expect do
           archive.send(:with_files_from, []) { raise "foo" }
         end.to raise_error("foo")

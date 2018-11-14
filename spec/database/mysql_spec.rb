@@ -7,14 +7,14 @@ module Backup
     let(:s) { sequence "" }
 
     before do
-      Database::MySQL.any_instance.stubs(:utility)
-        .with(:mysqldump).returns("mysqldump")
-      Database::MySQL.any_instance.stubs(:utility)
-        .with(:cat).returns("cat")
-      Database::MySQL.any_instance.stubs(:utility)
-        .with(:innobackupex).returns("innobackupex")
-      Database::MySQL.any_instance.stubs(:utility)
-        .with(:tar).returns("tar")
+      allow_any_instance_of(Database::MySQL).to receive(:utility)
+        .with(:mysqldump).and_return("mysqldump")
+      allow_any_instance_of(Database::MySQL).to receive(:utility)
+        .with(:cat).and_return("cat")
+      allow_any_instance_of(Database::MySQL).to receive(:utility)
+        .with(:innobackupex).and_return("innobackupex")
+      allow_any_instance_of(Database::MySQL).to receive(:utility)
+        .with(:tar).and_return("tar")
     end
 
     it_behaves_like "a class that includes Config::Helpers"
@@ -74,31 +74,31 @@ module Backup
     end # describe '#initialize'
 
     describe "#perform!" do
-      let(:pipeline) { mock }
-      let(:compressor) { mock }
+      let(:pipeline) { double }
+      let(:compressor) { double }
 
       before do
-        db.stubs(:mysqldump).returns("mysqldump_command")
-        db.stubs(:dump_path).returns("/tmp/trigger/databases")
+        allow(db).to receive(:mysqldump).and_return("mysqldump_command")
+        allow(db).to receive(:dump_path).and_return("/tmp/trigger/databases")
 
-        db.expects(:log!).in_sequence(s).with(:started)
-        db.expects(:prepare!).in_sequence(s)
+        expect(db).to receive(:log!).ordered.with(:started)
+        expect(db).to receive(:prepare!).ordered
       end
 
       context "without a compressor" do
         it "packages the dump without compression" do
-          Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+          expect(Pipeline).to receive(:new).ordered.and_return(pipeline)
 
-          pipeline.expects(:<<).in_sequence(s).with("mysqldump_command")
+          expect(pipeline).to receive(:<<).ordered.with("mysqldump_command")
 
-          pipeline.expects(:<<).in_sequence(s).with(
+          expect(pipeline).to receive(:<<).ordered.with(
             "cat > '/tmp/trigger/databases/MySQL.sql'"
           )
 
-          pipeline.expects(:run).in_sequence(s)
-          pipeline.expects(:success?).in_sequence(s).returns(true)
+          expect(pipeline).to receive(:run).ordered
+          expect(pipeline).to receive(:success?).ordered.and_return(true)
 
-          db.expects(:log!).in_sequence(s).with(:finished)
+          expect(db).to receive(:log!).ordered.with(:finished)
 
           db.perform!
         end
@@ -106,25 +106,25 @@ module Backup
 
       context "with a compressor" do
         before do
-          model.stubs(:compressor).returns(compressor)
-          compressor.stubs(:compress_with).yields("cmp_cmd", ".cmp_ext")
+          allow(model).to receive(:compressor).and_return(compressor)
+          allow(compressor).to receive(:compress_with).and_yield("cmp_cmd", ".cmp_ext")
         end
 
         it "packages the dump with compression" do
-          Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+          expect(Pipeline).to receive(:new).ordered.and_return(pipeline)
 
-          pipeline.expects(:<<).in_sequence(s).with("mysqldump_command")
+          expect(pipeline).to receive(:<<).ordered.with("mysqldump_command")
 
-          pipeline.expects(:<<).in_sequence(s).with("cmp_cmd")
+          expect(pipeline).to receive(:<<).ordered.with("cmp_cmd")
 
-          pipeline.expects(:<<).in_sequence(s).with(
+          expect(pipeline).to receive(:<<).ordered.with(
             "cat > '/tmp/trigger/databases/MySQL.sql.cmp_ext'"
           )
 
-          pipeline.expects(:run).in_sequence(s)
-          pipeline.expects(:success?).in_sequence(s).returns(true)
+          expect(pipeline).to receive(:run).ordered
+          expect(pipeline).to receive(:success?).ordered.and_return(true)
 
-          db.expects(:log!).in_sequence(s).with(:finished)
+          expect(db).to receive(:log!).ordered.with(:finished)
 
           db.perform!
         end
@@ -132,8 +132,8 @@ module Backup
 
       context "when the pipeline fails" do
         before do
-          Pipeline.any_instance.stubs(:success?).returns(false)
-          Pipeline.any_instance.stubs(:error_messages).returns("error messages")
+          allow_any_instance_of(Pipeline).to receive(:success?).and_return(false)
+          allow_any_instance_of(Pipeline).to receive(:error_messages).and_return("error messages")
         end
 
         it "raises an error" do
@@ -154,31 +154,31 @@ module Backup
       end
 
       describe "#perform!" do
-        let(:pipeline) { mock }
-        let(:compressor) { mock }
+        let(:pipeline) { double }
+        let(:compressor) { double }
 
         before do
-          db.stubs(:innobackupex).returns("innobackupex_command")
-          db.stubs(:dump_path).returns("/tmp/trigger/databases")
+          allow(db).to receive(:innobackupex).and_return("innobackupex_command")
+          allow(db).to receive(:dump_path).and_return("/tmp/trigger/databases")
 
-          db.expects(:log!).in_sequence(s).with(:started)
-          db.expects(:prepare!).in_sequence(s)
+          expect(db).to receive(:log!).ordered.with(:started)
+          expect(db).to receive(:prepare!).ordered
         end
 
         context "without a compressor" do
           it "packages the dump without compression" do
-            Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+            expect(Pipeline).to receive(:new).ordered.and_return(pipeline)
 
-            pipeline.expects(:<<).in_sequence(s).with("innobackupex_command")
+            expect(pipeline).to receive(:<<).ordered.with("innobackupex_command")
 
-            pipeline.expects(:<<).in_sequence(s).with(
+            expect(pipeline).to receive(:<<).ordered.with(
               "cat > '/tmp/trigger/databases/MySQL.tar'"
             )
 
-            pipeline.expects(:run).in_sequence(s)
-            pipeline.expects(:success?).in_sequence(s).returns(true)
+            expect(pipeline).to receive(:run).ordered
+            expect(pipeline).to receive(:success?).ordered.and_return(true)
 
-            db.expects(:log!).in_sequence(s).with(:finished)
+            expect(db).to receive(:log!).ordered.with(:finished)
 
             db.perform!
           end
@@ -186,25 +186,25 @@ module Backup
 
         context "with a compressor" do
           before do
-            model.stubs(:compressor).returns(compressor)
-            compressor.stubs(:compress_with).yields("cmp_cmd", ".cmp_ext")
+            allow(model).to receive(:compressor).and_return(compressor)
+            allow(compressor).to receive(:compress_with).and_yield("cmp_cmd", ".cmp_ext")
           end
 
           it "packages the dump with compression" do
-            Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+            expect(Pipeline).to receive(:new).ordered.and_return(pipeline)
 
-            pipeline.expects(:<<).in_sequence(s).with("innobackupex_command")
+            expect(pipeline).to receive(:<<).ordered.with("innobackupex_command")
 
-            pipeline.expects(:<<).in_sequence(s).with("cmp_cmd")
+            expect(pipeline).to receive(:<<).ordered.with("cmp_cmd")
 
-            pipeline.expects(:<<).in_sequence(s).with(
+            expect(pipeline).to receive(:<<).ordered.with(
               "cat > '/tmp/trigger/databases/MySQL.tar.cmp_ext'"
             )
 
-            pipeline.expects(:run).in_sequence(s)
-            pipeline.expects(:success?).in_sequence(s).returns(true)
+            expect(pipeline).to receive(:run).ordered
+            expect(pipeline).to receive(:success?).ordered.and_return(true)
 
-            db.expects(:log!).in_sequence(s).with(:finished)
+            expect(db).to receive(:log!).ordered.with(:finished)
 
             db.perform!
           end
@@ -212,8 +212,8 @@ module Backup
 
         context "when the pipeline fails" do
           before do
-            Pipeline.any_instance.stubs(:success?).returns(false)
-            Pipeline.any_instance.stubs(:error_messages).returns("error messages")
+            allow_any_instance_of(Pipeline).to receive(:success?).and_return(false)
+            allow_any_instance_of(Pipeline).to receive(:error_messages).and_return("error messages")
           end
 
           it "raises an error" do
@@ -238,14 +238,14 @@ module Backup
       end
 
       it "returns full mysqldump command built from all options" do
-        option_methods.each { |name| db.stubs(name).returns(name) }
+        option_methods.each { |name| allow(db).to receive(name).and_return(name) }
         expect(db.send(:mysqldump)).to eq(
           "mysqldump #{option_methods.join(" ")}"
         )
       end
 
       it "handles nil values from option methods" do
-        option_methods.each { |name| db.stubs(name).returns(nil) }
+        option_methods.each { |name| allow(db).to receive(name).and_return(nil) }
         expect(db.send(:mysqldump)).to eq(
           "mysqldump #{" " * (option_methods.count - 1)}"
         )
@@ -415,7 +415,7 @@ module Backup
 
     describe "#innobackupex" do
       before do
-        db.stubs(:dump_path).returns("/tmp")
+        allow(db).to receive(:dump_path).and_return("/tmp")
       end
 
       it "builds command to create backup, prepare for restore and tar to stdout" do

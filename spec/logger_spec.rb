@@ -2,22 +2,22 @@ require "spec_helper"
 
 module Backup
   describe Logger do
-    let(:console_logger) { mock("Console Logger") }
-    let(:logfile_logger) { mock("Logfile Logger") }
-    let(:syslog_logger)  { mock("Syslog Logger") }
+    let(:console_logger) { double("Console Logger") }
+    let(:logfile_logger) { double("Logfile Logger") }
+    let(:syslog_logger)  { double("Syslog Logger") }
     let(:default_loggers) { [console_logger, logfile_logger] }
 
     # Note: spec_helper calls Logger.reset! before each example
     before do
-      Logger::Console.stubs(:new)
+      allow(Logger::Console).to receive(:new)
         .with(kind_of(Logger::Console::Options))
-        .returns(console_logger)
-      Logger::Logfile.stubs(:new)
+        .and_return(console_logger)
+      allow(Logger::Logfile).to receive(:new)
         .with(kind_of(Logger::Logfile::Options))
-        .returns(logfile_logger)
-      Logger::Syslog.stubs(:new)
+        .and_return(logfile_logger)
+      allow(Logger::Syslog).to receive(:new)
         .with(kind_of(Logger::Syslog::Options))
-        .returns(syslog_logger)
+        .and_return(syslog_logger)
     end
 
     describe Logger::Message do
@@ -81,7 +81,7 @@ module Backup
     describe ".configure" do
       context "when the console and logfile loggers are enabled" do
         before do
-          Logger::Syslog.expects(:new).never
+          expect(Logger::Syslog).to receive(:new).never
           Logger.info "line 1\nline 2"
           Logger.configure do
             console.quiet   = false
@@ -91,15 +91,15 @@ module Backup
         end
 
         it "sends messages to only the enabled loggers" do
-          console_logger.expects(:log).with do |msg|
+          expect(console_logger).to receive(:log) do |msg|
             expect(msg.lines).to eq(["line 1", "line 2"])
           end
 
-          logfile_logger.expects(:log).with do |msg|
+          expect(logfile_logger).to receive(:log) do |msg|
             expect(msg.lines).to eq(["line 1", "line 2"])
           end
 
-          syslog_logger.expects(:log).never
+          expect(syslog_logger).to receive(:log).never
 
           Logger.start!
         end
@@ -107,7 +107,7 @@ module Backup
 
       context "when the logfile and syslog loggers are enabled" do
         before do
-          Logger::Console.expects(:new).never
+          expect(Logger::Console).to receive(:new).never
           Logger.info "line 1\nline 2"
           Logger.configure do
             console.quiet   = true
@@ -117,13 +117,13 @@ module Backup
         end
 
         it "sends messages to only the enabled loggers" do
-          console_logger.expects(:log).never
+          expect(console_logger).to receive(:log).never
 
-          logfile_logger.expects(:log).with do |msg|
+          expect(logfile_logger).to receive(:log) do |msg|
             expect(msg.lines).to eq(["line 1", "line 2"])
           end
 
-          syslog_logger.expects(:log).with do |msg|
+          expect(syslog_logger).to receive(:log) do |msg|
             expect(msg.lines).to eq(["line 1", "line 2"])
           end
 
@@ -133,7 +133,7 @@ module Backup
 
       context "when the console and syslog loggers are enabled" do
         before do
-          Logger::Logfile.expects(:new).never
+          expect(Logger::Logfile).to receive(:new).never
           Logger.info "line 1\nline 2"
           Logger.configure do
             console.quiet   = false
@@ -143,13 +143,13 @@ module Backup
         end
 
         it "sends messages to only the enabled loggers" do
-          console_logger.expects(:log).with do |msg|
+          expect(console_logger).to receive(:log) do |msg|
             expect(msg.lines).to eq(["line 1", "line 2"])
           end
 
-          logfile_logger.expects(:log).never
+          expect(logfile_logger).to receive(:log).never
 
-          syslog_logger.expects(:log).with do |msg|
+          expect(syslog_logger).to receive(:log) do |msg|
             expect(msg.lines).to eq(["line 1", "line 2"])
           end
 
@@ -195,16 +195,16 @@ module Backup
     describe ".start!" do
       context "before the Logger is started" do
         it "only stores the messages to be sent" do
-          default_loggers.each { |logger| logger.expects(:log).never }
+          default_loggers.each { |logger| expect(logger).to receive(:log).never }
 
           Logger.info "a message"
           expect(Logger.messages.first.lines).to eq(["a message"])
         end
 
         it "does not instantiate any loggers" do
-          Logger::Console.expects(:new).never
-          Logger::Logfile.expects(:new).never
-          Logger::Syslog.expects(:new).never
+          expect(Logger::Console).to receive(:new).never
+          expect(Logger::Logfile).to receive(:new).never
+          expect(Logger::Syslog).to receive(:new).never
 
           Logger.info "a message"
           expect(Logger.send(:logger).instance_variable_get(:@loggers)).to be_empty
@@ -212,9 +212,6 @@ module Backup
       end
 
       context "when Logger is started" do
-        let(:s1) { sequence "1" }
-        let(:s2) { sequence "2" }
-
         before do
           Logger.info "info message"
           Logger.warn "warn message"
@@ -222,14 +219,10 @@ module Backup
         end
 
         it "sends all messages sent before being started" do
-          m1, m2, m3 = Logger.messages
-
-          seq = s1
-          default_loggers.each do |logger|
-            logger.expects(:log).in_sequence(seq).with(m1)
-            logger.expects(:log).in_sequence(seq).with(m2)
-            logger.expects(:log).in_sequence(seq).with(m3)
-            seq = s2
+          Logger.messages.each do |msg|
+            default_loggers.each do |logger|
+              expect(logger).to receive(:log).ordered.with(msg)
+            end
           end
 
           Logger.start!
@@ -239,7 +232,7 @@ module Backup
       context "after the Logger is started" do
         it "stores and sends messages" do
           default_loggers.each do |logger|
-            logger.expects(:log).with do |msg|
+            expect(logger).to receive(:log) do |msg|
               expect(msg.lines).to eq(["a message"])
             end
           end
@@ -259,7 +252,7 @@ module Backup
 
     describe "log messaging methods" do
       before do
-        Logger::MUTEX.expects(:synchronize).yields
+        expect(Logger::MUTEX).to receive(:synchronize).and_yield
       end
 
       describe ".info" do
@@ -269,7 +262,7 @@ module Backup
           expect(msg.level).to eq(:info)
           expect(msg.lines).to eq(["info message"])
 
-          default_loggers.each { |logger| logger.expects(:log).with(msg) }
+          default_loggers.each { |logger| expect(logger).to receive(:log).with(msg) }
           Logger.start!
         end
       end
@@ -281,7 +274,7 @@ module Backup
           expect(msg.level).to eq(:warn)
           expect(msg.lines).to eq(["warn message"])
 
-          default_loggers.each { |logger| logger.expects(:log).with(msg) }
+          default_loggers.each { |logger| expect(logger).to receive(:log).with(msg) }
           Logger.start!
         end
       end
@@ -293,7 +286,7 @@ module Backup
           expect(msg.level).to eq(:error)
           expect(msg.lines).to eq(["error message"])
 
-          default_loggers.each { |logger| logger.expects(:log).with(msg) }
+          default_loggers.each { |logger| expect(logger).to receive(:log).with(msg) }
           Logger.start!
         end
       end
@@ -392,11 +385,11 @@ module Backup
 
     describe ".abort!" do
       before do
-        Logger::Console.stubs(:new)
-          .with(Not(kind_of(Logger::Console::Options)))
-          .returns(console_logger)
-        Logger::Logfile.expects(:new).never
-        Logger::Syslog.expects(:new).never
+        allow(Logger::Console).to receive(:new)
+          .with(no_args)
+          .and_return(console_logger)
+        expect(Logger::Logfile).to receive(:new).never
+        expect(Logger::Syslog).to receive(:new).never
 
         Logger.info "info message"
         Logger.warn "warn message"
@@ -404,8 +397,8 @@ module Backup
       end
 
       it "dumps all messages via a new console logger" do
-        logfile_logger.expects(:log).never
-        console_logger.expects(:log).times(3)
+        expect(logfile_logger).to receive(:log).never
+        expect(console_logger).to receive(:log).exactly(3).times
         Logger.abort!
       end
     end

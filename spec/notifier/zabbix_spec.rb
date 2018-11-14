@@ -6,8 +6,8 @@ module Backup
     let(:notifier) { Notifier::Zabbix.new(model) }
 
     before do
-      Utilities.stubs(:utility).with(:zabbix_sender).returns("zabbix_sender")
-      Config.stubs(:hostname).returns("zabbix.hostname")
+      allow(Utilities).to receive(:utility).with(:zabbix_sender).and_return("zabbix_sender")
+      allow(Config).to receive(:hostname).and_return("zabbix.hostname")
     end
 
     it_behaves_like "a class that includes Config::Helpers"
@@ -59,8 +59,8 @@ module Backup
     describe "#notify!" do
       before do
         notifier.service_host = "my.service.host"
-        model.stubs(:duration).returns("12:34:56")
-        notifier.stubs(:zabbix_port).returns(10_051)
+        allow(model).to receive(:duration).and_return("12:34:56")
+        allow(notifier).to receive(:zabbix_port).and_return(10_051)
       end
 
       context "when status is :success" do
@@ -77,10 +77,10 @@ module Backup
           " -o '#{zabbix_msg}'"
         end
 
-        before { model.stubs(:exit_status).returns(0) }
+        before { allow(model).to receive(:exit_status).and_return(0) }
 
         it "sends a Success message" do
-          Utilities.expects(:run).with("echo '#{zabbix_msg}' | #{zabbix_cmd}")
+          expect(Utilities).to receive(:run).with("echo '#{zabbix_msg}' | #{zabbix_cmd}")
           notifier.send(:notify!, :success)
         end
       end
@@ -99,10 +99,10 @@ module Backup
           " -o '#{zabbix_msg}'"
         end
 
-        before { model.stubs(:exit_status).returns(1) }
+        before { allow(model).to receive(:exit_status).and_return(1) }
 
         it "sends a Warning message" do
-          Utilities.expects(:run).with("echo '#{zabbix_msg}' | #{zabbix_cmd}")
+          expect(Utilities).to receive(:run).with("echo '#{zabbix_msg}' | #{zabbix_cmd}")
           notifier.send(:notify!, :warning)
         end
       end
@@ -121,10 +121,10 @@ module Backup
           " -o '#{zabbix_msg}'"
         end
 
-        before { model.stubs(:exit_status).returns(2) }
+        before { allow(model).to receive(:exit_status).and_return(2) }
 
         it "sends a Failure message" do
-          Utilities.expects(:run).with("echo '#{zabbix_msg}' | #{zabbix_cmd}")
+          expect(Utilities).to receive(:run).with("echo '#{zabbix_msg}' | #{zabbix_cmd}")
           notifier.send(:notify!, :failure)
         end
       end
