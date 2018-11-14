@@ -288,7 +288,7 @@ module Backup # rubocop:disable Metrics/ModuleLength
           .with("my_container", ["obj_a_name", "obj_b_name"]).and_return(resp_ok)
 
         objects = [object_a, object_b]
-        expect { cloud_io.delete(objects) }.not_to change { objects }
+        expect { cloud_io.delete(objects) }.not_to change { objects.map(&:inspect) }
       end
 
       it "accepts a single name" do
