@@ -14,7 +14,7 @@ module Backup
 
     describe "#write" do
       it "logs fog warnings as info messages" do
-        Logger.expects(:info).with("[fog][WARNING] some message")
+        expect(Logger).to receive(:info).with("[fog][WARNING] some message")
         Fog::Logger.warning "some message"
       end
     end

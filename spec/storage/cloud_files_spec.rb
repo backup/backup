@@ -152,7 +152,7 @@ module Backup
 
     describe "#cloud_io" do
       it "caches a new CloudIO instance" do
-        CloudIO::CloudFiles.expects(:new).once.with(
+        expect(CloudIO::CloudFiles).to receive(:new).once.with(
           username: "my_username",
           api_key: "my_api_key",
           auth_url: nil,
@@ -165,7 +165,7 @@ module Backup
           max_retries: 10,
           retry_waitsec: 30,
           fog_options: nil
-        ).returns(:cloud_io)
+        ).and_return(:cloud_io)
 
         expect(storage.send(:cloud_io)).to eq :cloud_io
         expect(storage.send(:cloud_io)).to eq :cloud_io
@@ -173,17 +173,17 @@ module Backup
     end # describe '#cloud_io'
 
     describe "#transfer!" do
-      let(:cloud_io) { mock }
+      let(:cloud_io) { double }
       let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
       let(:remote_path) { File.join("my/path/test_trigger", timestamp) }
 
       before do
         Timecop.freeze
         storage.package.time = timestamp
-        storage.package.stubs(:filenames).returns(
+        allow(storage.package).to receive(:filenames).and_return(
           ["test_trigger.tar-aa", "test_trigger.tar-ab"]
         )
-        storage.stubs(:cloud_io).returns(cloud_io)
+        allow(storage).to receive(:cloud_io).and_return(cloud_io)
         storage.path = "my/path"
       end
 
@@ -193,16 +193,16 @@ module Backup
         src = File.join(Config.tmp_path, "test_trigger.tar-aa")
         dest = File.join(remote_path, "test_trigger.tar-aa")
 
-        Logger.expects(:info).in_sequence(s)
+        expect(Logger).to receive(:info).ordered
           .with("Storing 'my_container/#{dest}'...")
-        cloud_io.expects(:upload).in_sequence(s).with(src, dest)
+        expect(cloud_io).to receive(:upload).ordered.with(src, dest)
 
         src = File.join(Config.tmp_path, "test_trigger.tar-ab")
         dest = File.join(remote_path, "test_trigger.tar-ab")
 
-        Logger.expects(:info).in_sequence(s)
+        expect(Logger).to receive(:info).ordered
           .with("Storing 'my_container/#{dest}'...")
-        cloud_io.expects(:upload).in_sequence(s).with(src, dest)
+        expect(cloud_io).to receive(:upload).ordered.with(src, dest)
 
         storage.send(:transfer!)
 
@@ -213,7 +213,7 @@ module Backup
         before { storage.days_to_keep = 1 }
 
         it "marks package so the cycler will not attempt to remove it" do
-          cloud_io.stubs(:upload)
+          allow(cloud_io).to receive(:upload)
           storage.send(:transfer!)
           expect(storage.package.no_cycle).to eq(true)
         end
@@ -221,47 +221,48 @@ module Backup
     end # describe '#transfer!'
 
     describe "#remove!" do
-      let(:cloud_io) { mock }
+      let(:cloud_io) { double }
       let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
       let(:remote_path) { File.join("my/path/test_trigger", timestamp) }
       let(:package) do
-        stub( # loaded from YAML storage file
+        double(
+          Package, # loaded from YAML storage file
           trigger: "test_trigger",
           time: timestamp
         )
       end
       let(:package_file_a) do
-        stub(marked_for_deletion?: false, slo?: true)
+        double(CloudIO::CloudFiles::Object, marked_for_deletion?: false, slo?: true)
       end
       let(:package_file_b) do
-        stub(marked_for_deletion?: false, slo?: false)
+        double(CloudIO::CloudFiles::Object, marked_for_deletion?: false, slo?: false)
       end
 
       before do
         Timecop.freeze
-        storage.stubs(:cloud_io).returns(cloud_io)
+        allow(storage).to receive(:cloud_io).and_return(cloud_io)
         storage.path = "my/path"
       end
 
       after { Timecop.return }
 
       it "removes the given package from the remote" do
-        Logger.expects(:info).with("Removing backup package dated #{timestamp}...")
+        expect(Logger).to receive(:info).with("Removing backup package dated #{timestamp}...")
 
         objects = [package_file_a, package_file_b]
-        cloud_io.expects(:objects).with(remote_path).returns(objects)
+        expect(cloud_io).to receive(:objects).with(remote_path).and_return(objects)
 
-        cloud_io.expects(:delete_slo).with([package_file_a])
-        cloud_io.expects(:delete).with([package_file_b])
+        expect(cloud_io).to receive(:delete_slo).with([package_file_a])
+        expect(cloud_io).to receive(:delete).with([package_file_b])
 
         storage.send(:remove!, package)
       end
 
       it "raises an error if remote package is missing" do
         objects = []
-        cloud_io.expects(:objects).with(remote_path).returns(objects)
-        cloud_io.expects(:delete_slo).never
-        cloud_io.expects(:delete).never
+        expect(cloud_io).to receive(:objects).with(remote_path).and_return(objects)
+        expect(cloud_io).to receive(:delete_slo).never
+        expect(cloud_io).to receive(:delete).never
 
         expect do
           storage.send(:remove!, package)

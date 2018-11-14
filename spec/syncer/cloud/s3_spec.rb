@@ -161,7 +161,7 @@ module Backup
 
     describe "#cloud_io" do
       specify "when using AWS access keys" do
-        CloudIO::S3.expects(:new).once.with(
+        expect(CloudIO::S3).to receive(:new).once.with(
           access_key_id: "my_access_key_id",
           secret_access_key: "my_secret_access_key",
           use_iam_profile: nil,
@@ -173,7 +173,7 @@ module Backup
           retry_waitsec: 30,
           chunk_size: 0,
           fog_options: nil
-        ).returns(:cloud_io)
+        ).and_return(:cloud_io)
 
         syncer = Syncer::Cloud::S3.new(&required_config)
 
@@ -182,7 +182,7 @@ module Backup
       end
 
       specify "when using AWS IAM profile" do
-        CloudIO::S3.expects(:new).once.with(
+        expect(CloudIO::S3).to receive(:new).once.with(
           access_key_id: nil,
           secret_access_key: nil,
           use_iam_profile: true,
@@ -194,7 +194,7 @@ module Backup
           retry_waitsec: 30,
           chunk_size: 0,
           fog_options: nil
-        ).returns(:cloud_io)
+        ).and_return(:cloud_io)
 
         syncer = Syncer::Cloud::S3.new(&required_iam_config)
 
@@ -204,24 +204,26 @@ module Backup
     end # describe '#cloud_io'
 
     describe "#get_remote_files" do
-      let(:cloud_io) { mock }
+      let(:cloud_io) { double }
       let(:object_a) do
-        stub(
+        double(
+          CloudIO::S3::Object,
           key: "my/path/dir_to_sync/some_dir/object_a",
           etag: "12345"
         )
       end
       let(:object_b) do
-        stub(
+        double(
+          CloudIO::S3::Object,
           key: "my/path/dir_to_sync/another_dir/object_b",
           etag: "67890"
         )
       end
-      before { syncer.stubs(:cloud_io).returns(cloud_io) }
+      before { allow(syncer).to receive(:cloud_io).and_return(cloud_io) }
 
       it "returns a hash of relative paths and checksums for remote objects" do
-        cloud_io.expects(:objects).with("my/path/dir_to_sync")
-          .returns([object_a, object_b])
+        expect(cloud_io).to receive(:objects).with("my/path/dir_to_sync")
+          .and_return([object_a, object_b])
 
         expect(
           syncer.send(:get_remote_files, "my/path/dir_to_sync")
@@ -231,7 +233,7 @@ module Backup
       end
 
       it "returns an empty hash if no remote objects are found" do
-        cloud_io.expects(:objects).returns([])
+        expect(cloud_io).to receive(:objects).and_return([])
         expect(syncer.send(:get_remote_files, "foo")).to eq({})
       end
     end # describe '#get_remote_files'

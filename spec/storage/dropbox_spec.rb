@@ -55,14 +55,14 @@ module Backup
     end # describe '#initialize'
 
     describe "#connection" do
-      let(:session) { mock }
-      let(:client)  { mock }
+      let(:session) { double }
+      let(:client)  { double }
 
       context "when a cached session exists" do
         before do
-          storage.stubs(:cached_session).returns(session)
-          storage.expects(:create_write_and_return_new_session!).never
-          DropboxClient.expects(:new).once.with(session, :app_folder).returns(client)
+          allow(storage).to receive(:cached_session).and_return(session)
+          expect(storage).to receive(:create_write_and_return_new_session!).never
+          expect(DropboxClient).to receive(:new).once.with(session, :app_folder).and_return(client)
         end
 
         it "uses the cached session to create the client" do
@@ -77,10 +77,10 @@ module Backup
 
       context "when a cached session does not exist" do
         before do
-          storage.stubs(:cached_session).returns(false)
-          Logger.expects(:info).with("Creating a new session!")
-          storage.expects(:create_write_and_return_new_session!).returns(session)
-          DropboxClient.expects(:new).once.with(session, :app_folder).returns(client)
+          allow(storage).to receive(:cached_session).and_return(false)
+          expect(Logger).to receive(:info).with("Creating a new session!")
+          expect(storage).to receive(:create_write_and_return_new_session!).and_return(session)
+          expect(DropboxClient).to receive(:new).once.with(session, :app_folder).and_return(client)
         end
 
         it "creates a new session and returns the client" do
@@ -95,8 +95,8 @@ module Backup
 
       context "when an error is raised creating a client for the session" do
         it "raises an error" do
-          storage.stubs(:cached_session).returns(true)
-          DropboxClient.expects(:new).raises("error")
+          allow(storage).to receive(:cached_session).and_return(true)
+          expect(DropboxClient).to receive(:new).and_raise("error")
 
           expect do
             storage.send(:connection)
@@ -112,7 +112,7 @@ module Backup
     end # describe '#connection'
 
     describe "#cached_session" do
-      let(:session) { mock }
+      let(:session) { double }
       let(:cached_file) { storage.send(:cached_file) }
 
       before do
@@ -121,26 +121,26 @@ module Backup
       end
 
       it "returns the cached session if one exists" do
-        File.expects(:exist?).with(cached_file).returns(true)
-        File.expects(:read).with(cached_file).returns("yaml_data")
-        DropboxSession.expects(:deserialize).with("yaml_data").returns(session)
-        Backup::Logger.expects(:info).with("Session data loaded from cache!")
+        expect(File).to receive(:exist?).with(cached_file).and_return(true)
+        expect(File).to receive(:read).with(cached_file).and_return("yaml_data")
+        expect(DropboxSession).to receive(:deserialize).with("yaml_data").and_return(session)
+        expect(Backup::Logger).to receive(:info).with("Session data loaded from cache!")
 
         expect(storage.send(:cached_session)).to be(session)
       end
 
       it "returns false when no cached session file exists" do
-        File.expects(:exist?).with(cached_file).returns(false)
+        expect(File).to receive(:exist?).with(cached_file).and_return(false)
         expect(storage.send(:cached_session)).to be false
       end
 
       context "when errors occur loading the session" do
         it "logs a warning and return false" do
-          File.expects(:exist?).with(cached_file).returns(true)
-          File.expects(:read).with(cached_file).returns("yaml_data")
-          DropboxSession.expects(:deserialize).with("yaml_data")
-            .raises("error message")
-          Logger.expects(:warn).with do |err|
+          expect(File).to receive(:exist?).with(cached_file).and_return(true)
+          expect(File).to receive(:read).with(cached_file).and_return("yaml_data")
+          expect(DropboxSession).to receive(:deserialize).with("yaml_data")
+            .and_raise("error message")
+          expect(Logger).to receive(:warn) do |err|
             expect(err).to be_an_instance_of(Storage::Dropbox::Error)
             expect(err.message).to match(
               "Could not read session data from cache.\n" \
@@ -157,19 +157,19 @@ module Backup
     end # describe '#cached_session'
 
     describe "#transfer!" do
-      let(:connection) { mock }
+      let(:connection) { double }
       let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
       let(:remote_path) { File.join("my/path/test_trigger", timestamp) }
-      let(:file) { mock }
-      let(:uploader) { mock }
+      let(:file) { double }
+      let(:uploader) { double }
 
       before do
         Timecop.freeze
         storage.package.time = timestamp
-        storage.stubs(:connection).returns(connection)
-        file.stubs(:stat).returns(stub(size: 6_291_456))
-        uploader.stubs(:total_size).returns(6_291_456)
-        uploader.stubs(:offset).returns(
+        allow(storage).to receive(:connection).and_return(connection)
+        allow(file).to receive(:stat).and_return(double(File::Stat, size: 6_291_456))
+        allow(uploader).to receive(:total_size).and_return(6_291_456)
+        allow(uploader).to receive(:offset).and_return(
           0, 2_097_152, 4_194_304, 6_291_456,
           0, 2_097_152, 4_194_304, 6_291_456
         )
@@ -180,7 +180,7 @@ module Backup
       after { Timecop.return }
 
       it "transfers the package files" do
-        storage.package.stubs(:filenames).returns(
+        allow(storage.package).to receive(:filenames).and_return(
           ["test_trigger.tar-aa", "test_trigger.tar-ab"]
         )
 
@@ -188,36 +188,36 @@ module Backup
         src = File.join(Config.tmp_path, "test_trigger.tar-aa")
         dest = File.join(remote_path, "test_trigger.tar-aa")
 
-        Logger.expects(:info).in_sequence(s).with("Storing '#{dest}'...")
-        File.expects(:open).in_sequence(s).with(src, "r").yields(file)
-        connection.expects(:get_chunked_uploader).in_sequence(s)
-          .with(file, 6_291_456).returns(uploader)
-        uploader.expects(:upload).in_sequence(s).times(3).with(2_097_152)
-        uploader.expects(:finish).in_sequence(s).with(dest)
+        expect(Logger).to receive(:info).ordered.with("Storing '#{dest}'...")
+        expect(File).to receive(:open).ordered.with(src, "r").and_yield(file)
+        expect(connection).to receive(:get_chunked_uploader).ordered
+          .with(file, 6_291_456).and_return(uploader)
+        expect(uploader).to receive(:upload).ordered.exactly(3).times.with(2_097_152)
+        expect(uploader).to receive(:finish).ordered.with(dest)
 
         # second file
         src = File.join(Config.tmp_path, "test_trigger.tar-ab")
         dest = File.join(remote_path, "test_trigger.tar-ab")
 
-        Logger.expects(:info).in_sequence(s).with("Storing '#{dest}'...")
-        File.expects(:open).in_sequence(s).with(src, "r").yields(file)
-        connection.expects(:get_chunked_uploader).in_sequence(s)
-          .with(file, 6_291_456).returns(uploader)
-        uploader.expects(:upload).in_sequence(s).times(3).with(2_097_152)
-        uploader.expects(:finish).in_sequence(s).with(dest)
+        expect(Logger).to receive(:info).ordered.with("Storing '#{dest}'...")
+        expect(File).to receive(:open).ordered.with(src, "r").and_yield(file)
+        expect(connection).to receive(:get_chunked_uploader).ordered
+          .with(file, 6_291_456).and_return(uploader)
+        expect(uploader).to receive(:upload).ordered.exactly(3).times.with(2_097_152)
+        expect(uploader).to receive(:finish).ordered.with(dest)
 
         storage.send(:transfer!)
       end
 
       it "retries on errors" do
         storage.max_retries = 1
-        storage.package.stubs(:filenames).returns(["test_trigger.tar"])
+        allow(storage.package).to receive(:filenames).and_return(["test_trigger.tar"])
 
         src = File.join(Config.tmp_path, "test_trigger.tar")
         dest = File.join(remote_path, "test_trigger.tar")
 
         @logger_calls = 0
-        Logger.expects(:info).times(3).with do |arg|
+        expect(Logger).to receive(:info).exactly(3).times do |arg|
           @logger_calls += 1
           case @logger_calls
           when 1
@@ -237,34 +237,34 @@ module Backup
           end
         end
 
-        File.expects(:open).in_sequence(s).with(src, "r").yields(file)
-        connection.expects(:get_chunked_uploader).in_sequence(s)
-          .with(file, 6_291_456).returns(uploader)
+        expect(File).to receive(:open).ordered.with(src, "r").and_yield(file)
+        expect(connection).to receive(:get_chunked_uploader).ordered
+          .with(file, 6_291_456).and_return(uploader)
 
-        uploader.expects(:upload).in_sequence(s).raises("chunk failed")
+        expect(uploader).to receive(:upload).ordered.and_raise("chunk failed")
 
-        storage.expects(:sleep).in_sequence(s).with(30)
+        expect(storage).to receive(:sleep).ordered.with(30)
 
-        uploader.expects(:upload).in_sequence(s).times(3).with(2_097_152)
+        expect(uploader).to receive(:upload).ordered.exactly(3).times.with(2_097_152)
 
-        uploader.expects(:finish).in_sequence(s).with(dest).raises("finish failed")
+        expect(uploader).to receive(:finish).ordered.with(dest).and_raise("finish failed")
 
-        storage.expects(:sleep).in_sequence(s).with(30)
+        expect(storage).to receive(:sleep).ordered.with(30)
 
-        uploader.expects(:finish).in_sequence(s).with(dest)
+        expect(uploader).to receive(:finish).ordered.with(dest)
 
         storage.send(:transfer!)
       end
 
       it "fails when retries are exceeded" do
         storage.max_retries = 2
-        storage.package.stubs(:filenames).returns(["test_trigger.tar"])
+        allow(storage.package).to receive(:filenames).and_return(["test_trigger.tar"])
 
         src = File.join(Config.tmp_path, "test_trigger.tar")
         dest = File.join(remote_path, "test_trigger.tar")
 
         @logger_calls = 0
-        Logger.expects(:info).times(3).with do |arg|
+        expect(Logger).to receive(:info).exactly(3).times do |arg|
           @logger_calls += 1
           case @logger_calls
           when 1
@@ -284,21 +284,21 @@ module Backup
           end
         end
 
-        File.expects(:open).in_sequence(s).with(src, "r").yields(file)
-        connection.expects(:get_chunked_uploader).in_sequence(s)
-          .with(file, 6_291_456).returns(uploader)
+        expect(File).to receive(:open).ordered.with(src, "r").and_yield(file)
+        expect(connection).to receive(:get_chunked_uploader).ordered
+          .with(file, 6_291_456).and_return(uploader)
 
-        uploader.expects(:upload).in_sequence(s).raises("chunk failed")
+        expect(uploader).to receive(:upload).ordered.and_raise("chunk failed")
 
-        storage.expects(:sleep).in_sequence(s).with(30)
+        expect(storage).to receive(:sleep).ordered.with(30)
 
-        uploader.expects(:upload).in_sequence(s).raises("chunk failed again")
+        expect(uploader).to receive(:upload).ordered.and_raise("chunk failed again")
 
-        storage.expects(:sleep).in_sequence(s).with(30)
+        expect(storage).to receive(:sleep).ordered.with(30)
 
-        uploader.expects(:upload).in_sequence(s).raises("strike three")
+        expect(uploader).to receive(:upload).ordered.and_raise("strike three")
 
-        uploader.expects(:finish).never
+        expect(uploader).to receive(:finish).never
 
         expect do
           storage.send(:transfer!)
@@ -310,11 +310,12 @@ module Backup
     end # describe '#transfer!'
 
     describe "#remove!" do
-      let(:connection) { mock }
+      let(:connection) { double }
       let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
       let(:remote_path) { File.join("my/path/test_trigger", timestamp) }
       let(:package) do
-        stub( # loaded from YAML storage file
+        double(
+          Package, # loaded from YAML storage file
           trigger: "test_trigger",
           time: timestamp
         )
@@ -322,17 +323,17 @@ module Backup
 
       before do
         Timecop.freeze
-        storage.stubs(:connection).returns(connection)
+        allow(storage).to receive(:connection).and_return(connection)
         storage.path = "my/path"
       end
 
       after { Timecop.return }
 
       it "removes the given package from the remote" do
-        Logger.expects(:info).in_sequence(s)
+        expect(Logger).to receive(:info).ordered
           .with("Removing backup package dated #{timestamp}...")
 
-        connection.expects(:file_delete).with(remote_path)
+        expect(connection).to receive(:file_delete).with(remote_path)
 
         storage.send(:remove!, package)
       end
@@ -368,7 +369,7 @@ module Backup
 
       context "with custom root_path" do
         before do
-          File.stubs(directory?: true)
+          allow(File).to receive(:directory?).and_return(true)
           Config.send(:update, root_path: "/my_root")
         end
 
@@ -395,59 +396,59 @@ module Backup
     end # describe '#cached_file'
 
     describe "#write_cache!" do
-      let(:session) { mock }
+      let(:session) { double }
       let(:cached_file) { storage.send(:cached_file) }
-      let(:file) { mock }
+      let(:file) { double }
 
       before do
         storage.api_key = "my_api_key"
         storage.api_secret = "my_api_secret"
-        session.stubs(:serialize).returns("serialized_data")
+        allow(session).to receive(:serialize).and_return("serialized_data")
       end
 
       it "should write a serialized session to file" do
-        FileUtils.expects(:mkdir_p).with(File.dirname(cached_file))
+        expect(FileUtils).to receive(:mkdir_p).with(File.dirname(cached_file))
 
-        File.expects(:open).with(cached_file, "w").yields(file)
-        file.expects(:write).with("serialized_data")
+        expect(File).to receive(:open).with(cached_file, "w").and_yield(file)
+        expect(file).to receive(:write).with("serialized_data")
 
         storage.send(:write_cache!, session)
       end
     end # describe '#write_cache!'
 
     describe "#create_write_and_return_new_session!" do
-      let(:session)   { mock }
-      let(:template)  { mock }
+      let(:session)   { double }
+      let(:template)  { double }
       let(:cached_file) { storage.send(:cached_file) }
 
       before do
         storage.api_key = "my_api_key"
         storage.api_secret = "my_api_secret"
 
-        DropboxSession.expects(:new).in_sequence(s)
-          .with("my_api_key", "my_api_secret").returns(session)
-        session.expects(:get_request_token).in_sequence(s)
-        Template.expects(:new).in_sequence(s).with(
+        expect(DropboxSession).to receive(:new).ordered
+          .with("my_api_key", "my_api_secret").and_return(session)
+        expect(session).to receive(:get_request_token).ordered
+        expect(Template).to receive(:new).ordered.with(
           session: session, cached_file: cached_file
-        ).returns(template)
-        template.expects(:render).in_sequence(s).with(
+        ).and_return(template)
+        expect(template).to receive(:render).ordered.with(
           "storage/dropbox/authorization_url.erb"
         )
-        Timeout.expects(:timeout).in_sequence(s).with(180).yields
-        STDIN.expects(:gets).in_sequence(s)
+        expect(Timeout).to receive(:timeout).ordered.with(180).and_yield
+        expect(STDIN).to receive(:gets).ordered
       end
 
       context "when session is authenticated" do
         before do
-          session.expects(:get_access_token).in_sequence(s)
+          expect(session).to receive(:get_access_token).ordered
         end
 
         it "caches and returns the new session" do
-          template.expects(:render).in_sequence(s).with(
+          expect(template).to receive(:render).ordered.with(
             "storage/dropbox/authorized.erb"
           )
-          storage.expects(:write_cache!).in_sequence(s).with(session)
-          template.expects(:render).in_sequence(s).with(
+          expect(storage).to receive(:write_cache!).ordered.with(session)
+          expect(template).to receive(:render).ordered.with(
             "storage/dropbox/cache_file_written.erb"
           )
 
@@ -457,13 +458,13 @@ module Backup
 
       context "when session is not authenticated" do
         before do
-          session.expects(:get_access_token).in_sequence(s).raises("error message")
+          expect(session).to receive(:get_access_token).ordered.and_raise("error message")
         end
 
         it "raises an error" do
-          template.expects(:render).with("storage/dropbox/authorized.erb").never
-          storage.expects(:write_cache!).never
-          template.expects(:render).with("storage/dropbox/cache_file_written.erb").never
+          expect(template).to receive(:render).with("storage/dropbox/authorized.erb").never
+          expect(storage).to receive(:write_cache!).never
+          expect(template).to receive(:render).with("storage/dropbox/cache_file_written.erb").never
 
           expect do
             storage.send(:create_write_and_return_new_session!)

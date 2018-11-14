@@ -12,10 +12,10 @@ module Backup
     let(:s) { sequence "" }
 
     before do
-      Database::Redis.any_instance.stubs(:utility)
-        .with("redis-cli").returns("redis-cli")
-      Database::Redis.any_instance.stubs(:utility)
-        .with(:cat).returns("cat")
+      allow_any_instance_of(Database::Redis).to receive(:utility)
+        .with("redis-cli").and_return("redis-cli")
+      allow_any_instance_of(Database::Redis).to receive(:utility)
+        .with(:cat).and_return("cat")
     end
 
     it_behaves_like "a class that includes Config::Helpers" do
@@ -83,8 +83,8 @@ module Backup
 
     describe "#perform!" do
       before do
-        db.expects(:log!).in_sequence(s).with(:started)
-        db.expects(:prepare!).in_sequence(s)
+        expect(db).to receive(:log!).ordered.with(:started)
+        expect(db).to receive(:prepare!).ordered
       end
 
       context "when mode is :sync" do
@@ -93,9 +93,9 @@ module Backup
         end
 
         it "uses sync!" do
-          Logger.expects(:configure).in_sequence(s)
-          db.expects(:sync!).in_sequence(s)
-          db.expects(:log!).in_sequence(s).with(:finished)
+          expect(Logger).to receive(:configure).ordered
+          expect(db).to receive(:sync!).ordered
+          expect(db).to receive(:log!).ordered.with(:finished)
           db.perform!
         end
       end
@@ -107,10 +107,10 @@ module Backup
 
         context "when :invoke_save is false" do
           it "calls copy! without save!" do
-            Logger.expects(:configure).never
-            db.expects(:save!).never
-            db.expects(:copy!).in_sequence(s)
-            db.expects(:log!).in_sequence(s).with(:finished)
+            expect(Logger).to receive(:configure).never
+            expect(db).to receive(:save!).never
+            expect(db).to receive(:copy!).ordered
+            expect(db).to receive(:log!).ordered.with(:finished)
             db.perform!
           end
         end
@@ -121,10 +121,10 @@ module Backup
           end
 
           it "calls save! before copy!" do
-            Logger.expects(:configure).never
-            db.expects(:save!).in_sequence(s)
-            db.expects(:copy!).in_sequence(s)
-            db.expects(:log!).in_sequence(s).with(:finished)
+            expect(Logger).to receive(:configure).never
+            expect(db).to receive(:save!).ordered
+            expect(db).to receive(:copy!).ordered
+            expect(db).to receive(:log!).ordered.with(:finished)
             db.perform!
           end
         end
@@ -132,26 +132,26 @@ module Backup
     end # describe '#perform!'
 
     describe "#sync!" do
-      let(:pipeline) { mock }
-      let(:compressor) { mock }
+      let(:pipeline) { double }
+      let(:compressor) { double }
 
       before do
-        db.stubs(:redis_cli_cmd).returns("redis_cli_cmd")
-        db.stubs(:dump_path).returns("/tmp/trigger/databases")
+        allow(db).to receive(:redis_cli_cmd).and_return("redis_cli_cmd")
+        allow(db).to receive(:dump_path).and_return("/tmp/trigger/databases")
       end
 
       context "without a compressor" do
         it "packages the dump without compression" do
-          Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+          expect(Pipeline).to receive(:new).ordered.and_return(pipeline)
 
-          pipeline.expects(:<<).in_sequence(s).with("redis_cli_cmd --rdb -")
+          expect(pipeline).to receive(:<<).ordered.with("redis_cli_cmd --rdb -")
 
-          pipeline.expects(:<<).in_sequence(s).with(
+          expect(pipeline).to receive(:<<).ordered.with(
             "cat > '/tmp/trigger/databases/Redis.rdb'"
           )
 
-          pipeline.expects(:run).in_sequence(s)
-          pipeline.expects(:success?).in_sequence(s).returns(true)
+          expect(pipeline).to receive(:run).ordered
+          expect(pipeline).to receive(:success?).ordered.and_return(true)
 
           db.send(:sync!)
         end
@@ -159,23 +159,23 @@ module Backup
 
       context "with a compressor" do
         before do
-          model.stubs(:compressor).returns(compressor)
-          compressor.stubs(:compress_with).yields("cmp_cmd", ".cmp_ext")
+          allow(model).to receive(:compressor).and_return(compressor)
+          allow(compressor).to receive(:compress_with).and_yield("cmp_cmd", ".cmp_ext")
         end
 
         it "packages the dump with compression" do
-          Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+          expect(Pipeline).to receive(:new).ordered.and_return(pipeline)
 
-          pipeline.expects(:<<).in_sequence(s).with("redis_cli_cmd --rdb -")
+          expect(pipeline).to receive(:<<).ordered.with("redis_cli_cmd --rdb -")
 
-          pipeline.expects(:<<).in_sequence(s).with("cmp_cmd")
+          expect(pipeline).to receive(:<<).ordered.with("cmp_cmd")
 
-          pipeline.expects(:<<).in_sequence(s).with(
+          expect(pipeline).to receive(:<<).ordered.with(
             "cat > '/tmp/trigger/databases/Redis.rdb.cmp_ext'"
           )
 
-          pipeline.expects(:run).in_sequence(s)
-          pipeline.expects(:success?).in_sequence(s).returns(true)
+          expect(pipeline).to receive(:run).ordered
+          expect(pipeline).to receive(:success?).ordered.and_return(true)
 
           db.send(:sync!)
         end
@@ -183,8 +183,8 @@ module Backup
 
       context "when the pipeline fails" do
         before do
-          Pipeline.any_instance.stubs(:success?).returns(false)
-          Pipeline.any_instance.stubs(:error_messages).returns("error messages")
+          allow_any_instance_of(Pipeline).to receive(:success?).and_return(false)
+          allow_any_instance_of(Pipeline).to receive(:error_messages).and_return("error messages")
         end
 
         it "raises an error" do
@@ -201,7 +201,7 @@ module Backup
 
     describe "#save!" do
       before do
-        db.stubs(:redis_cli_cmd).returns("redis_cli_cmd")
+        allow(db).to receive(:redis_cli_cmd).and_return("redis_cli_cmd")
       end
 
       # the redis docs say this returns "+OK\n", although it appears
@@ -209,12 +209,12 @@ module Backup
       # so a successful response should =~ /OK$/
 
       specify "when response is OK" do
-        db.expects(:run).with("redis_cli_cmd SAVE").returns("+OK")
+        expect(db).to receive(:run).with("redis_cli_cmd SAVE").and_return("+OK")
         db.send(:save!)
       end
 
       specify "when response is not OK" do
-        db.expects(:run).with("redis_cli_cmd SAVE").returns("No OK Returned")
+        expect(db).to receive(:run).with("redis_cli_cmd SAVE").and_return("No OK Returned")
         expect do
           db.send(:save!)
         end.to raise_error(Database::Redis::Error) { |err|
@@ -224,9 +224,9 @@ module Backup
       end
 
       specify "retries if save already in progress" do
-        db.expects(:run).with("redis_cli_cmd SAVE").times(5)
-          .returns("Background save already in progress")
-        db.expects(:sleep).with(5).times(4)
+        expect(db).to receive(:run).with("redis_cli_cmd SAVE").exactly(5).times
+          .and_return("Background save already in progress")
+        expect(db).to receive(:sleep).with(5).exactly(4).times
         expect do
           db.send(:save!)
         end.to raise_error(Database::Redis::Error) { |err|
@@ -240,31 +240,31 @@ module Backup
 
     describe "#copy!" do
       before do
-        db.stubs(:dump_path).returns("/tmp/trigger/databases")
+        allow(db).to receive(:dump_path).and_return("/tmp/trigger/databases")
         db.rdb_path = "/var/lib/redis/dump.rdb"
       end
 
       context "when the redis dump file exists" do
         before do
-          File.expects(:exist?).in_sequence(s).with(
+          expect(File).to receive(:exist?).ordered.with(
             "/var/lib/redis/dump.rdb"
-          ).returns(true)
+          ).and_return(true)
         end
 
         context "when a compressor is configured" do
-          let(:compressor) { mock }
+          let(:compressor) { double }
 
           before do
-            model.stubs(:compressor).returns(compressor)
-            compressor.stubs(:compress_with).yields("cmp_cmd", ".cmp_ext")
+            allow(model).to receive(:compressor).and_return(compressor)
+            allow(compressor).to receive(:compress_with).and_yield("cmp_cmd", ".cmp_ext")
           end
 
           it "should copy the redis dump file with compression" do
-            db.expects(:run).in_sequence(s).with(
+            expect(db).to receive(:run).ordered.with(
               "cmp_cmd -c '/var/lib/redis/dump.rdb' > " \
               "'/tmp/trigger/databases/Redis.rdb.cmp_ext'"
             )
-            FileUtils.expects(:cp).never
+            expect(FileUtils).to receive(:cp).never
 
             db.send(:copy!)
           end
@@ -272,10 +272,10 @@ module Backup
 
         context "when no compressor is configured" do
           it "should copy the redis dump file without compression" do
-            FileUtils.expects(:cp).in_sequence(s).with(
+            expect(FileUtils).to receive(:cp).ordered.with(
               "/var/lib/redis/dump.rdb", "/tmp/trigger/databases/Redis.rdb"
             )
-            db.expects(:run).never
+            expect(db).to receive(:run).never
 
             db.send(:copy!)
           end
@@ -284,9 +284,9 @@ module Backup
 
       context "when the redis dump file does not exist" do
         it "raises an error" do
-          File.expects(:exist?).in_sequence(s).with(
+          expect(File).to receive(:exist?).ordered.with(
             "/var/lib/redis/dump.rdb"
-          ).returns(false)
+          ).and_return(false)
 
           expect do
             db.send(:copy!)
@@ -303,14 +303,14 @@ module Backup
       end
 
       it "returns full redis-cli command built from all options" do
-        option_methods.each { |name| db.stubs(name).returns(name) }
+        option_methods.each { |name| allow(db).to receive(name).and_return(name) }
         expect(db.send(:redis_cli_cmd)).to eq(
           "redis-cli #{option_methods.join(" ")}"
         )
       end
 
       it "handles nil values from option methods" do
-        option_methods.each { |name| db.stubs(name).returns(nil) }
+        option_methods.each { |name| allow(db).to receive(name).and_return(nil) }
         expect(db.send(:redis_cli_cmd)).to eq(
           "redis-cli #{(" " * (option_methods.count - 1))}"
         )

@@ -54,21 +54,21 @@ module Backup
 
       context "when status is :success" do
         it "sends a success message" do
-          notifier.expects(:send_message).with(message % "Success")
+          expect(notifier).to receive(:send_message).with(message % "Success")
           notifier.send(:notify!, :success)
         end
       end
 
       context "when status is :warning" do
         it "sends a warning message" do
-          notifier.expects(:send_message).with(message % "Warning")
+          expect(notifier).to receive(:send_message).with(message % "Warning")
           notifier.send(:notify!, :warning)
         end
       end
 
       context "when status is :failure" do
         it "sends a failure message" do
-          notifier.expects(:send_message).with(message % "Failure")
+          expect(notifier).to receive(:send_message).with(message % "Failure")
           notifier.send(:notify!, :failure)
         end
       end
@@ -85,16 +85,16 @@ module Backup
       end
 
       it "sends a message" do
-        client = mock
-        config = mock
+        client = double
+        config = double
 
-        ::Twitter::REST::Client.expects(:new).yields(config).returns(client)
-        config.expects(:consumer_key=).with("my_consumer_key")
-        config.expects(:consumer_secret=).with("my_consumer_secret")
-        config.expects(:access_token=).with("my_oauth_token")
-        config.expects(:access_token_secret=).with("my_oauth_token_secret")
+        expect(::Twitter::REST::Client).to receive(:new).and_yield(config).and_return(client)
+        expect(config).to receive(:consumer_key=).with("my_consumer_key")
+        expect(config).to receive(:consumer_secret=).with("my_consumer_secret")
+        expect(config).to receive(:access_token=).with("my_oauth_token")
+        expect(config).to receive(:access_token_secret=).with("my_oauth_token_secret")
 
-        client.expects(:update).with("a message")
+        expect(client).to receive(:update).with("a message")
 
         notifier.send(:send_message, "a message")
       end

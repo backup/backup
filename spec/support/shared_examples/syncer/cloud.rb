@@ -15,7 +15,7 @@ shared_examples "a subclass of Syncer::Cloud::Base" do
 
   describe "#perform" do
     let(:syncer) { described_class.new(&required_config) }
-    let(:cloud_io) { mock }
+    let(:cloud_io) { double }
     let(:find_md5_data) do
       [
         ["/local/path/sync_dir/unchanged_01",          "unchanged_01_md5"],
@@ -43,18 +43,18 @@ shared_examples "a subclass of Syncer::Cloud::Base" do
     before do
       syncer.path = "my_backups"
       syncer.directories { add "/local/path/sync_dir" }
-      syncer.stubs(:cloud_io).returns(cloud_io)
-      cloud_io.stubs(:upload)
-      cloud_io.stubs(:delete)
-      File.stubs(:exist?).returns(true)
+      allow(syncer).to receive(:cloud_io).and_return(cloud_io)
+      allow(cloud_io).to receive(:upload)
+      allow(cloud_io).to receive(:delete)
+      allow(File).to receive(:exist?).and_return(true)
     end
 
     context "when no local or remote files are found" do
       before do
-        syncer.stubs(:get_remote_files)
-          .with("my_backups/sync_dir").returns({})
-        Backup::Syncer::Cloud::LocalFile.expects(:find_md5)
-          .with("/local/path/sync_dir", []).returns([])
+        allow(syncer).to receive(:get_remote_files)
+          .with("my_backups/sync_dir").and_return({})
+        expect(Backup::Syncer::Cloud::LocalFile).to receive(:find_md5)
+          .with("/local/path/sync_dir", []).and_return([])
       end
 
       it "does not attempt to sync" do
@@ -82,10 +82,10 @@ shared_examples "a subclass of Syncer::Cloud::Base" do
 
     context "without threads" do
       before do
-        syncer.stubs(:get_remote_files)
-          .with("my_backups/sync_dir").returns(remote_files_data)
-        Backup::Syncer::Cloud::LocalFile.expects(:find_md5)
-          .with("/local/path/sync_dir", []).returns(find_md5_data)
+        allow(syncer).to receive(:get_remote_files)
+          .with("my_backups/sync_dir").and_return(remote_files_data)
+        expect(Backup::Syncer::Cloud::LocalFile).to receive(:find_md5)
+          .with("/local/path/sync_dir", []).and_return(find_md5_data)
       end
 
       context "without mirror" do
@@ -148,7 +148,7 @@ shared_examples "a subclass of Syncer::Cloud::Base" do
         end
 
         it "warns if delete fails" do
-          cloud_io.stubs(:delete).raises("Delete Error")
+          allow(cloud_io).to receive(:delete).and_raise("Delete Error")
 
           expected_messages = <<-EOS.gsub(/^ +/, "").chomp
             #{syncer_name} Started...
@@ -181,9 +181,9 @@ shared_examples "a subclass of Syncer::Cloud::Base" do
       end # context 'with mirror'
 
       it "skips files that are too large" do
-        cloud_io.stubs(:upload).with(
+        allow(cloud_io).to receive(:upload).with(
           "/local/path/sync_dir/changed_01", "my_backups/sync_dir/changed_01"
-        ).raises(Backup::CloudIO::FileSizeError)
+        ).and_raise(Backup::CloudIO::FileSizeError)
 
         expected_messages = <<-EOS.gsub(/^ +/, "").chomp
           #{syncer_name} Started...
@@ -216,8 +216,8 @@ shared_examples "a subclass of Syncer::Cloud::Base" do
       end
 
       it "logs and raises error on upload failure" do
-        cloud_io.stubs(:upload).raises("upload failure")
-        Backup::Logger.expects(:error).with do |err|
+        allow(cloud_io).to receive(:upload).and_raise("upload failure")
+        expect(Backup::Logger).to receive(:error) do |err|
           expect(err.message).to eq "upload failure"
         end
         expect do
@@ -228,13 +228,13 @@ shared_examples "a subclass of Syncer::Cloud::Base" do
 
     context "with threads" do
       before do
-        syncer.stubs(:get_remote_files)
-          .with("my_backups/sync_dir").returns(remote_files_data)
-        Backup::Syncer::Cloud::LocalFile.expects(:find_md5)
-          .with("/local/path/sync_dir", []).returns(find_md5_data)
+        allow(syncer).to receive(:get_remote_files)
+          .with("my_backups/sync_dir").and_return(remote_files_data)
+        expect(Backup::Syncer::Cloud::LocalFile).to receive(:find_md5)
+          .with("/local/path/sync_dir", []).and_return(find_md5_data)
 
         syncer.thread_count = 20
-        syncer.stubs(:sleep) # quicker tests
+        allow(syncer).to receive(:sleep) # quicker tests
       end
 
       context "without mirror" do
@@ -300,7 +300,7 @@ shared_examples "a subclass of Syncer::Cloud::Base" do
         end
 
         it "warns if delete fails" do
-          cloud_io.stubs(:delete).raises("Delete Error")
+          allow(cloud_io).to receive(:delete).and_raise("Delete Error")
 
           expected_tail = <<-EOS.gsub(/^ +/, "").chomp
             Summary:
@@ -325,9 +325,9 @@ shared_examples "a subclass of Syncer::Cloud::Base" do
       end # context 'with mirror'
 
       it "skips files that are too large" do
-        cloud_io.stubs(:upload).with(
+        allow(cloud_io).to receive(:upload).with(
           "/local/path/sync_dir/changed_01", "my_backups/sync_dir/changed_01"
-        ).raises(Backup::CloudIO::FileSizeError)
+        ).and_raise(Backup::CloudIO::FileSizeError)
 
         expected_tail = <<-EOS.gsub(/^ +/, "").chomp
           Summary:
@@ -352,8 +352,8 @@ shared_examples "a subclass of Syncer::Cloud::Base" do
       end
 
       it "logs and raises error on upload failure" do
-        cloud_io.stubs(:upload).raises("upload failure")
-        Backup::Logger.expects(:error).at_least_once.with do |err|
+        allow(cloud_io).to receive(:upload).and_raise("upload failure")
+        expect(Backup::Logger).to receive(:error).at_least(1).times do |err|
           expect(err.message).to eq "upload failure"
         end
         expect do

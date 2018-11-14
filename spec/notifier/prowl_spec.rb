@@ -58,7 +58,7 @@ module Backup
 
       context "when status is :success" do
         it "sends a success message" do
-          Excon.expects(:post).with(
+          expect(Excon).to receive(:post).with(
             "https://api.prowlapp.com/publicapi/add",
             headers: { "Content-Type" => "application/x-www-form-urlencoded" },
 body: form_data.sub("STATUS", "Success"),
@@ -71,7 +71,7 @@ expects: 200
 
       context "when status is :warning" do
         it "sends a warning message" do
-          Excon.expects(:post).with(
+          expect(Excon).to receive(:post).with(
             "https://api.prowlapp.com/publicapi/add",
             headers: { "Content-Type" => "application/x-www-form-urlencoded" },
 body: form_data.sub("STATUS", "Warning"),
@@ -84,7 +84,7 @@ expects: 200
 
       context "when status is :failure" do
         it "sends a failure message" do
-          Excon.expects(:post).with(
+          expect(Excon).to receive(:post).with(
             "https://api.prowlapp.com/publicapi/add",
             headers: { "Content-Type" => "application/x-www-form-urlencoded" },
 body: form_data.sub("STATUS", "Failure"),

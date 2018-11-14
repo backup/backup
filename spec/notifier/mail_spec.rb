@@ -6,10 +6,10 @@ module Backup
     let(:notifier) { Notifier::Mail.new(model) }
 
     before do
-      Notifier::Mail.any_instance.stubs(:utility)
-        .with(:sendmail).returns("/path/to/sendmail")
-      Notifier::Mail.any_instance.stubs(:utility)
-        .with(:exim).returns("/path/to/exim")
+      allow_any_instance_of(Notifier::Mail).to receive(:utility)
+        .with(:sendmail).and_return("/path/to/sendmail")
+      allow_any_instance_of(Notifier::Mail).to receive(:utility)
+        .with(:exim).and_return("/path/to/exim")
     end
 
     it_behaves_like "a class that includes Config::Helpers"
@@ -108,15 +108,15 @@ module Backup
 
         ::Mail::TestMailer.deliveries.clear
 
-        Logger.stubs(:messages).returns([
-          stub(formatted_lines: ["line 1", "line 2"]),
-          stub(formatted_lines: ["line 3"])
+        allow(Logger).to receive(:messages).and_return([
+          double(Logger::Message, formatted_lines: ["line 1", "line 2"]),
+          double(Logger::Message, formatted_lines: ["line 3"])
         ])
 
         time = Time.now
-        model.stubs(:time).returns(time.strftime("%Y.%m.%d.%H.%M.%S"))
-        model.stubs(:started_at).returns(time)
-        model.stubs(:finished_at).returns(time + 5)
+        allow(model).to receive(:time).and_return(time.strftime("%Y.%m.%d.%H.%M.%S"))
+        allow(model).to receive(:started_at).and_return(time)
+        allow(model).to receive(:finished_at).and_return(time + 5)
       end
 
       context "when status is :success" do

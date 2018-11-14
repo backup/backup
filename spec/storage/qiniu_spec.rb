@@ -33,7 +33,7 @@ module Backup
       end
 
       it "establishes connection" do
-        ::Qiniu.expects(:establish_connection!).with(access_key: "my_access_key", secret_key: "my_secret_key")
+        expect(::Qiniu).to receive(:establish_connection!).with(access_key: "my_access_key", secret_key: "my_secret_key")
 
         pre_config = required_config
         Storage::Qiniu.new(model) do |qiniu|
@@ -50,12 +50,12 @@ module Backup
       before do
         Timecop.freeze
         storage.package.time = timestamp
-        storage.package.stubs(:filenames).returns(
+        allow(storage.package).to receive(:filenames).and_return(
           ["test_trigger.tar-aa", "test_trigger.tar-ab"]
         )
         storage.path = "my/path"
 
-        ::Qiniu.stubs(:generate_upload_token).returns(uptoken)
+        allow(::Qiniu).to receive(:generate_upload_token).and_return(uptoken)
       end
 
       after { Timecop.return }
@@ -64,8 +64,8 @@ module Backup
         src = File.join(Config.tmp_path, "test_trigger.tar-aa")
         dest = File.join(remote_path, "test_trigger.tar-aa")
 
-        Logger.expects(:info).in_sequence(s).with("Storing '#{dest}'...")
-        ::Qiniu.expects(:upload_file).in_sequence(s).with(uptoken: uptoken,
+        expect(Logger).to receive(:info).ordered.with("Storing '#{dest}'...")
+        expect(::Qiniu).to receive(:upload_file).ordered.with(uptoken: uptoken,
                                                           bucket: "my_bucket",
                                                           file: src,
                                                           key: dest)
@@ -73,8 +73,8 @@ module Backup
         src = File.join(Config.tmp_path, "test_trigger.tar-ab")
         dest = File.join(remote_path, "test_trigger.tar-ab")
 
-        Logger.expects(:info).in_sequence(s).with("Storing '#{dest}'...")
-        ::Qiniu.expects(:upload_file).in_sequence(s).with(uptoken: uptoken,
+        expect(Logger).to receive(:info).ordered.with("Storing '#{dest}'...")
+        expect(::Qiniu).to receive(:upload_file).ordered.with(uptoken: uptoken,
                                                           bucket: "my_bucket",
                                                           file: src,
                                                           key: dest)
@@ -88,7 +88,8 @@ module Backup
       let(:remote_path) { File.join("my/path/test_trigger", timestamp) }
       let(:uptoken) { "uptoken" }
       let(:package) do
-        stub( # loaded from YAML storage file
+        double(
+          Package, # loaded from YAML storage file
           trigger: "test_trigger",
           time: timestamp,
           filenames: ["test_trigger.tar-aa", "test_trigger.tar-ab"]
@@ -103,13 +104,13 @@ module Backup
       after { Timecop.return }
 
       it "removes the given package from the remote" do
-        Logger.expects(:info).in_sequence(s).with("Removing backup package dated #{timestamp}...")
+        expect(Logger).to receive(:info).ordered.with("Removing backup package dated #{timestamp}...")
 
         dest = File.join(remote_path, "test_trigger.tar-aa")
-        ::Qiniu.expects(:delete).in_sequence(s).with("my_bucket", dest)
+        expect(::Qiniu).to receive(:delete).ordered.with("my_bucket", dest)
 
         dest = File.join(remote_path, "test_trigger.tar-ab")
-        ::Qiniu.expects(:delete).in_sequence(s).with("my_bucket", dest)
+        expect(::Qiniu).to receive(:delete).ordered.with("my_bucket", dest)
 
         storage.send(:remove!, package)
       end

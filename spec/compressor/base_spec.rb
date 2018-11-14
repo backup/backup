@@ -18,7 +18,7 @@ describe Backup::Compressor::Base do
       compressor.instance_variable_set(:@cmd, "compressor command")
       compressor.instance_variable_set(:@ext, "compressor extension")
 
-      compressor.expects(:log!)
+      expect(compressor).to receive(:log!)
 
       compressor.compress_with do |cmd, ext|
         expect(cmd).to eq("compressor command")
@@ -37,9 +37,9 @@ describe Backup::Compressor::Base do
     it "should log a message" do
       compressor.instance_variable_set(:@cmd, "compressor command")
       compressor.instance_variable_set(:@ext, "compressor extension")
-      compressor.expects(:compressor_name).returns("Compressor Name")
+      expect(compressor).to receive(:compressor_name).and_return("Compressor Name")
 
-      Backup::Logger.expects(:info).with(
+      expect(Backup::Logger).to receive(:info).with(
         "Using Compressor Name for compression.\n" \
         "  Command: 'compressor command'\n" \
         "  Ext: 'compressor extension'"

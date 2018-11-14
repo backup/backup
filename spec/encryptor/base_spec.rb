@@ -15,7 +15,7 @@ describe Backup::Encryptor::Base do
 
   describe "#initialize" do
     it "should load defaults" do
-      Backup::Encryptor::Base.any_instance.expects(:load_defaults!)
+      expect_any_instance_of(Backup::Encryptor::Base).to receive(:load_defaults!)
       base
     end
   end
@@ -28,8 +28,8 @@ describe Backup::Encryptor::Base do
 
   describe "#log!" do
     it "should log a message" do
-      base.expects(:encryptor_name).returns("Encryptor Name")
-      Backup::Logger.expects(:info).with(
+      expect(base).to receive(:encryptor_name).and_return("Encryptor Name")
+      expect(Backup::Logger).to receive(:info).with(
         "Using Encryptor Name to encrypt the archive."
       )
       base.send(:log!)

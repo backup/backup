@@ -3,10 +3,10 @@ require "spec_helper"
 module Backup
   describe Syncer::RSync::Pull do
     before do
-      Syncer::RSync::Pull.any_instance
-        .stubs(:utility).with(:rsync).returns("rsync")
-      Syncer::RSync::Pull.any_instance
-        .stubs(:utility).with(:ssh).returns("ssh")
+      allow_any_instance_of(Syncer::RSync::Pull).to \
+        receive(:utility).with(:rsync).and_return("rsync")
+      allow_any_instance_of(Syncer::RSync::Pull).to \
+        receive(:utility).with(:ssh).and_return("ssh")
     end
 
     describe "#perform!" do
@@ -23,9 +23,9 @@ module Backup
             end
           end
 
-          FileUtils.expects(:mkdir_p).with(File.expand_path("~/some/path/"))
+          expect(FileUtils).to receive(:mkdir_p).with(File.expand_path("~/some/path/"))
 
-          syncer.expects(:run).with(
+          expect(syncer).to receive(:run).with(
             "rsync --archive -e \"ssh -p 22\" " \
             "my_host:'/this/dir' :'that/dir' :'home/dir' " \
             "'#{File.expand_path("~/some/path/")}'"
@@ -45,9 +45,9 @@ module Backup
             end
           end
 
-          FileUtils.expects(:mkdir_p).with(File.expand_path("~/some/path/"))
+          expect(FileUtils).to receive(:mkdir_p).with(File.expand_path("~/some/path/"))
 
-          syncer.expects(:run).with(
+          expect(syncer).to receive(:run).with(
             "rsync --archive -e \"ssh -p 22\" " \
             "my_host::'/this/dir' ::'that/dir' ::'home/dir' " \
             "'#{File.expand_path("~/some/path/")}'"
@@ -67,9 +67,9 @@ module Backup
             end
           end
 
-          FileUtils.expects(:mkdir_p).with(File.expand_path("~/some/path/"))
+          expect(FileUtils).to receive(:mkdir_p).with(File.expand_path("~/some/path/"))
 
-          syncer.expects(:run).with(
+          expect(syncer).to receive(:run).with(
             "rsync --archive --port 873 " \
             "my_host::'/this/dir' ::'that/dir' ::'home/dir' " \
             "'#{File.expand_path("~/some/path/")}'"
@@ -83,17 +83,17 @@ module Backup
         let(:syncer) { Syncer::RSync::Pull.new }
 
         it "writes and removes the temporary password file" do
-          syncer.expects(:write_password_file!).in_sequence(s)
-          syncer.expects(:run).in_sequence(s)
-          syncer.expects(:remove_password_file!).in_sequence(s)
+          expect(syncer).to receive(:write_password_file!).ordered
+          expect(syncer).to receive(:run).ordered
+          expect(syncer).to receive(:remove_password_file!).ordered
 
           syncer.perform!
         end
 
         it "ensures temporary password file removal" do
-          syncer.expects(:write_password_file!).in_sequence(s)
-          syncer.expects(:run).in_sequence(s).raises(VerySpecificError)
-          syncer.expects(:remove_password_file!).in_sequence(s)
+          expect(syncer).to receive(:write_password_file!).ordered
+          expect(syncer).to receive(:run).ordered.and_raise(VerySpecificError)
+          expect(syncer).to receive(:remove_password_file!).ordered
 
           expect do
             syncer.perform!
@@ -105,16 +105,16 @@ module Backup
         it "logs started/finished messages" do
           syncer = Syncer::RSync::Pull.new
 
-          Logger.expects(:info).with("Syncer::RSync::Pull Started...")
-          Logger.expects(:info).with("Syncer::RSync::Pull Finished!")
+          expect(Logger).to receive(:info).with("Syncer::RSync::Pull Started...")
+          expect(Logger).to receive(:info).with("Syncer::RSync::Pull Finished!")
           syncer.perform!
         end
 
         it "logs messages using optional syncer_id" do
           syncer = Syncer::RSync::Pull.new("My Syncer")
 
-          Logger.expects(:info).with("Syncer::RSync::Pull (My Syncer) Started...")
-          Logger.expects(:info).with("Syncer::RSync::Pull (My Syncer) Finished!")
+          expect(Logger).to receive(:info).with("Syncer::RSync::Pull (My Syncer) Started...")
+          expect(Logger).to receive(:info).with("Syncer::RSync::Pull (My Syncer) Finished!")
           syncer.perform!
         end
       end

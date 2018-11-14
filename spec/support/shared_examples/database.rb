@@ -23,7 +23,7 @@ shared_examples "a subclass of Database::Base" do
 
   describe "#prepare!" do
     it "creates the dump_path" do
-      FileUtils.expects(:mkdir_p).with(db.dump_path)
+      expect(FileUtils).to receive(:mkdir_p).with(db.dump_path)
       db.send(:prepare!)
     end
   end
@@ -32,11 +32,11 @@ shared_examples "a subclass of Database::Base" do
     let(:klass_name) { described_class.name.split("::").last }
 
     before do
-      described_class.any_instance.stubs(:sleep)
+      allow_any_instance_of(described_class).to receive(:sleep)
     end
 
     it "logs warning when model is created if database_id is needed" do
-      Backup::Logger.expects(:warn).with do |err|
+      expect(Backup::Logger).to receive(:warn) do |err|
         expect(err)
           .to be_an_instance_of Backup::Database::Error
       end
@@ -63,7 +63,7 @@ shared_examples "a subclass of Database::Base" do
     end
 
     it "does not warn or auto-generate database_id if only one class defined" do
-      Backup::Logger.expects(:warn).never
+      expect(Backup::Logger).to receive(:warn).never
 
       klass = described_class
       block = respond_to?(:required_config) ? required_config : proc {}
@@ -83,18 +83,18 @@ shared_examples "a subclass of Database::Base" do
       block = respond_to?(:required_config) ? required_config : proc {}
       db = described_class.new(model, :my_id, &block)
 
-      Backup::Logger.expects(:info).with("#{klass_name} (my_id) Started...")
+      expect(Backup::Logger).to receive(:info).with("#{klass_name} (my_id) Started...")
       db.send(:log!, :started)
 
-      Backup::Logger.expects(:info).with("#{klass_name} (my_id) Finished!")
+      expect(Backup::Logger).to receive(:info).with("#{klass_name} (my_id) Finished!")
       db.send(:log!, :finished)
     end
 
     specify "without a database_id" do
-      Backup::Logger.expects(:info).with("#{klass_name} Started...")
+      expect(Backup::Logger).to receive(:info).with("#{klass_name} Started...")
       db.send(:log!, :started)
 
-      Backup::Logger.expects(:info).with("#{klass_name} Finished!")
+      expect(Backup::Logger).to receive(:info).with("#{klass_name} Finished!")
       db.send(:log!, :finished)
     end
   end # describe 'log!'

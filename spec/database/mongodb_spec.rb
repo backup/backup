@@ -4,17 +4,16 @@ module Backup
   describe Database::MongoDB do
     let(:model) { Model.new(:test_trigger, "test label") }
     let(:db) { Database::MongoDB.new(model) }
-    let(:s) { sequence "" }
 
     before do
-      Database::MongoDB.any_instance.stubs(:utility)
-        .with(:mongodump).returns("mongodump")
-      Database::MongoDB.any_instance.stubs(:utility)
-        .with(:mongo).returns("mongo")
-      Database::MongoDB.any_instance.stubs(:utility)
-        .with(:cat).returns("cat")
-      Database::MongoDB.any_instance.stubs(:utility)
-        .with(:tar).returns("tar")
+      allow_any_instance_of(Database::MongoDB).to receive(:utility)
+        .with(:mongodump).and_return("mongodump")
+      allow_any_instance_of(Database::MongoDB).to receive(:utility)
+        .with(:mongo).and_return("mongo")
+      allow_any_instance_of(Database::MongoDB).to receive(:utility)
+        .with(:cat).and_return("cat")
+      allow_any_instance_of(Database::MongoDB).to receive(:utility)
+        .with(:tar).and_return("tar")
     end
 
     it_behaves_like "a class that includes Config::Helpers"
@@ -68,17 +67,17 @@ module Backup
 
     describe "#perform!" do
       before do
-        db.expects(:log!).in_sequence(s).with(:started)
-        db.expects(:prepare!).in_sequence(s)
+        expect(db).to receive(:log!).ordered.with(:started)
+        expect(db).to receive(:prepare!).ordered
       end
 
       context "with #lock set to false" do
         it "does not lock the database" do
-          db.expects(:lock_database).never
-          db.expects(:unlock_database).never
+          expect(db).to receive(:lock_database).never
+          expect(db).to receive(:unlock_database).never
 
-          db.expects(:dump!).in_sequence(s)
-          db.expects(:package!).in_sequence(s)
+          expect(db).to receive(:dump!).ordered
+          expect(db).to receive(:package!).ordered
 
           db.perform!
         end
@@ -88,19 +87,19 @@ module Backup
         before { db.lock = true }
 
         it "locks the database" do
-          db.expects(:lock_database).in_sequence(s)
-          db.expects(:dump!).in_sequence(s)
-          db.expects(:package!).in_sequence(s)
-          db.expects(:unlock_database).in_sequence(s)
+          expect(db).to receive(:lock_database).ordered
+          expect(db).to receive(:dump!).ordered
+          expect(db).to receive(:package!).ordered
+          expect(db).to receive(:unlock_database).ordered
 
           db.perform!
         end
 
         it "ensures the database is unlocked" do
-          db.expects(:lock_database).in_sequence(s)
-          db.expects(:dump!).in_sequence(s)
-          db.expects(:package!).in_sequence(s).raises("an error")
-          db.expects(:unlock_database).in_sequence(s)
+          expect(db).to receive(:lock_database).ordered
+          expect(db).to receive(:dump!).ordered
+          expect(db).to receive(:package!).ordered.and_raise("an error")
+          expect(db).to receive(:unlock_database).ordered
 
           expect do
             db.perform!
@@ -111,16 +110,16 @@ module Backup
 
     describe "#dump!" do
       before do
-        db.stubs(:mongodump).returns("mongodump_command")
-        db.stubs(:dump_path).returns("/tmp/trigger/databases")
+        allow(db).to receive(:mongodump).and_return("mongodump_command")
+        allow(db).to receive(:dump_path).and_return("/tmp/trigger/databases")
 
-        FileUtils.expects(:mkdir_p).in_sequence(s)
+        expect(FileUtils).to receive(:mkdir_p).ordered
           .with("/tmp/trigger/databases/MongoDB")
       end
 
       context "when #only_collections are not specified" do
         it "runs mongodump once" do
-          db.expects(:run).in_sequence(s).with("mongodump_command")
+          expect(db).to receive(:run).ordered.with("mongodump_command")
           db.send(:dump!)
         end
       end
@@ -129,10 +128,10 @@ module Backup
         it "runs mongodump for each collection" do
           db.only_collections = ["collection_a", "collection_b"]
 
-          db.expects(:run).in_sequence(s).with(
+          expect(db).to receive(:run).ordered.with(
             "mongodump_command --collection='collection_a'"
           )
-          db.expects(:run).in_sequence(s).with(
+          expect(db).to receive(:run).ordered.with(
             "mongodump_command --collection='collection_b'"
           )
 
@@ -142,7 +141,7 @@ module Backup
         it "allows only_collections to be a single string" do
           db.only_collections = "collection_a"
 
-          db.expects(:run).in_sequence(s).with(
+          expect(db).to receive(:run).ordered.with(
             "mongodump_command --collection='collection_a'"
           )
 
@@ -152,28 +151,28 @@ module Backup
     end # describe '#dump!'
 
     describe "#package!" do
-      let(:pipeline) { mock }
-      let(:compressor) { mock }
+      let(:pipeline) { double }
+      let(:compressor) { double }
 
       before do
-        db.stubs(:dump_path).returns("/tmp/trigger/databases")
+        allow(db).to receive(:dump_path).and_return("/tmp/trigger/databases")
       end
 
       context "without a compressor" do
         it "packages the dump without compression" do
-          Pipeline.expects(:new).in_sequence(s).returns(pipeline)
-          pipeline.expects(:<<).in_sequence(s).with(
+          expect(Pipeline).to receive(:new).ordered.and_return(pipeline)
+          expect(pipeline).to receive(:<<).ordered.with(
             "tar -cf - -C '/tmp/trigger/databases' 'MongoDB'"
           )
-          pipeline.expects(:<<).in_sequence(s).with(
+          expect(pipeline).to receive(:<<).ordered.with(
             "cat > '/tmp/trigger/databases/MongoDB.tar'"
           )
-          pipeline.expects(:run).in_sequence(s)
-          pipeline.expects(:success?).in_sequence(s).returns(true)
-          FileUtils.expects(:rm_rf).in_sequence(s).with(
+          expect(pipeline).to receive(:run).ordered
+          expect(pipeline).to receive(:success?).ordered.and_return(true)
+          expect(FileUtils).to receive(:rm_rf).ordered.with(
             "/tmp/trigger/databases/MongoDB"
           )
-          db.expects(:log!).in_sequence(s).with(:finished)
+          expect(db).to receive(:log!).ordered.with(:finished)
 
           db.send(:package!)
         end
@@ -181,25 +180,25 @@ module Backup
 
       context "with a compressor" do
         before do
-          model.stubs(:compressor).returns(compressor)
-          compressor.stubs(:compress_with).yields("cmp_cmd", ".cmp_ext")
+          allow(model).to receive(:compressor).and_return(compressor)
+          allow(compressor).to receive(:compress_with).and_yield("cmp_cmd", ".cmp_ext")
         end
 
         it "packages the dump with compression" do
-          Pipeline.expects(:new).in_sequence(s).returns(pipeline)
-          pipeline.expects(:<<).in_sequence(s).with(
+          expect(Pipeline).to receive(:new).ordered.and_return(pipeline)
+          expect(pipeline).to receive(:<<).ordered.with(
             "tar -cf - -C '/tmp/trigger/databases' 'MongoDB'"
           )
-          pipeline.expects(:<<).in_sequence(s).with("cmp_cmd")
-          pipeline.expects(:<<).in_sequence(s).with(
+          expect(pipeline).to receive(:<<).ordered.with("cmp_cmd")
+          expect(pipeline).to receive(:<<).ordered.with(
             "cat > '/tmp/trigger/databases/MongoDB.tar.cmp_ext'"
           )
-          pipeline.expects(:run).in_sequence(s)
-          pipeline.expects(:success?).in_sequence(s).returns(true)
-          FileUtils.expects(:rm_rf).in_sequence(s).with(
+          expect(pipeline).to receive(:run).ordered
+          expect(pipeline).to receive(:success?).ordered.and_return(true)
+          expect(FileUtils).to receive(:rm_rf).ordered.with(
             "/tmp/trigger/databases/MongoDB"
           )
-          db.expects(:log!).in_sequence(s).with(:finished)
+          expect(db).to receive(:log!).ordered.with(:finished)
 
           db.send(:package!)
         end
@@ -207,13 +206,13 @@ module Backup
 
       context "when the pipeline fails" do
         before do
-          Pipeline.any_instance.stubs(:success?).returns(false)
-          Pipeline.any_instance.stubs(:error_messages).returns("error messages")
+          allow_any_instance_of(Pipeline).to receive(:success?).and_return(false)
+          allow_any_instance_of(Pipeline).to receive(:error_messages).and_return("error messages")
         end
 
         it "raises an error and does not remove the packaging path" do
-          FileUtils.expects(:rm_rf).never
-          db.expects(:log!).never
+          expect(FileUtils).to receive(:rm_rf).never
+          expect(db).to receive(:log!).never
 
           expect do
             db.send(:package!)
@@ -235,7 +234,7 @@ module Backup
       end
 
       it "returns full mongodump command built from all options" do
-        option_methods.each { |name| db.stubs(name).returns(name) }
+        option_methods.each { |name| allow(db).to receive(name).and_return(name) }
         expect(db.send(:mongodump)).to eq(
           "mongodump name_option credential_options connectivity_options " \
           "ipv6_option oplog_option user_options --out='dump_packaging_path'"
@@ -243,7 +242,7 @@ module Backup
       end
 
       it "handles nil values from option methods" do
-        option_methods.each { |name| db.stubs(name).returns(nil) }
+        option_methods.each { |name| allow(db).to receive(name).and_return(nil) }
         expect(db.send(:mongodump)).to eq "mongodump       --out=''"
       end
     end # describe '#mongodump'
@@ -344,9 +343,9 @@ module Backup
     describe "#lock_database" do
       it "runs command to disable profiling and lock the database" do
         db = Database::MongoDB.new(model)
-        db.stubs(:mongo_shell).returns("mongo_shell")
+        allow(db).to receive(:mongo_shell).and_return("mongo_shell")
 
-        db.expects(:run).with(
+        expect(db).to receive(:run).with(
           "echo 'use admin\n" \
           "db.setProfilingLevel(0)\n" \
           "db.fsyncLock()' | mongo_shell\n"
@@ -358,9 +357,9 @@ module Backup
     describe "#unlock_database" do
       it "runs command to unlock the database" do
         db = Database::MongoDB.new(model)
-        db.stubs(:mongo_shell).returns("mongo_shell")
+        allow(db).to receive(:mongo_shell).and_return("mongo_shell")
 
-        db.expects(:run).with(
+        expect(db).to receive(:run).with(
           "echo 'use admin\n" \
           "db.fsyncUnlock()' | mongo_shell\n"
         )

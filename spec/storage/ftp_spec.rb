@@ -62,7 +62,7 @@ module Backup
     end # describe '#initialize'
 
     describe "#connection" do
-      let(:connection) { mock }
+      let(:connection) { double }
 
       before do
         @ftp_port = Net::FTP::FTP_PORT
@@ -77,9 +77,9 @@ module Backup
       end
 
       it "yields a connection to the remote server" do
-        Net::FTP.expects(:open).with(
+        expect(Net::FTP).to receive(:open).with(
           "123.45.678.90", "my_user", "my_pass"
-        ).yields(connection)
+        ).and_yield(connection)
 
         storage.send(:connection) do |ftp|
           expect(ftp).to be connection
@@ -90,7 +90,7 @@ module Backup
         storage = Storage::FTP.new(model) do |ftp|
           ftp.port = 123
         end
-        Net::FTP.stubs(:open)
+        allow(Net::FTP).to receive(:open)
 
         storage.send(:connection)
         expect(Net::FTP::FTP_PORT).to be 123
@@ -101,11 +101,11 @@ module Backup
       it "sets passive mode true if specified" do
         storage.passive_mode = true
 
-        Net::FTP.expects(:open).with(
+        expect(Net::FTP).to receive(:open).with(
           "123.45.678.90", "my_user", "my_pass"
-        ).yields(connection)
+        ).and_yield(connection)
 
-        connection.expects(:passive=).with(true)
+        expect(connection).to receive(:passive=).with(true)
 
         storage.send(:connection) {}
       end
@@ -113,26 +113,26 @@ module Backup
       it "sets timeout if specified" do
         storage.timeout = 10
 
-        Net::FTP.expects(:open).with(
+        expect(Net::FTP).to receive(:open).with(
           "123.45.678.90", "my_user", "my_pass"
-        ).yields(connection)
+        ).and_yield(connection)
 
-        connection.expects(:open_timeout=).with(10)
-        connection.expects(:read_timeout=).with(10)
+        expect(connection).to receive(:open_timeout=).with(10)
+        expect(connection).to receive(:read_timeout=).with(10)
 
         storage.send(:connection) {}
       end
     end # describe '#connection'
 
     describe "#transfer!" do
-      let(:connection) { mock }
+      let(:connection) { double }
       let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
       let(:remote_path) { File.join("my/path/test_trigger", timestamp) }
 
       before do
         Timecop.freeze
         storage.package.time = timestamp
-        storage.package.stubs(:filenames).returns(
+        allow(storage.package).to receive(:filenames).and_return(
           ["test_trigger.tar-aa", "test_trigger.tar-ab"]
         )
         storage.ip = "123.45.678.90"
@@ -142,36 +142,37 @@ module Backup
       after { Timecop.return }
 
       it "transfers the package files" do
-        storage.expects(:connection).in_sequence(s).yields(connection)
+        expect(storage).to receive(:connection).ordered.and_yield(connection)
 
-        storage.expects(:create_remote_path).in_sequence(s).with(connection)
+        expect(storage).to receive(:create_remote_path).ordered.with(connection)
 
         src = File.join(Config.tmp_path, "test_trigger.tar-aa")
         dest = File.join(remote_path, "test_trigger.tar-aa")
 
-        Logger.expects(:info).in_sequence(s)
+        expect(Logger).to receive(:info).ordered
           .with("Storing '123.45.678.90:#{dest}'...")
 
-        connection.expects(:put).in_sequence(s).with(src, dest)
+        expect(connection).to receive(:put).ordered.with(src, dest)
 
         src = File.join(Config.tmp_path, "test_trigger.tar-ab")
         dest = File.join(remote_path, "test_trigger.tar-ab")
 
-        Logger.expects(:info).in_sequence(s)
+        expect(Logger).to receive(:info).ordered
           .with("Storing '123.45.678.90:#{dest}'...")
 
-        connection.expects(:put).in_sequence(s).with(src, dest)
+        expect(connection).to receive(:put).ordered.with(src, dest)
 
         storage.send(:transfer!)
       end
     end # describe '#transfer!'
 
     describe "#remove!" do
-      let(:connection) { mock }
+      let(:connection) { double }
       let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
       let(:remote_path) { File.join("my/path/test_trigger", timestamp) }
       let(:package) do
-        stub( # loaded from YAML storage file
+        double(
+          Package, # loaded from YAML storage file
           trigger: "test_trigger",
           time: timestamp,
           filenames: ["test_trigger.tar-aa", "test_trigger.tar-ab"]
@@ -186,25 +187,25 @@ module Backup
       after { Timecop.return }
 
       it "removes the given package from the remote" do
-        Logger.expects(:info).in_sequence(s)
+        expect(Logger).to receive(:info).ordered
           .with("Removing backup package dated #{timestamp}...")
 
-        storage.expects(:connection).in_sequence(s).yields(connection)
+        expect(storage).to receive(:connection).ordered.and_yield(connection)
 
         target = File.join(remote_path, "test_trigger.tar-aa")
-        connection.expects(:delete).in_sequence(s).with(target)
+        expect(connection).to receive(:delete).ordered.with(target)
 
         target = File.join(remote_path, "test_trigger.tar-ab")
-        connection.expects(:delete).in_sequence(s).with(target)
+        expect(connection).to receive(:delete).ordered.with(target)
 
-        connection.expects(:rmdir).in_sequence(s).with(remote_path)
+        expect(connection).to receive(:rmdir).ordered.with(remote_path)
 
         storage.send(:remove!, package)
       end
     end # describe '#remove!'
 
     describe "#create_remote_path" do
-      let(:connection)  { mock }
+      let(:connection)  { double }
       let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
       let(:remote_path) { File.join("my/path/test_trigger", timestamp) }
 
@@ -218,13 +219,13 @@ module Backup
 
       context "while properly creating remote directories one by one" do
         it "should rescue any SFTP::StatusException and continue" do
-          connection.expects(:mkdir).in_sequence(s)
+          expect(connection).to receive(:mkdir).ordered
             .with("my")
-          connection.expects(:mkdir).in_sequence(s)
-            .with("my/path").raises(Net::FTPPermError)
-          connection.expects(:mkdir).in_sequence(s)
+          expect(connection).to receive(:mkdir).ordered
+            .with("my/path").and_raise(Net::FTPPermError)
+          expect(connection).to receive(:mkdir).ordered
             .with("my/path/test_trigger")
-          connection.expects(:mkdir).in_sequence(s)
+          expect(connection).to receive(:mkdir).ordered
             .with("my/path/test_trigger/#{timestamp}")
 
           expect do

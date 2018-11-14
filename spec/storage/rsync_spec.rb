@@ -7,10 +7,10 @@ module Backup
     let(:s) { sequence "" }
 
     before do
-      Storage::RSync.any_instance
-        .stubs(:utility).with(:rsync).returns("rsync")
-      Storage::RSync.any_instance
-        .stubs(:utility).with(:ssh).returns("ssh")
+      allow_any_instance_of(Storage::RSync).to \
+        receive(:utility).with(:rsync).and_return("rsync")
+      allow_any_instance_of(Storage::RSync).to \
+        receive(:utility).with(:ssh).and_return("ssh")
     end
 
     it_behaves_like "a class that includes Config::Helpers"
@@ -90,7 +90,7 @@ module Backup
       end
 
       before do
-        storage.package.stubs(:filenames).returns(
+        allow(storage.package).to receive(:filenames).and_return(
           ["test_trigger.tar-aa", "test_trigger.tar-ab"]
         )
       end
@@ -98,26 +98,26 @@ module Backup
       context "local transfer" do
         it "performs transfer with default values" do
           # write_password_file does nothing
-          Tempfile.expects(:new).never
+          expect(Tempfile).to receive(:new).never
 
           # create_remote_path
-          FileUtils.expects(:mkdir_p).with(File.expand_path("~/backups"))
+          expect(FileUtils).to receive(:mkdir_p).with(File.expand_path("~/backups"))
 
           # First Package File
           dest = File.join(File.expand_path("~/backups"), "test_trigger.tar-aa")
-          Logger.expects(:info).in_sequence(s).with(
+          expect(Logger).to receive(:info).ordered.with(
             "Syncing to '#{dest}'..."
           )
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive '#{package_files[0]}' '#{dest}'"
           )
 
           # Second Package File
           dest = File.join(File.expand_path("~/backups"), "test_trigger.tar-ab")
-          Logger.expects(:info).in_sequence(s).with(
+          expect(Logger).to receive(:info).ordered.with(
             "Syncing to '#{dest}'..."
           )
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive '#{package_files[1]}' '#{dest}'"
           )
 
@@ -131,26 +131,26 @@ module Backup
           end
 
           # write_password_file does nothing
-          Tempfile.expects(:new).never
+          expect(Tempfile).to receive(:new).never
 
           # create_remote_path
-          FileUtils.expects(:mkdir_p).with("/my/backups")
+          expect(FileUtils).to receive(:mkdir_p).with("/my/backups")
 
           # First Package File
           dest = "/my/backups/test_trigger.tar-aa"
-          Logger.expects(:info).in_sequence(s).with(
+          expect(Logger).to receive(:info).ordered.with(
             "Syncing to '#{dest}'..."
           )
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive --arg1 --arg2 '#{package_files[0]}' '#{dest}'"
           )
 
           # Second Package File
           dest = "/my/backups/test_trigger.tar-ab"
-          Logger.expects(:info).in_sequence(s).with(
+          expect(Logger).to receive(:info).ordered.with(
             "Syncing to '#{dest}'..."
           )
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive --arg1 --arg2 '#{package_files[1]}' '#{dest}'"
           )
 
@@ -165,22 +165,22 @@ module Backup
           end
 
           # write_password_file does nothing
-          Tempfile.expects(:new).never
+          expect(Tempfile).to receive(:new).never
 
           # create_remote_path
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             %(ssh -p 22 host.name "mkdir -p 'backups'")
           )
 
           # First Package File
           dest = "host.name:'backups/test_trigger.tar-aa'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             %(rsync --archive -e "ssh -p 22" '#{package_files[0]}' #{dest})
           )
 
           # Second Package File
           dest = "host.name:'backups/test_trigger.tar-ab'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             %(rsync --archive -e "ssh -p 22" '#{package_files[1]}' #{dest})
           )
 
@@ -198,17 +198,17 @@ module Backup
           end
 
           # write_password_file does nothing
-          Tempfile.expects(:new).never
+          expect(Tempfile).to receive(:new).never
 
           # create_remote_path
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "ssh -p 123 -l ssh_username -i '/my/id_rsa' " +
             %(host.name "mkdir -p 'backups'")
           )
 
           # First Package File
           dest = "host.name:'backups/test_trigger.tar-aa'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive --opt1 --compress " +
             %(-e "ssh -p 123 -l ssh_username -i '/my/id_rsa'" ) +
             "'#{package_files[0]}' #{dest}"
@@ -216,7 +216,7 @@ module Backup
 
           # Second Package File
           dest = "host.name:'backups/test_trigger.tar-ab'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive --opt1 --compress " +
             %(-e "ssh -p 123 -l ssh_username -i '/my/id_rsa'" ) +
             "'#{package_files[1]}' #{dest}"
@@ -235,21 +235,21 @@ module Backup
           end
 
           # write_password_file does nothing
-          Tempfile.expects(:new).never
+          expect(Tempfile).to receive(:new).never
 
           # create_remote_path does nothing
           # (a call to #run would be an unexpected expectation)
-          FileUtils.expects(:mkdir_p).never
+          expect(FileUtils).to receive(:mkdir_p).never
 
           # First Package File
           dest = "host.name::'module/path/test_trigger.tar-aa'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             %(rsync --archive -e "ssh -p 22" '#{package_files[0]}' #{dest})
           )
 
           # Second Package File
           dest = "host.name::'module/path/test_trigger.tar-ab'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             %(rsync --archive -e "ssh -p 22" '#{package_files[1]}' #{dest})
           )
 
@@ -270,17 +270,17 @@ module Backup
           end
 
           # write_password_file
-          password_file = stub(path: "/path/to/password_file")
-          Tempfile.expects(:new).in_sequence(s)
-            .with("backup-rsync-password").returns(password_file)
-          password_file.expects(:write).in_sequence(s).with("secret")
-          password_file.expects(:close).in_sequence(s)
+          password_file = double(File, path: "/path/to/password_file")
+          expect(Tempfile).to receive(:new).ordered
+            .with("backup-rsync-password").and_return(password_file)
+          expect(password_file).to receive(:write).ordered.with("secret")
+          expect(password_file).to receive(:close).ordered
 
           # create_remote_path does nothing
 
           # First Package File
           dest = "rsync_username@host.name::'backups/test_trigger.tar-aa'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive --opt1 --compress " \
             "--password-file='/path/to/password_file' " +
             %(-e "ssh -p 123 -l ssh_username -i '/my/id_rsa'" ) +
@@ -289,7 +289,7 @@ module Backup
 
           # Second Package File
           dest = "rsync_username@host.name::'backups/test_trigger.tar-ab'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive --opt1 --compress " \
             "--password-file='/path/to/password_file' " +
             %(-e "ssh -p 123 -l ssh_username -i '/my/id_rsa'" ) +
@@ -297,7 +297,7 @@ module Backup
           )
 
           # remove_password_file
-          password_file.expects(:delete).in_sequence(s)
+          expect(password_file).to receive(:delete).ordered
 
           storage.send(:transfer!)
         end
@@ -310,25 +310,25 @@ module Backup
           end
 
           # write_password_file
-          password_file = stub(path: "/path/to/password_file")
-          Tempfile.expects(:new).in_sequence(s)
-            .with("backup-rsync-password").returns(password_file)
-          password_file.expects(:write).in_sequence(s).with("secret")
-          password_file.expects(:close).in_sequence(s)
+          password_file = double(File, path: "/path/to/password_file")
+          expect(Tempfile).to receive(:new).ordered
+            .with("backup-rsync-password").and_return(password_file)
+          expect(password_file).to receive(:write).ordered.with("secret")
+          expect(password_file).to receive(:close).ordered
 
           # create_remote_path does nothing
 
           # First Package File (fails)
           dest = "host.name::'backups/test_trigger.tar-aa'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive " \
             "--password-file='/path/to/password_file' " +
             %(-e "ssh -p 22" ) +
             "'#{package_files[0]}' #{dest}"
-          ).raises("an error")
+          ).and_raise("an error")
 
           # remove_password_file
-          password_file.expects(:delete).in_sequence(s)
+          expect(password_file).to receive(:delete).ordered
 
           expect do
             storage.send(:transfer!)
@@ -349,13 +349,13 @@ module Backup
           end
 
           # write_password_file does nothing
-          Tempfile.expects(:new).never
+          expect(Tempfile).to receive(:new).never
 
           # create_remote_path does nothing
 
           # First Package File
           dest = "rsync_username@host.name::'backups/test_trigger.tar-aa'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive --opt1 --compress " \
             "--password-file='#{File.expand_path("my/pwd_file")}' " +
             %(-e "ssh -p 123 -l ssh_username -i '/my/id_rsa'" ) +
@@ -364,7 +364,7 @@ module Backup
 
           # Second Package File
           dest = "rsync_username@host.name::'backups/test_trigger.tar-ab'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive --opt1 --compress " \
             "--password-file='#{File.expand_path("my/pwd_file")}' " +
             %(-e "ssh -p 123 -l ssh_username -i '/my/id_rsa'" ) +
@@ -384,19 +384,19 @@ module Backup
           end
 
           # write_password_file does nothing
-          Tempfile.expects(:new).never
+          expect(Tempfile).to receive(:new).never
 
           # create_remote_path does nothing
 
           # First Package File
           dest = "host.name::'module/path/test_trigger.tar-aa'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive --port 873 '#{package_files[0]}' #{dest}"
           )
 
           # Second Package File
           dest = "host.name::'module/path/test_trigger.tar-ab'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive --port 873 '#{package_files[1]}' #{dest}"
           )
 
@@ -415,17 +415,17 @@ module Backup
           end
 
           # write_password_file
-          password_file = stub(path: "/path/to/password_file")
-          Tempfile.expects(:new).in_sequence(s)
-            .with("backup-rsync-password").returns(password_file)
-          password_file.expects(:write).in_sequence(s).with("secret")
-          password_file.expects(:close).in_sequence(s)
+          password_file = double(File, path: "/path/to/password_file")
+          expect(Tempfile).to receive(:new).ordered
+            .with("backup-rsync-password").and_return(password_file)
+          expect(password_file).to receive(:write).ordered.with("secret")
+          expect(password_file).to receive(:close).ordered
 
           # create_remote_path does nothing
 
           # First Package File
           dest = "rsync_username@host.name::'backups/test_trigger.tar-aa'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive --opt1 --compress " \
             "--password-file='/path/to/password_file' --port 123 " \
             "'#{package_files[0]}' #{dest}"
@@ -433,14 +433,14 @@ module Backup
 
           # Second Package File
           dest = "rsync_username@host.name::'backups/test_trigger.tar-ab'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive --opt1 --compress " \
             "--password-file='/path/to/password_file' --port 123 " \
             "'#{package_files[1]}' #{dest}"
           )
 
           # remove_password_file!
-          password_file.expects(:delete).in_sequence(s)
+          expect(password_file).to receive(:delete).ordered
 
           storage.send(:transfer!)
         end
@@ -453,24 +453,24 @@ module Backup
           end
 
           # write_password_file
-          password_file = stub(path: "/path/to/password_file")
-          Tempfile.expects(:new).in_sequence(s)
-            .with("backup-rsync-password").returns(password_file)
-          password_file.expects(:write).in_sequence(s).with("secret")
-          password_file.expects(:close).in_sequence(s)
+          password_file = double(File, path: "/path/to/password_file")
+          expect(Tempfile).to receive(:new).ordered
+            .with("backup-rsync-password").and_return(password_file)
+          expect(password_file).to receive(:write).ordered.with("secret")
+          expect(password_file).to receive(:close).ordered
 
           # create_remote_path does nothing
 
           # First Package File (fails)
           dest = "host.name::'backups/test_trigger.tar-aa'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive " \
             "--password-file='/path/to/password_file' --port 873 " \
             "'#{package_files[0]}' #{dest}"
-          ).raises("an error")
+          ).and_raise("an error")
 
           # remove_password_file
-          password_file.expects(:delete).in_sequence(s)
+          expect(password_file).to receive(:delete).ordered
 
           expect do
             storage.send(:transfer!)
@@ -489,13 +489,13 @@ module Backup
           end
 
           # write_password_file does nothing
-          Tempfile.expects(:new).never
+          expect(Tempfile).to receive(:new).never
 
           # create_remote_path does nothing
 
           # First Package File
           dest = "rsync_username@host.name::'backups/test_trigger.tar-aa'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive --opt1 --compress " \
             "--password-file='#{File.expand_path("my/pwd_file")}' --port 123 " \
             "'#{package_files[0]}' #{dest}"
@@ -503,7 +503,7 @@ module Backup
 
           # Second Package File
           dest = "rsync_username@host.name::'backups/test_trigger.tar-ab'"
-          storage.expects(:run).in_sequence(s).with(
+          expect(storage).to receive(:run).ordered.with(
             "rsync --archive --opt1 --compress " \
             "--password-file='#{File.expand_path("my/pwd_file")}' --port 123 " \
             "'#{package_files[1]}' #{dest}"

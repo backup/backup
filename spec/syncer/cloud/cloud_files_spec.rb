@@ -110,7 +110,7 @@ module Backup
 
     describe "#cloud_io" do
       it "caches a new CloudIO instance" do
-        CloudIO::CloudFiles.expects(:new).once.with(
+        expect(CloudIO::CloudFiles).to receive(:new).once.with(
           username: "my_username",
           api_key: "my_api_key",
           auth_url: nil,
@@ -122,7 +122,7 @@ module Backup
           segments_container: nil,
           segment_size: 0,
           fog_options: nil
-        ).returns(:cloud_io)
+        ).and_return(:cloud_io)
 
         expect(syncer.send(:cloud_io)).to eq :cloud_io
         expect(syncer.send(:cloud_io)).to eq :cloud_io
@@ -130,24 +130,26 @@ module Backup
     end # describe '#cloud_io'
 
     describe "#get_remote_files" do
-      let(:cloud_io) { mock }
+      let(:cloud_io) { double }
       let(:object_a) do
-        stub(
+        double(
+          CloudIO::CloudFiles::Object,
           name: "my/path/dir_to_sync/some_dir/object_a",
           hash: "12345"
         )
       end
       let(:object_b) do
-        stub(
+        double(
+          CloudIO::CloudFiles::Object,
           name: "my/path/dir_to_sync/another_dir/object_b",
           hash: "67890"
         )
       end
-      before { syncer.stubs(:cloud_io).returns(cloud_io) }
+      before { allow(syncer).to receive(:cloud_io).and_return(cloud_io) }
 
       it "returns a hash of relative paths and checksums for remote objects" do
-        cloud_io.expects(:objects).with("my/path/dir_to_sync")
-          .returns([object_a, object_b])
+        expect(cloud_io).to receive(:objects).with("my/path/dir_to_sync")
+          .and_return([object_a, object_b])
 
         expect(
           syncer.send(:get_remote_files, "my/path/dir_to_sync")
@@ -157,7 +159,7 @@ module Backup
       end
 
       it "returns an empty hash if no remote objects are found" do
-        cloud_io.expects(:objects).returns([])
+        expect(cloud_io).to receive(:objects).and_return([])
         expect(syncer.send(:get_remote_files, "foo")).to eq({})
       end
     end # describe '#get_remote_files'

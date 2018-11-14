@@ -7,12 +7,12 @@ module Backup
     let(:s) { sequence "" }
 
     before do
-      Database::Riak.any_instance.stubs(:utility)
-        .with("riak-admin").returns("riak-admin")
-      Database::Riak.any_instance.stubs(:utility)
-        .with(:sudo).returns("sudo")
-      Database::Riak.any_instance.stubs(:utility)
-        .with(:chown).returns("chown")
+      allow_any_instance_of(Database::Riak).to receive(:utility)
+        .with("riak-admin").and_return("riak-admin")
+      allow_any_instance_of(Database::Riak).to receive(:utility)
+        .with(:sudo).and_return("sudo")
+      allow_any_instance_of(Database::Riak).to receive(:utility)
+        .with(:chown).and_return("chown")
     end
 
     it_behaves_like "a class that includes Config::Helpers"
@@ -42,45 +42,45 @@ module Backup
 
     describe "#perform!" do
       before do
-        db.stubs(:dump_path).returns("/tmp/trigger/databases")
-        Config.stubs(:user).returns("backup_user")
+        allow(db).to receive(:dump_path).and_return("/tmp/trigger/databases")
+        allow(Config).to receive(:user).and_return("backup_user")
 
-        db.expects(:log!).in_sequence(s).with(:started)
-        db.expects(:prepare!).in_sequence(s)
+        expect(db).to receive(:log!).ordered.with(:started)
+        expect(db).to receive(:prepare!).ordered
       end
 
       context "with a compressor configured" do
-        let(:compressor) { mock }
+        let(:compressor) { double }
 
         before do
-          model.stubs(:compressor).returns(compressor)
-          compressor.stubs(:compress_with).yields("cmp_cmd", ".cmp_ext")
+          allow(model).to receive(:compressor).and_return(compressor)
+          allow(compressor).to receive(:compress_with).and_yield("cmp_cmd", ".cmp_ext")
         end
 
         it "dumps the database with compression" do
-          db.expects(:run).in_sequence(s).with(
+          expect(db).to receive(:run).ordered.with(
             "sudo -n chown riak '/tmp/trigger/databases'"
           )
 
-          db.expects(:run).in_sequence(s).with(
+          expect(db).to receive(:run).ordered.with(
             "sudo -n -u riak riak-admin backup riak@127.0.0.1 riak " \
             "'/tmp/trigger/databases/Riak' node"
           )
 
-          db.expects(:run).in_sequence(s).with(
+          expect(db).to receive(:run).ordered.with(
             "sudo -n chown -R backup_user '/tmp/trigger/databases'"
           )
 
-          db.expects(:run).in_sequence(s).with(
+          expect(db).to receive(:run).ordered.with(
             "cmp_cmd -c '/tmp/trigger/databases/Riak-riak@127.0.0.1' " \
             "> '/tmp/trigger/databases/Riak-riak@127.0.0.1.cmp_ext'"
           )
 
-          FileUtils.expects(:rm_f).in_sequence(s).with(
+          expect(FileUtils).to receive(:rm_f).ordered.with(
             "/tmp/trigger/databases/Riak-riak@127.0.0.1"
           )
 
-          db.expects(:log!).in_sequence(s).with(:finished)
+          expect(db).to receive(:log!).ordered.with(:finished)
 
           db.perform!
         end
@@ -88,38 +88,38 @@ module Backup
 
       context "without a compressor configured" do
         it "dumps the database without compression" do
-          db.expects(:run).in_sequence(s).with(
+          expect(db).to receive(:run).ordered.with(
             "sudo -n chown riak '/tmp/trigger/databases'"
           )
 
-          db.expects(:run).in_sequence(s).with(
+          expect(db).to receive(:run).ordered.with(
             "sudo -n -u riak riak-admin backup riak@127.0.0.1 riak " \
             "'/tmp/trigger/databases/Riak' node"
           )
 
-          db.expects(:run).in_sequence(s).with(
+          expect(db).to receive(:run).ordered.with(
             "sudo -n chown -R backup_user '/tmp/trigger/databases'"
           )
 
-          FileUtils.expects(:rm_f).never
+          expect(FileUtils).to receive(:rm_f).never
 
-          db.expects(:log!).in_sequence(s).with(:finished)
+          expect(db).to receive(:log!).ordered.with(:finished)
 
           db.perform!
         end
       end # context 'without a compressor configured'
 
       it "ensures dump_path ownership is reclaimed" do
-        db.expects(:run).in_sequence(s).with(
+        expect(db).to receive(:run).ordered.with(
           "sudo -n chown riak '/tmp/trigger/databases'"
         )
 
-        db.expects(:run).in_sequence(s).with(
+        expect(db).to receive(:run).ordered.with(
           "sudo -n -u riak riak-admin backup riak@127.0.0.1 riak " \
           "'/tmp/trigger/databases/Riak' node"
-        ).raises("an error")
+        ).and_raise("an error")
 
-        db.expects(:run).in_sequence(s).with(
+        expect(db).to receive(:run).ordered.with(
           "sudo -n chown -R backup_user '/tmp/trigger/databases'"
         )
 

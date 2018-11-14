@@ -3,8 +3,8 @@ require "spec_helper"
 module Backup
   describe Logger::Syslog do
     before do
-      Logger::Console.any_instance.expects(:log).never
-      Logger::Logfile.any_instance.expects(:log).never
+      expect_any_instance_of(Logger::Console).to receive(:log).never
+      expect_any_instance_of(Logger::Logfile).to receive(:log).never
       Logger.configure do
         console.quiet = true
         logfile.enabled = false
@@ -19,7 +19,7 @@ module Backup
         end
         Logger.start!
 
-        Logger::Syslog.any_instance.expects(:log).never
+        expect_any_instance_of(Logger::Syslog).to receive(:log).never
         Logger.info "message"
       end
 
@@ -34,13 +34,13 @@ module Backup
         end
         Logger.start!
 
-        Logger::Syslog.any_instance.expects(:log).never
+        expect_any_instance_of(Logger::Syslog).to receive(:log).never
         Logger.info "message"
       end
     end
 
     describe "console logger usage" do
-      let(:syslog_logger) { mock }
+      let(:syslog_logger) { double }
       let(:s) { sequence "" }
 
       before do
@@ -49,19 +49,19 @@ module Backup
           syslog.facility = ::Syslog::LOG_LOCAL4
         end
 
-        ::Syslog.expects(:open).with(
+        expect(::Syslog).to receive(:open).with(
           "test ident", ::Syslog::LOG_PID, ::Syslog::LOG_LOCAL4
-        ).yields(syslog_logger)
+        ).and_yield(syslog_logger)
 
         Logger.start!
       end
 
       context "when sending an :info message" do
         it "sends info messages to syslog" do
-          syslog_logger.expects(:log).in_sequence(s).with(
+          expect(syslog_logger).to receive(:log).ordered.with(
             ::Syslog::LOG_INFO, "%s", "message line one"
           )
-          syslog_logger.expects(:log).in_sequence(s).with(
+          expect(syslog_logger).to receive(:log).ordered.with(
             ::Syslog::LOG_INFO, "%s", "message line two"
           )
           Logger.info "message line one\nmessage line two"
@@ -70,10 +70,10 @@ module Backup
 
       context "when sending an :warn message" do
         it "sends warn messages to syslog" do
-          syslog_logger.expects(:log).in_sequence(s).with(
+          expect(syslog_logger).to receive(:log).ordered.with(
             ::Syslog::LOG_WARNING, "%s", "message line one"
           )
-          syslog_logger.expects(:log).in_sequence(s).with(
+          expect(syslog_logger).to receive(:log).ordered.with(
             ::Syslog::LOG_WARNING, "%s", "message line two"
           )
           Logger.warn "message line one\nmessage line two"
@@ -82,10 +82,10 @@ module Backup
 
       context "when sending an :error message" do
         it "sends error messages to syslog" do
-          syslog_logger.expects(:log).in_sequence(s).with(
+          expect(syslog_logger).to receive(:log).ordered.with(
             ::Syslog::LOG_ERR, "%s", "message line one"
           )
-          syslog_logger.expects(:log).in_sequence(s).with(
+          expect(syslog_logger).to receive(:log).ordered.with(
             ::Syslog::LOG_ERR, "%s", "message line two"
           )
           Logger.error "message line one\nmessage line two"

@@ -9,11 +9,10 @@ module Backup
         db.sqlitedump_utility = "/path/to/sqlitedump"
       end
     end
-    let(:s) { sequence "" }
 
     before do
-      Database::SQLite.any_instance.stubs(:utility)
-        .with(:sqlitedump).returns("sqlitedump")
+      allow_any_instance_of(Database::SQLite).to receive(:utility)
+        .with(:sqlitedump).and_return("sqlitedump")
     end
 
     it_behaves_like "a class that includes Config::Helpers"
@@ -21,7 +20,7 @@ module Backup
 
     describe "#initialize" do
       it "should load pre-configured defaults through Base" do
-        Database::SQLite.any_instance.expects(:load_defaults!)
+        expect_any_instance_of(Database::SQLite).to receive(:load_defaults!)
         db
       end
 
@@ -63,29 +62,29 @@ module Backup
     end # describe '#initialize'
 
     describe "#perform!" do
-      let(:pipeline) { mock }
-      let(:compressor) { mock }
+      let(:pipeline) { double }
+      let(:compressor) { double }
 
       before do
         # superclass actions
         db.instance_variable_set(:@dump_path, "/dump/path")
-        db.stubs(:dump_filename).returns("dump_filename")
+        allow(db).to receive(:dump_filename).and_return("dump_filename")
 
-        db.expects(:log!).in_sequence(s).with(:started)
-        db.expects(:prepare!).in_sequence(s)
+        expect(db).to receive(:log!).ordered.with(:started)
+        expect(db).to receive(:prepare!).ordered
       end
 
       context "when no compressor is configured" do
         it "should run sqlitedump without compression" do
-          Pipeline.expects(:new).returns(pipeline)
-          pipeline.expects(:<<).in_sequence(s).with("echo '.dump' | /path/to/sqlitedump /tmp/db1.sqlite3")
-          model.expects(:compressor).returns(nil)
-          pipeline.expects(:<<).in_sequence(s).with("cat > '/dump/path/dump_filename.sql'")
+          expect(Pipeline).to receive(:new).and_return(pipeline)
+          expect(pipeline).to receive(:<<).ordered.with("echo '.dump' | /path/to/sqlitedump /tmp/db1.sqlite3")
+          expect(model).to receive(:compressor).and_return(nil)
+          expect(pipeline).to receive(:<<).ordered.with("cat > '/dump/path/dump_filename.sql'")
 
-          pipeline.expects(:run).in_sequence(s)
-          pipeline.expects(:success?).in_sequence(s).returns(true)
+          expect(pipeline).to receive(:run).ordered
+          expect(pipeline).to receive(:success?).ordered.and_return(true)
 
-          db.expects(:log!).in_sequence(s).with(:finished)
+          expect(db).to receive(:log!).ordered.with(:finished)
 
           db.perform!
         end
@@ -93,17 +92,17 @@ module Backup
 
       context "when a compressor is configured" do
         it "should run sqlitedump with compression" do
-          Pipeline.expects(:new).returns(pipeline)
-          pipeline.expects(:<<).in_sequence(s).with("echo '.dump' | /path/to/sqlitedump /tmp/db1.sqlite3")
-          model.expects(:compressor).twice.returns(compressor)
-          compressor.expects(:compress_with).yields("gzip", ".gz")
-          pipeline.expects(:<<).in_sequence(s).with("gzip")
-          pipeline.expects(:<<).in_sequence(s).with("cat > '/dump/path/dump_filename.sql.gz'")
+          expect(Pipeline).to receive(:new).and_return(pipeline)
+          expect(pipeline).to receive(:<<).ordered.with("echo '.dump' | /path/to/sqlitedump /tmp/db1.sqlite3")
+          expect(model).to receive(:compressor).twice.and_return(compressor)
+          expect(compressor).to receive(:compress_with).and_yield("gzip", ".gz")
+          expect(pipeline).to receive(:<<).ordered.with("gzip")
+          expect(pipeline).to receive(:<<).ordered.with("cat > '/dump/path/dump_filename.sql.gz'")
 
-          pipeline.expects(:run).in_sequence(s)
-          pipeline.expects(:success?).in_sequence(s).returns(true)
+          expect(pipeline).to receive(:run).ordered
+          expect(pipeline).to receive(:success?).ordered.and_return(true)
 
-          db.expects(:log!).in_sequence(s).with(:finished)
+          expect(db).to receive(:log!).ordered.with(:finished)
 
           db.perform!
         end
@@ -111,13 +110,13 @@ module Backup
 
       context "when pipeline command fails" do
         before do
-          Pipeline.expects(:new).returns(pipeline)
-          pipeline.expects(:<<).in_sequence(s).with("echo '.dump' | /path/to/sqlitedump /tmp/db1.sqlite3")
-          model.expects(:compressor).returns(nil)
-          pipeline.expects(:<<).in_sequence(s).with("cat > '/dump/path/dump_filename.sql'")
-          pipeline.expects(:run).in_sequence(s)
-          pipeline.expects(:success?).in_sequence(s).returns(false)
-          pipeline.expects(:error_messages).returns("pipeline_errors")
+          expect(Pipeline).to receive(:new).and_return(pipeline)
+          expect(pipeline).to receive(:<<).ordered.with("echo '.dump' | /path/to/sqlitedump /tmp/db1.sqlite3")
+          expect(model).to receive(:compressor).and_return(nil)
+          expect(pipeline).to receive(:<<).ordered.with("cat > '/dump/path/dump_filename.sql'")
+          expect(pipeline).to receive(:run).ordered
+          expect(pipeline).to receive(:success?).ordered.and_return(false)
+          expect(pipeline).to receive(:error_messages).and_return("pipeline_errors")
         end
 
         it "should raise an error" do

@@ -9,29 +9,29 @@ describe "Backup::Packager" do
   end
 
   describe "#package!" do
-    let(:model)     { mock }
-    let(:package)   { mock }
-    let(:encryptor) { mock }
-    let(:splitter)  { mock }
-    let(:pipeline)  { mock }
-    let(:procedure) { mock }
+    let(:model)     { double }
+    let(:package)   { double }
+    let(:encryptor) { double }
+    let(:splitter)  { double }
+    let(:pipeline)  { double }
+    let(:procedure) { double }
     let(:s)         { sequence "" }
 
     context "when pipeline command is successful" do
       it "should setup variables and perform packaging procedures" do
-        model.expects(:package).in_sequence(s).returns(package)
-        model.expects(:encryptor).in_sequence(s).returns(encryptor)
-        model.expects(:splitter).in_sequence(s).returns(splitter)
-        Backup::Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+        expect(model).to receive(:package).ordered.and_return(package)
+        expect(model).to receive(:encryptor).ordered.and_return(encryptor)
+        expect(model).to receive(:splitter).ordered.and_return(splitter)
+        expect(Backup::Pipeline).to receive(:new).ordered.and_return(pipeline)
 
-        Backup::Logger.expects(:info).in_sequence(s).with(
+        expect(Backup::Logger).to receive(:info).ordered.with(
           "Packaging the backup files..."
         )
-        packager.expects(:procedure).in_sequence(s).returns(procedure)
-        procedure.expects(:call).in_sequence(s)
+        expect(packager).to receive(:procedure).ordered.and_return(procedure)
+        expect(procedure).to receive(:call).ordered
 
-        pipeline.expects(:success?).in_sequence(s).returns(true)
-        Backup::Logger.expects(:info).in_sequence(s).with(
+        expect(pipeline).to receive(:success?).ordered.and_return(true)
+        expect(Backup::Logger).to receive(:info).ordered.with(
           "Packaging Complete!"
         )
 
@@ -46,19 +46,19 @@ describe "Backup::Packager" do
 
     context "when pipeline command is not successful" do
       it "should raise an error" do
-        model.expects(:package).in_sequence(s).returns(package)
-        model.expects(:encryptor).in_sequence(s).returns(encryptor)
-        model.expects(:splitter).in_sequence(s).returns(splitter)
-        Backup::Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+        expect(model).to receive(:package).ordered.and_return(package)
+        expect(model).to receive(:encryptor).ordered.and_return(encryptor)
+        expect(model).to receive(:splitter).ordered.and_return(splitter)
+        expect(Backup::Pipeline).to receive(:new).ordered.and_return(pipeline)
 
-        Backup::Logger.expects(:info).in_sequence(s).with(
+        expect(Backup::Logger).to receive(:info).ordered.with(
           "Packaging the backup files..."
         )
-        packager.expects(:procedure).in_sequence(s).returns(procedure)
-        procedure.expects(:call).in_sequence(s)
+        expect(packager).to receive(:procedure).ordered.and_return(procedure)
+        expect(procedure).to receive(:call).ordered
 
-        pipeline.expects(:success?).in_sequence(s).returns(false)
-        pipeline.expects(:error_messages).in_sequence(s).returns("pipeline_errors")
+        expect(pipeline).to receive(:success?).ordered.and_return(false)
+        expect(pipeline).to receive(:error_messages).ordered.and_return("pipeline_errors")
 
         expect do
           packager.package!(model)
@@ -106,12 +106,12 @@ describe "Backup::Packager" do
     let(:package)   { Fake::Package.new }
     let(:encryptor) { Fake::Encryptor.new }
     let(:splitter)  { Fake::Splitter.new }
-    let(:pipeline)  { mock }
+    let(:pipeline)  { double }
     let(:s)         { sequence "" }
 
     before do
       Fake.stack_trace.clear
-      packager.expects(:utility).with(:tar).returns("tar")
+      expect(packager).to receive(:utility).with(:tar).and_return("tar")
       packager.instance_variable_set(:@package, package)
       packager.instance_variable_set(:@pipeline, pipeline)
       package.trigger = "model_trigger"
@@ -120,17 +120,17 @@ describe "Backup::Packager" do
 
     context "when no encryptor or splitter are defined" do
       it "should package the backup without encryption into a single file" do
-        packager.expects(:utility).with(:cat).returns("cat")
+        expect(packager).to receive(:utility).with(:cat).and_return("cat")
         packager.instance_variable_set(:@encryptor, nil)
         packager.instance_variable_set(:@splitter,  nil)
 
-        pipeline.expects(:add).in_sequence(s).with(
+        expect(pipeline).to receive(:add).ordered.with(
           "tar -cf - -C '#{Backup::Config.tmp_path}' 'model_trigger'", [0, 1]
         )
-        pipeline.expects(:<<).in_sequence(s).with(
+        expect(pipeline).to receive(:<<).ordered.with(
           "cat > #{File.join(Backup::Config.tmp_path, "base_filename.tar")}"
         )
-        pipeline.expects(:run).in_sequence(s)
+        expect(pipeline).to receive(:run).ordered
 
         packager.send(:procedure).call
       end
@@ -138,18 +138,18 @@ describe "Backup::Packager" do
 
     context "when only an encryptor is configured" do
       it "should package the backup with encryption" do
-        packager.expects(:utility).with(:cat).returns("cat")
+        expect(packager).to receive(:utility).with(:cat).and_return("cat")
         packager.instance_variable_set(:@encryptor, encryptor)
         packager.instance_variable_set(:@splitter,  nil)
 
-        pipeline.expects(:add).in_sequence(s).with(
+        expect(pipeline).to receive(:add).ordered.with(
           "tar -cf - -C '#{Backup::Config.tmp_path}' 'model_trigger'", [0, 1]
         )
-        pipeline.expects(:<<).in_sequence(s).with("encryption_command")
-        pipeline.expects(:<<).in_sequence(s).with(
+        expect(pipeline).to receive(:<<).ordered.with("encryption_command")
+        expect(pipeline).to receive(:<<).ordered.with(
           "cat > #{File.join(Backup::Config.tmp_path, "base_filename.tar.enc")}"
         )
-        pipeline.expects(:run).in_sequence(s).with do
+        expect(pipeline).to receive(:run).ordered do
           Fake.stack_trace << :command_executed
           true
         end
@@ -164,16 +164,16 @@ describe "Backup::Packager" do
 
     context "when only a splitter is configured" do
       it "should package the backup without encryption through the splitter" do
-        packager.expects(:utility).with(:cat).never
+        expect(packager).to receive(:utility).with(:cat).never
         packager.instance_variable_set(:@encryptor, nil)
         packager.instance_variable_set(:@splitter,  splitter)
 
-        pipeline.expects(:add).in_sequence(s).with(
+        expect(pipeline).to receive(:add).ordered.with(
           "tar -cf - -C '#{Backup::Config.tmp_path}' 'model_trigger'", [0, 1]
         )
-        pipeline.expects(:<<).in_sequence(s).with("splitter_command")
+        expect(pipeline).to receive(:<<).ordered.with("splitter_command")
 
-        pipeline.expects(:run).in_sequence(s).with do
+        expect(pipeline).to receive(:run).ordered do
           Fake.stack_trace << :command_executed
           true
         end
@@ -188,17 +188,17 @@ describe "Backup::Packager" do
 
     context "when both an encryptor and a splitter are configured" do
       it "should package the backup with encryption through the splitter" do
-        packager.expects(:utility).with(:cat).never
+        expect(packager).to receive(:utility).with(:cat).never
         packager.instance_variable_set(:@encryptor, encryptor)
         packager.instance_variable_set(:@splitter,  splitter)
 
-        pipeline.expects(:add).in_sequence(s).with(
+        expect(pipeline).to receive(:add).ordered.with(
           "tar -cf - -C '#{Backup::Config.tmp_path}' 'model_trigger'", [0, 1]
         )
-        pipeline.expects(:<<).in_sequence(s).with("encryption_command")
-        pipeline.expects(:<<).in_sequence(s).with("splitter_command")
+        expect(pipeline).to receive(:<<).ordered.with("encryption_command")
+        expect(pipeline).to receive(:<<).ordered.with("splitter_command")
 
-        pipeline.expects(:run).in_sequence(s).with do
+        expect(pipeline).to receive(:run).ordered do
           Fake.stack_trace << :command_executed
           true
         end
