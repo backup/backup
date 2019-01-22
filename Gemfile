@@ -39,6 +39,7 @@ group :production do
   gem 'aws-ses'
   gem 'qiniu', '~> 6.5.1'
   gem 'http', '~> 1.0'
+  gem 'nokogiri', '~> 1.8.5'
 end
 
 gem 'rspec'
