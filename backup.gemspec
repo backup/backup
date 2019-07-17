@@ -39,7 +39,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'faraday', '= 0.9.2'
   gem.add_dependency 'fission', '= 0.5.0'
   gem.add_dependency 'flowdock', '= 0.4.0'
-  gem.add_dependency 'fog', '= 1.28.0'
+  gem.add_dependency 'fog', '= 1.42.1'
   gem.add_dependency 'fog-atmos', '= 0.1.0'
   gem.add_dependency 'fog-aws', '= 0.1.1'
   gem.add_dependency 'fog-brightbox', '= 0.7.1'
