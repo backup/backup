@@ -23,13 +23,12 @@ group :production do
   gem 'thor'
   gem 'open4'
   gem 'fog'
-  # gem 'excon' - use version specified by fog
   gem 'unf' # for fog/AWS
   gem 'dropbox-sdk', '1.6.5'
   gem 'net-ssh'
   gem 'net-scp'
   gem 'net-sftp'
-  gem 'mail', '= 2.6.3' # patched
+  gem 'mail'
   gem 'pagerduty'
   gem 'twitter','~> 5.16.0'
   gem 'hipchat'
@@ -37,9 +36,8 @@ group :production do
   gem 'json'
   gem 'dogapi'
   gem 'aws-ses'
-  gem 'qiniu', '~> 6.5.1'
+  gem 'qiniu'
   gem 'http', '~> 1.0'
-  gem 'nokogiri', '~> 1.8.5'
 end
 
 gem 'rspec'
