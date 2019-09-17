@@ -1,33 +1,36 @@
-Backup
-======
+Backup II
+=========
 
-[![Code Climate](https://codeclimate.com/github/backup/backup.svg)](https://codeclimate.com/github/backup/backup)
-[![Build Status](https://travis-ci.org/backup/backup.svg?branch=master)](https://travis-ci.org/backup/backup)
-[![Join the chat at https://gitter.im/backup/backup](https://badges.gitter.im/Join%20Chat.svg)][Gitter]
+[![Code Climate](https://codeclimate.com/github/backupii/backupii.svg)](https://codeclimate.com/github/backupii/backupii)
+[![Build Status](https://travis-ci.org/backupii/backupii.svg?branch=master)](https://travis-ci.org/backupii/backupii)
 
-> This project is now in maintenance. No new features are planned.
+> This project is a fork of the excellent but un-maintained backup gem.
 
-Backup is a system utility for Linux and Mac OS X, distributed as a RubyGem, that allows you to easily perform backup
-operations. It provides an elegant DSL in Ruby for _modeling_ your backups. Backup has built-in support for various
-databases, storage protocols/services, syncers, compressors, encryptors and notifiers which you can mix and match. It
-was built with modularity, extensibility and simplicity in mind.
+BackupII is a system utility for Linux and Mac OS X, distributed as a
+RubyGem, that allows you to easily perform backup operations. It
+provides an elegant DSL in Ruby for _modeling_ your backups. BackupII
+has built-in support for various databases, storage
+protocols/services, syncers, compressors, encryptors and notifiers
+which you can mix and match. It was built with modularity,
+extensibility and simplicity in mind.
 
 [Installation][] &middot; [Release Notes][] &middot; [Documentation][] &middot; [Issues][] &middot;  [Chat][Gitter]
 
-## Project Status: Maintenance-Only ##
+## Project Status: Forking just started ##
 
-This project is not under active development, although we will continue to provide support for current users, and at least one more maintenance release: version 5.0. The version 5.0 release will include support for Ruby 2.4, and various other fixes. Future releases of Backup will only include bug fixes.
+I'm giving a try on taking over the maintenance of this project as I'm
+using it on many infrastructure and overall like it very much.
 
-If you use this project and would like to develop it further, please introduce yourself on the [maintainers wanted][Maintainers wanted] ticket.
+If you use this project and would like to develop it further, please
+introduce yourself on the [maintainers wanted][Maintainers wanted]
+ticket.
 
-**Copyright (c) 2009-2017 [Michael van Rooijen][] ( [@mrrooijen] )**  
+**Copyright (c) 2009-2017 [Michael van Rooijen][]**
 Released under the **MIT** [LICENSE](LICENSE).
 
-[Installation]:  http://backup.github.io/backup/v4/installation
-[Release Notes]: http://backup.github.io/backup/v4/release-notes
-[Documentation]: http://backup.github.io/backup/v4
-[Issues]: https://github.com/backup/backup/issues
-[Gitter]: https://gitter.im/backup/backup?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-[Maintainers wanted]: https://github.com/backup/backup/issues/803
+[Installation]:  http://backupii.github.io/backupii/v4/installation
+[Release Notes]: http://backupii.github.io/backupii/v4/release-notes
+[Documentation]: http://backupii.github.io/backupii/v4
+[Issues]: https://github.com/backupii/backupii/issues
+[Maintainers wanted]: https://github.com/backupii/backupii/issues/1
 [Michael van Rooijen]: http://github.com/mrrooijen
-[@mrrooijen]: http://twitter.com/mrrooijen
