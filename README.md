@@ -14,7 +14,7 @@ protocols/services, syncers, compressors, encryptors and notifiers
 which you can mix and match. It was built with modularity,
 extensibility and simplicity in mind.
 
-[Installation][] &middot; [Release Notes][] &middot; [Documentation][] &middot; [Issues][] &middot;  [Chat][Gitter]
+[Installation][] &middot; [Release Notes][] &middot; [Documentation][] &middot; [Issues][]
 
 ## Project Status: Forking just started ##
 
