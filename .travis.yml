@@ -9,14 +9,14 @@ os:
   - linux
   - osx
 rvm:
-  - 2.3.0
-  - 2.4.0
+  - 2.3.8
+  - 2.4.7
+  - 2.6.4
 matrix:
   include:
-    - rvm: "2.3.0"
+    - rvm: "2.3.8"
       script: "bundle exec rubocop"
 branches:
   only:
     - master
-    - develop
     - v4-stable
