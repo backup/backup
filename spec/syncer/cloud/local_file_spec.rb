@@ -4,7 +4,7 @@ module Backup
   describe Syncer::Cloud::LocalFile do
     describe ".find" do
       before do
-        @tmpdir = Dir.mktmpdir("backup_spec")
+        @tmpdir = File.realpath(Dir.mktmpdir("backup_spec"))
         SandboxFileUtils.activate!(@tmpdir)
         FileUtils.mkdir_p File.join(@tmpdir, "sync_dir/sub_dir")
         Utilities.unstub(:utility)
@@ -33,6 +33,8 @@ module Backup
 
         # This fails on OSX, see https://github.com/backup/backup/issues/482
         # for more information.
+        # Basically, this test can't work because the open(2) function on OSX
+        # removes invalid UTF-8 characters
         it "returns a Hash of LocalFile objects, keyed by relative path", skip: RUBY_PLATFORM =~ /darwin/ do
           Dir.chdir(@tmpdir) do
             bad_file = "sync_dir/bad\xFFfile"
@@ -45,7 +47,7 @@ module Backup
             )
 
             local_files = described_class.find("sync_dir")
-            expect(local_files.keys.count).to be 3
+            expect(local_files.keys.count).to eq 3
             local_files.each do |relative_path, local_file|
               expect(local_file.path).to eq(
                 File.expand_path("sync_dir/#{relative_path}")
