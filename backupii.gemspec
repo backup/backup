@@ -3,11 +3,11 @@
 require File.expand_path("lib/backup/version")
 
 Gem::Specification.new do |gem|
-  gem.name        = "backup"
+  gem.name        = "backupii"
   gem.version     = Backup::VERSION
   gem.authors     = "Michael van Rooijen"
-  gem.email       = "meskyanichi@gmail.com"
-  gem.homepage    = "https://github.com/backup/backup"
+  gem.email       = "contact@lta.io"
+  gem.homepage    = "https://github.com/backupii/backupii"
   gem.license     = "MIT"
   gem.summary     = "Provides an elegant DSL in Ruby for performing backups "\
     "on UNIX-like systems."
@@ -23,7 +23,7 @@ Gem::Specification.new do |gem|
 
   gem.files = `git ls-files -- lib bin templates README.md LICENSE`.split("\n")
   gem.require_path  = "lib"
-  gem.executables   = ["backup"]
+  gem.executables   = ["backupii"]
 
   gem.required_ruby_version = ">= 2.0"
 
