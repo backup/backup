@@ -3,8 +3,8 @@ require "spec_helper"
 module Backup
   describe Syncer::RSync::Local do
     before do
-      Syncer::RSync::Local.any_instance
-        .stubs(:utility).with(:rsync).returns("rsync")
+      allow_any_instance_of(Syncer::RSync::Local).to \
+        receive(:utility).with(:rsync).and_return("rsync")
     end
 
     describe "#initialize" do
@@ -96,9 +96,9 @@ module Backup
           end
         end
 
-        FileUtils.expects(:mkdir_p).with(File.expand_path("~/my_backups/"))
+        expect(FileUtils).to receive(:mkdir_p).with(File.expand_path("~/my_backups/"))
 
-        syncer.expects(:run).with(
+        expect(syncer).to receive(:run).with(
           "rsync --archive --delete --opt-a --opt-b " \
           "'/some/directory' '#{File.expand_path("~/home/directory")}' " \
           "'#{File.expand_path("~/my_backups")}'"
@@ -118,9 +118,9 @@ module Backup
           end
         end
 
-        FileUtils.expects(:mkdir_p).with(File.expand_path("~/my_backups/"))
+        expect(FileUtils).to receive(:mkdir_p).with(File.expand_path("~/my_backups/"))
 
-        syncer.expects(:run).with(
+        expect(syncer).to receive(:run).with(
           "rsync --archive --opt-a --opt-b " \
           "'/some/directory' '#{File.expand_path("~/home/directory")}' " \
           "'#{File.expand_path("~/my_backups")}'"
@@ -141,9 +141,9 @@ module Backup
           end
         end
 
-        FileUtils.expects(:mkdir_p).with(File.expand_path("~/my_backups/"))
+        expect(FileUtils).to receive(:mkdir_p).with(File.expand_path("~/my_backups/"))
 
-        syncer.expects(:run).with(
+        expect(syncer).to receive(:run).with(
           "rsync --opt-a --opt-b " \
           "'/some/directory' '#{File.expand_path("~/home/directory")}' " \
           "'#{File.expand_path("~/my_backups")}'"
@@ -166,9 +166,9 @@ module Backup
           end
         end
 
-        FileUtils.expects(:mkdir_p).with(File.expand_path("~/my_backups/"))
+        expect(FileUtils).to receive(:mkdir_p).with(File.expand_path("~/my_backups/"))
 
-        syncer.expects(:run).with(
+        expect(syncer).to receive(:run).with(
           "rsync --archive --delete --exclude='*~' --exclude='tmp/' " \
           "--opt-a --opt-b " \
           "'/some/directory' '#{File.expand_path("~/home/directory")}' " \
@@ -182,16 +182,16 @@ module Backup
         it "logs started/finished messages" do
           syncer = Syncer::RSync::Local.new
 
-          Logger.expects(:info).with("Syncer::RSync::Local Started...")
-          Logger.expects(:info).with("Syncer::RSync::Local Finished!")
+          expect(Logger).to receive(:info).with("Syncer::RSync::Local Started...")
+          expect(Logger).to receive(:info).with("Syncer::RSync::Local Finished!")
           syncer.perform!
         end
 
         it "logs messages using optional syncer_id" do
           syncer = Syncer::RSync::Local.new("My Syncer")
 
-          Logger.expects(:info).with("Syncer::RSync::Local (My Syncer) Started...")
-          Logger.expects(:info).with("Syncer::RSync::Local (My Syncer) Finished!")
+          expect(Logger).to receive(:info).with("Syncer::RSync::Local (My Syncer) Started...")
+          expect(Logger).to receive(:info).with("Syncer::RSync::Local (My Syncer) Finished!")
           syncer.perform!
         end
       end

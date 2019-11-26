@@ -3,25 +3,25 @@ require "backup/cloud_io/s3"
 
 module Backup
   describe CloudIO::S3 do
-    let(:connection) { mock }
+    let(:connection) { double }
 
     describe "#upload" do
       context "with multipart support" do
         let(:cloud_io) { CloudIO::S3.new(bucket: "my_bucket", chunk_size: 5) }
-        let(:parts) { mock }
+        let(:parts) { double }
 
         context "when src file is larger than chunk_size" do
           before do
-            File.expects(:size).with("/src/file").returns(10 * 1024**2)
+            expect(File).to receive(:size).with("/src/file").and_return(10 * 1024**2)
           end
 
           it "uploads using multipart" do
-            cloud_io.expects(:initiate_multipart).with("dest/file").returns(1234)
-            cloud_io.expects(:upload_parts).with(
+            expect(cloud_io).to receive(:initiate_multipart).with("dest/file").and_return(1234)
+            expect(cloud_io).to receive(:upload_parts).with(
               "/src/file", "dest/file", 1234, 5 * 1024**2, 10 * 1024**2
-            ).returns(parts)
-            cloud_io.expects(:complete_multipart).with("dest/file", 1234, parts)
-            cloud_io.expects(:put_object).never
+            ).and_return(parts)
+            expect(cloud_io).to receive(:complete_multipart).with("dest/file", 1234, parts)
+            expect(cloud_io).to receive(:put_object).never
 
             cloud_io.upload("/src/file", "dest/file")
           end
@@ -29,12 +29,12 @@ module Backup
 
         context "when src file is not larger than chunk_size" do
           before do
-            File.expects(:size).with("/src/file").returns(5 * 1024**2)
+            expect(File).to receive(:size).with("/src/file").and_return(5 * 1024**2)
           end
 
           it "uploads without multipart" do
-            cloud_io.expects(:put_object).with("/src/file", "dest/file")
-            cloud_io.expects(:initiate_multipart).never
+            expect(cloud_io).to receive(:put_object).with("/src/file", "dest/file")
+            expect(cloud_io).to receive(:initiate_multipart).never
 
             cloud_io.upload("/src/file", "dest/file")
           end
@@ -42,18 +42,18 @@ module Backup
 
         context "when chunk_size is too small for the src file" do
           before do
-            File.expects(:size).with("/src/file").returns((50_000 * 1024**2) + 1)
+            expect(File).to receive(:size).with("/src/file").and_return((50_000 * 1024**2) + 1)
           end
 
           it "warns and adjusts the chunk_size" do
-            cloud_io.expects(:initiate_multipart).with("dest/file").returns(1234)
-            cloud_io.expects(:upload_parts).with(
+            expect(cloud_io).to receive(:initiate_multipart).with("dest/file").and_return(1234)
+            expect(cloud_io).to receive(:upload_parts).with(
               "/src/file", "dest/file", 1234, 6 * 1024**2, (50_000 * 1024**2) + 1
-            ).returns(parts)
-            cloud_io.expects(:complete_multipart).with("dest/file", 1234, parts)
-            cloud_io.expects(:put_object).never
+            ).and_return(parts)
+            expect(cloud_io).to receive(:complete_multipart).with("dest/file", 1234, parts)
+            expect(cloud_io).to receive(:put_object).never
 
-            Logger.expects(:warn).with do |err|
+            expect(Logger).to receive(:warn) do |err|
               expect(err.message).to include(
                 "#chunk_size of 5 MiB has been adjusted\n  to 6 MiB"
               )
@@ -65,13 +65,13 @@ module Backup
 
         context "when src file is too large" do
           before do
-            File.expects(:size).with("/src/file")
-              .returns(described_class::MAX_MULTIPART_SIZE + 1)
+            expect(File).to receive(:size).with("/src/file")
+              .and_return(described_class::MAX_MULTIPART_SIZE + 1)
           end
 
           it "raises an error" do
-            cloud_io.expects(:initiate_multipart).never
-            cloud_io.expects(:put_object).never
+            expect(cloud_io).to receive(:initiate_multipart).never
+            expect(cloud_io).to receive(:put_object).never
 
             expect do
               cloud_io.upload("/src/file", "dest/file")
@@ -84,17 +84,17 @@ module Backup
         let(:cloud_io) { CloudIO::S3.new(bucket: "my_bucket", chunk_size: 0) }
 
         before do
-          cloud_io.expects(:initiate_multipart).never
+          expect(cloud_io).to receive(:initiate_multipart).never
         end
 
         context "when src file size is ok" do
           before do
-            File.expects(:size).with("/src/file")
-              .returns(described_class::MAX_FILE_SIZE)
+            expect(File).to receive(:size).with("/src/file")
+              .and_return(described_class::MAX_FILE_SIZE)
           end
 
           it "uploads using put_object" do
-            cloud_io.expects(:put_object).with("/src/file", "dest/file")
+            expect(cloud_io).to receive(:put_object).with("/src/file", "dest/file")
 
             cloud_io.upload("/src/file", "dest/file")
           end
@@ -102,12 +102,12 @@ module Backup
 
         context "when src file is too large" do
           before do
-            File.expects(:size).with("/src/file")
-              .returns(described_class::MAX_FILE_SIZE + 1)
+            expect(File).to receive(:size).with("/src/file")
+              .and_return(described_class::MAX_FILE_SIZE + 1)
           end
 
           it "raises an error" do
-            cloud_io.expects(:put_object).never
+            expect(cloud_io).to receive(:put_object).never
 
             expect do
               cloud_io.upload("/src/file", "dest/file")
@@ -127,20 +127,20 @@ module Backup
       end
 
       before do
-        cloud_io.stubs(:connection).returns(connection)
+        allow(cloud_io).to receive(:connection).and_return(connection)
       end
 
       it "ensures prefix ends with /" do
-        connection.expects(:get_bucket)
+        expect(connection).to receive(:get_bucket)
           .with("my_bucket", "prefix" => "foo/bar/")
-          .returns(stub(body: { "Contents" => [] }))
+          .and_return(double("response", body: { "Contents" => [] }))
         expect(cloud_io.objects("foo/bar")).to eq []
       end
 
       it "returns an empty array when no objects are found" do
-        connection.expects(:get_bucket)
+        expect(connection).to receive(:get_bucket)
           .with("my_bucket", "prefix" => "foo/bar/")
-          .returns(stub(body: { "Contents" => [] }))
+          .and_return(double("response", body: { "Contents" => [] }))
         expect(cloud_io.objects("foo/bar/")).to eq []
       end
 
@@ -155,11 +155,11 @@ module Backup
         end
 
         it "returns all objects" do
-          cloud_io.expects(:with_retries)
-            .with("GET 'my_bucket/foo/bar/*'").yields
-          connection.expects(:get_bucket)
+          expect(cloud_io).to receive(:with_retries)
+            .with("GET 'my_bucket/foo/bar/*'").and_yield
+          expect(connection).to receive(:get_bucket)
             .with("my_bucket", "prefix" => "foo/bar/")
-            .returns(stub(body: resp_body))
+            .and_return(double("response", body: resp_body))
 
           objects = cloud_io.objects("foo/bar/")
           expect(objects.count).to be 10
@@ -190,14 +190,14 @@ module Backup
         end
 
         it "returns all objects" do
-          cloud_io.expects(:with_retries).twice
-            .with("GET 'my_bucket/foo/bar/*'").yields
-          connection.expects(:get_bucket)
+          expect(cloud_io).to receive(:with_retries).twice
+            .with("GET 'my_bucket/foo/bar/*'").and_yield
+          expect(connection).to receive(:get_bucket)
             .with("my_bucket", "prefix" => "foo/bar/")
-            .returns(stub(body: resp_body_a))
-          connection.expects(:get_bucket)
+            .and_return(double("response", body: resp_body_a))
+          expect(connection).to receive(:get_bucket)
             .with("my_bucket", "prefix" => "foo/bar/", "marker" => "key_6")
-            .returns(stub(body: resp_body_b))
+            .and_return(double("response", body: resp_body_b))
 
           objects = cloud_io.objects("foo/bar/")
           expect(objects.count).to be 10
@@ -209,14 +209,18 @@ module Backup
         end
 
         it "retries on errors" do
-          connection.expects(:get_bucket).twice
+          expect(connection).to receive(:get_bucket).once
             .with("my_bucket", "prefix" => "foo/bar/")
-            .raises("error").then
-            .returns(stub(body: resp_body_a))
-          connection.expects(:get_bucket).twice
+            .and_raise("error")
+          expect(connection).to receive(:get_bucket).once
+            .with("my_bucket", "prefix" => "foo/bar/")
+            .and_return(double("response", body: resp_body_a))
+          expect(connection).to receive(:get_bucket).once
             .with("my_bucket", "prefix" => "foo/bar/", "marker" => "key_6")
-            .raises("error").then
-            .returns(stub(body: resp_body_b))
+            .and_raise("error")
+          expect(connection).to receive(:get_bucket).once
+            .with("my_bucket", "prefix" => "foo/bar/", "marker" => "key_6")
+            .and_return(double("response", body: resp_body_b))
 
           objects = cloud_io.objects("foo/bar/")
           expect(objects.count).to be 10
@@ -239,14 +243,17 @@ module Backup
       end
 
       before do
-        cloud_io.stubs(:connection).returns(connection)
+        allow(cloud_io).to receive(:connection).and_return(connection)
       end
 
       it "returns head_object response with retries" do
-        object = stub(key: "obj_key")
-        connection.expects(:head_object).twice
+        object = double("response", key: "obj_key")
+        expect(connection).to receive(:head_object).once
           .with("my_bucket", "obj_key")
-          .raises("error").then.returns(:response)
+          .and_raise("error")
+        expect(connection).to receive(:head_object).once
+          .with("my_bucket", "obj_key")
+          .and_return(:response)
         expect(cloud_io.head_object(object)).to eq :response
       end
     end # describe '#head_object'
@@ -259,64 +266,67 @@ module Backup
           retry_waitsec: 0
         )
       end
-      let(:resp_ok) { stub(body: { "DeleteResult" => [] }) }
+      let(:resp_ok) { double("response", body: { "DeleteResult" => [] }) }
       let(:resp_bad) do
-        stub(body: {
-               "DeleteResult" => [
-                 { "Error" => {
-                   "Key" => "obj_key",
-                   "Code" => "InternalError",
-                   "Message" => "We encountered an internal error. Please try again."
-                 } }
-               ]
-             })
+        double(
+          "response",
+          body: {
+            "DeleteResult" => [
+              { "Error" => {
+                "Key" => "obj_key",
+                "Code" => "InternalError",
+                "Message" => "We encountered an internal error. Please try again."
+              } }
+            ]
+          }
+        )
       end
 
       before do
-        cloud_io.stubs(:connection).returns(connection)
+        allow(cloud_io).to receive(:connection).and_return(connection)
       end
 
       it "accepts a single Object" do
         object = described_class::Object.new(:foo, "Key" => "obj_key")
-        cloud_io.expects(:with_retries).with("DELETE Multiple Objects").yields
-        connection.expects(:delete_multiple_objects).with(
+        expect(cloud_io).to receive(:with_retries).with("DELETE Multiple Objects").and_yield
+        expect(connection).to receive(:delete_multiple_objects).with(
           "my_bucket", ["obj_key"], quiet: true
-        ).returns(resp_ok)
+        ).and_return(resp_ok)
         cloud_io.delete(object)
       end
 
       it "accepts multiple Objects" do
         object_a = described_class::Object.new(:foo, "Key" => "obj_key_a")
         object_b = described_class::Object.new(:foo, "Key" => "obj_key_b")
-        cloud_io.expects(:with_retries).with("DELETE Multiple Objects").yields
-        connection.expects(:delete_multiple_objects).with(
+        expect(cloud_io).to receive(:with_retries).with("DELETE Multiple Objects").and_yield
+        expect(connection).to receive(:delete_multiple_objects).with(
           "my_bucket", ["obj_key_a", "obj_key_b"], quiet: true
-        ).returns(resp_ok)
+        ).and_return(resp_ok)
 
         objects = [object_a, object_b]
         expect { cloud_io.delete(objects) }.not_to change { objects }
       end
 
       it "accepts a single key" do
-        cloud_io.expects(:with_retries).with("DELETE Multiple Objects").yields
-        connection.expects(:delete_multiple_objects).with(
+        expect(cloud_io).to receive(:with_retries).with("DELETE Multiple Objects").and_yield
+        expect(connection).to receive(:delete_multiple_objects).with(
           "my_bucket", ["obj_key"], quiet: true
-        ).returns(resp_ok)
+        ).and_return(resp_ok)
         cloud_io.delete("obj_key")
       end
 
       it "accepts multiple keys" do
-        cloud_io.expects(:with_retries).with("DELETE Multiple Objects").yields
-        connection.expects(:delete_multiple_objects).with(
+        expect(cloud_io).to receive(:with_retries).with("DELETE Multiple Objects").and_yield
+        expect(connection).to receive(:delete_multiple_objects).with(
           "my_bucket", ["obj_key_a", "obj_key_b"], quiet: true
-        ).returns(resp_ok)
+        ).and_return(resp_ok)
 
         objects = ["obj_key_a", "obj_key_b"]
         expect { cloud_io.delete(objects) }.not_to change { objects }
       end
 
       it "does nothing if empty array passed" do
-        connection.expects(:delete_multiple_objects).never
+        expect(connection).to receive(:delete_multiple_objects).never
         cloud_io.delete([])
       end
 
@@ -326,50 +336,56 @@ module Backup
         let(:keys_all) { keys_1k + keys_10 }
 
         before do
-          cloud_io.expects(:with_retries).twice.with("DELETE Multiple Objects").yields
+          expect(cloud_io).to receive(:with_retries).twice.with("DELETE Multiple Objects").and_yield
         end
 
         it "deletes 1000 objects per request" do
-          connection.expects(:delete_multiple_objects).with(
+          expect(connection).to receive(:delete_multiple_objects).with(
             "my_bucket", keys_1k, quiet: true
-          ).returns(resp_ok)
-          connection.expects(:delete_multiple_objects).with(
+          ).and_return(resp_ok)
+          expect(connection).to receive(:delete_multiple_objects).with(
             "my_bucket", keys_10, quiet: true
-          ).returns(resp_ok)
+          ).and_return(resp_ok)
 
           expect { cloud_io.delete(keys_all) }.not_to change { keys_all }
         end
 
         it "prevents mutation of options to delete_multiple_objects" do
-          connection.expects(:delete_multiple_objects).with do |bucket, keys, opts|
+          expect(connection).to receive(:delete_multiple_objects) do |bucket, keys, opts|
             bucket == "my_bucket" && keys == keys_1k && opts.delete(:quiet)
-          end.returns(resp_ok)
-          connection.expects(:delete_multiple_objects).with(
+          end.and_return(resp_ok)
+          expect(connection).to receive(:delete_multiple_objects).with(
             "my_bucket", keys_10, quiet: true
-          ).returns(resp_ok)
+          ).and_return(resp_ok)
 
           expect { cloud_io.delete(keys_all) }.not_to change { keys_all }
         end
       end
 
       it "retries on raised errors" do
-        connection.expects(:delete_multiple_objects).twice
+        expect(connection).to receive(:delete_multiple_objects).once
           .with("my_bucket", ["obj_key"], quiet: true)
-          .raises("error").then.returns(resp_ok)
+          .and_raise("error")
+        expect(connection).to receive(:delete_multiple_objects).once
+          .with("my_bucket", ["obj_key"], quiet: true)
+          .and_return(resp_ok)
         cloud_io.delete("obj_key")
       end
 
       it "retries on returned errors" do
-        connection.expects(:delete_multiple_objects).twice
+        expect(connection).to receive(:delete_multiple_objects).twice
           .with("my_bucket", ["obj_key"], quiet: true)
-          .returns(resp_bad).then.returns(resp_ok)
+          .and_return(resp_bad, resp_ok)
         cloud_io.delete("obj_key")
       end
 
       it "fails after retries exceeded" do
-        connection.expects(:delete_multiple_objects).twice
+        expect(connection).to receive(:delete_multiple_objects).once
           .with("my_bucket", ["obj_key"], quiet: true)
-          .raises("error message").then.returns(resp_bad)
+          .and_raise("error message")
+        expect(connection).to receive(:delete_multiple_objects).once
+          .with("my_bucket", ["obj_key"], quiet: true)
+          .and_return(resp_bad)
 
         expect do
           cloud_io.delete("obj_key")
@@ -392,13 +408,13 @@ module Backup
 
     describe "#connection" do
       specify "using AWS access keys" do
-        Fog::Storage.expects(:new).once.with(
+        expect(Fog::Storage).to receive(:new).once.with(
           provider: "AWS",
           aws_access_key_id: "my_access_key_id",
           aws_secret_access_key: "my_secret_access_key",
           region: "my_region"
-        ).returns(connection)
-        connection.expects(:sync_clock).once
+        ).and_return(connection)
+        expect(connection).to receive(:sync_clock).once
 
         cloud_io = CloudIO::S3.new(
           access_key_id: "my_access_key_id",
@@ -411,12 +427,12 @@ module Backup
       end
 
       specify "using AWS IAM profile" do
-        Fog::Storage.expects(:new).once.with(
+        expect(Fog::Storage).to receive(:new).once.with(
           provider: "AWS",
           use_iam_profile: true,
           region: "my_region"
-        ).returns(connection)
-        connection.expects(:sync_clock).once
+        ).and_return(connection)
+        expect(connection).to receive(:sync_clock).once
 
         cloud_io = CloudIO::S3.new(
           use_iam_profile: true,
@@ -428,12 +444,12 @@ module Backup
       end
 
       it "passes along fog_options" do
-        Fog::Storage.expects(:new).with(provider: "AWS",
-                                          region: nil,
-                                          aws_access_key_id: "my_key",
-                                          aws_secret_access_key: "my_secret",
-                                          connection_options: { opt_key: "opt_value" },
-                                          my_key: "my_value").returns(stub(:sync_clock))
+        expect(Fog::Storage).to receive(:new).with(provider: "AWS",
+                                                   region: nil,
+                                                   aws_access_key_id: "my_key",
+                                                   aws_secret_access_key: "my_secret",
+                                                   connection_options: { opt_key: "opt_value" },
+                                                   my_key: "my_value").and_return(double("response", sync_clock: nil))
         CloudIO::S3.new(
           access_key_id: "my_key",
           secret_access_key: "my_secret",
@@ -453,28 +469,31 @@ module Backup
           retry_waitsec: 0
         )
       end
-      let(:file) { mock }
+      let(:file) { double }
 
       before do
-        cloud_io.stubs(:connection).returns(connection)
-        md5_file = mock
-        Digest::MD5.expects(:file).with("/src/file").returns(md5_file)
-        md5_file.expects(:digest).returns(:md5_digest)
-        Base64.expects(:encode64).with(:md5_digest).returns("encoded_digest\n")
+        allow(cloud_io).to receive(:connection).and_return(connection)
+        md5_file = double
+        expect(Digest::MD5).to receive(:file).with("/src/file").and_return(md5_file)
+        expect(md5_file).to receive(:digest).and_return(:md5_digest)
+        expect(Base64).to receive(:encode64).with(:md5_digest).and_return("encoded_digest\n")
       end
 
       it "calls put_object with Content-MD5 header" do
-        File.expects(:open).with("/src/file", "r").yields(file)
-        connection.expects(:put_object)
+        expect(File).to receive(:open).with("/src/file", "r").and_yield(file)
+        expect(connection).to receive(:put_object)
           .with("my_bucket", "dest/file", file, "Content-MD5" => "encoded_digest")
         cloud_io.send(:put_object, "/src/file", "dest/file")
       end
 
       it "fails after retries" do
-        File.expects(:open).twice.with("/src/file", "r").yields(file)
-        connection.expects(:put_object).twice
+        expect(File).to receive(:open).twice.with("/src/file", "r").and_yield(file)
+        expect(connection).to receive(:put_object).once
           .with("my_bucket", "dest/file", file, "Content-MD5" => "encoded_digest")
-          .raises("error1").then.raises("error2")
+          .and_raise("error1")
+        expect(connection).to receive(:put_object).once
+          .with("my_bucket", "dest/file", file, "Content-MD5" => "encoded_digest")
+          .and_raise("error2")
 
         expect do
           cloud_io.send(:put_object, "/src/file", "dest/file")
@@ -503,8 +522,8 @@ module Backup
         end
 
         it "sets headers for encryption and storage_class" do
-          File.expects(:open).with("/src/file", "r").yields(file)
-          connection.expects(:put_object).with(
+          expect(File).to receive(:open).with("/src/file", "r").and_yield(file)
+          expect(connection).to receive(:put_object).with(
             "my_bucket", "dest/file", file,
             "Content-MD5" => "encoded_digest",
               "x-amz-server-side-encryption" => "AES256",
@@ -523,18 +542,18 @@ module Backup
           retry_waitsec: 0
         )
       end
-      let(:response) { stub(body: { "UploadId" => 1234 }) }
+      let(:response) { double("response", body: { "UploadId" => 1234 }) }
 
       before do
-        cloud_io.stubs(:connection).returns(connection)
-        Logger.expects(:info).with("  Initiate Multipart 'my_bucket/dest/file'")
+        allow(cloud_io).to receive(:connection).and_return(connection)
+        expect(Logger).to receive(:info).with("  Initiate Multipart 'my_bucket/dest/file'")
       end
 
       it "initiates multipart upload with retries" do
-        cloud_io.expects(:with_retries)
-          .with("POST 'my_bucket/dest/file' (Initiate)").yields
-        connection.expects(:initiate_multipart_upload)
-          .with("my_bucket", "dest/file", {}).returns(response)
+        expect(cloud_io).to receive(:with_retries)
+          .with("POST 'my_bucket/dest/file' (Initiate)").and_yield
+        expect(connection).to receive(:initiate_multipart_upload)
+          .with("my_bucket", "dest/file", {}).and_return(response)
 
         expect(cloud_io.send(:initiate_multipart, "dest/file")).to be 1234
       end
@@ -551,11 +570,11 @@ module Backup
         end
 
         it "sets headers for encryption and storage_class" do
-          connection.expects(:initiate_multipart_upload).with(
+          expect(connection).to receive(:initiate_multipart_upload).with(
             "my_bucket", "dest/file",
             "x-amz-server-side-encryption" => "AES256",
               "x-amz-storage-class" => "REDUCED_REDUNDANCY"
-          ).returns(response)
+          ).and_return(response)
           expect(cloud_io.send(:initiate_multipart, "dest/file")).to be 1234
         end
       end
@@ -573,38 +592,38 @@ module Backup
       let(:file_size) { chunk_bytes + 250 }
       let(:chunk_a) { "a" * chunk_bytes }
       let(:encoded_digest_a) { "ebKBBg0ze5srhMzzkK3PdA==" }
-      let(:chunk_a_resp) { stub(headers: { "ETag" => "chunk_a_etag" }) }
+      let(:chunk_a_resp) { double("response", headers: { "ETag" => "chunk_a_etag" }) }
       let(:chunk_b) { "b" * 250 }
       let(:encoded_digest_b) { "OCttLDka1ocamHgkHvZMyQ==" }
-      let(:chunk_b_resp) { stub(headers: { "ETag" => "chunk_b_etag" }) }
+      let(:chunk_b_resp) { double("response", headers: { "ETag" => "chunk_b_etag" }) }
       let(:file) { StringIO.new(chunk_a + chunk_b) }
 
       before do
-        cloud_io.stubs(:connection).returns(connection)
+        allow(cloud_io).to receive(:connection).and_return(connection)
       end
 
       it "uploads chunks with Content-MD5" do
-        File.expects(:open).with("/src/file", "r").yields(file)
-        StringIO.stubs(:new).with(chunk_a).returns(:stringio_a)
-        StringIO.stubs(:new).with(chunk_b).returns(:stringio_b)
+        expect(File).to receive(:open).with("/src/file", "r").and_yield(file)
+        allow(StringIO).to receive(:new).with(chunk_a).and_return(:stringio_a)
+        allow(StringIO).to receive(:new).with(chunk_b).and_return(:stringio_b)
 
-        cloud_io.expects(:with_retries).with(
+        expect(cloud_io).to receive(:with_retries).with(
           "PUT 'my_bucket/dest/file' Part #1"
-        ).yields
+        ).and_yield
 
-        connection.expects(:upload_part).with(
+        expect(connection).to receive(:upload_part).with(
           "my_bucket", "dest/file", 1234, 1, :stringio_a,
           "Content-MD5" => encoded_digest_a
-        ).returns(chunk_a_resp)
+        ).and_return(chunk_a_resp)
 
-        cloud_io.expects(:with_retries).with(
+        expect(cloud_io).to receive(:with_retries).with(
           "PUT 'my_bucket/dest/file' Part #2"
-        ).yields
+        ).and_yield
 
-        connection.expects(:upload_part).with(
+        expect(connection).to receive(:upload_part).with(
           "my_bucket", "dest/file", 1234, 2, :stringio_b,
           "Content-MD5" => encoded_digest_b
-        ).returns(chunk_b_resp)
+        ).and_return(chunk_b_resp)
 
         expect(
           cloud_io.send(:upload_parts,
@@ -621,10 +640,10 @@ module Backup
         chunk_bytes = 1024**2 * 1
         file_size = chunk_bytes * 100
         file = StringIO.new("x" * file_size)
-        File.expects(:open).with("/src/file", "r").yields(file)
-        Digest::MD5.stubs(:digest)
-        Base64.stubs(:encode64).returns("")
-        connection.stubs(:upload_part).returns(stub(headers: {}))
+        expect(File).to receive(:open).with("/src/file", "r").and_yield(file)
+        allow(Digest::MD5).to receive(:digest)
+        allow(Base64).to receive(:encode64).and_return("")
+        allow(connection).to receive(:upload_part).and_return(double("response", headers: {}))
 
         cloud_io.send(:upload_parts,
           "/src/file", "dest/file", 1234, chunk_bytes, file_size)
@@ -652,42 +671,54 @@ module Backup
         )
       end
       let(:resp_ok) do
-        stub(body: {
-               "Location" => "http://my_bucket.s3.amazonaws.com/dest/file",
-               "Bucket" => "my_bucket",
-               "Key" => "dest/file",
-               "ETag" => '"some-etag"'
-             })
+        double(
+          "response",
+          body: {
+            "Location" => "http://my_bucket.s3.amazonaws.com/dest/file",
+            "Bucket" => "my_bucket",
+            "Key" => "dest/file",
+            "ETag" => '"some-etag"'
+          }
+        )
       end
       let(:resp_bad) do
-        stub(body: {
-               "Code" => "InternalError",
-               "Message" => "We encountered an internal error. Please try again."
-             })
+        double(
+          "response",
+          body: {
+            "Code" => "InternalError",
+            "Message" => "We encountered an internal error. Please try again."
+          }
+        )
       end
 
       before do
-        cloud_io.stubs(:connection).returns(connection)
+        allow(cloud_io).to receive(:connection).and_return(connection)
       end
 
       it "retries on raised errors" do
-        connection.expects(:complete_multipart_upload).twice
+        expect(connection).to receive(:complete_multipart_upload).once
           .with("my_bucket", "dest/file", 1234, [:parts])
-          .raises("error").then.returns(resp_ok)
+          .and_raise("error")
+        expect(connection).to receive(:complete_multipart_upload).once
+          .with("my_bucket", "dest/file", 1234, [:parts])
+          .and_return(resp_ok)
         cloud_io.send(:complete_multipart, "dest/file", 1234, [:parts])
       end
 
       it "retries on returned errors" do
-        connection.expects(:complete_multipart_upload).twice
+        expect(connection).to receive(:complete_multipart_upload).twice
           .with("my_bucket", "dest/file", 1234, [:parts])
-          .returns(resp_bad).then.returns(resp_ok)
+          .and_return(resp_bad, resp_ok)
         cloud_io.send(:complete_multipart, "dest/file", 1234, [:parts])
       end
 
       it "fails after retries exceeded" do
-        connection.expects(:complete_multipart_upload).twice
+        expect(connection).to receive(:complete_multipart_upload).once
           .with("my_bucket", "dest/file", 1234, [:parts])
-          .raises("error message").then.returns(resp_bad)
+          .and_raise("error message")
+        expect(connection).to receive(:complete_multipart_upload).once
+          .with("my_bucket", "dest/file", 1234, [:parts])
+          .and_return(resp_bad)
 
         expect do
           cloud_io.send(:complete_multipart, "dest/file", 1234, [:parts])
@@ -711,15 +742,15 @@ module Backup
       let(:cloud_io) { CloudIO::S3.new }
 
       it "returns empty headers by default" do
-        cloud_io.stubs(:encryption).returns(nil)
-        cloud_io.stubs(:storage_class).returns(nil)
+        allow(cloud_io).to receive(:encryption).and_return(nil)
+        allow(cloud_io).to receive(:storage_class).and_return(nil)
         expect(cloud_io.send(:headers)).to eq({})
       end
 
       it "returns headers for server-side encryption" do
-        cloud_io.stubs(:storage_class).returns(nil)
+        allow(cloud_io).to receive(:storage_class).and_return(nil)
         ["aes256", :aes256].each do |arg|
-          cloud_io.stubs(:encryption).returns(arg)
+          allow(cloud_io).to receive(:encryption).and_return(arg)
           expect(cloud_io.send(:headers)).to eq(
             "x-amz-server-side-encryption" => "AES256"
           )
@@ -727,9 +758,9 @@ module Backup
       end
 
       it "returns headers for reduced redundancy storage" do
-        cloud_io.stubs(:encryption).returns(nil)
+        allow(cloud_io).to receive(:encryption).and_return(nil)
         ["reduced_redundancy", :reduced_redundancy].each do |arg|
-          cloud_io.stubs(:storage_class).returns(arg)
+          allow(cloud_io).to receive(:storage_class).and_return(arg)
           expect(cloud_io.send(:headers)).to eq(
             "x-amz-storage-class" => "REDUCED_REDUNDANCY"
           )
@@ -737,8 +768,8 @@ module Backup
       end
 
       it "returns headers for both" do
-        cloud_io.stubs(:encryption).returns(:aes256)
-        cloud_io.stubs(:storage_class).returns(:reduced_redundancy)
+        allow(cloud_io).to receive(:encryption).and_return(:aes256)
+        allow(cloud_io).to receive(:storage_class).and_return(:reduced_redundancy)
         expect(cloud_io.send(:headers)).to eq(
           "x-amz-server-side-encryption" => "AES256",
             "x-amz-storage-class" => "REDUCED_REDUNDANCY"
@@ -746,8 +777,8 @@ module Backup
       end
 
       it "returns empty headers for empty values" do
-        cloud_io.stubs(:encryption).returns("")
-        cloud_io.stubs(:storage_class).returns("")
+        allow(cloud_io).to receive(:encryption).and_return("")
+        allow(cloud_io).to receive(:storage_class).and_return("")
         expect(cloud_io.send(:headers)).to eq({})
       end
     end # describe '#headers
@@ -769,16 +800,16 @@ module Backup
 
       describe "#encryption" do
         it "returns the algorithm used for server-side encryption" do
-          cloud_io.expects(:head_object).once.with(object).returns(
-            stub(headers: { "x-amz-server-side-encryption" => "AES256" })
+          expect(cloud_io).to receive(:head_object).once.with(object).and_return(
+            double("response", headers: { "x-amz-server-side-encryption" => "AES256" })
           )
           expect(object.encryption).to eq "AES256"
           expect(object.encryption).to eq "AES256"
         end
 
         it "returns nil if SSE was not used" do
-          cloud_io.expects(:head_object).once.with(object)
-            .returns(stub(headers: {}))
+          expect(cloud_io).to receive(:head_object).once.with(object)
+            .and_return(double("response", headers: {}))
           expect(object.encryption).to be_nil
           expect(object.encryption).to be_nil
         end

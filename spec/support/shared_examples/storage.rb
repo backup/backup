@@ -22,13 +22,13 @@ shared_examples "a subclass of Storage::Base" do
   end # describe '#initialize'
 
   describe "#perform!" do
-    # Note that using `storage.expects(:cycle!).never` will cause
+    # Note that using expect(`storage).to receive(:cycle!).never` will cause
     # respond_to?(:cycle!) to return true in Storage#perform! for RSync.
     specify "does not cycle if keep is not set" do
-      Backup::Logger.expects(:info).with("#{storage_name} Started...")
-      storage.expects(:transfer!)
-      storage.expects(:cycle!).never
-      Backup::Logger.expects(:info).with("#{storage_name} Finished!")
+      expect(Backup::Logger).to receive(:info).with("#{storage_name} Started...")
+      expect(storage).to receive(:transfer!)
+      expect(storage).to receive(:cycle!).never
+      expect(Backup::Logger).to receive(:info).with("#{storage_name} Finished!")
 
       storage.perform!
     end
@@ -38,9 +38,9 @@ shared_examples "a subclass of Storage::Base" do
         block = respond_to?(:required_config) ? required_config : proc {}
         storage = described_class.new(model, :my_id, &block)
 
-        Backup::Logger.expects(:info).with("#{storage_name} (my_id) Started...")
-        storage.expects(:transfer!)
-        Backup::Logger.expects(:info).with("#{storage_name} (my_id) Finished!")
+        expect(Backup::Logger).to receive(:info).with("#{storage_name} (my_id) Started...")
+        expect(storage).to receive(:transfer!)
+        expect(Backup::Logger).to receive(:info).with("#{storage_name} (my_id) Finished!")
 
         storage.perform!
       end
@@ -65,77 +65,77 @@ shared_examples "a storage that cycles" do
       (stored_packages + [storage.package]).each do |pkg|
         pkg.time = pkg.time.strftime("%Y.%m.%d.%H.%M.%S")
       end
-      File.expects(:exist?).with(yaml_file).returns(true)
-      File.expects(:zero?).with(yaml_file).returns(false)
-      YAML.expects(:load_file).with(yaml_file).returns(stored_packages)
-      storage.stubs(:transfer!)
+      expect(File).to receive(:exist?).with(yaml_file).and_return(true)
+      expect(File).to receive(:zero?).with(yaml_file).and_return(false)
+      expect(YAML).to receive(:load_file).with(yaml_file).and_return(stored_packages)
+      allow(storage).to receive(:transfer!)
     end
 
     it "cycles packages" do
-      storage.expects(:remove!).with(pkg_b)
-      storage.expects(:remove!).with(pkg_c)
+      expect(storage).to receive(:remove!).with(pkg_b)
+      expect(storage).to receive(:remove!).with(pkg_c)
 
-      FileUtils.expects(:mkdir_p).with(File.dirname(yaml_file))
-      file = mock
-      File.expects(:open).with(yaml_file, "w").yields(file)
+      expect(FileUtils).to receive(:mkdir_p).with(File.dirname(yaml_file))
+      file = double
+      expect(File).to receive(:open).with(yaml_file, "w").and_yield(file)
       saved_packages = [storage.package, pkg_a]
-      file.expects(:write).with(saved_packages.to_yaml)
+      expect(file).to receive(:write).with(saved_packages.to_yaml)
 
       storage.perform!
     end
 
     it "cycles but does not remove packages marked :no_cycle" do
       pkg_b.no_cycle = true
-      storage.expects(:remove!).with(pkg_b).never
-      storage.expects(:remove!).with(pkg_c)
+      expect(storage).to receive(:remove!).with(pkg_b).never
+      expect(storage).to receive(:remove!).with(pkg_c)
 
-      FileUtils.expects(:mkdir_p).with(File.dirname(yaml_file))
-      file = mock
-      File.expects(:open).with(yaml_file, "w").yields(file)
+      expect(FileUtils).to receive(:mkdir_p).with(File.dirname(yaml_file))
+      file = double
+      expect(File).to receive(:open).with(yaml_file, "w").and_yield(file)
       saved_packages = [storage.package, pkg_a]
-      file.expects(:write).with(saved_packages.to_yaml)
+      expect(file).to receive(:write).with(saved_packages.to_yaml)
 
       storage.perform!
     end
 
     it "does cycle when the available packages are more than the keep setting" do
-      storage.expects(:remove!).with(pkg_a).never
-      storage.expects(:remove!).with(pkg_b)
-      storage.expects(:remove!).with(pkg_c)
+      expect(storage).to receive(:remove!).with(pkg_a).never
+      expect(storage).to receive(:remove!).with(pkg_b)
+      expect(storage).to receive(:remove!).with(pkg_c)
 
       storage.keep = 2
 
-      FileUtils.expects(:mkdir_p).with(File.dirname(yaml_file))
-      file = mock
-      File.expects(:open).with(yaml_file, "w").yields(file)
+      expect(FileUtils).to receive(:mkdir_p).with(File.dirname(yaml_file))
+      file = double
+      expect(File).to receive(:open).with(yaml_file, "w").and_yield(file)
       saved_packages = [storage.package, pkg_a]
-      file.expects(:write).with(saved_packages.to_yaml)
+      expect(file).to receive(:write).with(saved_packages.to_yaml)
 
       storage.perform!
     end
 
     it "does not cycle when the available packages are less than the keep setting" do
-      storage.expects(:remove!).with(pkg_a).never
-      storage.expects(:remove!).with(pkg_b).never
-      storage.expects(:remove!).with(pkg_c).never
+      expect(storage).to receive(:remove!).with(pkg_a).never
+      expect(storage).to receive(:remove!).with(pkg_b).never
+      expect(storage).to receive(:remove!).with(pkg_c).never
 
       storage.keep = 5
 
-      FileUtils.expects(:mkdir_p).with(File.dirname(yaml_file))
-      file = mock
-      File.expects(:open).with(yaml_file, "w").yields(file)
+      expect(FileUtils).to receive(:mkdir_p).with(File.dirname(yaml_file))
+      file = double
+      expect(File).to receive(:open).with(yaml_file, "w").and_yield(file)
       saved_packages = [storage.package, pkg_a, pkg_b, pkg_c]
-      file.expects(:write).with(saved_packages.to_yaml)
+      expect(file).to receive(:write).with(saved_packages.to_yaml)
 
       storage.perform!
     end
 
     it "warns if remove fails" do
-      storage.expects(:remove!).with(pkg_b).raises("error message")
-      storage.expects(:remove!).with(pkg_c)
+      expect(storage).to receive(:remove!).with(pkg_b).and_raise("error message")
+      expect(storage).to receive(:remove!).with(pkg_c)
 
-      pkg_b.stubs(:filenames).returns(["file1", "file2"])
-      Backup::Logger.expects(:warn).with do |err|
+      allow(pkg_b).to receive(:filenames).and_return(["file1", "file2"])
+      expect(Backup::Logger).to receive(:warn) do |err|
         expect(err).to be_an_instance_of Backup::Storage::Cycler::Error
         expect(err.message).to include(
           "There was a problem removing the following package:\n" \
@@ -147,11 +147,11 @@ shared_examples "a storage that cycles" do
         expect(err.message).to match("RuntimeError: error message")
       end
 
-      FileUtils.expects(:mkdir_p).with(File.dirname(yaml_file))
-      file = mock
-      File.expects(:open).with(yaml_file, "w").yields(file)
+      expect(FileUtils).to receive(:mkdir_p).with(File.dirname(yaml_file))
+      file = double
+      expect(File).to receive(:open).with(yaml_file, "w").and_yield(file)
       saved_packages = [storage.package, pkg_a]
-      file.expects(:write).with(saved_packages.to_yaml)
+      expect(file).to receive(:write).with(saved_packages.to_yaml)
 
       storage.perform!
     end

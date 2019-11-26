@@ -34,7 +34,7 @@ module Backup
     describe "#notify!" do
       context "when status is :success" do
         it "sends a success message" do
-          IO.expects(:popen).with(
+          expect(IO).to receive(:popen).with(
             [
               "notify-send",
               "TEST LABEL",
@@ -48,7 +48,7 @@ module Backup
 
       context "when status is :warning" do
         it "sends a warning message" do
-          IO.expects(:popen).with(
+          expect(IO).to receive(:popen).with(
             [
               "notify-send",
               "TEST LABEL",
@@ -62,7 +62,7 @@ module Backup
 
       context "when status is :failure" do
         it "sends a failure message" do
-          IO.expects(:popen).with(
+          expect(IO).to receive(:popen).with(
             [
               "notify-send",
               "TEST LABEL",

@@ -23,12 +23,12 @@ describe Backup::Compressor::Custom do
     after { Backup::Compressor::Custom.clear_defaults! }
 
     it "should load pre-configured defaults" do
-      Backup::Compressor::Custom.any_instance.expects(:load_defaults!)
+      expect_any_instance_of(Backup::Compressor::Custom).to receive(:load_defaults!)
       compressor
     end
 
     it "should call Utilities::Helpers#utility to validate command" do
-      Backup::Compressor::Custom.any_instance.expects(:utility)
+      expect_any_instance_of(Backup::Compressor::Custom).to receive(:utility)
       compressor
     end
 
@@ -41,7 +41,7 @@ describe Backup::Compressor::Custom do
       expect(compressor.command).to   eq(" my_command --option foo ")
       expect(compressor.extension).to eq(" my_extension ")
 
-      compressor.expects(:log!)
+      expect(compressor).to receive(:log!)
       compressor.compress_with do |cmd, ext|
         expect(cmd).to eq("/path/to/my_command --option foo")
         expect(ext).to eq("my_extension")

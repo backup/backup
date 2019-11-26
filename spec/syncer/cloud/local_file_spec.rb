@@ -7,7 +7,7 @@ module Backup
         @tmpdir = Dir.mktmpdir("backup_spec")
         SandboxFileUtils.activate!(@tmpdir)
         FileUtils.mkdir_p File.join(@tmpdir, "sync_dir/sub_dir")
-        Utilities.unstub(:utility)
+        allow(Utilities).to receive(:utility).and_call_original
       end
 
       after do
@@ -39,7 +39,7 @@ module Backup
             sanitized_bad_file = "sync_dir/bad\xEF\xBF\xBDfile"
             FileUtils.touch bad_file
 
-            Logger.expects(:warn).with(
+            expect(Logger).to receive(:warn).with(
               "\s\s[skipping] #{File.expand_path(sanitized_bad_file)}\n" \
               "\s\sPath Contains Invalid UTF-8 byte sequences"
             )

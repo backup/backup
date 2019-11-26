@@ -2,9 +2,9 @@ require "spec_helper"
 
 describe Backup::Compressor::Gzip do
   before do
-    Backup::Compressor::Gzip.stubs(:utility).returns("gzip")
+    allow(Backup::Compressor::Gzip).to receive(:utility).and_return("gzip")
     Backup::Compressor::Gzip.instance_variable_set(:@has_rsyncable, true)
-    Backup::Compressor::Gzip.any_instance.stubs(:utility).returns("gzip")
+    allow_any_instance_of(Backup::Compressor::Gzip).to receive(:utility).and_return("gzip")
   end
 
   it "should be a subclass of Compressor::Base" do
@@ -24,9 +24,9 @@ describe Backup::Compressor::Gzip do
 
     context "when --rsyncable is available" do
       before do
-        Backup::Compressor::Gzip.expects(:`).once
+        expect(Backup::Compressor::Gzip).to receive(:`).once
           .with("gzip --rsyncable --version >/dev/null 2>&1; echo $?")
-          .returns("0\n")
+          .and_return("0\n")
       end
 
       it "returns true and caches the result" do
@@ -37,9 +37,9 @@ describe Backup::Compressor::Gzip do
 
     context "when --rsyncable is not available" do
       before do
-        Backup::Compressor::Gzip.expects(:`).once
+        expect(Backup::Compressor::Gzip).to receive(:`).once
           .with("gzip --rsyncable --version >/dev/null 2>&1; echo $?")
-          .returns("1\n")
+          .and_return("1\n")
       end
 
       it "returns false and caches the result" do
@@ -116,7 +116,7 @@ describe Backup::Compressor::Gzip do
     it "should ignore rsyncable option and warn user if not supported" do
       Backup::Compressor::Gzip.instance_variable_set(:@has_rsyncable, false)
 
-      Backup::Logger.expects(:warn).with do |err|
+      expect(Backup::Logger).to receive(:warn) do |err|
         expect(err).to be_a(Backup::Compressor::Gzip::Error)
         expect(err.message).to match(/'rsyncable' option ignored/)
       end

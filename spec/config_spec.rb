@@ -9,18 +9,16 @@ module Backup
 
     describe "#load" do
       it "loads config.rb and models" do
-        File.stubs(
-          exist?: true,
-          read: "# Backup v#{major_gem_version}.x Configuration\n@loaded << :config",
-          directory?: true
-        )
-        Dir.stubs(:[] => ["model_a", "model_b"])
-        File.expects(:read).with("model_a").returns("@loaded << :model_a")
-        File.expects(:read).with("model_b").returns("@loaded << :model_b")
+        allow(File).to receive(:exist?).and_return(true)
+        allow(File).to receive(:read).and_return("# Backup v#{major_gem_version}.x Configuration\n@loaded << :config")
+        allow(File).to receive(:directory?).and_return(true)
+        allow(Dir).to receive(:[]).and_return(["model_a", "model_b"])
+        expect(File).to receive(:read).with("model_a").and_return("@loaded << :model_a")
+        expect(File).to receive(:read).with("model_b").and_return("@loaded << :model_b")
 
         dsl = config::DSL.new
         dsl.instance_variable_set(:@loaded, [])
-        config::DSL.stubs(new: dsl)
+        allow(config::DSL).to receive(:new).and_return(dsl)
 
         config.load
 
@@ -37,12 +35,10 @@ module Backup
       end
 
       it "raises an error if config file version is invalid" do
-        File.stubs(
-          exist?: true,
-          read: "# Backup v3.x Configuration",
-          directory?: true
-        )
-        Dir.stubs(:[] => [])
+        allow(File).to receive(:exist?).and_return(true)
+        allow(File).to receive(:read).and_return("# Backup v3.x Configuration")
+        allow(File).to receive(:directory?).and_return(true)
+        allow(Dir).to receive(:[]).and_return([])
 
         expect do
           config.load(config_file: "/foo")
@@ -55,12 +51,10 @@ module Backup
         end
 
         before do
-          File.stubs(
-            exist?: true,
-            read: "# Backup v#{major_gem_version}.x Configuration",
-            directory?: true
-          )
-          Dir.stubs(:[] => [])
+          allow(File).to receive(:exist?).and_return(true)
+          allow(File).to receive(:read).and_return("# Backup v#{major_gem_version}.x Configuration")
+          allow(File).to receive(:directory?).and_return(true)
+          allow(Dir).to receive(:[]).and_return([])
         end
 
         context "when no options are given" do
@@ -98,7 +92,7 @@ module Backup
           end
 
           it "overrides config.rb settings only for the paths given" do
-            config::DSL.any_instance.expects(:_config_options).returns(
+            expect_any_instance_of(config::DSL).to receive(:_config_options).and_return(
               root_path: "/orig/root",
                 tmp_path: "/orig/root/my_tmp",
                 data_path: "/orig/root/my_data"
@@ -137,7 +131,7 @@ module Backup
           end
 
           it "overrides all config.rb settings" do
-            config::DSL.any_instance.expects(:_config_options).returns(
+            expect_any_instance_of(config::DSL).to receive(:_config_options).and_return(
               root_path: "/orig/root",
                 tmp_path: "/orig/root/my_tmp",
                 data_path: "/orig/root/my_data"
@@ -160,11 +154,11 @@ module Backup
     describe "#hostname" do
       before do
         config.instance_variable_set(:@hostname, nil)
-        Utilities.stubs(:utility).with(:hostname).returns("/path/to/hostname")
+        allow(Utilities).to receive(:utility).with(:hostname).and_return("/path/to/hostname")
       end
 
       it "caches the hostname" do
-        Utilities.expects(:run).once.with("/path/to/hostname").returns("my_hostname")
+        expect(Utilities).to receive(:run).once.with("/path/to/hostname").and_return("my_hostname")
         expect(config.hostname).to eq("my_hostname")
         expect(config.hostname).to eq("my_hostname")
       end
@@ -173,7 +167,7 @@ module Backup
     describe "#set_root_path" do
       context "when the given path == @root_path" do
         it "should return @root_path without requiring the path to exist" do
-          File.expects(:directory?).never
+          expect(File).to receive(:directory?).never
           expect(config.send(:set_root_path, config.root_path)).to eq(config.root_path)
         end
       end
@@ -329,7 +323,7 @@ module Backup
         before { ENV["HOME"] = "test/home/dir" }
 
         it "should use #update" do
-          config.expects(:update).with(
+          expect(config).to receive(:update).with(
             root_path: File.join(File.expand_path("test/home/dir"), "Backup")
           )
           config.send(:reset!)

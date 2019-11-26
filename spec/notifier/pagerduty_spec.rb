@@ -21,8 +21,8 @@ module Backup
     end
 
     describe "notify!" do
-      let(:pagerduty) { mock }
-      let(:incident) { mock }
+      let(:pagerduty) { double }
+      let(:incident) { double }
 
       let(:incident_key) { "backup/test_trigger" }
       let(:incident_details) do
@@ -40,21 +40,21 @@ module Backup
       end
 
       before do
-        notifier.stubs(:pagerduty).returns(pagerduty)
+        allow(notifier).to receive(:pagerduty).and_return(pagerduty)
       end
 
       it "resolves an incident when status is :success" do
         incident_details[:details][:status] = :success
 
-        pagerduty.expects(:get_incident).with(incident_key).returns(incident)
-        incident.expects(:resolve).with("Backup - test label", incident_details)
+        expect(pagerduty).to receive(:get_incident).with(incident_key).and_return(incident)
+        expect(incident).to receive(:resolve).with("Backup - test label", incident_details)
 
         notifier.send(:notify!, :success)
       end
 
       it "triggers an incident when status is :warning and resolve_on_warning is false" do
         incident_details[:details][:status] = :warning
-        pagerduty.expects(:trigger).with("Backup - test label", incident_details)
+        expect(pagerduty).to receive(:trigger).with("Backup - test label", incident_details)
 
         notifier.send(:notify!, :warning)
       end
@@ -64,15 +64,15 @@ module Backup
 
         incident_details[:details][:status] = :warning
 
-        pagerduty.expects(:get_incident).with(incident_key).returns(incident)
-        incident.expects(:resolve).with("Backup - test label", incident_details)
+        expect(pagerduty).to receive(:get_incident).with(incident_key).and_return(incident)
+        expect(incident).to receive(:resolve).with("Backup - test label", incident_details)
 
         notifier.send(:notify!, :warning)
       end
 
       it "triggers an incident when status is :failure" do
         incident_details[:details][:status] = :failure
-        pagerduty.expects(:trigger).with("Backup - test label", incident_details)
+        expect(pagerduty).to receive(:trigger).with("Backup - test label", incident_details)
 
         notifier.send(:notify!, :failure)
       end

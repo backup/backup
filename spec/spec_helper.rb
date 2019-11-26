@@ -32,10 +32,6 @@ end
 
 RSpec.configure do |config|
   ##
-  # Use Mocha to mock with RSpec
-  config.mock_with :mocha
-
-  ##
   # Example Helpers
   config.include Backup::ExampleHelpers
 
@@ -53,10 +49,10 @@ RSpec.configure do |config|
     SandboxFileUtils.deactivate!(:noop)
 
     # prevent system calls
-    Backup::Utilities.stubs(:gnu_tar?).returns(true)
-    Backup::Utilities.stubs(:utility)
-    Backup::Utilities.stubs(:run)
-    Backup::Pipeline.any_instance.stubs(:run)
+    allow(Backup::Utilities).to receive(:gnu_tar?).and_return(true)
+    allow(Backup::Utilities).to receive(:utility)
+    allow(Backup::Utilities).to receive(:run)
+    allow_any_instance_of(Backup::Pipeline).to receive(:run)
 
     Backup::Utilities.send(:reset!)
     Backup::Config.send(:reset!)

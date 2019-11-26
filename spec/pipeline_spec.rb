@@ -33,41 +33,41 @@ describe "Backup::Pipeline" do
 
   describe "#<<" do
     it "should add a command with the default successful exit code (0)" do
-      pipeline.expects(:add).with("a command", [0])
+      expect(pipeline).to receive(:add).with("a command", [0])
       pipeline << "a command"
     end
   end
 
   describe "#run" do
-    let(:stdout) { mock }
-    let(:stderr) { mock }
+    let(:stdout) { double }
+    let(:stderr) { double }
 
     before do
-      Backup::Pipeline.any_instance.unstub(:run)
-      pipeline.expects(:pipeline).returns("foo")
+      allow_any_instance_of(Backup::Pipeline).to receive(:run).and_call_original
+      expect(pipeline).to receive(:pipeline).and_return("foo")
       # stub Utilities::Helpers#command_name so it simply returns what it's passed
       pipeline.class.send(:define_method, :command_name, ->(arg) { arg })
     end
 
     context "when pipeline command is successfully executed" do
       before do
-        Open4.expects(:popen4).with("foo").yields(nil, nil, stdout, stderr)
+        expect(Open4).to receive(:popen4).with("foo").and_yield(nil, nil, stdout, stderr)
       end
 
       context "when all commands within the pipeline are successful" do
         before do
           pipeline.instance_variable_set(:@success_codes, [[0], [0, 3]])
-          stdout.expects(:read).returns("0|0:1|3:\n")
+          expect(stdout).to receive(:read).and_return("0|0:1|3:\n")
         end
 
         context "when commands output no stderr messages" do
           before do
-            stderr.expects(:read).returns("")
-            pipeline.stubs(:stderr_messages).returns(false)
+            expect(stderr).to receive(:read).and_return("")
+            allow(pipeline).to receive(:stderr_messages).and_return(false)
           end
 
           it "should process the returned stdout/stderr and report no errors" do
-            Backup::Logger.expects(:warn).never
+            expect(Backup::Logger).to receive(:warn).never
 
             pipeline.run
             expect(pipeline.stderr).to eq("")
@@ -77,12 +77,12 @@ describe "Backup::Pipeline" do
 
         context "when successful commands output messages on stderr" do
           before do
-            stderr.expects(:read).returns("stderr output\n")
-            pipeline.stubs(:stderr_messages).returns("stderr_messages_output")
+            expect(stderr).to receive(:read).and_return("stderr output\n")
+            allow(pipeline).to receive(:stderr_messages).and_return("stderr_messages_output")
           end
 
           it "should log a warning with the stderr messages" do
-            Backup::Logger.expects(:warn).with("stderr_messages_output")
+            expect(Backup::Logger).to receive(:warn).with("stderr_messages_output")
 
             pipeline.run
             expect(pipeline.stderr).to eq("stderr output")
@@ -95,17 +95,17 @@ describe "Backup::Pipeline" do
         before do
           pipeline.instance_variable_set(:@commands, ["first", "second", "third"])
           pipeline.instance_variable_set(:@success_codes, [[0, 1], [0, 3], [0]])
-          stderr.expects(:read).returns("stderr output\n")
-          pipeline.stubs(:stderr_messages).returns("success? should be false")
+          expect(stderr).to receive(:read).and_return("stderr output\n")
+          allow(pipeline).to receive(:stderr_messages).and_return("success? should be false")
         end
 
         context "when the commands return in sequence" do
           before do
-            stdout.expects(:read).returns("0|1:1|1:2|0:\n")
+            expect(stdout).to receive(:read).and_return("0|1:1|1:2|0:\n")
           end
 
           it "should set @errors and @stderr without logging warnings" do
-            Backup::Logger.expects(:warn).never
+            expect(Backup::Logger).to receive(:warn).never
 
             pipeline.run
             expect(pipeline.stderr).to eq("stderr output")
@@ -120,11 +120,11 @@ describe "Backup::Pipeline" do
 
         context "when the commands return out of sequence" do
           before do
-            stdout.expects(:read).returns("1|3:2|4:0|1:\n")
+            expect(stdout).to receive(:read).and_return("1|3:2|4:0|1:\n")
           end
 
           it "should properly associate the exitstatus for each command" do
-            Backup::Logger.expects(:warn).never
+            expect(Backup::Logger).to receive(:warn).never
 
             pipeline.run
             expect(pipeline.stderr).to eq("stderr output")
@@ -139,11 +139,11 @@ describe "Backup::Pipeline" do
 
         context "when multiple commands fail (out of sequence)" do
           before do
-            stdout.expects(:read).returns("1|1:2|0:0|3:\n")
+            expect(stdout).to receive(:read).and_return("1|1:2|0:0|3:\n")
           end
 
           it "should properly associate the exitstatus for each command" do
-            Backup::Logger.expects(:warn).never
+            expect(Backup::Logger).to receive(:warn).never
 
             pipeline.run
             expect(pipeline.stderr).to eq("stderr output")
@@ -164,7 +164,7 @@ describe "Backup::Pipeline" do
 
     context "when pipeline command fails to execute" do
       before do
-        Open4.expects(:popen4).with("foo").raises("exec failed")
+        expect(Open4).to receive(:popen4).with("foo").and_raise("exec failed")
       end
 
       it "should raise an error" do
@@ -207,7 +207,7 @@ describe "Backup::Pipeline" do
 
     context "when #stderr_messages has messages" do
       before do
-        pipeline.expects(:stderr_messages).returns("stderr messages\n")
+        expect(pipeline).to receive(:stderr_messages).and_return("stderr messages\n")
       end
 
       it "should output #stderr_messages and formatted system error messages" do
@@ -222,7 +222,7 @@ describe "Backup::Pipeline" do
 
     context "when #stderr_messages has no messages" do
       before do
-        pipeline.expects(:stderr_messages).returns("stderr messages\n")
+        expect(pipeline).to receive(:stderr_messages).and_return("stderr messages\n")
       end
 
       it "should only output the formatted system error messages" do

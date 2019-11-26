@@ -65,7 +65,7 @@ module Backup
 
       context "when status is :success" do
         it "sends a success message" do
-          Excon.expects(:post).with(
+          expect(Excon).to receive(:post).with(
             "https://my_subdomain.campfirenow.com/room/my_room_id/speak.json",
             headers: { "Content-Type" => "application/json" },
             body: json_body.sub("STATUS", "Success"),
@@ -80,7 +80,7 @@ module Backup
 
       context "when status is :warning" do
         it "sends a warning message" do
-          Excon.expects(:post).with(
+          expect(Excon).to receive(:post).with(
             "https://my_subdomain.campfirenow.com/room/my_room_id/speak.json",
             headers: { "Content-Type" => "application/json" },
             body: json_body.sub("STATUS", "Warning"),
@@ -95,7 +95,7 @@ module Backup
 
       context "when status is :failure" do
         it "sends a failure message" do
-          Excon.expects(:post).with(
+          expect(Excon).to receive(:post).with(
             "https://my_subdomain.campfirenow.com/room/my_room_id/speak.json",
             headers: { "Content-Type" => "application/json" },
             body: json_body.sub("STATUS", "Failure"),

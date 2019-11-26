@@ -48,7 +48,6 @@ Gem::Specification.new do |gem|
 
   gem.add_development_dependency "rubocop", "0.48.1"
   gem.add_development_dependency "rake"
-  gem.add_development_dependency "rspec", "3.5.0"
-  gem.add_development_dependency "mocha", "0.14.0"
-  gem.add_development_dependency "timecop", "0.7.1"
+  gem.add_development_dependency "rspec", "3.8.0"
+  gem.add_development_dependency "timecop", "0.9.1"
 end

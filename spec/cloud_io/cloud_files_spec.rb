@@ -1,13 +1,13 @@
 require "spec_helper"
 require "backup/cloud_io/cloud_files"
 
-module Backup
+module Backup # rubocop:disable Metrics/ModuleLength
   describe CloudIO::CloudFiles do
-    let(:connection) { mock }
+    let(:connection) { double }
 
     describe "#upload" do
       before do
-        described_class.any_instance.expects(:create_containers)
+        expect_any_instance_of(described_class).to receive(:create_containers)
       end
 
       context "with SLO support" do
@@ -18,19 +18,19 @@ module Backup
             segment_size: 5
           )
         end
-        let(:segments) { mock }
+        let(:segments) { double }
 
         context "when src file is larger than segment_size" do
           before do
-            File.expects(:size).with("/src/file").returns(10 * 1024**2)
+            expect(File).to receive(:size).with("/src/file").and_return(10 * 1024**2)
           end
 
           it "uploads as a SLO" do
-            cloud_io.expects(:upload_segments).with(
+            expect(cloud_io).to receive(:upload_segments).with(
               "/src/file", "dest/file", 5 * 1024**2, 10 * 1024**2
-            ).returns(segments)
-            cloud_io.expects(:upload_manifest).with("dest/file", segments)
-            cloud_io.expects(:put_object).never
+            ).and_return(segments)
+            expect(cloud_io).to receive(:upload_manifest).with("dest/file", segments)
+            expect(cloud_io).to receive(:put_object).never
 
             cloud_io.upload("/src/file", "dest/file")
           end
@@ -38,13 +38,13 @@ module Backup
 
         context "when src file is not larger than segment_size" do
           before do
-            File.expects(:size).with("/src/file").returns(5 * 1024**2)
+            expect(File).to receive(:size).with("/src/file").and_return(5 * 1024**2)
           end
 
           it "uploads as a non-SLO" do
-            cloud_io.expects(:put_object).with("/src/file", "dest/file")
-            cloud_io.expects(:upload_segments).never
-            cloud_io.expects(:upload_manifest).never
+            expect(cloud_io).to receive(:put_object).with("/src/file", "dest/file")
+            expect(cloud_io).to receive(:upload_segments).never
+            expect(cloud_io).to receive(:upload_manifest).never
 
             cloud_io.upload("/src/file", "dest/file")
           end
@@ -52,17 +52,17 @@ module Backup
 
         context "when segment_size is too small for the src file" do
           before do
-            File.expects(:size).with("/src/file").returns((5000 * 1024**2) + 1)
+            expect(File).to receive(:size).with("/src/file").and_return((5000 * 1024**2) + 1)
           end
 
           it "warns and adjusts the segment_size" do
-            cloud_io.expects(:upload_segments).with(
+            expect(cloud_io).to receive(:upload_segments).with(
               "/src/file", "dest/file", 6 * 1024**2, (5000 * 1024**2) + 1
-            ).returns(segments)
-            cloud_io.expects(:upload_manifest).with("dest/file", segments)
-            cloud_io.expects(:put_object).never
+            ).and_return(segments)
+            expect(cloud_io).to receive(:upload_manifest).with("dest/file", segments)
+            expect(cloud_io).to receive(:put_object).never
 
-            Logger.expects(:warn).with do |err|
+            expect(Logger).to receive(:warn) do |err|
               expect(err.message).to include(
                 "#segment_size of 5 MiB has been adjusted\n  to 6 MiB"
               )
@@ -74,14 +74,14 @@ module Backup
 
         context "when src file is too large" do
           before do
-            File.expects(:size).with("/src/file")
-              .returns(described_class::MAX_SLO_SIZE + 1)
+            expect(File).to receive(:size).with("/src/file")
+              .and_return(described_class::MAX_SLO_SIZE + 1)
           end
 
           it "raises an error" do
-            cloud_io.expects(:upload_segments).never
-            cloud_io.expects(:upload_manifest).never
-            cloud_io.expects(:put_object).never
+            expect(cloud_io).to receive(:upload_segments).never
+            expect(cloud_io).to receive(:upload_manifest).never
+            expect(cloud_io).to receive(:put_object).never
 
             expect do
               cloud_io.upload("/src/file", "dest/file")
@@ -99,17 +99,17 @@ module Backup
         end
 
         before do
-          cloud_io.expects(:upload_segments).never
+          expect(cloud_io).to receive(:upload_segments).never
         end
 
         context "when src file size is ok" do
           before do
-            File.expects(:size).with("/src/file")
-              .returns(described_class::MAX_FILE_SIZE)
+            expect(File).to receive(:size).with("/src/file")
+              .and_return(described_class::MAX_FILE_SIZE)
           end
 
           it "uploads as non-SLO" do
-            cloud_io.expects(:put_object).with("/src/file", "dest/file")
+            expect(cloud_io).to receive(:put_object).with("/src/file", "dest/file")
 
             cloud_io.upload("/src/file", "dest/file")
           end
@@ -117,12 +117,12 @@ module Backup
 
         context "when src file is too large" do
           before do
-            File.expects(:size).with("/src/file")
-              .returns(described_class::MAX_FILE_SIZE + 1)
+            expect(File).to receive(:size).with("/src/file")
+              .and_return(described_class::MAX_FILE_SIZE + 1)
           end
 
           it "raises an error" do
-            cloud_io.expects(:put_object).never
+            expect(cloud_io).to receive(:put_object).never
 
             expect do
               cloud_io.upload("/src/file", "dest/file")
@@ -142,21 +142,21 @@ module Backup
       end
 
       before do
-        cloud_io.stubs(:connection).returns(connection)
-        cloud_io.expects(:create_containers)
+        allow(cloud_io).to receive(:connection).and_return(connection)
+        expect(cloud_io).to receive(:create_containers)
       end
 
       it "ensures prefix ends with /" do
-        connection.expects(:get_container)
+        expect(connection).to receive(:get_container)
           .with("my_container", prefix: "foo/bar/")
-          .returns(stub(body: []))
+          .and_return(double("response", body: []))
         expect(cloud_io.objects("foo/bar")).to eq []
       end
 
       it "returns an empty array when no objects are found" do
-        connection.expects(:get_container)
+        expect(connection).to receive(:get_container)
           .with("my_container", prefix: "foo/bar/")
-          .returns(stub(body: []))
+          .and_return(double("response", body: []))
         expect(cloud_io.objects("foo/bar/")).to eq []
       end
 
@@ -166,11 +166,11 @@ module Backup
         end
 
         it "returns all objects" do
-          cloud_io.expects(:with_retries)
-            .with("GET 'my_container/foo/bar/*'").yields
-          connection.expects(:get_container)
+          expect(cloud_io).to receive(:with_retries)
+            .with("GET 'my_container/foo/bar/*'").and_yield
+          expect(connection).to receive(:get_container)
             .with("my_container", prefix: "foo/bar/")
-            .returns(stub(body: resp_body))
+            .and_return(double("response", body: resp_body))
 
           objects = cloud_io.objects("foo/bar/")
           expect(objects.count).to be 10
@@ -193,28 +193,32 @@ module Backup
         end
 
         it "returns all objects" do
-          cloud_io.expects(:with_retries).twice
-            .with("GET 'my_container/foo/bar/*'").yields
-          connection.expects(:get_container)
+          expect(cloud_io).to receive(:with_retries).twice
+            .with("GET 'my_container/foo/bar/*'").and_yield
+          expect(connection).to receive(:get_container)
             .with("my_container", prefix: "foo/bar/")
-            .returns(stub(body: resp_body_a))
-          connection.expects(:get_container)
+            .and_return(double("response", body: resp_body_a))
+          expect(connection).to receive(:get_container)
             .with("my_container", prefix: "foo/bar/", marker: "name_9999")
-            .returns(stub(body: resp_body_b))
+            .and_return(double("response", body: resp_body_b))
 
           objects = cloud_io.objects("foo/bar/")
           expect(objects.count).to be 10_010
         end
 
         it "retries on errors" do
-          connection.expects(:get_container).twice
+          expect(connection).to receive(:get_container).once
             .with("my_container", prefix: "foo/bar/")
-            .raises("error").then
-            .returns(stub(body: resp_body_a))
-          connection.expects(:get_container).twice
+            .and_raise("error")
+          expect(connection).to receive(:get_container).once
+            .with("my_container", prefix: "foo/bar/")
+            .and_return(double("response", body: resp_body_a))
+          expect(connection).to receive(:get_container).once
             .with("my_container", prefix: "foo/bar/", marker: "name_9999")
-            .raises("error").then
-            .returns(stub(body: resp_body_b))
+            .and_raise("error")
+          expect(connection).to receive(:get_container).once
+            .with("my_container", prefix: "foo/bar/", marker: "name_9999")
+            .and_return(double("response", body: resp_body_b))
 
           objects = cloud_io.objects("foo/bar/")
           expect(objects.count).to be 10_010
@@ -232,14 +236,17 @@ module Backup
       end
 
       before do
-        cloud_io.stubs(:connection).returns(connection)
+        allow(cloud_io).to receive(:connection).and_return(connection)
       end
 
       it "returns head_object response with retries" do
-        object = stub(name: "obj_name")
-        connection.expects(:head_object).twice
+        object = double("response", name: "obj_name")
+        expect(connection).to receive(:head_object).once
           .with("my_container", "obj_name")
-          .raises("error").then.returns(:response)
+          .and_raise("error")
+        expect(connection).to receive(:head_object).once
+          .with("my_container", "obj_name")
+          .and_return(:response)
         expect(cloud_io.head_object(object)).to eq :response
       end
     end # describe '#head_object'
@@ -252,20 +259,20 @@ module Backup
           retry_waitsec: 0
         )
       end
-      let(:resp_ok) { stub(body: { "Response Status" => "200 OK" }) }
-      let(:resp_bad) { stub(body: { "Response Status" => "400 Bad Request" }) }
+      let(:resp_ok) { double("response", body: { "Response Status" => "200 OK" }) }
+      let(:resp_bad) { double("response", body: { "Response Status" => "400 Bad Request" }) }
 
       before do
-        cloud_io.stubs(:connection).returns(connection)
+        allow(cloud_io).to receive(:connection).and_return(connection)
       end
 
       it "accepts a single Object" do
         object = described_class::Object.new(
           :foo, "name" => "obj_name", "hash" => "obj_hash"
         )
-        cloud_io.expects(:with_retries).with("DELETE Multiple Objects").yields
-        connection.expects(:delete_multiple_objects)
-          .with("my_container", ["obj_name"]).returns(resp_ok)
+        expect(cloud_io).to receive(:with_retries).with("DELETE Multiple Objects").and_yield
+        expect(connection).to receive(:delete_multiple_objects)
+          .with("my_container", ["obj_name"]).and_return(resp_ok)
         cloud_io.delete(object)
       end
 
@@ -276,32 +283,32 @@ module Backup
         object_b = described_class::Object.new(
           :foo, "name" => "obj_b_name", "hash" => "obj_b_hash"
         )
-        cloud_io.expects(:with_retries).with("DELETE Multiple Objects").yields
-        connection.expects(:delete_multiple_objects)
-          .with("my_container", ["obj_a_name", "obj_b_name"]).returns(resp_ok)
+        expect(cloud_io).to receive(:with_retries).with("DELETE Multiple Objects").and_yield
+        expect(connection).to receive(:delete_multiple_objects)
+          .with("my_container", ["obj_a_name", "obj_b_name"]).and_return(resp_ok)
 
         objects = [object_a, object_b]
-        expect { cloud_io.delete(objects) }.not_to change { objects }
+        expect { cloud_io.delete(objects) }.not_to change { objects.map(&:inspect) }
       end
 
       it "accepts a single name" do
-        cloud_io.expects(:with_retries).with("DELETE Multiple Objects").yields
-        connection.expects(:delete_multiple_objects)
-          .with("my_container", ["obj_name"]).returns(resp_ok)
+        expect(cloud_io).to receive(:with_retries).with("DELETE Multiple Objects").and_yield
+        expect(connection).to receive(:delete_multiple_objects)
+          .with("my_container", ["obj_name"]).and_return(resp_ok)
         cloud_io.delete("obj_name")
       end
 
       it "accepts multiple names" do
-        cloud_io.expects(:with_retries).with("DELETE Multiple Objects").yields
-        connection.expects(:delete_multiple_objects)
-          .with("my_container", ["obj_a_name", "obj_b_name"]).returns(resp_ok)
+        expect(cloud_io).to receive(:with_retries).with("DELETE Multiple Objects").and_yield
+        expect(connection).to receive(:delete_multiple_objects)
+          .with("my_container", ["obj_a_name", "obj_b_name"]).and_return(resp_ok)
 
         names = ["obj_a_name", "obj_b_name"]
         expect { cloud_io.delete(names) }.not_to change { names }
       end
 
       it "does nothing if empty array passed" do
-        connection.expects(:delete_multiple_objects).never
+        expect(connection).to receive(:delete_multiple_objects).never
         cloud_io.delete([])
       end
 
@@ -310,33 +317,39 @@ module Backup
         names_remaining = ["name"] * 10
         names_all = max_names + names_remaining
 
-        cloud_io.expects(:with_retries).twice.with("DELETE Multiple Objects").yields
-        connection.expects(:delete_multiple_objects)
-          .with("my_container", max_names).returns(resp_ok)
-        connection.expects(:delete_multiple_objects)
-          .with("my_container", names_remaining).returns(resp_ok)
+        expect(cloud_io).to receive(:with_retries).twice.with("DELETE Multiple Objects").and_yield
+        expect(connection).to receive(:delete_multiple_objects)
+          .with("my_container", max_names).and_return(resp_ok)
+        expect(connection).to receive(:delete_multiple_objects)
+          .with("my_container", names_remaining).and_return(resp_ok)
 
         expect { cloud_io.delete(names_all) }.not_to change { names_all }
       end
 
       it "retries on raised errors" do
-        connection.expects(:delete_multiple_objects).twice
+        expect(connection).to receive(:delete_multiple_objects).once
           .with("my_container", ["obj_name"])
-          .raises("error").then.returns(resp_ok)
+          .and_raise("error")
+        expect(connection).to receive(:delete_multiple_objects).once
+          .with("my_container", ["obj_name"])
+          .and_return(resp_ok)
         cloud_io.delete("obj_name")
       end
 
       it "retries on returned errors" do
-        connection.expects(:delete_multiple_objects).twice
+        expect(connection).to receive(:delete_multiple_objects).twice
           .with("my_container", ["obj_name"])
-          .returns(resp_bad).then.returns(resp_ok)
+          .and_return(resp_bad, resp_ok)
         cloud_io.delete("obj_name")
       end
 
       it "fails after retries exceeded" do
-        connection.expects(:delete_multiple_objects).twice
+        expect(connection).to receive(:delete_multiple_objects).once
           .with("my_container", ["obj_name"])
-          .raises("error message").then.returns(resp_bad)
+          .and_raise("error message")
+        expect(connection).to receive(:delete_multiple_objects).once
+          .with("my_container", ["obj_name"])
+          .and_return(resp_bad)
 
         expect do
           cloud_io.delete("obj_name")
@@ -378,44 +391,53 @@ module Backup
           :foo, "name" => "obj_b_name", "hash" => "obj_b_hash"
         )
       end
-      let(:resp_ok) { stub(body: { "Response Status" => "200 OK" }) }
-      let(:resp_bad) { stub(body: { "Response Status" => "400 Bad Request" }) }
+      let(:resp_ok) { double("response", body: { "Response Status" => "200 OK" }) }
+      let(:resp_bad) { double("response", body: { "Response Status" => "400 Bad Request" }) }
 
       before do
-        cloud_io.stubs(:connection).returns(connection)
+        allow(cloud_io).to receive(:connection).and_return(connection)
       end
 
       it "deletes a single SLO" do
-        connection.expects(:delete_static_large_object)
-          .with("my_container", "obj_a_name").returns(resp_ok)
+        expect(connection).to receive(:delete_static_large_object)
+          .with("my_container", "obj_a_name").and_return(resp_ok)
         cloud_io.delete_slo(object_a)
       end
 
       it "deletes a multiple SLOs" do
-        connection.expects(:delete_static_large_object)
-          .with("my_container", "obj_a_name").returns(resp_ok)
-        connection.expects(:delete_static_large_object)
-          .with("my_container", "obj_b_name").returns(resp_ok)
+        expect(connection).to receive(:delete_static_large_object)
+          .with("my_container", "obj_a_name").and_return(resp_ok)
+        expect(connection).to receive(:delete_static_large_object)
+          .with("my_container", "obj_b_name").and_return(resp_ok)
         cloud_io.delete_slo([object_a, object_b])
       end
 
       it "retries on raised and returned errors" do
-        connection.expects(:delete_static_large_object).twice
+        expect(connection).to receive(:delete_static_large_object).once
           .with("my_container", "obj_a_name")
-          .raises("error").then.returns(resp_ok)
-        connection.expects(:delete_static_large_object).twice
+          .and_raise("error")
+        expect(connection).to receive(:delete_static_large_object).once
+          .with("my_container", "obj_a_name")
+          .and_return(resp_ok)
+        expect(connection).to receive(:delete_static_large_object).twice
           .with("my_container", "obj_b_name")
-          .returns(resp_bad).then.returns(resp_ok)
+          .and_return(resp_bad, resp_ok)
         cloud_io.delete_slo([object_a, object_b])
       end
 
       it "fails after retries exceeded" do
-        connection.expects(:delete_static_large_object).twice
+        expect(connection).to receive(:delete_static_large_object).once
           .with("my_container", "obj_a_name")
-          .raises("error message").then.returns(resp_ok)
-        connection.expects(:delete_static_large_object).twice
+          .and_raise("error message")
+        expect(connection).to receive(:delete_static_large_object).once
+          .with("my_container", "obj_a_name")
+          .and_return(resp_ok)
+        expect(connection).to receive(:delete_static_large_object).once
           .with("my_container", "obj_b_name")
-          .returns(resp_bad).then.raises("failure")
+          .and_return(resp_bad)
+        expect(connection).to receive(:delete_static_large_object).once
+          .with("my_container", "obj_b_name")
+          .and_raise("failure")
 
         expect do
           cloud_io.delete_slo([object_a, object_b])
@@ -455,21 +477,21 @@ module Backup
       end
 
       it "caches a connection" do
-        Fog::Storage.expects(:new).once.with(
+        expect(Fog::Storage).to receive(:new).once.with(
           provider: "Rackspace",
           rackspace_username: "my_username",
           rackspace_api_key: "my_api_key",
           rackspace_auth_url: "my_auth_url",
           rackspace_region: "my_region",
           rackspace_servicenet: false
-        ).returns(connection)
+        ).and_return(connection)
 
         expect(cloud_io.send(:connection)).to be connection
         expect(cloud_io.send(:connection)).to be connection
       end
 
       it "passes along fog_options" do
-        Fog::Storage.expects(:new).with(provider: "Rackspace",
+        expect(Fog::Storage).to receive(:new).with(provider: "Rackspace",
                                           rackspace_username: "my_user",
                                           rackspace_api_key: "my_key",
                                           rackspace_auth_url: nil,
@@ -499,15 +521,18 @@ module Backup
           )
         end
         before do
-          cloud_io.stubs(:connection).returns(connection)
+          allow(cloud_io).to receive(:connection).and_return(connection)
         end
 
         it "creates containers once with retries" do
-          connection.expects(:put_container).twice
+          expect(connection).to receive(:put_container).twice
             .with("my_container")
-          connection.expects(:put_container).twice
+          expect(connection).to receive(:put_container).once
             .with("my_segments_container")
-            .raises("error").then.returns(nil)
+            .and_raise("error")
+          expect(connection).to receive(:put_container).once
+            .with("my_segments_container")
+            .and_return(nil)
 
           cloud_io.send(:create_containers)
           cloud_io.send(:create_containers)
@@ -523,13 +548,16 @@ module Backup
           )
         end
         before do
-          cloud_io.stubs(:connection).returns(connection)
+          allow(cloud_io).to receive(:connection).and_return(connection)
         end
 
         it "creates containers once with retries" do
-          connection.expects(:put_container).twice
+          expect(connection).to receive(:put_container).once
             .with("my_container")
-            .raises("error").then.returns(nil)
+            .and_raise("error")
+          expect(connection).to receive(:put_container).once
+            .with("my_container")
+            .and_return(nil)
 
           cloud_io.send(:create_containers)
           cloud_io.send(:create_containers)
@@ -545,27 +573,30 @@ module Backup
           retry_waitsec: 0
         )
       end
-      let(:file) { mock }
+      let(:file) { double }
 
       before do
-        cloud_io.stubs(:connection).returns(connection)
-        md5_file = mock
-        Digest::MD5.expects(:file).with("/src/file").returns(md5_file)
-        md5_file.expects(:hexdigest).returns("abc123")
+        allow(cloud_io).to receive(:connection).and_return(connection)
+        md5_file = double
+        expect(Digest::MD5).to receive(:file).with("/src/file").and_return(md5_file)
+        expect(md5_file).to receive(:hexdigest).and_return("abc123")
       end
 
       it "calls put_object with ETag" do
-        File.expects(:open).with("/src/file", "r").yields(file)
-        connection.expects(:put_object)
+        expect(File).to receive(:open).with("/src/file", "r").and_yield(file)
+        expect(connection).to receive(:put_object)
           .with("my_container", "dest/file", file, "ETag" => "abc123")
         cloud_io.send(:put_object, "/src/file", "dest/file")
       end
 
       it "fails after retries" do
-        File.expects(:open).twice.with("/src/file", "r").yields(file)
-        connection.expects(:put_object).twice
+        expect(File).to receive(:open).twice.with("/src/file", "r").and_yield(file)
+        expect(connection).to receive(:put_object).once
           .with("my_container", "dest/file", file, "ETag" => "abc123")
-          .raises("error1").then.raises("error2")
+          .and_raise("error1")
+        expect(connection).to receive(:put_object).once
+          .with("my_container", "dest/file", file, "ETag" => "abc123")
+          .and_raise("error2")
 
         expect do
           cloud_io.send(:put_object, "/src/file", "dest/file")
@@ -598,8 +629,8 @@ module Backup
         let(:delete_at) { cloud_io.send(:delete_at) }
 
         it "call put_object with X-Delete-At" do
-          File.expects(:open).with("/src/file", "r").yields(file)
-          connection.expects(:put_object).with(
+          expect(File).to receive(:open).with("/src/file", "r").and_yield(file)
+          expect(connection).to receive(:put_object).with(
             "my_container", "dest/file", file,
             "ETag" => "abc123", "X-Delete-At" => delete_at
           )
@@ -623,25 +654,25 @@ module Backup
       let(:file) { StringIO.new(("a" * segment_bytes) + ("b" * 250)) }
 
       before do
-        cloud_io.stubs(:connection).returns(connection)
+        allow(cloud_io).to receive(:connection).and_return(connection)
       end
 
       it "uploads segments with ETags" do
-        File.expects(:open).with("/src/file", "r").yields(file)
+        expect(File).to receive(:open).with("/src/file", "r").and_yield(file)
 
-        cloud_io.expects(:with_retries)
-          .with("PUT 'my_segments_container/dest/file/0001'").yields
-        connection.expects(:put_object).with(
+        expect(cloud_io).to receive(:with_retries)
+          .with("PUT 'my_segments_container/dest/file/0001'").and_yield
+        expect(connection).to receive(:put_object).with(
           "my_segments_container", "dest/file/0001", nil,
           "ETag" => digest_a
-        ).multiple_yields(nil, nil, nil) # twice to read 2 MiB, third should not read
+        ).and_yield.and_yield.and_yield # twice to read 2 MiB, third should not read
 
-        cloud_io.expects(:with_retries)
-          .with("PUT 'my_segments_container/dest/file/0002'").yields
-        connection.expects(:put_object).with(
+        expect(cloud_io).to receive(:with_retries)
+          .with("PUT 'my_segments_container/dest/file/0002'").and_yield
+        expect(connection).to receive(:put_object).with(
           "my_segments_container", "dest/file/0002", nil,
           "ETag" => digest_b
-        ).multiple_yields(nil, nil) # once to read 250 B, second should not read
+        ).and_yield.and_yield # once to read 250 B, second should not read
 
         expected = [
           { path: "my_segments_container/dest/file/0001",
@@ -665,9 +696,9 @@ module Backup
         segment_bytes = 1024**2 * 1
         file_size = segment_bytes * 100
         file = StringIO.new("x" * file_size)
-        File.expects(:open).with("/src/file", "r").yields(file)
-        cloud_io.stubs(:segment_md5)
-        connection.stubs(:put_object).yields
+        expect(File).to receive(:open).with("/src/file", "r").and_yield(file)
+        allow(cloud_io).to receive(:segment_md5)
+        allow(connection).to receive(:put_object).and_yield
 
         cloud_io.send(:upload_segments,
           "/src/file", "dest/file", segment_bytes, file_size)
@@ -697,17 +728,17 @@ module Backup
         let(:delete_at) { cloud_io.send(:delete_at) }
 
         it "uploads segments with X-Delete-At" do
-          File.expects(:open).with("/src/file", "r").yields(file)
+          expect(File).to receive(:open).with("/src/file", "r").and_yield(file)
 
-          connection.expects(:put_object).with(
+          expect(connection).to receive(:put_object).with(
             "my_segments_container", "dest/file/0001", nil,
             "ETag" => digest_a, "X-Delete-At" => delete_at
-          ).multiple_yields(nil, nil) # twice to read 2 MiB
+          ).and_yield.and_yield # twice to read 2 MiB
 
-          connection.expects(:put_object).with(
+          expect(connection).to receive(:put_object).with(
             "my_segments_container", "dest/file/0002", nil,
             "ETag" => digest_b, "X-Delete-At" => delete_at
-          ).yields # once to read 250 B
+          ).and_yield # once to read 250 B
 
           expected = [
             { path: "my_segments_container/dest/file/0001",
@@ -733,24 +764,30 @@ module Backup
           retry_waitsec: 0
         )
       end
-      let(:segments) { mock }
+      let(:segments) { double }
 
       before do
-        cloud_io.stubs(:connection).returns(connection)
+        allow(cloud_io).to receive(:connection).and_return(connection)
       end
 
       it "uploads manifest with retries" do
-        connection.expects(:put_static_obj_manifest).twice
+        expect(connection).to receive(:put_static_obj_manifest).once
           .with("my_container", "dest/file", segments, {})
-          .raises("error").then.returns(nil)
+          .and_raise("error")
+        expect(connection).to receive(:put_static_obj_manifest).once
+          .with("my_container", "dest/file", segments, {})
+          .and_return(nil)
 
         cloud_io.send(:upload_manifest, "dest/file", segments)
       end
 
       it "fails when retries exceeded" do
-        connection.expects(:put_static_obj_manifest).twice
+        expect(connection).to receive(:put_static_obj_manifest).once
           .with("my_container", "dest/file", segments, {})
-          .raises("error1").then.raises("error2")
+          .and_raise("error1")
+        expect(connection).to receive(:put_static_obj_manifest).once
+          .with("my_container", "dest/file", segments, {})
+          .and_raise("error2")
 
         expect do
           cloud_io.send(:upload_manifest, "dest/file", segments)
@@ -784,7 +821,7 @@ module Backup
         let(:delete_at) { cloud_io.send(:delete_at) }
 
         it "uploads manifest with X-Delete-At" do
-          connection.expects(:put_static_obj_manifest)
+          expect(connection).to receive(:put_static_obj_manifest)
             .with("my_container", "dest/file", segments, "X-Delete-At" => delete_at)
 
           cloud_io.send(:upload_manifest, "dest/file", segments)
@@ -837,32 +874,32 @@ module Backup
 
       describe "#slo?" do
         it "returns true when object is an SLO" do
-          cloud_io.expects(:head_object).once
+          expect(cloud_io).to receive(:head_object).once
             .with(object)
-            .returns(stub(headers: { "X-Static-Large-Object" => "True" }))
+            .and_return(double("response", headers: { "X-Static-Large-Object" => "True" }))
 
           expect(object.slo?).to be(true)
           expect(object.slo?).to be(true)
         end
 
         it "returns false when object is not an SLO" do
-          cloud_io.expects(:head_object).with(object).returns(stub(headers: {}))
+          expect(cloud_io).to receive(:head_object).with(object).and_return(double("response", headers: {}))
           expect(object.slo?).to be(false)
         end
       end
 
       describe "#marked_for_deletion?" do
         it "returns true when object has X-Delete-At set" do
-          cloud_io.expects(:head_object).once
+          expect(cloud_io).to receive(:head_object).once
             .with(object)
-            .returns(stub(headers: { "X-Delete-At" => "12345" }))
+            .and_return(double("response", headers: { "X-Delete-At" => "12345" }))
 
           expect(object.marked_for_deletion?).to be(true)
           expect(object.marked_for_deletion?).to be(true)
         end
 
         it "returns false when object does not have X-Delete-At set" do
-          cloud_io.expects(:head_object).with(object).returns(stub(headers: {}))
+          expect(cloud_io).to receive(:head_object).with(object).and_return(double("response", headers: {}))
           expect(object.marked_for_deletion?).to be(false)
         end
       end
