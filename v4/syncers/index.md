@@ -14,7 +14,7 @@ Backup includes the following Syncers:
 
 Syncers are used to keep source directories and their contents synchronized with a destination directory.
 Only the contents of the source directories that have changed are transferred to the destination. The source and
-destination locations may be on the same physical machine or remote, depending on the Syncer and it's configuration.
+destination locations may be on the same physical machine or remote, depending on the Syncer and its configuration.
 
 
 Storages vs Syncers
