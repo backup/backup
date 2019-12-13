@@ -1,0 +1,19 @@
+  ##
+  # OpenStack Swift object storage [Storage]
+  #
+  store_with Swift do |swift|
+    # Your OpenStack credentials
+    swift.auth_url      = "https://my.identity.server/v2.0/tokens"
+    swift.username      = "my_username"
+    swift.password      = "my_password"
+    
+    # If using a Keystone (v2) identity
+    swift.tenant_name   = "my_tenant_name"
+
+    swift.container     = "my_swift_container"
+    swift.path          = "path/to/backups"        
+    swift.keep          = 5
+    # swift.keep          = Time.now - 2592000 # Remove all backups older than 1 month.        
+    # If your deploiement has multiple regions
+    # swift.region        = "region"
+  end
