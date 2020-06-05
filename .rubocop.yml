@@ -9,6 +9,8 @@ AllCops:
   Exclude:
     - "tmp/**/*"
     - "vagrant/**/*"
+    # Necessary on travis CI
+    - "vendor/**/*"
   DisplayCopNames: true
   UseCache: true
   CacheRootDirectory: ./tmp
