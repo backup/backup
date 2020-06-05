@@ -19,7 +19,7 @@ describe Backup::Encryptor::OpenSSL do
     after { Backup::Encryptor::OpenSSL.clear_defaults! }
 
     it "should load pre-configured defaults" do
-      Backup::Encryptor::OpenSSL.any_instance.expects(:load_defaults!)
+      expect_any_instance_of(Backup::Encryptor::OpenSSL).to receive(:load_defaults!)
       encryptor
     end
 
@@ -69,9 +69,9 @@ describe Backup::Encryptor::OpenSSL do
 
   describe "#encrypt_with" do
     it "should yield the encryption command and extension" do
-      encryptor.expects(:log!)
-      encryptor.expects(:utility).with(:openssl).returns("openssl_cmd")
-      encryptor.expects(:options).returns("cmd_options")
+      expect(encryptor).to receive(:log!)
+      expect(encryptor).to receive(:utility).with(:openssl).and_return("openssl_cmd")
+      expect(encryptor).to receive(:options).and_return("cmd_options")
 
       encryptor.encrypt_with do |command, ext|
         expect(command).to eq("openssl_cmd cmd_options")

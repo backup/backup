@@ -38,7 +38,7 @@ module Backup
       before do
         Timecop.freeze
         storage.package.time = timestamp
-        storage.package.stubs(:filenames).returns(
+        allow(storage.package).to receive(:filenames).and_return(
           ["test_trigger.tar-aa", "test_trigger.tar-ab"]
         )
         storage.path = "my/path"
@@ -52,19 +52,19 @@ module Backup
         end
 
         it "moves the package files to their destination" do
-          FileUtils.expects(:mkdir_p).in_sequence(s).with(remote_path)
+          expect(FileUtils).to receive(:mkdir_p).ordered.with(remote_path)
 
-          Logger.expects(:warn).never
+          expect(Logger).to receive(:warn).never
 
           src = File.join(Config.tmp_path, "test_trigger.tar-aa")
           dest = File.join(remote_path, "test_trigger.tar-aa")
-          Logger.expects(:info).in_sequence(s).with("Storing '#{dest}'...")
-          FileUtils.expects(:mv).in_sequence(s).with(src, dest)
+          expect(Logger).to receive(:info).ordered.with("Storing '#{dest}'...")
+          expect(FileUtils).to receive(:mv).ordered.with(src, dest)
 
           src = File.join(Config.tmp_path, "test_trigger.tar-ab")
           dest = File.join(remote_path, "test_trigger.tar-ab")
-          Logger.expects(:info).in_sequence(s).with("Storing '#{dest}'...")
-          FileUtils.expects(:mv).in_sequence(s).with(src, dest)
+          expect(Logger).to receive(:info).ordered.with("Storing '#{dest}'...")
+          expect(FileUtils).to receive(:mv).ordered.with(src, dest)
 
           storage.send(:transfer!)
         end
@@ -77,9 +77,9 @@ module Backup
         end
 
         it "logs a warning and copies the package files to their destination" do
-          FileUtils.expects(:mkdir_p).in_sequence(s).with(remote_path)
+          expect(FileUtils).to receive(:mkdir_p).ordered.with(remote_path)
 
-          Logger.expects(:warn).in_sequence(s).with do |err|
+          expect(Logger).to receive(:warn).ordered do |err|
             expect(err).to be_an_instance_of Storage::Local::Error
             expect(err.message).to eq <<-EOS.gsub(/^ +/, "  ").strip
             Storage::Local::Error: Local File Copy Warning!
@@ -92,13 +92,13 @@ module Backup
 
           src = File.join(Config.tmp_path, "test_trigger.tar-aa")
           dest = File.join(remote_path, "test_trigger.tar-aa")
-          Logger.expects(:info).in_sequence(s).with("Storing '#{dest}'...")
-          FileUtils.expects(:cp).in_sequence(s).with(src, dest)
+          expect(Logger).to receive(:info).ordered.with("Storing '#{dest}'...")
+          expect(FileUtils).to receive(:cp).ordered.with(src, dest)
 
           src = File.join(Config.tmp_path, "test_trigger.tar-ab")
           dest = File.join(remote_path, "test_trigger.tar-ab")
-          Logger.expects(:info).in_sequence(s).with("Storing '#{dest}'...")
-          FileUtils.expects(:cp).in_sequence(s).with(src, dest)
+          expect(Logger).to receive(:info).ordered.with("Storing '#{dest}'...")
+          expect(FileUtils).to receive(:cp).ordered.with(src, dest)
 
           storage.send(:transfer!)
         end
@@ -111,7 +111,8 @@ module Backup
         File.expand_path(File.join("my/path/test_trigger", timestamp))
       end
       let(:package) do
-        stub( # loaded from YAML storage file
+        double(
+          Package, # loaded from YAML storage file
           trigger: "test_trigger",
           time: timestamp
         )
@@ -125,10 +126,10 @@ module Backup
       after { Timecop.return }
 
       it "removes the given package from the remote" do
-        Logger.expects(:info).in_sequence(s)
+        expect(Logger).to receive(:info).ordered
           .with("Removing backup package dated #{timestamp}...")
 
-        FileUtils.expects(:rm_r).in_sequence(s).with(remote_path)
+        expect(FileUtils).to receive(:rm_r).ordered.with(remote_path)
 
         storage.send(:remove!, package)
       end

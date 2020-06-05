@@ -13,10 +13,10 @@ module Backup
       @log_path_default = File.join(@root_path, "log")
       @logfile_default = File.join(@log_path_default, "backup.log")
 
-      Backup::Config.stubs(:root_path).returns(@root_path)
+      allow(Backup::Config).to receive(:root_path).and_return(@root_path)
 
-      Logger::Console.any_instance.expects(:log).never
-      Logger::Syslog.any_instance.expects(:log).never
+      expect_any_instance_of(Logger::Console).to receive(:log).never
+      expect_any_instance_of(Logger::Syslog).to receive(:log).never
       Logger.configure do
         console.quiet = true
         logfile.enabled = true
@@ -35,7 +35,7 @@ module Backup
         end
         Logger.start!
 
-        Logger::Syslog.any_instance.expects(:log).never
+        expect_any_instance_of(Logger::Syslog).to receive(:log).never
         Logger.info "message"
         expect(File.exist?(@log_path_default)).to eq(false)
       end
@@ -51,7 +51,7 @@ module Backup
         end
         Logger.start!
 
-        Logger::Syslog.any_instance.expects(:log).never
+        expect_any_instance_of(Logger::Syslog).to receive(:log).never
         Logger.info "message"
         expect(File.exist?(@log_path_default)).to eq(false)
       end
@@ -151,7 +151,7 @@ module Backup
 
         context "when log file is not larger than max_bytes" do
           it "does not truncates the file" do
-            File.expects(:mv).never
+            expect(File).to receive(:mv).never
             Logger.start!
             Logger.info "a message"
 
@@ -164,7 +164,7 @@ module Backup
 
         context "when log file does not exist" do
           it "does not truncates the file" do
-            File.expects(:mv).never
+            expect(File).to receive(:mv).never
             Logger.start!
             expect(File.exist?(@log_path_default)).to eq(true)
             expect(File.exist?(@logfile_default)).to eq(false)

@@ -4,7 +4,7 @@ shared_examples "a subclass of Notifier::Base" do
 
   describe "#perform" do
     context "when the model succeeded without warnings" do
-      before { model.stubs(:exit_status).returns(0) }
+      before { allow(model).to receive(:exit_status).and_return(0) }
 
       context "when notify_on_success is true" do
         before do
@@ -14,10 +14,10 @@ shared_examples "a subclass of Notifier::Base" do
         end
 
         it "sends a notification" do
-          Backup::Logger.expects(:info).with(
+          expect(Backup::Logger).to receive(:info).with(
             "Sending notification using #{notifier_name}..."
           )
-          notifier.expects(:notify!).with(:success)
+          expect(notifier).to receive(:notify!).with(:success)
           notifier.perform!
         end
       end
@@ -30,15 +30,15 @@ shared_examples "a subclass of Notifier::Base" do
         end
 
         it "does nothing" do
-          Backup::Logger.expects(:info).never
-          notifier.expects(:notify!).never
+          expect(Backup::Logger).to receive(:info).never
+          expect(notifier).to receive(:notify!).never
           notifier.perform!
         end
       end
     end
 
     context "when the model succeeded with warnings" do
-      before { model.stubs(:exit_status).returns(1) }
+      before { allow(model).to receive(:exit_status).and_return(1) }
 
       context "when notify_on_success is true" do
         before do
@@ -48,10 +48,10 @@ shared_examples "a subclass of Notifier::Base" do
         end
 
         it "sends a notification" do
-          Backup::Logger.expects(:info).with(
+          expect(Backup::Logger).to receive(:info).with(
             "Sending notification using #{notifier_name}..."
           )
-          notifier.expects(:notify!).with(:warning)
+          expect(notifier).to receive(:notify!).with(:warning)
           notifier.perform!
         end
       end
@@ -64,10 +64,10 @@ shared_examples "a subclass of Notifier::Base" do
         end
 
         it "sends a notification" do
-          Backup::Logger.expects(:info).with(
+          expect(Backup::Logger).to receive(:info).with(
             "Sending notification using #{notifier_name}..."
           )
-          notifier.expects(:notify!).with(:warning)
+          expect(notifier).to receive(:notify!).with(:warning)
           notifier.perform!
         end
       end
@@ -80,15 +80,15 @@ shared_examples "a subclass of Notifier::Base" do
         end
 
         it "does nothing" do
-          Backup::Logger.expects(:info).never
-          notifier.expects(:notify!).never
+          expect(Backup::Logger).to receive(:info).never
+          expect(notifier).to receive(:notify!).never
           notifier.perform!
         end
       end
     end
 
     context "when the model failed (non-fatal)" do
-      before { model.stubs(:exit_status).returns(2) }
+      before { allow(model).to receive(:exit_status).and_return(2) }
 
       context "when notify_on_failure is true" do
         before do
@@ -98,10 +98,10 @@ shared_examples "a subclass of Notifier::Base" do
         end
 
         it "sends a notification" do
-          Backup::Logger.expects(:info).with(
+          expect(Backup::Logger).to receive(:info).with(
             "Sending notification using #{notifier_name}..."
           )
-          notifier.expects(:notify!).with(:failure)
+          expect(notifier).to receive(:notify!).with(:failure)
           notifier.perform!
         end
       end
@@ -114,15 +114,15 @@ shared_examples "a subclass of Notifier::Base" do
         end
 
         it "does nothing" do
-          Backup::Logger.expects(:info).never
-          notifier.expects(:notify!).never
+          expect(Backup::Logger).to receive(:info).never
+          expect(notifier).to receive(:notify!).never
           notifier.perform!
         end
       end
     end
 
     context "when the model failed (fatal)" do
-      before { model.stubs(:exit_status).returns(3) }
+      before { allow(model).to receive(:exit_status).and_return(3) }
 
       context "when notify_on_failure is true" do
         before do
@@ -132,10 +132,10 @@ shared_examples "a subclass of Notifier::Base" do
         end
 
         it "sends a notification" do
-          Backup::Logger.expects(:info).with(
+          expect(Backup::Logger).to receive(:info).with(
             "Sending notification using #{notifier_name}..."
           )
-          notifier.expects(:notify!).with(:failure)
+          expect(notifier).to receive(:notify!).with(:failure)
           notifier.perform!
         end
       end
@@ -148,19 +148,19 @@ shared_examples "a subclass of Notifier::Base" do
         end
 
         it "does nothing" do
-          Backup::Logger.expects(:info).never
-          notifier.expects(:notify!).never
+          expect(Backup::Logger).to receive(:info).never
+          expect(notifier).to receive(:notify!).never
           notifier.perform!
         end
       end
     end
 
     specify "only logs exceptions" do
-      model.stubs(:exit_status).returns(0)
-      notifier.expects(:notify!).with(:success)
-        .raises(Exception.new("error message"))
+      allow(model).to receive(:exit_status).and_return(0)
+      expect(notifier).to receive(:notify!).with(:success)
+        .and_raise(Exception.new("error message"))
 
-      Backup::Logger.expects(:error).with do |err|
+      expect(Backup::Logger).to receive(:error) do |err|
         expect(err).to be_an_instance_of Backup::Notifier::Error
         expect(err.message).to match(/#{ notifier_name } Failed!/)
         expect(err.message).to match(/error message/)
@@ -170,11 +170,11 @@ shared_examples "a subclass of Notifier::Base" do
     end
 
     specify "retries failed attempts" do
-      model.stubs(:exit_status).returns(0)
+      allow(model).to receive(:exit_status).and_return(0)
       notifier.max_retries = 2
 
       logger_calls = 0
-      Backup::Logger.expects(:info).times(3).with do |arg|
+      expect(Backup::Logger).to receive(:info).exactly(3).times do |arg|
         logger_calls += 1
         case logger_calls
         when 1
@@ -190,14 +190,13 @@ shared_examples "a subclass of Notifier::Base" do
         end
       end
 
-      notifier.expects(:sleep).with(30).twice
+      expect(notifier).to receive(:sleep).with(30).twice
 
-      s = sequence ""
-      notifier.expects(:notify!).in_sequence(s).raises("standard error")
-      notifier.expects(:notify!).in_sequence(s).raises(Timeout::Error.new)
-      notifier.expects(:notify!).in_sequence(s).raises("final error")
+      expect(notifier).to receive(:notify!).ordered.and_raise("standard error")
+      expect(notifier).to receive(:notify!).ordered.and_raise(Timeout::Error.new)
+      expect(notifier).to receive(:notify!).ordered.and_raise("final error")
 
-      Backup::Logger.expects(:error).in_sequence(s).with do |err|
+      expect(Backup::Logger).to receive(:error).ordered do |err|
         expect(err).to be_an_instance_of Backup::Notifier::Error
         expect(err.message).to match(/#{ notifier_name } Failed!/)
         expect(err.message).to match(/final error/)

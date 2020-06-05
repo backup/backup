@@ -62,17 +62,17 @@ module Backup
           flowdock.link            = "www.example.com"
         end
       end
-      let(:client) { mock }
+      let(:client) { double }
       let(:push_to_team_inbox) { double }
       let(:message) { "[Backup::%s] test label (test_trigger)" }
 
       context "when status is :success" do
         it "sends a success message" do
-          Flowdock::Flow.expects(:new).in_sequence(s).with(
+          expect(Flowdock::Flow).to receive(:new).ordered.with(
             api_token: "my_token", source: "Backup test label",
             from: { name: "my_name", address: "email@example.com" }
-          ).returns(client)
-          client.expects(:push_to_team_inbox).in_sequence(s).with(
+          ).and_return(client)
+          expect(client).to receive(:push_to_team_inbox).ordered.with(
             subject: "My Daily Backup",
             content: message % "Success",
             tags: ["prod", "#BackupSuccess"],
@@ -85,11 +85,11 @@ module Backup
 
       context "when status is :warning" do
         it "sends a warning message" do
-          Flowdock::Flow.expects(:new).in_sequence(s).with(
+          expect(Flowdock::Flow).to receive(:new).ordered.with(
             api_token: "my_token", source: "Backup test label",
             from: { name: "my_name", address: "email@example.com" }
-          ).returns(client)
-          client.expects(:push_to_team_inbox).in_sequence(s).with(
+          ).and_return(client)
+          expect(client).to receive(:push_to_team_inbox).ordered.with(
             subject: "My Daily Backup",
             content: message % "Warning",
             tags: ["prod", "#BackupWarning"],
@@ -102,11 +102,11 @@ module Backup
 
       context "when status is :failure" do
         it "sends a failure message" do
-          Flowdock::Flow.expects(:new).in_sequence(s).with(
+          expect(Flowdock::Flow).to receive(:new).ordered.with(
             api_token: "my_token", source: "Backup test label",
             from: { name: "my_name", address: "email@example.com" }
-          ).returns(client)
-          client.expects(:push_to_team_inbox).in_sequence(s).with(
+          ).and_return(client)
+          expect(client).to receive(:push_to_team_inbox).ordered.with(
             subject: "My Daily Backup",
             content: message % "Failure",
             tags: ["prod", "#BackupFailure"],

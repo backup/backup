@@ -41,7 +41,7 @@ describe Backup::Encryptor::GPG do
     after { Backup::Encryptor::GPG.clear_defaults! }
 
     it "should load pre-configured defaults" do
-      Backup::Encryptor::GPG.any_instance.expects(:load_defaults!)
+      expect_any_instance_of(Backup::Encryptor::GPG).to receive(:load_defaults!)
       encryptor
     end
 
@@ -93,16 +93,16 @@ describe Backup::Encryptor::GPG do
 
   describe "#encrypt_with" do
     before do
-      encryptor.expects(:log!)
-      encryptor.expects(:prepare)
-      encryptor.expects(:cleanup) # ensure call
+      expect(encryptor).to receive(:log!)
+      expect(encryptor).to receive(:prepare)
+      expect(encryptor).to receive(:cleanup) # ensure call
     end
 
     context "when encryption can be performed" do
       it "should yield the encryption command and extension" do
-        encryptor.expects(:mode_options).twice.returns("mode_options")
-        encryptor.expects(:base_options).returns("base_options")
-        encryptor.expects(:utility).with(:gpg).returns("gpg")
+        expect(encryptor).to receive(:mode_options).twice.and_return("mode_options")
+        expect(encryptor).to receive(:base_options).and_return("base_options")
+        expect(encryptor).to receive(:utility).with(:gpg).and_return("gpg")
 
         encryptor.encrypt_with do |command, ext|
           expect(command).to eq("gpg base_options mode_options")
@@ -113,7 +113,7 @@ describe Backup::Encryptor::GPG do
 
     context "when encryption can not be performed" do
       it "should raise an error when no mode_options are returned" do
-        encryptor.expects(:mode_options).returns([])
+        expect(encryptor).to receive(:mode_options).and_return([])
 
         expect do
           encryptor.encrypt_with
@@ -125,14 +125,14 @@ describe Backup::Encryptor::GPG do
   describe "#prepare and #cleanup" do
     it "should setup required variables" do
       encryptor.instance_variable_set(:@tempdirs, nil)
-      FileUtils.expects(:rm_rf).never
+      expect(FileUtils).to receive(:rm_rf).never
       encryptor.send(:prepare)
       expect(encryptor.instance_variable_get(:@tempdirs)).to eq([])
     end
 
     it "should remove any tempdirs and clear all variables" do
       encryptor.instance_variable_set(:@tempdirs, ["a", "b"])
-      FileUtils.expects(:rm_rf).with(["a", "b"], secure: true)
+      expect(FileUtils).to receive(:rm_rf).with(["a", "b"], secure: true)
 
       encryptor.instance_variable_set(:@base_options, true)
       encryptor.instance_variable_set(:@mode_options, true)
@@ -157,8 +157,8 @@ describe Backup::Encryptor::GPG do
 
       context "when #gpg_homedir is given" do
         it "should return the proper options" do
-          encryptor.expects(:setup_gpg_homedir).once.returns("/a/dir")
-          encryptor.expects(:setup_gpg_config).once.returns(false)
+          expect(encryptor).to receive(:setup_gpg_homedir).once.and_return("/a/dir")
+          expect(encryptor).to receive(:setup_gpg_config).once.and_return(false)
 
           ret = "--no-tty --homedir '/a/dir'"
           expect(encryptor.send(:base_options)).to eq(ret)
@@ -169,8 +169,8 @@ describe Backup::Encryptor::GPG do
 
       context "when #gpg_config is given" do
         it "should return the proper options" do
-          encryptor.expects(:setup_gpg_homedir).once.returns(false)
-          encryptor.expects(:setup_gpg_config).once.returns("/a/file")
+          expect(encryptor).to receive(:setup_gpg_homedir).once.and_return(false)
+          expect(encryptor).to receive(:setup_gpg_config).once.and_return("/a/file")
 
           ret = "--no-tty --options '/a/file'"
           expect(encryptor.send(:base_options)).to eq(ret)
@@ -181,8 +181,8 @@ describe Backup::Encryptor::GPG do
 
       context "when #gpg_homedir and #gpg_config is given" do
         it "should return the proper options" do
-          encryptor.expects(:setup_gpg_homedir).once.returns("/a/dir")
-          encryptor.expects(:setup_gpg_config).once.returns("/a/file")
+          expect(encryptor).to receive(:setup_gpg_homedir).once.and_return("/a/dir")
+          expect(encryptor).to receive(:setup_gpg_config).once.and_return("/a/file")
 
           ret = "--no-tty --homedir '/a/dir' --options '/a/file'"
           expect(encryptor.send(:base_options)).to eq(ret)
@@ -193,8 +193,8 @@ describe Backup::Encryptor::GPG do
 
       context "when neither #gpg_homedir and #gpg_config is given" do
         it "should return the proper options" do
-          encryptor.expects(:setup_gpg_homedir).once.returns(false)
-          encryptor.expects(:setup_gpg_config).once.returns(false)
+          expect(encryptor).to receive(:setup_gpg_homedir).once.and_return(false)
+          expect(encryptor).to receive(:setup_gpg_config).once.and_return(false)
 
           ret = "--no-tty"
           expect(encryptor.send(:base_options)).to eq(ret)
@@ -219,39 +219,39 @@ describe Backup::Encryptor::GPG do
 
       before do
         encryptor.gpg_homedir = path
-        Backup::Config.stubs(:user).returns("a_user")
+        allow(Backup::Config).to receive(:user).and_return("a_user")
       end
 
       context "and no errors occur" do
         before do
-          FileUtils.expects(:mkdir_p).with(expanded_path)
-          FileUtils.expects(:chown).with("a_user", nil, expanded_path)
-          FileUtils.expects(:chmod).with(0o700, expanded_path)
+          expect(FileUtils).to receive(:mkdir_p).with(expanded_path)
+          expect(FileUtils).to receive(:chown).with("a_user", nil, expanded_path)
+          expect(FileUtils).to receive(:chmod).with(0o700, expanded_path)
         end
 
         context "and the gpg_homedir files exist" do
           before do
             %w[pubring.gpg secring.gpg trustdb.gpg].each do |file|
-              File.expects(:exist?).with(
+              expect(File).to receive(:exist?).with(
                 File.join(expanded_path, file)
-              ).returns(true)
+              ).and_return(true)
             end
           end
 
           it "should ensure permissions and return the path" do
-            encryptor.expects(:utility).never
+            expect(encryptor).to receive(:utility).never
             expect(encryptor.send(:setup_gpg_homedir)).to eq(expanded_path)
           end
         end
 
         context "and the gpg_homedir files do not exist" do
           before do
-            File.stubs(:exist?).returns(false)
+            allow(File).to receive(:exist?).and_return(false)
           end
 
           it "should call gpg to initialize the files" do
-            encryptor.expects(:utility).with(:gpg).returns("gpg")
-            encryptor.expects(:run).with(
+            expect(encryptor).to receive(:utility).with(:gpg).and_return("gpg")
+            expect(encryptor).to receive(:run).with(
               "gpg --homedir '#{expanded_path}' -K 2>&1 >/dev/null"
             )
             expect(encryptor.send(:setup_gpg_homedir)).to eq(expanded_path)
@@ -261,7 +261,7 @@ describe Backup::Encryptor::GPG do
 
       context "and errors occur" do
         it "should wrap and raise the error" do
-          File.expects(:expand_path).raises("error message")
+          expect(File).to receive(:expand_path).and_raise("error message")
 
           expect do
             encryptor.send(:setup_gpg_homedir)
@@ -291,44 +291,44 @@ describe Backup::Encryptor::GPG do
 
           \tthe content of a gpg.conf file
         EOF
-        Backup::Config.stubs(:tmp_path).returns("/Backup/tmp")
+        allow(Backup::Config).to receive(:tmp_path).and_return("/Backup/tmp")
         encryptor.instance_variable_set(:@tempdirs, [])
       end
 
       context "when no errors occur" do
-        let(:tempdir) { mock }
-        let(:tempfile) { mock }
-        let(:tempfile_path) { mock }
+        let(:tempdir) { double }
+        let(:tempfile) { double }
+        let(:tempfile_path) { double }
         let(:path) { double }
 
         before do
-          encryptor.expects(:cleanup).never
-          tempfile.stubs(:path).returns(tempfile_path)
+          expect(encryptor).to receive(:cleanup).never
+          allow(tempfile).to receive(:path).and_return(tempfile_path)
         end
 
         it "should create and return the file path" do
           # create temporary directory and convert to a Pathname object
-          Dir.expects(:mktmpdir).with(
+          expect(Dir).to receive(:mktmpdir).with(
             "backup-gpg_config", "/Backup/tmp"
-          ).returns(tempdir)
+          ).and_return(tempdir)
 
           # create temporary file within the temporary directory
-          Tempfile.expects(:open).with(
+          expect(Tempfile).to receive(:open).with(
             "backup-gpg_config", tempdir
-          ).returns(tempfile)
+          ).and_return(tempfile)
 
           # write the gpg_config, stripping leading tabs/spaces
-          tempfile.expects(:write).with(
+          expect(tempfile).to receive(:write).with(
             "# a comment\n" \
             "text which will be\n" \
             "\n" \
             "the content of a gpg.conf file\n"
           )
           # close the file
-          tempfile.expects(:close)
+          expect(tempfile).to receive(:close)
 
           # check the config file
-          encryptor.expects(:check_gpg_config).with(tempfile_path)
+          expect(encryptor).to receive(:check_gpg_config).with(tempfile_path)
 
           # method returns the tempfile's path
           expect(encryptor.send(:setup_gpg_config)).to eq(tempfile_path)
@@ -340,11 +340,11 @@ describe Backup::Encryptor::GPG do
 
       context "when errors occur" do
         before do
-          encryptor.expects(:cleanup) # run before the error is raised
+          expect(encryptor).to receive(:cleanup) # run before the error is raised
         end
 
         it "should wrap and raise the error" do
-          Dir.expects(:mktmpdir).raises("an error")
+          expect(Dir).to receive(:mktmpdir).and_raise("an error")
 
           expect do
             encryptor.send(:setup_gpg_config)
@@ -359,18 +359,18 @@ describe Backup::Encryptor::GPG do
   end # describe '#setup_gpg_config'
 
   describe "#check_gpg_config" do
-    let(:cmd_ret) { mock }
+    let(:cmd_ret) { double }
     let(:file_path) { "/path/to/tempfile" }
 
     before do
-      encryptor.expects(:utility).with(:gpg).returns("gpg")
-      encryptor.expects(:run).with(
+      expect(encryptor).to receive(:utility).with(:gpg).and_return("gpg")
+      expect(encryptor).to receive(:run).with(
         "gpg --options '#{file_path}' --gpgconf-test 2>&1"
-      ).returns(cmd_ret)
+      ).and_return(cmd_ret)
     end
 
     context "when no errors are reported" do
-      before { cmd_ret.expects(:chomp).returns("") }
+      before { expect(cmd_ret).to receive(:chomp).and_return("") }
 
       it "should do nothing" do
         expect(encryptor.send(:check_gpg_config, file_path)).to be_nil
@@ -379,7 +379,7 @@ describe Backup::Encryptor::GPG do
 
     context "when errors are reported" do
       let(:error_message) { "gpg: /path/to/tempfile:1: invalid option" }
-      before { cmd_ret.expects(:chomp).returns(error_message) }
+      before { expect(cmd_ret).to receive(:chomp).and_return(error_message) }
 
       it "should raise the error message reported" do
         expect do
@@ -398,8 +398,8 @@ describe Backup::Encryptor::GPG do
 
       context "when #mode is :symmetric" do
         it "should return symmetric encryption options" do
-          encryptor.expects(:symmetric_options).once.returns(s_opts)
-          encryptor.expects(:asymmetric_options).never
+          expect(encryptor).to receive(:symmetric_options).once.and_return(s_opts)
+          expect(encryptor).to receive(:asymmetric_options).never
 
           encryptor.mode = :symmetric
           expect(encryptor.send(:mode_options)).to eq(s_opts)
@@ -410,8 +410,8 @@ describe Backup::Encryptor::GPG do
 
       context "when #mode is :asymmetric" do
         it "should return asymmetric encryption options" do
-          encryptor.expects(:symmetric_options).never
-          encryptor.expects(:asymmetric_options).once.returns(a_opts)
+          expect(encryptor).to receive(:symmetric_options).never
+          expect(encryptor).to receive(:asymmetric_options).once.and_return(a_opts)
 
           encryptor.mode = :asymmetric
           expect(encryptor.send(:mode_options)).to eq(a_opts)
@@ -422,8 +422,8 @@ describe Backup::Encryptor::GPG do
 
       context "when #mode is :both" do
         it "should return both symmetric and asymmetric encryption options" do
-          encryptor.expects(:symmetric_options).once.returns(s_opts)
-          encryptor.expects(:asymmetric_options).once.returns(a_opts)
+          expect(encryptor).to receive(:symmetric_options).once.and_return(s_opts)
+          expect(encryptor).to receive(:asymmetric_options).once.and_return(a_opts)
 
           encryptor.mode = :both
           opts = "#{s_opts} #{a_opts}"
@@ -442,8 +442,8 @@ describe Backup::Encryptor::GPG do
 
     context "when setup_passphrase_file returns a path" do
       it "should return the options" do
-        encryptor.expects(:setup_passphrase_file).returns(path)
-        File.expects(:exist?).with(path).returns(true)
+        expect(encryptor).to receive(:setup_passphrase_file).and_return(path)
+        expect(File).to receive(:exist?).with(path).and_return(true)
 
         expect(encryptor.send(:symmetric_options)).to eq(s_opts)
       end
@@ -451,13 +451,13 @@ describe Backup::Encryptor::GPG do
 
     context "when setup_passphrase_file returns false" do
       before do
-        encryptor.expects(:setup_passphrase_file).returns(false)
+        expect(encryptor).to receive(:setup_passphrase_file).and_return(false)
       end
 
       context "and no :passphrase_file is set" do
         it "should return nil and log a warning" do
-          encryptor.expects(:passphrase_file).returns(nil)
-          Backup::Logger.expects(:warn)
+          expect(encryptor).to receive(:passphrase_file).and_return(nil)
+          expect(Backup::Logger).to receive(:warn)
 
           expect(encryptor.send(:symmetric_options)).to be_nil
         end
@@ -465,21 +465,21 @@ describe Backup::Encryptor::GPG do
 
       context "and a :passphrase_file is set" do
         before do
-          encryptor.expects(:passphrase_file).twice.returns(path)
-          File.expects(:expand_path).with(path).returns(path)
+          expect(encryptor).to receive(:passphrase_file).twice.and_return(path)
+          expect(File).to receive(:expand_path).with(path).and_return(path)
         end
 
         context "when :passphrase_file exists" do
           it "should return the options" do
-            File.expects(:exist?).with(path).returns(true)
+            expect(File).to receive(:exist?).with(path).and_return(true)
             expect(encryptor.send(:symmetric_options)).to eq(s_opts)
           end
         end
 
         context "when :passphrase_file is no valid" do
           it "should return nil and log a warning" do
-            File.expects(:exist?).with(path).returns(false)
-            Backup::Logger.expects(:warn)
+            expect(File).to receive(:exist?).with(path).and_return(false)
+            expect(Backup::Logger).to receive(:warn)
             expect(encryptor.send(:symmetric_options)).to be_nil
           end
         end
@@ -490,36 +490,36 @@ describe Backup::Encryptor::GPG do
   describe "#setup_passphrase_file" do
     context "when :passphrase is not set" do
       it "should return false" do
-        encryptor.expects(:passphrase).returns(nil)
+        expect(encryptor).to receive(:passphrase).and_return(nil)
         expect(encryptor.send(:setup_passphrase_file)).to eq(false)
       end
     end
 
     context "when :passphrase is set" do
-      let(:tempdir) { mock }
-      let(:tempfile) { mock }
-      let(:tempfile_path) { mock }
+      let(:tempdir) { double }
+      let(:tempfile) { double }
+      let(:tempfile_path) { double }
 
       before do
         encryptor.instance_variable_set(:@tempdirs, [])
-        Backup::Config.stubs(:tmp_path).returns("/Backup/tmp")
-        encryptor.stubs(:passphrase).returns("a secret")
-        tempfile.stubs(:path).returns(tempfile_path)
+        allow(Backup::Config).to receive(:tmp_path).and_return("/Backup/tmp")
+        allow(encryptor).to receive(:passphrase).and_return("a secret")
+        allow(tempfile).to receive(:path).and_return(tempfile_path)
       end
 
       context "and no errors occur" do
         it "should return the path for the temp file" do
           # creates temporary directory in Config.tmp_path
-          Dir.expects(:mktmpdir)
+          expect(Dir).to receive(:mktmpdir)
             .with("backup-gpg_passphrase", "/Backup/tmp")
-            .returns(tempdir)
+            .and_return(tempdir)
 
           # create the temporary file in that temporary directory
-          Tempfile.expects(:open)
+          expect(Tempfile).to receive(:open)
             .with("backup-gpg_passphrase", tempdir)
-            .returns(tempfile)
-          tempfile.expects(:write).with("a secret")
-          tempfile.expects(:close)
+            .and_return(tempfile)
+          expect(tempfile).to receive(:write).with("a secret")
+          expect(tempfile).to receive(:close)
 
           expect(encryptor.send(:setup_passphrase_file)).to eq(tempfile_path)
 
@@ -530,8 +530,8 @@ describe Backup::Encryptor::GPG do
 
       context "and an error occurs" do
         it "should return false and log a warning" do
-          Dir.expects(:mktmpdir).raises("an error")
-          Backup::Logger.expects(:warn).with do |err|
+          expect(Dir).to receive(:mktmpdir).and_raise("an error")
+          expect(Backup::Logger).to receive(:warn) do |err|
             expect(err).to be_an_instance_of(Backup::Encryptor::GPG::Error)
             expect(err.message).to match("Error creating temporary passphrase file")
             expect(err.message).to match("RuntimeError: an error")
@@ -545,7 +545,7 @@ describe Backup::Encryptor::GPG do
   describe "#asymmetric_options" do
     context "when recipients are found" do
       it "should return the options" do
-        encryptor.stubs(:user_recipients).returns(["keyid1", "keyid2"])
+        allow(encryptor).to receive(:user_recipients).and_return(["keyid1", "keyid2"])
         expect(encryptor.send(:asymmetric_options)).to eq(
           "-e --trust-model always -r 'keyid1' -r 'keyid2'"
         )
@@ -554,8 +554,8 @@ describe Backup::Encryptor::GPG do
 
     context "when no recipients are found" do
       it "should return nil log a warning" do
-        encryptor.expects(:user_recipients).returns([])
-        Backup::Logger.expects(:warn)
+        expect(encryptor).to receive(:user_recipients).and_return([])
+        expect(Backup::Logger).to receive(:warn)
         expect(encryptor.send(:asymmetric_options)).to be_nil
       end
     end
@@ -564,26 +564,26 @@ describe Backup::Encryptor::GPG do
   describe "#user_recipients" do
     context "when an Array of :recipients are given" do
       it "should return the recipient list and cache the result" do
-        encryptor.expects(:recipients).returns(
+        expect(encryptor).to receive(:recipients).and_return(
           ["key_id1", "key_id2", "key_id3", "key_id4"]
         )
-        encryptor.expects(:clean_identifier).with("key_id1").returns("key_id1")
-        encryptor.expects(:clean_identifier).with("key_id2").returns("key_id2")
-        encryptor.expects(:clean_identifier).with("key_id3").returns("key_id3")
-        encryptor.expects(:clean_identifier).with("key_id4").returns("key_id4")
+        expect(encryptor).to receive(:clean_identifier).with("key_id1").and_return("key_id1")
+        expect(encryptor).to receive(:clean_identifier).with("key_id2").and_return("key_id2")
+        expect(encryptor).to receive(:clean_identifier).with("key_id3").and_return("key_id3")
+        expect(encryptor).to receive(:clean_identifier).with("key_id4").and_return("key_id4")
 
         # key_id1 and key_id3 will be found in the system
-        encryptor.stubs(:system_identifiers).returns(["key_id1", "key_id3"])
+        allow(encryptor).to receive(:system_identifiers).and_return(["key_id1", "key_id3"])
 
         # key_id2 will be imported (key_id returned)
-        encryptor.stubs(:user_keys).returns("key_id2" => "a public key")
-        encryptor.expects(:import_key)
+        allow(encryptor).to receive(:user_keys).and_return("key_id2" => "a public key")
+        expect(encryptor).to receive(:import_key)
           .with("key_id2", "a public key")
-          .returns("key_id2")
+          .and_return("key_id2")
 
         # key_id4 will not be found in user_keys, so a warning will be logged.
         # This will return nil into the array, which will be compacted out.
-        Backup::Logger.expects(:warn).with do |msg|
+        expect(Backup::Logger).to receive(:warn) do |msg|
           expect(msg).to match(/'key_id4'/)
         end
 
@@ -598,10 +598,10 @@ describe Backup::Encryptor::GPG do
 
     context "when :recipients is a single recipient, given as a String" do
       it "should return the cleaned identifier in an Array" do
-        encryptor.expects(:recipients).returns("key_id")
+        expect(encryptor).to receive(:recipients).and_return("key_id")
         # the key will be found in system_identifiers
-        encryptor.stubs(:system_identifiers).returns(["key_id"])
-        encryptor.expects(:clean_identifier).with("key_id").returns("key_id")
+        allow(encryptor).to receive(:system_identifiers).and_return(["key_id"])
+        expect(encryptor).to receive(:clean_identifier).with("key_id").and_return("key_id")
 
         expect(encryptor.send(:user_recipients)).to eq(["key_id"])
       end
@@ -609,7 +609,7 @@ describe Backup::Encryptor::GPG do
 
     context "when :recipients is not set" do
       it "should return an empty Array" do
-        encryptor.expects(:recipients).returns(nil)
+        expect(encryptor).to receive(:recipients).and_return(nil)
         expect(encryptor.send(:user_recipients)).to eq([])
       end
     end
@@ -618,18 +618,18 @@ describe Backup::Encryptor::GPG do
   describe "#user_keys" do
     context "when :keys has been set" do
       before do
-        encryptor.expects(:keys).returns(
+        expect(encryptor).to receive(:keys).and_return(
           "key1" => :foo, "key2" => :foo, "key3" => :foo
         )
         encryptor.instance_variable_set(:@user_keys, nil)
       end
 
       it "should return a new Hash of #keys with cleaned identifiers" do
-        encryptor.expects(:clean_identifier).with("key1").returns("clean_key1")
-        encryptor.expects(:clean_identifier).with("key2").returns("clean_key2")
-        encryptor.expects(:clean_identifier).with("key3").returns("clean_key3")
+        expect(encryptor).to receive(:clean_identifier).with("key1").and_return("clean_key1")
+        expect(encryptor).to receive(:clean_identifier).with("key2").and_return("clean_key2")
+        expect(encryptor).to receive(:clean_identifier).with("key3").and_return("clean_key3")
 
-        Backup::Logger.expects(:warn).never
+        expect(Backup::Logger).to receive(:warn).never
 
         cleaned_hash = {
           "clean_key1" => :foo, "clean_key2" => :foo, "clean_key3" => :foo
@@ -641,12 +641,12 @@ describe Backup::Encryptor::GPG do
       end
 
       it "should log a warning if cleaning results in a duplicate identifier" do
-        encryptor.expects(:clean_identifier).with("key1").returns("clean_key1")
-        encryptor.expects(:clean_identifier).with("key2").returns("clean_key2")
+        expect(encryptor).to receive(:clean_identifier).with("key1").and_return("clean_key1")
+        expect(encryptor).to receive(:clean_identifier).with("key2").and_return("clean_key2")
         # return a duplicate key
-        encryptor.expects(:clean_identifier).with("key3").returns("clean_key2")
+        expect(encryptor).to receive(:clean_identifier).with("key3").and_return("clean_key2")
 
-        Backup::Logger.expects(:warn)
+        expect(Backup::Logger).to receive(:warn)
 
         cleaned_hash = {
           "clean_key1" => :foo, "clean_key2" => :foo
@@ -660,7 +660,7 @@ describe Backup::Encryptor::GPG do
 
     context "when :keys has not be set" do
       before do
-        encryptor.expects(:keys).returns(nil)
+        expect(encryptor).to receive(:keys).and_return(nil)
         encryptor.instance_variable_set(:@user_keys, nil)
       end
 
@@ -725,19 +725,19 @@ describe Backup::Encryptor::GPG do
         -----END PGP PUBLIC KEY BLOCK-----
       EOS
     end
-    let(:tempfile) { mock }
+    let(:tempfile) { double }
 
     before do
-      Backup::Config.stubs(:tmp_path).returns("/tmp/path")
-      encryptor.stubs(:base_options).returns("--some 'base options'")
-      encryptor.stubs(:utility).returns("gpg")
-      tempfile.stubs(:path).returns("/tmp/file/path")
+      allow(Backup::Config).to receive(:tmp_path).and_return("/tmp/path")
+      allow(encryptor).to receive(:base_options).and_return("--some 'base options'")
+      allow(encryptor).to receive(:utility).and_return("gpg")
+      allow(tempfile).to receive(:path).and_return("/tmp/file/path")
     end
 
     context "when the import is successful" do
       it "should return the long key ID" do
-        Tempfile.expects(:open).with("backup-gpg_import", "/tmp/path").returns(tempfile)
-        tempfile.expects(:write).with(<<-EOS)
+        expect(Tempfile).to receive(:open).with("backup-gpg_import", "/tmp/path").and_return(tempfile)
+        expect(tempfile).to receive(:write).with(<<-EOS)
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: GnuPG v1.4.12 (GNU/Linux)
 
@@ -748,16 +748,16 @@ gXY+pNqaEE6cHrg+uQatVQITX8EoVJhQ9Z1mYJB+g62zqOQPe10Spb381O9y4dN/
 -----END PGP PUBLIC KEY BLOCK-----
       EOS
 
-        tempfile.expects(:close)
+        expect(tempfile).to receive(:close)
 
-        encryptor.expects(:run).with(
+        expect(encryptor).to receive(:run).with(
           "gpg --some 'base options' --keyid-format 0xlong " \
           "--import '/tmp/file/path' 2>&1"
-        ).returns(gpg_return_ok)
+        ).and_return(gpg_return_ok)
 
-        tempfile.expects(:delete)
+        expect(tempfile).to receive(:delete)
 
-        Backup::Logger.expects(:warn).never
+        expect(Backup::Logger).to receive(:warn).never
 
         expect(encryptor.send(:import_key, "some_identifier", gpg_key))
           .to eq("9D666290C5F7EE0F")
@@ -766,8 +766,8 @@ gXY+pNqaEE6cHrg+uQatVQITX8EoVJhQ9Z1mYJB+g62zqOQPe10Spb381O9y4dN/
 
     context "when the import is unsuccessful" do
       it "should return nil and log a warning" do
-        Tempfile.expects(:open).raises("an error")
-        Backup::Logger.expects(:warn).with do |err|
+        expect(Tempfile).to receive(:open).and_raise("an error")
+        expect(Backup::Logger).to receive(:warn) do |err|
           expect(err).to be_an_instance_of(Backup::Encryptor::GPG::Error)
           expect(err.message).to match("Public key import failed for 'some_identifier'")
           expect(err.message).to match("RuntimeError: an error")
@@ -853,11 +853,11 @@ gXY+pNqaEE6cHrg+uQatVQITX8EoVJhQ9Z1mYJB+g62zqOQPe10Spb381O9y4dN/
     it "should return an array of all valid identifiers" do
       encryptor.instance_variable_set(:@system_identifiers, nil)
 
-      encryptor.expects(:utility).with(:gpg).returns("gpg")
-      encryptor.expects(:base_options).returns("--base 'options'")
-      encryptor.expects(:run).with(
+      expect(encryptor).to receive(:utility).with(:gpg).and_return("gpg")
+      expect(encryptor).to receive(:base_options).and_return("--base 'options'")
+      expect(encryptor).to receive(:run).with(
         "gpg --base 'options' --with-colons --fixed-list-mode --fingerprint"
-      ).returns(gpg_output)
+      ).and_return(gpg_output)
 
       expect(encryptor.send(:system_identifiers)).to eq(valid_identifiers)
       # results cached

@@ -61,7 +61,7 @@ module Backup
       shared_examples "messages" do
         context "when status is :success" do
           it "sends a success message" do
-            fake_ses.expects(:send_raw_email).once.with do |send_opts|
+            expect(fake_ses).to receive(:send_raw_email).once do |send_opts|
               mail = ::Mail.new(send_opts[:raw_message][:data])
               expect(mail.subject).to eq("[Backup::Success] test label (test_trigger)")
               expect(mail.body.raw_source).to match_regex("Backup Completed Successfully!")
@@ -79,7 +79,7 @@ module Backup
 
         context "when status is :warning" do
           it "sends a warning message" do
-            fake_ses.expects(:send_raw_email).once.with do |send_opts|
+            expect(fake_ses).to receive(:send_raw_email).once do |send_opts|
               mail = ::Mail.new(send_opts[:raw_message][:data])
               expect(mail.subject).to eq("[Backup::Warning] test label (test_trigger)")
               expect(mail.parts[0].body.raw_source).to match_regex("with Warnings")
@@ -93,7 +93,7 @@ module Backup
 
         context "when status is :failure" do
           it "sends a failure message" do
-            fake_ses.expects(:send_raw_email).once.with do |send_opts|
+            expect(fake_ses).to receive(:send_raw_email).once do |send_opts|
               mail = ::Mail.new(send_opts[:raw_message][:data])
               expect(mail.subject).to eq("[Backup::Failure] test label (test_trigger)")
               expect(mail.parts[0].body.raw_source).to match_regex("Backup Failed!")
@@ -108,15 +108,14 @@ module Backup
 
       context "uses access key id" do
         before do
-          credentials = mock
-          Aws::Credentials
-            .expects(:new)
+          credentials = double
+          expect(Aws::Credentials).to receive(:new)
             .with("my_access_key_id", "my_secret_access_key")
-            .returns(credentials)
-          Aws::SES::Client.stubs(:new).with(
+            .and_return(credentials)
+          allow(Aws::SES::Client).to receive(:new).with(
             region: "eu-west-1",
             credentials: credentials
-          ).returns(fake_ses)
+          ).and_return(fake_ses)
         end
 
         it_behaves_like "messages" do
@@ -136,12 +135,12 @@ module Backup
 
       context "uses iam instance profile" do
         before do
-          iam_profile = mock
-          Aws::InstanceProfileCredentials.expects(:new).returns(iam_profile)
-          Aws::SES::Client.stubs(:new).with(
+          iam_profile = double
+          expect(Aws::InstanceProfileCredentials).to receive(:new).and_return(iam_profile)
+          allow(Aws::SES::Client).to receive(:new).with(
             region: "eu-west-1",
             credentials: iam_profile
-          ).returns(fake_ses)
+          ).and_return(fake_ses)
         end
 
         it_behaves_like "messages" do

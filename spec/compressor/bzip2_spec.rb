@@ -2,7 +2,7 @@ require "spec_helper"
 
 describe Backup::Compressor::Bzip2 do
   before do
-    Backup::Compressor::Bzip2.any_instance.stubs(:utility).returns("bzip2")
+    allow_any_instance_of(Backup::Compressor::Bzip2).to receive(:utility).and_return("bzip2")
   end
 
   it "should be a subclass of Compressor::Base" do
@@ -16,7 +16,7 @@ describe Backup::Compressor::Bzip2 do
     after { Backup::Compressor::Bzip2.clear_defaults! }
 
     it "should load pre-configured defaults" do
-      Backup::Compressor::Bzip2.any_instance.expects(:load_defaults!)
+      expect_any_instance_of(Backup::Compressor::Bzip2).to receive(:load_defaults!)
       compressor
     end
 

@@ -7,10 +7,10 @@ module Backup
     let(:s) { sequence "" }
 
     before do
-      Utilities.stubs(:utility).with(:pg_dump).returns("pg_dump")
-      Utilities.stubs(:utility).with(:pg_dumpall).returns("pg_dumpall")
-      Utilities.stubs(:utility).with(:cat).returns("cat")
-      Utilities.stubs(:utility).with(:sudo).returns("sudo")
+      allow(Utilities).to receive(:utility).with(:pg_dump).and_return("pg_dump")
+      allow(Utilities).to receive(:utility).with(:pg_dumpall).and_return("pg_dumpall")
+      allow(Utilities).to receive(:utility).with(:cat).and_return("cat")
+      allow(Utilities).to receive(:utility).with(:sudo).and_return("sudo")
     end
 
     it_behaves_like "a class that includes Config::Helpers"
@@ -60,32 +60,32 @@ module Backup
     end # describe '#initialize'
 
     describe "#perform!" do
-      let(:pipeline) { mock }
-      let(:compressor) { mock }
+      let(:pipeline) { double }
+      let(:compressor) { double }
 
       before do
-        db.stubs(:pgdump).returns("pgdump_command")
-        db.stubs(:pgdumpall).returns("pgdumpall_command")
-        db.stubs(:dump_path).returns("/tmp/trigger/databases")
+        allow(db).to receive(:pgdump).and_return("pgdump_command")
+        allow(db).to receive(:pgdumpall).and_return("pgdumpall_command")
+        allow(db).to receive(:dump_path).and_return("/tmp/trigger/databases")
 
-        db.expects(:log!).in_sequence(s).with(:started)
-        db.expects(:prepare!).in_sequence(s)
+        expect(db).to receive(:log!).ordered.with(:started)
+        expect(db).to receive(:prepare!).ordered
       end
 
       context "without a compressor" do
         it "packages the dump without compression" do
-          Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+          expect(Pipeline).to receive(:new).ordered.and_return(pipeline)
 
-          pipeline.expects(:<<).in_sequence(s).with("pgdumpall_command")
+          expect(pipeline).to receive(:<<).ordered.with("pgdumpall_command")
 
-          pipeline.expects(:<<).in_sequence(s).with(
+          expect(pipeline).to receive(:<<).ordered.with(
             "cat > '/tmp/trigger/databases/PostgreSQL.sql'"
           )
 
-          pipeline.expects(:run).in_sequence(s)
-          pipeline.expects(:success?).in_sequence(s).returns(true)
+          expect(pipeline).to receive(:run).ordered
+          expect(pipeline).to receive(:success?).ordered.and_return(true)
 
-          db.expects(:log!).in_sequence(s).with(:finished)
+          expect(db).to receive(:log!).ordered.with(:finished)
 
           db.perform!
         end
@@ -93,25 +93,25 @@ module Backup
 
       context "with a compressor" do
         before do
-          model.stubs(:compressor).returns(compressor)
-          compressor.stubs(:compress_with).yields("cmp_cmd", ".cmp_ext")
+          allow(model).to receive(:compressor).and_return(compressor)
+          allow(compressor).to receive(:compress_with).and_yield("cmp_cmd", ".cmp_ext")
         end
 
         it "packages the dump with compression" do
-          Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+          expect(Pipeline).to receive(:new).ordered.and_return(pipeline)
 
-          pipeline.expects(:<<).in_sequence(s).with("pgdumpall_command")
+          expect(pipeline).to receive(:<<).ordered.with("pgdumpall_command")
 
-          pipeline.expects(:<<).in_sequence(s).with("cmp_cmd")
+          expect(pipeline).to receive(:<<).ordered.with("cmp_cmd")
 
-          pipeline.expects(:<<).in_sequence(s).with(
+          expect(pipeline).to receive(:<<).ordered.with(
             "cat > '/tmp/trigger/databases/PostgreSQL.sql.cmp_ext'"
           )
 
-          pipeline.expects(:run).in_sequence(s)
-          pipeline.expects(:success?).in_sequence(s).returns(true)
+          expect(pipeline).to receive(:run).ordered
+          expect(pipeline).to receive(:success?).ordered.and_return(true)
 
-          db.expects(:log!).in_sequence(s).with(:finished)
+          expect(db).to receive(:log!).ordered.with(:finished)
 
           db.perform!
         end
@@ -123,18 +123,18 @@ module Backup
         end
 
         it "uses the pg_dump command" do
-          Pipeline.expects(:new).in_sequence(s).returns(pipeline)
+          expect(Pipeline).to receive(:new).ordered.and_return(pipeline)
 
-          pipeline.expects(:<<).in_sequence(s).with("pgdump_command")
+          expect(pipeline).to receive(:<<).ordered.with("pgdump_command")
 
-          pipeline.expects(:<<).in_sequence(s).with(
+          expect(pipeline).to receive(:<<).ordered.with(
             "cat > '/tmp/trigger/databases/PostgreSQL.sql'"
           )
 
-          pipeline.expects(:run).in_sequence(s)
-          pipeline.expects(:success?).in_sequence(s).returns(true)
+          expect(pipeline).to receive(:run).ordered
+          expect(pipeline).to receive(:success?).ordered.and_return(true)
 
-          db.expects(:log!).in_sequence(s).with(:finished)
+          expect(db).to receive(:log!).ordered.with(:finished)
 
           db.perform!
         end
@@ -142,8 +142,8 @@ module Backup
 
       context "when the pipeline fails" do
         before do
-          Pipeline.any_instance.stubs(:success?).returns(false)
-          Pipeline.any_instance.stubs(:error_messages).returns("error messages")
+          allow_any_instance_of(Pipeline).to receive(:success?).and_return(false)
+          allow_any_instance_of(Pipeline).to receive(:error_messages).and_return("error messages")
         end
 
         it "raises an error" do
@@ -168,18 +168,18 @@ module Backup
       # password_option and sudo_option leave no leading space if it's not used
 
       it "returns full pg_dump command built from all options" do
-        option_methods.each { |name| db.stubs(name).returns(name) }
-        db.stubs(:password_option).returns("password_option")
-        db.stubs(:sudo_option).returns("sudo_option")
+        option_methods.each { |name| allow(db).to receive(name).and_return(name) }
+        allow(db).to receive(:password_option).and_return("password_option")
+        allow(db).to receive(:sudo_option).and_return("sudo_option")
         expect(db.send(:pgdump)).to eq(
           "password_optionsudo_optionpg_dump #{option_methods.join(" ")}"
         )
       end
 
       it "handles nil values from option methods" do
-        option_methods.each { |name| db.stubs(name).returns(nil) }
-        db.stubs(:password_option).returns(nil)
-        db.stubs(:sudo_option).returns(nil)
+        option_methods.each { |name| allow(db).to receive(name).and_return(nil) }
+        allow(db).to receive(:password_option).and_return(nil)
+        allow(db).to receive(:sudo_option).and_return(nil)
         expect(db.send(:pgdump)).to eq(
           "pg_dump #{" " * (option_methods.count - 1)}"
         )
@@ -195,18 +195,18 @@ module Backup
       # password_option and sudo_option leave no leading space if it's not used
 
       it "returns full pg_dump command built from all options" do
-        option_methods.each { |name| db.stubs(name).returns(name) }
-        db.stubs(:password_option).returns("password_option")
-        db.stubs(:sudo_option).returns("sudo_option")
+        option_methods.each { |name| allow(db).to receive(name).and_return(name) }
+        allow(db).to receive(:password_option).and_return("password_option")
+        allow(db).to receive(:sudo_option).and_return("sudo_option")
         expect(db.send(:pgdumpall)).to eq(
           "password_optionsudo_optionpg_dumpall #{option_methods.join(" ")}"
         )
       end
 
       it "handles nil values from option methods" do
-        option_methods.each { |name| db.stubs(name).returns(nil) }
-        db.stubs(:password_option).returns(nil)
-        db.stubs(:sudo_option).returns(nil)
+        option_methods.each { |name| allow(db).to receive(name).and_return(nil) }
+        allow(db).to receive(:password_option).and_return(nil)
+        allow(db).to receive(:sudo_option).and_return(nil)
         expect(db.send(:pgdumpall)).to eq(
           "pg_dumpall #{" " * (option_methods.count - 1)}"
         )

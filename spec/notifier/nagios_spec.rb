@@ -6,8 +6,8 @@ module Backup
     let(:notifier) { Notifier::Nagios.new(model) }
 
     before do
-      Utilities.stubs(:utility).with(:send_nsca).returns("send_nsca")
-      Config.stubs(:hostname).returns("my.hostname")
+      allow(Utilities).to receive(:utility).with(:send_nsca).and_return("send_nsca")
+      allow(Config).to receive(:hostname).and_return("my.hostname")
     end
 
     it_behaves_like "a class that includes Config::Helpers"
@@ -62,7 +62,7 @@ module Backup
 
       before do
         notifier.service_host = "my.service.host"
-        model.stubs(:duration).returns("12:34:56")
+        allow(model).to receive(:duration).and_return("12:34:56")
       end
 
       context "when status is :success" do
@@ -70,10 +70,10 @@ module Backup
           "my.service.host\tBackup test_trigger\t0\t"\
           "[Backup::Success] test model (test_trigger)"
         end
-        before { model.stubs(:exit_status).returns(0) }
+        before { allow(model).to receive(:exit_status).and_return(0) }
 
         it "sends a Success message" do
-          Utilities.expects(:run).with("echo '#{nagios_msg}' | #{nagios_cmd}")
+          expect(Utilities).to receive(:run).with("echo '#{nagios_msg}' | #{nagios_cmd}")
 
           notifier.send(:notify!, :success)
         end
@@ -84,10 +84,10 @@ module Backup
           "my.service.host\tBackup test_trigger\t1\t"\
           "[Backup::Warning] test model (test_trigger)"
         end
-        before { model.stubs(:exit_status).returns(1) }
+        before { allow(model).to receive(:exit_status).and_return(1) }
 
         it "sends a Success message" do
-          Utilities.expects(:run).with("echo '#{nagios_msg}' | #{nagios_cmd}")
+          expect(Utilities).to receive(:run).with("echo '#{nagios_msg}' | #{nagios_cmd}")
 
           notifier.send(:notify!, :warning)
         end
@@ -98,10 +98,10 @@ module Backup
           "my.service.host\tBackup test_trigger\t2\t"\
           "[Backup::Failure] test model (test_trigger)"
         end
-        before { model.stubs(:exit_status).returns(2) }
+        before { allow(model).to receive(:exit_status).and_return(2) }
 
         it "sends a Success message" do
-          Utilities.expects(:run).with("echo '#{nagios_msg}' | #{nagios_cmd}")
+          expect(Utilities).to receive(:run).with("echo '#{nagios_msg}' | #{nagios_cmd}")
 
           notifier.send(:notify!, :failure)
         end

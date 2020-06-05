@@ -295,9 +295,9 @@ module Backup
       context "with a wrapped exception" do
         describe ".wrap" do
           it "wraps #initialize to reverse parameters" do
-            ex = mock
-            described_class.expects(:new).with(nil, ex)
-            described_class.expects(:new).with("error message", ex)
+            ex = double
+            expect(described_class).to receive(:new).with(nil, ex)
+            expect(described_class).to receive(:new).with("error message", ex)
 
             described_class.wrap(ex)
             described_class.wrap(ex, "error message")

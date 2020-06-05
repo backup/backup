@@ -89,7 +89,7 @@ module Backup
 
       context "when status is :success" do
         it "sends a success message" do
-          Excon.expects(:post).with do |given_url, options|
+          expect(Excon).to receive(:post) do |given_url, options|
             expected_excon_params(given_url, options, text: "[Backup::Success] test label (test_trigger)")
           end
 
@@ -99,7 +99,7 @@ module Backup
 
       context "when status is :warning" do
         it "sends a warning message" do
-          Excon.expects(:post).with do |given_url, options|
+          expect(Excon).to receive(:post) do |given_url, options|
             expected_excon_params(given_url, options, { text: "[Backup::Warning] test label (test_trigger)" }, true)
           end
 
@@ -109,7 +109,7 @@ module Backup
 
       context "when status is :failure" do
         it "sends a failure message" do
-          Excon.expects(:post).with do |given_url, options|
+          expect(Excon).to receive(:post) do |given_url, options|
             expected_excon_params(given_url, options, { text: "[Backup::Failure] test label (test_trigger)" }, true)
           end
 
@@ -128,7 +128,7 @@ module Backup
         end
 
         it "sends message with optional parameters" do
-          Excon.expects(:post).with do |given_url, options|
+          expect(Excon).to receive(:post) do |given_url, options|
             expected_excon_params(given_url, options, text: "[Backup::Success] test label (test_trigger)",
                                     channel: "my_channel",
                                     username: "my_username",

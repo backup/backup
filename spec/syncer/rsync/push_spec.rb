@@ -3,10 +3,10 @@ require "spec_helper"
 module Backup
   describe Syncer::RSync::Push do
     before do
-      Syncer::RSync::Push.any_instance
-        .stubs(:utility).with(:rsync).returns("rsync")
-      Syncer::RSync::Push.any_instance
-        .stubs(:utility).with(:ssh).returns("ssh")
+      allow_any_instance_of(Syncer::RSync::Push).to \
+        receive(:utility).with(:rsync).and_return("rsync")
+      allow_any_instance_of(Syncer::RSync::Push).to \
+        receive(:utility).with(:ssh).and_return("ssh")
     end
 
     describe "#initialize" do
@@ -179,8 +179,8 @@ module Backup
             end
           end
 
-          syncer.expects(:create_dest_path!)
-          syncer.expects(:run).with(
+          expect(syncer).to receive(:create_dest_path!)
+          expect(syncer).to receive(:run).with(
             "rsync --archive --delete --compress " \
             "-e \"ssh -p 22 -l ssh_username\" " \
             "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -202,8 +202,8 @@ module Backup
             end
           end
 
-          syncer.expects(:create_dest_path!)
-          syncer.expects(:run).with(
+          expect(syncer).to receive(:create_dest_path!)
+          expect(syncer).to receive(:run).with(
             "rsync --archive --compress " \
             "-e \"ssh -p 22 -l ssh_username\" " \
             "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -224,8 +224,8 @@ module Backup
             end
           end
 
-          syncer.expects(:create_dest_path!)
-          syncer.expects(:run).with(
+          expect(syncer).to receive(:create_dest_path!)
+          expect(syncer).to receive(:run).with(
             "rsync --archive --delete " \
             "-e \"ssh -p 22\" " \
             "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -245,8 +245,8 @@ module Backup
             end
           end
 
-          syncer.expects(:create_dest_path!)
-          syncer.expects(:run).with(
+          expect(syncer).to receive(:create_dest_path!)
+          expect(syncer).to receive(:run).with(
             "rsync --archive " \
             "-e \"ssh -p 22\" " \
             "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -270,8 +270,8 @@ module Backup
             end
           end
 
-          syncer.expects(:create_dest_path!)
-          syncer.expects(:run).with(
+          expect(syncer).to receive(:create_dest_path!)
+          expect(syncer).to receive(:run).with(
             "rsync --archive --delete --opt-a --opt-b " \
             "-e \"ssh -p 22\" " \
             "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -292,8 +292,8 @@ module Backup
             end
           end
 
-          syncer.expects(:create_dest_path!)
-          syncer.expects(:run).with(
+          expect(syncer).to receive(:create_dest_path!)
+          expect(syncer).to receive(:run).with(
             "rsync --archive --opt-a --opt-b " \
             "-e \"ssh -p 22\" " \
             "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -316,8 +316,8 @@ module Backup
             end
           end
 
-          syncer.expects(:create_dest_path!)
-          syncer.expects(:run).with(
+          expect(syncer).to receive(:create_dest_path!)
+          expect(syncer).to receive(:run).with(
             "rsync --archive --exclude='*~' --exclude='tmp/' --opt-a --opt-b " \
             "-e \"ssh -p 22\" " \
             "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -329,7 +329,7 @@ module Backup
 
       describe "rsync password options" do
         let(:s) { sequence "" }
-        let(:password_file) { mock }
+        let(:password_file) { double }
 
         context "when an rsync_password is given" do
           let(:syncer) do
@@ -349,15 +349,15 @@ module Backup
           end
 
           before do
-            password_file.stubs(:path).returns("path/to/password_file")
-            Tempfile.expects(:new).in_sequence(s)
-              .with("backup-rsync-password").returns(password_file)
-            password_file.expects(:write).in_sequence(s).with("my_password")
-            password_file.expects(:close).in_sequence(s)
+            allow(password_file).to receive(:path).and_return("path/to/password_file")
+            expect(Tempfile).to receive(:new).ordered
+              .with("backup-rsync-password").and_return(password_file)
+            expect(password_file).to receive(:write).ordered.with("my_password")
+            expect(password_file).to receive(:close).ordered
           end
 
           it "creates and uses a temp file for the password" do
-            syncer.expects(:run).in_sequence(s).with(
+            expect(syncer).to receive(:run).ordered.with(
               "rsync --archive --delete --compress " \
               "--password-file='#{File.expand_path("path/to/password_file")}' " \
               "--port 873 " \
@@ -365,15 +365,15 @@ module Backup
               "rsync_username@my_host::'my_module'"
             )
 
-            password_file.expects(:delete).in_sequence(s)
+            expect(password_file).to receive(:delete).ordered
 
             syncer.perform!
           end
 
           it "ensures tempfile removal" do
-            syncer.expects(:run).in_sequence(s).raises("error message")
+            expect(syncer).to receive(:run).ordered.and_raise("error message")
 
-            password_file.expects(:delete).in_sequence(s)
+            expect(password_file).to receive(:delete).ordered
 
             expect do
               syncer.perform!
@@ -400,11 +400,11 @@ module Backup
           end
 
           before do
-            Tempfile.expects(:new).never
+            expect(Tempfile).to receive(:new).never
           end
 
           it "uses the given path" do
-            syncer.expects(:run).in_sequence(s).with(
+            expect(syncer).to receive(:run).ordered.with(
               "rsync --archive --delete --compress " \
               "--password-file='#{File.expand_path("path/to/my_password")}' " \
               "-e \"ssh -p 22 -l ssh_username\" " \
@@ -435,12 +435,12 @@ module Backup
           end
 
           before do
-            Tempfile.expects(:new).never
+            expect(Tempfile).to receive(:new).never
           end
 
           it "uses no rsync_user, tempfile or password_option" do
-            syncer.expects(:create_dest_path!)
-            syncer.expects(:run).in_sequence(s).with(
+            expect(syncer).to receive(:create_dest_path!)
+            expect(syncer).to receive(:run).ordered.with(
               "rsync --archive --delete --compress " \
               "-e \"ssh -p 22 -l ssh_username\" " \
               "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -467,7 +467,7 @@ module Backup
               end
             end
 
-            syncer.expects(:run).with(
+            expect(syncer).to receive(:run).with(
               "rsync --archive --delete --opt-a --opt-b --compress " \
               "--port 873 " \
               "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -491,7 +491,7 @@ module Backup
               end
             end
 
-            syncer.expects(:run).with(
+            expect(syncer).to receive(:run).with(
               "rsync --archive --delete --opt-a --opt-b " \
               "--port 789 " \
               "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -518,7 +518,7 @@ module Backup
               end
             end
 
-            syncer.expects(:run).with(
+            expect(syncer).to receive(:run).with(
               "rsync --archive --delete --opt-a --opt-b --compress " \
               "-e \"ssh -p 22 --opt1 --opt2\" " \
               "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -544,7 +544,7 @@ module Backup
               end
             end
 
-            syncer.expects(:run).with(
+            expect(syncer).to receive(:run).with(
               "rsync --archive --delete --opt-a --opt-b --compress " \
               "-e \"ssh -p 789 -l ssh_username -i '/my/identity_file'\" " \
               "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -572,8 +572,8 @@ module Backup
               end
             end
 
-            syncer.expects(:create_dest_path!)
-            syncer.expects(:run).with(
+            expect(syncer).to receive(:create_dest_path!)
+            expect(syncer).to receive(:run).with(
               "rsync --archive --delete --opt-a 'something' --compress " \
               "-e \"ssh -p 22 -l ssh_username --opt1 --opt2\" " \
               "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -599,12 +599,12 @@ module Backup
               end
             end
 
-            syncer.expects(:run).with(
+            expect(syncer).to receive(:run).with(
               "ssh -p 22 -l ssh_username -i '/path/to/id_rsa' my_host " +
               %("mkdir -p 'some/path'")
             )
 
-            syncer.expects(:run).with(
+            expect(syncer).to receive(:run).with(
               "rsync --archive " \
               "-e \"ssh -p 22 -l ssh_username -i '/path/to/id_rsa'\" " \
               "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -627,7 +627,7 @@ module Backup
               end
             end
 
-            syncer.expects(:run).with(
+            expect(syncer).to receive(:run).with(
               "rsync --archive " \
               "-e \"ssh -p 22 -l ssh_username -i '/path/to/id_rsa'\" " \
               "'/this/dir' '#{File.expand_path("that/dir")}' " \
@@ -643,16 +643,16 @@ module Backup
         it "logs started/finished messages" do
           syncer = Syncer::RSync::Push.new
 
-          Logger.expects(:info).with("Syncer::RSync::Push Started...")
-          Logger.expects(:info).with("Syncer::RSync::Push Finished!")
+          expect(Logger).to receive(:info).with("Syncer::RSync::Push Started...")
+          expect(Logger).to receive(:info).with("Syncer::RSync::Push Finished!")
           syncer.perform!
         end
 
         it "logs messages using optional syncer_id" do
           syncer = Syncer::RSync::Push.new("My Syncer")
 
-          Logger.expects(:info).with("Syncer::RSync::Push (My Syncer) Started...")
-          Logger.expects(:info).with("Syncer::RSync::Push (My Syncer) Finished!")
+          expect(Logger).to receive(:info).with("Syncer::RSync::Push (My Syncer) Started...")
+          expect(Logger).to receive(:info).with("Syncer::RSync::Push (My Syncer) Finished!")
           syncer.perform!
         end
       end

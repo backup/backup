@@ -79,23 +79,23 @@ module Backup
       let(:client_options) do
         { api_version: "v1", server_url: "https://mycustom.server.com" }
       end
-      let(:client) { mock }
-      let(:room) { mock }
+      let(:client) { double }
+      let(:room) { double }
       let(:message) { "[Backup::%s] test label (test_trigger)" }
 
       context "when status is :success" do
         it "sends a success message" do
-          HipChat::Client.expects(:new).in_sequence(s)
+          expect(HipChat::Client).to receive(:new).ordered
             .with("my_token", client_options)
-            .returns(client)
-          client.expects(:[]).in_sequence(s).with("room_a").returns(room)
-          room.expects(:send).in_sequence(s).with(
+            .and_return(client)
+          expect(client).to receive(:[]).ordered.with("room_a").and_return(room)
+          expect(room).to receive(:send).ordered.with(
             "my_from", message % "Success",
             color: :success_color,
             notify: true
           )
-          client.expects(:[]).in_sequence(s).with("room_b").returns(room)
-          room.expects(:send).in_sequence(s).with(
+          expect(client).to receive(:[]).ordered.with("room_b").and_return(room)
+          expect(room).to receive(:send).ordered.with(
             "my_from",
             message % "Success",
             color: :success_color, notify: true
@@ -107,18 +107,18 @@ module Backup
 
       context "when status is :warning" do
         it "sends a warning message" do
-          HipChat::Client.expects(:new).in_sequence(s)
+          expect(HipChat::Client).to receive(:new).ordered
             .with("my_token", client_options)
-            .returns(client)
-          client.expects(:[]).in_sequence(s).with("room_a").returns(room)
-          room.expects(:send).in_sequence(s).with(
+            .and_return(client)
+          expect(client).to receive(:[]).ordered.with("room_a").and_return(room)
+          expect(room).to receive(:send).ordered.with(
             "my_from",
             message % "Warning",
             color: :warning_color,
             notify: true
           )
-          client.expects(:[]).in_sequence(s).with("room_b").returns(room)
-          room.expects(:send).in_sequence(s).with(
+          expect(client).to receive(:[]).ordered.with("room_b").and_return(room)
+          expect(room).to receive(:send).ordered.with(
             "my_from",
             message % "Warning",
             color: :warning_color,
@@ -131,18 +131,18 @@ module Backup
 
       context "when status is :failure" do
         it "sends a failure message" do
-          HipChat::Client.expects(:new).in_sequence(s)
+          expect(HipChat::Client).to receive(:new).ordered
             .with("my_token", client_options)
-            .returns(client)
-          client.expects(:[]).in_sequence(s).with("room_a").returns(room)
-          room.expects(:send).in_sequence(s).with(
+            .and_return(client)
+          expect(client).to receive(:[]).ordered.with("room_a").and_return(room)
+          expect(room).to receive(:send).ordered.with(
             "my_from",
             message % "Failure",
             color: :failure_color,
             notify: true
           )
-          client.expects(:[]).in_sequence(s).with("room_b").returns(room)
-          room.expects(:send).in_sequence(s).with(
+          expect(client).to receive(:[]).ordered.with("room_b").and_return(room)
+          expect(room).to receive(:send).ordered.with(
             "my_from",
             message % "Failure",
             color: :failure_color,

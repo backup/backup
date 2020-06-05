@@ -59,7 +59,7 @@ module Backup
     end # describe '#initialize'
 
     describe "#connection" do
-      let(:connection) { mock }
+      let(:connection) { double }
 
       before do
         storage.ip = "123.45.678.90"
@@ -69,10 +69,10 @@ module Backup
       end
 
       it "yields a connection to the remote server" do
-        Net::SSH.expects(:start).with(
+        expect(Net::SSH).to receive(:start).with(
           "123.45.678.90", "my_user", password: "my_pass", port: 22,
           keys: ["my/key"]
-        ).yields(connection)
+        ).and_yield(connection)
 
         storage.send(:connection) do |scp|
           expect(scp).to be connection
@@ -81,57 +81,58 @@ module Backup
     end # describe '#connection'
 
     describe "#transfer!" do
-      let(:connection) { mock }
-      let(:scp) { mock }
+      let(:connection) { double }
+      let(:scp) { double }
       let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
       let(:remote_path) { File.join("my/path/test_trigger", timestamp) }
 
       before do
         Timecop.freeze
         storage.package.time = timestamp
-        storage.package.stubs(:filenames).returns(
+        allow(storage.package).to receive(:filenames).and_return(
           ["test_trigger.tar-aa", "test_trigger.tar-ab"]
         )
         storage.ip = "123.45.678.90"
         storage.path = "my/path"
-        connection.stubs(:scp).returns(scp)
+        allow(connection).to receive(:scp).and_return(scp)
       end
 
       after { Timecop.return }
 
       it "transfers the package files" do
-        storage.expects(:connection).in_sequence(s).yields(connection)
+        expect(storage).to receive(:connection).ordered.and_yield(connection)
 
-        connection.expects(:exec!).in_sequence(s).with(
+        expect(connection).to receive(:exec!).ordered.with(
           "mkdir -p '#{remote_path}'"
         )
 
         src = File.join(Config.tmp_path, "test_trigger.tar-aa")
         dest = File.join(remote_path, "test_trigger.tar-aa")
 
-        Logger.expects(:info).in_sequence(s)
+        expect(Logger).to receive(:info).ordered
           .with("Storing '123.45.678.90:#{dest}'...")
 
-        scp.expects(:upload!).in_sequence(s).with(src, dest)
+        expect(scp).to receive(:upload!).ordered.with(src, dest)
 
         src = File.join(Config.tmp_path, "test_trigger.tar-ab")
         dest = File.join(remote_path, "test_trigger.tar-ab")
 
-        Logger.expects(:info).in_sequence(s)
+        expect(Logger).to receive(:info).ordered
           .with("Storing '123.45.678.90:#{dest}'...")
 
-        scp.expects(:upload!).in_sequence(s).with(src, dest)
+        expect(scp).to receive(:upload!).ordered.with(src, dest)
 
         storage.send(:transfer!)
       end
     end # describe '#transfer!'
 
     describe "#remove!" do
-      let(:connection) { mock }
+      let(:connection) { double }
       let(:timestamp) { Time.now.strftime("%Y.%m.%d.%H.%M.%S") }
       let(:remote_path) { File.join("my/path/test_trigger", timestamp) }
       let(:package) do
-        stub( # loaded from YAML storage file
+        double(
+          Package, # loaded from YAML storage file
           trigger: "test_trigger",
           time: timestamp
         )
@@ -145,12 +146,12 @@ module Backup
       after { Timecop.return }
 
       it "removes the given package from the remote" do
-        Logger.expects(:info).in_sequence(s)
+        expect(Logger).to receive(:info).ordered
           .with("Removing backup package dated #{timestamp}...")
 
-        storage.expects(:connection).in_sequence(s).yields(connection)
+        expect(storage).to receive(:connection).ordered.and_yield(connection)
 
-        connection.expects(:exec!).in_sequence(s)
+        expect(connection).to receive(:exec!).ordered
           .with("rm -r '#{remote_path}'")
 
         storage.send(:remove!, package)
@@ -158,14 +159,14 @@ module Backup
 
       context "when the ssh connection reports errors" do
         it "raises an error reporting the errors" do
-          Logger.expects(:info).in_sequence(s)
+          expect(Logger).to receive(:info).ordered
             .with("Removing backup package dated #{timestamp}...")
 
-          storage.expects(:connection).in_sequence(s).yields(connection)
+          expect(storage).to receive(:connection).ordered.and_yield(connection)
 
-          connection.expects(:exec!).in_sequence(s)
+          expect(connection).to receive(:exec!).ordered
             .with("rm -r '#{remote_path}'")
-            .yields(:ch, :stderr, "path not found")
+            .and_yield(:ch, :stderr, "path not found")
 
           expect do
             storage.send(:remove!, package)
