@@ -1,4 +1,6 @@
 language: ruby
+cache: bundler
+bundler_args: '-j4'
 before_install:
   - "gem update --system"
   - "gem update bundler"
