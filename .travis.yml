@@ -1,8 +1,8 @@
 language: ruby
-bundler_args: --without no_ci
 before_install:
   - "gem update --system"
   - "gem update bundler"
+  - "bundle config set without no_ci"
 script:
   - "bundle exec rspec"
 os:
@@ -14,9 +14,11 @@ rvm:
   - 2.6
 matrix:
   include:
-    - rvm: 2.3
+    - name: rubocop
+      rvm: 2.3
       script: "bundle exec rubocop"
-    - rvm: 2.6
+    - name: 'OSX'
+      rvm: 2.6
       os: osx
 branches:
   only:
