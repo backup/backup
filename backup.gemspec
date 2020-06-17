@@ -42,7 +42,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency "hipchat", "1.0.1"
   gem.add_dependency "flowdock", "0.4.0"
   gem.add_dependency "dogapi", "1.40.0"
-  gem.add_dependency "aws-sdk", "~> 2"
+  gem.add_dependency "aws-sdk", "~> 3"
   gem.add_dependency "qiniu", "~> 6.5"
   gem.add_dependency "nokogiri", "~> 1.10", ">= 1.10.9"
 
