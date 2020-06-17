@@ -230,11 +230,23 @@ shared_examples "a subclass of Syncer::Cloud::Base" do
       before do
         allow(syncer).to receive(:get_remote_files)
           .with("my_backups/sync_dir").and_return(remote_files_data)
+
         expect(Backup::Syncer::Cloud::LocalFile).to receive(:find_md5)
           .with("/local/path/sync_dir", []).and_return(find_md5_data)
 
         syncer.thread_count = 20
         allow(syncer).to receive(:sleep) # quicker tests
+
+        # Don't print $stderr message for this spec
+        if Thread.respond_to?(:report_on_exception) && Thread.report_on_exception
+          Thread.report_on_exception = false
+        end
+      end
+
+      after do
+        unless Thread.respond_to?(:report_on_exception) && Thread.report_on_exception
+          Thread.report_on_exception = true
+        end
       end
 
       context "without mirror" do

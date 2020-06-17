@@ -20,7 +20,7 @@ This project is not under active development, although we will continue to provi
 
 If you use this project and would like to develop it further, please introduce yourself on the [maintainers wanted][Maintainers wanted] ticket.
 
-**Copyright (c) 2009-2017 [Michael van Rooijen][] ( [@mrrooijen] )**  
+**Copyright (c) 2009-2020 [Michael van Rooijen][] ( [@mrrooijen] )**
 Released under the **MIT** [LICENSE](LICENSE).
 
 [Installation]:  http://backup.github.io/backup/v4/installation
