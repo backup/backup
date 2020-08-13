@@ -3,13 +3,14 @@ module Backup
     class MongoDB < Base
       class Error < Backup::Error; end
 
+
       ##
       # Name of the database that needs to get dumped
       attr_accessor :name
 
       ##
       # Credentials for the specified database
-      attr_accessor :username, :password, :authdb
+      attr_accessor :username, :password, :authdb, :uri
 
       ##
       # Connectivity options
@@ -130,9 +131,11 @@ module Backup
 
       def credential_options
         opts = []
+
         opts << "--username='#{username}'" if username
         opts << "--password='#{password}'" if password
         opts << "--authenticationDatabase='#{authdb}'" if authdb
+        opts << "--uri #{uri}" if uri
         opts.join(" ")
       end
 
