@@ -168,6 +168,26 @@ store_with S3 do |s3|
 end
 ```
 
+The _fog_option_ `endpoint` only works for the default http/https ports (i.e., 80/443).
+In order to specify a custom port or scheme, the following options will do the trick:
+
+```rb
+store_with S3 do |s3|
+  s3.access_key_id = "my_access_key_id"
+  s3.secret_access_key = "my_secret_access_key"
+  s3.bucket = "bucket-name"
+  s3.fog_options = {
+    host: "custom_host", # e.g., localhost
+    port: "custom_port", # e.g., 9000
+    scheme: "custom_scheme", # e.g., http or https
+    aws_signature_version: 4,
+    path_style: true
+  }
+end
+```
+
+If your service is not able to resolve the bucket name as a subdomain like `bucket.hostname` you need to add `path_style: true`.
+
 ### China region
 
 Backup relies on [fog][] for AWS S3 support. Fog does not support the China region directly.
