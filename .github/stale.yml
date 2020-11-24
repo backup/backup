@@ -4,6 +4,7 @@ daysUntilStale: 60
 daysUntilClose: 15
 # Issues with these labels will never be considered stale
 exemptLabels:
+  - evergreen
   - Up for review
   - Someone take a look at this!
   - good first issue
