@@ -345,6 +345,13 @@ module Backup
       puts "Backup #{Backup::VERSION}"
     end
 
+    class << self
+      # If this returns `true`, it exits with status 1 on failure for CLI options and arguments errors.
+      def exit_on_failure?
+        true
+      end
+    end
+
     # This is to avoid Thor's warnings when stubbing methods on the Thor class.
     module Helpers
       class << self
