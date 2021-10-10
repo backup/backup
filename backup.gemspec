@@ -7,7 +7,7 @@ Gem::Specification.new do |gem|
   gem.version     = Backup::VERSION
   gem.authors     = "Michael van Rooijen"
   gem.email       = "meskyanichi@gmail.com"
-  gem.homepage    = "https://github.com/backup/backup"
+  gem.homepage    = "https://backup.github.io/backup/"
   gem.license     = "MIT"
   gem.summary     = "Provides an elegant DSL in Ruby for performing backups "\
     "on UNIX-like systems."
