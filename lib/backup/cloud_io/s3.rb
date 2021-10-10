@@ -1,5 +1,5 @@
 require "backup/cloud_io/base"
-require "fog"
+require "fog/aws"
 require "digest/md5"
 require "base64"
 require "stringio"

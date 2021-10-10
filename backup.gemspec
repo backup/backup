@@ -29,7 +29,8 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency "thor", "~> 0.18", ">= 0.18.1"
   gem.add_dependency "open4", "1.3.0"
-  gem.add_dependency "fog", "~> 1.42"
+  gem.add_dependency "fog-aws", ">= 0.6.0"
+  gem.add_dependency "fog-rackspace", ">= 0"
   gem.add_dependency "excon", "~> 0.71"
   gem.add_dependency "unf", "0.1.3" # for fog/AWS
   gem.add_dependency "dropbox-sdk", "1.6.5"
