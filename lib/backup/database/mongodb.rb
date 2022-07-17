@@ -26,7 +26,7 @@ module Backup
       ##
       # Additional "mongodump" options
       attr_accessor :additional_options
-
+      
       ##
       # Forces mongod to flush all pending write operations to the disk and
       # locks the entire mongod instance to prevent additional writes until the
@@ -88,6 +88,8 @@ module Backup
       #
       # If successful, +dump_packaging_path+ is removed.
       def package!
+        return if model.storages.length == 1 && model.storages.first.is_a?(Backup::Storage::ProxmoxBackupServer)
+        
         pipeline = Pipeline.new
         dump_ext = "tar"
 
