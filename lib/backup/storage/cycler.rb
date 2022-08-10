@@ -51,11 +51,14 @@ module Backup
 
       # Returns stored Package objects, sorted by #time descending (oldest last).
       def yaml_load
-        if File.exist?(yaml_file) && !File.zero?(yaml_file)
-          YAML.load_file(yaml_file).sort_by!(&:time).reverse!
-        else
-          []
-        end
+        loaded =
+          if File.exist?(yaml_file) && !File.zero?(yaml_file)
+            YAML.load_file(yaml_file)
+          else
+            []
+          end
+
+        loaded.sort_by!(&:time).reverse!
       end
 
       # Stores the given package objects to the YAML data file.
