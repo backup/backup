@@ -190,7 +190,7 @@ module SandboxFileUtils
       rm_rf rmtree touch
     ].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
-        def #{name}(list, options = {})
+        def #{name}(list, **options)
           protect!(list)
           super
         end
@@ -199,7 +199,7 @@ module SandboxFileUtils
 
     %w[cp copy cp_r install].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
-        def #{name}(src, dest, options = {})
+        def #{name}(src, dest, **options)
           protect!(dest)
           super
         end
@@ -208,7 +208,7 @@ module SandboxFileUtils
 
     %w[ln link ln_s symlink ln_sf mv move].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
-        def #{name}(src, dest, options = {})
+        def #{name}(src, dest, **options)
           protect!(src)
           super
         end
@@ -217,7 +217,7 @@ module SandboxFileUtils
 
     %w[chmod chmod_R].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
-        def #{name}(mode, list, options = {})
+        def #{name}(mode, list, **options)
           protect!(list)
           super
         end
@@ -226,7 +226,7 @@ module SandboxFileUtils
 
     %w[chown chown_R].each do |name|
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
-        def #{name}(user, group, list, options = {})
+        def #{name}(user, group, list, **options)
           protect!(list)
           super
         end
