@@ -6,7 +6,6 @@ describe Backup::Encryptor::OpenSSL do
       e.password      = "mypassword"
       e.password_file = "/my/password/file"
       e.base64        = true
-      e.salt          = true
     end
   end
 
@@ -28,7 +27,6 @@ describe Backup::Encryptor::OpenSSL do
         expect(encryptor.password).to       eq("mypassword")
         expect(encryptor.password_file).to  eq("/my/password/file")
         expect(encryptor.base64).to         eq(true)
-        expect(encryptor.salt).to           eq(true)
       end
 
       it "should use default values if none are given" do
@@ -36,7 +34,6 @@ describe Backup::Encryptor::OpenSSL do
         expect(encryptor.password).to       be_nil
         expect(encryptor.password_file).to  be_nil
         expect(encryptor.base64).to         eq(false)
-        expect(encryptor.salt).to           eq(true)
       end
     end # context 'when no pre-configured defaults have been set'
 
@@ -46,7 +43,6 @@ describe Backup::Encryptor::OpenSSL do
           e.password      = "default_password"
           e.password_file = "/default/password/file"
           e.base64        = "default_base64"
-          e.salt          = "default_salt"
         end
       end
 
@@ -55,14 +51,12 @@ describe Backup::Encryptor::OpenSSL do
         encryptor.password      = "default_password"
         encryptor.password_file = "/default/password/file"
         encryptor.base64        = "default_base64"
-        encryptor.salt          = "default_salt"
       end
 
       it "should override pre-configured defaults" do
         expect(encryptor.password).to       eq("mypassword")
         expect(encryptor.password_file).to  eq("/my/password/file")
         expect(encryptor.base64).to         eq(true)
-        expect(encryptor.salt).to           eq(true)
       end
     end # context 'when pre-configured defaults have been set'
   end # describe '#initialize'
@@ -83,11 +77,6 @@ describe Backup::Encryptor::OpenSSL do
   describe "#options" do
     let(:encryptor) { Backup::Encryptor::OpenSSL.new }
 
-    before do
-      # salt is true by default
-      encryptor.salt = false
-    end
-
     context "with no options given" do
       it "should always include cipher command" do
         expect(encryptor.send(:options)).to match(/^aes-256-cbc\s.*$/)
@@ -95,7 +84,7 @@ describe Backup::Encryptor::OpenSSL do
 
       it "should add #password option whenever #password_file not given" do
         expect(encryptor.send(:options)).to eq(
-          "aes-256-cbc -k ''"
+          "aes-256-cbc -pbkdf2 -iter 310000 -k ''"
         )
       end
     end
@@ -105,14 +94,14 @@ describe Backup::Encryptor::OpenSSL do
 
       it "should add #password_file option" do
         expect(encryptor.send(:options)).to eq(
-          "aes-256-cbc -pass file:password_file"
+          "aes-256-cbc -pbkdf2 -iter 310000 -pass file:password_file"
         )
       end
 
       it "should add #password_file option even when #password given" do
         encryptor.password = "password"
         expect(encryptor.send(:options)).to eq(
-          "aes-256-cbc -pass file:password_file"
+          "aes-256-cbc -pbkdf2 -iter 310000 -pass file:password_file"
         )
       end
     end
@@ -122,7 +111,7 @@ describe Backup::Encryptor::OpenSSL do
 
       it "should include the given password in the #password option" do
         expect(encryptor.send(:options)).to eq(
-          %q(aes-256-cbc -k pa\\\ss\'w\"ord)
+          %q(aes-256-cbc -pbkdf2 -iter 310000 -k pa\\\ss\'w\"ord)
         )
       end
     end
@@ -132,17 +121,7 @@ describe Backup::Encryptor::OpenSSL do
 
       it "should add the option" do
         expect(encryptor.send(:options)).to eq(
-          "aes-256-cbc -base64 -k ''"
-        )
-      end
-    end
-
-    context "when #salt is true" do
-      before { encryptor.salt = true }
-
-      it "should add the option" do
-        expect(encryptor.send(:options)).to eq(
-          "aes-256-cbc -salt -k ''"
+          "aes-256-cbc -pbkdf2 -iter 310000 -base64 -k ''"
         )
       end
     end
