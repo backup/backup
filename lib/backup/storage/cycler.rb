@@ -53,7 +53,7 @@ module Backup
       def yaml_load
         loaded =
           if File.exist?(yaml_file) && !File.zero?(yaml_file)
-            if YAML.name == 'Psych' && Psych::VERSION >= '3.1'
+            if YAML.respond_to?(:safe_load_file)
               YAML.safe_load_file(yaml_file, permitted_classes: [Backup::Package])
             else
               YAML.load_file(yaml_file)
