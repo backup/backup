@@ -95,7 +95,7 @@ describe Backup::Encryptor::OpenSSL do
 
       it "should add #password option whenever #password_file not given" do
         expect(encryptor.send(:options)).to eq(
-          "aes-256-cbc -k ''"
+          "aes-256-cbc -pbkdf2 -iter 310000 -k ''"
         )
       end
     end
@@ -105,14 +105,14 @@ describe Backup::Encryptor::OpenSSL do
 
       it "should add #password_file option" do
         expect(encryptor.send(:options)).to eq(
-          "aes-256-cbc -pass file:password_file"
+          "aes-256-cbc -pbkdf2 -iter 310000 -pass file:password_file"
         )
       end
 
       it "should add #password_file option even when #password given" do
         encryptor.password = "password"
         expect(encryptor.send(:options)).to eq(
-          "aes-256-cbc -pass file:password_file"
+          "aes-256-cbc -pbkdf2 -iter 310000 -pass file:password_file"
         )
       end
     end
@@ -122,7 +122,7 @@ describe Backup::Encryptor::OpenSSL do
 
       it "should include the given password in the #password option" do
         expect(encryptor.send(:options)).to eq(
-          %q(aes-256-cbc -k pa\\\ss\'w\"ord)
+          %q(aes-256-cbc -pbkdf2 -iter 310000 -k pa\\\ss\'w\"ord)
         )
       end
     end
@@ -132,17 +132,7 @@ describe Backup::Encryptor::OpenSSL do
 
       it "should add the option" do
         expect(encryptor.send(:options)).to eq(
-          "aes-256-cbc -base64 -k ''"
-        )
-      end
-    end
-
-    context "when #salt is true" do
-      before { encryptor.salt = true }
-
-      it "should add the option" do
-        expect(encryptor.send(:options)).to eq(
-          "aes-256-cbc -salt -k ''"
+          "aes-256-cbc -pbkdf2 -iter 310000 -base64 -k ''"
         )
       end
     end

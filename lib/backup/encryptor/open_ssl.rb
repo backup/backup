@@ -1,6 +1,12 @@
 module Backup
   module Encryptor
     class OpenSSL < Base
+      BASE_OPTIONS = [
+        "aes-256-cbc",
+        "-pbkdf2",
+        "-iter", "310000" # As per OWASP "Password Storage Cheat Sheet"
+      ].freeze
+
       ##
       # The password that'll be used to encrypt the backup. This
       # password will be required to decrypt the backup later on.
@@ -56,7 +62,7 @@ module Backup
       # Always sets a password option, if even no password is given,
       # but will prefer the password_file option if both are given.
       def options
-        opts = ["aes-256-cbc"]
+        opts = BASE_OPTIONS.dup
         opts << "-base64" if @base64
         opts << "-salt"   if @salt
 
