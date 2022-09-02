@@ -1,5 +1,8 @@
 name: tests
 on:
+  push:
+    branches:
+      - master
   pull_request:
     paths:
       - 'bin/*'
@@ -13,7 +16,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # ruby: ['2.5', '2.7', '3.0', '3.1', truffleruby]
         ruby: ['2.5', '2.6', '2.7', '3.0', '3.1']
     env:
       BUNDLE_WITHOUT: no_ci
