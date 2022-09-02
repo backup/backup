@@ -2,7 +2,7 @@ Backup
 ======
 
 [![Code Climate](https://codeclimate.com/github/backup/backup.svg)](https://codeclimate.com/github/backup/backup)
-[![Build Status](https://travis-ci.org/backup/backup.svg?branch=master)](https://travis-ci.org/backup/backup)
+[![Build Status](https://github.com/backup/backup/actions/workflows/rspec.yml/badge.svg)](https://github.com/backup/backup/actions/workflows/rspec.yml)
 [![Join the chat at https://gitter.im/backup/backup](https://badges.gitter.im/Join%20Chat.svg)][Gitter]
 
 > This project is welcoming new contributors and maintainers. See CONTRIBUTING.md
