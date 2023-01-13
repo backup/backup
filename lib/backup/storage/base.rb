@@ -1,8 +1,6 @@
 module Backup
   module Storage
     class Base
-      class Error < Backup::Error; end
-
       include Config::Helpers
 
       ##
@@ -47,7 +45,7 @@ module Backup
           if respond_to?(:cycle!, true)
             cycle!
           else
-            raise Error.new("Storage option \"keep\" set, but not supported.")
+            raise "Storage option \"keep\" set, but not supported."
           end
         end
         Logger.info "#{storage_name} Finished!"
