@@ -1,6 +1,8 @@
 module Backup
   module Storage
     class Base
+      class Error < Backup::Error; end
+
       include Config::Helpers
 
       ##
@@ -41,8 +43,12 @@ module Backup
       def perform!
         Logger.info "#{storage_name} Started..."
         transfer!
-        if respond_to?(:cycle!, true) && (keep.to_i > 0 || keep.is_a?(Time))
-          cycle!
+        if (keep.to_i > 0 || keep.is_a?(Time))
+          if respond_to?(:cycle!, true)
+            cycle!
+          else
+            raise Error.new("Storage option \"keep\" set, but not supported.")
+          end
         end
         Logger.info "#{storage_name} Finished!"
       end
