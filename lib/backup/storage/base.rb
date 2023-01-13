@@ -41,12 +41,9 @@ module Backup
       def perform!
         Logger.info "#{storage_name} Started..."
         transfer!
-        if (keep.to_i > 0 || keep.is_a?(Time))
-          if respond_to?(:cycle!, true)
-            cycle!
-          else
-            raise "Storage option \"keep\" set, but not supported."
-          end
+        if keep.to_i > 0 || keep.is_a?(Time)
+          raise "Storage option \"keep\" set, but not supported." unless respond_to?(:cycle!, true)
+          cycle!
         end
         Logger.info "#{storage_name} Finished!"
       end
