@@ -67,7 +67,14 @@ shared_examples "a storage that cycles" do
       end
       expect(File).to receive(:exist?).with(yaml_file).and_return(true)
       expect(File).to receive(:zero?).with(yaml_file).and_return(false)
-      expect(YAML).to receive(:load_file).with(yaml_file).and_return(stored_packages)
+
+      if YAML.respond_to? :safe_load_file
+        expect(YAML).to receive(:safe_load_file)
+          .with(yaml_file, permitted_classes: [Backup::Package])
+      else
+        expect(YAML).to receive(:load_file).with(yaml_file)
+      end.and_return(stored_packages)
+
       allow(storage).to receive(:transfer!)
     end
 
