@@ -122,7 +122,7 @@ GEM
       multi_xml (>= 0.5.2)
     inflecto (0.0.2)
     ipaddress (0.8.0)
-    json (1.8.2)
+    json (1.8.6)
     mail (2.6.3)
       mime-types (>= 1.16, < 3)
     memoizable (0.4.0)
@@ -228,4 +228,4 @@ DEPENDENCIES
   yard
 
 BUNDLED WITH
-   1.15.4
+   1.17.3

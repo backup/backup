@@ -65,7 +65,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'httparty', '= 0.12.0'
   gem.add_dependency 'inflecto', '= 0.0.2'
   gem.add_dependency 'ipaddress', '= 0.8.0'
-  gem.add_dependency 'json', '= 1.8.2'
+  gem.add_dependency 'json', '= 1.8.6'
   gem.add_dependency 'mail', '= 2.6.3'
   gem.add_dependency 'memoizable', '= 0.4.0'
   gem.add_dependency 'mime-types', '= 2.4.3'
