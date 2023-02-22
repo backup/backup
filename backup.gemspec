@@ -25,7 +25,7 @@ Gem::Specification.new do |gem|
   gem.require_path  = "lib"
   gem.executables   = ["backup"]
 
-  gem.required_ruby_version = ">= 2.0"
+  gem.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
 
   gem.add_dependency "thor", "~> 0.18", ">= 0.18.1"
   gem.add_dependency "open4", "1.3.0"
@@ -36,6 +36,8 @@ Gem::Specification.new do |gem|
   gem.add_dependency "net-ssh", "5.2.0"
   gem.add_dependency "net-scp", "~> 2.0.0"
   gem.add_dependency "net-sftp", "2.1.2"
+  gem.add_dependency "net-ftp", "~> 0.1.3"
+  gem.add_dependency "net-smtp", "~> 0.1"
   gem.add_dependency "mail", "~> 2.6", ">= 2.6.6"
   gem.add_dependency "pagerduty", "2.0.0"
   gem.add_dependency "twitter", "~> 6.0"
@@ -49,5 +51,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "rubocop", "0.48.1"
   gem.add_development_dependency "rake"
   gem.add_development_dependency "rspec", "3.8.0"
-  gem.add_development_dependency "timecop", "0.9.1"
+  gem.add_development_dependency "timecop", "0.9.4"
 end

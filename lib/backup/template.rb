@@ -26,7 +26,11 @@ module Backup
     ##
     # Returns a String object containing the contents of the file (in the context of the binding if any)
     def result(file)
-      ERB.new(file_contents(file), nil, "<>").result(binding)
+      if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new("3.0.0")
+        ERB.new(file_contents(file), trim_mode: "<>")
+      else
+        ERB.new(file_contents(file), nil, "<>")
+      end.result(binding)
     end
 
     private
