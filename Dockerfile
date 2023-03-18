@@ -1,4 +1,5 @@
-FROM ruby:2.4.3
+FROM ruby:3.1.3
+
 
 ## 1. Image metadata ##
  LABEL maintainer="stuart@stuartellis.name" \
@@ -10,8 +11,8 @@ FROM ruby:2.4.3
 # Dependencies for developing and running Backup
 #  * The Nokogiri gem requires libxml2
 #  * The unf_ext gem requires the g++ compiler to build
-ENV APP_DEPS bsdtar ca-certificates curl g++ git \
-    libxml2 libxslt1.1 libyaml-0-2 openssl
+ENV APP_DEPS ca-certificates curl g++ git \
+    libarchive-tools libxml2 libxslt1.1 libyaml-0-2 openssl
 
 RUN apt-get update && apt-get install -y --no-install-recommends $APP_DEPS
 
