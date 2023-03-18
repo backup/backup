@@ -33,8 +33,8 @@ Gem::Specification.new do |gem|
   gem.add_dependency "excon", "~> 0.71"
   gem.add_dependency "unf", "0.1.3" # for fog/AWS
   gem.add_dependency "dropbox-sdk", "1.6.5"
-  gem.add_dependency "net-ssh", "5.2.0"
-  gem.add_dependency "net-scp", "~> 2.0.0"
+  gem.add_dependency "net-ssh", "7.1.0"
+  gem.add_dependency "net-scp", "~> 4.0.0"
   gem.add_dependency "net-sftp", "2.1.2"
   gem.add_dependency "net-ftp", "~> 0.1.3"
   gem.add_dependency "net-smtp", "~> 0.1"
