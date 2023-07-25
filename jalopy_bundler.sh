@@ -6,6 +6,14 @@
 ## 
 ##
 
+echo "##############################################################################"
+echo "Welcome to Jalopy Bundler: the crappy stand-in for the real bundler until"
+echo "backup supports ruby 2.6.0 or better (or until a way is found to install a "
+echo "version of the bundler gem that supports ruby 2.4.10)!"
+echo "##############################################################################"
+
+
+
 gem install thor -v 0.18
 gem install open4 -v 1.3.0
 gem install fog -v 1.42
