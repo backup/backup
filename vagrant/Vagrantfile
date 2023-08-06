@@ -45,7 +45,7 @@ Vagrant.configure("2") do |config|
      vb.memory = 4096
   
      # Use VBoxManage to customize the VM. For example to change memory:
-    # vb.customize ["modifyvm", :id, "--memory", "1024"]
+     #vb.customize ["modifyvm", :id, "--memory", "1024"]
    end
   #
   # View the documentation for the provider you're using for more
@@ -88,6 +88,7 @@ Vagrant.configure("2") do |config|
     curl -fsSL https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-installer | sudo -u vagrant bash
     echo 'eval "$(/home/vagrant/.rbenv/bin/rbenv init - bash)"' >> ~vagrant/.bashrc
 
+    # Install bundler v2.3.26 because it is the last version to support Ruby 2.4
     su --login vagrant -c 'eval "$(/home/vagrant/.rbenv/bin/rbenv init - bash)" && 
                                cd /backup.git &&
                                rbenv install &&
