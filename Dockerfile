@@ -1,8 +1,8 @@
-FROM ruby:2.4.3
+FROM ruby:2.4.10
 
 ## 1. Image metadata ##
  LABEL maintainer="stuart@stuartellis.name" \
-    version="0.2.0" \
+    version="0.2.1" \
     description="Image for running the backup Rubygem"
 
 ## 2. Add operating system packages ##
