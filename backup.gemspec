@@ -46,7 +46,8 @@ Gem::Specification.new do |gem|
   gem.add_dependency "dogapi", "1.40.0"
   gem.add_dependency "aws-sdk", "~> 2"
   gem.add_dependency "qiniu", "~> 6.5"
-  gem.add_dependency "nokogiri", "~> 1.10", ">= 1.10.9"
+  gem.add_dependency "nokogiri", "~> 1.11.7"
+  gem.add_dependency "activesupport", "~> 5.2.8"
 
   gem.add_development_dependency "rubocop", "0.48.1"
   gem.add_development_dependency "rake"
