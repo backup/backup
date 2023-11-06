@@ -7,12 +7,11 @@ Vagrant.configure("2") do |config|
   # please see the online documentation at vagrantup.com.
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = 'backup-testbox'
+  config.vm.box = 'ubuntu/jammy64'
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
   # config.vm.box_url = "http://domain.com/path/to/above.box"
-  config.vm.box_url = 'http://dl.dropbox.com/u/95700067/backup-testbox.box'
 
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,
@@ -39,14 +38,60 @@ Vagrant.configure("2") do |config|
   # backing providers for Vagrant. These expose provider-specific options.
   # Example for VirtualBox:
   #
-  # config.vm.provider :virtualbox do |vb|
-  #   # Don't boot with headless mode
-  #   vb.gui = true
-  #
-  #   # Use VBoxManage to customize the VM. For example to change memory:
-  #   vb.customize ["modifyvm", :id, "--memory", "1024"]
-  # end
+   config.vm.provider :virtualbox do |vb|
+     # Don't boot with headless mode
+     #vb.gui = true
+     vb.cpus = 4
+     vb.memory = 4096
+  
+     # Use VBoxManage to customize the VM. For example to change memory:
+     #vb.customize ["modifyvm", :id, "--memory", "1024"]
+   end
   #
   # View the documentation for the provider you're using for more
   # information on available options.
+
+  config.vm.provision "shell", inline: <<END
+    apt-get update
+    
+    # Based off of the Ruby 2.4.10 Dockerfile from commit a564feaaee4c8647c299ab11d41498468bb9af7b of the https://github.com/docker-library/ruby repo, then revised to use rbenv
+    apt-get install -y --no-install-recommends \
+            bzip2 \
+            ca-certificates \
+            libffi-dev \
+            libgmp-dev \
+            libssl-dev \
+            libyaml-dev \
+            procps \
+            zlib1g-dev \
+            autoconf \
+            bison \
+            dpkg-dev \
+            gcc \
+            libbz2-dev \
+            libgdbm-dev \
+            libglib2.0-dev \
+            libncurses-dev \
+            libreadline-dev \
+            libxml2-dev \
+            libxslt-dev \
+            make \
+            wget \
+            xz-utils \
+            curl
+
+    # install additional packages required by dependent gems
+    apt-get install -y  g++ \
+                        libxml2-dev \
+                        libcurl4-openssl-dev
+
+    curl -fsSL https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-installer | sudo -u vagrant bash
+    echo 'eval "$(/home/vagrant/.rbenv/bin/rbenv init - bash)"' >> ~vagrant/.bashrc
+
+    # Install bundler v2.3.26 because it is the last version to support Ruby 2.4
+    su --login vagrant -c 'eval "$(/home/vagrant/.rbenv/bin/rbenv init - bash)" && 
+                               cd /backup.git &&
+                               rbenv install &&
+                               /home/vagrant/.rbenv/shims/gem install bundler -v 2.3.26'
+END
 end
