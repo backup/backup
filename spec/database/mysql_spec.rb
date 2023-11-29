@@ -251,7 +251,7 @@ module Backup
         )
       end
 
-      it 'adds password env' do
+      it "adds password env" do
         db.password = "my_password"
         expect(db.send(:mysqldump)).to start_with(
           "MYSQL_PWD=my_password mysqldump"
@@ -305,7 +305,6 @@ module Backup
             "MYSQL_PWD=my_password\\'\\\" "
           )
         end
-
       end # describe '#password_env'
 
       describe "#connectivity_options" do
