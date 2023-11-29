@@ -250,6 +250,13 @@ module Backup
           "mysqldump #{" " * (option_methods.count - 1)}"
         )
       end
+
+      it "adds password env" do
+        db.password = "my_password"
+        expect(db.send(:mysqldump)).to start_with(
+          "MYSQL_PWD=my_password mysqldump"
+        )
+      end
     end # describe '#mysqldump'
 
     describe "backup engine option methods" do
@@ -264,12 +271,12 @@ module Backup
 
           db.password = "my_password"
           expect(db.send(:credential_options)).to eq(
-            "--user=my_user --password=my_password"
+            "--user=my_user"
           )
 
           db.username = nil
           expect(db.send(:credential_options)).to eq(
-            "--password=my_password"
+            ""
           )
         end
 
@@ -277,10 +284,28 @@ module Backup
           db.username = "my_user'\""
           db.password = "my_password'\""
           expect(db.send(:credential_options)).to eq(
-            "--user=my_user\\'\\\" --password=my_password\\'\\\""
+            "--user=my_user\\'\\\""
           )
         end
       end # describe '#credential_options'
+
+      describe "#password_env" do
+        it "returns the envs" do
+          db.password = "my_password"
+
+          expect(db.send(:password_env)).to eq(
+            "MYSQL_PWD=my_password "
+          )
+        end
+
+        it "handles special characters" do
+          db.password = "my_password'\""
+
+          expect(db.send(:password_env)).to eq(
+            "MYSQL_PWD=my_password\\'\\\" "
+          )
+        end
+      end # describe '#password_env'
 
       describe "#connectivity_options" do
         it "returns only the socket argument if #socket specified" do

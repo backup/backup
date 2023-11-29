@@ -101,15 +101,19 @@ module Backup
       private
 
       def mysqldump
-        "#{utility(:mysqldump)} #{user_options} #{credential_options} " \
+        "#{password_env}#{utility(:mysqldump)} #{user_options} #{credential_options} " \
           "#{connectivity_options} #{name_option} " \
           "#{tables_to_dump} #{tables_to_skip}"
+      end
+
+      def password_env
+        "MYSQL_PWD=#{Shellwords.escape(password)} " if password
       end
 
       def credential_options
         opts = []
         opts << "--user=#{Shellwords.escape(username)}" if username
-        opts << "--password=#{Shellwords.escape(password)}" if password
+        opts << "--password=#{Shellwords.escape(password)}" if password && backup_engine.to_sym != :mysqldump
         opts.join(" ")
       end
 
