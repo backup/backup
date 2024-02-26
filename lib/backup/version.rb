@@ -1,3 +1,3 @@
 module Backup
-  VERSION = "5.0.0.beta.3"
+  VERSION = "6.0.0.alpha.1"
 end

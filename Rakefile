@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "rake/clean"
 
 CLEAN.include("tmp")
@@ -51,9 +53,7 @@ task :release do
   print "Enter new version: "
   new_version = $stdin.gets.chomp
 
-  unless valid_version?(new_version)
-    abort "ERROR: Invalid version number: #{new_version.inspect}"
-  end
+  abort "ERROR: Invalid version number: #{new_version.inspect}" unless valid_version?(new_version)
 
   puts "Creating new version: #{new_version}"
 
