@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative "lib/backup/fog/version"
+require_relative "lib/backup_fog/version"
 
 Gem::Specification.new do |spec|
   spec.name = "backup-fog"
-  spec.version = Backup::Fog::VERSION
+  spec.version = BackupFog::VERSION
   spec.authors = ["Tomasz Stachewicz"]
   spec.email = ["t.stachewicz@gmail.com"]
 

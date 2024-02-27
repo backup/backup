@@ -734,12 +734,12 @@ module Backup # rubocop:disable Metrics/ModuleLength
 
           expect(connection).to receive(:put_object).with(
             "my_segments_container", "dest/file/0001", nil,
-            { "ETag" => digest_a, "X-Delete-At" => delete_at }
+            "ETag" => digest_a, "X-Delete-At" => delete_at
           ).and_yield.and_yield # twice to read 2 MiB
 
           expect(connection).to receive(:put_object).with(
             "my_segments_container", "dest/file/0002", nil,
-            { "ETag" => digest_b, "X-Delete-At" => delete_at }
+            "ETag" => digest_b, "X-Delete-At" => delete_at
           ).and_yield # once to read 250 B
 
           expected = [

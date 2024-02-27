@@ -4,10 +4,12 @@
 # $:.unshift File.expand_path("../../../../lib", __FILE__)
 
 require "backup"
-require "backup/fog"
+require "backup_fog"
 require "backup/cloud_io/s3"
 
 require "timecop"
+
+require "fog"
 
 Dir[File.expand_path("../support/**/*.rb", __FILE__)].each { |f| require f }
 
