@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "backup/cloud_io/base"
 require "fog"
 require "digest/md5"

@@ -1,6 +1,9 @@
 require "aws-sdk"
 require "mail"
 
+require "backup"
+require "backup/notifier/base"
+
 module Backup
   module Notifier
     class Ses < Base

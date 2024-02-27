@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "backup/cloud_io/cloud_files"
 
 module Backup
@@ -79,7 +81,7 @@ module Backup
         @retry_waitsec      ||= 30
 
         @path ||= "backups"
-        path.sub!(/^\//, "")
+        @path = path.sub(/^\//, "")
 
         check_configuration
       end

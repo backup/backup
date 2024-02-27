@@ -5,7 +5,6 @@
 
 require "backup"
 require "backup_fog"
-require "backup/cloud_io/s3"
 
 require "timecop"
 
@@ -23,4 +22,10 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+  config.before(:example) do
+    # Logger only queues messages received until Logger.start! is called.
+    Backup::Logger.send(:reset!)
+  end
+
 end

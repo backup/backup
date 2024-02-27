@@ -1,3 +1,5 @@
+require "backup"
+require "backup/syncer/cloud/base"
 require "backup/cloud_io/cloud_files"
 
 module Backup

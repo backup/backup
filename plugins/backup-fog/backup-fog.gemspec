@@ -31,8 +31,10 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "backup", "5.0.0.beta.3"
+  spec.add_dependency "aws-sdk", "~> 2"
+  spec.add_dependency "backup", "6.0.0.alpha.1"
   spec.add_dependency "fog", "~> 1.42"
+  spec.add_dependency "unf", "0.1.3" # for fog/AWS
 
   spec.add_development_dependency "rake"
   spec.add_development_dependency "rspec", "3.8.0"
