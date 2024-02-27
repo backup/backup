@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module Backup
-  describe Storage::S3 do
+  RSpec.describe Storage::S3 do
     let(:model) { Model.new(:test_trigger, "test label") }
     let(:required_config) do
       proc do |s3|

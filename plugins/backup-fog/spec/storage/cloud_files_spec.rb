@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module Backup
-  describe Storage::CloudFiles do
+  RSpec.describe Storage::CloudFiles do
     let(:model) { Model.new(:test_trigger, "test label") }
     let(:required_config) do
       proc do |cf|

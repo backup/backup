@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module Backup
-  describe Logger::FogAdapter do
+  RSpec.describe Logger::FogAdapter do
     it "replaces STDOUT fog warning channel" do
       expect(Fog::Logger[:warning]).to be Logger::FogAdapter
     end

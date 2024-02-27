@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require "spec_helper"
 require "backup/cloud_io/cloud_files"
 
 module Backup # rubocop:disable Metrics/ModuleLength
-  describe CloudIO::CloudFiles do
+  RSpec.describe CloudIO::CloudFiles do
     let(:connection) { double }
 
     describe "#upload" do
@@ -732,12 +734,12 @@ module Backup # rubocop:disable Metrics/ModuleLength
 
           expect(connection).to receive(:put_object).with(
             "my_segments_container", "dest/file/0001", nil,
-            "ETag" => digest_a, "X-Delete-At" => delete_at
+            { "ETag" => digest_a, "X-Delete-At" => delete_at }
           ).and_yield.and_yield # twice to read 2 MiB
 
           expect(connection).to receive(:put_object).with(
             "my_segments_container", "dest/file/0002", nil,
-            "ETag" => digest_b, "X-Delete-At" => delete_at
+            { "ETag" => digest_b, "X-Delete-At" => delete_at }
           ).and_yield # once to read 250 B
 
           expected = [

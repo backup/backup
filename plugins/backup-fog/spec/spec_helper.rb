@@ -1,8 +1,13 @@
 # frozen_string_literal: true
 
+# hacky: add parent-level backup gem to load path
+# $:.unshift File.expand_path("../../../../lib", __FILE__)
+
 require "backup"
 require "backup/fog"
 require "backup/cloud_io/s3"
+
+require "timecop"
 
 Dir[File.expand_path("../support/**/*.rb", __FILE__)].each { |f| require f }
 

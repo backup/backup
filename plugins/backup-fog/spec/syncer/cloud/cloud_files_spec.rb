@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module Backup
-  describe Syncer::Cloud::CloudFiles do
+  RSpec.describe Syncer::Cloud::CloudFiles do
     let(:required_config) do
       proc do |cf|
         cf.username   = "my_username"

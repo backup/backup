@@ -2,7 +2,7 @@ require "spec_helper"
 require "backup/cloud_io/s3"
 
 module Backup
-  describe CloudIO::S3 do
+  RSpec.describe CloudIO::S3 do
     let(:connection) { double }
 
     describe "#upload" do

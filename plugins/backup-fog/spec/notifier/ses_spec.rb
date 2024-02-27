@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module Backup
-  describe Notifier::Ses do
+  RSpec.describe Notifier::Ses do
     let(:model) { Model.new(:test_trigger, "test label") }
     let(:notifier) { Notifier::Ses.new(model) }
 

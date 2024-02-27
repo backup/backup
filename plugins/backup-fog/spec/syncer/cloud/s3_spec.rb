@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module Backup
-  describe Syncer::Cloud::S3 do
+  RSpec.describe Syncer::Cloud::S3 do
     let(:required_config) do
       proc do |s3|
         s3.access_key_id      = "my_access_key_id"
