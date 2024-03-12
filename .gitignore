@@ -10,3 +10,4 @@ vagrant/spec/live.yml
 .ruby-*
 doc/
 tmp/
+.rspec_status

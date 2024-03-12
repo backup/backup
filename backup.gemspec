@@ -26,7 +26,7 @@ Gem::Specification.new do |gem|
   gem.executables   = ["backup"]
 
   gem.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
- 
+
   # core connectivity gems
   gem.add_dependency "activesupport", "~> 5.2.8"
   gem.add_dependency "excon", "~> 0.71"
@@ -40,17 +40,14 @@ Gem::Specification.new do |gem|
   gem.add_dependency "thor", "~> 0.18", ">= 0.18.1"
 
   # integrations gems
-  # gem.add_dependency "aws-sdk", "~> 2"
   gem.add_dependency "dogapi", "1.40.0"
   gem.add_dependency "dropbox-sdk", "1.6.5"
   gem.add_dependency "flowdock", "0.4.0"
-  # gem.add_dependency "fog", "~> 1.42"
   gem.add_dependency "hipchat", "1.0.1"
   gem.add_dependency "mail", "~> 2.6", ">= 2.6.6"
   gem.add_dependency "pagerduty", "2.0.0"
   gem.add_dependency "qiniu", "~> 6.5"
   gem.add_dependency "twitter", "~> 6.0"
-  # gem.add_dependency "unf", "0.1.3" # for fog/AWS
 
   gem.add_development_dependency "rake"
   gem.add_development_dependency "rspec", "3.8.0"
