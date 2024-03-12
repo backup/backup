@@ -37,8 +37,6 @@ module Backup
   module Storage
     autoload :Base,       File.join(STORAGE_PATH, "base")
     autoload :Cycler,     File.join(STORAGE_PATH, "cycler")
-    autoload :S3,         File.join(STORAGE_PATH, "s3")
-    autoload :CloudFiles, File.join(STORAGE_PATH, "cloud_files")
     autoload :Ninefold,   File.join(STORAGE_PATH, "ninefold")
     autoload :Dropbox,    File.join(STORAGE_PATH, "dropbox")
     autoload :FTP,        File.join(STORAGE_PATH, "ftp")
@@ -56,8 +54,6 @@ module Backup
     module Cloud
       autoload :Base,       File.join(SYNCER_PATH, "cloud", "base")
       autoload :LocalFile,  File.join(SYNCER_PATH, "cloud", "local_file")
-      autoload :CloudFiles, File.join(SYNCER_PATH, "cloud", "cloud_files")
-      autoload :S3,         File.join(SYNCER_PATH, "cloud", "s3")
     end
     module RSync
       autoload :Base,  File.join(SYNCER_PATH, "rsync", "base")
@@ -114,7 +110,6 @@ module Backup
     autoload :FlowDock,  File.join(NOTIFIER_PATH, "flowdock")
     autoload :Zabbix,    File.join(NOTIFIER_PATH, "zabbix")
     autoload :DataDog,   File.join(NOTIFIER_PATH, "datadog")
-    autoload :Ses,       File.join(NOTIFIER_PATH, "ses")
     autoload :Command,   File.join(NOTIFIER_PATH, "command")
   end
 

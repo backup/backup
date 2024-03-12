@@ -1,7 +1,6 @@
 require "backup/logger/console"
 require "backup/logger/logfile"
 require "backup/logger/syslog"
-require "backup/logger/fog_adapter"
 
 module Backup
   class Logger
