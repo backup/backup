@@ -1,4 +1,4 @@
-FROM ruby:2.4.10
+FROM ruby:3.2-bookworm
 
 ## 1. Image metadata ##
  LABEL maintainer="stuart@stuartellis.name" \
@@ -8,10 +8,8 @@ FROM ruby:2.4.10
 ## 2. Add operating system packages ##
 
 # Dependencies for developing and running Backup
-#  * The Nokogiri gem requires libxml2
-#  * The unf_ext gem requires the g++ compiler to build
-ENV APP_DEPS bsdtar ca-certificates curl g++ git \
-    libxml2 libxslt1.1 libyaml-0-2 openssl
+#  * Some legacy notifier dependencies contain native extensions.
+ENV APP_DEPS build-essential ca-certificates curl git libarchive-tools openssl
 
 RUN apt-get update && apt-get install -y --no-install-recommends $APP_DEPS
 

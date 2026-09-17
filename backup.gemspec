@@ -25,13 +25,14 @@ Gem::Specification.new do |gem|
   gem.require_path  = "lib"
   gem.executables   = ["backup"]
 
-  gem.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
+  gem.required_ruby_version = Gem::Requirement.new(">= 2.7.0")
 
-  gem.add_dependency "thor", "~> 0.18", ">= 0.18.1"
+  gem.add_dependency "thor", ">= 1.2", "< 2"
   gem.add_dependency "open4", "1.3.0"
-  gem.add_dependency "fog", "~> 1.42"
+  gem.add_dependency "fog-core", "~> 1.45"
+  gem.add_dependency "fog-aws", "~> 2.0.1"
+  gem.add_dependency "fog-rackspace", "~> 0.1.6"
   gem.add_dependency "excon", "~> 0.71"
-  gem.add_dependency "unf", "0.1.3" # for fog/AWS
   gem.add_dependency "dropbox-sdk", "1.6.5"
   gem.add_dependency "net-ssh", "5.2.0"
   gem.add_dependency "net-scp", "~> 2.0.0"
@@ -44,10 +45,8 @@ Gem::Specification.new do |gem|
   gem.add_dependency "hipchat", "1.0.1"
   gem.add_dependency "flowdock", "0.4.0"
   gem.add_dependency "dogapi", "1.40.0"
-  gem.add_dependency "aws-sdk", "~> 2"
+  gem.add_dependency "aws-sdk-ses", "~> 1"
   gem.add_dependency "qiniu", "~> 6.5"
-  gem.add_dependency "nokogiri", "~> 1.11.7"
-  gem.add_dependency "activesupport", "~> 5.2.8"
 
   gem.add_development_dependency "rubocop", "0.48.1"
   gem.add_development_dependency "rake"

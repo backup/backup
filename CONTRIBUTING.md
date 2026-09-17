@@ -93,7 +93,7 @@ default resolution mechanism.
 To help the committers review your code and speed up the merge:
 
 * Use the latest version of the `master` branch as the base for your topic branch
-* Be sure to use the latest version of Ruby 2 when you write and test your code
+* Use a supported Ruby version (2.7 or newer) when you write and test your code
 * Write tests for your changes
 * In the comment box for your pull request, specify the operating system(s) and Ruby version that you have tested your code on
 * Write [clear commit messages](http://chris.beams.io/posts/git-commit/):
