@@ -1,5 +1,5 @@
 require "backup/cloud_io/base"
-require "fog"
+require "fog/rackspace"
 require "digest/md5"
 
 module Backup

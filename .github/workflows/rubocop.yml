@@ -13,13 +13,11 @@ on:
       - '.github/workflows/rubocop.yml'
 jobs:
   rubocop:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       BUNDLE_WITHOUT: no_ci
     steps:
       - uses: actions/checkout@v3
-      - name: Install deps
-        run: sudo apt-get install -qf libcurl4-openssl-dev
       - name: Install ruby
         uses: ruby/setup-ruby@v1
         with:

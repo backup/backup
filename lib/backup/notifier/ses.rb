@@ -1,4 +1,4 @@
-require "aws-sdk"
+require "aws-sdk-ses"
 require "mail"
 
 module Backup

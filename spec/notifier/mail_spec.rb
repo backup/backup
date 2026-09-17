@@ -430,7 +430,7 @@ module Backup
 
           settings = email.delivery_method.settings
           expect(settings[:location]).to eq "/path/to/sendmail"
-          expect(settings[:arguments]).to eq "-i -t -X/tmp/traffic.log"
+          expect(settings[:arguments]).to eq ["-i", "-t", "-X/tmp/traffic.log"]
         end
       end
 
@@ -459,7 +459,7 @@ module Backup
 
           settings = email.delivery_method.settings
           expect(settings[:location]).to eq "/path/to/exim"
-          expect(settings[:arguments]).to eq "-i -t -X/tmp/traffic.log"
+          expect(settings[:arguments]).to eq ["-i", "-t", "-X/tmp/traffic.log"]
         end
       end
 

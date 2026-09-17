@@ -14,6 +14,8 @@ module Backup
       allow_any_instance_of(Database::MySQL).to receive(:utility)
         .with(:innobackupex).and_return("innobackupex")
       allow_any_instance_of(Database::MySQL).to receive(:utility)
+        .with(:xtrabackup).and_return("xtrabackup")
+      allow_any_instance_of(Database::MySQL).to receive(:utility)
         .with(:tar).and_return("tar")
     end
 
@@ -228,6 +230,37 @@ module Backup
         end # context 'when the pipeline fails'
       end # describe '#perform!'
     end # context 'using alternative engine (innobackupex)'
+
+    context "using xtrabackup" do
+      before do
+        db.backup_engine = :xtrabackup
+      end
+
+      describe "#perform!" do
+        let(:pipeline) { double }
+
+        before do
+          allow(db).to receive(:xtrabackup).and_return("xtrabackup_command")
+          allow(db).to receive(:dump_path).and_return("/tmp/trigger/databases")
+
+          expect(db).to receive(:log!).ordered.with(:started)
+          expect(db).to receive(:prepare!).ordered
+        end
+
+        it "packages the physical backup" do
+          expect(Pipeline).to receive(:new).ordered.and_return(pipeline)
+          expect(pipeline).to receive(:<<).ordered.with("xtrabackup_command")
+          expect(pipeline).to receive(:<<).ordered.with(
+            "cat > '/tmp/trigger/databases/MySQL.tar'"
+          )
+          expect(pipeline).to receive(:run).ordered
+          expect(pipeline).to receive(:success?).ordered.and_return(true)
+          expect(db).to receive(:log!).ordered.with(:finished)
+
+          db.perform!
+        end
+      end
+    end
 
     describe "#mysqldump" do
       let(:option_methods) do
@@ -448,6 +481,65 @@ module Backup
         it "does not contain apply-log command" do
           expect(db.send(:innobackupex).split.join(" ")).to eq(
             "innobackupex --no-timestamp /tmp/MySQL.bkpdir 2> /dev/null && " \
+            "tar --remove-files -cf - -C /tmp MySQL.bkpdir"
+          )
+        end
+      end
+    end
+
+    describe "#xtrabackup" do
+      before do
+        allow(db).to receive(:dump_path).and_return("/tmp")
+      end
+
+      it "builds commands to create, prepare, and package the backup" do
+        expect(db.send(:xtrabackup).split.join(" ")).to eq(
+          "xtrabackup --backup --target-dir=/tmp/MySQL.bkpdir > /dev/null 2>&1 && " \
+          "xtrabackup --prepare --target-dir=/tmp/MySQL.bkpdir > /dev/null 2>&1 && " \
+          "tar --remove-files -cf - -C /tmp MySQL.bkpdir"
+        )
+      end
+
+      it "includes connection and user-supplied options" do
+        db.username = "backup_user"
+        db.password = "secret"
+        db.socket = "/run/mysqld/mysqld.sock"
+        db.additional_options = ["--parallel=4", "--lock-ddl"]
+        db.prepare_options = "--use-free-memory-pct=50"
+
+        expect(db.send(:xtrabackup).split.join(" ")).to eq(
+          "xtrabackup --parallel=4 --lock-ddl --backup " \
+          "--user=backup_user --password=secret " \
+          "--socket='/run/mysqld/mysqld.sock' " \
+          "--target-dir=/tmp/MySQL.bkpdir > /dev/null 2>&1 && " \
+          "xtrabackup --use-free-memory-pct=50 --prepare " \
+          "--target-dir=/tmp/MySQL.bkpdir > /dev/null 2>&1 && " \
+          "tar --remove-files -cf - -C /tmp MySQL.bkpdir"
+        )
+      end
+
+      context "with verbose option enabled" do
+        before do
+          db.verbose = true
+        end
+
+        it "does not suppress xtrabackup output" do
+          expect(db.send(:xtrabackup).split.join(" ")).to eq(
+            "xtrabackup --backup --target-dir=/tmp/MySQL.bkpdir 1>&2 && " \
+            "xtrabackup --prepare --target-dir=/tmp/MySQL.bkpdir 1>&2 && " \
+            "tar --remove-files -cf - -C /tmp MySQL.bkpdir"
+          )
+        end
+      end
+
+      context "with prepare_backup option disabled" do
+        before do
+          db.prepare_backup = false
+        end
+
+        it "does not contain the prepare command" do
+          expect(db.send(:xtrabackup).split.join(" ")).to eq(
+            "xtrabackup --backup --target-dir=/tmp/MySQL.bkpdir > /dev/null 2>&1 && " \
             "tar --remove-files -cf - -C /tmp MySQL.bkpdir"
           )
         end

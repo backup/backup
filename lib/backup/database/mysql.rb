@@ -30,24 +30,24 @@ module Backup
       attr_accessor :only_tables
 
       ##
-      # Additional "mysqldump" or "innobackupex (backup creation)" options
+      # Additional "mysqldump", "innobackupex", or "xtrabackup" backup options
       attr_accessor :additional_options
 
       ##
-      # Additional innobackupex log preparation phase ("apply-logs") options
+      # Additional physical backup preparation options
       attr_accessor :prepare_options
 
       ##
       # Default is :mysqldump (which is built in MySQL and generates
-      # a textual SQL file), but can be changed to :innobackupex, which
-      # has more feasible restore times for large databases.
-      # See: http://www.percona.com/doc/percona-xtrabackup/
+      # a textual SQL file), but can be changed to :innobackupex or
+      # :xtrabackup, which have more feasible restore times for large databases.
+      # See: https://docs.percona.com/percona-xtrabackup/
       attr_accessor :backup_engine
 
       ##
       # If true (which is the default behaviour), the backup will be prepared
       # after it has been successfuly created. This option is only valid if
-      # :backup_engine is set to :innobackupex.
+      # :backup_engine is set to :innobackupex or :xtrabackup.
       attr_accessor :prepare_backup
 
       ##
@@ -55,7 +55,7 @@ module Backup
       attr_accessor :sudo_user
 
       ##
-      # If set, do not suppress innobackupdb output (useful for debugging)
+      # If set, do not suppress physical backup output (useful for debugging)
       attr_accessor :verbose
 
       def initialize(model, database_id = nil, &block)
@@ -68,7 +68,7 @@ module Backup
       end
 
       ##
-      # Performs the mysqldump or innobackupex command and outputs
+      # Performs the selected backup engine command and outputs
       # the dump file in the +dump_path+ using +dump_filename+.
       #
       #   <trigger>/databases/MySQL[-<database_id>].[sql|tar][.gz]
@@ -78,7 +78,7 @@ module Backup
         pipeline = Pipeline.new
         dump_ext = sql_backup? ? "sql" : "tar"
 
-        pipeline << sudo_option(sql_backup? ? mysqldump : innobackupex)
+        pipeline << sudo_option(backup_command)
 
         if model.compressor
           model.compressor.compress_with do |command, ext|
@@ -153,6 +153,16 @@ module Backup
         backup_engine.to_sym == :mysqldump
       end
 
+      def backup_command
+        case backup_engine.to_sym
+        when :mysqldump then mysqldump
+        when :innobackupex then innobackupex
+        when :xtrabackup then xtrabackup
+        else
+          raise Error, "Unknown backup engine: #{backup_engine.inspect}"
+        end
+      end
+
       def innobackupex
         # Creation phase
         "#{utility(:innobackupex)} #{credential_options} " \
@@ -171,6 +181,23 @@ module Backup
           "#{user_prepare_options}  #{quiet_option} && "
       end
 
+      def xtrabackup
+        # Creation phase
+        "#{utility(:xtrabackup)} #{user_options} --backup " \
+          "#{credential_options} #{connectivity_options} " \
+          "--target-dir=#{temp_dir} #{xtrabackup_output_option} && " +
+          xtrabackup_prepare +
+          # Move files to tar-ed stream on stdout
+          "#{utility(:tar)} --remove-files -cf -  " \
+          "-C #{File.dirname(temp_dir)} #{File.basename(temp_dir)}"
+      end
+
+      def xtrabackup_prepare
+        return "" unless @prepare_backup
+        "#{utility(:xtrabackup)} #{user_prepare_options} --prepare " \
+          "--target-dir=#{temp_dir} #{xtrabackup_output_option} && "
+      end
+
       def sudo_option(command_block)
         return command_block unless sudo_user
 
@@ -181,6 +208,12 @@ module Backup
 
       def quiet_option
         verbose ? "" : " 2> /dev/null "
+      end
+
+      # XtraBackup writes diagnostic messages to STDOUT as well as STDERR.
+      # Keep both away from the archive stream produced by the final tar command.
+      def xtrabackup_output_option
+        verbose ? " 1>&2 " : " > /dev/null 2>&1 "
       end
 
       def temp_dir

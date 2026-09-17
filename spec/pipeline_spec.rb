@@ -1,4 +1,5 @@
 require "spec_helper"
+require "timeout"
 
 describe "Backup::Pipeline" do
   let(:pipeline) { Backup::Pipeline.new }
@@ -180,6 +181,22 @@ describe "Backup::Pipeline" do
       end
     end # context 'when pipeline command fails to execute'
   end # describe '#run'
+
+  describe "#run with verbose command output" do
+    before do
+      allow_any_instance_of(Backup::Pipeline).to receive(:run).and_call_original
+      allow(Backup::Logger).to receive(:warn)
+    end
+
+    it "drains large stderr output without deadlocking" do
+      pipeline << "#{Shellwords.escape(Gem.ruby)} -e 'STDERR.write(\"x\" * 131072)'"
+
+      Timeout.timeout(5) { pipeline.run }
+
+      expect(pipeline).to be_success
+      expect(pipeline.stderr.bytesize).to eq(131_072)
+    end
+  end
 
   describe "#success?" do
     it "returns true when @errors is empty" do
